@@ -31,20 +31,18 @@ try:
     # Create a server that listens on 127.0.0.1:* and identifies itself as myserver.
     server = hahomematic.Server()
     # Connect to pydevccu at 127.0.0.1:2001
-    # client = hahomematic.Client(name="localhost",
-    #                             host="127.0.0.1", port=2001,
-    #                             password='',
-    #                             local_port=server.local_port)
-    #client1 = hahomematic.Client(name="localhost", host="127.0.0.1", port=2001, password='', local_port=server.local_port)
+    client1 = hahomematic.Client(name="localhost", host="127.0.0.1", port=2001, password='', local_port=server.local_port)
+    # Connect to CCU for RF-deices at 192.168.1.173:2001
     client2 = hahomematic.Client(name="hmip", host="192.168.1.173", port=2010, password='', local_port=server.local_port)
-    #client3 = hahomematic.Client(name="rf", host="192.168.1.173", port=2001, password='', local_port=server.local_port)
+    # Connect to CCU for HmIP-deices at 192.168.1.173:2010
+    client3 = hahomematic.Client(name="rf", host="192.168.1.173", port=2001, password='', local_port=server.local_port)
     # Clients have to exist prior to starting the server thread!
     print(hahomematic.data.CLIENTS)
     server.start()
     # Once the server is running we subscribe to receive messages.
-    #client1.proxy_init()
+    client1.proxy_init()
     client2.proxy_init()
-    #client3.proxy_init()
+    client3.proxy_init()
 except Exception:
     LOG.exception("Exception")
     try:
