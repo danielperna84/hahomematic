@@ -34,7 +34,6 @@ class RPCFunctions():
     """
     # pylint: disable=too-many-branches,too-many-statements
     def __init__(self):
-        # pylint: disable=global-statement
         LOG.debug("RPCFunctions.__init__")
 
     @eventcallback
@@ -46,9 +45,8 @@ class RPCFunctions():
         LOG.debug("RPCFunctions.event: interface_id = %s, address = %s, value_key = %s, value = %s",
                   interface_id, address, value_key, str(value))
         data.SERVER.last_events[interface_id] = int(time.time())
-        # TODO: Implement event. This will fire the event-method of the corresponding channel+param object.
-        # self.devices_all[interface_id.split(
-        #     '-')[-1]][address].event(interface_id, value_key, value)
+        # TODO: Implement event. This will fire the event-method of the
+        # corresponding channel+param object.
         return True
 
     @systemcallback(ATTR_ERROR)
@@ -57,7 +55,7 @@ class RPCFunctions():
         """
         When some error occurs the CCU / Homegear will send it's error message here.
         """
-        LOG.debug("RPCFunctions.error: interface_id = %s, errorcode = %i, message = %s",
+        LOG.error("RPCFunctions.error: interface_id = %s, errorcode = %i, message = %s",
                   interface_id, int(errorcode), str(msg))
         return True
 
@@ -71,21 +69,6 @@ class RPCFunctions():
         LOG.debug("RPCFunctions.listDevices: interface_id = %s", interface_id)
         if interface_id not in data.DEVICES_RAW:
             data.DEVICES_RAW[interface_id] = []
-        # if interface_id in data.CLIENTS:
-        #     # For HomeMatic IP, init is not working correctly (it fails to parse large lists).
-        #     # Issue for RPi-Matic: https://github.com/jens-maus/RaspberryMatic/issues/843
-        #     # Possibly fixed since 3.55.5.20201226 (CCU3) and 2.53.27 (CCU2)
-        #     # Ich habe 2.41.5
-        #     if data.CLIENTS[interface_id].backend == BACKEND_CCU and \
-        #         data.CLIENTS[interface_id].port in [PORT_HMIP, 32010, PORT_HMIP_TLS]:
-        #         clean_list = []
-        #         for dd in data.DEVICES_RAW[interface_id]:
-        #             clean_dd = {
-        #                 ATTR_HM_ADDRESS: dd[ATTR_HM_ADDRESS],
-        #                 ATTR_HM_VERSION: dd[ATTR_HM_VERSION],
-        #             }
-        #             clean_list.append(clean_dd)
-        #         return clean_list
         return data.DEVICES_RAW[interface_id]
 
     @systemcallback('newDevices')
@@ -104,7 +87,8 @@ class RPCFunctions():
         if interface_id not in data.NAMES:
             data.NAMES[interface_id] = {}
         if interface_id not in data.CLIENTS:
-            LOG.error("RPCFunctions.newDevices: Missing client for interface_id %s.", interface_id)
+            LOG.error("RPCFunctions.newDevices: Missing client for interface_id %s.",
+                      interface_id)
             return True
         client = data.CLIENTS[interface_id]
 
@@ -193,7 +177,6 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
     """
     rpc_paths = ('/', '/RPC2',)
 
-
 class Server(threading.Thread):
     """
     XML-RPC server thread to handle messages from CCU / Homegear.
@@ -233,7 +216,8 @@ class Server(threading.Thread):
         """
         Run the server thread.
         """
-        LOG.info("Server.run: Starting server at http://%s:%i", self.local_ip, self.local_port)
+        LOG.info("Server.run: Starting server at http://%s:%i",
+                 self.local_ip, self.local_port)
         self.server.serve_forever()
 
     def stop(self):
