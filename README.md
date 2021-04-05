@@ -2,7 +2,7 @@
 
 ### This project is still in early development!
 
-`hahomematic` is Python 3 (>= 3.6) module for [Home Assistant](https://www.home-assistant.io/) to interact with [HomeMatic](https://www.eq-3.com/products/homematic.html) and [homematic IP](https://www.homematic-ip.com/en/start.html) devices. Some other devices (f.ex. Bosch, Intertechno) might be supported as well.
+`hahomematic` is a Python 3 (>= 3.6) module for [Home Assistant](https://www.home-assistant.io/) to interact with [HomeMatic](https://www.eq-3.com/products/homematic.html) and [homematic IP](https://www.homematic-ip.com/en/start.html) devices. Some other devices (f.ex. Bosch, Intertechno) might be supported as well.
 
 No 3rd party Python dependencies are required.
 
