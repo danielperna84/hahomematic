@@ -28,15 +28,9 @@ JSONRPC_PATH = '/api/homematic.cgi'
 PATH_JSON_RPC = '/api/homematic.cgi'
 PATH_TCL_REGA = '/tclrega.exe'
 
-DEVICEFILE = None  # e.g. devices_%s.json
-PARAMSETFILE = None # e.g. paramsets_%s.json
-
 FILE_DEVICES = None
 FILE_DEVICES_RAW = None
 FILE_PARAMSETS = None
-
-DEVICE_DESCRIPTIONS = "data/device_descriptions.json"
-PARAMSET_DESCRIPTIONS = "data/paramset_descriptions.json"
 
 RELEVANT_PARAMSETS = [
     'VALUES',
