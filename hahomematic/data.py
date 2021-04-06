@@ -12,4 +12,5 @@ REMOTES = {}
 CLIENTS = {}
 CLIENTS_BY_INIT_URL = {}
 NAMES = {}
+ENTITIES = {}
 SERVER = None
