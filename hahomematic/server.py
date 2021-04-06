@@ -16,6 +16,8 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler
 from hahomematic.const import (
     ATTR_ERROR,
     ATTR_HM_ADDRESS,
+    ATTR_HM_OPERATIONS,
+    ATTR_HM_TYPE,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     IP_ANY_V4,
@@ -23,6 +25,7 @@ from hahomematic.const import (
 )
 from hahomematic import data, config
 from hahomematic.decorators import systemcallback, eventcallback
+from hahomematic.entity import create_entity
 
 LOG = logging.getLogger(__name__)
 
@@ -210,14 +213,18 @@ class Server(threading.Thread):
             if interface_id not in data.PARAMSETS:
                 data.PARAMSETS[interface_id] = {}
             handle_device_descriptions(interface_id, device_descriptions)
-        create_entities()
 
     def run(self):
         """
         Run the server thread.
         """
-        LOG.info("Server.run: Starting server at http://%s:%i",
+        LOG.info("Server.run: Creating entities and starting server at http://%s:%i",
                  self.local_ip, self.local_port)
+        try:
+            create_entities()
+        except Exception as err:
+            LOG.exception("Server.run: Failed to create entities")
+            raise Exception("entitiy-creation-error") from err
         self.server.serve_forever()
 
     def stop(self):
@@ -258,9 +265,36 @@ def handle_device_descriptions(interface_id, dev_descriptions):
 
 def create_entities():
     """
+    Trigger createion of the objects that expose the functionality.
+    """
+    for interface_id in data.DEVICES:
+        if interface_id not in data.CLIENTS:
+            LOG.warning("create_entities: Skipping interface %s, missing client.", interface_id)
+            continue
+        if interface_id not in data.PARAMSETS:
+            LOG.warning("create_entities: Skipping interface %s, missing paramsets.", interface_id)
+            continue
+        for main_address, channels in data.DEVICES[interface_id].items():
+            create_entity_objects(interface_id, main_address, channels)
+    LOG.debug("create_entities: data.ENTITIES = %s", data.ENTITIES)
+
+def create_entity_objects(interface_id, main_address, channels):
+    """
     Create the objects that expose the functionality.
     """
-    LOG.debug("create_entities")
+    device_type = data.DEVICES_RAW_DICT[interface_id][main_address][ATTR_HM_TYPE]
+    LOG.debug("create_entity_objects: Handling device %s (%s)", main_address, device_type)
+    for channel in channels:
+        if channel not in data.PARAMSETS[interface_id]:
+            LOG.warning("create_entity_objects: Skipping channel %s, missing paramsets.", channel)
+            continue
+        for paramset in data.PARAMSETS[interface_id][channel]:
+            for parameter, parameter_data in data.PARAMSETS[interface_id][channel][paramset].items():
+                if not parameter_data[ATTR_HM_OPERATIONS] & 4:
+                    LOG.debug("create_entity_objects: Skipping %s (no event)", parameter)
+                    continue
+                create_entity(channel, parameter, parameter_data, interface_id)
+    # TODO: Hook for custom entity based on `device_type`
 
 def save_devices_raw():
     """
