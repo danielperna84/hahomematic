@@ -277,6 +277,8 @@ def create_entities():
         for main_address, channels in data.DEVICES[interface_id].items():
             create_entity_objects(interface_id, main_address, channels)
     LOG.debug("create_entities: data.ENTITIES = %s", data.ENTITIES)
+    # TODO: Call callback function to inform that entities have been created.
+    # Do we check for duplicates here?
 
 def create_entity_objects(interface_id, main_address, channels):
     """

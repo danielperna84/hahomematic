@@ -37,9 +37,6 @@ RELEVANT_PARAMSETS = [
     #'MASTER',
 ]
 
-# Parameters within the paramsets for which we don't create entities.
-IGNORED_PARAMETERS = []
-
 # When CONFIG_PENDING turns from True to False (ONLY then!) we should refetch the paramsets.
 # However, usually multiple of these events are fired, so we should only
 # act on the last one. This also only seems to fire on channel 0.
@@ -67,6 +64,11 @@ EVENTS_FORWARD = [
     EVENT_UNREACH,
     EVENT_SEQUENCE_OK,
     EVENT_STICKY_UNREACH,
+]
+
+# Parameters within the paramsets for which we don't create entities.
+IGNORED_PARAMETERS = [
+    EVENT_STICKY_UNREACH
 ]
 
 BACKEND_UNKNOWN = 0
@@ -106,6 +108,7 @@ ATTR_VALUE = 'value'
 ATTR_VERIFY_SSL = 'verify_ssl'
 
 ATTR_HM_ADDRESS = 'ADDRESS'
+ATTR_HM_CONTROL = 'CONTROL'
 ATTR_HM_OPERATIONS = 'OPERATIONS'
 ATTR_HM_PARAMSETS = 'PARAMSETS'
 ATTR_HM_TYPE = 'TYPE'
