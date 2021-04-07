@@ -28,9 +28,9 @@ def systemcallback(name):
                 raise Exception("args-exception systemcallback") from err
             if interface_id in data.CLIENTS:
                 data.CLIENTS[interface_id].initialized = int(time.time())
-            if config.SYSTEMCALLBACK is not None:
+            if config.CALLBACK_SYSTEM is not None:
                 # pylint: disable=not-callable
-                config.SYSTEMCALLBACK(name, *args)
+                config.CALLBACK_SYSTEM(name, *args)
             return return_value
         return wrapper_systemcallback
     return decorator_systemcallback
@@ -52,8 +52,8 @@ def eventcallback(func):
             raise Exception("args-exception eventcallback") from err
         if interface_id in data.CLIENTS:
             data.CLIENTS[interface_id].initialized = int(time.time())
-        if config.EVENTCALLBACK is not None:
+        if config.CALLBACK_EVENT is not None:
             # pylint: disable=not-callable
-            config.EVENTCALLBACK(*args)
+            config.CALLBACK_EVENT(*args)
         return return_value
     return wrapper_eventcallback

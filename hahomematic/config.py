@@ -11,5 +11,9 @@ FILE_DEVICES = None
 FILE_PARAMSETS = None
 FILE_NAMES = None
 
-SYSTEMCALLBACK = None
-EVENTCALLBACK = None
+# Signature: f(name, *args)
+CALLBACK_SYSTEM = None
+# Signature: f(interface_id, address, value_key, value)
+CALLBACK_EVENT = None
+# Signature: f(entity_id)
+CALLBACK_ENTITY_UPDATE = None

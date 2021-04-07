@@ -48,8 +48,12 @@ class RPCFunctions():
         LOG.debug("RPCFunctions.event: interface_id = %s, address = %s, value_key = %s, value = %s",
                   interface_id, address, value_key, str(value))
         data.SERVER.last_events[interface_id] = int(time.time())
-        # TODO: Implement event. This will fire the event-method of the
-        # corresponding channel+param object.
+        try:
+            for callback in data.EVENT_SUBSCRIPTIONS[(address, value_key)]:
+                callback(interface_id, address, value_key, value)
+        except Exception:
+            LOG.exception("RPCFunctions.event: Failed to call callback for: %s, %s, %s",
+                          interface_id, address, value_key)
         return True
 
     @systemcallback(ATTR_ERROR)
@@ -277,7 +281,9 @@ def create_entities():
         for main_address, channels in data.DEVICES[interface_id].items():
             create_entity_objects(interface_id, main_address, channels)
     LOG.debug("create_entities: data.ENTITIES = %s", data.ENTITIES)
-    # TODO: Call callback function to inform that entities have been created.
+    if callable(config.CALLBACK_SYSTEM):
+        # pylint: disable=not-callable
+        config.CALLBACK_SYSTEM('entitiesCreated')
     # Do we check for duplicates here?
 
 def create_entity_objects(interface_id, main_address, channels):

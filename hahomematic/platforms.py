@@ -6,6 +6,7 @@ import logging
 from abc import ABC, abstractmethod
 
 import hahomematic.data
+import hahomematic.config
 from hahomematic.const import (
     ATTR_HM_CONTROL,
     ATTR_HM_ID,
@@ -31,7 +32,8 @@ class Entity(ABC):
         Initialize the entity.
         """
         self.interface_id = interface_id
-        self.proxy = hahomematic.data.CLIENTS[interface_id]
+        self.client = hahomematic.data.CLIENTS[interface_id]
+        self.proxy = self.client.proxy
         self.entity_id = entity_id.replace('-', '_').lower()
         self.unique_id = self.entity_id.split('.')[-1]
         self.address = address
@@ -39,12 +41,54 @@ class Entity(ABC):
         self._parameter_data = parameter_data
         self.type = self._parameter_data.get(ATTR_HM_TYPE)
         self.control = self._parameter_data.get(ATTR_HM_CONTROL)
+        self.unit = self._parameter_data.get(ATTR_HM_UNIT)
+        self.max = self._parameter_data.get(ATTR_HM_MAX)
+        self.min = self._parameter_data.get(ATTR_HM_MIN)
+        self.value_list = dict(enumerate(self._parameter_data.get(ATTR_HM_VALUE_LIST, []))) or None
+        self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
         self.name = hahomematic.data.NAMES.get(
             self.interface_id, {}).get(self.address, self.entity_id)
         self._state = None
         if self.type == TYPE_ACTION:
             self._state = False
-        # Should we fetch the current value immediately if a `CONTROL` is set?
+        LOG.debug("Entity.__init__: Getting current value for %s",
+                  self.entity_id)
+        self.STATE
+        hahomematic.data.EVENT_SUBSCRIPTIONS[(self.address, self.parameter)].append(self.event)
+        self.update_callback = None
+        if callable(hahomematic.config.CALLBACK_ENTITY_UPDATE):
+            self.update_callback = hahomematic.config.CALLBACK_ENTITY_UPDATE
+
+    def event(self, interface_id, address, parameter, value):
+        """
+        Handle event for which this entity has subscribed.
+        """
+        LOG.debug("Entity.event: %s, %s, %s, %s",
+                  interface_id, address, parameter, value)
+        if interface_id != self.interface_id:
+            LOG.warning("Entity.event: Incorrect interface_id: %s - should be: %s",
+                        interface_id, self.interface_id)
+            return
+        if address != self.address:
+            LOG.warning("Entity.event: Incorrect address: %s - should be: %s",
+                        address, self.address)
+            return
+        if parameter != self.parameter:
+            LOG.warning("Entity.event: Incorrect parameter: %s - should be: %s",
+                        parameter, self.parameter)
+            return
+        self._state = value
+        self.update_entity()
+
+    def update_entity(self):
+        """
+        Do what is needed when the state of the entity has been updated.
+        """
+        if self.update_callback is None:
+            LOG.debug("Entity.update_entity: No callback defined.")
+            return
+        # pylint: disable=not-callable
+        self.update_callback(self.entity_id)
 
     @property
     @abstractmethod
@@ -59,23 +103,26 @@ class binary_sensor(Entity):
     @property
     def STATE(self):
         if self._state is None:
-            self._state = self.proxy.getValue(self.address, self.parameter)
+            try:
+                self._state = self.proxy.getValue(self.address, self.parameter)
+            except Exception as err:
+                LOG.info("switch: Failed to get state for %s, %s: %s",
+                         self.address, self.parameter, err)
         return self._state
 
 class number(Entity):
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
         super().__init__(interface_id, "number.{}".format(unique_id),
                          address, parameter, parameter_data)
-        self.unit = self._parameter_data.get(ATTR_HM_UNIT)
-        self.max = self._parameter_data.get(ATTR_HM_MAX)
-        self.min = self._parameter_data.get(ATTR_HM_MIN)
-        self.value_list = dict(self._parameter_data.get(ATTR_HM_VALUE_LIST))
-        self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
 
     @property
     def STATE(self):
         if self._state is None:
-            self._state = self.proxy.getValue(self.address, self.parameter)
+            try:
+                self._state = self.proxy.getValue(self.address, self.parameter)
+            except Exception as err:
+                LOG.info("switch: Failed to get state for %s, %s: %s",
+                         self.address, self.parameter, err)
         if self.type == TYPE_ENUM:
             return self.value_list[self._state]
         return self._state
@@ -104,14 +151,16 @@ class sensor(Entity):
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
         super().__init__(interface_id, "sensor.{}".format(unique_id),
                          address, parameter, parameter_data)
-        self.unit = self._parameter_data.get(ATTR_HM_UNIT)
-        self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
 
     @property
     def STATE(self):
         if self._state is None:
-            self._state = self.proxy.getValue(self.address, self.parameter)
-        if self.value_list:
+            try:
+                self._state = self.proxy.getValue(self.address, self.parameter)
+            except Exception as err:
+                LOG.info("switch: Failed to get state for %s, %s: %s",
+                         self.address, self.parameter, err)
+        if self.value_list is not None:
             return self.value_list[self._state]
         return self._state
 
@@ -125,7 +174,11 @@ class switch(Entity):
         if self.type == TYPE_ACTION:
             return False
         if self._state is None:
-            self._state = self.proxy.getValue(self.address, self.parameter)
+            try:
+                self._state = self.proxy.getValue(self.address, self.parameter)
+            except Exception as err:
+                LOG.info("switch: Failed to get state for %s, %s: %s",
+                         self.address, self.parameter, err)
         return self._state
 
     @STATE.setter

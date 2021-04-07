@@ -4,7 +4,9 @@ Functions for entity creation.
 
 import logging
 
+import hahomematic.config
 import hahomematic.data
+from hahomematic.helpers import generate_unique_id
 from hahomematic.platforms import (
     binary_sensor,
     number,
@@ -12,6 +14,7 @@ from hahomematic.platforms import (
     switch,
 )
 from hahomematic.const import (
+    ATTR_HM_CONTROL,
     ATTR_HM_OPERATIONS,
     ATTR_HM_TYPE,
     IGNORED_PARAMETERS,
@@ -24,20 +27,17 @@ from hahomematic.const import (
 
 LOG = logging.getLogger(__name__)
 
-def generate_unique_id(address, parameter):
-    """
-    Build unique id from address and parameter.
-    """
-    return "{}_{}".format(address.replace(':', '_'), parameter)
-
 def create_entity(address, parameter, parameter_data, interface_id):
     """
     Helper that looks at the paramsets, decides which default
     platform should be used, and creates the required entities.
     """
     if parameter in IGNORED_PARAMETERS:
-        LOG.debug("create_entity: Ignoring parameter: %s (%s)", parameter, address)
+        LOG.debug("create_entity: Ignoring parameter: %s (%s)",
+                  parameter, address)
         return
+    if (address, parameter) not in hahomematic.data.EVENT_SUBSCRIPTIONS:
+        hahomematic.data.EVENT_SUBSCRIPTIONS[(address, parameter)] = []
     unique_id = generate_unique_id(address, parameter)
     if unique_id in hahomematic.data.ENTITIES:
         LOG.warning("create_entity: Skipping %s (entity already exists)", unique_id)
