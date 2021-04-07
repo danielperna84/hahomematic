@@ -37,6 +37,15 @@ RELEVANT_PARAMSETS = [
     #'MASTER',
 ]
 
+HH_EVENT_DELETE_DEVICES = 'deleteDevices'
+HH_EVENT_ENTITIES_CREATED = 'entitiesCreated'
+HH_EVENT_ERROR = 'error'
+HH_EVENT_LIST_DEVICES = 'listDevices'
+HH_EVENT_NEW_DEVICES = 'newDevices'
+HH_EVENT_READDED_DEVICE = 'readdedDevice'
+HH_EVENT_REPLACE_DEVICE = 'replaceDevice'
+HH_EVENT_UPDATE_DEVICE = 'updateDevice'
+
 # When CONFIG_PENDING turns from True to False (ONLY then!) we should refetch the paramsets.
 # However, usually multiple of these events are fired, so we should only
 # act on the last one. This also only seems to fire on channel 0.

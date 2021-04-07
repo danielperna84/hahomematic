@@ -14,12 +14,19 @@ from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 
 from hahomematic.const import (
-    ATTR_ERROR,
     ATTR_HM_ADDRESS,
     ATTR_HM_OPERATIONS,
     ATTR_HM_TYPE,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
+    HH_EVENT_DELETE_DEVICES,
+    HH_EVENT_ENTITIES_CREATED,
+    HH_EVENT_ERROR,
+    HH_EVENT_LIST_DEVICES,
+    HH_EVENT_NEW_DEVICES,
+    HH_EVENT_UPDATE_DEVICE,
+    HH_EVENT_READDED_DEVICE,
+    HH_EVENT_REPLACE_DEVICE,
     IP_ANY_V4,
     PORT_ANY,
 )
@@ -56,7 +63,7 @@ class RPCFunctions():
                           interface_id, address, value_key)
         return True
 
-    @systemcallback(ATTR_ERROR)
+    @systemcallback(HH_EVENT_ERROR)
     # pylint: disable=no-self-use
     def error(self, interface_id, errorcode, msg):
         """
@@ -66,7 +73,7 @@ class RPCFunctions():
                   interface_id, int(errorcode), str(msg))
         return True
 
-    @systemcallback('listDevices')
+    @systemcallback(HH_EVENT_LIST_DEVICES)
     # pylint: disable=no-self-use
     def listDevices(self, interface_id):
         """
@@ -78,7 +85,7 @@ class RPCFunctions():
             data.DEVICES_RAW[interface_id] = []
         return data.DEVICES_RAW[interface_id]
 
-    @systemcallback('newDevices')
+    @systemcallback(HH_EVENT_NEW_DEVICES)
     # pylint: disable=no-self-use
     def newDevices(self, interface_id, dev_descriptions):
         """
@@ -120,7 +127,7 @@ class RPCFunctions():
         create_entities()
         return True
 
-    @systemcallback('deleteDevices')
+    @systemcallback(HH_EVENT_DELETE_DEVICES)
     # pylint: disable=no-self-use
     def deleteDevices(self, interface_id, addresses):
         """
@@ -143,7 +150,7 @@ class RPCFunctions():
         save_paramsets()
         return True
 
-    @systemcallback('updateDevice')
+    @systemcallback(HH_EVENT_UPDATE_DEVICE)
     # pylint: disable=no-self-use
     def updateDevice(self, interface_id, address, hint):
         """
@@ -155,7 +162,7 @@ class RPCFunctions():
                   interface_id, address, str(hint))
         return True
 
-    @systemcallback('replaceDevice')
+    @systemcallback(HH_EVENT_REPLACE_DEVICE)
     # pylint: disable=no-self-use
     def replaceDevice(self, interface_id, oldDeviceAddress, newDeviceAddress):
         """
@@ -165,7 +172,7 @@ class RPCFunctions():
                   interface_id, oldDeviceAddress, newDeviceAddress)
         return True
 
-    @systemcallback('readdedDevice')
+    @systemcallback(HH_EVENT_READDED_DEVICE)
     # pylint: disable=no-self-use
     def readdedDevice(self, interface_id, addresses):
         """
@@ -283,7 +290,7 @@ def create_entities():
     LOG.debug("create_entities: data.ENTITIES = %s", data.ENTITIES)
     if callable(config.CALLBACK_SYSTEM):
         # pylint: disable=not-callable
-        config.CALLBACK_SYSTEM('entitiesCreated')
+        config.CALLBACK_SYSTEM(HH_EVENT_ENTITIES_CREATED)
     # Do we check for duplicates here?
 
 def create_entity_objects(interface_id, main_address, channels):
