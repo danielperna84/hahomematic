@@ -299,6 +299,11 @@ def create_entity_objects(interface_id, main_address, channels):
     """
     device_type = data.DEVICES_RAW_DICT[interface_id][main_address][ATTR_HM_TYPE]
     LOG.debug("create_entity_objects: Handling device %s (%s)", main_address, device_type)
+    if main_address in data.NAMES.get(interface_id, {}):
+        device_name = data.NAMES[interface_id][main_address]
+    else:
+        device_name = "{}_{}".format(device_type, main_address)
+    data.HA_DEVICES[device_name] = []
     for channel in channels:
         if channel not in data.PARAMSETS[interface_id]:
             LOG.warning("create_entity_objects: Skipping channel %s, missing paramsets.", channel)
@@ -308,7 +313,9 @@ def create_entity_objects(interface_id, main_address, channels):
                 if not parameter_data[ATTR_HM_OPERATIONS] & 4:
                     LOG.debug("create_entity_objects: Skipping %s (no event)", parameter)
                     continue
-                create_entity(channel, parameter, parameter_data, interface_id)
+                entity_id = create_entity(channel, parameter, parameter_data, interface_id)
+                if entity_id is not None:
+                    data.HA_DEVICES[device_name].append(entity_id)
     # TODO: Hook for custom entity based on `device_type`
 
 def save_devices_raw():

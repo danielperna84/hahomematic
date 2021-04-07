@@ -46,6 +46,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
     # receives a deleteDevices call. When the paramset has updated it should be recreated probably.
     LOG.debug("create_entity: Creating entity (%s, %s, %s)",
               address, parameter, interface_id)
+    entity_id = None
     if parameter_data[ATTR_HM_OPERATIONS] & 2:
         if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
             LOG.debug("switch (action): %s %s", address, parameter)
@@ -81,6 +82,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
             hahomematic.data.ENTITIES[entity_id] = sensor(
                 interface_id, unique_id, address, parameter, parameter_data
             )
+    return entity_id
 
 def create_custom_entity(address, device_type):
     """
