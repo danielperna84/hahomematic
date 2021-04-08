@@ -123,7 +123,7 @@ class number(Entity):
             except Exception as err:
                 LOG.info("switch: Failed to get state for %s, %s: %s",
                          self.address, self.parameter, err)
-        if self.type == TYPE_ENUM:
+        if self.type == TYPE_ENUM and self._state is not None:
             return self.value_list[self._state]
         return self._state
 
@@ -160,7 +160,7 @@ class sensor(Entity):
             except Exception as err:
                 LOG.info("switch: Failed to get state for %s, %s: %s",
                          self.address, self.parameter, err)
-        if self.value_list is not None:
+        if self._state is not None and self.value_list is not None:
             return self.value_list[self._state]
         return self._state
 
