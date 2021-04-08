@@ -165,7 +165,7 @@ class input_text(Entity):
             if self._state is None:
                 self._state = self.proxy.getValue(self.address, self.parameter)
         except Exception as err:
-            LOG.info("input_text: Failed to get state for %s, %s, %s, %s: %s",
+            LOG.info("input_text: Failed to get state for %s, %s, %s: %s",
                      self.device_type, self.address, self.parameter, err)
             return None
         return self._state
