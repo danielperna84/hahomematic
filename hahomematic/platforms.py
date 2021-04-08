@@ -12,6 +12,7 @@ from hahomematic.const import (
     ATTR_HM_ID,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
+    ATTR_HM_PARENT_TYPE,
     ATTR_HM_SPECIAL,
     ATTR_HM_TYPE,
     ATTR_HM_UNIT,
@@ -37,6 +38,7 @@ class Entity(ABC):
         self.entity_id = entity_id.replace('-', '_').lower()
         self.unique_id = self.entity_id.split('.')[-1]
         self.address = address
+        self.device_type = hahomematic.data.DEVICES_RAW_DICT[self.interface_id][self.address].get(ATTR_HM_PARENT_TYPE)
         self.parameter = parameter
         self._parameter_data = parameter_data
         self.type = self._parameter_data.get(ATTR_HM_TYPE)
@@ -106,8 +108,8 @@ class binary_sensor(Entity):
             if self._state is None:
                 self._state = self.proxy.getValue(self.address, self.parameter)
         except Exception as err:
-            LOG.info("binary_sensor: Failed to get state for %s, %s: %s",
-                     self.address, self.parameter, err)
+            LOG.info("binary_sensor: Failed to get state for %s, %s, %s: %s",
+                     self.device_type, self.address, self.parameter, err)
             return None
         return self._state
 
@@ -124,8 +126,8 @@ class number(Entity):
             if self.type == TYPE_ENUM and self._state is not None:
                 return self.value_list[self._state]
         except Exception as err:
-            LOG.info("number: Failed to get state for %s, %s: %s",
-                     self.address, self.parameter, err)
+            LOG.info("number: Failed to get state for %s, %s, %s: %s",
+                     self.device_type, self.address, self.parameter, err)
             return None
         return self._state
 
@@ -149,8 +151,8 @@ class number(Entity):
                 LOG.error("number: Invalid value: %s (min: %s, max: %s, special: %s)",
                           value, self.min, self.max, self.special)
         except Exception:
-            LOG.exception("number: Failed to set state for %s, %s, %s",
-                          self.address, self.parameter, value)
+            LOG.exception("number: Failed to set state for %s, %s, %s, %s",
+                          self.device_type, self.address, self.parameter, value)
 
 class input_text(Entity):
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
@@ -163,8 +165,8 @@ class input_text(Entity):
             if self._state is None:
                 self._state = self.proxy.getValue(self.address, self.parameter)
         except Exception as err:
-            LOG.info("input_text: Failed to get state for %s, %s: %s",
-                     self.address, self.parameter, err)
+            LOG.info("input_text: Failed to get state for %s, %s, %s, %s: %s",
+                     self.device_type, self.address, self.parameter, err)
             return None
         return self._state
 
@@ -173,8 +175,8 @@ class input_text(Entity):
         try:
             self.proxy.setValue(self.address, self.parameter, str(value))
         except Exception:
-            LOG.exception("input_text: Failed to set state for: %s, %s, %s",
-                          self.address, self.parameter, value)
+            LOG.exception("input_text: Failed to set state for: %s, %s, %s, %s",
+                          self.device_type, self.address, self.parameter, value)
 
 class sensor(Entity):
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
@@ -189,8 +191,8 @@ class sensor(Entity):
             if self._state is not None and self.value_list is not None:
                 return self.value_list[self._state]
         except Exception as err:
-            LOG.info("switch: Failed to get state for %s, %s: %s",
-                     self.address, self.parameter, err)
+            LOG.info("switch: Failed to get state for %s, %s, %s: %s",
+                     self.device_type, self.address, self.parameter, err)
             return None
         return self._state
 
@@ -207,8 +209,8 @@ class switch(Entity):
             if self._state is None:
                 self._state = self.proxy.getValue(self.address, self.parameter)
         except Exception as err:
-            LOG.info("switch: Failed to get state for %s, %s: %s",
-                     self.address, self.parameter, err)
+            LOG.info("switch: Failed to get state for %s, %s, %s: %s",
+                     self.device_type, self.address, self.parameter, err)
             return None
         return self._state
 
@@ -220,5 +222,5 @@ class switch(Entity):
             else:
                 self.proxy.setValue(self.address, self.parameter, value)
         except Exception:
-            LOG.exception("switch: Failed to set state for: %s, %s, %s",
-                          self.address, self.parameter, value)
+            LOG.exception("switch: Failed to set state for: %s, %s, %s, %s",
+                          self.device_type, self.address, self.parameter, value)
