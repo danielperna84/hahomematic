@@ -23,6 +23,7 @@ from hahomematic.const import (
     TYPE_ENUM,
     TYPE_FLOAT,
     TYPE_INTEGER,
+    TYPE_STRING,
 )
 
 LOG = logging.getLogger(__name__)
@@ -67,8 +68,13 @@ def create_entity(address, parameter, parameter_data, interface_id):
                 hahomematic.data.ENTITIES[entity_id] = number(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
+            elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
+                LOG.warning("string actors currently not supported: %s %s",
+                            address, parameter)
+                # TODO: Implement STRING actors. Maybe input_text?
             else:
-                LOG.warning("unsupported actor: %s %s", address, parameter)
+                LOG.warning("unsupported actor: %s %s %s",
+                            address, parameter, parameter_data[ATTR_HM_TYPE])
     else:
         if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
             LOG.debug("binary_sensor: %s %s", address, parameter)
