@@ -55,12 +55,13 @@ class RPCFunctions():
         LOG.debug("RPCFunctions.event: interface_id = %s, address = %s, value_key = %s, value = %s",
                   interface_id, address, value_key, str(value))
         data.SERVER.last_events[interface_id] = int(time.time())
-        try:
-            for callback in data.EVENT_SUBSCRIPTIONS[(address, value_key)]:
-                callback(interface_id, address, value_key, value)
-        except Exception:
-            LOG.exception("RPCFunctions.event: Failed to call callback for: %s, %s, %s",
-                          interface_id, address, value_key)
+        if (address, value_key) in data.EVENT_SUBSCRIPTIONS:
+            try:
+                for callback in data.EVENT_SUBSCRIPTIONS[(address, value_key)]:
+                    callback(interface_id, address, value_key, value)
+            except Exception:
+                LOG.exception("RPCFunctions.event: Failed to call callback for: %s, %s, %s",
+                              interface_id, address, value_key)
         return True
 
     @systemcallback(HH_EVENT_ERROR)
@@ -287,7 +288,6 @@ def create_entities():
             continue
         for main_address, channels in data.DEVICES[interface_id].items():
             create_entity_objects(interface_id, main_address, channels)
-    LOG.debug("create_entities: data.ENTITIES = %s", data.ENTITIES)
     if callable(config.CALLBACK_SYSTEM):
         # pylint: disable=not-callable
         config.CALLBACK_SYSTEM(HH_EVENT_ENTITIES_CREATED)
