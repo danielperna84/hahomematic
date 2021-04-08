@@ -102,12 +102,13 @@ class binary_sensor(Entity):
 
     @property
     def STATE(self):
-        if self._state is None:
-            try:
+        try:
+            if self._state is None:
                 self._state = self.proxy.getValue(self.address, self.parameter)
-            except Exception as err:
-                LOG.info("switch: Failed to get state for %s, %s: %s",
-                         self.address, self.parameter, err)
+        except Exception as err:
+            LOG.info("binary_sensor: Failed to get state for %s, %s: %s",
+                     self.address, self.parameter, err)
+            return None
         return self._state
 
 class number(Entity):
@@ -117,35 +118,63 @@ class number(Entity):
 
     @property
     def STATE(self):
-        if self._state is None:
-            try:
+        try:
+            if self._state is None:
                 self._state = self.proxy.getValue(self.address, self.parameter)
-            except Exception as err:
-                LOG.info("switch: Failed to get state for %s, %s: %s",
-                         self.address, self.parameter, err)
-        if self.type == TYPE_ENUM and self._state is not None:
-            return self.value_list[self._state]
+            if self.type == TYPE_ENUM and self._state is not None:
+                return self.value_list[self._state]
+        except Exception as err:
+            LOG.info("number: Failed to get state for %s, %s: %s",
+                     self.address, self.parameter, err)
+            return None
         return self._state
 
     @STATE.setter
     def STATE(self, value):
-        if self.type == TYPE_ENUM:
-            if value in self.value_list:
-                self.proxy.setValue(self.address, self.parameter, value)
-                return
-            LOG.error("number: Invalid value: %s (allowed: %s)",
-                      value, self.value_list)
-        else:
-            if value >= self.min and value <= self.max:
-                self.proxy.setValue(self.address, self.parameter, value)
-                return
-            elif self.special:
-                for special_value in self.special:
-                    if value == special_value[ATTR_HM_VALUE]:
+        try:
+            if self.type == TYPE_ENUM:
+                if value in self.value_list:
+                    self.proxy.setValue(self.address, self.parameter, value)
+                    return
+                LOG.error("number: Invalid value: %s (allowed: %s)",
+                          value, self.value_list)
+            else:
+                if value >= self.min and value <= self.max:
+                    self.proxy.setValue(self.address, self.parameter, value)
+                    return
+                elif self.special:
+                    if [sv for sv in self.special if value == sv[ATTR_HM_VALUE]]:
                         self.proxy.setValue(self.address, self.parameter, value)
                         return
-            LOG.error("number: Invalid value: %s (min: %s, max: %s, special: %s)",
-                      value, self.min, self.max, self.special)
+                LOG.error("number: Invalid value: %s (min: %s, max: %s, special: %s)",
+                          value, self.min, self.max, self.special)
+        except Exception:
+            LOG.exception("number: Failed to set state for %s, %s, %s",
+                          self.address, self.parameter, value)
+
+class input_text(Entity):
+    def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
+        super().__init__(interface_id, "input_text.{}".format(unique_id),
+                         address, parameter, parameter_data)
+
+    @property
+    def STATE(self):
+        try:
+            if self._state is None:
+                self._state = self.proxy.getValue(self.address, self.parameter)
+        except Exception as err:
+            LOG.info("input_text: Failed to get state for %s, %s: %s",
+                     self.address, self.parameter, err)
+            return None
+        return self._state
+
+    @STATE.setter
+    def STATE(self, value):
+        try:
+            self.proxy.setValue(self.address, self.parameter, str(value))
+        except Exception:
+            LOG.exception("input_text: Failed to set state for: %s, %s, %s",
+                          self.address, self.parameter, value)
 
 class sensor(Entity):
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
@@ -154,14 +183,15 @@ class sensor(Entity):
 
     @property
     def STATE(self):
-        if self._state is None:
-            try:
+        try:
+            if self._state is None:
                 self._state = self.proxy.getValue(self.address, self.parameter)
-            except Exception as err:
-                LOG.info("switch: Failed to get state for %s, %s: %s",
-                         self.address, self.parameter, err)
-        if self._state is not None and self.value_list is not None:
-            return self.value_list[self._state]
+            if self._state is not None and self.value_list is not None:
+                return self.value_list[self._state]
+        except Exception as err:
+            LOG.info("switch: Failed to get state for %s, %s: %s",
+                     self.address, self.parameter, err)
+            return None
         return self._state
 
 class switch(Entity):
@@ -173,17 +203,22 @@ class switch(Entity):
     def STATE(self):
         if self.type == TYPE_ACTION:
             return False
-        if self._state is None:
-            try:
+        try:
+            if self._state is None:
                 self._state = self.proxy.getValue(self.address, self.parameter)
-            except Exception as err:
-                LOG.info("switch: Failed to get state for %s, %s: %s",
-                         self.address, self.parameter, err)
+        except Exception as err:
+            LOG.info("switch: Failed to get state for %s, %s: %s",
+                     self.address, self.parameter, err)
+            return None
         return self._state
 
     @STATE.setter
     def STATE(self, value):
-        if self.type == TYPE_ACTION:
-            self.proxy.setValue(self.address, self.parameter, True)
-        else:
-            self.proxy.setValue(self.address, self.parameter, value)
+        try:
+            if self.type == TYPE_ACTION:
+                self.proxy.setValue(self.address, self.parameter, True)
+            else:
+                self.proxy.setValue(self.address, self.parameter, value)
+        except Exception:
+            LOG.exception("switch: Failed to set state for: %s, %s, %s",
+                          self.address, self.parameter, value)
