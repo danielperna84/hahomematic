@@ -132,7 +132,10 @@ class Client():
             verify_tls=self.verify_tls
         )
         self.initialized = 0
-        self.version = self.proxy.getVersion()
+        try:
+            self.version = self.proxy.getVersion()
+        except Exception as err:
+            raise Exception("Failed to get backend version. Not creating client: %s" % self.name) from err
         if 'Homegear' in self.version or 'pydevccu' in self.version:
             self.backend = BACKEND_HOMEGEAR
             self.session = None
