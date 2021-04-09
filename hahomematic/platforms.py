@@ -46,7 +46,7 @@ class Entity(ABC):
         self.unit = self._parameter_data.get(ATTR_HM_UNIT)
         self.max = self._parameter_data.get(ATTR_HM_MAX)
         self.min = self._parameter_data.get(ATTR_HM_MIN)
-        self.value_list = dict(enumerate(self._parameter_data.get(ATTR_HM_VALUE_LIST, []))) or None
+        self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
         self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
         self.name = hahomematic.data.NAMES.get(
             self.interface_id, {}).get(self.address, self.entity_id)
@@ -113,20 +113,18 @@ class binary_sensor(Entity):
             return None
         return self._state
 
-class number(Entity):
+class input_select(Entity):
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
-        super().__init__(interface_id, "number.{}".format(unique_id),
+        super().__init__(interface_id, "input_select.{}".format(unique_id),
                          address, parameter, parameter_data)
 
     @property
     def STATE(self):
         try:
             if self._state is None:
-                self._state = self.proxy.getValue(self.address, self.parameter)
-            if self.type == TYPE_ENUM and self._state is not None:
-                return self.value_list[self._state]
+                self._state = self.value_list[self.proxy.getValue(self.address, self.parameter)]
         except Exception as err:
-            LOG.info("number: Failed to get state for %s, %s, %s: %s",
+            LOG.info("input_select: Failed to get state for %s, %s, %s: %s",
                      self.device_type, self.address, self.parameter, err)
             return None
         return self._state
@@ -134,24 +132,9 @@ class number(Entity):
     @STATE.setter
     def STATE(self, value):
         try:
-            if self.type == TYPE_ENUM:
-                if value in self.value_list:
-                    self.proxy.setValue(self.address, self.parameter, value)
-                    return
-                LOG.error("number: Invalid value: %s (allowed: %s)",
-                          value, self.value_list)
-            else:
-                if value >= self.min and value <= self.max:
-                    self.proxy.setValue(self.address, self.parameter, value)
-                    return
-                elif self.special:
-                    if [sv for sv in self.special if value == sv[ATTR_HM_VALUE]]:
-                        self.proxy.setValue(self.address, self.parameter, value)
-                        return
-                LOG.error("number: Invalid value: %s (min: %s, max: %s, special: %s)",
-                          value, self.min, self.max, self.special)
+            self.proxy.setValue(self.address, self.parameter, self.value_list.index(value))
         except Exception:
-            LOG.exception("number: Failed to set state for %s, %s, %s, %s",
+            LOG.exception("input_select: Failed to set state for: %s, %s, %s, %s",
                           self.device_type, self.address, self.parameter, value)
 
 class input_text(Entity):
@@ -176,6 +159,38 @@ class input_text(Entity):
             self.proxy.setValue(self.address, self.parameter, str(value))
         except Exception:
             LOG.exception("input_text: Failed to set state for: %s, %s, %s, %s",
+                          self.device_type, self.address, self.parameter, value)
+
+class number(Entity):
+    def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
+        super().__init__(interface_id, "number.{}".format(unique_id),
+                         address, parameter, parameter_data)
+
+    @property
+    def STATE(self):
+        try:
+            if self._state is None:
+                self._state = self.proxy.getValue(self.address, self.parameter)
+        except Exception as err:
+            LOG.info("number: Failed to get state for %s, %s, %s: %s",
+                     self.device_type, self.address, self.parameter, err)
+            return None
+        return self._state
+
+    @STATE.setter
+    def STATE(self, value):
+        try:
+            if value >= self.min and value <= self.max:
+                self.proxy.setValue(self.address, self.parameter, value)
+                return
+            elif self.special:
+                if [sv for sv in self.special if value == sv[ATTR_HM_VALUE]]:
+                    self.proxy.setValue(self.address, self.parameter, value)
+                    return
+            LOG.error("number: Invalid value: %s (min: %s, max: %s, special: %s)",
+                        value, self.min, self.max, self.special)
+        except Exception:
+            LOG.exception("number: Failed to set state for %s, %s, %s, %s",
                           self.device_type, self.address, self.parameter, value)
 
 class sensor(Entity):

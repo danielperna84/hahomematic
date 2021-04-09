@@ -9,6 +9,7 @@ import hahomematic.data
 from hahomematic.helpers import generate_unique_id
 from hahomematic.platforms import (
     binary_sensor,
+    input_select,
     input_text,
     number,
     sensor,
@@ -66,7 +67,16 @@ def create_entity(address, parameter, parameter_data, interface_id):
                 hahomematic.data.ENTITIES[entity_id] = switch(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
-            elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER, TYPE_ENUM]:
+            elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
+                LOG.debug("create_entity: input_select: %s %s", address, parameter)
+                entity_id = "input_select.{}".format(unique_id).replace('-', '_').lower()
+                if entity_id in hahomematic.data.ENTITIES:
+                    LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
+                    return
+                hahomematic.data.ENTITIES[entity_id] = input_select(
+                    interface_id, unique_id, address, parameter, parameter_data
+                )
+            elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
                 LOG.debug("create_entity: number: %s %s", address, parameter)
                 entity_id = "number.{}".format(unique_id).replace('-', '_').lower()
                 if entity_id in hahomematic.data.ENTITIES:
