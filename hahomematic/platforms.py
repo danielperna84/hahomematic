@@ -12,12 +12,14 @@ from hahomematic.const import (
     ATTR_HM_ID,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
+    ATTR_HM_OPERATIONS,
     ATTR_HM_PARENT_TYPE,
     ATTR_HM_SPECIAL,
     ATTR_HM_TYPE,
     ATTR_HM_UNIT,
     ATTR_HM_VALUE,
     ATTR_HM_VALUE_LIST,
+    OPERATION_READ,
     TYPE_ACTION,
     TYPE_ENUM,
 )
@@ -41,6 +43,7 @@ class Entity(ABC):
         self.device_type = hahomematic.data.DEVICES_RAW_DICT[self.interface_id][self.address].get(ATTR_HM_PARENT_TYPE)
         self.parameter = parameter
         self._parameter_data = parameter_data
+        self.operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
         self.type = self._parameter_data.get(ATTR_HM_TYPE)
         self.control = self._parameter_data.get(ATTR_HM_CONTROL)
         self.unit = self._parameter_data.get(ATTR_HM_UNIT)
@@ -105,7 +108,7 @@ class binary_sensor(Entity):
     @property
     def STATE(self):
         try:
-            if self._state is None:
+            if self._state is None and self.operations & OPERATION_READ:
                 self._state = self.proxy.getValue(self.address, self.parameter)
         except Exception as err:
             LOG.info("binary_sensor: Failed to get state for %s, %s, %s: %s",
@@ -121,7 +124,7 @@ class input_select(Entity):
     @property
     def STATE(self):
         try:
-            if self._state is None:
+            if self._state is None and self.operations & OPERATION_READ:
                 self._state = self.value_list[self.proxy.getValue(self.address, self.parameter)]
         except Exception as err:
             LOG.info("input_select: Failed to get state for %s, %s, %s: %s",
@@ -145,7 +148,7 @@ class input_text(Entity):
     @property
     def STATE(self):
         try:
-            if self._state is None:
+            if self._state is None and self.operations & OPERATION_READ:
                 self._state = self.proxy.getValue(self.address, self.parameter)
         except Exception as err:
             LOG.info("input_text: Failed to get state for %s, %s, %s: %s",
@@ -169,7 +172,7 @@ class number(Entity):
     @property
     def STATE(self):
         try:
-            if self._state is None:
+            if self._state is None and self.operations & OPERATION_READ:
                 self._state = self.proxy.getValue(self.address, self.parameter)
         except Exception as err:
             LOG.info("number: Failed to get state for %s, %s, %s: %s",
@@ -201,7 +204,7 @@ class sensor(Entity):
     @property
     def STATE(self):
         try:
-            if self._state is None:
+            if self._state is None and self.operations & OPERATION_READ:
                 self._state = self.proxy.getValue(self.address, self.parameter)
             if self._state is not None and self.value_list is not None:
                 return self.value_list[self._state]
@@ -221,7 +224,7 @@ class switch(Entity):
         if self.type == TYPE_ACTION:
             return False
         try:
-            if self._state is None:
+            if self._state is None and self.operations & OPERATION_READ:
                 self._state = self.proxy.getValue(self.address, self.parameter)
         except Exception as err:
             LOG.info("switch: Failed to get state for %s, %s, %s: %s",
