@@ -77,7 +77,9 @@ EVENTS_FORWARD = [
 
 # Parameters within the paramsets for which we don't create entities.
 IGNORED_PARAMETERS = [
-    EVENT_STICKY_UNREACH
+    'DEVICE_IN_BOOTLOADER',
+    'INSTALL_TEST',
+    'STICKY_UNREACH'
 ]
 
 BACKEND_UNKNOWN = 0
