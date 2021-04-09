@@ -7,8 +7,17 @@ import hahomematic
 logging.basicConfig(level=logging.DEBUG)
 LOG = logging.getLogger(__name__)
 
+SLEEPCOUNTER = 0
+GOT_DEVICES = False
+
 def systemcallback(src, *args):
+    global GOT_DEVICES
     print("systemcallback: %s" % src)
+    if src == hahomematic.const.HH_EVENT_NEW_DEVICES:
+        print("Number of new device descriptions: %i" % len(args[0]))
+        return
+    elif src == hahomematic.const.HH_EVENT_ENTITIES_CREATED:
+        GOT_DEVICES = True
     for arg in args:
         print("argument: %s" % arg)
 
@@ -50,14 +59,13 @@ client1.proxy_init()
 client2.proxy_init()
 client3.proxy_init()
 
-SLEEPCOUNTER = 0
-
-while not hahomematic.data.HA_DEVICES and SLEEPCOUNTER < 20:
+while not GOT_DEVICES and SLEEPCOUNTER < 20:
     print("Waiting for devices")
     SLEEPCOUNTER += 1
     time.sleep(1)
-time.sleep(5)
 print(hahomematic.data.HA_DEVICES)
+time.sleep(5)
+
 for i in range(16):
     if i % 4 == 0:
         for client in hahomematic.data.CLIENTS:
