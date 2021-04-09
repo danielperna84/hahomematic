@@ -234,6 +234,8 @@ class Server(threading.Thread):
         """
         LOG.info("Server.run: Creating entities and starting server at http://%s:%i",
                  self.local_ip, self.local_port)
+        if not data.CLIENTS:
+            raise Exception("No clients initialized. Not starting server.")
         try:
             create_entities()
         except Exception as err:
