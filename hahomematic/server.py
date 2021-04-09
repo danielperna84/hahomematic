@@ -28,6 +28,7 @@ from hahomematic.const import (
     HH_EVENT_READDED_DEVICE,
     HH_EVENT_REPLACE_DEVICE,
     TYPE_ACTION,
+    TYPE_FLOAT,
     IP_ANY_V4,
     PORT_ANY,
 )
@@ -311,8 +312,11 @@ def create_entity_objects(interface_id, main_address, channels):
             continue
         for paramset in data.PARAMSETS[interface_id][channel]:
             for parameter, parameter_data in data.PARAMSETS[interface_id][channel][paramset].items():
-                if not parameter_data[ATTR_HM_OPERATIONS] & 4 and not parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
-                    LOG.debug("create_entity_objects: Skipping %s (no event, no action)", parameter)
+                if not parameter_data[ATTR_HM_OPERATIONS] & 4 and \
+                   not parameter_data[ATTR_HM_TYPE] == TYPE_ACTION and \
+                   not parameter_data[ATTR_HM_TYPE] == TYPE_FLOAT:
+                    LOG.debug("create_entity_objects: Skipping %s (no event, no action, no float)",
+                              parameter)
                     continue
                 entity_id = create_entity(channel, parameter, parameter_data, interface_id)
                 if entity_id is not None:
