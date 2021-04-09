@@ -2,6 +2,8 @@
 Constants used by hahomematic.
 """
 
+VERSION = '0.0.2'
+
 LOCALHOST = 'localhost'
 IP_LOCALHOST_V4 = '127.0.0.1'
 IP_LOCALHOST_V6 = '::1'
