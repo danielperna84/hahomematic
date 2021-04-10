@@ -35,10 +35,13 @@ class Device():
     """
     Object to hold information about a device and associated entities.
     """
-    def __init__(self, interface_id, address, channels):
+    def __init__(self, interface_id, address):
+        """
+        Initialize the device object.
+        """
         self.interface_id = interface_id
         self.address = address
-        self.channels = channels
+        self.channels = hahomematic.data.DEVICES[self.interface_id][self.address]
         LOG.debug("Device.__init__: Initializing device: %s, %s",
                   self.interface_id, self.address)
         self.entities = set()
@@ -51,6 +54,12 @@ class Device():
         self.client = hahomematic.data.CLIENTS[self.interface_id]
         LOG.debug("Device.__init__: Initialized device: %s, %s, %s, %s",
                   self.interface_id, self.address, self.device_type, self.name)
+
+    def __str__(self):
+        """
+        Provide some useful information.
+        """
+        return f'address: {self.address}, type: {self.device_type}, name: {self.name}, entities: {self.entities}'
 
     def create_entities(self):
         """

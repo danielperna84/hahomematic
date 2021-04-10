@@ -290,22 +290,22 @@ def create_devices():
         if interface_id not in data.PARAMSETS:
             LOG.warning("create_devices: Skipping interface %s, missing paramsets.", interface_id)
             continue
-        for main_address, channels in data.DEVICES[interface_id].items():
+        for device_address in data.DEVICES[interface_id]:
             # Do we check for duplicates here? For now we do.
-            if main_address in data.HA_DEVICES:
+            if device_address in data.HA_DEVICES:
                 LOG.warning("create_devices: Skipping device %s on %s, already exists.",
-                            main_address, interface_id)
+                            device_address, interface_id)
                 continue
             try:
-                data.HA_DEVICES[main_address] = Device(interface_id, main_address, channels)
+                data.HA_DEVICES[device_address] = Device(interface_id, device_address)
             except Exception:
                 LOG.exception("create_devices: Failed to create device: %s, %s",
-                              interface_id, main_address)
+                              interface_id, device_address)
             try:
-                data.HA_DEVICES[main_address].create_entities()
+                data.HA_DEVICES[device_address].create_entities()
             except Exception:
                 LOG.exception("create_devices: Failed to create entities: %s, %s",
-                              interface_id, main_address)
+                              interface_id, device_address)
     if callable(config.CALLBACK_SYSTEM):
         # pylint: disable=not-callable
         config.CALLBACK_SYSTEM(HH_EVENT_DEVICES_CREATED)
