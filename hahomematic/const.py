@@ -40,7 +40,9 @@ RELEVANT_PARAMSETS = [
 ]
 
 HH_EVENT_DELETE_DEVICES = 'deleteDevices'
+HH_EVENT_DEVICES_CREATED = 'devicesCreated'
 HH_EVENT_ENTITIES_CREATED = 'entitiesCreated'
+HH_EVENT_ENTITY_CREATED = 'entitiyCreated'
 HH_EVENT_ERROR = 'error'
 HH_EVENT_LIST_DEVICES = 'listDevices'
 HH_EVENT_NEW_DEVICES = 'newDevices'

@@ -2,6 +2,7 @@
 Functions for entity creation.
 """
 
+from abc import ABC, abstractmethod
 import logging
 
 import hahomematic.config
@@ -29,6 +30,48 @@ from hahomematic.const import (
 )
 
 LOG = logging.getLogger(__name__)
+
+class Device():
+    """
+    Object to hold information about a device and associated entities.
+    """
+    def __init__(self, interface_id, address, channels):
+        self.interface_id = interface_id
+        self.address = address
+        self.channels = channels
+        LOG.debug("Device.__init__: Initializing device: %s, %s",
+                  self.interface_id, self.address)
+        self.entities = set()
+        self.device_type = hahomematic.data.DEVICES_RAW_DICT[self.interface_id][self.address][ATTR_HM_TYPE]
+        if self.address in hahomematic.data.NAMES.get(self.interface_id, {}):
+            self.name = hahomematic.data.NAMES[self.interface_id][self.address]
+        else:
+            LOG.info("Device.__init__: Using auto-generated name for %s %s", self.device_type, self.address)
+            self.name = "{}_{}".format(self.device_type, self.address)
+        self.client = hahomematic.data.CLIENTS[self.interface_id]
+        LOG.debug("Device.__init__: Initialized device: %s, %s, %s, %s",
+                  self.interface_id, self.address, self.device_type, self.name)
+
+    def create_entities(self):
+        """
+        Create the entities associated to this device.
+        """
+        for channel in self.channels:
+            if channel not in hahomematic.data.PARAMSETS[self.interface_id]:
+                LOG.warning("Device.create_entities: Skipping channel %s, missing paramsets.", channel)
+                continue
+            for paramset in hahomematic.data.PARAMSETS[self.interface_id][channel]:
+                for parameter, parameter_data in hahomematic.data.PARAMSETS[self.interface_id][channel][paramset].items():
+                    if not parameter_data[ATTR_HM_OPERATIONS] & 4 and \
+                    not parameter_data[ATTR_HM_TYPE] == TYPE_ACTION and \
+                    not parameter_data[ATTR_HM_TYPE] == TYPE_FLOAT:
+                        LOG.debug("Device.create_entities: Skipping %s (no event, no action, no float)",
+                                  parameter)
+                        continue
+                    entity_id = create_entity(channel, parameter, parameter_data, self.interface_id)
+                    if entity_id is not None:
+                        hahomematic.data.HA_DEVICES[self.address].entities.add(entity_id)
+        # TODO: Hook for custom entity based on `self.device_type`
 
 def create_entity(address, parameter, parameter_data, interface_id):
     """

@@ -16,7 +16,7 @@ def systemcallback(src, *args):
     if src == hahomematic.const.HH_EVENT_NEW_DEVICES:
         print("Number of new device descriptions: %i" % len(args[0]))
         return
-    elif src == hahomematic.const.HH_EVENT_ENTITIES_CREATED:
+    elif src == hahomematic.const.HH_EVENT_DEVICES_CREATED:
         GOT_DEVICES = True
     for arg in args:
         print("argument: %s" % arg)
