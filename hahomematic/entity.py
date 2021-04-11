@@ -1,8 +1,9 @@
+# pylint: disable=line-too-long
+
 """
 Functions for entity creation.
 """
 
-from abc import ABC, abstractmethod
 import logging
 
 import hahomematic.config
@@ -17,10 +18,10 @@ from hahomematic.platforms import (
     switch,
 )
 from hahomematic.const import (
-    ATTR_HM_CONTROL,
     ATTR_HM_OPERATIONS,
     ATTR_HM_TYPE,
     IGNORED_PARAMETERS,
+    OPERATION_WRITE,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_ENUM,
@@ -82,6 +83,7 @@ class Device():
                         hahomematic.data.HA_DEVICES[self.address].entities.add(entity_id)
         # TODO: Hook for custom entity based on `self.device_type`
 
+# pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
 def create_entity(address, parameter, parameter_data, interface_id):
     """
     Helper that looks at the paramsets, decides which default
@@ -90,7 +92,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
     if parameter in IGNORED_PARAMETERS:
         LOG.debug("create_entity: Ignoring parameter: %s (%s)",
                   parameter, address)
-        return
+        return None
     if (address, parameter) not in hahomematic.data.EVENT_SUBSCRIPTIONS:
         hahomematic.data.EVENT_SUBSCRIPTIONS[(address, parameter)] = []
     unique_id = generate_unique_id(address, parameter)
@@ -99,13 +101,13 @@ def create_entity(address, parameter, parameter_data, interface_id):
     LOG.debug("create_entity: Creating entity (%s, %s, %s)",
               address, parameter, interface_id)
     entity_id = None
-    if parameter_data[ATTR_HM_OPERATIONS] & 2:
+    if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
         if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
             LOG.debug("create_entity: switch (action): %s %s", address, parameter)
             entity_id = "switch.{}".format(unique_id).replace('-', '_').lower()
             if entity_id in hahomematic.data.ENTITIES:
                 LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                return
+                return None
             hahomematic.data.ENTITIES[entity_id] = switch(
                 interface_id, unique_id, address, parameter, parameter_data
             )
@@ -115,7 +117,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
                 entity_id = "switch.{}".format(unique_id).replace('-', '_').lower()
                 if entity_id in hahomematic.data.ENTITIES:
                     LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                    return
+                    return None
                 hahomematic.data.ENTITIES[entity_id] = switch(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
@@ -124,7 +126,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
                 entity_id = "input_select.{}".format(unique_id).replace('-', '_').lower()
                 if entity_id in hahomematic.data.ENTITIES:
                     LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                    return
+                    return None
                 hahomematic.data.ENTITIES[entity_id] = input_select(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
@@ -133,7 +135,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
                 entity_id = "number.{}".format(unique_id).replace('-', '_').lower()
                 if entity_id in hahomematic.data.ENTITIES:
                     LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                    return
+                    return None
                 hahomematic.data.ENTITIES[entity_id] = number(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
@@ -142,7 +144,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
                 entity_id = "input_text.{}".format(unique_id).replace('-', '_').lower()
                 if entity_id in hahomematic.data.ENTITIES:
                     LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                    return
+                    return None
                 hahomematic.data.ENTITIES[entity_id] = input_text(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
@@ -155,7 +157,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
             entity_id = "binary_sensor.{}".format(unique_id).replace('-', '_').lower()
             if entity_id in hahomematic.data.ENTITIES:
                 LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                return
+                return None
             hahomematic.data.ENTITIES[entity_id] = binary_sensor(
                 interface_id, unique_id, address, parameter, parameter_data
             )
@@ -164,7 +166,7 @@ def create_entity(address, parameter, parameter_data, interface_id):
             entity_id = "sensor.{}".format(unique_id).replace('-', '_').lower()
             if entity_id in hahomematic.data.ENTITIES:
                 LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                return
+                return None
             hahomematic.data.ENTITIES[entity_id] = sensor(
                 interface_id, unique_id, address, parameter, parameter_data
             )
