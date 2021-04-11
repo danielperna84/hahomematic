@@ -259,6 +259,8 @@ class Server(threading.Thread):
         LOG.debug("Server.stop: Stopping Server")
         self.server.server_close()
         LOG.info("Server.stop: Server stopped")
+        LOG.debug("Server.stop: Setting data.SERVER to None")
+        data.SERVER = None
 
 def handle_device_descriptions(interface_id, dev_descriptions):
     """
