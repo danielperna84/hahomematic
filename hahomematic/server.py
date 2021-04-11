@@ -15,8 +15,6 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler
 
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
-    ATTR_HM_OPERATIONS,
-    ATTR_HM_TYPE,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     HH_EVENT_DELETE_DEVICES,
@@ -27,14 +25,12 @@ from hahomematic.const import (
     HH_EVENT_UPDATE_DEVICE,
     HH_EVENT_READDED_DEVICE,
     HH_EVENT_REPLACE_DEVICE,
-    TYPE_ACTION,
-    TYPE_FLOAT,
     IP_ANY_V4,
     PORT_ANY,
 )
 from hahomematic import data, config
 from hahomematic.decorators import systemcallback, eventcallback
-from hahomematic.entity import Device
+from hahomematic.device import Device
 
 LOG = logging.getLogger(__name__)
 
