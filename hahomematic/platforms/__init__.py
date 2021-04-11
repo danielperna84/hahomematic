@@ -1,5 +1,7 @@
 """
-The base platform classes.
+The base platform classes. Customized classes for dedicated
+Home Assistant platforms should be in the corresponding
+platform module.
 """
 
 import logging
@@ -51,6 +53,7 @@ class Entity(ABC):
         self.min = self._parameter_data.get(ATTR_HM_MIN)
         self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
         self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
+        self.device_class = None
         self.name = hahomematic.data.NAMES.get(
             self.interface_id, {}).get(self.address, self.entity_id)
         self._state = None
@@ -101,6 +104,10 @@ class Entity(ABC):
         ...
 
 class binary_sensor(Entity):
+    """
+    Implementation of a binary_sensor (https://www.home-assistant.io/integrations/binary_sensor/).
+    This is a default platform that gets automatically generated.
+    """
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
         super().__init__(interface_id, "binary_sensor.{}".format(unique_id),
                          address, parameter, parameter_data)
@@ -117,6 +124,10 @@ class binary_sensor(Entity):
         return self._state
 
 class input_select(Entity):
+    """
+    Implementation of a input_select (https://www.home-assistant.io/integrations/input_select/).
+    This is a default platform that gets automatically generated.
+    """
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
         super().__init__(interface_id, "input_select.{}".format(unique_id),
                          address, parameter, parameter_data)
@@ -141,6 +152,10 @@ class input_select(Entity):
                           self.device_type, self.address, self.parameter, value)
 
 class input_text(Entity):
+    """
+    Implementation of a input_text (https://www.home-assistant.io/integrations/input_text/).
+    This is a default platform that gets automatically generated.
+    """
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
         super().__init__(interface_id, "input_text.{}".format(unique_id),
                          address, parameter, parameter_data)
@@ -165,6 +180,10 @@ class input_text(Entity):
                           self.device_type, self.address, self.parameter, value)
 
 class number(Entity):
+    """
+    Implementation of a number (https://www.home-assistant.io/integrations/number/).
+    This is a default platform that gets automatically generated.
+    """
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
         super().__init__(interface_id, "number.{}".format(unique_id),
                          address, parameter, parameter_data)
@@ -197,6 +216,10 @@ class number(Entity):
                           self.device_type, self.address, self.parameter, value)
 
 class sensor(Entity):
+    """
+    Implementation of a sensor (https://www.home-assistant.io/integrations/sensor/).
+    This is a default platform that gets automatically generated.
+    """
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
         super().__init__(interface_id, "sensor.{}".format(unique_id),
                          address, parameter, parameter_data)
@@ -215,6 +238,10 @@ class sensor(Entity):
         return self._state
 
 class switch(Entity):
+    """
+    Implementation of a switch (https://www.home-assistant.io/integrations/switch/).
+    This is a default platform that gets automatically generated.
+    """
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
         super().__init__(interface_id, "switch.{}".format(unique_id),
                          address, parameter, parameter_data)
