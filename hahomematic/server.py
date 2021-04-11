@@ -60,6 +60,15 @@ class RPCFunctions():
             except Exception:
                 LOG.exception("RPCFunctions.event: Failed to call callback for: %s, %s, %s",
                               interface_id, address, value_key)
+        if ':' in address:
+            device_address = address.split(':')[0]
+            if device_address in data.EVENT_SUBSCRIPTIONS_DEVICE:
+                try:
+                    for callback in data.EVENT_SUBSCRIPTIONS_DEVICE[device_address]:
+                        callback(interface_id, address, value_key, value)
+                except Exception:
+                    LOG.exception("RPCFunctions.event: Failed to call device-callback for: %s, %s, %s",
+                                    interface_id, address, value_key)
         return True
 
     @systemcallback(HH_EVENT_ERROR)
