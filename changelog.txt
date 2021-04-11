@@ -5,6 +5,7 @@ Version 0.0.2 (2021-)
 - Create `number` for type `FLOAT` for parameters with only write-flag
 - Add exceptions to abort startup under certain conditions
 - Refactoring, introduce `Device` class
+- Allow to fetch single paramset on demand
 
 Version 0.0.1 (2021-04-08)
 - Initial testing release

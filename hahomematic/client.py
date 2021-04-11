@@ -473,6 +473,26 @@ class Client():
         except Exception:
             LOG.exception("put_paramset: Exception")
 
+    def fetch_paramset(self, address, paramset, update=False):
+        """
+        Fetch a specific paramset and add it to the known ones.
+        """
+        if self.id not in data.PARAMSETS:
+            data.PARAMSETS[self.id] = {}
+        if address not in data.PARAMSETS[self.id]:
+            data.PARAMSETS[self.id][address] = {}
+        if not paramset in data.PARAMSETS[self.id][address] or update:
+            LOG.debug("Fetching paramset %s for %s", paramset, address)
+            if not data.PARAMSETS[self.id][address]:
+                data.PARAMSETS[self.id][address] = {}
+            try:
+                data.PARAMSETS[self.id][address][paramset] = \
+                    self.proxy.getParamsetDescription(address, paramset)
+            except Exception:
+                LOG.exception("Unable to get paramset %s for address %s.",
+                              paramset, address)
+        save_paramsets()
+
     def fetch_paramsets(self, device_description, update=False):
         """
         Fetch paramsets for provided device description.
