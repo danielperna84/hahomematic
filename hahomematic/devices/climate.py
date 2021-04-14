@@ -24,6 +24,21 @@ ENTITY_BOOST_MODE = 'ENTITY_BOOST_MODE'
 ENTITY_COMFORT_MODE = 'ENTITY_COMFORT_MODE'
 ENTITY_LOWERING_MODE = 'ENTITY_LOWERING_MODE'
 
+HM_MODE_AUTO = 0
+HM_MODE_MANU = 1
+HM_MODE_AWAY = 2
+HM_MODE_BOOST = 3
+HM_MODE_AUTO_ENUM = 'AUTO-MODE'
+HM_MODE_MANU_ENUM = 'MANU-MODE'
+HM_MODE_AWAY_ENUM = 'PARTY-MODE'
+HM_MODE_BOOST_ENUM = 'BOOST-MODE'
+HM_MODE_ENUM_MAP = {
+    HM_MODE_AUTO_ENUM: HM_MODE_AUTO,
+    HM_MODE_MANU_ENUM: HM_MODE_MANU,
+    HM_MODE_AWAY_ENUM: HM_MODE_AWAY,
+    HM_MODE_BOOST_ENUM: HM_MODE_BOOST,
+}
+
 ATTR_TEMPERATURE = "temperature"
 HVAC_MODE_OFF = 'off'
 HVAC_MODE_HEAT = 'heat'
@@ -39,15 +54,15 @@ SUPPORT_PRESET_MODE = 16
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 # pylint: disable=too-many-instance-attributes
-class SimpleRFDThermostat(climate):
+class SimpleThermostat(climate):
     """
-    Simple classic HomeMatic RFD thermostat HM-CC-TC.
+    Simple classic HomeMatic thermostat HM-CC-TC.
     This implementation reuses the existing entities associated
     to this device.
     """
     # pylint: disable=too-many-arguments
     def __init__(self, interface_id, address, entity_id, unique_id, entities):
-        LOG.debug("SimpleRFDThermostat.__init__(%s, %s, %s, %s)",
+        LOG.debug("SimpleThermostat.__init__(%s, %s, %s, %s)",
                   interface_id, address, entity_id, unique_id)
         self.interface_id = interface_id
         self.address = address
@@ -73,7 +88,7 @@ class SimpleRFDThermostat(climate):
         Handle event for this device.
         """
         if interface_id == self.interface_id:
-            LOG.debug("SimpleRFDThermostat.event(%s, %s, %s, %s)",
+            LOG.debug("SimpleThermostat.event(%s, %s, %s, %s)",
                       interface_id, address, value_key, value)
             self.update_entity()
 
@@ -82,7 +97,7 @@ class SimpleRFDThermostat(climate):
         Do what is needed when the state of the entity has been updated.
         """
         if self.update_callback is None:
-            LOG.debug("SimpleRFDThermostat.update_entity: No callback defined.")
+            LOG.debug("SimpleThermostat.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
         self.update_callback(self.entity_id)
@@ -147,15 +162,15 @@ class SimpleRFDThermostat(climate):
             return None
         data.ENTITIES[self._entity_set_temperature].STATE = float(temperature)
 
-class RFDThermostat(climate):
+class Thermostat(climate):
     """
-    Classic HomeMatic RFD thermostat like HM-CC-RT-DN.
+    Classic HomeMatic thermostat like HM-CC-RT-DN.
     This implementation reuses the existing entities associated
     to this device.
     """
     # pylint: disable=too-many-arguments
     def __init__(self, interface_id, address, entity_id, unique_id, entities):
-        LOG.debug("RFDThermostat.__init__(%s, %s, %s, %s)",
+        LOG.debug("Thermostat.__init__(%s, %s, %s, %s)",
                   interface_id, address, entity_id, unique_id)
         self.interface_id = interface_id
         self.address = address
@@ -187,7 +202,7 @@ class RFDThermostat(climate):
         Handle event for this device.
         """
         if interface_id == self.interface_id:
-            LOG.debug("RFDThermostat.event(%s, %s, %s, %s)",
+            LOG.debug("Thermostat.event(%s, %s, %s, %s)",
                       interface_id, address, value_key, value)
             self.update_entity()
 
@@ -196,7 +211,7 @@ class RFDThermostat(climate):
         Do what is needed when the state of the entity has been updated.
         """
         if self.update_callback is None:
-            LOG.debug("RFDThermostat.update_entity: No callback defined.")
+            LOG.debug("Thermostat.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
         self.update_callback(self.entity_id)
@@ -204,11 +219,10 @@ class RFDThermostat(climate):
     @property
     def _hm_control_mode(self):
         """
-        Return current control mode.
-        Will be one of: ['AUTO-MODE', 'MANU-MODE', 'PARTY-MODE', 'BOOST-MODE']
-        (for HM-CC-RT-DN)
+        Return current control mode. Will always be an integer.
         """
-        return data.ENTITIES[self._entity_control_mode].STATE
+        # pylint: disable=protected-access
+        return data.ENTITIES[self._entity_control_mode]._state
 
     @property
     def supported_features(self):
@@ -240,7 +254,7 @@ class RFDThermostat(climate):
         """Return hvac operation mode."""
         if data.ENTITIES[self._entity_set_temperature].STATE <= self.min_temp:
             return HVAC_MODE_OFF
-        if self._hm_control_mode == 'MANU-MODE':
+        if self._hm_control_mode == HM_MODE_MANU:
             return HVAC_MODE_HEAT
         return HVAC_MODE_AUTO
 
@@ -255,9 +269,9 @@ class RFDThermostat(climate):
         control_mode = self._hm_control_mode
         if control_mode is None:
             return PRESET_NONE
-        if control_mode == 'BOOST-MODE':
+        if control_mode == HM_MODE_BOOST:
             return PRESET_BOOST
-        # elif control_mode == 'PARTY-MODE':
+        # elif control_mode == HM_MODE_AWAY:
         #     return PRESET_AWAY
         # This mode (PRESET_AWY) generally is available, but we're hiding it because
         # we can't set it from the Home Assistant UI natively.
@@ -319,93 +333,93 @@ class RFDThermostat(climate):
         elif preset_mode == PRESET_ECO:
             data.ENTITIES[self._entity_lowering_mode].STATE = True
 
-def make_simple_rfd_thermostat(interface_id, address):
+def make_simple_thermostat(interface_id, address):
     """
-    Helper to create SimpleRDFThermostat entities.
+    Helper to create SimpleThermostat entities.
     """
     unique_id = generate_unique_id(address)
     entity_id = "climate.{}".format(unique_id)
     if entity_id in data.ENTITIES:
-        LOG.debug("make_simple_rfd_thermostat: Skipping %s (already exists)", entity_id)
+        LOG.debug("make_simple_thermostat: Skipping %s (already exists)", entity_id)
     device_entities = {
-        ENTITY_ACTUAL_TEMPERATURE: f"number.{unique_id}_1_temperature",
+        ENTITY_ACTUAL_TEMPERATURE: f"sensor.{unique_id}_1_temperature",
         ENTITY_HUMIDITY: f"sensor.{unique_id}_1_humidity",
         ENTITY_SET_TEMPERATURE: f"number.{unique_id}_2_setpoint",
     }
-    data.ENTITIES[entity_id] = SimpleRFDThermostat(interface_id, address, entity_id, unique_id, device_entities)
+    data.ENTITIES[entity_id] = SimpleThermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
 
-def make_rfd_thermostat(interface_id, address):
+def make_thermostat(interface_id, address):
     """
-    Helper to create RDFThermostat entities.
+    Helper to create Thermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
     entity_id = "climate.{}".format(unique_id)
     if entity_id in data.ENTITIES:
-        LOG.debug("make_rfd_thermostat: Skipping %s (already exists)", entity_id)
+        LOG.debug("make_thermostat: Skipping %s (already exists)", entity_id)
     device_entities = {
-        ENTITY_ACTUAL_TEMPERATURE: f"number.{unique_id}_4_actual_temperature",
+        ENTITY_ACTUAL_TEMPERATURE: f"sensor.{unique_id}_4_actual_temperature",
         ENTITY_SET_TEMPERATURE: f"number.{unique_id}_4_set_temperature",
         ENTITY_CONTROL_MODE: f"sensor.{unique_id}_4_control_mode",
         ENTITY_AUTO_MODE: f"switch.{unique_id}_4_auto_mode",
-        ENTITY_MANU_MODE: f"switch.{unique_id}_4_manu_mode",
+        ENTITY_MANU_MODE: f"number.{unique_id}_4_manu_mode",
         ENTITY_BOOST_MODE: f"switch.{unique_id}_4_boost_mode",
         ENTITY_COMFORT_MODE: f"switch.{unique_id}_4_comfort_mode",
         ENTITY_LOWERING_MODE: f"switch.{unique_id}_4_lowering_mode",
     }
-    data.ENTITIES[entity_id] = RFDThermostat(interface_id, address, entity_id, unique_id, device_entities)
+    data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
 
-def make_rfd_wall_thermostat(interface_id, address):
+def make_wall_thermostat(interface_id, address):
     """
-    Helper to create RDFThermostat entities.
+    Helper to create Thermostat entities for wall-thermostats.
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
     entity_id = "climate.{}".format(unique_id)
     if entity_id in data.ENTITIES:
-        LOG.debug("make_rfd_wall_thermostat: Skipping %s (already exists)", entity_id)
+        LOG.debug("make_wall_thermostat: Skipping %s (already exists)", entity_id)
     device_entities = {
-        ENTITY_ACTUAL_TEMPERATURE: f"number.{unique_id}_2_actual_temperature",
+        ENTITY_ACTUAL_TEMPERATURE: f"sensor.{unique_id}_2_actual_temperature",
         ENTITY_SET_TEMPERATURE: f"number.{unique_id}_2_set_temperature",
         ENTITY_CONTROL_MODE: f"sensor.{unique_id}_2_control_mode",
         ENTITY_AUTO_MODE: f"switch.{unique_id}_2_auto_mode",
-        ENTITY_MANU_MODE: f"switch.{unique_id}_2_manu_mode",
+        ENTITY_MANU_MODE: f"number.{unique_id}_2_manu_mode",
         ENTITY_BOOST_MODE: f"switch.{unique_id}_2_boost_mode",
         ENTITY_COMFORT_MODE: f"switch.{unique_id}_2_comfort_mode",
         ENTITY_LOWERING_MODE: f"switch.{unique_id}_2_lowering_mode",
         ENTITY_HUMIDITY: f"sensor.{unique_id}_2_humidity",
     }
-    data.ENTITIES[entity_id] = RFDThermostat(interface_id, address, entity_id, unique_id, device_entities)
+    data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
 
-def make_rfd_group_thermostat(interface_id, address):
+def make_group_thermostat(interface_id, address):
     """
-    Helper to create RDFThermostat entities.
+    Helper to create Thermostat entities for heating groups.
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
     entity_id = "climate.{}".format(unique_id)
     if entity_id in data.ENTITIES:
-        LOG.debug("make_rfd_group_thermostat: Skipping %s (already exists)", entity_id)
+        LOG.debug("make_group_thermostat: Skipping %s (already exists)", entity_id)
     device_entities = {
-        ENTITY_ACTUAL_TEMPERATURE: f"number.{unique_id}_1_actual_temperature",
+        ENTITY_ACTUAL_TEMPERATURE: f"sensor.{unique_id}_1_actual_temperature",
         ENTITY_SET_TEMPERATURE: f"number.{unique_id}_1_set_temperature",
         ENTITY_CONTROL_MODE: f"sensor.{unique_id}_1_control_mode",
         ENTITY_AUTO_MODE: f"switch.{unique_id}_1_auto_mode",
-        ENTITY_MANU_MODE: f"switch.{unique_id}_1_manu_mode",
+        ENTITY_MANU_MODE: f"number.{unique_id}_1_manu_mode",
         ENTITY_BOOST_MODE: f"switch.{unique_id}_1_boost_mode",
         ENTITY_COMFORT_MODE: f"switch.{unique_id}_1_comfort_mode",
         ENTITY_LOWERING_MODE: f"switch.{unique_id}_1_lowering_mode",
     }
-    data.ENTITIES[entity_id] = RFDThermostat(interface_id, address, entity_id, unique_id, device_entities)
+    data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
 
 DEVICES = {
-    'HM-CC-TC': make_simple_rfd_thermostat,
-    'HM-CC-RT-DN': make_rfd_thermostat,
-    'HM-CC-RT-DN-BoM': make_rfd_thermostat,
-    'HM-TC-IT-WM-W-EU': make_rfd_wall_thermostat,
-    'HM-CC-VG-1': make_rfd_group_thermostat,
+    'HM-CC-TC': make_simple_thermostat,
+    'HM-CC-RT-DN': make_thermostat,
+    'HM-CC-RT-DN-BoM': make_thermostat,
+    'HM-TC-IT-WM-W-EU': make_wall_thermostat,
+    'HM-CC-VG-1': make_group_thermostat,
 }
