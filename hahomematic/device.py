@@ -72,8 +72,9 @@ class Device():
                     if not parameter_data[ATTR_HM_OPERATIONS] & 4 and \
                     not parameter_data[ATTR_HM_TYPE] == TYPE_ACTION and \
                     not parameter_data[ATTR_HM_TYPE] == TYPE_STRING and \
+                    not parameter_data[ATTR_HM_TYPE] == TYPE_INTEGER and \
                     not parameter_data[ATTR_HM_TYPE] == TYPE_FLOAT:
-                        LOG.debug("Device.create_entities: Skipping %s (no event, no action, no float, no string)",
+                        LOG.debug("Device.create_entities: Skipping %s (no event, no action, no float, no int, no string)",
                                   parameter)
                         continue
                     entity_id = create_entity(channel, parameter, parameter_data, self.interface_id)
