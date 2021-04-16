@@ -18,6 +18,15 @@ def systemcallback(src, *args):
         return
     elif src == hahomematic.const.HH_EVENT_DEVICES_CREATED:
         GOT_DEVICES = True
+        print("All devices:")
+        print(hahomematic.data.HA_DEVICES)
+        for _, device in hahomematic.data.HA_DEVICES.items():
+            print(device)
+        print("New devices:")
+        print(args[0])
+        print("New entities:")
+        print(args[1])
+        return
     for arg in args:
         print("argument: %s" % arg)
 
@@ -63,7 +72,6 @@ while not GOT_DEVICES and SLEEPCOUNTER < 20:
     print("Waiting for devices")
     SLEEPCOUNTER += 1
     time.sleep(1)
-print(hahomematic.data.HA_DEVICES)
 time.sleep(5)
 
 for i in range(16):
