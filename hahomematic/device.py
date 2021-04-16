@@ -63,6 +63,7 @@ class Device():
         """
         Create the entities associated to this device.
         """
+        new_entities = set()
         for channel in self.channels:
             if channel not in hahomematic.data.PARAMSETS[self.interface_id]:
                 LOG.warning("Device.create_entities: Skipping channel %s, missing paramsets.", channel)
@@ -80,11 +81,14 @@ class Device():
                     entity_id = create_entity(channel, parameter, parameter_data, self.interface_id)
                     if entity_id is not None:
                         hahomematic.data.HA_DEVICES[self.address].entities.add(entity_id)
+                        new_entities.add(entity_id)
         if self.device_type in hahomematic.devices.DEVICES:
             LOG.debug("Device.create_entities: Handling custom device integration: %s, %s, %s",
                       self.interface_id, self.address, self.device_type)
             # Call the custom device / entity creation function.
-            hahomematic.devices.DEVICES[self.device_type](self.interface_id, self.address)
+            for e_id in hahomematic.devices.DEVICES[self.device_type](self.interface_id, self.address):
+                new_entities.add(e_id)
+        return new_entities
 
 # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
 def create_entity(address, parameter, parameter_data, interface_id):

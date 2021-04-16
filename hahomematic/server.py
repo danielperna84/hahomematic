@@ -290,6 +290,8 @@ def create_devices():
     """
     Trigger createion of the objects that expose the functionality.
     """
+    new_devices = set()
+    new_entities = set()
     for interface_id in data.DEVICES:
         if interface_id not in data.CLIENTS:
             LOG.warning("create_devices: Skipping interface %s, missing client.", interface_id)
@@ -305,17 +307,18 @@ def create_devices():
                 continue
             try:
                 data.HA_DEVICES[device_address] = Device(interface_id, device_address)
+                new_devices.add(device_address)
             except Exception:
                 LOG.exception("create_devices: Failed to create device: %s, %s",
                               interface_id, device_address)
             try:
-                data.HA_DEVICES[device_address].create_entities()
+                new_entities.update(data.HA_DEVICES[device_address].create_entities())
             except Exception:
                 LOG.exception("create_devices: Failed to create entities: %s, %s",
                               interface_id, device_address)
     if callable(config.CALLBACK_SYSTEM):
         # pylint: disable=not-callable
-        config.CALLBACK_SYSTEM(HH_EVENT_DEVICES_CREATED)
+        config.CALLBACK_SYSTEM(HH_EVENT_DEVICES_CREATED, new_devices, new_entities)
 
 def save_devices_raw():
     """

@@ -497,6 +497,7 @@ def make_simple_thermostat(interface_id, address):
     }
     data.ENTITIES[entity_id] = SimpleThermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
+    return [entity_id]
 
 def make_thermostat(interface_id, address):
     """
@@ -519,6 +520,7 @@ def make_thermostat(interface_id, address):
     }
     data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
+    return [entity_id]
 
 def make_wall_thermostat(interface_id, address):
     """
@@ -542,6 +544,7 @@ def make_wall_thermostat(interface_id, address):
     }
     data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
+    return [entity_id]
 
 def make_group_thermostat(interface_id, address):
     """
@@ -564,6 +567,7 @@ def make_group_thermostat(interface_id, address):
     }
     data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
+    return [entity_id]
 
 def make_ip_thermostat(interface_id, address):
     """
@@ -584,6 +588,7 @@ def make_ip_thermostat(interface_id, address):
     }
     data.ENTITIES[entity_id] = IPThermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
+    return [entity_id]
 
 def make_ip_wall_thermostat(interface_id, address):
     """
@@ -605,6 +610,7 @@ def make_ip_wall_thermostat(interface_id, address):
     }
     data.ENTITIES[entity_id] = IPThermostat(interface_id, address, entity_id, unique_id, device_entities)
     data.HA_DEVICES[address].entities.add(entity_id)
+    return [entity_id]
 
 DEVICES = {
     'HM-CC-TC': make_simple_thermostat,
