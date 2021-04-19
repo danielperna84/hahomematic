@@ -6,6 +6,7 @@ Version 0.0.2 (2021-)
 - Add exceptions to abort startup under certain conditions
 - Refactoring, introduce `Device` class
 - Allow to fetch single paramset on demand
+- Renew JSON-RPC sessions instead of logging in and out all the time
 
 Version 0.0.1 (2021-04-08)
 - Initial testing release

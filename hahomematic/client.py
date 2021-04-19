@@ -219,6 +219,24 @@ class Client():
         except Exception:
             LOG.exception("json_rpc_login: Exception while logging in via JSON-RPC")
 
+    def json_rpc_renew(self):
+        """Renew JSON-RPC session or perform login."""
+        if not self.session:
+            self.json_rpc_login()
+            return
+
+        try:
+            response = json_rpc_post(
+                self.host, self.json_port,
+                "Session.renew", {ATTR_SESSION_ID: self.session},
+                tls=self.json_tls, verify_tls=self.verify_tls)
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                self.session = response[ATTR_RESULT]
+                return
+            self.json_rpc_login()
+        except Exception:
+            LOG.exception("json_rpc_renew: Exception while renewing JSON-RPC session.")
+
     def json_rpc_logout(self):
         """Logout of CCU."""
         if not self.session:
@@ -242,7 +260,7 @@ class Client():
         variables = {}
         if self.backend == BACKEND_CCU and self.username and self.password:
             LOG.debug("get_all_system_variables: Getting all System variables via JSON-RPC")
-            self.json_rpc_login()
+            self.json_rpc_renew()
             if not self.session:
                 return variables
             try:
@@ -255,9 +273,7 @@ class Client():
                         key, value = parse_ccu_sys_var(var)
                         variables[key] = value
 
-                self.json_rpc_logout()
             except Exception:
-                self.json_rpc_logout()
                 LOG.exception("get_all_system_variables: Exception")
         else:
             try:
@@ -271,7 +287,7 @@ class Client():
         var = None
         if self.backend == BACKEND_CCU and self.username and self.password:
             LOG.debug("get_system_variable: Getting System variable via JSON-RPC")
-            self.json_rpc_login()
+            self.json_rpc_renew()
             if not self.session:
                 return var
             try:
@@ -286,9 +302,7 @@ class Client():
                     except Exception:
                         var = response[ATTR_RESULT] == 'true'
 
-                self.json_rpc_logout()
             except Exception:
-                self.json_rpc_logout()
                 LOG.exception("get_system_variable: Exception")
         else:
             try:
@@ -301,7 +315,7 @@ class Client():
         """Delete a system variable from CCU / Homegear."""
         if self.backend == BACKEND_CCU and self.username and self.password:
             LOG.debug("delete_system_variable: Getting System variable via JSON-RPC")
-            self.json_rpc_login()
+            self.json_rpc_renew()
             if not self.session:
                 return
             try:
@@ -313,9 +327,7 @@ class Client():
                     deleted = response[ATTR_RESULT]
                     LOG.warning("delete_system_variable: Deleted: %s", str(deleted))
 
-                self.json_rpc_logout()
             except Exception:
-                self.json_rpc_logout()
                 LOG.exception("delete_system_variable: Exception")
         else:
             try:
@@ -327,7 +339,7 @@ class Client():
         """Set a system variable on CCU / Homegear."""
         if self.backend == BACKEND_CCU and self.username and self.password:
             LOG.debug("set_system_variable: Setting System variable via JSON-RPC")
-            self.json_rpc_login()
+            self.json_rpc_renew()
             if not self.session:
                 return
             try:
@@ -348,9 +360,7 @@ class Client():
                         LOG.debug("set_system_variable: Error while setting variable: %s", str(
                             response[ATTR_ERROR]))
 
-                self.json_rpc_logout()
             except Exception:
-                self.json_rpc_logout()
                 LOG.exception("set_system_variable: Exception")
         else:
             try:
@@ -553,8 +563,7 @@ class Client():
             return
         LOG.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
-            self.session = False
-            self.json_rpc_login()
+            self.json_rpc_renew()
             if not self.session:
                 LOG.warning("fetch_names_json: Login failed. Not fetching names via JSON-RPC.")
                 return
@@ -571,7 +580,6 @@ class Client():
                         break
             LOG.debug("fetch_names_json: Got interface: %s", interface)
             if not interface:
-                self.json_rpc_logout()
                 return
 
             params = {ATTR_SESSION_ID: self.session}
@@ -591,9 +599,7 @@ class Client():
                     except Exception:
                         LOG.exception("fetch_names_json: Exception")
 
-            self.json_rpc_logout()
         except Exception:
-            self.json_rpc_logout()
             LOG.exception("fetch_names_json: General exception")
 
     def fetch_names_metadata(self):
