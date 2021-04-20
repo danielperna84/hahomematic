@@ -175,6 +175,8 @@ class Client():
         """
         De-init to stop CCU from sending events for this remote.
         """
+        if self.session:
+            self.json_rpc_logout()
         if not self.connect:
             LOG.debug("proxy_de_init: Skipping de-init for %s", self.name)
             return PROXY_INIT_SKIPPED
