@@ -1,4 +1,4 @@
-Version 0.0.2 (2021-)
+Version 0.0.2 (2021-04-20)
 - Use input_select for ENUM actors (Issue #8)
 - Added `DEVICE_IN_BOOTLOADER` and `INSTALL_TEST` to ignored parameters
 - Create `switch` for type `ACTION` for parameters with only write-flag
