@@ -15,12 +15,10 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler
 
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
-    ATTR_HM_OPERATIONS,
-    ATTR_HM_TYPE,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     HH_EVENT_DELETE_DEVICES,
-    HH_EVENT_ENTITIES_CREATED,
+    HH_EVENT_DEVICES_CREATED,
     HH_EVENT_ERROR,
     HH_EVENT_LIST_DEVICES,
     HH_EVENT_NEW_DEVICES,
@@ -32,7 +30,7 @@ from hahomematic.const import (
 )
 from hahomematic import data, config
 from hahomematic.decorators import systemcallback, eventcallback
-from hahomematic.entity import create_entity
+from hahomematic.device import Device
 
 LOG = logging.getLogger(__name__)
 
@@ -62,6 +60,15 @@ class RPCFunctions():
             except Exception:
                 LOG.exception("RPCFunctions.event: Failed to call callback for: %s, %s, %s",
                               interface_id, address, value_key)
+        if ':' in address:
+            device_address = address.split(':')[0]
+            if device_address in data.EVENT_SUBSCRIPTIONS_DEVICE:
+                try:
+                    for callback in data.EVENT_SUBSCRIPTIONS_DEVICE[device_address]:
+                        callback(interface_id, address, value_key, value)
+                except Exception:
+                    LOG.exception("RPCFunctions.event: Failed to call device-callback for: %s, %s, %s",
+                                    interface_id, address, value_key)
         return True
 
     @systemcallback(HH_EVENT_ERROR)
@@ -125,7 +132,7 @@ class RPCFunctions():
         elif client.backend == BACKEND_HOMEGEAR:
             client.fetch_names_metadata()
         save_names()
-        create_entities()
+        create_devices()
         return True
 
     @systemcallback(HH_EVENT_DELETE_DEVICES)
@@ -232,8 +239,10 @@ class Server(threading.Thread):
         """
         LOG.info("Server.run: Creating entities and starting server at http://%s:%i",
                  self.local_ip, self.local_port)
+        if not data.CLIENTS:
+            raise Exception("No clients initialized. Not starting server.")
         try:
-            create_entities()
+            create_devices()
         except Exception as err:
             LOG.exception("Server.run: Failed to create entities")
             raise Exception("entitiy-creation-error") from err
@@ -255,6 +264,8 @@ class Server(threading.Thread):
         LOG.debug("Server.stop: Stopping Server")
         self.server.server_close()
         LOG.info("Server.stop: Server stopped")
+        LOG.debug("Server.stop: Setting data.SERVER to None")
+        data.SERVER = None
 
 def handle_device_descriptions(interface_id, dev_descriptions):
     """
@@ -275,48 +286,39 @@ def handle_device_descriptions(interface_id, dev_descriptions):
                 data.DEVICES[interface_id][main] = {}
             data.DEVICES[interface_id][main][address] = {}
 
-def create_entities():
+def create_devices():
     """
     Trigger createion of the objects that expose the functionality.
     """
+    new_devices = set()
+    new_entities = set()
     for interface_id in data.DEVICES:
         if interface_id not in data.CLIENTS:
-            LOG.warning("create_entities: Skipping interface %s, missing client.", interface_id)
+            LOG.warning("create_devices: Skipping interface %s, missing client.", interface_id)
             continue
         if interface_id not in data.PARAMSETS:
-            LOG.warning("create_entities: Skipping interface %s, missing paramsets.", interface_id)
+            LOG.warning("create_devices: Skipping interface %s, missing paramsets.", interface_id)
             continue
-        for main_address, channels in data.DEVICES[interface_id].items():
-            create_entity_objects(interface_id, main_address, channels)
+        for device_address in data.DEVICES[interface_id]:
+            # Do we check for duplicates here? For now we do.
+            if device_address in data.HA_DEVICES:
+                LOG.warning("create_devices: Skipping device %s on %s, already exists.",
+                            device_address, interface_id)
+                continue
+            try:
+                data.HA_DEVICES[device_address] = Device(interface_id, device_address)
+                new_devices.add(device_address)
+            except Exception:
+                LOG.exception("create_devices: Failed to create device: %s, %s",
+                              interface_id, device_address)
+            try:
+                new_entities.update(data.HA_DEVICES[device_address].create_entities())
+            except Exception:
+                LOG.exception("create_devices: Failed to create entities: %s, %s",
+                              interface_id, device_address)
     if callable(config.CALLBACK_SYSTEM):
         # pylint: disable=not-callable
-        config.CALLBACK_SYSTEM(HH_EVENT_ENTITIES_CREATED)
-    # Do we check for duplicates here?
-
-def create_entity_objects(interface_id, main_address, channels):
-    """
-    Create the objects that expose the functionality.
-    """
-    device_type = data.DEVICES_RAW_DICT[interface_id][main_address][ATTR_HM_TYPE]
-    LOG.debug("create_entity_objects: Handling device %s (%s)", main_address, device_type)
-    if main_address in data.NAMES.get(interface_id, {}):
-        device_name = data.NAMES[interface_id][main_address]
-    else:
-        device_name = "{}_{}".format(device_type, main_address)
-    data.HA_DEVICES[device_name] = []
-    for channel in channels:
-        if channel not in data.PARAMSETS[interface_id]:
-            LOG.warning("create_entity_objects: Skipping channel %s, missing paramsets.", channel)
-            continue
-        for paramset in data.PARAMSETS[interface_id][channel]:
-            for parameter, parameter_data in data.PARAMSETS[interface_id][channel][paramset].items():
-                if not parameter_data[ATTR_HM_OPERATIONS] & 4:
-                    LOG.debug("create_entity_objects: Skipping %s (no event)", parameter)
-                    continue
-                entity_id = create_entity(channel, parameter, parameter_data, interface_id)
-                if entity_id is not None:
-                    data.HA_DEVICES[device_name].append(entity_id)
-    # TODO: Hook for custom entity based on `device_type`
+        config.CALLBACK_SYSTEM(HH_EVENT_DEVICES_CREATED, new_devices, new_entities)
 
 def save_devices_raw():
     """

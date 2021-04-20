@@ -1,2 +1,12 @@
+Version 0.0.2 (2021-04-20)
+- Use input_select for ENUM actors (Issue #8)
+- Added `DEVICE_IN_BOOTLOADER` and `INSTALL_TEST` to ignored parameters
+- Create `switch` for type `ACTION` for parameters with only write-flag
+- Create `number` for type `FLOAT` for parameters with only write-flag
+- Add exceptions to abort startup under certain conditions
+- Refactoring, introduce `Device` class
+- Allow to fetch single paramset on demand
+- Renew JSON-RPC sessions instead of logging in and out all the time
+
 Version 0.0.1 (2021-04-08)
 - Initial testing release

@@ -1,115 +1,104 @@
+# pylint: disable=line-too-long
+
 """
 Functions for entity creation.
 """
 
 import logging
+from abc import ABC, abstractmethod
 
 import hahomematic.config
 import hahomematic.data
-from hahomematic.helpers import generate_unique_id
-from hahomematic.platforms import (
-    binary_sensor,
-    input_text,
-    number,
-    sensor,
-    switch,
-)
 from hahomematic.const import (
     ATTR_HM_CONTROL,
+    ATTR_HM_MAX,
+    ATTR_HM_MIN,
     ATTR_HM_OPERATIONS,
+    ATTR_HM_PARENT_TYPE,
+    ATTR_HM_SPECIAL,
     ATTR_HM_TYPE,
-    IGNORED_PARAMETERS,
+    ATTR_HM_UNIT,
+    ATTR_HM_VALUE_LIST,
     TYPE_ACTION,
-    TYPE_BOOL,
-    TYPE_ENUM,
-    TYPE_FLOAT,
-    TYPE_INTEGER,
-    TYPE_STRING,
 )
 
 LOG = logging.getLogger(__name__)
 
-def create_entity(address, parameter, parameter_data, interface_id):
+# pylint: disable=too-many-instance-attributes
+class Entity(ABC):
     """
-    Helper that looks at the paramsets, decides which default
-    platform should be used, and creates the required entities.
+    Base class for regular entities.
     """
-    if parameter in IGNORED_PARAMETERS:
-        LOG.debug("create_entity: Ignoring parameter: %s (%s)",
-                  parameter, address)
-        return
-    if (address, parameter) not in hahomematic.data.EVENT_SUBSCRIPTIONS:
-        hahomematic.data.EVENT_SUBSCRIPTIONS[(address, parameter)] = []
-    unique_id = generate_unique_id(address, parameter)
-    # TODO: How do we handle existing entities? Entities should be removed when the server
-    # receives a deleteDevices call. When the paramset has updated it should be recreated probably.
-    LOG.debug("create_entity: Creating entity (%s, %s, %s)",
-              address, parameter, interface_id)
-    entity_id = None
-    if parameter_data[ATTR_HM_OPERATIONS] & 2:
-        if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
-            LOG.debug("create_entity: switch (action): %s %s", address, parameter)
-            entity_id = "switch.{}".format(unique_id).replace('-', '_').lower()
-            if entity_id in hahomematic.data.ENTITIES:
-                LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                return
-            hahomematic.data.ENTITIES[entity_id] = switch(
-                interface_id, unique_id, address, parameter, parameter_data
-            )
-        else:
-            if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
-                LOG.debug("create_entity: switch: %s %s", address, parameter)
-                entity_id = "switch.{}".format(unique_id).replace('-', '_').lower()
-                if entity_id in hahomematic.data.ENTITIES:
-                    LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                    return
-                hahomematic.data.ENTITIES[entity_id] = switch(
-                    interface_id, unique_id, address, parameter, parameter_data
-                )
-            elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER, TYPE_ENUM]:
-                LOG.debug("create_entity: number: %s %s", address, parameter)
-                entity_id = "number.{}".format(unique_id).replace('-', '_').lower()
-                if entity_id in hahomematic.data.ENTITIES:
-                    LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                    return
-                hahomematic.data.ENTITIES[entity_id] = number(
-                    interface_id, unique_id, address, parameter, parameter_data
-                )
-            elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
-                LOG.debug("create_entity: input_text: %s %s", address, parameter)
-                entity_id = "input_text.{}".format(unique_id).replace('-', '_').lower()
-                if entity_id in hahomematic.data.ENTITIES:
-                    LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                    return
-                hahomematic.data.ENTITIES[entity_id] = input_text(
-                    interface_id, unique_id, address, parameter, parameter_data
-                )
-            else:
-                LOG.warning("unsupported actor: %s %s %s",
-                            address, parameter, parameter_data[ATTR_HM_TYPE])
-    else:
-        if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
-            LOG.debug("create_entity: binary_sensor: %s %s", address, parameter)
-            entity_id = "binary_sensor.{}".format(unique_id).replace('-', '_').lower()
-            if entity_id in hahomematic.data.ENTITIES:
-                LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                return
-            hahomematic.data.ENTITIES[entity_id] = binary_sensor(
-                interface_id, unique_id, address, parameter, parameter_data
-            )
-        else:
-            LOG.debug("create_entity: sensor: %s %s", address, parameter)
-            entity_id = "sensor.{}".format(unique_id).replace('-', '_').lower()
-            if entity_id in hahomematic.data.ENTITIES:
-                LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
-                return
-            hahomematic.data.ENTITIES[entity_id] = sensor(
-                interface_id, unique_id, address, parameter, parameter_data
-            )
-    return entity_id
+    # pylint: disable=too-many-arguments
+    def __init__(self, interface_id, entity_id, address, parameter, parameter_data):
+        """
+        Initialize the entity.
+        """
+        self.interface_id = interface_id
+        self.client = hahomematic.data.CLIENTS[interface_id]
+        self.proxy = self.client.proxy
+        self.entity_id = entity_id.replace('-', '_').lower()
+        self.unique_id = self.entity_id.split('.')[-1]
+        self.address = address
+        self.device_type = hahomematic.data.DEVICES_RAW_DICT[self.interface_id][self.address].get(ATTR_HM_PARENT_TYPE)
+        self.parameter = parameter
+        self._parameter_data = parameter_data
+        self.operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
+        self.type = self._parameter_data.get(ATTR_HM_TYPE)
+        self.control = self._parameter_data.get(ATTR_HM_CONTROL)
+        self.unit = self._parameter_data.get(ATTR_HM_UNIT)
+        self.max = self._parameter_data.get(ATTR_HM_MAX)
+        self.min = self._parameter_data.get(ATTR_HM_MIN)
+        self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
+        self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
+        self.device_class = None
+        self.name = hahomematic.data.NAMES.get(
+            self.interface_id, {}).get(self.address, self.entity_id)
+        self._state = None
+        if self.type == TYPE_ACTION:
+            self._state = False
+        LOG.debug("Entity.__init__: Getting current value for %s",
+                  self.entity_id)
+        # pylint: disable=pointless-statement
+        self.STATE
+        hahomematic.data.EVENT_SUBSCRIPTIONS[(self.address, self.parameter)].append(self.event)
+        self.update_callback = None
+        if callable(hahomematic.config.CALLBACK_ENTITY_UPDATE):
+            self.update_callback = hahomematic.config.CALLBACK_ENTITY_UPDATE
 
-def create_custom_entity(address, device_type):
-    """
-    This function creates custom entities.
-    """
-    LOG.debug("create_custom_entity: %s (%s)", address, device_type)
+    def event(self, interface_id, address, parameter, value):
+        """
+        Handle event for which this entity has subscribed.
+        """
+        LOG.debug("Entity.event: %s, %s, %s, %s",
+                  interface_id, address, parameter, value)
+        if interface_id != self.interface_id:
+            LOG.warning("Entity.event: Incorrect interface_id: %s - should be: %s",
+                        interface_id, self.interface_id)
+            return
+        if address != self.address:
+            LOG.warning("Entity.event: Incorrect address: %s - should be: %s",
+                        address, self.address)
+            return
+        if parameter != self.parameter:
+            LOG.warning("Entity.event: Incorrect parameter: %s - should be: %s",
+                        parameter, self.parameter)
+            return
+        self._state = value
+        self.update_entity()
+
+    def update_entity(self):
+        """
+        Do what is needed when the state of the entity has been updated.
+        """
+        if self.update_callback is None:
+            LOG.debug("Entity.update_entity: No callback defined.")
+            return
+        # pylint: disable=not-callable
+        self.update_callback(self.entity_id)
+
+    @property
+    @abstractmethod
+    # pylint: disable=invalid-name
+    def STATE(self):
+        ...

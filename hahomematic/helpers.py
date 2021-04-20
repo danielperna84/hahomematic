@@ -29,11 +29,13 @@ UNVERIFIED_CTX = ssl.create_default_context()
 UNVERIFIED_CTX.check_hostname = False
 UNVERIFIED_CTX.verify_mode = ssl.CERT_NONE
 
-def generate_unique_id(address, parameter):
+def generate_unique_id(address, parameter=None):
     """
     Build unique id from address and parameter.
     """
-    return "{}_{}".format(address.replace(':', '_'), parameter)
+    if parameter is None:
+        return f"{address.replace(':', '_').replace('-', '_')}".lower()
+    return f"{address.replace(':', '_').replace('-', '_')}_{parameter}".lower()
 
 def make_http_credentials(username=None, password=None):
     """Build auth part for api_url."""
