@@ -99,6 +99,6 @@ class Entity(ABC):
 
     @property
     @abstractmethod
-    # pylint: disable=invalid-name
+    # pylint: disable=invalid-name,missing-function-docstring
     def STATE(self):
         ...
