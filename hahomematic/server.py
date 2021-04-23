@@ -17,6 +17,9 @@ from hahomematic.const import (
     ATTR_HM_ADDRESS,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
+    FILE_DEVICES,
+    FILE_PARAMSETS,
+    FILE_NAMES,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_DEVICES_CREATED,
     HH_EVENT_ERROR,
@@ -320,97 +323,99 @@ def create_devices():
         # pylint: disable=not-callable
         config.CALLBACK_SYSTEM(HH_EVENT_DEVICES_CREATED, new_devices, new_entities)
 
+def check_cache_dir():
+    """Check presence of cache directory."""
+    if config.CACHE_DIR is None:
+        return False
+    if not os.path.exists(config.CACHE_DIR):
+        os.makedirs(config.CACHE_DIR)
+    return True
+
 def save_devices_raw():
     """
     Save current device data in DEVICES_RAW to disk.
     """
-    if config.FILE_DEVICES is None:
+    if not check_cache_dir():
         return
-    with open(config.FILE_DEVICES, 'w') as fptr:
+    with open(os.path.join(config.CACHE_DIR, FILE_DEVICES), 'w') as fptr:
         json.dump(data.DEVICES_RAW, fptr)
 
 def load_devices_raw():
     """
     Load device data from disk into DEVICES_RAW.
     """
-    if config.FILE_DEVICES is None:
+    if not check_cache_dir():
         return
-    if not os.path.exists(config.FILE_DEVICES):
+    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_DEVICES)):
         return
-    with open(config.FILE_DEVICES) as fptr:
+    with open(os.path.join(config.CACHE_DIR, FILE_DEVICES)) as fptr:
         data.DEVICES_RAW = json.load(fptr)
 
 def clear_devices_raw():
     """
     Remove stored device data from disk and clear DEVICES_RAW.
     """
-    if config.FILE_DEVICES is None:
-        return
-    if not os.path.exists(config.FILE_DEVICES):
-        return
-    os.unlink(config.FILE_DEVICES)
+    check_cache_dir()
+    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_DEVICES)):
+        os.unlink(os.path.join(config.CACHE_DIR, FILE_DEVICES))
     data.DEVICES_RAW.clear()
 
 def save_paramsets():
     """
     Save current paramset data in PARAMSETS to disk.
     """
-    if config.FILE_PARAMSETS is None:
+    if not check_cache_dir():
         return
-    with open(config.FILE_PARAMSETS, 'w') as fptr:
+    with open(os.path.join(config.CACHE_DIR, FILE_PARAMSETS), 'w') as fptr:
         json.dump(data.PARAMSETS, fptr)
 
 def load_paramsets():
     """
     Load paramset data from disk into PARAMSETS.
     """
-    if config.FILE_DEVICES is None:
+    if not check_cache_dir():
         return
-    if not os.path.exists(config.FILE_PARAMSETS):
+    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)):
         return
-    with open(config.FILE_PARAMSETS) as fptr:
+    with open(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)) as fptr:
         data.PARAMSETS = json.load(fptr)
 
 def clear_paramsets():
     """
     Remove stored paramset data from disk.
     """
-    if config.FILE_PARAMSETS is None:
-        return
-    if not os.path.exists(config.FILE_PARAMSETS):
-        return
-    os.unlink(config.FILE_PARAMSETS)
+    check_cache_dir()
+    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)):
+        os.unlink(os.path.join(config.CACHE_DIR, FILE_PARAMSETS))
     data.PARAMSETS.clear()
 
 def save_names():
     """
     Save current name data in NAMES to disk.
     """
-    if config.FILE_NAMES is None:
+    if not check_cache_dir():
         return
-    with open(config.FILE_NAMES, 'w') as fptr:
+    with open(os.path.join(config.CACHE_DIR, FILE_NAMES), 'w') as fptr:
         json.dump(data.NAMES, fptr)
 
 def load_names():
     """
     Load name data from disk into NAMES.
     """
-    if config.FILE_DEVICES is None:
+    if not check_cache_dir():
         return
-    if not os.path.exists(config.FILE_NAMES):
+    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_NAMES)):
         return
-    with open(config.FILE_NAMES) as fptr:
+    with open(os.path.join(config.CACHE_DIR, FILE_NAMES)) as fptr:
         data.NAMES = json.load(fptr)
 
 def clear_names():
     """
     Remove stored names data from disk.
     """
-    if config.FILE_NAMES is None:
-        return
-    if not os.path.exists(config.FILE_NAMES):
-        return
-    os.unlink(config.FILE_NAMES)
+    check_cache_dir()
+    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_NAMES)):
+        os.unlink(os.path.join(config.CACHE_DIR, FILE_NAMES))
     data.NAMES.clear()
 
 def clear_all():
