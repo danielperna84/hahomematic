@@ -41,11 +41,9 @@ def entityupdatecallback(entity_id):
 hahomematic.config.INTERFACE_ID = "myserver"
 # For testing we set a short INIT_TIMEOUT
 hahomematic.config.INIT_TIMEOUT = 10
-# We have to set the locations of stored data so the server can load
+# We have to set the cache location of stored data so the server can load
 # it while initializing.
-hahomematic.config.FILE_DEVICES = 'ha_devices.json'
-hahomematic.config.FILE_PARAMSETS = 'ha_paramsets.json'
-hahomematic.config.FILE_NAMES = 'ha_names.json'
+hahomematic.config.CACHE_DIR = 'cache'
 # Add callbacks to handle the events and see what happens on the system.
 hahomematic.config.CALLBACK_SYSTEM = systemcallback
 hahomematic.config.CALLBACK_EVENT = eventcallback
