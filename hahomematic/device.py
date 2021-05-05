@@ -12,6 +12,7 @@ from hahomematic.const import (
     ATTR_HM_OPERATIONS,
     ATTR_HM_TYPE,
     IGNORED_PARAMETERS,
+    OPERATION_EVENT,
     OPERATION_WRITE,
     TYPE_ACTION,
     TYPE_BOOL,
@@ -70,7 +71,7 @@ class Device():
                 continue
             for paramset in hahomematic.data.PARAMSETS[self.interface_id][channel]:
                 for parameter, parameter_data in hahomematic.data.PARAMSETS[self.interface_id][channel][paramset].items():
-                    if not parameter_data[ATTR_HM_OPERATIONS] & 4 and \
+                    if not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT and \
                     not parameter_data[ATTR_HM_TYPE] == TYPE_ACTION and \
                     not parameter_data[ATTR_HM_TYPE] == TYPE_STRING and \
                     not parameter_data[ATTR_HM_TYPE] == TYPE_INTEGER and \
