@@ -14,6 +14,7 @@ from hahomematic.const import (
     IGNORED_PARAMETERS,
     OPERATION_EVENT,
     OPERATION_WRITE,
+    PARAMSET_VALUES,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_ENUM,
@@ -70,6 +71,8 @@ class Device():
                 LOG.warning("Device.create_entities: Skipping channel %s, missing paramsets.", channel)
                 continue
             for paramset in hahomematic.data.PARAMSETS[self.interface_id][channel]:
+                if paramset != PARAMSET_VALUES:
+                    continue
                 for parameter, parameter_data in hahomematic.data.PARAMSETS[self.interface_id][channel][paramset].items():
                     if not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT and \
                     not parameter_data[ATTR_HM_TYPE] == TYPE_ACTION and \
