@@ -1,5 +1,6 @@
 Version 0.0.3 (2021-)
-- 
+- Reduce back to parameters with events
+- Rewrite climate-entity creation
 
 Version 0.0.2 (2021-04-20)
 - Use input_select for ENUM actors (Issue #8)
