@@ -227,12 +227,12 @@ class Thermostat(climate):
                   interface_id, address, value_key, value)
         if value_key == self._node_actual_temperature[1]:
             self.temperature = value
-        elif value_key == self._node_humidity[1]:
-            self.humidity = value
         elif value_key == self._node_set_temperature[1]:
             self.setpoint = value
         elif value_key == self._node_control_mode[1]:
             self.control_mode = value
+        elif self._node_humidity is not None and value_key == self._node_humidity[1]:
+            self.humidity = value
         self.update_entity()
 
     def update_entity(self):
@@ -314,16 +314,25 @@ class Thermostat(climate):
     @property
     def current_humidity(self):
         """Return the current humidity."""
+        if self.humidity is None and self._node_humidity is not None:
+            self.humidity = self.proxy.getValue(self._node_humidity[0],
+                                                self._node_humidity[1])
         return self.humidity
 
     @property
     def current_temperature(self):
         """Return current temperature."""
+        if self.temperature is None:
+            self.temperature = self.proxy.getValue(self._node_actual_temperature[0],
+                                                   self._node_actual_temperature[1])
         return self.temperature
 
     @property
     def target_temperature(self):
         """Return target temperature."""
+        if self.setpoint is None:
+            self.setpoint = self.proxy.getValue(self._node_set_temperature[0],
+                                                self._node_set_temperature[1])
         return self.setpoint
 
     # pylint: disable=inconsistent-return-statements
@@ -423,6 +432,8 @@ class IPThermostat(climate):
             self.boost_mode = value
         elif value_key == self._node_party_mode[1]:
             self.party_mode = value
+        elif self._node_humidity is not None and value_key == self._node_humidity[1]:
+            self.humidity = value
         self.update_entity()
 
     def update_entity(self):
@@ -499,16 +510,25 @@ class IPThermostat(climate):
     @property
     def current_humidity(self):
         """Return the current humidity."""
+        if self.humidity is None and self._node_humidity is not None:
+            self.humidity = self.proxy.getValue(self._node_humidity[0],
+                                                self._node_humidity[1])
         return self.humidity
 
     @property
     def current_temperature(self):
         """Return current temperature."""
+        if self.temperature is None:
+            self.temperature = self.proxy.getValue(self._node_actual_temperature[0],
+                                                   self._node_actual_temperature[1])
         return self.temperature
 
     @property
     def target_temperature(self):
         """Return target temperature."""
+        if self.setpoint is None:
+            self.setpoint = self.proxy.getValue(self._node_set_temperature[0],
+                                                self._node_set_temperature[1])
         return self.setpoint
 
     # pylint: disable=inconsistent-return-statements
