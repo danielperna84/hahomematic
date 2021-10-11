@@ -577,7 +577,7 @@ class Client():
             interface = False
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 for i in response[ATTR_RESULT]:
-                    if i[ATTR_PORT] in [self.port, self.port + 40000]:
+                    if i[ATTR_PORT] in [self.port, self.port + 30000, self.port + 40000]:
                         interface = i[ATTR_NAME]
                         break
             LOG.debug("fetch_names_json: Got interface: %s", interface)
