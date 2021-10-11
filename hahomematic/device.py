@@ -78,10 +78,10 @@ class Device():
                         LOG.debug("Device.create_entities: Skipping %s (no event)",
                                   parameter)
                         continue
-                    entity_id = create_entity(channel, parameter, parameter_data, self.interface_id)
-                    if entity_id is not None:
-                        hahomematic.data.HA_DEVICES[self.address].entities.add(entity_id)
-                        new_entities.add(entity_id)
+                    unique_id = create_entity(channel, parameter, parameter_data, self.interface_id)
+                    if unique_id is not None:
+                        hahomematic.data.HA_DEVICES[self.address].entities.add(unique_id)
+                        new_entities.add(unique_id)
         if self.device_type in hahomematic.devices.DEVICES:
             LOG.debug("Device.create_entities: Handling custom device integration: %s, %s, %s",
                       self.interface_id, self.address, self.device_type)
@@ -107,52 +107,46 @@ def create_entity(address, parameter, parameter_data, interface_id):
     # receives a deleteDevices call. When the paramset has updated it should be recreated probably.
     LOG.debug("create_entity: Creating entity for %s, %s, %s",
               address, parameter, interface_id)
-    entity_id = None
     if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
         if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
             LOG.debug("create_entity: switch (action): %s %s", address, parameter)
-            entity_id = f"switch.{unique_id}"
-            if entity_id in hahomematic.data.ENTITIES:
-                LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
+            if unique_id in hahomematic.data.ENTITIES:
+                LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            hahomematic.data.ENTITIES[entity_id] = switch(
+            hahomematic.data.ENTITIES[unique_id] = switch(
                 interface_id, unique_id, address, parameter, parameter_data
             )
         else:
             if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
                 LOG.debug("create_entity: switch: %s %s", address, parameter)
-                entity_id = f"switch.{unique_id}"
-                if entity_id in hahomematic.data.ENTITIES:
-                    LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
+                if unique_id in hahomematic.data.ENTITIES:
+                    LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                hahomematic.data.ENTITIES[entity_id] = switch(
+                hahomematic.data.ENTITIES[unique_id] = switch(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
                 LOG.debug("create_entity: input_select: %s %s", address, parameter)
-                entity_id = f"input_select.{unique_id}"
-                if entity_id in hahomematic.data.ENTITIES:
-                    LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
+                if unique_id in hahomematic.data.ENTITIES:
+                    LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                hahomematic.data.ENTITIES[entity_id] = input_select(
+                hahomematic.data.ENTITIES[unique_id] = input_select(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
                 LOG.debug("create_entity: number: %s %s", address, parameter)
-                entity_id = f"number.{unique_id}"
-                if entity_id in hahomematic.data.ENTITIES:
-                    LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
+                if unique_id in hahomematic.data.ENTITIES:
+                    LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                hahomematic.data.ENTITIES[entity_id] = number(
+                hahomematic.data.ENTITIES[unique_id] = number(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
                 LOG.debug("create_entity: input_text: %s %s", address, parameter)
-                entity_id = f"input_text.{unique_id}"
-                if entity_id in hahomematic.data.ENTITIES:
-                    LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
+                if unique_id in hahomematic.data.ENTITIES:
+                    LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                hahomematic.data.ENTITIES[entity_id] = input_text(
+                hahomematic.data.ENTITIES[unique_id] = input_text(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
             else:
@@ -161,20 +155,18 @@ def create_entity(address, parameter, parameter_data, interface_id):
     else:
         if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
             LOG.debug("create_entity: binary_sensor: %s %s", address, parameter)
-            entity_id = f"binary_sensor.{unique_id}"
-            if entity_id in hahomematic.data.ENTITIES:
-                LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
+            if unique_id in hahomematic.data.ENTITIES:
+                LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            hahomematic.data.ENTITIES[entity_id] = binary_sensor(
+            hahomematic.data.ENTITIES[unique_id] = binary_sensor(
                 interface_id, unique_id, address, parameter, parameter_data
             )
         else:
             LOG.debug("create_entity: sensor: %s %s", address, parameter)
-            entity_id = f"sensor.{unique_id}"
-            if entity_id in hahomematic.data.ENTITIES:
-                LOG.debug("create_entity: Skipping %s (already exists)", entity_id)
+            if unique_id in hahomematic.data.ENTITIES:
+                LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            hahomematic.data.ENTITIES[entity_id] = sensor(
+            hahomematic.data.ENTITIES[unique_id] = sensor(
                 interface_id, unique_id, address, parameter, parameter_data
             )
-    return entity_id
+    return unique_id

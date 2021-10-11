@@ -18,8 +18,7 @@ class switch(Entity):
     """
     # pylint: disable=too-many-arguments
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
-        super().__init__(interface_id, "switch.{}".format(unique_id),
-                         address, parameter, parameter_data)
+        super().__init__(interface_id, unique_id, address, parameter, parameter_data, 'switch')
 
     @property
     def STATE(self):

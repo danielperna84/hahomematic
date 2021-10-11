@@ -13,5 +13,5 @@ CACHE_DIR = None
 CALLBACK_SYSTEM = None
 # Signature: f(interface_id, address, value_key, value)
 CALLBACK_EVENT = None
-# Signature: f(entity_id)
+# Signature: f(unique_id)
 CALLBACK_ENTITY_UPDATE = None

@@ -58,17 +58,16 @@ SUPPORT_PRESET_MODE = 16
 class SimpleThermostat(climate):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, address, entity_id, unique_id):
-        LOG.debug("SimpleThermostat.__init__(%s, %s, %s, %s)",
-                  interface_id, address, entity_id, unique_id)
+    def __init__(self, interface_id, address, unique_id):
+        LOG.debug("SimpleThermostat.__init__(%s, %s, %s)",
+                  interface_id, address, unique_id)
         self.interface_id = interface_id
         self.address = address
         self.client = data.CLIENTS[self.interface_id]
         self.proxy = self.client.proxy
         self.unique_id = unique_id
-        self.entity_id = entity_id
         self.name = data.NAMES.get(
-            self.interface_id, {}).get(self.address, self.entity_id)
+            self.interface_id, {}).get(self.address, self.unique_id)
         self.ha_device = data.HA_DEVICES[self.address]
         self.channels = list(data.DEVICES[self.interface_id][self.address].keys())
         # Subscribe for all events of this device
@@ -109,7 +108,7 @@ class SimpleThermostat(climate):
             LOG.debug("SimpleThermostat.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
-        self.update_callback(self.entity_id)
+        self.update_callback(self.unique_id)
 
     @property
     def supported_features(self):
@@ -180,17 +179,16 @@ class SimpleThermostat(climate):
 class Thermostat(climate):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, address, entity_id, unique_id, nodes):
-        LOG.debug("Thermostat.__init__(%s, %s, %s, %s)",
-                  interface_id, address, entity_id, unique_id)
+    def __init__(self, interface_id, address, unique_id, nodes):
+        LOG.debug("Thermostat.__init__(%s, %s, %s)",
+                  interface_id, address, unique_id)
         self.interface_id = interface_id
         self.address = address
         self.client = data.CLIENTS[self.interface_id]
         self.proxy = self.client.proxy
         self.unique_id = unique_id
-        self.entity_id = entity_id
         self.name = data.NAMES.get(
-            self.interface_id, {}).get(self.address, self.entity_id)
+            self.interface_id, {}).get(self.address, self.unique_id)
         self.ha_device = data.HA_DEVICES[self.address]
         self.channels = list(data.DEVICES[self.interface_id][self.address].keys())
         # Subscribe for all events of this device
@@ -243,7 +241,7 @@ class Thermostat(climate):
             LOG.debug("Thermostat.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
-        self.update_callback(self.entity_id)
+        self.update_callback(self.unique_id)
 
     @property
     def supported_features(self):
@@ -376,17 +374,16 @@ class Thermostat(climate):
 class IPThermostat(climate):
     """homematic IP thermostat like HmIP-eTRV-B."""
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, address, entity_id, unique_id, nodes):
-        LOG.debug("IPThermostat.__init__(%s, %s, %s, %s)",
-                  interface_id, address, entity_id, unique_id)
+    def __init__(self, interface_id, address, unique_id, nodes):
+        LOG.debug("IPThermostat.__init__(%s, %s, %s)",
+                  interface_id, address, unique_id)
         self.interface_id = interface_id
         self.address = address
         self.client = data.CLIENTS[self.interface_id]
         self.proxy = self.client.proxy
         self.unique_id = unique_id
-        self.entity_id = entity_id
         self.name = data.NAMES.get(
-            self.interface_id, {}).get(self.address, self.entity_id)
+            self.interface_id, {}).get(self.address, self.unique_id)
         self.ha_device = data.HA_DEVICES[self.address]
         self.channels = list(data.DEVICES[self.interface_id][self.address].keys())
         # Subscribe for all events of this device
@@ -444,7 +441,7 @@ class IPThermostat(climate):
             LOG.debug("IPThermostat.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
-        self.update_callback(self.entity_id)
+        self.update_callback(self.unique_id)
 
     @property
     def supported_features(self):
@@ -570,12 +567,11 @@ def make_simple_thermostat(interface_id, address):
     Helper to create SimpleThermostat entities.
     """
     unique_id = generate_unique_id(address)
-    entity_id = "climate.{}".format(unique_id)
-    if entity_id in data.ENTITIES:
-        LOG.debug("make_simple_thermostat: Skipping %s (already exists)", entity_id)
-    data.ENTITIES[entity_id] = SimpleThermostat(interface_id, address, entity_id, unique_id)
-    data.HA_DEVICES[address].entities.add(entity_id)
-    return [entity_id]
+    if unique_id in data.ENTITIES:
+        LOG.debug("make_simple_thermostat: Skipping %s (already exists)", unique_id)
+    data.ENTITIES[unique_id] = SimpleThermostat(interface_id, address, unique_id)
+    data.HA_DEVICES[address].entities.add(unique_id)
+    return [unique_id]
 
 def make_thermostat(interface_id, address):
     """
@@ -583,9 +579,8 @@ def make_thermostat(interface_id, address):
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
-    entity_id = "climate.{}".format(unique_id)
-    if entity_id in data.ENTITIES:
-        LOG.debug("make_thermostat: Skipping %s (already exists)", entity_id)
+    if unique_id in data.ENTITIES:
+        LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f'{address}:4', 'ACTUAL_TEMPERATURE'),
         NODE_SET_TEMPERATURE: (f'{address}:4', 'SET_TEMPERATURE'),
@@ -596,9 +591,9 @@ def make_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f'{address}:4', 'COMFORT_MODE'),
         NODE_LOWERING_MODE: (f'{address}:4', 'LOWERING_MODE'),
     }
-    data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(entity_id)
-    return [entity_id]
+    data.ENTITIES[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    data.HA_DEVICES[address].entities.add(unique_id)
+    return [unique_id]
 
 def make_max_thermostat(interface_id, address):
     """
@@ -606,9 +601,8 @@ def make_max_thermostat(interface_id, address):
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
-    entity_id = "climate.{}".format(unique_id)
-    if entity_id in data.ENTITIES:
-        LOG.debug("make_thermostat: Skipping %s (already exists)", entity_id)
+    if unique_id in data.ENTITIES:
+        LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f'{address}:1', 'ACTUAL_TEMPERATURE'),
         NODE_SET_TEMPERATURE: (f'{address}:1', 'SET_TEMPERATURE'),
@@ -619,9 +613,9 @@ def make_max_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f'{address}:1', 'COMFORT_MODE'),
         NODE_LOWERING_MODE: (f'{address}:1', 'LOWERING_MODE'),
     }
-    data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(entity_id)
-    return [entity_id]
+    data.ENTITIES[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    data.HA_DEVICES[address].entities.add(unique_id)
+    return [unique_id]
 
 def make_wall_thermostat(interface_id, address):
     """
@@ -629,9 +623,8 @@ def make_wall_thermostat(interface_id, address):
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
-    entity_id = "climate.{}".format(unique_id)
-    if entity_id in data.ENTITIES:
-        LOG.debug("make_wall_thermostat: Skipping %s (already exists)", entity_id)
+    if unique_id in data.ENTITIES:
+        LOG.debug("make_wall_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f'{address}:2', 'ACTUAL_TEMPERATURE'),
         NODE_SET_TEMPERATURE: (f'{address}:2', 'SET_TEMPERATURE'),
@@ -643,9 +636,9 @@ def make_wall_thermostat(interface_id, address):
         NODE_LOWERING_MODE: (f'{address}:2', 'LOWERING_MODE'),
         NODE_HUMIDITY: (f'{address}:2', 'HUMIDITY'),
     }
-    data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(entity_id)
-    return [entity_id]
+    data.ENTITIES[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    data.HA_DEVICES[address].entities.add(unique_id)
+    return [unique_id]
 
 def make_group_thermostat(interface_id, address):
     """
@@ -653,9 +646,8 @@ def make_group_thermostat(interface_id, address):
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
-    entity_id = "climate.{}".format(unique_id)
-    if entity_id in data.ENTITIES:
-        LOG.debug("make_group_thermostat: Skipping %s (already exists)", entity_id)
+    if unique_id in data.ENTITIES:
+        LOG.debug("make_group_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f'{address}:1', 'ACTUAL_TEMPERATURE'),
         NODE_SET_TEMPERATURE: (f'{address}:1', 'SET_TEMPERATURE'),
@@ -666,9 +658,9 @@ def make_group_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f'{address}:1', 'COMFORT_MODE'),
         NODE_LOWERING_MODE: (f'{address}:1', 'LOWERING_MODE'),
     }
-    data.ENTITIES[entity_id] = Thermostat(interface_id, address, entity_id, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(entity_id)
-    return [entity_id]
+    data.ENTITIES[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    data.HA_DEVICES[address].entities.add(unique_id)
+    return [unique_id]
 
 def make_ip_thermostat(interface_id, address):
     """
@@ -676,9 +668,8 @@ def make_ip_thermostat(interface_id, address):
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
-    entity_id = "climate.{}".format(unique_id)
-    if entity_id in data.ENTITIES:
-        LOG.debug("make_ip_thermostat: Skipping %s (already exists)", entity_id)
+    if unique_id in data.ENTITIES:
+        LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f'{address}:1', 'ACTUAL_TEMPERATURE'),
         NODE_SET_TEMPERATURE: (f'{address}:1', 'SET_POINT_TEMPERATURE'),
@@ -687,9 +678,9 @@ def make_ip_thermostat(interface_id, address):
         NODE_BOOST_MODE: (f'{address}:1', 'BOOST_MODE'),
         NODE_PARTY_MODE: (f'{address}:1', 'PARTY_MODE'),
     }
-    data.ENTITIES[entity_id] = IPThermostat(interface_id, address, entity_id, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(entity_id)
-    return [entity_id]
+    data.ENTITIES[unique_id] = IPThermostat(interface_id, address, unique_id, nodes)
+    data.HA_DEVICES[address].entities.add(unique_id)
+    return [unique_id]
 
 def make_ip_wall_thermostat(interface_id, address):
     """
@@ -697,9 +688,8 @@ def make_ip_wall_thermostat(interface_id, address):
     We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
-    entity_id = "climate.{}".format(unique_id)
-    if entity_id in data.ENTITIES:
-        LOG.debug("make_ip_thermostat: Skipping %s (already exists)", entity_id)
+    if unique_id in data.ENTITIES:
+        LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f'{address}:1', 'ACTUAL_TEMPERATURE'),
         NODE_SET_TEMPERATURE: (f'{address}:1', 'SET_POINT_TEMPERATURE'),
@@ -709,9 +699,9 @@ def make_ip_wall_thermostat(interface_id, address):
         NODE_PARTY_MODE: (f'{address}:1', 'PARTY_MODE'),
         NODE_HUMIDITY: (f'{address}:1', 'HUMIDITY'),
     }
-    data.ENTITIES[entity_id] = IPThermostat(interface_id, address, entity_id, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(entity_id)
-    return [entity_id]
+    data.ENTITIES[unique_id] = IPThermostat(interface_id, address, unique_id, nodes)
+    data.HA_DEVICES[address].entities.add(unique_id)
+    return [unique_id]
 
 DEVICES = {
     'BC-RT-TRX-CyG': make_max_thermostat,

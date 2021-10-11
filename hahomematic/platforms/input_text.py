@@ -18,8 +18,7 @@ class input_text(Entity):
     """
     # pylint: disable=too-many-arguments
     def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
-        super().__init__(interface_id, "input_text.{}".format(unique_id),
-                         address, parameter, parameter_data)
+        super().__init__(interface_id, unique_id, address, parameter, parameter_data, 'input_text')
 
     @property
     def STATE(self):

@@ -30,15 +30,15 @@ class Entity(ABC):
     Base class for regular entities.
     """
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, entity_id, address, parameter, parameter_data):
+    def __init__(self, interface_id, unique_id, address, parameter, parameter_data, platform):
         """
         Initialize the entity.
         """
         self.interface_id = interface_id
         self.client = hahomematic.data.CLIENTS[interface_id]
         self.proxy = self.client.proxy
-        self.entity_id = entity_id.replace('-', '_').lower()
-        self.unique_id = self.entity_id.split('.')[-1]
+        self.unique_id = unique_id
+        self.platform = platform
         self.address = address
         self.device_type = hahomematic.data.DEVICES_RAW_DICT[self.interface_id][self.address].get(ATTR_HM_PARENT_TYPE)
         self.parameter = parameter
@@ -53,12 +53,12 @@ class Entity(ABC):
         self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
         self.device_class = None
         self.name = hahomematic.data.NAMES.get(
-            self.interface_id, {}).get(self.address, self.entity_id)
+            self.interface_id, {}).get(self.address, self.unique_id)
         self._state = None
         if self.type == TYPE_ACTION:
             self._state = False
         LOG.debug("Entity.__init__: Getting current value for %s",
-                  self.entity_id)
+                  self.unique_id)
         # pylint: disable=pointless-statement
         self.STATE
         hahomematic.data.EVENT_SUBSCRIPTIONS[(self.address, self.parameter)].append(self.event)
@@ -95,7 +95,7 @@ class Entity(ABC):
             LOG.debug("Entity.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
-        self.update_callback(self.entity_id)
+        self.update_callback(self.unique_id)
 
     @property
     @abstractmethod

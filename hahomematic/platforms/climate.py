@@ -11,3 +11,6 @@ class climate():
     """
     Base class for climate entities.
     """
+
+    def __init__(self):
+        self.platform = 'climate'
