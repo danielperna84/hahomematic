@@ -14,11 +14,11 @@ from hahomematic.const import (
     ATTR_HM_MAX,
     ATTR_HM_MIN,
     ATTR_HM_OPERATIONS,
-    ATTR_HM_PARENT_TYPE,
     ATTR_HM_SPECIAL,
     ATTR_HM_TYPE,
     ATTR_HM_UNIT,
     ATTR_HM_VALUE_LIST,
+    HA_DOMAIN,
     TYPE_ACTION,
 )
 
@@ -43,9 +43,11 @@ class Entity(ABC):
         self.unique_id = unique_id
         self.platform = platform
         self.address = address
-        self.device_type = hahomematic.data.DEVICES_RAW_DICT[self.interface_id][
-            self.address
-        ].get(ATTR_HM_PARENT_TYPE)
+        self._parent_address = address.split(":")[0]
+        self._parent_device = hahomematic.data.DEVICES_RAW_DICT[interface_id][
+            self._parent_address
+        ]
+        self.device_type = self._parent_device.get(ATTR_HM_TYPE)
         self.parameter = parameter
         self._parameter_data = parameter_data
         self.operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
@@ -119,3 +121,15 @@ class Entity(ABC):
     # pylint: disable=invalid-name,missing-function-docstring
     def STATE(self):
         ...
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(HA_DOMAIN, self._parent_address)},
+            "name": hahomematic.data.HA_DEVICES.get(self._parent_address).name,
+            "manufacturer": "eQ-3",
+            "model": self.device_type,
+            "sw_version": self._parent_device.get("FIRMWARE"),
+            "via_device": (HA_DOMAIN, self.interface_id),
+        }
