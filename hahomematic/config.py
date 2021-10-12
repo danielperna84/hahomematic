@@ -2,7 +2,11 @@
 Global configuration parameters.
 """
 
-from hahomematic.const import DEFAULT_INTERFACE_ID, DEFAULT_TIMEOUT, DEFAULT_INIT_TIMEOUT
+from hahomematic.const import (
+    DEFAULT_INIT_TIMEOUT,
+    DEFAULT_INTERFACE_ID,
+    DEFAULT_TIMEOUT,
+)
 
 INTERFACE_ID = DEFAULT_INTERFACE_ID
 TIMEOUT = DEFAULT_TIMEOUT

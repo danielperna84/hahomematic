@@ -3,10 +3,11 @@
 The client-object and its methods.
 """
 
-import time
-import socket
 import logging
+import socket
+import time
 
+from hahomematic import config, data
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
@@ -40,39 +41,44 @@ from hahomematic.const import (
     PROXY_INIT_SUCCESS,
     RELEVANT_PARAMSETS,
 )
+from hahomematic.helpers import build_api_url, json_rpc_post, parse_ccu_sys_var
 from hahomematic.proxy import LockingServerProxy
-from hahomematic import data, config
 from hahomematic.server import save_paramsets
-from hahomematic.helpers import (
-    build_api_url,
-    json_rpc_post,
-    parse_ccu_sys_var,
-)
 
 LOG = logging.getLogger(__name__)
+
 
 class ClientException(Exception):
     """hahomematic Client exception."""
 
+
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
-class Client():
+class Client:
     """
     Client object that initializes the XML-RPC proxy
     and provides access to other data via XML-RPC
     or JSON-RPC.
     """
+
     # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,too-many-branches
-    def __init__(self, name=DEFAULT_NAME,
-                 host=LOCALHOST, port=PORT_RFD, path=DEFAULT_PATH,
-                 username=DEFAULT_USER, password=DEFAULT_PASSWORD,
-                 tls=DEFAULT_TLS, verify_tls=DEFAULT_VERIFY_TLS,
-                 # connect -> do init
-                 connect=DEFAULT_CONNECT,
-                 callback_hostname=None,
-                 callback_port=None,
-                 local_port=DEFAULT_LOCAL_PORT,
-                 json_port=DEFAULT_JSONPORT,
-                 json_tls=DEFAULT_TLS):
+    def __init__(
+        self,
+        name=DEFAULT_NAME,
+        host=LOCALHOST,
+        port=PORT_RFD,
+        path=DEFAULT_PATH,
+        username=DEFAULT_USER,
+        password=DEFAULT_PASSWORD,
+        tls=DEFAULT_TLS,
+        verify_tls=DEFAULT_VERIFY_TLS,
+        # connect -> do init
+        connect=DEFAULT_CONNECT,
+        callback_hostname=None,
+        callback_port=None,
+        local_port=DEFAULT_LOCAL_PORT,
+        json_port=DEFAULT_JSONPORT,
+        json_tls=DEFAULT_TLS,
+    ):
         """
         Initialize the Client.
         """
@@ -124,19 +130,19 @@ class Client():
             self.path,
             username=self.username,
             password=self.password,
-            tls=self.tls
+            tls=self.tls,
         )
         self.proxy = LockingServerProxy(
-            self.api_url,
-            tls=self.tls,
-            verify_tls=self.verify_tls
+            self.api_url, tls=self.tls, verify_tls=self.verify_tls
         )
         self.initialized = 0
         try:
             self.version = self.proxy.getVersion()
         except Exception as err:
-            raise Exception(f"Failed to get backend version. Not creating client: {self.name}") from err
-        if 'Homegear' in self.version or 'pydevccu' in self.version:
+            raise Exception(
+                f"Failed to get backend version. Not creating client: {self.name}"
+            ) from err
+        if "Homegear" in self.version or "pydevccu" in self.version:
             self.backend = BACKEND_HOMEGEAR
             self.session = None
         else:
@@ -184,14 +190,18 @@ class Client():
             LOG.warning("proxy_de_init: Local server missing for %s", self.name)
             return PROXY_INIT_FAILED
         if not self.initialized:
-            LOG.debug("proxy_de_init: Skipping de-init for %s (not initialized)", self.name)
+            LOG.debug(
+                "proxy_de_init: Skipping de-init for %s (not initialized)", self.name
+            )
             return PROXY_INIT_SKIPPED
         try:
             LOG.debug("proxy_de_init: init('%s')", self.init_url)
             self.proxy.init(self.init_url)
         # pylint: disable=broad-except
         except Exception:
-            LOG.exception("proxy_de_init: Failed to de-initialize proxy for %s", self.name)
+            LOG.exception(
+                "proxy_de_init: Failed to de-initialize proxy for %s", self.name
+            )
             return PROXY_INIT_FAILED
         # TODO: Should the de-init really be skipped for other clients?
         #  for client in data.CLIENTS_BY_INIT_URL.get(self.init_url, []):
@@ -209,14 +219,20 @@ class Client():
                 ATTR_PASSWORD: self.password,
             }
             response = json_rpc_post(
-                self.host, self.json_port,
-                "Session.login", params,
-                tls=self.json_tls, verify_tls=self.verify_tls)
+                self.host,
+                self.json_port,
+                "Session.login",
+                params,
+                tls=self.json_tls,
+                verify_tls=self.verify_tls,
+            )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 self.session = response[ATTR_RESULT]
 
             if not self.session:
-                LOG.warning("json_rpc_login: Unable to open session: %s", response[ATTR_ERROR])
+                LOG.warning(
+                    "json_rpc_login: Unable to open session: %s", response[ATTR_ERROR]
+                )
         # pylint: disable=broad-except
         except Exception:
             LOG.exception("json_rpc_login: Exception while logging in via JSON-RPC")
@@ -229,9 +245,13 @@ class Client():
 
         try:
             response = json_rpc_post(
-                self.host, self.json_port,
-                "Session.renew", {ATTR_SESSION_ID: self.session},
-                tls=self.json_tls, verify_tls=self.verify_tls)
+                self.host,
+                self.json_port,
+                "Session.renew",
+                {ATTR_SESSION_ID: self.session},
+                tls=self.json_tls,
+                verify_tls=self.verify_tls,
+            )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 self.session = response[ATTR_RESULT]
                 return
@@ -247,9 +267,13 @@ class Client():
         try:
             params = {"_session_id_": self.session}
             response = json_rpc_post(
-                self.host, self.json_port,
-                "Session.logout", params,
-                tls=self.json_tls, verify_tls=self.verify_tls)
+                self.host,
+                self.json_port,
+                "Session.logout",
+                params,
+                tls=self.json_tls,
+                verify_tls=self.verify_tls,
+            )
             if response[ATTR_ERROR]:
                 LOG.warning("json_rpc_logout: Logout error: %s", response[ATTR_RESULT])
         # pylint: disable=broad-except
@@ -261,15 +285,22 @@ class Client():
         """Get all system variables from CCU / Homegear."""
         variables = {}
         if self.backend == BACKEND_CCU and self.username and self.password:
-            LOG.debug("get_all_system_variables: Getting all System variables via JSON-RPC")
+            LOG.debug(
+                "get_all_system_variables: Getting all System variables via JSON-RPC"
+            )
             self.json_rpc_renew()
             if not self.session:
                 return variables
             try:
                 params = {"_session_id_": self.session}
                 response = json_rpc_post(
-                    self.host, self.json_port, "SysVar.getAll", params,
-                    tls=self.json_tls, verify_tls=self.verify_tls)
+                    self.host,
+                    self.json_port,
+                    "SysVar.getAll",
+                    params,
+                    tls=self.json_tls,
+                    verify_tls=self.verify_tls,
+                )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     for var in response[ATTR_RESULT]:
                         key, value = parse_ccu_sys_var(var)
@@ -294,15 +325,20 @@ class Client():
                 return var
             try:
                 params = {"_session_id_": self.session, ATTR_NAME: name}
-                response = json_rpc_post(self.host, self.json_port,
-                    "SysVar.getValueByName", params,
-                    tls=self.json_tls, verify_tls=self.verify_tls)
+                response = json_rpc_post(
+                    self.host,
+                    self.json_port,
+                    "SysVar.getValueByName",
+                    params,
+                    tls=self.json_tls,
+                    verify_tls=self.verify_tls,
+                )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     # TODO: This does not yet support strings
                     try:
                         var = float(response[ATTR_RESULT])
                     except Exception:
-                        var = response[ATTR_RESULT] == 'true'
+                        var = response[ATTR_RESULT] == "true"
 
             except Exception:
                 LOG.exception("get_system_variable: Exception")
@@ -322,9 +358,14 @@ class Client():
                 return
             try:
                 params = {"_session_id_": self.session, ATTR_NAME: name}
-                response = json_rpc_post(self.host, self.json_port,
-                    "SysVar.deleteSysVarByName", params,
-                    tls=self.json_tls, verify_tls=self.verify_tls)
+                response = json_rpc_post(
+                    self.host,
+                    self.json_port,
+                    "SysVar.deleteSysVarByName",
+                    params,
+                    tls=self.json_tls,
+                    verify_tls=self.verify_tls,
+                )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     deleted = response[ATTR_RESULT]
                     LOG.warning("delete_system_variable: Deleted: %s", str(deleted))
@@ -345,22 +386,32 @@ class Client():
             if not self.session:
                 return
             try:
-                params = {"_session_id_": self.session,
-                          ATTR_NAME: name, ATTR_VALUE: value}
+                params = {
+                    "_session_id_": self.session,
+                    ATTR_NAME: name,
+                    ATTR_VALUE: value,
+                }
                 if value is True or value is False:
                     params[ATTR_VALUE] = int(value)
                     response = json_rpc_post(
-                        self.host, self.json_port, "SysVar.setBool", params)
+                        self.host, self.json_port, "SysVar.setBool", params
+                    )
                 else:
                     response = json_rpc_post(
-                        self.host, self.json_port, "SysVar.setFloat", params)
+                        self.host, self.json_port, "SysVar.setFloat", params
+                    )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     res = response[ATTR_RESULT]
-                    LOG.debug("set_system_variable: Result while setting variable: %s", str(res))
+                    LOG.debug(
+                        "set_system_variable: Result while setting variable: %s",
+                        str(res),
+                    )
                 else:
                     if response[ATTR_ERROR]:
-                        LOG.debug("set_system_variable: Error while setting variable: %s", str(
-                            response[ATTR_ERROR]))
+                        LOG.debug(
+                            "set_system_variable: Error while setting variable: %s",
+                            str(response[ATTR_ERROR]),
+                        )
 
             except Exception:
                 LOG.exception("set_system_variable: Exception")
@@ -498,11 +549,13 @@ class Client():
             if not data.PARAMSETS[self.id][address]:
                 data.PARAMSETS[self.id][address] = {}
             try:
-                data.PARAMSETS[self.id][address][paramset] = \
-                    self.proxy.getParamsetDescription(address, paramset)
+                data.PARAMSETS[self.id][address][
+                    paramset
+                ] = self.proxy.getParamsetDescription(address, paramset)
             except Exception:
-                LOG.exception("Unable to get paramset %s for address %s.",
-                              paramset, address)
+                LOG.exception(
+                    "Unable to get paramset %s for address %s.", paramset, address
+                )
         save_paramsets()
 
     def fetch_paramsets(self, device_description, update=False):
@@ -519,11 +572,13 @@ class Client():
                 if paramset not in device_description[ATTR_HM_PARAMSETS]:
                     continue
                 try:
-                    data.PARAMSETS[self.id][address][paramset] = \
-                        self.proxy.getParamsetDescription(address, paramset)
+                    data.PARAMSETS[self.id][address][
+                        paramset
+                    ] = self.proxy.getParamsetDescription(address, paramset)
                 except Exception:
-                    LOG.exception("Unable to get paramset %s for address %s.",
-                                  paramset, address)
+                    LOG.exception(
+                        "Unable to get paramset %s for address %s.", paramset, address
+                    )
                     data.PARAMSETS[self.id][address][paramset] = {}
 
     def fetch_all_paramsets(self, skip_existing=False):
@@ -545,10 +600,16 @@ class Client():
         Update paramsets for provided address.
         """
         if self.id not in data.DEVICES_RAW_DICT:
-            LOG.error("Interface ID missing in data.DEVICES_RAW_DICT. Not updating paramsets for %s.", address)
+            LOG.error(
+                "Interface ID missing in data.DEVICES_RAW_DICT. Not updating paramsets for %s.",
+                address,
+            )
             return
         if not address in data.DEVICES_RAW_DICT[self.id]:
-            LOG.error("Channel missing in data.DEVICES_RAW_DICT[interface_id]. Not updating paramsets for %s.", address)
+            LOG.error(
+                "Channel missing in data.DEVICES_RAW_DICT[interface_id]. Not updating paramsets for %s.",
+                address,
+            )
             return
         self.fetch_paramsets(data.DEVICES_RAW_DICT[self.id][address], update=True)
         save_paramsets()
@@ -558,26 +619,41 @@ class Client():
         Get all names via JSON-RPS and store in data.NAMES.
         """
         if not self.backend == BACKEND_CCU:
-            LOG.warning("fetch_names_json: No CCU detected. Not fetching names via JSON-RPC.")
+            LOG.warning(
+                "fetch_names_json: No CCU detected. Not fetching names via JSON-RPC."
+            )
             return
         if not self.username:
-            LOG.warning("fetch_names_json: No username set. Not fetching names via JSON-RPC.")
+            LOG.warning(
+                "fetch_names_json: No username set. Not fetching names via JSON-RPC."
+            )
             return
         LOG.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
             self.json_rpc_renew()
             if not self.session:
-                LOG.warning("fetch_names_json: Login failed. Not fetching names via JSON-RPC.")
+                LOG.warning(
+                    "fetch_names_json: Login failed. Not fetching names via JSON-RPC."
+                )
                 return
 
             params = {ATTR_SESSION_ID: self.session}
-            response = json_rpc_post(self.host, self.json_port,
-                "Interface.listInterfaces", params,
-                tls=self.json_tls, verify_tls=self.verify_tls)
+            response = json_rpc_post(
+                self.host,
+                self.json_port,
+                "Interface.listInterfaces",
+                params,
+                tls=self.json_tls,
+                verify_tls=self.verify_tls,
+            )
             interface = False
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 for i in response[ATTR_RESULT]:
-                    if i[ATTR_PORT] in [self.port, self.port + 30000, self.port + 40000]:
+                    if i[ATTR_PORT] in [
+                        self.port,
+                        self.port + 30000,
+                        self.port + 40000,
+                    ]:
                         interface = i[ATTR_NAME]
                         break
             LOG.debug("fetch_names_json: Got interface: %s", interface)
@@ -585,9 +661,14 @@ class Client():
                 return
 
             params = {ATTR_SESSION_ID: self.session}
-            response = json_rpc_post(self.host, self.json_port,
-                "Device.listAllDetail", params,
-                tls=self.json_tls, verify_tls=self.verify_tls)
+            response = json_rpc_post(
+                self.host,
+                self.json_port,
+                "Device.listAllDetail",
+                params,
+                tls=self.json_tls,
+                verify_tls=self.verify_tls,
+            )
 
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 LOG.debug("fetch_names_json: Resolving devicenames")
@@ -597,7 +678,9 @@ class Client():
                     try:
                         data.NAMES[self.id][device[ATTR_ADDRESS]] = device[ATTR_NAME]
                         for channel in device.get(ATTR_CHANNELS, []):
-                            data.NAMES[self.id][channel[ATTR_ADDRESS]] = channel[ATTR_NAME]
+                            data.NAMES[self.id][channel[ATTR_ADDRESS]] = channel[
+                                ATTR_NAME
+                            ]
                     except Exception:
                         LOG.exception("fetch_names_json: Exception")
 
@@ -609,11 +692,15 @@ class Client():
         Get all names from metadata (Homegear).
         """
         if not self.backend == BACKEND_HOMEGEAR:
-            LOG.warning("fetch_names_metadata: No Homegear detected. Not fetching names via Metadata.")
+            LOG.warning(
+                "fetch_names_metadata: No Homegear detected. Not fetching names via Metadata."
+            )
             return
         LOG.debug("fetch_names_metadata: Fetching names via Metadata.")
         for address in data.DEVICES_RAW_DICT[self.id]:
             try:
-                data.NAMES[self.id][address] = self.proxy.getMetadata(address, ATTR_HM_NAME)
+                data.NAMES[self.id][address] = self.proxy.getMetadata(
+                    address, ATTR_HM_NAME
+                )
             except Exception:
                 LOG.exception("Failed to fetch name for device %s.", address)

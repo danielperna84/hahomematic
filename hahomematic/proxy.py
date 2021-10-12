@@ -2,10 +2,10 @@
 Implementation of a locking ServerProxy for XML-RPC communication.
 """
 
-import ssl
-import xmlrpc.client
-import threading
 import logging
+import ssl
+import threading
+import xmlrpc.client
 
 LOG = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class LockingServerProxy(xmlrpc.client.ServerProxy):
         self._verify_tls = kwargs.pop("verify_tls", True)
         self.lock = threading.Lock()
         if self._tls and not self._verify_tls and self._verify_tls is not None:
-            kwargs['context'] = ssl._create_unverified_context()
+            kwargs["context"] = ssl._create_unverified_context()
         xmlrpc.client.ServerProxy.__init__(self, encoding="ISO-8859-1", *args, **kwargs)
 
     def __request(self, *args, **kwargs):

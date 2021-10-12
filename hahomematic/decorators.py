@@ -2,18 +2,20 @@
 Decorators used within hahomematic.
 """
 
-import time
 import functools
 import logging
+import time
 
 from hahomematic import config, data
 
 LOG = logging.getLogger(__name__)
 
+
 def systemcallback(name):
     """
     Check if systemcallback is set and call it AFTER original function.
     """
+
     def decorator_systemcallback(func):
         @functools.wraps(func)
         def wrapper_systemcallback(*args):
@@ -32,13 +34,17 @@ def systemcallback(name):
                 # pylint: disable=not-callable
                 config.CALLBACK_SYSTEM(name, *args)
             return return_value
+
         return wrapper_systemcallback
+
     return decorator_systemcallback
+
 
 def eventcallback(func):
     """
     Check if eventcallback is set and call it AFTER original function.
     """
+
     @functools.wraps(func)
     def wrapper_eventcallback(*args):
         return_value = func(*args)
@@ -56,4 +62,5 @@ def eventcallback(func):
             # pylint: disable=not-callable
             config.CALLBACK_EVENT(*args)
         return return_value
+
     return wrapper_eventcallback
