@@ -80,7 +80,7 @@ class Client():
         self.name = name
         # This is the actual interface_id used for init
         # pylint: disable=invalid-name
-        self.id = "{}-{}".format(config.INTERFACE_ID, name)
+        self.id = f"{config.INTERFACE_ID}-{name}"
         self.host = host
         self.port = port
         self.json_port = json_port
@@ -117,7 +117,7 @@ class Client():
             self.callback_port = int(callback_port)
         else:
             self.callback_port = self.local_port
-        self.init_url = 'http://{}:{}'.format(self.callback_hostname, self.callback_port)
+        self.init_url = f"http://{self.callback_hostname}:{self.callback_port}"
         self.api_url = build_api_url(
             self.host,
             self.port,
@@ -135,7 +135,7 @@ class Client():
         try:
             self.version = self.proxy.getVersion()
         except Exception as err:
-            raise Exception("Failed to get backend version. Not creating client: %s" % self.name) from err
+            raise Exception(f"Failed to get backend version. Not creating client: {self.name}") from err
         if 'Homegear' in self.version or 'pydevccu' in self.version:
             self.backend = BACKEND_HOMEGEAR
             self.session = None

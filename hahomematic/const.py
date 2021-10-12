@@ -3,6 +3,7 @@ Constants used by hahomematic.
 """
 
 VERSION = '0.0.3'
+DEFAULT_ENCODING = 'UTF-8'
 
 LOCALHOST = 'localhost'
 IP_LOCALHOST_V4 = '127.0.0.1'

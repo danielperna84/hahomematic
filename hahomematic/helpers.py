@@ -47,8 +47,8 @@ def make_http_credentials(username=None, password=None):
             return credentials
         credentials += username
     if credentials and password is not None:
-        credentials += ":%s" % password
-    return "%s@" % credentials
+        credentials += f":{password}"
+    return f"{credentials}@"
 
 # pylint: disable=too-many-arguments
 def build_api_url(host, port, path, username=None, password=None, tls=False):
@@ -58,10 +58,10 @@ def build_api_url(host, port, path, username=None, password=None, tls=False):
     if not path:
         path = ''
     if path and not path.startswith('/'):
-        path = "/{}".format(path)
+        path = f"/{path}"
     if tls:
         scheme += 's'
-    return "{}://{}{}:{}{}".format(scheme, credentials, host, port, path)
+    return f"{scheme}://{credentials}{host}:{port}{path}"
 
 # pylint: disable=dangerous-default-value
 def json_rpc_post(host, jsonport, method, params={}, tls=DEFAULT_TLS, verify_tls=DEFAULT_VERIFY_TLS):
@@ -74,9 +74,9 @@ def json_rpc_post(host, jsonport, method, params={}, tls=DEFAULT_TLS, verify_tls
         headers = {"Content-Type": 'application/json',
                    "Content-Length": len(payload)}
         if tls:
-            apiendpoint = "https://%s:%s%s" % (host, jsonport, PATH_JSON_RPC)
+            apiendpoint = f"https://{host}:{jsonport}(PATH_JSON_RPC)"
         else:
-            apiendpoint = "http://%s:%s%s" % (host, jsonport, PATH_JSON_RPC)
+            apiendpoint = f"http://{host}:{jsonport}(PATH_JSON_RPC)"
         LOG.debug("helpers.json_rpc_post: API-Endpoint: %s", apiendpoint)
         req = urllib.request.Request(apiendpoint, payload, headers)
         if tls:

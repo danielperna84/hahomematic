@@ -17,6 +17,7 @@ from hahomematic.const import (
     ATTR_HM_ADDRESS,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
+    DEFAULT_ENCODING,
     FILE_DEVICES,
     FILE_PARAMSETS,
     FILE_NAMES,
@@ -337,7 +338,7 @@ def save_devices_raw():
     """
     if not check_cache_dir():
         return
-    with open(os.path.join(config.CACHE_DIR, FILE_DEVICES), 'w') as fptr:
+    with open(file=os.path.join(config.CACHE_DIR, FILE_DEVICES), mode='w', encoding=DEFAULT_ENCODING) as fptr:
         json.dump(data.DEVICES_RAW, fptr)
 
 def load_devices_raw():
@@ -348,7 +349,7 @@ def load_devices_raw():
         return
     if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_DEVICES)):
         return
-    with open(os.path.join(config.CACHE_DIR, FILE_DEVICES)) as fptr:
+    with open(file=os.path.join(config.CACHE_DIR, FILE_DEVICES), mode='r', encoding=DEFAULT_ENCODING) as fptr:
         data.DEVICES_RAW = json.load(fptr)
 
 def clear_devices_raw():
@@ -366,7 +367,7 @@ def save_paramsets():
     """
     if not check_cache_dir():
         return
-    with open(os.path.join(config.CACHE_DIR, FILE_PARAMSETS), 'w') as fptr:
+    with open(file=os.path.join(config.CACHE_DIR, FILE_PARAMSETS), mode='w', encoding=DEFAULT_ENCODING) as fptr:
         json.dump(data.PARAMSETS, fptr)
 
 def load_paramsets():
@@ -377,7 +378,7 @@ def load_paramsets():
         return
     if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)):
         return
-    with open(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)) as fptr:
+    with open(file=os.path.join(config.CACHE_DIR, FILE_PARAMSETS), mode='r', encoding=DEFAULT_ENCODING) as fptr:
         data.PARAMSETS = json.load(fptr)
 
 def clear_paramsets():
@@ -395,7 +396,7 @@ def save_names():
     """
     if not check_cache_dir():
         return
-    with open(os.path.join(config.CACHE_DIR, FILE_NAMES), 'w') as fptr:
+    with open(file=os.path.join(config.CACHE_DIR, FILE_NAMES), mode='w', encoding=DEFAULT_ENCODING) as fptr:
         json.dump(data.NAMES, fptr)
 
 def load_names():
@@ -406,7 +407,7 @@ def load_names():
         return
     if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_NAMES)):
         return
-    with open(os.path.join(config.CACHE_DIR, FILE_NAMES)) as fptr:
+    with open(file=os.path.join(config.CACHE_DIR, FILE_NAMES), mode='r', encoding=DEFAULT_ENCODING) as fptr:
         data.NAMES = json.load(fptr)
 
 def clear_names():
