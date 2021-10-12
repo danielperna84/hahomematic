@@ -86,8 +86,8 @@ class Device():
             LOG.debug("Device.create_entities: Handling custom device integration: %s, %s, %s",
                       self.interface_id, self.address, self.device_type)
             # Call the custom device / entity creation function.
-            for e_id in hahomematic.devices.DEVICES[self.device_type](self.interface_id, self.address):
-                new_entities.add(e_id)
+            for u_id in hahomematic.devices.DEVICES[self.device_type](self.interface_id, self.address):
+                new_entities.add(u_id)
         return new_entities
 
 # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
