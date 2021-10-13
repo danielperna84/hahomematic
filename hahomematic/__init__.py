@@ -24,7 +24,8 @@ LOG = logging.getLogger(__name__)
 def signal_handler(sig, frame):
     """Handle signal to shut down server."""
     LOG.info("Got signal: %s. Shutting down server", str(sig))
-    data.SERVER.stop()
+    for server in data.INSTANCES.values():
+        server.stop()
 
 
 if sys.stdout.isatty():

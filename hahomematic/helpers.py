@@ -80,9 +80,9 @@ def json_rpc_post(
 
         headers = {"Content-Type": "application/json", "Content-Length": len(payload)}
         if tls:
-            apiendpoint = f"https://{host}:{jsonport}(PATH_JSON_RPC)"
+            apiendpoint = f"https://{host}:{jsonport}{PATH_JSON_RPC}"
         else:
-            apiendpoint = f"http://{host}:{jsonport}(PATH_JSON_RPC)"
+            apiendpoint = f"http://{host}:{jsonport}{PATH_JSON_RPC}"
         LOG.debug("helpers.json_rpc_post: API-Endpoint: %s", apiendpoint)
         req = urllib.request.Request(apiendpoint, payload, headers)
         if tls:

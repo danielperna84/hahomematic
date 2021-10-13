@@ -7,8 +7,7 @@ Functions for entity creation.
 import logging
 from abc import ABC, abstractmethod
 
-import hahomematic.config
-import hahomematic.data
+from hahomematic import config, data
 from hahomematic.const import (
     ATTR_HM_CONTROL,
     ATTR_HM_MAX,
@@ -38,15 +37,13 @@ class Entity(ABC):
         Initialize the entity.
         """
         self.interface_id = interface_id
-        self.client = hahomematic.data.CLIENTS[interface_id]
+        self.client = data.CLIENTS[interface_id]
         self.proxy = self.client.proxy
         self.unique_id = unique_id
         self.platform = platform
         self.address = address
         self._parent_address = address.split(":")[0]
-        self._parent_device = hahomematic.data.DEVICES_RAW_DICT[interface_id][
-            self._parent_address
-        ]
+        self._parent_device = data.DEVICES_RAW_DICT[interface_id][self._parent_address]
         self.device_type = self._parent_device.get(ATTR_HM_TYPE)
         self.parameter = parameter
         self._parameter_data = parameter_data
@@ -59,7 +56,7 @@ class Entity(ABC):
         self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
         self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
         self.device_class = None
-        self.name = hahomematic.data.NAMES.get(self.interface_id, {}).get(
+        self.name = data.NAMES.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
         self._state = None
@@ -68,12 +65,10 @@ class Entity(ABC):
         LOG.debug("Entity.__init__: Getting current value for %s", self.unique_id)
         # pylint: disable=pointless-statement
         self.STATE
-        hahomematic.data.EVENT_SUBSCRIPTIONS[(self.address, self.parameter)].append(
-            self.event
-        )
+        data.EVENT_SUBSCRIPTIONS[(self.address, self.parameter)].append(self.event)
         self.update_callback = None
-        if callable(hahomematic.config.CALLBACK_ENTITY_UPDATE):
-            self.update_callback = hahomematic.config.CALLBACK_ENTITY_UPDATE
+        if callable(config.CALLBACK_ENTITY_UPDATE):
+            self.update_callback = config.CALLBACK_ENTITY_UPDATE
 
     def event(self, interface_id, address, parameter, value):
         """
@@ -127,7 +122,7 @@ class Entity(ABC):
         """Return device specific attributes."""
         return {
             "identifiers": {(HA_DOMAIN, self._parent_address)},
-            "name": hahomematic.data.HA_DEVICES.get(self._parent_address).name,
+            "name": data.HA_DEVICES.get(self._parent_address).name,
             "manufacturer": "eQ-3",
             "model": self.device_type,
             "sw_version": self._parent_device.get("FIRMWARE"),

@@ -63,6 +63,7 @@ class Client:
     # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,too-many-branches
     def __init__(
         self,
+        server,
         name=DEFAULT_NAME,
         host=LOCALHOST,
         port=PORT_RFD,
@@ -75,18 +76,18 @@ class Client:
         connect=DEFAULT_CONNECT,
         callback_hostname=None,
         callback_port=None,
-        local_port=DEFAULT_LOCAL_PORT,
         json_port=DEFAULT_JSONPORT,
         json_tls=DEFAULT_TLS,
     ):
         """
         Initialize the Client.
         """
+        self.server = server
         # Referred to as 'remote' in other places
         self.name = name
         # This is the actual interface_id used for init
         # pylint: disable=invalid-name
-        self.id = f"{config.INTERFACE_ID}-{name}"
+        self.id = f"{server.instance_name}-{name}"
         self.host = host
         self.port = port
         self.json_port = json_port
@@ -112,7 +113,6 @@ class Client:
         self.local_ip = tmpsocket.getsockname()[0]
         tmpsocket.close()
         LOG.debug("Got local ip: %s", self.local_ip)
-        self.local_port = local_port
 
         # Get callback address
         if callback_hostname is not None:
@@ -122,7 +122,7 @@ class Client:
         if callback_port is not None:
             self.callback_port = int(callback_port)
         else:
-            self.callback_port = self.local_port
+            self.callback_port = self.server.local_port
         self.init_url = f"http://{self.callback_hostname}:{self.callback_port}"
         self.api_url = build_api_url(
             self.host,
@@ -161,7 +161,7 @@ class Client:
         if not self.connect:
             LOG.debug("proxy_init: Skipping init for %s", self.name)
             return PROXY_INIT_SKIPPED
-        if data.SERVER is None:
+        if self.server is None:
             LOG.warning("proxy_init: Local server missing for %s", self.name)
             self.initialized = 0
             return PROXY_INIT_FAILED
@@ -186,7 +186,7 @@ class Client:
         if not self.connect:
             LOG.debug("proxy_de_init: Skipping de-init for %s", self.name)
             return PROXY_INIT_SKIPPED
-        if data.SERVER is None:
+        if self.server is None:
             LOG.warning("proxy_de_init: Local server missing for %s", self.name)
             return PROXY_INIT_FAILED
         if not self.initialized:
