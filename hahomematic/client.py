@@ -27,7 +27,6 @@ from hahomematic.const import (
     BACKEND_HOMEGEAR,
     DEFAULT_CONNECT,
     DEFAULT_JSONPORT,
-    DEFAULT_LOCAL_PORT,
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
     DEFAULT_PATH,
@@ -43,7 +42,7 @@ from hahomematic.const import (
 )
 from hahomematic.helpers import build_api_url, json_rpc_post, parse_ccu_sys_var
 from hahomematic.proxy import LockingServerProxy
-from hahomematic.server import save_paramsets
+
 
 LOG = logging.getLogger(__name__)
 
@@ -540,60 +539,60 @@ class Client:
         """
         Fetch a specific paramset and add it to the known ones.
         """
-        if self.id not in data.PARAMSETS:
-            data.PARAMSETS[self.id] = {}
-        if address not in data.PARAMSETS[self.id]:
-            data.PARAMSETS[self.id][address] = {}
-        if not paramset in data.PARAMSETS[self.id][address] or update:
+        if self.id not in self.server.paramsets_cache:
+            self.server.paramsets_cache[self.id] = {}
+        if address not in self.server.paramsets_cache[self.id]:
+            self.server.paramsets_cache[self.id][address] = {}
+        if not paramset in self.server.paramsets_cache[self.id][address] or update:
             LOG.debug("Fetching paramset %s for %s", paramset, address)
-            if not data.PARAMSETS[self.id][address]:
-                data.PARAMSETS[self.id][address] = {}
+            if not self.server.paramsets_cache[self.id][address]:
+                self.server.paramsets_cache[self.id][address] = {}
             try:
-                data.PARAMSETS[self.id][address][
+                self.server.paramsets_cache[self.id][address][
                     paramset
                 ] = self.proxy.getParamsetDescription(address, paramset)
             except Exception:
                 LOG.exception(
                     "Unable to get paramset %s for address %s.", paramset, address
                 )
-        save_paramsets()
+        self.server.save_paramsets()
 
     def fetch_paramsets(self, device_description, update=False):
         """
         Fetch paramsets for provided device description.
         """
-        if self.id not in data.PARAMSETS:
-            data.PARAMSETS[self.id] = {}
+        if self.id not in self.server.paramsets_cache:
+            self.server.paramsets_cache[self.id] = {}
         address = device_description[ATTR_HM_ADDRESS]
-        if address not in data.PARAMSETS[self.id] or update:
+        if address not in self.server.paramsets_cache[self.id] or update:
             LOG.debug("Fetching paramsets for %s", address)
-            data.PARAMSETS[self.id][address] = {}
+            self.server.paramsets_cache[self.id][address] = {}
             for paramset in RELEVANT_PARAMSETS:
                 if paramset not in device_description[ATTR_HM_PARAMSETS]:
                     continue
                 try:
-                    data.PARAMSETS[self.id][address][
+                    self.server.paramsets_cache[self.id][address][
                         paramset
                     ] = self.proxy.getParamsetDescription(address, paramset)
                 except Exception:
                     LOG.exception(
                         "Unable to get paramset %s for address %s.", paramset, address
                     )
-                    data.PARAMSETS[self.id][address][paramset] = {}
+                    self.server.paramsets_cache[self.id][address][paramset] = {}
 
     def fetch_all_paramsets(self, skip_existing=False):
         """
         Fetch all paramsets for provided interface id.
         """
-        if self.id not in data.DEVICES_RAW_DICT:
-            data.DEVICES_RAW_DICT[self.id] = {}
-        if self.id not in data.PARAMSETS:
-            data.PARAMSETS[self.id] = {}
-        for address, dd in data.DEVICES_RAW_DICT[self.id].items():
-            if skip_existing and address in data.PARAMSETS[self.id]:
+        if self.id not in self.server.DEVICES_RAW_DICT:
+            self.server.DEVICES_RAW_DICT[self.id] = {}
+        if self.id not in self.server.paramsets_cache:
+            self.server.paramsets_cache[self.id] = {}
+        for address, dd in self.server.DEVICES_RAW_DICT[self.id].items():
+            if skip_existing and address in self.server.paramsets_cache[self.id]:
                 continue
             self.fetch_paramsets(dd)
-        save_paramsets()
+        self.server.save_paramsets()
 
     def update_paramsets(self, address):
         """
@@ -612,7 +611,7 @@ class Client:
             )
             return
         self.fetch_paramsets(data.DEVICES_RAW_DICT[self.id][address], update=True)
-        save_paramsets()
+        self.server.save_paramsets()
 
     def fetch_names_json(self):
         """
@@ -676,9 +675,9 @@ class Client:
                     if device[ATTR_INTERFACE] != interface:
                         continue
                     try:
-                        data.NAMES[self.id][device[ATTR_ADDRESS]] = device[ATTR_NAME]
+                        self.server.names_cache[self.id][device[ATTR_ADDRESS]] = device[ATTR_NAME]
                         for channel in device.get(ATTR_CHANNELS, []):
-                            data.NAMES[self.id][channel[ATTR_ADDRESS]] = channel[
+                            self.server.names_cache[self.id][channel[ATTR_ADDRESS]] = channel[
                                 ATTR_NAME
                             ]
                     except Exception:
@@ -699,7 +698,7 @@ class Client:
         LOG.debug("fetch_names_metadata: Fetching names via Metadata.")
         for address in data.DEVICES_RAW_DICT[self.id]:
             try:
-                data.NAMES[self.id][address] = self.proxy.getMetadata(
+                self.server.names_cache[self.id][address] = self.proxy.getMetadata(
                     address, ATTR_HM_NAME
                 )
             except Exception:

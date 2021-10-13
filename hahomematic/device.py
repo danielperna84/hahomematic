@@ -50,12 +50,14 @@ class Device:
             self.interface_id,
             self.address,
         )
+        self.client = data.CLIENTS[self.interface_id]
+        self._server =self.client.server
         self.entities = set()
         self.device_type = data.DEVICES_RAW_DICT[self.interface_id][self.address][
             ATTR_HM_TYPE
         ]
-        if self.address in data.NAMES.get(self.interface_id, {}):
-            self.name = data.NAMES[self.interface_id][self.address]
+        if self.address in self._server.names_cache.get(self.interface_id, {}):
+            self.name = self._server.names_cache[self.interface_id][self.address]
         else:
             LOG.info(
                 "Device.__init__: Using auto-generated name for %s %s",
@@ -63,7 +65,7 @@ class Device:
                 self.address,
             )
             self.name = f"{self.device_type}_{self.address}"
-        self.client = data.CLIENTS[self.interface_id]
+
         LOG.debug(
             "Device.__init__: Initialized device: %s, %s, %s, %s",
             self.interface_id,
@@ -84,16 +86,16 @@ class Device:
         """
         new_entities = set()
         for channel in self.channels:
-            if channel not in data.PARAMSETS[self.interface_id]:
+            if channel not in self._server.paramsets_cache[self.interface_id]:
                 LOG.warning(
                     "Device.create_entities: Skipping channel %s, missing paramsets.",
                     channel,
                 )
                 continue
-            for paramset in data.PARAMSETS[self.interface_id][channel]:
+            for paramset in self._server.paramsets_cache[self.interface_id][channel]:
                 if paramset != PARAMSET_VALUES:
                     continue
-                for parameter, parameter_data in data.PARAMSETS[self.interface_id][
+                for parameter, parameter_data in self._server.paramsets_cache[self.interface_id][
                     channel
                 ][paramset].items():
                     if not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
@@ -129,12 +131,13 @@ def create_devices():
     new_devices = set()
     new_entities = set()
     for interface_id in data.DEVICES:
-        if interface_id not in data.CLIENTS:
+        client = data.CLIENTS.get(interface_id)
+        if not client:
             LOG.warning(
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
-        if interface_id not in data.PARAMSETS:
+        if interface_id not in client.server.paramsets_cache:
             LOG.warning(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,

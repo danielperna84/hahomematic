@@ -44,8 +44,9 @@ class RPCFunctions:
     """
 
     # pylint: disable=too-many-branches,too-many-statements
-    def __init__(self):
+    def __init__(self, server):
         LOG.debug("RPCFunctions.__init__")
+        self._server = server
 
     @eventcallback
     # pylint: disable=no-self-use
@@ -60,7 +61,7 @@ class RPCFunctions:
             value_key,
             str(value),
         )
-        data.CLIENTS[interface_id].server.last_events[interface_id] = int(time.time())
+        self._server.last_events[interface_id] = int(time.time())
         if (address, value_key) in data.EVENT_SUBSCRIPTIONS:
             try:
                 for callback in data.EVENT_SUBSCRIPTIONS[(address, value_key)]:
@@ -109,9 +110,9 @@ class RPCFunctions:
         We respond to that request using this method.
         """
         LOG.debug("RPCFunctions.listDevices: interface_id = %s", interface_id)
-        if interface_id not in data.DEVICES_RAW:
-            data.DEVICES_RAW[interface_id] = []
-        return data.DEVICES_RAW[interface_id]
+        if interface_id not in self._server.devices_raw_cache:
+            self._server.devices_raw_cache[interface_id] = []
+        return self._server.devices_raw_cache[interface_id]
 
     @systemcallback(HH_EVENT_NEW_DEVICES)
     # pylint: disable=no-self-use
@@ -125,38 +126,40 @@ class RPCFunctions:
             interface_id,
             len(dev_descriptions),
         )
-        if interface_id not in data.DEVICES_RAW:
-            data.DEVICES_RAW[interface_id] = []
+
+        if interface_id not in self._server.devices_raw_cache:
+            self._server.devices_raw_cache[interface_id] = []
         if interface_id not in data.DEVICES_RAW_DICT:
             data.DEVICES_RAW_DICT[interface_id] = {}
-        if interface_id not in data.NAMES:
-            data.NAMES[interface_id] = {}
+        if interface_id not in self._server.names_cache:
+            self._server.names_cache[interface_id] = {}
         if interface_id not in data.CLIENTS:
             LOG.error(
                 "RPCFunctions.newDevices: Missing client for interface_id %s.",
                 interface_id,
             )
             return True
-        client = data.CLIENTS[interface_id]
+
 
         # We need this list to avoid adding duplicates.
-        known_addresses = [dd[ATTR_HM_ADDRESS] for dd in data.DEVICES_RAW[interface_id]]
+        known_addresses = [dd[ATTR_HM_ADDRESS] for dd in self._server.devices_raw_cache[interface_id]]
+        client = data.CLIENTS[interface_id]
         for dd in dev_descriptions:
             try:
                 if dd[ATTR_HM_ADDRESS] not in known_addresses:
-                    data.DEVICES_RAW[interface_id].append(dd)
+                    self._server.devices_raw_cache[interface_id].append(dd)
                     client.fetch_paramsets(dd)
             except Exception:
                 LOG.exception("RPCFunctions.newDevices: Exception")
-        save_devices_raw()
-        save_paramsets()
+        self._server.save_devices_raw()
+        self._server.save_paramsets()
 
         handle_device_descriptions(interface_id, dev_descriptions)
         if client.backend == BACKEND_CCU:
             client.fetch_names_json()
         elif client.backend == BACKEND_HOMEGEAR:
             client.fetch_names_metadata()
-        save_names()
+        self._server.save_names()
         create_devices()
         return True
 
@@ -172,21 +175,23 @@ class RPCFunctions:
             interface_id,
             str(addresses),
         )
-        data.DEVICES_RAW[interface_id] = [
+        server = data.CLIENTS[interface_id]._server
+        server.devices_raw_cache[interface_id] = [
             device
-            for device in data.DEVICES_RAW[interface_id]
+            for device in server.devices_raw_cache[interface_id]
             if not device[ATTR_HM_ADDRESS] in addresses
         ]
-        save_devices_raw()
+
+        server.save_devices_raw()
         for address in addresses:
             try:
                 if ":" not in address:
                     del data.DEVICES[interface_id][address]
                 del data.DEVICES_RAW_DICT[interface_id][address]
-                del data.PARAMSETS[interface_id][address]
+                del server.paramsets_cache[interface_id][address]
             except KeyError:
                 LOG.exception("Failed to delete: %s", address)
-        save_paramsets()
+        server.save_paramsets()
         return True
 
     @systemcallback(HH_EVENT_UPDATE_DEVICE)
@@ -256,11 +261,19 @@ class Server(threading.Thread):
         LOG.debug("Server.__init__")
         threading.Thread.__init__(self)
 
+        # Caches for CCU data
+        # {interface_id, {address, paramsets}}
+        self.paramsets_cache = {}
+        # {interface_id,  {address, name}}
+        self.names_cache = {}
+        # {interface_id, {counter, device}}
+        self.devices_raw_cache = {}
+
         self.instance_name = instance_name
         self.local_ip = local_ip
         self.local_port = int(local_port)
 
-        self._rpcfunctions = RPCFunctions()
+        self._rpcfunctions = RPCFunctions(self)
 
         self.last_events = {}
 
@@ -277,12 +290,12 @@ class Server(threading.Thread):
         LOG.debug("Server.__init__: Registering RPC functions")
         self.server.register_instance(self._rpcfunctions, allow_dotted_names=True)
         data.INSTANCES[instance_name] = self
-        load_devices_raw()
-        load_paramsets()
-        load_names()
-        for interface_id, device_descriptions in data.DEVICES_RAW.items():
-            if interface_id not in data.PARAMSETS:
-                data.PARAMSETS[interface_id] = {}
+        self.load_devices_raw()
+        self.load_paramsets()
+        self.load_names()
+        for interface_id, device_descriptions in self.devices_raw_cache.items():
+            if interface_id not in self.paramsets_cache:
+                self.paramsets_cache[interface_id] = {}
             handle_device_descriptions(interface_id, device_descriptions)
 
     def run(self):
@@ -323,6 +336,136 @@ class Server(threading.Thread):
         del data.INSTANCES[self.instance_name]
 
 
+    def save_devices_raw(self):
+        """
+        Save current device data in DEVICES_RAW to disk.
+        """
+        if not check_cache_dir():
+            return
+        with open(
+                file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            json.dump(self.devices_raw_cache, fptr)
+
+
+    def load_devices_raw(self):
+        """
+        Load device data from disk into DEVICES_RAW.
+        """
+        if not check_cache_dir():
+            return
+        if not os.path.exists(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")):
+            return
+        with open(
+                file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
+                mode="r",
+                encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self.devices_raw_cache = json.load(fptr)
+
+
+    def clear_devices_raw(self):
+        """
+        Remove stored device data from disk and clear DEVICES_RAW.
+        """
+        check_cache_dir()
+        if os.path.exists(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")):
+            os.unlink(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"))
+        self.devices_raw_cache.clear()
+
+
+    def save_paramsets(self):
+        """
+        Save current paramset data in PARAMSETS to disk.
+        """
+        if not check_cache_dir():
+            return
+        with open(
+                file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            json.dump(self.paramsets_cache, fptr)
+
+
+    def load_paramsets(self):
+        """
+        Load paramset data from disk into PARAMSETS.
+        """
+        if not check_cache_dir():
+            return
+        if not os.path.exists(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")):
+            return
+        with open(
+                file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"),
+                mode="r",
+                encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self.paramsets_cache = json.load(fptr)
+
+
+    def clear_paramsets(self):
+        """
+        Remove stored paramset data from disk.
+        """
+        check_cache_dir()
+        if os.path.exists(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")):
+            os.unlink(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"))
+        self.paramsets_cache.clear()
+
+
+    def save_names(self):
+        """
+        Save current name data in NAMES to disk.
+        """
+        if not check_cache_dir():
+            return
+        with open(
+                file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            json.dump(self.names_cache, fptr)
+
+
+    def load_names(self):
+        """
+        Load name data from disk into NAMES.
+        """
+        if not check_cache_dir():
+            return
+        if not os.path.exists(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")):
+            return
+        with open(
+                file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"),
+                mode="r",
+                encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self.names_cache = json.load(fptr)
+
+
+    def clear_names(self):
+        """
+        Remove stored names data from disk.
+        """
+        check_cache_dir()
+        if os.path.exists(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")):
+            os.unlink(os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"))
+        self.names_cache.clear()
+
+
+    def clear_all(self):
+        """
+        Clear all stored data.
+        """
+        self.clear_devices_raw()
+        self.clear_paramsets()
+        self.clear_names()
+
+
+
 def handle_device_descriptions(interface_id, dev_descriptions):
     """
     Handle provided list of device descriptions.
@@ -352,130 +495,4 @@ def check_cache_dir():
     return True
 
 
-def save_devices_raw():
-    """
-    Save current device data in DEVICES_RAW to disk.
-    """
-    if not check_cache_dir():
-        return
-    with open(
-        file=os.path.join(config.CACHE_DIR, FILE_DEVICES),
-        mode="w",
-        encoding=DEFAULT_ENCODING,
-    ) as fptr:
-        json.dump(data.DEVICES_RAW, fptr)
 
-
-def load_devices_raw():
-    """
-    Load device data from disk into DEVICES_RAW.
-    """
-    if not check_cache_dir():
-        return
-    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_DEVICES)):
-        return
-    with open(
-        file=os.path.join(config.CACHE_DIR, FILE_DEVICES),
-        mode="r",
-        encoding=DEFAULT_ENCODING,
-    ) as fptr:
-        data.DEVICES_RAW = json.load(fptr)
-
-
-def clear_devices_raw():
-    """
-    Remove stored device data from disk and clear DEVICES_RAW.
-    """
-    check_cache_dir()
-    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_DEVICES)):
-        os.unlink(os.path.join(config.CACHE_DIR, FILE_DEVICES))
-    data.DEVICES_RAW.clear()
-
-
-def save_paramsets():
-    """
-    Save current paramset data in PARAMSETS to disk.
-    """
-    if not check_cache_dir():
-        return
-    with open(
-        file=os.path.join(config.CACHE_DIR, FILE_PARAMSETS),
-        mode="w",
-        encoding=DEFAULT_ENCODING,
-    ) as fptr:
-        json.dump(data.PARAMSETS, fptr)
-
-
-def load_paramsets():
-    """
-    Load paramset data from disk into PARAMSETS.
-    """
-    if not check_cache_dir():
-        return
-    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)):
-        return
-    with open(
-        file=os.path.join(config.CACHE_DIR, FILE_PARAMSETS),
-        mode="r",
-        encoding=DEFAULT_ENCODING,
-    ) as fptr:
-        data.PARAMSETS = json.load(fptr)
-
-
-def clear_paramsets():
-    """
-    Remove stored paramset data from disk.
-    """
-    check_cache_dir()
-    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)):
-        os.unlink(os.path.join(config.CACHE_DIR, FILE_PARAMSETS))
-    data.PARAMSETS.clear()
-
-
-def save_names():
-    """
-    Save current name data in NAMES to disk.
-    """
-    if not check_cache_dir():
-        return
-    with open(
-        file=os.path.join(config.CACHE_DIR, FILE_NAMES),
-        mode="w",
-        encoding=DEFAULT_ENCODING,
-    ) as fptr:
-        json.dump(data.NAMES, fptr)
-
-
-def load_names():
-    """
-    Load name data from disk into NAMES.
-    """
-    if not check_cache_dir():
-        return
-    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_NAMES)):
-        return
-    with open(
-        file=os.path.join(config.CACHE_DIR, FILE_NAMES),
-        mode="r",
-        encoding=DEFAULT_ENCODING,
-    ) as fptr:
-        data.NAMES = json.load(fptr)
-
-
-def clear_names():
-    """
-    Remove stored names data from disk.
-    """
-    check_cache_dir()
-    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_NAMES)):
-        os.unlink(os.path.join(config.CACHE_DIR, FILE_NAMES))
-    data.NAMES.clear()
-
-
-def clear_all():
-    """
-    Clear all stored data.
-    """
-    clear_devices_raw()
-    clear_paramsets()
-    clear_names()

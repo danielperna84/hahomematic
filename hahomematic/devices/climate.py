@@ -61,10 +61,11 @@ class SimpleThermostat(climate):
         )
         self.interface_id = interface_id
         self.address = address
-        self.client = data.CLIENTS[self.interface_id]
-        self.proxy = self.client.proxy
+        self._client = data.CLIENTS[self.interface_id]
+        self._server = self._client.server
+        self.proxy = self._client.proxy
         self.unique_id = unique_id
-        self.name = data.NAMES.get(self.interface_id, {}).get(
+        self.name = self._server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
         self.ha_device = data.HA_DEVICES[self.address]
@@ -127,14 +128,14 @@ class SimpleThermostat(climate):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return data.PARAMSETS[self.interface_id][f"{self.address}:1"][PARAMSET_VALUES][
+        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][PARAMSET_VALUES][
             PARAM_TEMPERATURE
         ][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return data.PARAMSETS[self.interface_id][f"{self.address}:1"][PARAMSET_VALUES][
+        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][PARAMSET_VALUES][
             PARAM_TEMPERATURE
         ][ATTR_HM_MAX]
 
@@ -193,10 +194,11 @@ class Thermostat(climate):
         LOG.debug("Thermostat.__init__(%s, %s, %s)", interface_id, address, unique_id)
         self.interface_id = interface_id
         self.address = address
-        self.client = data.CLIENTS[self.interface_id]
-        self.proxy = self.client.proxy
+        self._client = data.CLIENTS[self.interface_id]
+        self._server = self._client.server
+        self.proxy = self._client.proxy
         self.unique_id = unique_id
-        self.name = data.NAMES.get(self.interface_id, {}).get(
+        self.name = self._server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
         self.ha_device = data.HA_DEVICES[self.address]
@@ -267,14 +269,14 @@ class Thermostat(climate):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return data.PARAMSETS[self.interface_id][self._node_actual_temperature[0]][
+        return self._server.paramsets_cache[self.interface_id][self._node_actual_temperature[0]][
             PARAMSET_VALUES
         ][self._node_actual_temperature[1]][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return data.PARAMSETS[self.interface_id][self._node_actual_temperature[0]][
+        return self._server.paramsets_cache[self.interface_id][self._node_actual_temperature[0]][
             PARAMSET_VALUES
         ][self._node_actual_temperature[1]][ATTR_HM_MAX]
 
@@ -394,10 +396,11 @@ class IPThermostat(climate):
         LOG.debug("IPThermostat.__init__(%s, %s, %s)", interface_id, address, unique_id)
         self.interface_id = interface_id
         self.address = address
-        self.client = data.CLIENTS[self.interface_id]
-        self.proxy = self.client.proxy
+        self._client = data.CLIENTS[self.interface_id]
+        self._server = self._client.server
+        self.proxy = self._client.proxy
         self.unique_id = unique_id
-        self.name = data.NAMES.get(self.interface_id, {}).get(
+        self.name = self._server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
         self.ha_device = data.HA_DEVICES[self.address]
@@ -477,14 +480,14 @@ class IPThermostat(climate):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return data.PARAMSETS[self.interface_id][self._node_actual_temperature[0]][
+        return self._server.paramsets_cache[self.interface_id][self._node_actual_temperature[0]][
             PARAMSET_VALUES
         ][self._node_actual_temperature[1]][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return data.PARAMSETS[self.interface_id][self._node_actual_temperature[0]][
+        return self._server.paramsets_cache[self.interface_id][self._node_actual_temperature[0]][
             PARAMSET_VALUES
         ][self._node_actual_temperature[1]][ATTR_HM_MAX]
 

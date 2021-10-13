@@ -56,7 +56,7 @@ class Entity(ABC):
         self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
         self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
         self.device_class = None
-        self.name = data.NAMES.get(self.interface_id, {}).get(
+        self.name = self.client.server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
         self._state = None

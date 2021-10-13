@@ -7,12 +7,8 @@ INSTANCES = {}
 DEVICES = {}
 # ---
 DEVICES_ALL = {}
-# {interface_id, {counter, device}}
-DEVICES_RAW = {}
 # {interface_id, {address, dev_descriptions}
 DEVICES_RAW_DICT = {}
-# {interface_id, {address, paramsets}}
-PARAMSETS = {}
 # ---
 PROXIES = {}
 # ---
@@ -21,8 +17,7 @@ REMOTES = {}
 CLIENTS = {}
 # {url, client}
 CLIENTS_BY_INIT_URL = {}
-# {interface_id,  {address, name}}
-NAMES = {}
+
 # {unique_id, entity}
 ENTITIES = {}
 # {{channel_address, parameter}, event_handle}
@@ -31,6 +26,3 @@ EVENT_SUBSCRIPTIONS = {}
 EVENT_SUBSCRIPTIONS_DEVICE = {}
 # {device_address, device}
 HA_DEVICES = {}
-
-
-
