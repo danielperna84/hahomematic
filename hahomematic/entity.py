@@ -38,12 +38,15 @@ class Entity(ABC):
         """
         self.interface_id = interface_id
         self.client = data.CLIENTS[interface_id]
+        self._server = self.client.server
         self.proxy = self.client.proxy
         self.unique_id = unique_id
         self.platform = platform
         self.address = address
         self._parent_address = address.split(":")[0]
-        self._parent_device = data.DEVICES_RAW_DICT[interface_id][self._parent_address]
+        self._parent_device = self._server.devices_raw_dict[interface_id][
+            self._parent_address
+        ]
         self.device_type = self._parent_device.get(ATTR_HM_TYPE)
         self.parameter = parameter
         self._parameter_data = parameter_data
@@ -64,8 +67,10 @@ class Entity(ABC):
             self._state = False
         LOG.debug("Entity.__init__: Getting current value for %s", self.unique_id)
         # pylint: disable=pointless-statement
-        self.STATE
-        data.EVENT_SUBSCRIPTIONS[(self.address, self.parameter)].append(self.event)
+        # self.STATE
+        self._server.event_subscriptions[(self.address, self.parameter)].append(
+            self.event
+        )
         self.update_callback = None
         if callable(config.CALLBACK_ENTITY_UPDATE):
             self.update_callback = config.CALLBACK_ENTITY_UPDATE
@@ -122,7 +127,7 @@ class Entity(ABC):
         """Return device specific attributes."""
         return {
             "identifiers": {(HA_DOMAIN, self._parent_address)},
-            "name": data.HA_DEVICES.get(self._parent_address).name,
+            "name": self._server.ha_devices.get(self._parent_address).name,
             "manufacturer": "eQ-3",
             "model": self.device_type,
             "sw_version": self._parent_device.get("FIRMWARE"),

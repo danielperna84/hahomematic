@@ -584,11 +584,11 @@ class Client:
         """
         Fetch all paramsets for provided interface id.
         """
-        if self.id not in self.server.DEVICES_RAW_DICT:
-            self.server.DEVICES_RAW_DICT[self.id] = {}
+        if self.id not in self.server.devices_raw_dict:
+            self.server.devices_raw_dict[self.id] = {}
         if self.id not in self.server.paramsets_cache:
             self.server.paramsets_cache[self.id] = {}
-        for address, dd in self.server.DEVICES_RAW_DICT[self.id].items():
+        for address, dd in self.server.devices_raw_dict[self.id].items():
             if skip_existing and address in self.server.paramsets_cache[self.id]:
                 continue
             self.fetch_paramsets(dd)
@@ -598,19 +598,21 @@ class Client:
         """
         Update paramsets for provided address.
         """
-        if self.id not in data.DEVICES_RAW_DICT:
+        if self.id not in self.server.devices_raw_dict:
             LOG.error(
-                "Interface ID missing in data.DEVICES_RAW_DICT. Not updating paramsets for %s.",
+                "Interface ID missing in self.server.devices_raw_dict. Not updating paramsets for %s.",
                 address,
             )
             return
-        if not address in data.DEVICES_RAW_DICT[self.id]:
+        if not address in self.server.devices_raw_dict[self.id]:
             LOG.error(
-                "Channel missing in data.DEVICES_RAW_DICT[interface_id]. Not updating paramsets for %s.",
+                "Channel missing in self.server.devices_raw_dict[interface_id]. Not updating paramsets for %s.",
                 address,
             )
             return
-        self.fetch_paramsets(data.DEVICES_RAW_DICT[self.id][address], update=True)
+        self.fetch_paramsets(
+            self.server.devices_raw_dict[self.id][address], update=True
+        )
         self.server.save_paramsets()
 
     def fetch_names_json(self):
@@ -675,11 +677,13 @@ class Client:
                     if device[ATTR_INTERFACE] != interface:
                         continue
                     try:
-                        self.server.names_cache[self.id][device[ATTR_ADDRESS]] = device[ATTR_NAME]
+                        self.server.names_cache[self.id][device[ATTR_ADDRESS]] = device[
+                            ATTR_NAME
+                        ]
                         for channel in device.get(ATTR_CHANNELS, []):
-                            self.server.names_cache[self.id][channel[ATTR_ADDRESS]] = channel[
-                                ATTR_NAME
-                            ]
+                            self.server.names_cache[self.id][
+                                channel[ATTR_ADDRESS]
+                            ] = channel[ATTR_NAME]
                     except Exception:
                         LOG.exception("fetch_names_json: Exception")
 
@@ -696,7 +700,7 @@ class Client:
             )
             return
         LOG.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in data.DEVICES_RAW_DICT[self.id]:
+        for address in self.server.devices_raw_dict[self.id]:
             try:
                 self.server.names_cache[self.id][address] = self.proxy.getMetadata(
                     address, ATTR_HM_NAME

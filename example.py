@@ -12,6 +12,10 @@ LOG = logging.getLogger(__name__)
 SLEEPCOUNTER = 0
 GOT_DEVICES = False
 
+
+# Create a server that listens on 127.0.0.1:* and identifies itself as myserver.
+server = Server("ccu-dev")
+
 def systemcallback(src, *args):
     global GOT_DEVICES
     print("systemcallback: %s" % src)
@@ -21,8 +25,8 @@ def systemcallback(src, *args):
     elif src == const.HH_EVENT_DEVICES_CREATED:
         GOT_DEVICES = True
         print("All devices:")
-        print(data.HA_DEVICES)
-        for _, device in data.HA_DEVICES.items():
+        print(server.ha_devices)
+        for _, device in server.ha_devices.items():
             print(device)
         print("New devices:")
         print(args[0])
@@ -50,8 +54,7 @@ config.CACHE_DIR = 'cache'
 config.CALLBACK_SYSTEM = systemcallback
 config.CALLBACK_EVENT = eventcallback
 config.CALLBACK_ENTITY_UPDATE = entityupdatecallback
-# Create a server that listens on 127.0.0.1:* and identifies itself as myserver.
-server = Server("ccu-dev")
+
 
 # Create clients
 # Connect to pydevccu at 127.0.0.1:2001

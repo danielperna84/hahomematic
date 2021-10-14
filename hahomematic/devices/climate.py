@@ -68,12 +68,14 @@ class SimpleThermostat(climate):
         self.name = self._server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
-        self.ha_device = data.HA_DEVICES[self.address]
-        self.channels = list(data.DEVICES[self.interface_id][self.address].keys())
+        self.ha_device = self._server.ha_devices[self.address]
+        self.channels = list(
+            self._server.devices[self.interface_id][self.address].keys()
+        )
         # Subscribe for all events of this device
-        if not self.address in data.EVENT_SUBSCRIPTIONS_DEVICE:
-            data.EVENT_SUBSCRIPTIONS_DEVICE[self.address] = []
-        data.EVENT_SUBSCRIPTIONS_DEVICE[self.address].append(self.event)
+        if not self.address in self._server.event_subscriptions_device:
+            self._server.event_subscriptions_device[self.address] = []
+        self._server.event_subscriptions_device[self.address].append(self.event)
         self.update_callback = None
         if callable(config.CALLBACK_ENTITY_UPDATE):
             self.update_callback = config.CALLBACK_ENTITY_UPDATE
@@ -128,16 +130,16 @@ class SimpleThermostat(climate):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][PARAMSET_VALUES][
-            PARAM_TEMPERATURE
-        ][ATTR_HM_MIN]
+        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][
+            PARAMSET_VALUES
+        ][PARAM_TEMPERATURE][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][PARAMSET_VALUES][
-            PARAM_TEMPERATURE
-        ][ATTR_HM_MAX]
+        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][
+            PARAMSET_VALUES
+        ][PARAM_TEMPERATURE][ATTR_HM_MAX]
 
     @property
     def target_temperature_step(self):
@@ -201,12 +203,14 @@ class Thermostat(climate):
         self.name = self._server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
-        self.ha_device = data.HA_DEVICES[self.address]
-        self.channels = list(data.DEVICES[self.interface_id][self.address].keys())
+        self.ha_device = self._server.ha_devices[self.address]
+        self.channels = list(
+            self._server.devices[self.interface_id][self.address].keys()
+        )
         # Subscribe for all events of this device
-        if not self.address in data.EVENT_SUBSCRIPTIONS_DEVICE:
-            data.EVENT_SUBSCRIPTIONS_DEVICE[self.address] = []
-        data.EVENT_SUBSCRIPTIONS_DEVICE[self.address].append(self.event)
+        if not self.address in self._server.event_subscriptions_device:
+            self._server.event_subscriptions_device[self.address] = []
+        self._server.event_subscriptions_device[self.address].append(self.event)
         self.update_callback = None
         if callable(config.CALLBACK_ENTITY_UPDATE):
             self.update_callback = config.CALLBACK_ENTITY_UPDATE
@@ -269,16 +273,16 @@ class Thermostat(climate):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][self._node_actual_temperature[0]][
-            PARAMSET_VALUES
-        ][self._node_actual_temperature[1]][ATTR_HM_MIN]
+        return self._server.paramsets_cache[self.interface_id][
+            self._node_actual_temperature[0]
+        ][PARAMSET_VALUES][self._node_actual_temperature[1]][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][self._node_actual_temperature[0]][
-            PARAMSET_VALUES
-        ][self._node_actual_temperature[1]][ATTR_HM_MAX]
+        return self._server.paramsets_cache[self.interface_id][
+            self._node_actual_temperature[0]
+        ][PARAMSET_VALUES][self._node_actual_temperature[1]][ATTR_HM_MAX]
 
     @property
     def target_temperature_step(self):
@@ -403,12 +407,14 @@ class IPThermostat(climate):
         self.name = self._server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
-        self.ha_device = data.HA_DEVICES[self.address]
-        self.channels = list(data.DEVICES[self.interface_id][self.address].keys())
+        self.ha_device = self._server.ha_devices[self.address]
+        self.channels = list(
+            self._server.devices[self.interface_id][self.address].keys()
+        )
         # Subscribe for all events of this device
-        if not self.address in data.EVENT_SUBSCRIPTIONS_DEVICE:
-            data.EVENT_SUBSCRIPTIONS_DEVICE[self.address] = []
-        data.EVENT_SUBSCRIPTIONS_DEVICE[self.address].append(self.event)
+        if not self.address in self._server.event_subscriptions_device:
+            self._server.event_subscriptions_device[self.address] = []
+        self._server.event_subscriptions_device[self.address].append(self.event)
         self.update_callback = None
         if callable(config.CALLBACK_ENTITY_UPDATE):
             self.update_callback = config.CALLBACK_ENTITY_UPDATE
@@ -480,16 +486,16 @@ class IPThermostat(climate):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][self._node_actual_temperature[0]][
-            PARAMSET_VALUES
-        ][self._node_actual_temperature[1]][ATTR_HM_MIN]
+        return self._server.paramsets_cache[self.interface_id][
+            self._node_actual_temperature[0]
+        ][PARAMSET_VALUES][self._node_actual_temperature[1]][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][self._node_actual_temperature[0]][
-            PARAMSET_VALUES
-        ][self._node_actual_temperature[1]][ATTR_HM_MAX]
+        return self._server.paramsets_cache[self.interface_id][
+            self._node_actual_temperature[0]
+        ][PARAMSET_VALUES][self._node_actual_temperature[1]][ATTR_HM_MAX]
 
     @property
     def target_temperature_step(self):
@@ -602,11 +608,12 @@ def make_simple_thermostat(interface_id, address):
     """
     Helper to create SimpleThermostat entities.
     """
+    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
-    if unique_id in data.ENTITIES:
+    if unique_id in server.entities:
         LOG.debug("make_simple_thermostat: Skipping %s (already exists)", unique_id)
-    data.ENTITIES[unique_id] = SimpleThermostat(interface_id, address, unique_id)
-    data.HA_DEVICES[address].entities.add(unique_id)
+    server.entities[unique_id] = SimpleThermostat(interface_id, address, unique_id)
+    server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
@@ -615,8 +622,9 @@ def make_thermostat(interface_id, address):
     Helper to create Thermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
+    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
-    if unique_id in data.ENTITIES:
+    if unique_id in server.entities:
         LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f"{address}:4", "ACTUAL_TEMPERATURE"),
@@ -628,8 +636,8 @@ def make_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f"{address}:4", "COMFORT_MODE"),
         NODE_LOWERING_MODE: (f"{address}:4", "LOWERING_MODE"),
     }
-    data.ENTITIES[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(unique_id)
+    server.entities[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
@@ -638,8 +646,9 @@ def make_max_thermostat(interface_id, address):
     Helper to create MAX! Thermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
+    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
-    if unique_id in data.ENTITIES:
+    if unique_id in server.entities:
         LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f"{address}:1", "ACTUAL_TEMPERATURE"),
@@ -651,8 +660,8 @@ def make_max_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f"{address}:1", "COMFORT_MODE"),
         NODE_LOWERING_MODE: (f"{address}:1", "LOWERING_MODE"),
     }
-    data.ENTITIES[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(unique_id)
+    server.entities[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
@@ -661,8 +670,9 @@ def make_wall_thermostat(interface_id, address):
     Helper to create Thermostat entities for wall-thermostats.
     We use a helper-function to avoid raising exceptions during object-init.
     """
+    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
-    if unique_id in data.ENTITIES:
+    if unique_id in server.entities:
         LOG.debug("make_wall_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f"{address}:2", "ACTUAL_TEMPERATURE"),
@@ -675,8 +685,8 @@ def make_wall_thermostat(interface_id, address):
         NODE_LOWERING_MODE: (f"{address}:2", "LOWERING_MODE"),
         NODE_HUMIDITY: (f"{address}:2", "HUMIDITY"),
     }
-    data.ENTITIES[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(unique_id)
+    server.entities[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
@@ -685,8 +695,9 @@ def make_group_thermostat(interface_id, address):
     Helper to create Thermostat entities for heating groups.
     We use a helper-function to avoid raising exceptions during object-init.
     """
+    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
-    if unique_id in data.ENTITIES:
+    if unique_id in server.entities:
         LOG.debug("make_group_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f"{address}:1", "ACTUAL_TEMPERATURE"),
@@ -698,8 +709,8 @@ def make_group_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f"{address}:1", "COMFORT_MODE"),
         NODE_LOWERING_MODE: (f"{address}:1", "LOWERING_MODE"),
     }
-    data.ENTITIES[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(unique_id)
+    server.entities[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
@@ -708,8 +719,9 @@ def make_ip_thermostat(interface_id, address):
     Helper to create IPThermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
+    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
-    if unique_id in data.ENTITIES:
+    if unique_id in server.entities:
         LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f"{address}:1", "ACTUAL_TEMPERATURE"),
@@ -719,8 +731,8 @@ def make_ip_thermostat(interface_id, address):
         NODE_BOOST_MODE: (f"{address}:1", "BOOST_MODE"),
         NODE_PARTY_MODE: (f"{address}:1", "PARTY_MODE"),
     }
-    data.ENTITIES[unique_id] = IPThermostat(interface_id, address, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(unique_id)
+    server.entities[unique_id] = IPThermostat(interface_id, address, unique_id, nodes)
+    server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
@@ -729,8 +741,9 @@ def make_ip_wall_thermostat(interface_id, address):
     Helper to create IPThermostat entities for wall-thermostats.
     We use a helper-function to avoid raising exceptions during object-init.
     """
+    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
-    if unique_id in data.ENTITIES:
+    if unique_id in server.entities:
         LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
     nodes = {
         NODE_ACTUAL_TEMPERATURE: (f"{address}:1", "ACTUAL_TEMPERATURE"),
@@ -741,8 +754,8 @@ def make_ip_wall_thermostat(interface_id, address):
         NODE_PARTY_MODE: (f"{address}:1", "PARTY_MODE"),
         NODE_HUMIDITY: (f"{address}:1", "HUMIDITY"),
     }
-    data.ENTITIES[unique_id] = IPThermostat(interface_id, address, unique_id, nodes)
-    data.HA_DEVICES[address].entities.add(unique_id)
+    server.entities[unique_id] = IPThermostat(interface_id, address, unique_id, nodes)
+    server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 

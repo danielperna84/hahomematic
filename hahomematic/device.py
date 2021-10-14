@@ -43,19 +43,20 @@ class Device:
         Initialize the device object.
         """
         self.interface_id = interface_id
+        self.client = data.CLIENTS[self.interface_id]
+        self._server = self.client.server
         self.address = address
-        self.channels = data.DEVICES[self.interface_id][self.address]
+        self.channels = self._server.devices[self.interface_id][self.address]
         LOG.debug(
             "Device.__init__: Initializing device: %s, %s",
             self.interface_id,
             self.address,
         )
-        self.client = data.CLIENTS[self.interface_id]
-        self._server =self.client.server
+
         self.entities = set()
-        self.device_type = data.DEVICES_RAW_DICT[self.interface_id][self.address][
-            ATTR_HM_TYPE
-        ]
+        self.device_type = self._server.devices_raw_dict[self.interface_id][
+            self.address
+        ][ATTR_HM_TYPE]
         if self.address in self._server.names_cache.get(self.interface_id, {}):
             self.name = self._server.names_cache[self.interface_id][self.address]
         else:
@@ -95,9 +96,9 @@ class Device:
             for paramset in self._server.paramsets_cache[self.interface_id][channel]:
                 if paramset != PARAMSET_VALUES:
                     continue
-                for parameter, parameter_data in self._server.paramsets_cache[self.interface_id][
-                    channel
-                ][paramset].items():
+                for parameter, parameter_data in self._server.paramsets_cache[
+                    self.interface_id
+                ][channel][paramset].items():
                     if not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
                         LOG.debug(
                             "Device.create_entities: Skipping %s (no event)", parameter
@@ -107,7 +108,7 @@ class Device:
                         channel, parameter, parameter_data, self.interface_id
                     )
                     if unique_id is not None:
-                        data.HA_DEVICES[self.address].entities.add(unique_id)
+                        self._server.ha_devices[self.address].entities.add(unique_id)
                         new_entities.add(unique_id)
         if self.device_type in hahomematic.devices.DEVICES:
             LOG.debug(
@@ -124,28 +125,27 @@ class Device:
         return new_entities
 
 
-def create_devices():
+def create_devices(server):
     """
     Trigger creation of the objects that expose the functionality.
     """
     new_devices = set()
     new_entities = set()
-    for interface_id in data.DEVICES:
-        client = data.CLIENTS.get(interface_id)
+    for interface_id, client in data.CLIENTS.items():
         if not client:
             LOG.warning(
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
-        if interface_id not in client.server.paramsets_cache:
+        if interface_id not in server.paramsets_cache:
             LOG.warning(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,
             )
             continue
-        for device_address in data.DEVICES[interface_id]:
+        for device_address in server.devices[interface_id]:
             # Do we check for duplicates here? For now we do.
-            if device_address in data.HA_DEVICES:
+            if device_address in server.ha_devices:
                 LOG.warning(
                     "create_devices: Skipping device %s on %s, already exists.",
                     device_address,
@@ -153,7 +153,7 @@ def create_devices():
                 )
                 continue
             try:
-                data.HA_DEVICES[device_address] = Device(interface_id, device_address)
+                server.ha_devices[device_address] = Device(interface_id, device_address)
                 new_devices.add(device_address)
             except Exception:
                 LOG.exception(
@@ -162,8 +162,8 @@ def create_devices():
                     device_address,
                 )
             try:
-                new_entities.update(data.HA_DEVICES[device_address].create_entities())
-            except Exception as err:
+                new_entities.update(server.ha_devices[device_address].create_entities())
+            except Exception:
                 LOG.exception(
                     "create_devices: Failed to create entities: %s, %s",
                     interface_id,
@@ -180,11 +180,12 @@ def create_entity(address, parameter, parameter_data, interface_id):
     Helper that looks at the paramsets, decides which default
     platform should be used, and creates the required entities.
     """
+    server = data.CLIENTS[interface_id].server
     if parameter in IGNORED_PARAMETERS:
         LOG.debug("create_entity: Ignoring parameter: %s (%s)", parameter, address)
         return None
-    if (address, parameter) not in data.EVENT_SUBSCRIPTIONS:
-        data.EVENT_SUBSCRIPTIONS[(address, parameter)] = []
+    if (address, parameter) not in server.event_subscriptions:
+        server.event_subscriptions[(address, parameter)] = []
     unique_id = generate_unique_id(address, parameter)
     # TODO: How do we handle existing entities? Entities should be removed when the server
     # receives a deleteDevices call. When the paramset has updated it should be recreated probably.
@@ -197,43 +198,43 @@ def create_entity(address, parameter, parameter_data, interface_id):
     if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
         if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
             LOG.debug("create_entity: switch (action): %s %s", address, parameter)
-            if unique_id in data.ENTITIES:
+            if unique_id in server.entities:
                 LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            data.ENTITIES[unique_id] = switch(
+            server.entities[unique_id] = switch(
                 interface_id, unique_id, address, parameter, parameter_data
             )
         else:
             if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
                 LOG.debug("create_entity: switch: %s %s", address, parameter)
-                if unique_id in data.ENTITIES:
+                if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                data.ENTITIES[unique_id] = switch(
+                server.entities[unique_id] = switch(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
                 LOG.debug("create_entity: input_select: %s %s", address, parameter)
-                if unique_id in data.ENTITIES:
+                if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                data.ENTITIES[unique_id] = input_select(
+                server.entities[unique_id] = input_select(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
                 LOG.debug("create_entity: number: %s %s", address, parameter)
-                if unique_id in data.ENTITIES:
+                if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                data.ENTITIES[unique_id] = number(
+                server.entities[unique_id] = number(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
                 LOG.debug("create_entity: input_text: %s %s", address, parameter)
-                if unique_id in data.ENTITIES:
+                if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                data.ENTITIES[unique_id] = input_text(
+                server.entities[unique_id] = input_text(
                     interface_id, unique_id, address, parameter, parameter_data
                 )
             else:
@@ -246,18 +247,18 @@ def create_entity(address, parameter, parameter_data, interface_id):
     else:
         if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
             LOG.debug("create_entity: binary_sensor: %s %s", address, parameter)
-            if unique_id in data.ENTITIES:
+            if unique_id in server.entities:
                 LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            data.ENTITIES[unique_id] = binary_sensor(
+            server.entities[unique_id] = binary_sensor(
                 interface_id, unique_id, address, parameter, parameter_data
             )
         else:
             LOG.debug("create_entity: sensor: %s %s", address, parameter)
-            if unique_id in data.ENTITIES:
+            if unique_id in server.entities:
                 LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            data.ENTITIES[unique_id] = sensor(
+            server.entities[unique_id] = sensor(
                 interface_id, unique_id, address, parameter, parameter_data
             )
     return unique_id
