@@ -5,7 +5,7 @@ Code to create the required entities for thermostat devices.
 
 import logging
 
-from hahomematic import config, data
+from hahomematic import config
 from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, PARAMSET_VALUES
 from hahomematic.helpers import generate_unique_id
 from hahomematic.platforms.climate import climate
@@ -55,14 +55,14 @@ class SimpleThermostat(climate):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, address, unique_id):
+    def __init__(self, server, interface_id, address, unique_id):
         LOG.debug(
             "SimpleThermostat.__init__(%s, %s, %s)", interface_id, address, unique_id
         )
+        self._server = server
         self.interface_id = interface_id
         self.address = address
-        self._client = data.CLIENTS[self.interface_id]
-        self._server = self._client.server
+        self._client = self._server.clients[self.interface_id]
         self.proxy = self._client.proxy
         self.unique_id = unique_id
         self.name = self._server.names_cache.get(self.interface_id, {}).get(
@@ -192,12 +192,12 @@ class Thermostat(climate):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, address, unique_id, nodes):
+    def __init__(self, server, interface_id, address, unique_id, nodes):
         LOG.debug("Thermostat.__init__(%s, %s, %s)", interface_id, address, unique_id)
+        self._server = server
         self.interface_id = interface_id
         self.address = address
-        self._client = data.CLIENTS[self.interface_id]
-        self._server = self._client.server
+        self._client = self._server.clients[self.interface_id]
         self.proxy = self._client.proxy
         self.unique_id = unique_id
         self.name = self._server.names_cache.get(self.interface_id, {}).get(
@@ -396,12 +396,12 @@ class IPThermostat(climate):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, address, unique_id, nodes):
+    def __init__(self, server, interface_id, address, unique_id, nodes):
         LOG.debug("IPThermostat.__init__(%s, %s, %s)", interface_id, address, unique_id)
+        self._server = server
         self.interface_id = interface_id
         self.address = address
-        self._client = data.CLIENTS[self.interface_id]
-        self._server = self._client.server
+        self._client = self._server.clients[self.interface_id]
         self.proxy = self._client.proxy
         self.unique_id = unique_id
         self.name = self._server.names_cache.get(self.interface_id, {}).get(
@@ -604,25 +604,27 @@ class IPThermostat(climate):
             )
 
 
-def make_simple_thermostat(interface_id, address):
+def make_simple_thermostat(server, interface_id, address):
     """
     Helper to create SimpleThermostat entities.
+    :param server:
     """
-    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
     if unique_id in server.entities:
         LOG.debug("make_simple_thermostat: Skipping %s (already exists)", unique_id)
-    server.entities[unique_id] = SimpleThermostat(interface_id, address, unique_id)
+    server.entities[unique_id] = SimpleThermostat(
+        server, interface_id, address, unique_id
+    )
     server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
-def make_thermostat(interface_id, address):
+def make_thermostat(server, interface_id, address):
     """
     Helper to create Thermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
+    :param server:
     """
-    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
     if unique_id in server.entities:
         LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
@@ -636,17 +638,19 @@ def make_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f"{address}:4", "COMFORT_MODE"),
         NODE_LOWERING_MODE: (f"{address}:4", "LOWERING_MODE"),
     }
-    server.entities[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    server.entities[unique_id] = Thermostat(
+        server, interface_id, address, unique_id, nodes
+    )
     server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
-def make_max_thermostat(interface_id, address):
+def make_max_thermostat(server, interface_id, address):
     """
     Helper to create MAX! Thermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
+    :param server:
     """
-    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
     if unique_id in server.entities:
         LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
@@ -660,17 +664,19 @@ def make_max_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f"{address}:1", "COMFORT_MODE"),
         NODE_LOWERING_MODE: (f"{address}:1", "LOWERING_MODE"),
     }
-    server.entities[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    server.entities[unique_id] = Thermostat(
+        server, interface_id, address, unique_id, nodes
+    )
     server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
-def make_wall_thermostat(interface_id, address):
+def make_wall_thermostat(server, interface_id, address):
     """
     Helper to create Thermostat entities for wall-thermostats.
     We use a helper-function to avoid raising exceptions during object-init.
+    :param server:
     """
-    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
     if unique_id in server.entities:
         LOG.debug("make_wall_thermostat: Skipping %s (already exists)", unique_id)
@@ -685,17 +691,19 @@ def make_wall_thermostat(interface_id, address):
         NODE_LOWERING_MODE: (f"{address}:2", "LOWERING_MODE"),
         NODE_HUMIDITY: (f"{address}:2", "HUMIDITY"),
     }
-    server.entities[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    server.entities[unique_id] = Thermostat(
+        server, interface_id, address, unique_id, nodes
+    )
     server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
-def make_group_thermostat(interface_id, address):
+def make_group_thermostat(server, interface_id, address):
     """
     Helper to create Thermostat entities for heating groups.
     We use a helper-function to avoid raising exceptions during object-init.
+    :param server:
     """
-    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
     if unique_id in server.entities:
         LOG.debug("make_group_thermostat: Skipping %s (already exists)", unique_id)
@@ -709,17 +717,19 @@ def make_group_thermostat(interface_id, address):
         NODE_COMFORT_MODE: (f"{address}:1", "COMFORT_MODE"),
         NODE_LOWERING_MODE: (f"{address}:1", "LOWERING_MODE"),
     }
-    server.entities[unique_id] = Thermostat(interface_id, address, unique_id, nodes)
+    server.entities[unique_id] = Thermostat(
+        server, interface_id, address, unique_id, nodes
+    )
     server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
-def make_ip_thermostat(interface_id, address):
+def make_ip_thermostat(server, interface_id, address):
     """
     Helper to create IPThermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
+    :param server:
     """
-    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
     if unique_id in server.entities:
         LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
@@ -731,17 +741,19 @@ def make_ip_thermostat(interface_id, address):
         NODE_BOOST_MODE: (f"{address}:1", "BOOST_MODE"),
         NODE_PARTY_MODE: (f"{address}:1", "PARTY_MODE"),
     }
-    server.entities[unique_id] = IPThermostat(interface_id, address, unique_id, nodes)
+    server.entities[unique_id] = IPThermostat(
+        server, interface_id, address, unique_id, nodes
+    )
     server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 
 
-def make_ip_wall_thermostat(interface_id, address):
+def make_ip_wall_thermostat(server, interface_id, address):
     """
     Helper to create IPThermostat entities for wall-thermostats.
     We use a helper-function to avoid raising exceptions during object-init.
+    :param server:
     """
-    server = data.CLIENTS[interface_id].server
     unique_id = generate_unique_id(address)
     if unique_id in server.entities:
         LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
@@ -754,7 +766,9 @@ def make_ip_wall_thermostat(interface_id, address):
         NODE_PARTY_MODE: (f"{address}:1", "PARTY_MODE"),
         NODE_HUMIDITY: (f"{address}:1", "HUMIDITY"),
     }
-    server.entities[unique_id] = IPThermostat(interface_id, address, unique_id, nodes)
+    server.entities[unique_id] = IPThermostat(
+        server, interface_id, address, unique_id, nodes
+    )
     server.ha_devices[address].entities.add(unique_id)
     return [unique_id]
 

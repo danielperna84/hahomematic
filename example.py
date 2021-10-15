@@ -2,7 +2,7 @@
 import time
 import sys
 import logging
-from hahomematic import config, data, const
+from hahomematic import config, const
 from hahomematic.server import Server
 from hahomematic.client import Client
 
@@ -79,10 +79,10 @@ time.sleep(5)
 
 for i in range(16):
     if i % 4 == 0:
-        for client in data.CLIENTS:
-            if not data.CLIENTS[client].is_connected():
+        for client in server.clients:
+            if not server.clients[client].is_connected():
                 LOG.warning("Disconnected. Reconnecting for %s" % client)
-                data.CLIENTS[client].proxy_init()
+                server.clients[client].proxy_init()
     LOG.debug("Sleeping (%i)", i)
     time.sleep(2)
 # Stop the server thread so Python can exit properly.

@@ -7,7 +7,7 @@ import logging
 import socket
 import time
 
-from hahomematic import config, data
+from hahomematic import config
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
@@ -42,7 +42,6 @@ from hahomematic.const import (
 )
 from hahomematic.helpers import build_api_url, json_rpc_post, parse_ccu_sys_var
 from hahomematic.proxy import LockingServerProxy
-
 
 LOG = logging.getLogger(__name__)
 
@@ -147,10 +146,10 @@ class Client:
         else:
             self.backend = BACKEND_CCU
             self.session = False
-        data.CLIENTS[self.id] = self
-        if self.init_url not in data.CLIENTS_BY_INIT_URL:
-            data.CLIENTS_BY_INIT_URL[self.init_url] = []
-        data.CLIENTS_BY_INIT_URL[self.init_url].append(self)
+        self.server.clients[self.id] = self
+        if self.init_url not in self.server.clients_by_init_url:
+            self.server.clients_by_init_url[self.init_url] = []
+        self.server.clients_by_init_url[self.init_url].append(self)
 
     def proxy_init(self):
         """
@@ -203,7 +202,7 @@ class Client:
             )
             return PROXY_INIT_FAILED
         # TODO: Should the de-init really be skipped for other clients?
-        #  for client in data.CLIENTS_BY_INIT_URL.get(self.init_url, []):
+        #  for client in server.clients_by_init_url.get(self.init_url, []):
         #     LOG.debug("proxy_de_init: Setting client %s initialized status to False.", client.id)
         #     client.initialized = False
         self.initialized = 0

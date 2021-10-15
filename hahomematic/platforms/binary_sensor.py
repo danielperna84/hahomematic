@@ -18,9 +18,17 @@ class binary_sensor(Entity):
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self, server, interface_id, unique_id, address, parameter, parameter_data
+    ):
         super().__init__(
-            interface_id, unique_id, address, parameter, parameter_data, "binary_sensor"
+            server,
+            interface_id,
+            unique_id,
+            address,
+            parameter,
+            parameter_data,
+            "binary_sensor",
         )
 
     @property

@@ -12,7 +12,7 @@ import threading
 import time
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
-from hahomematic import config, data
+from hahomematic import config
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
     BACKEND_CCU,
@@ -31,10 +31,12 @@ from hahomematic.const import (
     IP_ANY_V4,
     PORT_ANY,
 )
+from hahomematic.data import INSTANCES
 from hahomematic.decorators import eventcallback, systemcallback
 from hahomematic.device import create_devices
 
 LOG = logging.getLogger(__name__)
+
 
 # pylint: disable=too-many-instance-attributes
 class RPCFunctions:
@@ -135,7 +137,7 @@ class RPCFunctions:
             self._server.devices_raw_dict[interface_id] = {}
         if interface_id not in self._server.names_cache:
             self._server.names_cache[interface_id] = {}
-        if interface_id not in data.CLIENTS:
+        if interface_id not in self._server.clients:
             LOG.error(
                 "RPCFunctions.newDevices: Missing client for interface_id %s.",
                 interface_id,
@@ -146,7 +148,7 @@ class RPCFunctions:
         known_addresses = [
             dd[ATTR_HM_ADDRESS] for dd in self._server.devices_raw_cache[interface_id]
         ]
-        client = data.CLIENTS[interface_id]
+        client = self._server.clients[interface_id]
         for dd in dev_descriptions:
             try:
                 if dd[ATTR_HM_ADDRESS] not in known_addresses:
@@ -178,23 +180,23 @@ class RPCFunctions:
             interface_id,
             str(addresses),
         )
-        server = data.CLIENTS[interface_id].xmlrpc_server
-        server.devices_raw_cache[interface_id] = [
+
+        self._server.devices_raw_cache[interface_id] = [
             device
-            for device in server.devices_raw_cache[interface_id]
+            for device in self._server.devices_raw_cache[interface_id]
             if not device[ATTR_HM_ADDRESS] in addresses
         ]
 
-        server.save_devices_raw()
+        self._server.save_devices_raw()
         for address in addresses:
             try:
                 if ":" not in address:
-                    del server.devices[interface_id][address]
-                del server.devices_raw_dict[interface_id][address]
-                del server.paramsets_cache[interface_id][address]
+                    del self._server.devices[interface_id][address]
+                del self._server.devices_raw_dict[interface_id][address]
+                del self._server.paramsets_cache[interface_id][address]
             except KeyError:
                 LOG.exception("Failed to delete: %s", address)
-        server.save_paramsets()
+        self._server.save_paramsets()
         return True
 
     @systemcallback(HH_EVENT_UPDATE_DEVICE)
@@ -283,6 +285,10 @@ class Server(threading.Thread):
         self.devices = {}
         # {interface_id, {address, dev_descriptions}
         self.devices_raw_dict = {}
+        # {interface_id, client}
+        self.clients = {}
+        # {url, client}
+        self.clients_by_init_url = {}
 
         self.instance_name = instance_name
         self.local_ip = local_ip
@@ -303,8 +309,10 @@ class Server(threading.Thread):
         self.xmlrpc_server.register_introspection_functions()
         self.xmlrpc_server.register_multicall_functions()
         LOG.debug("Server.__init__: Registering RPC functions")
-        self.xmlrpc_server.register_instance(self._rpcfunctions, allow_dotted_names=True)
-        data.INSTANCES[instance_name] = self
+        self.xmlrpc_server.register_instance(
+            self._rpcfunctions, allow_dotted_names=True
+        )
+        INSTANCES[instance_name] = self
         self.load_devices_raw()
         self.load_paramsets()
         self.load_names()
@@ -322,7 +330,7 @@ class Server(threading.Thread):
             self.local_ip,
             self.local_port,
         )
-        if not data.CLIENTS:
+        if not self.clients:
             raise Exception("No clients initialized. Not starting server.")
         try:
             create_devices(self)
@@ -336,19 +344,19 @@ class Server(threading.Thread):
         To stop the server we de-init from the CCU / Homegear,
         then shut down our XML-RPC server.
         """
-        for name, client in data.CLIENTS.items():
+        for name, client in self.clients.items():
             if client.proxy_de_init():
                 LOG.info("Server.stop: Proxy de-initialized: %s", name)
         LOG.info("Server.stop: Clearing existing clients. Please recreate them!")
-        data.CLIENTS.clear()
-        data.CLIENTS_BY_INIT_URL.clear()
+        self.clients.clear()
+        self.clients_by_init_url.clear()
         LOG.info("Server.stop: Shutting down server")
         self.xmlrpc_server.shutdown()
         LOG.debug("Server.stop: Stopping Server")
         self.xmlrpc_server.server_close()
         LOG.info("Server.stop: Server stopped")
         LOG.debug("Server.stop: Removing instance")
-        del data.INSTANCES[self.instance_name]
+        del INSTANCES[self.instance_name]
 
     def save_devices_raw(self):
         """

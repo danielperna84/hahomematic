@@ -11,8 +11,9 @@ import os
 import signal
 import sys
 
-from hahomematic import config, data
+from hahomematic import config
 from hahomematic.client import Client
+from hahomematic.data import INSTANCES
 from hahomematic.server import Server
 
 if sys.stdout.isatty():
@@ -24,7 +25,7 @@ LOG = logging.getLogger(__name__)
 def signal_handler(sig, frame):
     """Handle signal to shut down server."""
     LOG.info("Got signal: %s. Shutting down server", str(sig))
-    for server in data.INSTANCES.values():
+    for server in INSTANCES.values():
         server.stop()
 
 

@@ -7,7 +7,7 @@ Functions for entity creation.
 import logging
 from abc import ABC, abstractmethod
 
-from hahomematic import config, data
+from hahomematic import config
 from hahomematic.const import (
     ATTR_HM_CONTROL,
     ATTR_HM_MAX,
@@ -31,14 +31,22 @@ class Entity(ABC):
 
     # pylint: disable=too-many-arguments
     def __init__(
-        self, interface_id, unique_id, address, parameter, parameter_data, platform
+        self,
+        server,
+        interface_id,
+        unique_id,
+        address,
+        parameter,
+        parameter_data,
+        platform,
     ):
         """
         Initialize the entity.
+        :param server:
         """
+        self._server = server
         self.interface_id = interface_id
-        self.client = data.CLIENTS[interface_id]
-        self._server = self.client.server
+        self.client = self._server.clients[interface_id]
         self.proxy = self.client.proxy
         self.unique_id = unique_id
         self.platform = platform
