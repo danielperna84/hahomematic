@@ -5,15 +5,16 @@ Some other devices (f.ex. Bosch, Intertechno) might be supported as well.
 https://github.com/danielperna84/hahomematic
 """
 
-import os
-import sys
 import json
 import logging
+import os
 import signal
+import sys
 
-from hahomematic import data, config
-from hahomematic.server import Server
+from hahomematic import config
 from hahomematic.client import Client
+from hahomematic.data import INSTANCES
+from hahomematic.server import Server
 
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.DEBUG)
@@ -24,7 +25,9 @@ LOG = logging.getLogger(__name__)
 def signal_handler(sig, frame):
     """Handle signal to shut down server."""
     LOG.info("Got signal: %s. Shutting down server", str(sig))
-    data.SERVER.stop()
+    for server in INSTANCES.values():
+        server.stop()
+
 
 if sys.stdout.isatty():
     signal.signal(signal.SIGINT, signal_handler)

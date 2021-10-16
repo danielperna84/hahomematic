@@ -7,7 +7,10 @@ as a climate entity.
 """
 
 # pylint: disable=invalid-name,too-few-public-methods
-class climate():
+class climate:
     """
     Base class for climate entities.
     """
+
+    def __init__(self):
+        self.platform = "climate"

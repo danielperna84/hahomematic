@@ -5,47 +5,50 @@ Provides the XML-RPC server which handles communication
 with the CCU or Homegear
 """
 
-import os
-import time
 import json
 import logging
+import os
 import threading
-from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.server import SimpleXMLRPCRequestHandler
+import time
+from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
+from hahomematic import config
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
+    DEFAULT_ENCODING,
     FILE_DEVICES,
-    FILE_PARAMSETS,
     FILE_NAMES,
+    FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
-    HH_EVENT_DEVICES_CREATED,
     HH_EVENT_ERROR,
     HH_EVENT_LIST_DEVICES,
     HH_EVENT_NEW_DEVICES,
-    HH_EVENT_UPDATE_DEVICE,
     HH_EVENT_READDED_DEVICE,
     HH_EVENT_REPLACE_DEVICE,
+    HH_EVENT_UPDATE_DEVICE,
     IP_ANY_V4,
     PORT_ANY,
 )
-from hahomematic import data, config
-from hahomematic.decorators import systemcallback, eventcallback
-from hahomematic.device import Device
+from hahomematic.data import INSTANCES
+from hahomematic.decorators import eventcallback, systemcallback
+from hahomematic.device import create_devices
 
 LOG = logging.getLogger(__name__)
 
+
 # pylint: disable=too-many-instance-attributes
-class RPCFunctions():
+class RPCFunctions:
     """
     The XML-RPC functions the CCU or Homegear will expect.
     Additionally there are some internal functions for hahomematic itself.
     """
+
     # pylint: disable=too-many-branches,too-many-statements
-    def __init__(self):
+    def __init__(self, server):
         LOG.debug("RPCFunctions.__init__")
+        self._server = server
 
     @eventcallback
     # pylint: disable=no-self-use
@@ -53,25 +56,40 @@ class RPCFunctions():
         """
         If a device emits some sort event, we will handle it here.
         """
-        LOG.debug("RPCFunctions.event: interface_id = %s, address = %s, value_key = %s, value = %s",
-                  interface_id, address, value_key, str(value))
-        data.SERVER.last_events[interface_id] = int(time.time())
-        if (address, value_key) in data.EVENT_SUBSCRIPTIONS:
+        LOG.debug(
+            "RPCFunctions.event: interface_id = %s, address = %s, value_key = %s, value = %s",
+            interface_id,
+            address,
+            value_key,
+            str(value),
+        )
+        self._server.last_events[interface_id] = int(time.time())
+        if (address, value_key) in self._server.event_subscriptions:
             try:
-                for callback in data.EVENT_SUBSCRIPTIONS[(address, value_key)]:
+                for callback in self._server.event_subscriptions[(address, value_key)]:
                     callback(interface_id, address, value_key, value)
             except Exception:
-                LOG.exception("RPCFunctions.event: Failed to call callback for: %s, %s, %s",
-                              interface_id, address, value_key)
-        if ':' in address:
-            device_address = address.split(':')[0]
-            if device_address in data.EVENT_SUBSCRIPTIONS_DEVICE:
+                LOG.exception(
+                    "RPCFunctions.event: Failed to call callback for: %s, %s, %s",
+                    interface_id,
+                    address,
+                    value_key,
+                )
+        if ":" in address:
+            device_address = address.split(":")[0]
+            if device_address in self._server.event_subscriptions_device:
                 try:
-                    for callback in data.EVENT_SUBSCRIPTIONS_DEVICE[device_address]:
+                    for callback in self._server.event_subscriptions_device[
+                        device_address
+                    ]:
                         callback(interface_id, address, value_key, value)
                 except Exception:
-                    LOG.exception("RPCFunctions.event: Failed to call device-callback for: %s, %s, %s",
-                                    interface_id, address, value_key)
+                    LOG.exception(
+                        "RPCFunctions.event: Failed to call device-callback for: %s, %s, %s",
+                        interface_id,
+                        address,
+                        value_key,
+                    )
         return True
 
     @systemcallback(HH_EVENT_ERROR)
@@ -80,8 +98,12 @@ class RPCFunctions():
         """
         When some error occurs the CCU / Homegear will send it's error message here.
         """
-        LOG.error("RPCFunctions.error: interface_id = %s, errorcode = %i, message = %s",
-                  interface_id, int(errorcode), str(msg))
+        LOG.error(
+            "RPCFunctions.error: interface_id = %s, errorcode = %i, message = %s",
+            interface_id,
+            int(errorcode),
+            str(msg),
+        )
         return True
 
     @systemcallback(HH_EVENT_LIST_DEVICES)
@@ -92,9 +114,9 @@ class RPCFunctions():
         We respond to that request using this method.
         """
         LOG.debug("RPCFunctions.listDevices: interface_id = %s", interface_id)
-        if interface_id not in data.DEVICES_RAW:
-            data.DEVICES_RAW[interface_id] = []
-        return data.DEVICES_RAW[interface_id]
+        if interface_id not in self._server.devices_raw_cache:
+            self._server.devices_raw_cache[interface_id] = []
+        return self._server.devices_raw_cache[interface_id]
 
     @systemcallback(HH_EVENT_NEW_DEVICES)
     # pylint: disable=no-self-use
@@ -103,39 +125,47 @@ class RPCFunctions():
         The CCU / Homegear informs us about newly added devices.
         We react on that and add those devices as well.
         """
-        LOG.debug("RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
-                  interface_id, len(dev_descriptions))
-        if interface_id not in data.DEVICES_RAW:
-            data.DEVICES_RAW[interface_id] = []
-        if interface_id not in data.DEVICES_RAW_DICT:
-            data.DEVICES_RAW_DICT[interface_id] = {}
-        if interface_id not in data.NAMES:
-            data.NAMES[interface_id] = {}
-        if interface_id not in data.CLIENTS:
-            LOG.error("RPCFunctions.newDevices: Missing client for interface_id %s.",
-                      interface_id)
+        LOG.debug(
+            "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
+            interface_id,
+            len(dev_descriptions),
+        )
+
+        if interface_id not in self._server.devices_raw_cache:
+            self._server.devices_raw_cache[interface_id] = []
+        if interface_id not in self._server.devices_raw_dict:
+            self._server.devices_raw_dict[interface_id] = {}
+        if interface_id not in self._server.names_cache:
+            self._server.names_cache[interface_id] = {}
+        if interface_id not in self._server.clients:
+            LOG.error(
+                "RPCFunctions.newDevices: Missing client for interface_id %s.",
+                interface_id,
+            )
             return True
-        client = data.CLIENTS[interface_id]
 
         # We need this list to avoid adding duplicates.
-        known_addresses = [dd[ATTR_HM_ADDRESS] for dd in data.DEVICES_RAW[interface_id]]
+        known_addresses = [
+            dd[ATTR_HM_ADDRESS] for dd in self._server.devices_raw_cache[interface_id]
+        ]
+        client = self._server.clients[interface_id]
         for dd in dev_descriptions:
             try:
                 if dd[ATTR_HM_ADDRESS] not in known_addresses:
-                    data.DEVICES_RAW[interface_id].append(dd)
+                    self._server.devices_raw_cache[interface_id].append(dd)
                     client.fetch_paramsets(dd)
             except Exception:
                 LOG.exception("RPCFunctions.newDevices: Exception")
-        save_devices_raw()
-        save_paramsets()
+        self._server.save_devices_raw()
+        self._server.save_paramsets()
 
-        handle_device_descriptions(interface_id, dev_descriptions)
+        handle_device_descriptions(self._server, interface_id, dev_descriptions)
         if client.backend == BACKEND_CCU:
             client.fetch_names_json()
         elif client.backend == BACKEND_HOMEGEAR:
             client.fetch_names_metadata()
-        save_names()
-        create_devices()
+        self._server.save_names()
+        create_devices(self._server)
         return True
 
     @systemcallback(HH_EVENT_DELETE_DEVICES)
@@ -145,20 +175,28 @@ class RPCFunctions():
         The CCU / Homegear informs us about removed devices.
         We react on that and remove those devices as well.
         """
-        LOG.debug("RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
-                  interface_id, str(addresses))
-        data.DEVICES_RAW[interface_id] = [device for device in data.DEVICES_RAW[
-            interface_id] if not device[ATTR_HM_ADDRESS] in addresses]
-        save_devices_raw()
+        LOG.debug(
+            "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
+            interface_id,
+            str(addresses),
+        )
+
+        self._server.devices_raw_cache[interface_id] = [
+            device
+            for device in self._server.devices_raw_cache[interface_id]
+            if not device[ATTR_HM_ADDRESS] in addresses
+        ]
+
+        self._server.save_devices_raw()
         for address in addresses:
             try:
-                if ':' not in address:
-                    del data.DEVICES[interface_id][address]
-                del data.DEVICES_RAW_DICT[interface_id][address]
-                del data.PARAMSETS[interface_id][address]
+                if ":" not in address:
+                    del self._server.devices[interface_id][address]
+                del self._server.devices_raw_dict[interface_id][address]
+                del self._server.paramsets_cache[interface_id][address]
             except KeyError:
                 LOG.exception("Failed to delete: %s", address)
-        save_paramsets()
+        self._server.save_paramsets()
         return True
 
     @systemcallback(HH_EVENT_UPDATE_DEVICE)
@@ -169,8 +207,12 @@ class RPCFunctions():
         Irrelevant, as currently only changes to link
         partners are reported.
         """
-        LOG.debug("RPCFunctions.updateDevice: interface_id = %s, address = %s, hint = %s",
-                  interface_id, address, str(hint))
+        LOG.debug(
+            "RPCFunctions.updateDevice: interface_id = %s, address = %s, hint = %s",
+            interface_id,
+            address,
+            str(hint),
+        )
         return True
 
     @systemcallback(HH_EVENT_REPLACE_DEVICE)
@@ -179,8 +221,12 @@ class RPCFunctions():
         """
         Replace a device. Probably irrelevant for us.
         """
-        LOG.debug("RPCFunctions.replaceDevice: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
-                  interface_id, oldDeviceAddress, newDeviceAddress)
+        LOG.debug(
+            "RPCFunctions.replaceDevice: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
+            interface_id,
+            oldDeviceAddress,
+            newDeviceAddress,
+        )
         return True
 
     @systemcallback(HH_EVENT_READDED_DEVICE)
@@ -191,137 +237,288 @@ class RPCFunctions():
         Gets called when a known devices is put into learn-mode
         while installation mode is active.
         """
-        LOG.debug("RPCFunctions.readdedDevices: interface_id = %s, addresses = %s",
-                  interface_id, str(addresses))
+        LOG.debug(
+            "RPCFunctions.readdedDevices: interface_id = %s, addresses = %s",
+            interface_id,
+            str(addresses),
+        )
         return True
+
 
 # Restrict to specific paths.
 class RequestHandler(SimpleXMLRPCRequestHandler):
     """
     We handle requests to / and /RPC2.
     """
-    rpc_paths = ('/', '/RPC2',)
+
+    rpc_paths = (
+        "/",
+        "/RPC2",
+    )
+
 
 class Server(threading.Thread):
     """
     XML-RPC server thread to handle messages from CCU / Homegear.
     """
-    def __init__(self, local_ip=IP_ANY_V4, local_port=PORT_ANY):
+
+    def __init__(self, instance_name, local_ip=IP_ANY_V4, local_port=PORT_ANY):
         LOG.debug("Server.__init__")
         threading.Thread.__init__(self)
 
+        # Caches for CCU data
+        # {interface_id, {address, paramsets}}
+        self.paramsets_cache = {}
+        # {interface_id,  {address, name}}
+        self.names_cache = {}
+        # {interface_id, {counter, device}}
+        self.devices_raw_cache = {}
+        # {{channel_address, parameter}, event_handle}
+        self.event_subscriptions = {}
+        # {device_address, event_handle}
+        self.event_subscriptions_device = {}
+        # {unique_id, entity}
+        self.entities = {}
+        # {device_address, device}
+        self.ha_devices = {}
+        # {interface_id, {address, channel_address}}
+        self.devices = {}
+        # {interface_id, {address, dev_descriptions}
+        self.devices_raw_dict = {}
+        # {interface_id, client}
+        self.clients = {}
+        # {url, client}
+        self.clients_by_init_url = {}
+
+        self.instance_name = instance_name
         self.local_ip = local_ip
         self.local_port = int(local_port)
 
-        self._rpcfunctions = RPCFunctions()
+        self._rpcfunctions = RPCFunctions(self)
 
         self.last_events = {}
 
         # Setup server to handle requests from CCU / Homegear
         LOG.debug("Server.__init__: Setting up server")
-        self.server = SimpleXMLRPCServer((self.local_ip, self.local_port),
-                                         requestHandler=RequestHandler,
-                                         logRequests=False)
-        self.local_port = self.server.socket.getsockname()[1]
-        self.server.register_introspection_functions()
-        self.server.register_multicall_functions()
+        self.xmlrpc_server = SimpleXMLRPCServer(
+            (self.local_ip, self.local_port),
+            requestHandler=RequestHandler,
+            logRequests=False,
+        )
+        self.local_port = self.xmlrpc_server.socket.getsockname()[1]
+        self.xmlrpc_server.register_introspection_functions()
+        self.xmlrpc_server.register_multicall_functions()
         LOG.debug("Server.__init__: Registering RPC functions")
-        self.server.register_instance(self._rpcfunctions, allow_dotted_names=True)
-        data.SERVER = self
-        load_devices_raw()
-        load_paramsets()
-        load_names()
-        for interface_id, device_descriptions in data.DEVICES_RAW.items():
-            if interface_id not in data.PARAMSETS:
-                data.PARAMSETS[interface_id] = {}
-            handle_device_descriptions(interface_id, device_descriptions)
+        self.xmlrpc_server.register_instance(
+            self._rpcfunctions, allow_dotted_names=True
+        )
+        INSTANCES[instance_name] = self
+        self.load_devices_raw()
+        self.load_paramsets()
+        self.load_names()
+        for interface_id, device_descriptions in self.devices_raw_cache.items():
+            if interface_id not in self.paramsets_cache:
+                self.paramsets_cache[interface_id] = {}
+            handle_device_descriptions(self, interface_id, device_descriptions)
 
     def run(self):
         """
         Run the server thread.
         """
-        LOG.info("Server.run: Creating entities and starting server at http://%s:%i",
-                 self.local_ip, self.local_port)
-        if not data.CLIENTS:
+        LOG.info(
+            "Server.run: Creating entities and starting server at http://%s:%i",
+            self.local_ip,
+            self.local_port,
+        )
+        if not self.clients:
             raise Exception("No clients initialized. Not starting server.")
         try:
-            create_devices()
+            create_devices(self)
         except Exception as err:
             LOG.exception("Server.run: Failed to create entities")
             raise Exception("entitiy-creation-error") from err
-        self.server.serve_forever()
+        self.xmlrpc_server.serve_forever()
 
     def stop(self):
         """
         To stop the server we de-init from the CCU / Homegear,
         then shut down our XML-RPC server.
         """
-        for name, client in data.CLIENTS.items():
+        for name, client in self.clients.items():
             if client.proxy_de_init():
                 LOG.info("Server.stop: Proxy de-initialized: %s", name)
         LOG.info("Server.stop: Clearing existing clients. Please recreate them!")
-        data.CLIENTS.clear()
-        data.CLIENTS_BY_INIT_URL.clear()
+        self.clients.clear()
+        self.clients_by_init_url.clear()
         LOG.info("Server.stop: Shutting down server")
-        self.server.shutdown()
+        self.xmlrpc_server.shutdown()
         LOG.debug("Server.stop: Stopping Server")
-        self.server.server_close()
+        self.xmlrpc_server.server_close()
         LOG.info("Server.stop: Server stopped")
-        LOG.debug("Server.stop: Setting data.SERVER to None")
-        data.SERVER = None
+        LOG.debug("Server.stop: Removing instance")
+        del INSTANCES[self.instance_name]
 
-def handle_device_descriptions(interface_id, dev_descriptions):
+    def save_devices_raw(self):
+        """
+        Save current device data in DEVICES_RAW to disk.
+        """
+        if not check_cache_dir():
+            return
+        with open(
+            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
+            mode="w",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            json.dump(self.devices_raw_cache, fptr)
+
+    def load_devices_raw(self):
+        """
+        Load device data from disk into devices_raw.
+        """
+        if not check_cache_dir():
+            return
+        if not os.path.exists(
+            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")
+        ):
+            return
+        with open(
+            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
+            mode="r",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self.devices_raw_cache = json.load(fptr)
+
+    def clear_devices_raw(self):
+        """
+        Remove stored device data from disk and clear devices_raw.
+        """
+        check_cache_dir()
+        if os.path.exists(
+            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")
+        ):
+            os.unlink(
+                os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")
+            )
+        self.devices_raw_cache.clear()
+
+    def save_paramsets(self):
+        """
+        Save current paramset data in PARAMSETS to disk.
+        """
+        if not check_cache_dir():
+            return
+        with open(
+            file=os.path.join(
+                config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"
+            ),
+            mode="w",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            json.dump(self.paramsets_cache, fptr)
+
+    def load_paramsets(self):
+        """
+        Load paramset data from disk into PARAMSETS.
+        """
+        if not check_cache_dir():
+            return
+        if not os.path.exists(
+            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")
+        ):
+            return
+        with open(
+            file=os.path.join(
+                config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"
+            ),
+            mode="r",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self.paramsets_cache = json.load(fptr)
+
+    def clear_paramsets(self):
+        """
+        Remove stored paramset data from disk.
+        """
+        check_cache_dir()
+        if os.path.exists(
+            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")
+        ):
+            os.unlink(
+                os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")
+            )
+        self.paramsets_cache.clear()
+
+    def save_names(self):
+        """
+        Save current name data in NAMES to disk.
+        """
+        if not check_cache_dir():
+            return
+        with open(
+            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"),
+            mode="w",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            json.dump(self.names_cache, fptr)
+
+    def load_names(self):
+        """
+        Load name data from disk into NAMES.
+        """
+        if not check_cache_dir():
+            return
+        if not os.path.exists(
+            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")
+        ):
+            return
+        with open(
+            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"),
+            mode="r",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self.names_cache = json.load(fptr)
+
+    def clear_names(self):
+        """
+        Remove stored names data from disk.
+        """
+        check_cache_dir()
+        if os.path.exists(
+            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")
+        ):
+            os.unlink(
+                os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")
+            )
+        self.names_cache.clear()
+
+    def clear_all(self):
+        """
+        Clear all stored data.
+        """
+        self.clear_devices_raw()
+        self.clear_paramsets()
+        self.clear_names()
+
+
+def handle_device_descriptions(server, interface_id, dev_descriptions):
     """
     Handle provided list of device descriptions.
     """
-    if interface_id not in data.DEVICES:
-        data.DEVICES[interface_id] = {}
-    if interface_id not in data.DEVICES_RAW_DICT:
-        data.DEVICES_RAW_DICT[interface_id] = {}
+    if interface_id not in server.devices:
+        server.devices[interface_id] = {}
+    if interface_id not in server.devices_raw_dict:
+        server.devices_raw_dict[interface_id] = {}
     for dd in dev_descriptions:
         address = dd[ATTR_HM_ADDRESS]
-        data.DEVICES_RAW_DICT[interface_id][address] = dd
-        if ':' not in address and address not in data.DEVICES[interface_id]:
-            data.DEVICES[interface_id][address] = {}
-        if ':' in address:
-            main, _ = address.split(':')
-            if main not in data.DEVICES[interface_id]:
-                data.DEVICES[interface_id][main] = {}
-            data.DEVICES[interface_id][main][address] = {}
+        server.devices_raw_dict[interface_id][address] = dd
+        if ":" not in address and address not in server.devices[interface_id]:
+            server.devices[interface_id][address] = {}
+        if ":" in address:
+            main, _ = address.split(":")
+            if main not in server.devices[interface_id]:
+                server.devices[interface_id][main] = {}
+            server.devices[interface_id][main][address] = {}
 
-def create_devices():
-    """
-    Trigger createion of the objects that expose the functionality.
-    """
-    new_devices = set()
-    new_entities = set()
-    for interface_id in data.DEVICES:
-        if interface_id not in data.CLIENTS:
-            LOG.warning("create_devices: Skipping interface %s, missing client.", interface_id)
-            continue
-        if interface_id not in data.PARAMSETS:
-            LOG.warning("create_devices: Skipping interface %s, missing paramsets.", interface_id)
-            continue
-        for device_address in data.DEVICES[interface_id]:
-            # Do we check for duplicates here? For now we do.
-            if device_address in data.HA_DEVICES:
-                LOG.warning("create_devices: Skipping device %s on %s, already exists.",
-                            device_address, interface_id)
-                continue
-            try:
-                data.HA_DEVICES[device_address] = Device(interface_id, device_address)
-                new_devices.add(device_address)
-            except Exception:
-                LOG.exception("create_devices: Failed to create device: %s, %s",
-                              interface_id, device_address)
-            try:
-                new_entities.update(data.HA_DEVICES[device_address].create_entities())
-            except Exception:
-                LOG.exception("create_devices: Failed to create entities: %s, %s",
-                              interface_id, device_address)
-    if callable(config.CALLBACK_SYSTEM):
-        # pylint: disable=not-callable
-        config.CALLBACK_SYSTEM(HH_EVENT_DEVICES_CREATED, new_devices, new_entities)
 
 def check_cache_dir():
     """Check presence of cache directory."""
@@ -330,98 +527,3 @@ def check_cache_dir():
     if not os.path.exists(config.CACHE_DIR):
         os.makedirs(config.CACHE_DIR)
     return True
-
-def save_devices_raw():
-    """
-    Save current device data in DEVICES_RAW to disk.
-    """
-    if not check_cache_dir():
-        return
-    with open(os.path.join(config.CACHE_DIR, FILE_DEVICES), 'w') as fptr:
-        json.dump(data.DEVICES_RAW, fptr)
-
-def load_devices_raw():
-    """
-    Load device data from disk into DEVICES_RAW.
-    """
-    if not check_cache_dir():
-        return
-    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_DEVICES)):
-        return
-    with open(os.path.join(config.CACHE_DIR, FILE_DEVICES)) as fptr:
-        data.DEVICES_RAW = json.load(fptr)
-
-def clear_devices_raw():
-    """
-    Remove stored device data from disk and clear DEVICES_RAW.
-    """
-    check_cache_dir()
-    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_DEVICES)):
-        os.unlink(os.path.join(config.CACHE_DIR, FILE_DEVICES))
-    data.DEVICES_RAW.clear()
-
-def save_paramsets():
-    """
-    Save current paramset data in PARAMSETS to disk.
-    """
-    if not check_cache_dir():
-        return
-    with open(os.path.join(config.CACHE_DIR, FILE_PARAMSETS), 'w') as fptr:
-        json.dump(data.PARAMSETS, fptr)
-
-def load_paramsets():
-    """
-    Load paramset data from disk into PARAMSETS.
-    """
-    if not check_cache_dir():
-        return
-    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)):
-        return
-    with open(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)) as fptr:
-        data.PARAMSETS = json.load(fptr)
-
-def clear_paramsets():
-    """
-    Remove stored paramset data from disk.
-    """
-    check_cache_dir()
-    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_PARAMSETS)):
-        os.unlink(os.path.join(config.CACHE_DIR, FILE_PARAMSETS))
-    data.PARAMSETS.clear()
-
-def save_names():
-    """
-    Save current name data in NAMES to disk.
-    """
-    if not check_cache_dir():
-        return
-    with open(os.path.join(config.CACHE_DIR, FILE_NAMES), 'w') as fptr:
-        json.dump(data.NAMES, fptr)
-
-def load_names():
-    """
-    Load name data from disk into NAMES.
-    """
-    if not check_cache_dir():
-        return
-    if not os.path.exists(os.path.join(config.CACHE_DIR, FILE_NAMES)):
-        return
-    with open(os.path.join(config.CACHE_DIR, FILE_NAMES)) as fptr:
-        data.NAMES = json.load(fptr)
-
-def clear_names():
-    """
-    Remove stored names data from disk.
-    """
-    check_cache_dir()
-    if os.path.exists(os.path.join(config.CACHE_DIR, FILE_NAMES)):
-        os.unlink(os.path.join(config.CACHE_DIR, FILE_NAMES))
-    data.NAMES.clear()
-
-def clear_all():
-    """
-    Clear all stored data.
-    """
-    clear_devices_raw()
-    clear_paramsets()
-    clear_names()

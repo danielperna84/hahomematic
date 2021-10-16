@@ -7,18 +7,17 @@ Functions for entity creation.
 import logging
 from abc import ABC, abstractmethod
 
-import hahomematic.config
-import hahomematic.data
+from hahomematic import config
 from hahomematic.const import (
     ATTR_HM_CONTROL,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
     ATTR_HM_OPERATIONS,
-    ATTR_HM_PARENT_TYPE,
     ATTR_HM_SPECIAL,
     ATTR_HM_TYPE,
     ATTR_HM_UNIT,
     ATTR_HM_VALUE_LIST,
+    HA_DOMAIN,
     TYPE_ACTION,
 )
 
@@ -29,18 +28,34 @@ class Entity(ABC):
     """
     Base class for regular entities.
     """
+
     # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, entity_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        server,
+        interface_id,
+        unique_id,
+        address,
+        parameter,
+        parameter_data,
+        platform,
+    ):
         """
         Initialize the entity.
+        :param server:
         """
+        self._server = server
         self.interface_id = interface_id
-        self.client = hahomematic.data.CLIENTS[interface_id]
+        self.client = self._server.clients[interface_id]
         self.proxy = self.client.proxy
-        self.entity_id = entity_id.replace('-', '_').lower()
-        self.unique_id = self.entity_id.split('.')[-1]
+        self.unique_id = unique_id
+        self.platform = platform
         self.address = address
-        self.device_type = hahomematic.data.DEVICES_RAW_DICT[self.interface_id][self.address].get(ATTR_HM_PARENT_TYPE)
+        self._parent_address = address.split(":")[0]
+        self._parent_device = self._server.devices_raw_dict[interface_id][
+            self._parent_address
+        ]
+        self.device_type = self._parent_device.get(ATTR_HM_TYPE)
         self.parameter = parameter
         self._parameter_data = parameter_data
         self.operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
@@ -52,37 +67,49 @@ class Entity(ABC):
         self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
         self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
         self.device_class = None
-        self.name = hahomematic.data.NAMES.get(
-            self.interface_id, {}).get(self.address, self.entity_id)
+        self.name = self.client.server.names_cache.get(self.interface_id, {}).get(
+            self.address, self.unique_id
+        )
         self._state = None
         if self.type == TYPE_ACTION:
             self._state = False
-        LOG.debug("Entity.__init__: Getting current value for %s",
-                  self.entity_id)
+        LOG.debug("Entity.__init__: Getting current value for %s", self.unique_id)
         # pylint: disable=pointless-statement
-        self.STATE
-        hahomematic.data.EVENT_SUBSCRIPTIONS[(self.address, self.parameter)].append(self.event)
+        # self.STATE
+        self._server.event_subscriptions[(self.address, self.parameter)].append(
+            self.event
+        )
         self.update_callback = None
-        if callable(hahomematic.config.CALLBACK_ENTITY_UPDATE):
-            self.update_callback = hahomematic.config.CALLBACK_ENTITY_UPDATE
+        if callable(config.CALLBACK_ENTITY_UPDATE):
+            self.update_callback = config.CALLBACK_ENTITY_UPDATE
 
     def event(self, interface_id, address, parameter, value):
         """
         Handle event for which this entity has subscribed.
         """
-        LOG.debug("Entity.event: %s, %s, %s, %s",
-                  interface_id, address, parameter, value)
+        LOG.debug(
+            "Entity.event: %s, %s, %s, %s", interface_id, address, parameter, value
+        )
         if interface_id != self.interface_id:
-            LOG.warning("Entity.event: Incorrect interface_id: %s - should be: %s",
-                        interface_id, self.interface_id)
+            LOG.warning(
+                "Entity.event: Incorrect interface_id: %s - should be: %s",
+                interface_id,
+                self.interface_id,
+            )
             return
         if address != self.address:
-            LOG.warning("Entity.event: Incorrect address: %s - should be: %s",
-                        address, self.address)
+            LOG.warning(
+                "Entity.event: Incorrect address: %s - should be: %s",
+                address,
+                self.address,
+            )
             return
         if parameter != self.parameter:
-            LOG.warning("Entity.event: Incorrect parameter: %s - should be: %s",
-                        parameter, self.parameter)
+            LOG.warning(
+                "Entity.event: Incorrect parameter: %s - should be: %s",
+                parameter,
+                self.parameter,
+            )
             return
         self._state = value
         self.update_entity()
@@ -95,10 +122,22 @@ class Entity(ABC):
             LOG.debug("Entity.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
-        self.update_callback(self.entity_id)
+        self.update_callback(self.unique_id)
 
     @property
     @abstractmethod
     # pylint: disable=invalid-name,missing-function-docstring
     def STATE(self):
         ...
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(HA_DOMAIN, self._parent_address)},
+            "name": self._server.ha_devices.get(self._parent_address).name,
+            "manufacturer": "eQ-3",
+            "model": self.device_type,
+            "sw_version": self._parent_device.get("FIRMWARE"),
+            "via_device": (HA_DOMAIN, self.interface_id),
+        }
