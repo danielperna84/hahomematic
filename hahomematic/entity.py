@@ -67,9 +67,7 @@ class Entity(ABC):
         self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
         self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
         self.device_class = None
-        self.name = self.client.server.names_cache.get(self.interface_id, {}).get(
-            self.address, self.unique_id
-        )
+        self.name = self._name()
         self._state = None
         if self.type == TYPE_ACTION:
             self._state = False
@@ -141,3 +139,11 @@ class Entity(ABC):
             "sw_version": self._parent_device.get("FIRMWARE"),
             "via_device": (HA_DOMAIN, self.interface_id),
         }
+
+    def _name(self):
+        name = self.client.server.names_cache.get(self.interface_id, {}).get(
+            self.address, self.unique_id)
+        if ":" in name:
+            return f"{name.split(':')[0]}_{self.parameter}"
+        else:
+            return name
