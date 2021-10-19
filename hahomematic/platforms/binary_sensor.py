@@ -5,13 +5,13 @@ binary_sensor platform (https://www.home-assistant.io/integrations/binary_sensor
 
 import logging
 
-from hahomematic.const import OPERATION_READ
-from hahomematic.entity import Entity
+from hahomematic.const import HA_PLATFORM_BINARY_SENSOR, OPERATION_READ
+from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class binary_sensor(Entity):
+class Binary_Sensor(GenericEntity):
     """
     Implementation of a binary_sensor.
     This is a default platform that gets automatically generated.
@@ -28,7 +28,7 @@ class binary_sensor(Entity):
             address,
             parameter,
             parameter_data,
-            "binary_sensor",
+            HA_PLATFORM_BINARY_SENSOR,
         )
 
     @property

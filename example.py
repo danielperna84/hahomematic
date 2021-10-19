@@ -29,9 +29,9 @@ def systemcallback(src, *args):
         for _, device in server.ha_devices.items():
             print(device)
         print("New devices:")
-        print(args[0])
-        print("New entities:")
         print(args[1])
+        print("New entities:")
+        print(args[2])
         return
     for arg in args:
         print("argument: %s" % arg)

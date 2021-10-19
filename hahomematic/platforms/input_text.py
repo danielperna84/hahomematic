@@ -5,13 +5,13 @@ input_text platform (https://www.home-assistant.io/integrations/input_text/).
 
 import logging
 
-from hahomematic.const import OPERATION_READ
-from hahomematic.entity import Entity
+from hahomematic.const import HA_PLATFORM_INPUT_TEXT, OPERATION_READ
+from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class input_text(Entity):
+class Input_Text(GenericEntity):
     """
     Implementation of a input_text.
     This is a default platform that gets automatically generated.
@@ -28,7 +28,7 @@ class input_text(Entity):
             address,
             parameter,
             parameter_data,
-            "input_text",
+            HA_PLATFORM_INPUT_TEXT,
         )
 
     @property

@@ -5,13 +5,13 @@ switch platform (https://www.home-assistant.io/integrations/switch/).
 
 import logging
 
-from hahomematic.const import OPERATION_READ, TYPE_ACTION
-from hahomematic.entity import Entity
+from hahomematic.const import HA_PLATFORM_SWITCH, OPERATION_READ, TYPE_ACTION
+from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class switch(Entity):
+class switch(GenericEntity):
     """
     Implementation of a switch.
     This is a default platform that gets automatically generated.
@@ -28,7 +28,7 @@ class switch(Entity):
             address,
             parameter,
             parameter_data,
-            "switch",
+            HA_PLATFORM_SWITCH,
         )
 
     @property

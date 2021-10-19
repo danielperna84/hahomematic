@@ -24,7 +24,7 @@ from hahomematic.const import (
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=too-many-instance-attributes
-class Entity(ABC):
+class BaseEntity(ABC):
     """
     Base class for regular entities.
     """
@@ -36,8 +36,6 @@ class Entity(ABC):
         interface_id,
         unique_id,
         address,
-        parameter,
-        parameter_data,
         platform,
     ):
         """
@@ -56,8 +54,54 @@ class Entity(ABC):
             self._parent_address
         ]
         self.device_type = self._parent_device.get(ATTR_HM_TYPE)
+        self.device_class = None
+
+        self.update_callback = None
+        if callable(config.CALLBACK_ENTITY_UPDATE):
+            self.update_callback = config.CALLBACK_ENTITY_UPDATE
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "identifiers": {(HA_DOMAIN, self._parent_address)},
+            "name": self._server.ha_devices.get(self._parent_address).name,
+            "manufacturer": "eQ-3",
+            "model": self.device_type,
+            "sw_version": self._parent_device.get("FIRMWARE"),
+            "via_device": (HA_DOMAIN, self.interface_id),
+        }
+
+
+class GenericEntity(BaseEntity):
+    """
+    Base class for generic entities.
+    """
+
+    # pylint: disable=too-many-arguments
+    def __init__(
+        self,
+        server,
+        interface_id,
+        unique_id,
+        address,
+        parameter,
+        parameter_data,
+        platform,
+    ):
+        """
+        Initialize the entity.
+        :param server:
+        """
+        super().__init__(server, interface_id, unique_id, address, platform)
+
+        self._parent_address = address.split(":")[0]
+        self._parent_device = self._server.devices_raw_dict[interface_id][
+            self._parent_address
+        ]
         self.parameter = parameter
         self._parameter_data = parameter_data
+        self.name = self._name()
         self.operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
         self.type = self._parameter_data.get(ATTR_HM_TYPE)
         self.control = self._parameter_data.get(ATTR_HM_CONTROL)
@@ -66,20 +110,17 @@ class Entity(ABC):
         self.min = self._parameter_data.get(ATTR_HM_MIN)
         self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
         self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
-        self.device_class = None
-        self.name = self._name()
+
         self._state = None
         if self.type == TYPE_ACTION:
             self._state = False
+
         LOG.debug("Entity.__init__: Getting current value for %s", self.unique_id)
         # pylint: disable=pointless-statement
         # self.STATE
         self._server.event_subscriptions[(self.address, self.parameter)].append(
             self.event
         )
-        self.update_callback = None
-        if callable(config.CALLBACK_ENTITY_UPDATE):
-            self.update_callback = config.CALLBACK_ENTITY_UPDATE
 
     def event(self, interface_id, address, parameter, value):
         """
@@ -128,21 +169,10 @@ class Entity(ABC):
     def STATE(self):
         ...
 
-    @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return {
-            "identifiers": {(HA_DOMAIN, self._parent_address)},
-            "name": self._server.ha_devices.get(self._parent_address).name,
-            "manufacturer": "eQ-3",
-            "model": self.device_type,
-            "sw_version": self._parent_device.get("FIRMWARE"),
-            "via_device": (HA_DOMAIN, self.interface_id),
-        }
-
     def _name(self):
         name = self.client.server.names_cache.get(self.interface_id, {}).get(
-            self.address, self.unique_id)
+            self.address, self.unique_id
+        )
         if ":" in name:
             return f"{name.split(':')[0]}_{self.parameter}"
         else:

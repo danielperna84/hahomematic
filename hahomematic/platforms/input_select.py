@@ -5,13 +5,13 @@ input_select platform (https://www.home-assistant.io/integrations/input_select/)
 
 import logging
 
-from hahomematic.const import OPERATION_READ
-from hahomematic.entity import Entity
+from hahomematic.const import HA_PLATFORM_INPUT_SELECT, OPERATION_READ
+from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class input_select(Entity):
+class Input_Select(GenericEntity):
     """
     Implementation of a input_select.
     This is a default platform that gets automatically generated.
@@ -28,7 +28,7 @@ class input_select(Entity):
             address,
             parameter,
             parameter_data,
-            "input_select",
+            HA_PLATFORM_INPUT_SELECT,
         )
 
     @property
