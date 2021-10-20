@@ -11,7 +11,7 @@ from hahomematic.entity import GenericEntity
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class Number(GenericEntity):
+class HM_Number(GenericEntity):
     """
     Implementation of a number.
     This is a default platform that gets automatically generated.

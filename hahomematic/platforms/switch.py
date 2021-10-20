@@ -11,7 +11,7 @@ from hahomematic.entity import GenericEntity
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class switch(GenericEntity):
+class HM_Switch(GenericEntity):
     """
     Implementation of a switch.
     This is a default platform that gets automatically generated.

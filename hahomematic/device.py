@@ -23,12 +23,12 @@ from hahomematic.const import (
     TYPE_STRING,
 )
 from hahomematic.helpers import generate_unique_id
-from hahomematic.platforms.binary_sensor import Binary_Sensor
-from hahomematic.platforms.input_select import Input_Select
-from hahomematic.platforms.input_text import Input_Text
-from hahomematic.platforms.number import Number
-from hahomematic.platforms.sensor import Sensor
-from hahomematic.platforms.switch import switch
+from hahomematic.platforms.binary_sensor import HM_Binary_Sensor
+from hahomematic.platforms.input_select import HM_Input_Select
+from hahomematic.platforms.input_text import HM_Input_Text
+from hahomematic.platforms.number import HM_Number
+from hahomematic.platforms.sensor import HM_Sensor
+from hahomematic.platforms.switch import HM_Switch
 
 LOG = logging.getLogger(__name__)
 
@@ -208,7 +208,7 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
             if unique_id in server.entities:
                 LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            server.entities[unique_id] = switch(
+            server.entities[unique_id] = HM_Switch(
                 server, interface_id, unique_id, address, parameter, parameter_data
             )
         else:
@@ -217,7 +217,7 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
                 if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                server.entities[unique_id] = switch(
+                server.entities[unique_id] = HM_Switch(
                     server, interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
@@ -225,7 +225,7 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
                 if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                server.entities[unique_id] = Input_Select(
+                server.entities[unique_id] = HM_Input_Select(
                     server, interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
@@ -233,7 +233,7 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
                 if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                server.entities[unique_id] = Number(
+                server.entities[unique_id] = HM_Number(
                     server, interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
@@ -241,7 +241,7 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
                 if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                server.entities[unique_id] = Input_Text(
+                server.entities[unique_id] = HM_Input_Text(
                     server, interface_id, unique_id, address, parameter, parameter_data
                 )
             else:
@@ -257,7 +257,7 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
             if unique_id in server.entities:
                 LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            server.entities[unique_id] = Binary_Sensor(
+            server.entities[unique_id] = HM_Binary_Sensor(
                 server, interface_id, unique_id, address, parameter, parameter_data
             )
         else:
@@ -265,7 +265,7 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
             if unique_id in server.entities:
                 LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                 return None
-            server.entities[unique_id] = Sensor(
+            server.entities[unique_id] = HM_Sensor(
                 server, interface_id, unique_id, address, parameter, parameter_data
             )
     return unique_id

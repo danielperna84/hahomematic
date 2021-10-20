@@ -11,7 +11,7 @@ from hahomematic.entity import GenericEntity
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class Input_Select(GenericEntity):
+class HM_Input_Select(GenericEntity):
     """
     Implementation of a input_select.
     This is a default platform that gets automatically generated.

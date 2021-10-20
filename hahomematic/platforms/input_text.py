@@ -11,7 +11,7 @@ from hahomematic.entity import GenericEntity
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class Input_Text(GenericEntity):
+class HM_Input_Text(GenericEntity):
     """
     Implementation of a input_text.
     This is a default platform that gets automatically generated.
