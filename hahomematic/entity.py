@@ -7,7 +7,6 @@ Functions for entity creation.
 import logging
 from abc import ABC, abstractmethod
 
-from hahomematic import config
 from hahomematic.const import (
     ATTR_HM_CONTROL,
     ATTR_HM_MAX,
@@ -56,9 +55,12 @@ class BaseEntity(ABC):
         self.device_type = self._parent_device.get(ATTR_HM_TYPE)
         self.device_class = None
 
-        self.update_callback = None
-        if callable(config.CALLBACK_ENTITY_UPDATE):
-            self.update_callback = config.CALLBACK_ENTITY_UPDATE
+        self._update_callback = None
+
+    def register_update_callback(self, update_callback):
+        """register update callback"""
+        if callable(update_callback):
+            self._update_callback = update_callback
 
     @property
     def device_info(self):
@@ -157,11 +159,11 @@ class GenericEntity(BaseEntity):
         """
         Do what is needed when the state of the entity has been updated.
         """
-        if self.update_callback is None:
+        if self._update_callback is None:
             LOG.debug("Entity.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
-        self.update_callback(self.unique_id)
+        self._update_callback(self.unique_id)
 
     @property
     @abstractmethod

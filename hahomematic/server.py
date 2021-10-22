@@ -359,22 +359,21 @@ class Server(threading.Thread):
         LOG.debug("Server.stop: Removing instance")
         del INSTANCES[self.instance_name]
 
-    def get_new_entities(self, new_unique_entity_ids=None):
+    def get_hm_entities_by_platform(self, unique_entity_ids):
         """
-        Return all new Entities by unique_ids
+        Return all hḿ-entities by requested unique_ids
         """
-        new_entities = {}
+        # init dict
+        hm_entities = {}
         for platform in HA_PLATFORMS:
-            new_entities[platform] = []
-            for (address, entity) in self.entities.items():
-                if platform == getattr(entity, "platform", None):
-                    if new_unique_entity_ids:
-                        if address in new_unique_entity_ids:
-                            new_entities[platform].append(entity)
-                    else:
-                        new_entities[platform].append(entity)
+            hm_entities[platform] = []
 
-        return new_entities
+        for unique_id in unique_entity_ids:
+            entity = self.entities.get(unique_id)
+            if entity and entity.platform in HA_PLATFORMS:
+                hm_entities[entity.platform].append(entity)
+
+        return hm_entities
 
     def save_devices_raw(self):
         """

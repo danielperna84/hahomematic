@@ -10,6 +10,7 @@ from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
+
 # pylint: disable=invalid-name
 class HM_Binary_Sensor(GenericEntity):
     """

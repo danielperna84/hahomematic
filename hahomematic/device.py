@@ -177,9 +177,7 @@ def create_devices(server):
                 )
     if callable(config.CALLBACK_SYSTEM):
         # pylint: disable=not-callable
-        config.CALLBACK_SYSTEM(
-            HH_EVENT_DEVICES_CREATED, server, new_devices, new_entities
-        )
+        config.CALLBACK_SYSTEM(HH_EVENT_DEVICES_CREATED, new_devices, new_entities)
 
 
 # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements

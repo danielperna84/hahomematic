@@ -26,6 +26,10 @@ class BaseClimate(BaseEntity):
         self.channels = list(
             self._server.devices[self.interface_id][self.address].keys()
         )
+        # Subscribe for all events of this device
+        if not self.address in self._server.event_subscriptions_device:
+            self._server.event_subscriptions_device[self.address] = []
+        self._server.event_subscriptions_device[self.address].append(self.event)
 
     def event(self, interface_id, address, value_key, value):
         """
@@ -48,8 +52,8 @@ class BaseClimate(BaseEntity):
         """
         Do what is needed when the state of the entity has been updated.
         """
-        if self.update_callback is None:
+        if self._update_callback is None:
             LOG.debug("Thermostat.update_entity: No callback defined.")
             return
         # pylint: disable=not-callable
-        self.update_callback(self.unique_id)
+        self._update_callback(self.unique_id)
