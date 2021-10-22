@@ -175,7 +175,11 @@ class GenericEntity(BaseEntity):
         name = self.client.server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
-        if ":" in name:
-            return f"{name.split(':')[0]}_{self.parameter}"
+        if name.count(':') == 1:
+            d_name = name.split(':')[0]
+            p_name = self.parameter.title().replace('_',' ')
+            c_no = name.split(':')[1]
+            c_name = "" if c_no == "0" else f" ch{c_no}"
+            return f"{d_name} {p_name}{c_name}"
         else:
             return name
