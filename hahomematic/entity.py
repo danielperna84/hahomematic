@@ -94,7 +94,7 @@ class BaseEntity(ABC):
             LOG.debug("Entity.remove_entity: No callback defined.")
             return
         # pylint: disable=not-callable
-        self._remove_entity(self.unique_id)
+        self._remove_callback(self.unique_id)
 
     @property
     def device_info(self):
@@ -107,6 +107,10 @@ class BaseEntity(ABC):
             "sw_version": self._parent_device.get("FIRMWARE"),
             "via_device": (HA_DOMAIN, self.interface_id),
         }
+
+    @abstractmethod
+    def remove_event_subscriptions(self):
+        """Remove existing event subscriptions"""
 
 
 class GenericEntity(BaseEntity):
@@ -189,7 +193,6 @@ class GenericEntity(BaseEntity):
         self._state = value
         self.update_entity()
 
-
     @property
     @abstractmethod
     # pylint: disable=invalid-name,missing-function-docstring
@@ -200,11 +203,15 @@ class GenericEntity(BaseEntity):
         name = self.client.server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
         )
-        if name.count(':') == 1:
-            d_name = name.split(':')[0]
-            p_name = self.parameter.title().replace('_',' ')
-            c_no = name.split(':')[1]
+        if name.count(":") == 1:
+            d_name = name.split(":")[0]
+            p_name = self.parameter.title().replace("_", " ")
+            c_no = name.split(":")[1]
             c_name = "" if c_no == "0" else f" ch{c_no}"
             return f"{d_name} {p_name}{c_name}"
         else:
             return name
+
+    def remove_event_subscriptions(self):
+        """Remove existing event subscriptions"""
+        del self._server.event_subscriptions[(self.address, self.parameter)]
