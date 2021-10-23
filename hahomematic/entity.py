@@ -56,11 +56,45 @@ class BaseEntity(ABC):
         self.device_class = None
 
         self._update_callback = None
+        self._remove_callback = None
 
     def register_update_callback(self, update_callback):
         """register update callback"""
         if callable(update_callback):
             self._update_callback = update_callback
+
+    def unregister_update_callback(self):
+        """remove update callback"""
+        self._update_callback = None
+
+    def update_entity(self):
+        """
+        Do what is needed when the state of the entity has been updated.
+        """
+        if self._update_callback is None:
+            LOG.debug("Entity.update_entity: No callback defined.")
+            return
+        # pylint: disable=not-callable
+        self._update_callback(self.unique_id)
+
+    def register_remove_callback(self, remove_callback):
+        """register remove callback"""
+        if callable(remove_callback):
+            self._remove_callback = remove_callback
+
+    def unregister_remove_callback(self):
+        """remove remove callback"""
+        self._remove_callback = None
+
+    def remove_entity(self):
+        """
+        Do what is needed when the entity has been removed.
+        """
+        if self._remove_callback is None:
+            LOG.debug("Entity.remove_entity: No callback defined.")
+            return
+        # pylint: disable=not-callable
+        self._remove_entity(self.unique_id)
 
     @property
     def device_info(self):
@@ -155,15 +189,6 @@ class GenericEntity(BaseEntity):
         self._state = value
         self.update_entity()
 
-    def update_entity(self):
-        """
-        Do what is needed when the state of the entity has been updated.
-        """
-        if self._update_callback is None:
-            LOG.debug("Entity.update_entity: No callback defined.")
-            return
-        # pylint: disable=not-callable
-        self._update_callback(self.unique_id)
 
     @property
     @abstractmethod
