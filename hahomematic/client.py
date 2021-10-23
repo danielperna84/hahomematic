@@ -85,7 +85,7 @@ class Client:
         self.name = name
         # This is the actual interface_id used for init
         # pylint: disable=invalid-name
-        self.id = f"{server.instance_name}-{name}"
+        self.interface_id = f"{server.instance_name}-{name}"
         self.host = host
         self.port = port
         self.json_port = json_port
@@ -146,7 +146,7 @@ class Client:
         else:
             self.backend = BACKEND_CCU
             self.session = False
-        self.server.clients[self.id] = self
+        self.server.clients[self.interface_id] = self
         if self.init_url not in self.server.clients_by_init_url:
             self.server.clients_by_init_url[self.init_url] = []
         self.server.clients_by_init_url[self.init_url].append(self)
@@ -164,8 +164,8 @@ class Client:
             self.initialized = 0
             return PROXY_INIT_FAILED
         try:
-            LOG.debug("proxy_init: init('%s', '%s')", self.init_url, self.id)
-            self.proxy.init(self.init_url, self.id)
+            LOG.debug("proxy_init: init('%s', '%s')", self.init_url, self.interface_id)
+            self.proxy.init(self.init_url, self.interface_id)
             LOG.info("proxy_init: Proxy for %s initialized", self.name)
         # pylint: disable=broad-except
         except Exception:
@@ -494,7 +494,7 @@ class Client:
     def ping(self):
         """Send ping to CCU to generate PONG event."""
         try:
-            self.proxy.ping(self.id)
+            self.proxy.ping(self.interface_id)
         except Exception:
             LOG.exception("ping: Exception")
 
@@ -503,12 +503,14 @@ class Client:
         if self.backend != BACKEND_HOMEGEAR:
             return
         try:
-            if self.proxy.clientServerInitialized(self.id):
+            if self.proxy.clientServerInitialized(self.interface_id):
                 self.initialized = int(time.time())
                 return
         except Exception:
             LOG.exception("homegear_check_init: Exception")
-        LOG.warning("homegear_check_init: Setting initialized to 0 for %s", self.id)
+        LOG.warning(
+            "homegear_check_init: Setting initialized to 0 for %s", self.interface_id
+        )
         self.initialized = 0
 
     def is_connected(self):
@@ -538,16 +540,19 @@ class Client:
         """
         Fetch a specific paramset and add it to the known ones.
         """
-        if self.id not in self.server.paramsets_cache:
-            self.server.paramsets_cache[self.id] = {}
-        if address not in self.server.paramsets_cache[self.id]:
-            self.server.paramsets_cache[self.id][address] = {}
-        if not paramset in self.server.paramsets_cache[self.id][address] or update:
+        if self.interface_id not in self.server.paramsets_cache:
+            self.server.paramsets_cache[self.interface_id] = {}
+        if address not in self.server.paramsets_cache[self.interface_id]:
+            self.server.paramsets_cache[self.interface_id][address] = {}
+        if (
+            not paramset in self.server.paramsets_cache[self.interface_id][address]
+            or update
+        ):
             LOG.debug("Fetching paramset %s for %s", paramset, address)
-            if not self.server.paramsets_cache[self.id][address]:
-                self.server.paramsets_cache[self.id][address] = {}
+            if not self.server.paramsets_cache[self.interface_id][address]:
+                self.server.paramsets_cache[self.interface_id][address] = {}
             try:
-                self.server.paramsets_cache[self.id][address][
+                self.server.paramsets_cache[self.interface_id][address][
                     paramset
                 ] = self.proxy.getParamsetDescription(address, paramset)
             except Exception:
@@ -560,35 +565,40 @@ class Client:
         """
         Fetch paramsets for provided device description.
         """
-        if self.id not in self.server.paramsets_cache:
-            self.server.paramsets_cache[self.id] = {}
+        if self.interface_id not in self.server.paramsets_cache:
+            self.server.paramsets_cache[self.interface_id] = {}
         address = device_description[ATTR_HM_ADDRESS]
-        if address not in self.server.paramsets_cache[self.id] or update:
+        if address not in self.server.paramsets_cache[self.interface_id] or update:
             LOG.debug("Fetching paramsets for %s", address)
-            self.server.paramsets_cache[self.id][address] = {}
+            self.server.paramsets_cache[self.interface_id][address] = {}
             for paramset in RELEVANT_PARAMSETS:
                 if paramset not in device_description[ATTR_HM_PARAMSETS]:
                     continue
                 try:
-                    self.server.paramsets_cache[self.id][address][
+                    self.server.paramsets_cache[self.interface_id][address][
                         paramset
                     ] = self.proxy.getParamsetDescription(address, paramset)
                 except Exception:
                     LOG.exception(
                         "Unable to get paramset %s for address %s.", paramset, address
                     )
-                    self.server.paramsets_cache[self.id][address][paramset] = {}
+                    self.server.paramsets_cache[self.interface_id][address][
+                        paramset
+                    ] = {}
 
     def fetch_all_paramsets(self, skip_existing=False):
         """
         Fetch all paramsets for provided interface id.
         """
-        if self.id not in self.server.devices_raw_dict:
-            self.server.devices_raw_dict[self.id] = {}
-        if self.id not in self.server.paramsets_cache:
-            self.server.paramsets_cache[self.id] = {}
-        for address, dd in self.server.devices_raw_dict[self.id].items():
-            if skip_existing and address in self.server.paramsets_cache[self.id]:
+        if self.interface_id not in self.server.devices_raw_dict:
+            self.server.devices_raw_dict[self.interface_id] = {}
+        if self.interface_id not in self.server.paramsets_cache:
+            self.server.paramsets_cache[self.interface_id] = {}
+        for address, dd in self.server.devices_raw_dict[self.interface_id].items():
+            if (
+                skip_existing
+                and address in self.server.paramsets_cache[self.interface_id]
+            ):
                 continue
             self.fetch_paramsets(dd)
         self.server.save_paramsets()
@@ -597,20 +607,20 @@ class Client:
         """
         Update paramsets for provided address.
         """
-        if self.id not in self.server.devices_raw_dict:
+        if self.interface_id not in self.server.devices_raw_dict:
             LOG.error(
                 "Interface ID missing in self.server.devices_raw_dict. Not updating paramsets for %s.",
                 address,
             )
             return
-        if not address in self.server.devices_raw_dict[self.id]:
+        if not address in self.server.devices_raw_dict[self.interface_id]:
             LOG.error(
                 "Channel missing in self.server.devices_raw_dict[interface_id]. Not updating paramsets for %s.",
                 address,
             )
             return
         self.fetch_paramsets(
-            self.server.devices_raw_dict[self.id][address], update=True
+            self.server.devices_raw_dict[self.interface_id][address], update=True
         )
         self.server.save_paramsets()
 
@@ -676,11 +686,11 @@ class Client:
                     if device[ATTR_INTERFACE] != interface:
                         continue
                     try:
-                        self.server.names_cache[self.id][device[ATTR_ADDRESS]] = device[
-                            ATTR_NAME
-                        ]
+                        self.server.names_cache[self.interface_id][
+                            device[ATTR_ADDRESS]
+                        ] = device[ATTR_NAME]
                         for channel in device.get(ATTR_CHANNELS, []):
-                            self.server.names_cache[self.id][
+                            self.server.names_cache[self.interface_id][
                                 channel[ATTR_ADDRESS]
                             ] = channel[ATTR_NAME]
                     except Exception:
@@ -699,10 +709,10 @@ class Client:
             )
             return
         LOG.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in self.server.devices_raw_dict[self.id]:
+        for address in self.server.devices_raw_dict[self.interface_id]:
             try:
-                self.server.names_cache[self.id][address] = self.proxy.getMetadata(
-                    address, ATTR_HM_NAME
-                )
+                self.server.names_cache[self.interface_id][
+                    address
+                ] = self.proxy.getMetadata(address, ATTR_HM_NAME)
             except Exception:
                 LOG.exception("Failed to fetch name for device %s.", address)

@@ -5,13 +5,13 @@ sensor platform (https://www.home-assistant.io/integrations/sensor/).
 
 import logging
 
-from hahomematic.const import OPERATION_READ
-from hahomematic.entity import Entity
+from hahomematic.const import HA_PLATFORM_SENSOR, OPERATION_READ
+from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class sensor(Entity):
+class HM_Sensor(GenericEntity):
     """
     Implementation of a sensor.
     This is a default platform that gets automatically generated.
@@ -28,7 +28,7 @@ class sensor(Entity):
             address,
             parameter,
             parameter_data,
-            "sensor",
+            HA_PLATFORM_SENSOR,
         )
 
     @property

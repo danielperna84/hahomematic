@@ -5,13 +5,13 @@ number platform (https://www.home-assistant.io/integrations/number/).
 
 import logging
 
-from hahomematic.const import ATTR_HM_VALUE, OPERATION_READ
-from hahomematic.entity import Entity
+from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_NUMBER, OPERATION_READ
+from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class number(Entity):
+class HM_Number(GenericEntity):
     """
     Implementation of a number.
     This is a default platform that gets automatically generated.
@@ -28,7 +28,7 @@ class number(Entity):
             address,
             parameter,
             parameter_data,
-            "number",
+            HA_PLATFORM_NUMBER,
         )
 
     @property

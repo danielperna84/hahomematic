@@ -5,10 +5,9 @@ Code to create the required entities for thermostat devices.
 
 import logging
 
-from hahomematic import config
 from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, PARAMSET_VALUES
 from hahomematic.helpers import generate_unique_id
-from hahomematic.platforms.climate import climate
+from hahomematic.platforms.climate import BaseClimate
 
 LOG = logging.getLogger(__name__)
 
@@ -51,34 +50,16 @@ SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
 
 # pylint: disable=too-many-instance-attributes
-class SimpleThermostat(climate):
+class SimpleThermostat(BaseClimate):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, server, interface_id, address, unique_id):
+        super().__init__(server, interface_id, address, unique_id)
         LOG.debug(
             "SimpleThermostat.__init__(%s, %s, %s)", interface_id, address, unique_id
         )
-        self._server = server
-        self.interface_id = interface_id
-        self.address = address
-        self._client = self._server.clients[self.interface_id]
-        self.proxy = self._client.proxy
-        self.unique_id = unique_id
-        self.name = self._server.names_cache.get(self.interface_id, {}).get(
-            self.address, self.unique_id
-        )
-        self.ha_device = self._server.ha_devices[self.address]
-        self.channels = list(
-            self._server.devices[self.interface_id][self.address].keys()
-        )
-        # Subscribe for all events of this device
-        if not self.address in self._server.event_subscriptions_device:
-            self._server.event_subscriptions_device[self.address] = []
-        self._server.event_subscriptions_device[self.address].append(self.event)
-        self.update_callback = None
-        if callable(config.CALLBACK_ENTITY_UPDATE):
-            self.update_callback = config.CALLBACK_ENTITY_UPDATE
+
         # Parameter defaults
         self.humidity = None  # Channel 1
         self.temperature = None  # Channel 1
@@ -88,34 +69,13 @@ class SimpleThermostat(climate):
         """
         Handle events for this device.
         """
-        if interface_id != self.interface_id:
-            return
-        if address not in [f"{self.address}:1", f"{self.address}:2"]:
-            return
-        LOG.debug(
-            "SimpleThermostat.event(%s, %s, %s, %s)",
-            interface_id,
-            address,
-            value_key,
-            value,
-        )
         if value_key == PARAM_TEMPERATURE:
             self.temperature = value
         elif value_key == PARAM_HUMIDITY:
             self.humidity = value
         elif value_key == PARAM_SETPOINT:
             self.setpoint = value
-        self.update_entity()
-
-    def update_entity(self):
-        """
-        Do what is needed when the state of the entity has been updated.
-        """
-        if self.update_callback is None:
-            LOG.debug("SimpleThermostat.update_entity: No callback defined.")
-            return
-        # pylint: disable=not-callable
-        self.update_callback(self.unique_id)
+        super().event(interface_id, address, value_key, value)
 
     @property
     def supported_features(self):
@@ -188,32 +148,14 @@ class SimpleThermostat(climate):
         )
 
 
-class Thermostat(climate):
+class Thermostat(BaseClimate):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, server, interface_id, address, unique_id, nodes):
+        super().__init__(server, interface_id, address, unique_id)
         LOG.debug("Thermostat.__init__(%s, %s, %s)", interface_id, address, unique_id)
-        self._server = server
-        self.interface_id = interface_id
-        self.address = address
-        self._client = self._server.clients[self.interface_id]
-        self.proxy = self._client.proxy
-        self.unique_id = unique_id
-        self.name = self._server.names_cache.get(self.interface_id, {}).get(
-            self.address, self.unique_id
-        )
-        self.ha_device = self._server.ha_devices[self.address]
-        self.channels = list(
-            self._server.devices[self.interface_id][self.address].keys()
-        )
-        # Subscribe for all events of this device
-        if not self.address in self._server.event_subscriptions_device:
-            self._server.event_subscriptions_device[self.address] = []
-        self._server.event_subscriptions_device[self.address].append(self.event)
-        self.update_callback = None
-        if callable(config.CALLBACK_ENTITY_UPDATE):
-            self.update_callback = config.CALLBACK_ENTITY_UPDATE
+
         self._node_actual_temperature = nodes.get(NODE_ACTUAL_TEMPERATURE)
         self._node_set_temperature = nodes.get(NODE_SET_TEMPERATURE)
         self._node_control_mode = nodes.get(NODE_CONTROL_MODE)
@@ -233,13 +175,6 @@ class Thermostat(climate):
         """
         Handle event for this device.
         """
-        if interface_id != self.interface_id:
-            return
-        if address != self._node_actual_temperature[0]:
-            return
-        LOG.debug(
-            "Thermostat.event(%s, %s, %s, %s)", interface_id, address, value_key, value
-        )
         if value_key == self._node_actual_temperature[1]:
             self.temperature = value
         elif value_key == self._node_set_temperature[1]:
@@ -248,17 +183,7 @@ class Thermostat(climate):
             self.control_mode = value
         elif self._node_humidity is not None and value_key == self._node_humidity[1]:
             self.humidity = value
-        self.update_entity()
-
-    def update_entity(self):
-        """
-        Do what is needed when the state of the entity has been updated.
-        """
-        if self.update_callback is None:
-            LOG.debug("Thermostat.update_entity: No callback defined.")
-            return
-        # pylint: disable=not-callable
-        self.update_callback(self.unique_id)
+        super().event(interface_id, address, value_key, value)
 
     @property
     def supported_features(self):
@@ -392,32 +317,14 @@ class Thermostat(climate):
             )
 
 
-class IPThermostat(climate):
+class IPThermostat(BaseClimate):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
     # pylint: disable=too-many-arguments
     def __init__(self, server, interface_id, address, unique_id, nodes):
+        super().__init__(server, interface_id, address, unique_id)
         LOG.debug("IPThermostat.__init__(%s, %s, %s)", interface_id, address, unique_id)
-        self._server = server
-        self.interface_id = interface_id
-        self.address = address
-        self._client = self._server.clients[self.interface_id]
-        self.proxy = self._client.proxy
-        self.unique_id = unique_id
-        self.name = self._server.names_cache.get(self.interface_id, {}).get(
-            self.address, self.unique_id
-        )
-        self.ha_device = self._server.ha_devices[self.address]
-        self.channels = list(
-            self._server.devices[self.interface_id][self.address].keys()
-        )
-        # Subscribe for all events of this device
-        if not self.address in self._server.event_subscriptions_device:
-            self._server.event_subscriptions_device[self.address] = []
-        self._server.event_subscriptions_device[self.address].append(self.event)
-        self.update_callback = None
-        if callable(config.CALLBACK_ENTITY_UPDATE):
-            self.update_callback = config.CALLBACK_ENTITY_UPDATE
+
         self._node_actual_temperature = nodes.get(NODE_ACTUAL_TEMPERATURE)
         self._node_set_temperature = nodes.get(NODE_SET_TEMPERATURE)
         self._node_control_mode = nodes.get(NODE_CONTROL_MODE)
@@ -438,17 +345,6 @@ class IPThermostat(climate):
         """
         Handle event for this device.
         """
-        if interface_id != self.interface_id:
-            return
-        if address != self._node_actual_temperature[0]:
-            return
-        LOG.debug(
-            "IPThermostat.event(%s, %s, %s, %s)",
-            interface_id,
-            address,
-            value_key,
-            value,
-        )
         if value_key == self._node_actual_temperature[1]:
             self.temperature = value
         elif value_key == self._node_set_temperature[1]:
@@ -461,17 +357,7 @@ class IPThermostat(climate):
             self.party_mode = value
         elif self._node_humidity is not None and value_key == self._node_humidity[1]:
             self.humidity = value
-        self.update_entity()
-
-    def update_entity(self):
-        """
-        Do what is needed when the state of the entity has been updated.
-        """
-        if self.update_callback is None:
-            LOG.debug("IPThermostat.update_entity: No callback defined.")
-            return
-        # pylint: disable=not-callable
-        self.update_callback(self.unique_id)
+        super().event(interface_id, address, value_key, value)
 
     @property
     def supported_features(self):

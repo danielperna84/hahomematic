@@ -21,6 +21,7 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
+    HA_PLATFORMS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_ERROR,
     HH_EVENT_LIST_DEVICES,
@@ -357,6 +358,22 @@ class Server(threading.Thread):
         LOG.info("Server.stop: Server stopped")
         LOG.debug("Server.stop: Removing instance")
         del INSTANCES[self.instance_name]
+
+    def get_hm_entities_by_platform(self, unique_entity_ids):
+        """
+        Return all hḿ-entities by requested unique_ids
+        """
+        # init dict
+        hm_entities = {}
+        for platform in HA_PLATFORMS:
+            hm_entities[platform] = []
+
+        for unique_id in unique_entity_ids:
+            entity = self.entities.get(unique_id)
+            if entity and entity.platform in HA_PLATFORMS:
+                hm_entities[entity.platform].append(entity)
+
+        return hm_entities
 
     def save_devices_raw(self):
         """
