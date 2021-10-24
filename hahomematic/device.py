@@ -24,9 +24,8 @@ from hahomematic.const import (
 )
 from hahomematic.helpers import generate_unique_id
 from hahomematic.platforms.binary_sensor import HM_Binary_Sensor
-from hahomematic.platforms.input_select import HM_Input_Select
-from hahomematic.platforms.input_text import HM_Input_Text
 from hahomematic.platforms.number import HM_Number
+from hahomematic.platforms.select import HM_Select
 from hahomematic.platforms.sensor import HM_Sensor
 from hahomematic.platforms.switch import HM_Switch
 
@@ -219,11 +218,11 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
                     server, interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
-                LOG.debug("create_entity: input_select: %s %s", address, parameter)
+                LOG.debug("create_entity: select: %s %s", address, parameter)
                 if unique_id in server.entities:
                     LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
                     return None
-                server.entities[unique_id] = HM_Input_Select(
+                server.entities[unique_id] = HM_Select(
                     server, interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
@@ -235,13 +234,8 @@ def create_entity(server, interface_id, address, parameter, parameter_data):
                     server, interface_id, unique_id, address, parameter, parameter_data
                 )
             elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
-                LOG.debug("create_entity: input_text: %s %s", address, parameter)
-                if unique_id in server.entities:
-                    LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
-                    return None
-                server.entities[unique_id] = HM_Input_Text(
-                    server, interface_id, unique_id, address, parameter, parameter_data
-                )
+                # There is currently no entity platform in HA for this.
+                return None
             else:
                 LOG.warning(
                     "unsupported actor: %s %s %s",

@@ -1,19 +1,19 @@
 """
 Module for entities implemented using the
-input_text platform (https://www.home-assistant.io/integrations/input_text/).
+select platform (https://www.home-assistant.io/integrations/select/).
 """
 
 import logging
 
-from hahomematic.const import HA_PLATFORM_INPUT_TEXT, OPERATION_READ
+from hahomematic.const import HA_PLATFORM_SELECT, OPERATION_READ
 from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
-class HM_Input_Text(GenericEntity):
+class HM_Select(GenericEntity):
     """
-    Implementation of a input_text.
+    Implementation of a select.
     This is a default platform that gets automatically generated.
     """
 
@@ -28,7 +28,7 @@ class HM_Input_Text(GenericEntity):
             address,
             parameter,
             parameter_data,
-            HA_PLATFORM_INPUT_TEXT,
+            HA_PLATFORM_SELECT,
         )
 
     @property
@@ -39,23 +39,29 @@ class HM_Input_Text(GenericEntity):
         # pylint: disable=broad-except
         except Exception as err:
             LOG.info(
-                "input_text: Failed to get state for %s, %s, %s: %s",
+                "select: Failed to get state for %s, %s, %s: %s",
                 self.device_type,
                 self.address,
                 self.parameter,
                 err,
             )
             return None
-        return self._state
+        return self.value_list[self._state]
 
     @STATE.setter
     def STATE(self, value):
         try:
-            self.proxy.setValue(self.address, self.parameter, str(value))
+            # We allow setting the value via index as well, just in case.
+            if isinstance(value, int):
+                self.proxy.setValue(self.address, self.parameter, value)
+            else:
+                self.proxy.setValue(
+                    self.address, self.parameter, self.value_list.index(value)
+                )
         # pylint: disable=broad-except
         except Exception:
             LOG.exception(
-                "input_text: Failed to set state for: %s, %s, %s, %s",
+                "select: Failed to set state for: %s, %s, %s, %s",
                 self.device_type,
                 self.address,
                 self.parameter,
