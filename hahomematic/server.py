@@ -187,17 +187,27 @@ class RPCFunctions:
             for device in self._server.devices_raw_cache[interface_id]
             if not device[ATTR_HM_ADDRESS] in addresses
         ]
-
         self._server.save_devices_raw()
+
         for address in addresses:
             try:
                 if ":" not in address:
                     del self._server.devices[interface_id][address]
                 del self._server.devices_raw_dict[interface_id][address]
                 del self._server.paramsets_cache[interface_id][address]
+                del self._server.names_cache[interface_id][address]
+                ha_device = self._server.ha_devices.get(address)
+                if ha_device:
+                    for entity_id in ha_device.entities:
+                        entity = self._server.entities[entity_id]
+                        if entity:
+                            entity.remove_event_subscriptions()
+                        del self._server.entities[entity_id]
+                    del self._server.ha_devices[address]
             except KeyError:
                 LOG.exception("Failed to delete: %s", address)
         self._server.save_paramsets()
+        self._server.save_names()
         return True
 
     @systemcallback(HH_EVENT_UPDATE_DEVICE)

@@ -57,3 +57,7 @@ class BaseClimate(BaseEntity):
             return
         # pylint: disable=not-callable
         self._update_callback(self.unique_id)
+
+    def remove_event_subscriptions(self):
+        """Remove existing event subscriptions"""
+        del self._server.event_subscriptions_device[self.address]
