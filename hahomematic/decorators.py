@@ -6,7 +6,6 @@ import functools
 import logging
 import time
 
-from hahomematic import config
 from hahomematic.data import get_client_by_interface_id
 
 LOG = logging.getLogger(__name__)
@@ -32,9 +31,9 @@ def systemcallback(name):
                 raise Exception("args-exception systemcallback") from err
             if client:
                 client.initialized = int(time.time())
-            if config.CALLBACK_SYSTEM is not None:
+            if client.server.callback_system is not None:
                 # pylint: disable=not-callable
-                config.CALLBACK_SYSTEM(name, *args)
+                client.server.callback_system(name, *args)
             return return_value
 
         return wrapper_systemcallback
@@ -61,9 +60,9 @@ def eventcallback(func):
             raise Exception("args-exception eventcallback") from err
         if client:
             client.initialized = int(time.time())
-        if config.CALLBACK_EVENT is not None:
+        if client.server.callback_event is not None:
             # pylint: disable=not-callable
-            config.CALLBACK_EVENT(*args)
+            client.server.callback_event(*args)
         return return_value
 
     return wrapper_eventcallback

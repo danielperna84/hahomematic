@@ -5,9 +5,29 @@ Code to create the required entities for thermostat devices.
 
 import logging
 
-from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, PARAMSET_VALUES
+from hahomematic.const import (
+    ATTR_HM_MAX,
+    ATTR_HM_MIN,
+    HA_PLATFORM_CLIMATE,
+    PARAMSET_VALUES,
+)
+from hahomematic.devices.device_description import (
+    DD_DEVICE,
+    FIELD_AUTO_MODE,
+    FIELD_BOOST_MODE,
+    FIELD_COMFORT_MODE,
+    FIELD_CONTROL_MODE,
+    FIELD_HUMIDITY,
+    FIELD_LOWERING_MODE,
+    FIELD_MANU_MODE,
+    FIELD_PARTY_MODE,
+    FIELD_SET_POINT_MODE,
+    FIELD_SETPOINT,
+    FIELD_TEMPERATURE,
+    device_description,
+)
+from hahomematic.entity import CustomEntity
 from hahomematic.helpers import generate_unique_id
-from hahomematic.platforms.climate import BaseClimate
 
 LOG = logging.getLogger(__name__)
 
@@ -49,33 +69,41 @@ TEMP_CELSIUS = "°C"
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
 
+
 # pylint: disable=too-many-instance-attributes
-class SimpleThermostat(BaseClimate):
+class SimpleThermostat(CustomEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, server, interface_id, address, unique_id):
-        super().__init__(server, interface_id, address, unique_id)
+    def __init__(self, device, address, unique_id, device_desc):
+        super().__init__(
+            device=device,
+            address=address,
+            unique_id=unique_id,
+            device_desc=device_desc,
+            platform=HA_PLATFORM_CLIMATE,
+        )
         LOG.debug(
-            "SimpleThermostat.__init__(%s, %s, %s)", interface_id, address, unique_id
+            "SimpleThermostat.__init__(%s, %s, %s)",
+            self._device.interface_id,
+            address,
+            unique_id,
         )
 
-        # Parameter defaults
-        self.humidity = None  # Channel 1
-        self.temperature = None  # Channel 1
-        self.setpoint = None  # Channel 2
+    @property
+    def _humidity(self):
+        """return the humidity of the device"""
+        self._get_entity_value(FIELD_HUMIDITY)
 
-    def event(self, interface_id, address, value_key, value):
-        """
-        Handle events for this device.
-        """
-        if value_key == PARAM_TEMPERATURE:
-            self.temperature = value
-        elif value_key == PARAM_HUMIDITY:
-            self.humidity = value
-        elif value_key == PARAM_SETPOINT:
-            self.setpoint = value
-        super().event(interface_id, address, value_key, value)
+    @property
+    def _temperature(self):
+        """return the temperature of the device"""
+        return self._get_entity_value(FIELD_TEMPERATURE)
+
+    @property
+    def _setpoint(self):
+        """return the setpoint of the device"""
+        return self._get_entity_value(FIELD_SETPOINT)
 
     @property
     def supported_features(self):
@@ -119,23 +147,17 @@ class SimpleThermostat(BaseClimate):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        if self.humidity is None:
-            return self.proxy.getValue(f"{self.address}:1", PARAM_HUMIDITY)
-        return self.humidity
+        return self._humidity
 
     @property
     def current_temperature(self):
         """Return current temperature."""
-        if self.temperature is None:
-            return self.proxy.getValue(f"{self.address}:1", PARAM_TEMPERATURE)
-        return self.temperature
+        return self._temperature
 
     @property
     def target_temperature(self):
         """Return target temperature."""
-        if self.setpoint is None:
-            return self.proxy.getValue(f"{self.address}:2", PARAM_SETPOINT)
-        return self.setpoint
+        return self._setpoint
 
     # pylint: disable=inconsistent-return-statements
     def set_temperature(self, **kwargs):
@@ -143,47 +165,47 @@ class SimpleThermostat(BaseClimate):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return None
-        return self.proxy.getValue(
-            f"{self.address}:2", PARAM_SETPOINT, float(temperature)
-        )
+        self._send_value(FIELD_SETPOINT, float(temperature))
 
 
-class Thermostat(BaseClimate):
+class Thermostat(CustomEntity):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, server, interface_id, address, unique_id, nodes):
-        super().__init__(server, interface_id, address, unique_id)
-        LOG.debug("Thermostat.__init__(%s, %s, %s)", interface_id, address, unique_id)
+    def __init__(self, device, address, unique_id, device_desc):
+        super().__init__(
+            device=device,
+            address=address,
+            unique_id=unique_id,
+            device_desc=device_desc,
+            platform=HA_PLATFORM_CLIMATE,
+        )
+        LOG.debug(
+            "Thermostat.__init__(%s, %s, %s)",
+            self._device.interface_id,
+            address,
+            unique_id,
+        )
 
-        self._node_actual_temperature = nodes.get(NODE_ACTUAL_TEMPERATURE)
-        self._node_set_temperature = nodes.get(NODE_SET_TEMPERATURE)
-        self._node_control_mode = nodes.get(NODE_CONTROL_MODE)
-        self._node_humidity = nodes.get(NODE_HUMIDITY)
-        self._node_auto_mode = nodes.get(NODE_AUTO_MODE)
-        self._node_manu_mode = nodes.get(NODE_MANU_MODE)
-        self._node_boost_mode = nodes.get(NODE_BOOST_MODE)
-        self._node_comfort_mode = nodes.get(NODE_COMFORT_MODE)
-        self._node_lowering_mode = nodes.get(NODE_LOWERING_MODE)
-        # Parameter defaults
-        self.humidity = None
-        self.temperature = None
-        self.setpoint = None
-        self.control_mode = None
+    @property
+    def _humidity(self):
+        """return the humidity of the device"""
+        self._get_entity_value(FIELD_HUMIDITY)
 
-    def event(self, interface_id, address, value_key, value):
-        """
-        Handle event for this device.
-        """
-        if value_key == self._node_actual_temperature[1]:
-            self.temperature = value
-        elif value_key == self._node_set_temperature[1]:
-            self.setpoint = value
-        elif value_key == self._node_control_mode[1]:
-            self.control_mode = value
-        elif self._node_humidity is not None and value_key == self._node_humidity[1]:
-            self.humidity = value
-        super().event(interface_id, address, value_key, value)
+    @property
+    def _temperature(self):
+        """return the temperature of the device"""
+        return self._get_entity_value(FIELD_TEMPERATURE)
+
+    @property
+    def _setpoint(self):
+        """return the setpoint of the device"""
+        return self._get_entity_value(FIELD_SETPOINT)
+
+    @property
+    def control_mode(self):
+        """return the control_mode of the device"""
+        return None  # self._get_entity_value(FIELD_CONTROL_MODE)
 
     @property
     def supported_features(self):
@@ -191,7 +213,7 @@ class Thermostat(BaseClimate):
         return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
-    def temperature_unit(self):
+    def _temperature_unit(self):
         """Return temperature unit."""
         return TEMP_CELSIUS
 
@@ -199,15 +221,15 @@ class Thermostat(BaseClimate):
     def min_temp(self):
         """Return the minimum temperature."""
         return self._server.paramsets_cache[self.interface_id][
-            self._node_actual_temperature[0]
-        ][PARAMSET_VALUES][self._node_actual_temperature[1]][ATTR_HM_MIN]
+            self._get_field_address(FIELD_TEMPERATURE)
+        ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         return self._server.paramsets_cache[self.interface_id][
-            self._node_actual_temperature[0]
-        ][PARAMSET_VALUES][self._node_actual_temperature[1]][ATTR_HM_MAX]
+            self._get_field_address(FIELD_TEMPERATURE)
+        ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MAX]
 
     @property
     def target_temperature_step(self):
@@ -217,7 +239,7 @@ class Thermostat(BaseClimate):
     @property
     def hvac_mode(self):
         """Return hvac operation mode."""
-        if self.temperature <= self.min_temp:
+        if self._temperature <= self.min_temp:
             return HVAC_MODE_OFF
         if self.control_mode == HM_MODE_MANU:
             return HVAC_MODE_HEAT
@@ -254,29 +276,17 @@ class Thermostat(BaseClimate):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        if self.humidity is None and self._node_humidity is not None:
-            self.humidity = self.proxy.getValue(
-                self._node_humidity[0], self._node_humidity[1]
-            )
-        return self.humidity
+        return self._humidity
 
     @property
     def current_temperature(self):
         """Return current temperature."""
-        if self.temperature is None:
-            self.temperature = self.proxy.getValue(
-                self._node_actual_temperature[0], self._node_actual_temperature[1]
-            )
-        return self.temperature
+        return self._temperature
 
     @property
     def target_temperature(self):
         """Return target temperature."""
-        if self.setpoint is None:
-            self.setpoint = self.proxy.getValue(
-                self._node_set_temperature[0], self._node_set_temperature[1]
-            )
-        return self.setpoint
+        return self._setpoint
 
     # pylint: disable=inconsistent-return-statements
     def set_temperature(self, **kwargs):
@@ -284,80 +294,73 @@ class Thermostat(BaseClimate):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return None
-        self.proxy.setValue(
-            self._node_set_temperature[0],
-            self._node_set_temperature[1],
-            float(temperature),
-        )
+        self._send_value(FIELD_SETPOINT, float(temperature))
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
-            self.proxy.setValue(self._node_auto_mode[0], self._node_auto_mode[1], True)
+            self._send_value(FIELD_AUTO_MODE, True)
         elif hvac_mode == HVAC_MODE_HEAT:
-            self.proxy.setValue(
-                self._node_manu_mode[0], self._node_manu_mode[1], self.max_temp
-            )
+            self._send_value(FIELD_MANU_MODE, self.max_temp)
         elif hvac_mode == HVAC_MODE_OFF:
             self.set_temperature(temperature=self.min_temp)
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_BOOST:
-            self.proxy.setValue(
-                self._node_boost_mode[0], self._node_boost_mode[1], True
-            )
+            self._send_value(FIELD_BOOST_MODE, True)
         elif preset_mode == PRESET_COMFORT:
-            self.proxy.setValue(
-                self._node_comfort_mode[0], self._node_comfort_mode[1], True
-            )
+            self._send_value(FIELD_COMFORT_MODE, True)
         elif preset_mode == PRESET_ECO:
-            self.proxy.setValue(
-                self._node_lowering_mode[0], self._node_lowering_mode[1], True
-            )
+            self._send_value(FIELD_LOWERING_MODE, True)
 
 
-class IPThermostat(BaseClimate):
+class IPThermostat(CustomEntity):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, server, interface_id, address, unique_id, nodes):
-        super().__init__(server, interface_id, address, unique_id)
-        LOG.debug("IPThermostat.__init__(%s, %s, %s)", interface_id, address, unique_id)
+    def __init__(self, device, address, unique_id, device_desc):
+        super().__init__(
+            device=device,
+            address=address,
+            unique_id=unique_id,
+            device_desc=device_desc,
+            platform=HA_PLATFORM_CLIMATE,
+        )
+        LOG.debug(
+            "IPThermostat.__init__(%s, %s, %s)",
+            self._device.interface_id,
+            address,
+            unique_id,
+        )
 
-        self._node_actual_temperature = nodes.get(NODE_ACTUAL_TEMPERATURE)
-        self._node_set_temperature = nodes.get(NODE_SET_TEMPERATURE)
-        self._node_control_mode = nodes.get(NODE_CONTROL_MODE)
-        self._node_humidity = nodes.get(NODE_HUMIDITY)
-        self._node_set_point_mode = nodes.get(NODE_SET_POINT_MODE)
-        self._node_boost_mode = nodes.get(NODE_BOOST_MODE)
-        self._node_party_mode = nodes.get(NODE_PARTY_MODE)
-        # Parameter defaults
-        self.humidity = None
-        self.temperature = None
-        self.setpoint = None
-        self.set_point_mode = None
-        self.control_mode = None
-        self.boost_mode = None
-        self.party_mode = None
+    @property
+    def _humidity(self):
+        return self._get_entity_value(FIELD_HUMIDITY)
 
-    def event(self, interface_id, address, value_key, value):
-        """
-        Handle event for this device.
-        """
-        if value_key == self._node_actual_temperature[1]:
-            self.temperature = value
-        elif value_key == self._node_set_temperature[1]:
-            self.setpoint = value
-        elif value_key == self._node_set_point_mode[1]:
-            self.set_point_mode = value
-        elif value_key == self._node_boost_mode[1]:
-            self.boost_mode = value
-        elif value_key == self._node_party_mode[1]:
-            self.party_mode = value
-        elif self._node_humidity is not None and value_key == self._node_humidity[1]:
-            self.humidity = value
-        super().event(interface_id, address, value_key, value)
+    @property
+    def _temperature(self):
+        return self._get_entity_value(FIELD_TEMPERATURE)
+
+    @property
+    def _setpoint(self):
+        return self._get_entity_value(FIELD_SETPOINT)
+
+    @property
+    def _set_point_mode(self):
+        return self._get_entity_value(FIELD_SET_POINT_MODE)
+
+    @property
+    def _control_mode(self):
+        return None  # self._get_entity_value(FIELD_CONTROL_MODE)
+
+    @property
+    def _boost_mode(self):
+        return self._get_entity_value(FIELD_BOOST_MODE)
+
+    @property
+    def _party_mode(self):
+        return self._get_entity_value(FIELD_PARTY_MODE)
 
     @property
     def supported_features(self):
@@ -373,15 +376,15 @@ class IPThermostat(BaseClimate):
     def min_temp(self):
         """Return the minimum temperature."""
         return self._server.paramsets_cache[self.interface_id][
-            self._node_actual_temperature[0]
-        ][PARAMSET_VALUES][self._node_actual_temperature[1]][ATTR_HM_MIN]
+            self._get_field_address(FIELD_TEMPERATURE)
+        ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         return self._server.paramsets_cache[self.interface_id][
-            self._node_actual_temperature[0]
-        ][PARAMSET_VALUES][self._node_actual_temperature[1]][ATTR_HM_MAX]
+            self._get_field_address(FIELD_TEMPERATURE)
+        ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MAX]
 
     @property
     def target_temperature_step(self):
@@ -391,11 +394,11 @@ class IPThermostat(BaseClimate):
     @property
     def hvac_mode(self):
         """Return hvac operation mode."""
-        if self.temperature <= self.min_temp:
+        if self._temperature and self._temperature <= self.min_temp:
             return HVAC_MODE_OFF
-        if self.set_point_mode == HMIP_SET_POINT_MODE_MANU:
+        if self._set_point_mode == HMIP_SET_POINT_MODE_MANU:
             return HVAC_MODE_HEAT
-        if self.set_point_mode == HMIP_SET_POINT_MODE_AUTO:
+        if self._set_point_mode == HMIP_SET_POINT_MODE_AUTO:
             return HVAC_MODE_AUTO
         return HVAC_MODE_AUTO
 
@@ -407,7 +410,7 @@ class IPThermostat(BaseClimate):
     @property
     def preset_mode(self):
         """Return the current preset mode."""
-        if self.boost_mode:
+        if self._boost_mode:
             return PRESET_BOOST
         # This mode (PRESET_AWAY) generally is available, but we're hiding it because
         # we can't set it from the Home Assistant UI natively.
@@ -423,29 +426,17 @@ class IPThermostat(BaseClimate):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        if self.humidity is None and self._node_humidity is not None:
-            self.humidity = self.proxy.getValue(
-                self._node_humidity[0], self._node_humidity[1]
-            )
-        return self.humidity
+        return self._humidity
 
     @property
     def current_temperature(self):
         """Return current temperature."""
-        if self.temperature is None:
-            self.temperature = self.proxy.getValue(
-                self._node_actual_temperature[0], self._node_actual_temperature[1]
-            )
-        return self.temperature
+        return self._temperature
 
     @property
     def target_temperature(self):
         """Return target temperature."""
-        if self.setpoint is None:
-            self.setpoint = self.proxy.getValue(
-                self._node_set_temperature[0], self._node_set_temperature[1]
-            )
-        return self.setpoint
+        return self._setpoint
 
     # pylint: disable=inconsistent-return-statements
     def set_temperature(self, **kwargs):
@@ -453,227 +444,98 @@ class IPThermostat(BaseClimate):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return None
-        self.proxy.setValue(
-            self._node_set_temperature[0],
-            self._node_set_temperature[1],
-            float(temperature),
-        )
+        self._send_value(FIELD_SETPOINT, float(temperature))
 
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
-            self.proxy.setValue(
-                self._node_control_mode[0],
-                self._node_control_mode[1],
-                HMIP_SET_POINT_MODE_AUTO,
-            )
+            self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_AUTO)
         elif hvac_mode == HVAC_MODE_HEAT:
-            self.proxy.setValue(
-                self._node_control_mode[0],
-                self._node_control_mode[1],
-                HMIP_SET_POINT_MODE_MANU,
-            )
+            self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
             self.set_temperature(temperature=self.max_temp)
         elif hvac_mode == HVAC_MODE_OFF:
-            self.proxy.setValue(
-                self._node_control_mode[0],
-                self._node_control_mode[1],
-                HMIP_SET_POINT_MODE_MANU,
-            )
+            self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
             self.set_temperature(temperature=self.min_temp)
 
     def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_BOOST:
-            self.proxy.setValue(
-                self._node_boost_mode[0], self._node_boost_mode[1], True
-            )
+            self._send_value(FIELD_BOOST_MODE, True)
 
 
-def make_simple_thermostat(server, interface_id, address):
+def make_simple_thermostat(device, address):
     """
     Helper to create SimpleThermostat entities.
-    :param server:
     """
     unique_id = generate_unique_id(address)
-    if unique_id in server.entities:
+    if unique_id in device.server.hm_entities:
         LOG.debug("make_simple_thermostat: Skipping %s (already exists)", unique_id)
-    server.entities[unique_id] = SimpleThermostat(
-        server, interface_id, address, unique_id
+    device_desc = device_description["SimpleThermostat"]
+    entity = SimpleThermostat(
+        device=device,
+        address=address,
+        unique_id=unique_id,
+        device_desc=device_desc,
     )
-    server.ha_devices[address].entities.add(unique_id)
-    return [unique_id]
+    entity.add_entity_to_server_collections()
+    return [entity]
 
 
-def make_thermostat(server, interface_id, address):
+def make_thermostat(device, address):
     """
     Helper to create Thermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
-    :param server:
     """
     unique_id = generate_unique_id(address)
-    if unique_id in server.entities:
+    if unique_id in device.server.hm_entities:
         LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
-    nodes = {
-        NODE_ACTUAL_TEMPERATURE: (f"{address}:4", "ACTUAL_TEMPERATURE"),
-        NODE_SET_TEMPERATURE: (f"{address}:4", "SET_TEMPERATURE"),
-        NODE_CONTROL_MODE: (f"{address}:4", "CONTROL_MODE"),
-        NODE_AUTO_MODE: (f"{address}:4", "AUTO_MODE"),
-        NODE_MANU_MODE: (f"{address}:4", "MANU_MODE"),
-        NODE_BOOST_MODE: (f"{address}:4", "BOOST_MODE"),
-        NODE_COMFORT_MODE: (f"{address}:4", "COMFORT_MODE"),
-        NODE_LOWERING_MODE: (f"{address}:4", "LOWERING_MODE"),
-    }
-    server.entities[unique_id] = Thermostat(
-        server, interface_id, address, unique_id, nodes
+
+    device_desc = device_description["Thermostat"]
+    entity = Thermostat(
+        device=device,
+        address=address,
+        unique_id=unique_id,
+        device_desc=device_desc,
     )
-    server.ha_devices[address].entities.add(unique_id)
-    return [unique_id]
+    device.server.hm_entities[unique_id] = entity
+    return [entity]
 
 
-def make_max_thermostat(server, interface_id, address):
-    """
-    Helper to create MAX! Thermostat entities.
-    We use a helper-function to avoid raising exceptions during object-init.
-    :param server:
-    """
-    unique_id = generate_unique_id(address)
-    if unique_id in server.entities:
-        LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
-    nodes = {
-        NODE_ACTUAL_TEMPERATURE: (f"{address}:1", "ACTUAL_TEMPERATURE"),
-        NODE_SET_TEMPERATURE: (f"{address}:1", "SET_TEMPERATURE"),
-        NODE_CONTROL_MODE: (f"{address}:1", "CONTROL_MODE"),
-        NODE_AUTO_MODE: (f"{address}:1", "AUTO_MODE"),
-        NODE_MANU_MODE: (f"{address}:1", "MANU_MODE"),
-        NODE_BOOST_MODE: (f"{address}:1", "BOOST_MODE"),
-        NODE_COMFORT_MODE: (f"{address}:1", "COMFORT_MODE"),
-        NODE_LOWERING_MODE: (f"{address}:1", "LOWERING_MODE"),
-    }
-    server.entities[unique_id] = Thermostat(
-        server, interface_id, address, unique_id, nodes
-    )
-    server.ha_devices[address].entities.add(unique_id)
-    return [unique_id]
-
-
-def make_wall_thermostat(server, interface_id, address):
-    """
-    Helper to create Thermostat entities for wall-thermostats.
-    We use a helper-function to avoid raising exceptions during object-init.
-    :param server:
-    """
-    unique_id = generate_unique_id(address)
-    if unique_id in server.entities:
-        LOG.debug("make_wall_thermostat: Skipping %s (already exists)", unique_id)
-    nodes = {
-        NODE_ACTUAL_TEMPERATURE: (f"{address}:2", "ACTUAL_TEMPERATURE"),
-        NODE_SET_TEMPERATURE: (f"{address}:2", "SET_TEMPERATURE"),
-        NODE_CONTROL_MODE: (f"{address}:2", "CONTROL_MODE"),
-        NODE_AUTO_MODE: (f"{address}:2", "AUTO_MODE"),
-        NODE_MANU_MODE: (f"{address}:2", "MANU_MODE"),
-        NODE_BOOST_MODE: (f"{address}:2", "BOOST_MODE"),
-        NODE_COMFORT_MODE: (f"{address}:2", "COMFORT_MODE"),
-        NODE_LOWERING_MODE: (f"{address}:2", "LOWERING_MODE"),
-        NODE_HUMIDITY: (f"{address}:2", "HUMIDITY"),
-    }
-    server.entities[unique_id] = Thermostat(
-        server, interface_id, address, unique_id, nodes
-    )
-    server.ha_devices[address].entities.add(unique_id)
-    return [unique_id]
-
-
-def make_group_thermostat(server, interface_id, address):
-    """
-    Helper to create Thermostat entities for heating groups.
-    We use a helper-function to avoid raising exceptions during object-init.
-    :param server:
-    """
-    unique_id = generate_unique_id(address)
-    if unique_id in server.entities:
-        LOG.debug("make_group_thermostat: Skipping %s (already exists)", unique_id)
-    nodes = {
-        NODE_ACTUAL_TEMPERATURE: (f"{address}:1", "ACTUAL_TEMPERATURE"),
-        NODE_SET_TEMPERATURE: (f"{address}:1", "SET_TEMPERATURE"),
-        NODE_CONTROL_MODE: (f"{address}:1", "CONTROL_MODE"),
-        NODE_AUTO_MODE: (f"{address}:1", "AUTO_MODE"),
-        NODE_MANU_MODE: (f"{address}:1", "MANU_MODE"),
-        NODE_BOOST_MODE: (f"{address}:1", "BOOST_MODE"),
-        NODE_COMFORT_MODE: (f"{address}:1", "COMFORT_MODE"),
-        NODE_LOWERING_MODE: (f"{address}:1", "LOWERING_MODE"),
-    }
-    server.entities[unique_id] = Thermostat(
-        server, interface_id, address, unique_id, nodes
-    )
-    server.ha_devices[address].entities.add(unique_id)
-    return [unique_id]
-
-
-def make_ip_thermostat(server, interface_id, address):
+def make_ip_thermostat(device, address):
     """
     Helper to create IPThermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
-    :param server:
     """
     unique_id = generate_unique_id(address)
-    if unique_id in server.entities:
+    if unique_id in device.server.hm_entities:
         LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
-    nodes = {
-        NODE_ACTUAL_TEMPERATURE: (f"{address}:1", "ACTUAL_TEMPERATURE"),
-        NODE_SET_TEMPERATURE: (f"{address}:1", "SET_POINT_TEMPERATURE"),
-        NODE_CONTROL_MODE: (f"{address}:1", "CONTROL_MODE"),
-        NODE_SET_POINT_MODE: (f"{address}:1", "SET_POINT_MODE"),
-        NODE_BOOST_MODE: (f"{address}:1", "BOOST_MODE"),
-        NODE_PARTY_MODE: (f"{address}:1", "PARTY_MODE"),
-    }
-    server.entities[unique_id] = IPThermostat(
-        server, interface_id, address, unique_id, nodes
+    device_desc = device_description["IPThermostat"]
+    entity = IPThermostat(
+        device=device,
+        address=address,
+        unique_id=unique_id,
+        device_desc=device_desc,
     )
-    server.ha_devices[address].entities.add(unique_id)
-    return [unique_id]
 
-
-def make_ip_wall_thermostat(server, interface_id, address):
-    """
-    Helper to create IPThermostat entities for wall-thermostats.
-    We use a helper-function to avoid raising exceptions during object-init.
-    :param server:
-    """
-    unique_id = generate_unique_id(address)
-    if unique_id in server.entities:
-        LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
-    nodes = {
-        NODE_ACTUAL_TEMPERATURE: (f"{address}:1", "ACTUAL_TEMPERATURE"),
-        NODE_SET_TEMPERATURE: (f"{address}:1", "SET_POINT_TEMPERATURE"),
-        NODE_CONTROL_MODE: (f"{address}:1", "CONTROL_MODE"),
-        NODE_SET_POINT_MODE: (f"{address}:1", "SET_POINT_MODE"),
-        NODE_BOOST_MODE: (f"{address}:1", "BOOST_MODE"),
-        NODE_PARTY_MODE: (f"{address}:1", "PARTY_MODE"),
-        NODE_HUMIDITY: (f"{address}:1", "HUMIDITY"),
-    }
-    server.entities[unique_id] = IPThermostat(
-        server, interface_id, address, unique_id, nodes
-    )
-    server.ha_devices[address].entities.add(unique_id)
-    return [unique_id]
+    entity.add_entity_to_server_collections()
+    return [entity]
 
 
 DEVICES = {
-    "BC-RT-TRX-CyG": make_max_thermostat,
-    "BC-RT-TRX-CyG-2": make_max_thermostat,
-    "BC-RT-TRX-CyG-3": make_max_thermostat,
-    "BC-RT-TRX-CyG-4": make_max_thermostat,
-    "BC-RT-TRX-CyN": make_max_thermostat,
-    "BC-TC-C-WM-2": make_max_thermostat,
-    "BC-TC-C-WM-4": make_max_thermostat,
+    "BC-RT-TRX-CyG": make_thermostat,
+    "BC-RT-TRX-CyG-2": make_thermostat,
+    "BC-RT-TRX-CyG-3": make_thermostat,
+    "BC-RT-TRX-CyG-4": make_thermostat,
+    "BC-RT-TRX-CyN": make_thermostat,
+    "BC-TC-C-WM-2": make_thermostat,
+    "BC-TC-C-WM-4": make_thermostat,
     "HM-CC-RT-DN": make_thermostat,
     "HM-CC-RT-DN-BoM": make_thermostat,
     "HM-CC-TC": make_simple_thermostat,
-    "HM-CC-VG-1": make_group_thermostat,
-    "HM-TC-IT-WM-W-EU": make_wall_thermostat,
-    "HmIP-BWTH": make_ip_wall_thermostat,
-    "HmIP-BWTH24": make_ip_wall_thermostat,
+    "HM-CC-VG-1": make_thermostat,
+    "HM-TC-IT-WM-W-EU": make_thermostat,
+    "HmIP-BWTH": make_ip_thermostat,
+    "HmIP-BWTH24": make_ip_thermostat,
     "HMIP-eTRV": make_ip_thermostat,
     "HmIP-eTRV": make_ip_thermostat,
     "HmIP-eTRV-2": make_ip_thermostat,
@@ -684,16 +546,16 @@ DEVICES = {
     "HmIP-eTRV-C": make_ip_thermostat,
     "HmIP-eTRV-C-2": make_ip_thermostat,
     "HmIP-HEATING": make_ip_thermostat,
-    "HmIP-STH": make_ip_wall_thermostat,
-    "HmIP-STHD": make_ip_wall_thermostat,
-    "HMIP-WTH": make_ip_wall_thermostat,
-    "HmIP-WTH": make_ip_wall_thermostat,
-    "HMIP-WTH-2": make_ip_wall_thermostat,
-    "HmIP-WTH-2": make_ip_wall_thermostat,
-    "HMIP-WTH-B": make_ip_wall_thermostat,
-    "HmIP-WTH-B": make_ip_wall_thermostat,
-    "HmIPW-STH": make_ip_wall_thermostat,
-    "HmIPW-WTH": make_ip_wall_thermostat,
+    "HmIP-STH": make_ip_thermostat,
+    "HmIP-STHD": make_ip_thermostat,
+    "HMIP-WTH": make_ip_thermostat,
+    "HmIP-WTH": make_ip_thermostat,
+    "HMIP-WTH-2": make_ip_thermostat,
+    "HmIP-WTH-2": make_ip_thermostat,
+    "HMIP-WTH-B": make_ip_thermostat,
+    "HmIP-WTH-B": make_ip_thermostat,
+    "HmIPW-STH": make_ip_thermostat,
+    "HmIPW-WTH": make_ip_thermostat,
     "Thermostat AA": make_ip_thermostat,
     "Thermostat AA GB": make_ip_thermostat,
     "ZEL STG RM FWT": make_simple_thermostat,

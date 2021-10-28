@@ -21,7 +21,6 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
-    HA_PLATFORMS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_ERROR,
     HH_EVENT_LIST_DEVICES,
@@ -83,7 +82,7 @@ class RPCFunctions:
                     for callback in self._server.event_subscriptions_device[
                         device_address
                     ]:
-                        callback(interface_id, address, value_key, value)
+                        callback(interface_id, device_address)
                 except Exception:
                     LOG.exception(
                         "RPCFunctions.event: Failed to call device-callback for: %s, %s, %s",
@@ -91,6 +90,9 @@ class RPCFunctions:
                         address,
                         value_key,
                     )
+        else:
+            return
+
         return True
 
     @systemcallback(HH_EVENT_ERROR)
@@ -196,14 +198,14 @@ class RPCFunctions:
                 del self._server.devices_raw_dict[interface_id][address]
                 del self._server.paramsets_cache[interface_id][address]
                 del self._server.names_cache[interface_id][address]
-                ha_device = self._server.ha_devices.get(address)
+                ha_device = self._server.hm_devices.get(address)
                 if ha_device:
-                    for entity_id in ha_device.entities:
-                        entity = self._server.entities[entity_id]
+                    for entity_id in ha_device.hm_entities:
+                        entity = self._server.hm_entities[entity_id]
                         if entity:
                             entity.remove_event_subscriptions()
-                        del self._server.entities[entity_id]
-                    del self._server.ha_devices[address]
+                        del self._server.hm_entities[entity_id]
+                    del self._server.hm_devices[address]
             except KeyError:
                 LOG.exception("Failed to delete: %s", address)
         self._server.save_paramsets()
@@ -289,9 +291,9 @@ class Server(threading.Thread):
         # {device_address, event_handle}
         self.event_subscriptions_device = {}
         # {unique_id, entity}
-        self.entities = {}
+        self.hm_entities = {}
         # {device_address, device}
-        self.ha_devices = {}
+        self.hm_devices = {}
         # {interface_id, {address, channel_address}}
         self.devices = {}
         # {interface_id, {address, dev_descriptions}
@@ -308,6 +310,11 @@ class Server(threading.Thread):
         self._rpcfunctions = RPCFunctions(self)
 
         self.last_events = {}
+
+        # Signature: f(name, *args)
+        self.callback_system = None
+        # Signature: f(interface_id, address, value_key, value)
+        self.callback_event = None
 
         # Setup server to handle requests from CCU / Homegear
         LOG.debug("Server.__init__: Setting up server")
@@ -369,19 +376,14 @@ class Server(threading.Thread):
         LOG.debug("Server.stop: Removing instance")
         del INSTANCES[self.instance_name]
 
-    def get_hm_entities_by_platform(self, unique_entity_ids):
+    def get_hm_entities_by_platform(self, platform):
         """
-        Return all hḿ-entities by requested unique_ids
+        Return all hm-entities by requested unique_ids
         """
-        # init dict
-        hm_entities = {}
-        for platform in HA_PLATFORMS:
-            hm_entities[platform] = []
-
-        for unique_id in unique_entity_ids:
-            entity = self.entities.get(unique_id)
-            if entity and entity.platform in HA_PLATFORMS:
-                hm_entities[entity.platform].append(entity)
+        hm_entities = []
+        for entity in self.hm_entities.values():
+            if entity and entity.platform == platform and entity.create_in_ha:
+                hm_entities.append(entity)
 
         return hm_entities
 
