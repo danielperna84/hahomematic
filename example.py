@@ -27,8 +27,8 @@ def systemcallback(src, *args):
     elif src == const.HH_EVENT_DEVICES_CREATED:
         GOT_DEVICES = True
         print("All devices:")
-        print(server.ha_devices)
-        for _, device in server.ha_devices.items():
+        print(server.hm_devices)
+        for _, device in server.hm_devices.items():
             print(device)
         print("New devices:")
         print(args[0])
@@ -58,8 +58,8 @@ config.INIT_TIMEOUT = 10
 # it while initializing.
 config.CACHE_DIR = "cache"
 # Add callbacks to handle the events and see what happens on the system.
-config.CALLBACK_SYSTEM = systemcallback
-config.CALLBACK_EVENT = eventcallback
+server.callback_system = systemcallback
+server.callback_event = eventcallback
 config.CALLBACK_ENTITY_UPDATE = entityupdatecallback
 
 
