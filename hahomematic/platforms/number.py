@@ -10,7 +10,6 @@ from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
-
 # pylint: disable=invalid-name
 class HM_Number(GenericEntity):
     """
@@ -36,6 +35,7 @@ class HM_Number(GenericEntity):
     @STATE.setter
     def STATE(self, value):
         # pylint: disable=no-else-return
+        # if value >= self.min and value <= self.max:
         if self.min <= value <= self.max:
             self.send_value(value)
             return
@@ -49,4 +49,5 @@ class HM_Number(GenericEntity):
             self.min,
             self.max,
             self.special,
-        )
+            )
+
