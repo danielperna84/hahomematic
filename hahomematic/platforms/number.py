@@ -10,6 +10,7 @@ from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
+
 # pylint: disable=invalid-name
 class HM_Number(GenericEntity):
     """
@@ -34,29 +35,18 @@ class HM_Number(GenericEntity):
 
     @STATE.setter
     def STATE(self, value):
-        try:
-            # pylint: disable=no-else-return
-            # if value >= self.min and value <= self.max:
-            if self.min <= value <= self.max:
-                self.proxy.setValue(self.address, self.parameter, value)
+        # pylint: disable=no-else-return
+        if self.min <= value <= self.max:
+            self.send_value(value)
+            return
+        elif self.special:
+            if [sv for sv in self.special if value == sv[ATTR_HM_VALUE]]:
+                self.send_value(value)
                 return
-            elif self.special:
-                if [sv for sv in self.special if value == sv[ATTR_HM_VALUE]]:
-                    self.proxy.setValue(self.address, self.parameter, value)
-                    return
-            LOG.error(
-                "number: Invalid value: %s (min: %s, max: %s, special: %s)",
-                value,
-                self.min,
-                self.max,
-                self.special,
-            )
-        # pylint: disable=broad-except
-        except Exception:
-            LOG.exception(
-                "number: Failed to set state for %s, %s, %s, %s",
-                self.device_type,
-                self.address,
-                self.parameter,
-                value,
-            )
+        LOG.error(
+            "number: Invalid value: %s (min: %s, max: %s, special: %s)",
+            value,
+            self.min,
+            self.max,
+            self.special,
+        )

@@ -15,7 +15,7 @@ GOT_DEVICES = False
 
 
 # Create a server that listens on 127.0.0.1:* and identifies itself as myserver.
-server = Server("ccu-dev")
+server = Server("ccu-dev", "123")
 
 
 def systemcallback(src, *args):

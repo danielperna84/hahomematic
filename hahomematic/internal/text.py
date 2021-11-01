@@ -1,20 +1,20 @@
 """
 Module for entities implemented using the
-switch platform (https://www.home-assistant.io/integrations/switch/).
+text platform (https://www.home-assistant.io/integrations/text/).
 """
 
 import logging
 
-from hahomematic.const import HA_PLATFORM_SWITCH, TYPE_ACTION
+from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_TEXT
 from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
-class HM_Switch(GenericEntity):
+class HM_Text(GenericEntity):
     """
-    Implementation of a switch.
+    Implementation of a text.
     This is a default platform that gets automatically generated.
     """
 
@@ -26,19 +26,27 @@ class HM_Switch(GenericEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_SWITCH,
+            platform=HA_PLATFORM_TEXT,
         )
 
     @property
     def STATE(self):
-        if self.type == TYPE_ACTION:
-            return False
-
         return self._state
 
     @STATE.setter
     def STATE(self, value):
-        if self.type == TYPE_ACTION:
-            self.send_value(True)
-        else:
+        # pylint: disable=no-else-return
+        if self.min <= value <= self.max:
             self.send_value(value)
+            return
+        elif self.special:
+            if [sv for sv in self.special if value == sv[ATTR_HM_VALUE]]:
+                self.send_value(value)
+                return
+        LOG.error(
+            "text: Invalid value: %s (min: %s, max: %s, special: %s)",
+            value,
+            self.min,
+            self.max,
+            self.special,
+        )

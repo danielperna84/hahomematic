@@ -7,6 +7,7 @@ Functions for entity creation.
 import datetime
 import logging
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from hahomematic.const import (
     ATTR_HM_CONTROL,
@@ -20,7 +21,9 @@ from hahomematic.const import (
     DATA_LOAD_FAIL,
     DATA_LOAD_SUCCESS,
     DATA_NO_LOAD,
+    HIDDEN_PARAMETERS,
     OPERATION_READ,
+    PARAM_UNREACH,
     TYPE_ACTION,
 )
 from hahomematic.devices.device_description import (
@@ -49,6 +52,7 @@ class BaseEntity(ABC):
         self.lastupdate = None
         self._device = device
         self.create_in_ha = not self._device.custom_device
+        self._entities: dict[str, GenericEntity] = {}
         self._server = self._device.server
         self.interface_id = self._device.interface_id
         self.client = self._server.clients[self.interface_id]
@@ -65,45 +69,61 @@ class BaseEntity(ABC):
         self._update_callback = None
         self._remove_callback = None
 
-    @property
-    def is_in_use(self):
-        return self._update_callback is not None
+    def _init_entities(self) -> None:
+        """Init the supporting entity collection."""
+        unreach = self._device.get_hm_entity(f"{self.address}:0", PARAM_UNREACH)
+        if unreach:
+            self._entities[PARAM_UNREACH] = unreach
 
-    def add_entity_to_server_collections(self):
+    @property
+    def available(self) -> bool:
+        """Return the availabiltity of the device."""
+        unreach = self._entities.get(PARAM_UNREACH)
+        if unreach and unreach.lastupdate:
+            return not unreach.STATE
+        return True
+
+    @property
+    def device_info(self) -> dict[str, str]:
+        """Return device specific attributes."""
+        return self._device.device_info
+
+    def add_entity_to_server_collections(self) -> None:
         """add entity to server collections"""
         if isinstance(self, GenericEntity):
             self._device.add_hm_entity(self)
         self._server.hm_entities[self.unique_id] = self
 
-    def register_update_callback(self, update_callback):
+    def register_update_callback(self, update_callback) -> None:
         """register update callback"""
         if callable(update_callback):
             self._update_callback = update_callback
 
-    def unregister_update_callback(self):
+    def unregister_update_callback(self) -> None:
         """remove update callback"""
         self._update_callback = None
 
-    def update_entity(self):
+    def update_entity(self) -> None:
         """
         Do what is needed when the state of the entity has been updated.
         """
         if self._update_callback is None:
             LOG.debug("Entity.update_entity: No callback defined.")
             return
+        self._set_lastupdated()
         # pylint: disable=not-callable
         self._update_callback(self.unique_id)
 
-    def register_remove_callback(self, remove_callback):
+    def register_remove_callback(self, remove_callback) -> None:
         """register remove callback"""
         if callable(remove_callback):
             self._remove_callback = remove_callback
 
-    def unregister_remove_callback(self):
+    def unregister_remove_callback(self) -> None:
         """remove remove callback"""
         self._remove_callback = None
 
-    def remove_entity(self):
+    def remove_entity(self) -> None:
         """
         Do what is needed when the entity has been removed.
         """
@@ -113,23 +133,18 @@ class BaseEntity(ABC):
         # pylint: disable=not-callable
         self._remove_callback(self.unique_id)
 
-    @property
-    def device_info(self):
-        """Return device specific attributes."""
-        return self._device.device_info
-
     @abstractmethod
-    def remove_event_subscriptions(self):
+    def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
 
     @abstractmethod
-    def load_data(self):
+    def load_data(self) -> None:
         """Load data"""
 
-    def _set_lastupdated(self):
+    def _set_lastupdated(self) -> None:
         self.lastupdate = datetime.datetime.now()
 
-    def _updated_within_minutes(self, minutes=10):
+    def _updated_within_minutes(self, minutes=10) -> bool:
         if self.lastupdate is None:
             return False
         delta = datetime.datetime.now() - self.lastupdate
@@ -137,7 +152,7 @@ class BaseEntity(ABC):
             return True
         return False
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Provide some useful information.
         """
@@ -162,6 +177,9 @@ class GenericEntity(BaseEntity):
         )
 
         self.parameter = parameter
+        # Do not create some Entities in HA
+        if self.parameter in HIDDEN_PARAMETERS:
+            self.create_in_ha = False
         self._parameter_data = parameter_data
         self.name = self._name()
         self.operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
@@ -177,14 +195,15 @@ class GenericEntity(BaseEntity):
         if self.type == TYPE_ACTION:
             self._state = False
 
-        LOG.debug("Entity.__init__: Getting current value for %s", self.unique_id)
-        # pylint: disable=pointless-statement
-        # self.STATE
+        # Subscribe for all events of this device
+        if (self.address, self.parameter) not in self._server.event_subscriptions:
+            self._server.event_subscriptions[(self.address, self.parameter)] = []
         self._server.event_subscriptions[(self.address, self.parameter)].append(
             self.event
         )
+        self._init_entities()
 
-    def event(self, interface_id, address, parameter, value):
+    def event(self, interface_id, address, parameter, value) -> None:
         """
         Handle event for which this entity has subscribed.
         """
@@ -230,11 +249,21 @@ class GenericEntity(BaseEntity):
     def STATE(self):
         ...
 
-    def send_value(self, value):
-        """send value to cu."""
-        self.proxy.setValue(self.address, self.parameter, value)
+    def send_value(self, value) -> None:
+        """send value to ccu."""
+        try:
+            self.proxy.setValue(self.address, self.parameter, value)
+        # pylint: disable=broad-except
+        except Exception:
+            LOG.exception(
+                "switch: Failed to set state for: %s, %s, %s, %s",
+                self.device_type,
+                self.address,
+                self.parameter,
+                value,
+            )
 
-    def _name(self):
+    def _name(self) -> str:
         """generate name for entity"""
         name = self.client.server.names_cache.get(self.interface_id, {}).get(
             self.address, self.unique_id
@@ -251,16 +280,22 @@ class GenericEntity(BaseEntity):
             name = f"{d_name} {p_name}"
         return name
 
-    def load_data(self):
+    def load_data(self) -> int:
         """Load data"""
         if self._updated_within_minutes():
             return DATA_NO_LOAD
         try:
+
             if self.operations & OPERATION_READ:
                 self._state = self.proxy.getValue(self.address, self.parameter)
-                self._set_lastupdated()
                 self.update_entity()
-                return DATA_LOAD_SUCCESS
+
+            for entity in self._entities.values():
+                if entity:
+                    entity.load_data()
+
+            self.update_entity()
+            return DATA_LOAD_SUCCESS
         # pylint: disable=broad-except
         except Exception as err:
             LOG.debug(
@@ -272,9 +307,8 @@ class GenericEntity(BaseEntity):
                 err,
             )
             return DATA_LOAD_FAIL
-        return DATA_NO_LOAD
 
-    def remove_event_subscriptions(self):
+    def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
         del self._server.event_subscriptions[(self.address, self.parameter)]
 
@@ -298,7 +332,6 @@ class CustomEntity(BaseEntity):
 
         self.create_in_ha = True
         self._device_desc = device_desc
-        self._entities: dict(str, BaseEntity) = {}
         self.channels = list(
             self._server.devices[self.interface_id][self.address].keys()
         )
@@ -308,7 +341,7 @@ class CustomEntity(BaseEntity):
         self._server.event_subscriptions_device[self.address].append(self.event)
         self._init_entities()
 
-    def event(self, interface_id, address):
+    def event(self, interface_id, address) -> None:
         """
         Handle events for this device.
         """
@@ -330,12 +363,13 @@ class CustomEntity(BaseEntity):
 
         self.update_entity()
 
-    def remove_event_subscriptions(self):
+    def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
         del self._server.event_subscriptions_device[self.address]
 
-    def _init_entities(self):
+    def _init_entities(self) -> None:
         """init entity collection"""
+        super()._init_entities()
         for (f_name, data) in self._device_desc[DD_DEVICE][DD_FIELDS].items():
             f_address = f"{self.address}{data[DD_ADDRESS_PREFIX]}"
             p_name = data[DD_PARAM_NAME]
@@ -349,25 +383,26 @@ class CustomEntity(BaseEntity):
             if entity:
                 entity.create_in_ha = True
 
-    def load_data(self):
+    def load_data(self) -> int:
         """Load data"""
         if self._updated_within_minutes():
             return DATA_NO_LOAD
+
         for entity in self._entities.values():
             if entity:
                 entity.load_data()
-                self._set_lastupdated()
+
         self.update_entity()
         return DATA_LOAD_SUCCESS
 
-    def _get_field_address(self, field_name) -> str:
+    def _get_field_address(self, field_name) -> Optional[str]:
         """get field address"""
         entity = self._entities.get(field_name)
         if entity:
             return entity.address
         return None
 
-    def _get_field_param(self, field_name) -> str:
+    def _get_field_param(self, field_name) -> Optional[str]:
         """get field param name"""
         entity = self._entities.get(field_name)
         if entity:
@@ -380,7 +415,7 @@ class CustomEntity(BaseEntity):
             return entity.STATE
         return None
 
-    def _send_value(self, field_name, value):
+    def _send_value(self, field_name, value) -> None:
         entity = self._entities.get(field_name)
         if entity:
             entity.send_value(value)

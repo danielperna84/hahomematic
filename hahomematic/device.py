@@ -4,9 +4,9 @@
 Module for the Device class
 """
 import logging
+from typing import Optional
 
 import hahomematic.devices
-from hahomematic import config
 from hahomematic.const import (
     ATTR_HM_FIRMWARE,
     ATTR_HM_OPERATIONS,
@@ -25,8 +25,9 @@ from hahomematic.const import (
     TYPE_INTEGER,
     TYPE_STRING,
 )
-from hahomematic.entity import BaseEntity, GenericEntity
+from hahomematic.entity import GenericEntity
 from hahomematic.helpers import generate_unique_id
+from hahomematic.internal.text import HM_Text
 from hahomematic.platforms.binary_sensor import HM_Binary_Sensor
 from hahomematic.platforms.number import HM_Number
 from hahomematic.platforms.select import HM_Select
@@ -56,7 +57,7 @@ class Device:
             self.address,
         )
 
-        self.entities: dict(dict(str, str), BaseEntity) = {}
+        self.entities: dict[tuple[str, str], GenericEntity] = {}
         self.device_type = self.server.devices_raw_dict[self.interface_id][
             self.address
         ][ATTR_HM_TYPE]
@@ -90,7 +91,7 @@ class Device:
         if isinstance(hm_entity, GenericEntity):
             self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
 
-    def get_hm_entity(self, address, parameter) -> GenericEntity:
+    def get_hm_entity(self, address, parameter) -> Optional[GenericEntity]:
         """return a hm_entity from device"""
         return self.entities.get((address, parameter))
 
@@ -104,6 +105,7 @@ class Device:
     def device_info(self):
         """Return device specific attributes."""
         return {
+            "config_entry_id": self.server.entry_id,
             "identifiers": {(HA_DOMAIN, self.address)},
             "name": self.name,
             "manufacturer": "eQ-3",
@@ -112,11 +114,11 @@ class Device:
             "via_device": (HA_DOMAIN, self.interface_id),
         }
 
-    def create_entities(self) -> dict[str, GenericEntity]:
+    def create_entities(self) -> Optional[set[GenericEntity]]:
         """
         Create the entities associated to this device.
         """
-        new_entities: GenericEntity = set()
+        new_entities: set[GenericEntity] = set()
         for channel in self.channels:
             if channel not in self.server.paramsets_cache[self.interface_id]:
                 LOG.warning(
@@ -157,7 +159,9 @@ class Device:
                 new_entities.add(custom_entity)
         return new_entities
 
-    def create_entity(self, address, parameter, parameter_data) -> GenericEntity:
+    def create_entity(
+        self, address, parameter, parameter_data
+    ) -> Optional[GenericEntity]:
         """
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
@@ -169,8 +173,6 @@ class Device:
             return None
         if (address, parameter) not in self.server.event_subscriptions:
             self.server.event_subscriptions[(address, parameter)] = []
-        if (address, parameter) not in self.entities:
-            self.entities[(address, parameter)] = []
 
         unique_id = generate_unique_id(address, parameter)
 
@@ -239,7 +241,19 @@ class Device:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
                     # There is currently no entity platform in HA for this.
-                    return None
+                    LOG.debug("create_entity: text: %s %s", address, parameter)
+                    if unique_id in self.server.hm_entities:
+                        LOG.debug(
+                            "create_entity: Skipping %s (already exists)", unique_id
+                        )
+                        return None
+                    entity = HM_Text(
+                        device=self,
+                        unique_id=unique_id,
+                        address=address,
+                        parameter=parameter,
+                        parameter_data=parameter_data,
+                    )
                 else:
                     LOG.warning(
                         "unsupported actor: %s %s %s",
@@ -278,12 +292,12 @@ class Device:
 
 
 # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
-def create_devices(server):
+def create_devices(server) -> None:
     """
     Trigger creation of the objects that expose the functionality.
     """
-    new_devices = set()
-    new_entities = set()
+    new_devices = set[str]()
+    new_entities = set[GenericEntity]()
     for interface_id, client in server.clients.items():
         if not client:
             LOG.warning(
@@ -298,7 +312,7 @@ def create_devices(server):
             continue
         for device_address in server.devices[interface_id]:
             # Do we check for duplicates here? For now we do.
-            device: Device = None
+            device = None
             if device_address in server.hm_devices:
                 LOG.debug(
                     "create_devices: Skipping device %s on %s, already exists.",

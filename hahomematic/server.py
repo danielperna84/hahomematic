@@ -275,9 +275,16 @@ class Server(threading.Thread):
     XML-RPC server thread to handle messages from CCU / Homegear.
     """
 
-    def __init__(self, instance_name, local_ip=IP_ANY_V4, local_port=PORT_ANY):
+    def __init__(
+        self, instance_name, entry_id, local_ip=IP_ANY_V4, local_port=PORT_ANY
+    ):
         LOG.debug("Server.__init__")
         threading.Thread.__init__(self)
+
+        self.instance_name = instance_name
+        self.entry_id = entry_id
+        self.local_ip = local_ip
+        self.local_port = int(local_port)
 
         # Caches for CCU data
         # {interface_id, {address, paramsets}}
@@ -302,10 +309,6 @@ class Server(threading.Thread):
         self.clients = {}
         # {url, client}
         self.clients_by_init_url = {}
-
-        self.instance_name = instance_name
-        self.local_ip = local_ip
-        self.local_port = int(local_port)
 
         self._rpcfunctions = RPCFunctions(self)
 
@@ -386,6 +389,51 @@ class Server(threading.Thread):
                 hm_entities.append(entity)
 
         return hm_entities
+
+    def get_all_parameters(self):
+        """Return all parameters"""
+        parameters = set()
+        for interface_id in self.paramsets_cache:
+            for address in self.paramsets_cache[interface_id]:
+                for paramset in self.paramsets_cache[interface_id][address].values():
+                    parameters.update(paramset)
+
+        return sorted(parameters)
+
+    def get_parameters(self, address):
+        """Return all parameters of a device"""
+        parameters = set()
+        for interface_id in self.paramsets_cache:
+            for p_address in self.paramsets_cache[interface_id]:
+                if p_address.startswith(address):
+                    for paramset in self.paramsets_cache[interface_id][
+                        p_address
+                    ].values():
+                        parameters.update(paramset)
+
+        return sorted(parameters)
+
+    def get_all_used_parameters(self):
+        """Return used parameters"""
+        parameters = set()
+        for entity in self.hm_entities.values():
+            parameter = getattr(entity, "parameter", None)
+            if parameter:
+                parameters.add(entity.parameter)
+
+        return sorted(parameters)
+
+    def get_used_parameters(self, address):
+        """Return used parameters"""
+        parameters = set()
+        device = self.hm_devices.get(address)
+        if device:
+            for entity in device.entities.values():
+                parameter = getattr(entity, "parameter", None)
+                if parameter:
+                    parameters.add(entity.parameter)
+
+        return sorted(parameters)
 
     def save_devices_raw(self):
         """

@@ -447,7 +447,7 @@ class Client:
 
             return self.proxy.setInstallMode(*args)
         except Exception:
-            LOG.exceptoin("set_install_mode: Exception")
+            LOG.exception("set_install_mode: Exception")
 
     def get_install_mode(self):
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
@@ -613,7 +613,7 @@ class Client:
                 address,
             )
             return
-        if not address in self.server.devices_raw_dict[self.interface_id]:
+        if address not in self.server.devices_raw_dict[self.interface_id]:
             LOG.error(
                 "Channel missing in self.server.devices_raw_dict[interface_id]. Not updating paramsets for %s.",
                 address,
