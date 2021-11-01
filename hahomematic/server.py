@@ -169,10 +169,7 @@ class RPCFunctions:
         self._server.save_paramsets()
 
         handle_device_descriptions(self._server, interface_id, dev_descriptions)
-        if client.backend == BACKEND_CCU:
-            client.fetch_names_json()
-        elif client.backend == BACKEND_HOMEGEAR:
-            client.fetch_names_metadata()
+        client.fetch_names()
         self._server.save_names()
         create_devices(self._server)
         return True
@@ -312,8 +309,6 @@ class Server(threading.Thread):
         # {device_address, device}
         self.hm_devices: dict[str, Device] = {}
 
-        self._rpc_functions = RPCFunctions(self)
-
         self.last_events = {}
 
         # Signature: f(name, *args)
@@ -325,7 +320,13 @@ class Server(threading.Thread):
         # Signature: f(interface_id, address, value_key, value)
         self.callback_impulse_event = None
 
-        # Setup server to handle requests from CCU / Homegear
+        INSTANCES[instance_name] = self
+        self._init_xmlrpc_server()
+        self._load_caches()
+
+    def _init_xmlrpc_server(self):
+        """ Setup server to handle requests from CCU / Homegear. """
+        self._rpc_functions = RPCFunctions(self)
         LOG.debug("Server.__init__: Setting up server")
         self.xmlrpc_server = SimpleXMLRPCServer(
             (self.local_ip, self.local_port),
@@ -339,14 +340,19 @@ class Server(threading.Thread):
         self.xmlrpc_server.register_instance(
             self._rpc_functions, allow_dotted_names=True
         )
-        INSTANCES[instance_name] = self
-        self.load_devices_raw()
-        self.load_paramsets()
-        self.load_names()
-        for interface_id, device_descriptions in self.devices_raw_cache.items():
-            if interface_id not in self.paramsets_cache:
-                self.paramsets_cache[interface_id] = {}
-            handle_device_descriptions(self, interface_id, device_descriptions)
+
+    def _load_caches(self):
+        try:
+            self.load_devices_raw()
+            self.load_paramsets()
+            self.load_names()
+            for interface_id, device_descriptions in self.devices_raw_cache.items():
+                if interface_id not in self.paramsets_cache:
+                    self.paramsets_cache[interface_id] = {}
+                handle_device_descriptions(self, interface_id, device_descriptions)
+        except json.decoder.JSONDecodeError as err:
+            LOG.warning("Failed to load caches.")
+            self.clear_all()
 
     def run(self):
         """
@@ -539,11 +545,12 @@ class Server(threading.Thread):
         ):
             return
         with open(
-            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
-            mode="r",
-            encoding=DEFAULT_ENCODING,
+                file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
+                mode="r",
+                encoding=DEFAULT_ENCODING,
         ) as fptr:
             self.devices_raw_cache = json.load(fptr)
+
 
     def clear_devices_raw(self):
         """

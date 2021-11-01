@@ -624,6 +624,13 @@ class Client:
         )
         self.server.save_paramsets()
 
+    def fetch_names(self):
+        """ Get all names. """
+        if self.backend == BACKEND_CCU:
+            self.fetch_names_json()
+        elif self.backend == BACKEND_HOMEGEAR:
+            self.fetch_names_metadata()
+
     def fetch_names_json(self):
         """
         Get all names via JSON-RPS and store in data.NAMES.
