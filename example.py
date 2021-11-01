@@ -50,6 +50,40 @@ def entityupdatecallback(entity_id):
     print("entityupdatecallback at %i: %s" % (int(time.time()), entity_id))
 
 
+def clickcallback(interface_id, address, parameter, name, unique_id, eventtype, value):
+    print(
+        "clickcallback at %i: %s, %s, %s, %s, %s, %s"
+        % (
+            int(time.time()),
+            address,
+            interface_id,
+            parameter,
+            name,
+            unique_id,
+            eventtype,
+            value,
+        )
+    )
+
+
+def impulsecallback(
+    interface_id, address, parameter, name, unique_id, eventtype, value
+):
+    print(
+        "impulsecallback at %i: %s, %s, %s, %s, %s, %s"
+        % (
+            int(time.time()),
+            address,
+            interface_id,
+            parameter,
+            name,
+            unique_id,
+            eventtype,
+            value,
+        )
+    )
+
+
 # Specify a unique name to identify our server.
 config.INTERFACE_ID = "myserver"
 # For testing we set a short INIT_TIMEOUT
@@ -58,10 +92,10 @@ config.INIT_TIMEOUT = 10
 # it while initializing.
 config.CACHE_DIR = "cache"
 # Add callbacks to handle the events and see what happens on the system.
-server.callback_system = systemcallback
-server.callback_event = eventcallback
-config.CALLBACK_ENTITY_UPDATE = entityupdatecallback
-
+server.callback_system_event = systemcallback
+server.callback_device_event = eventcallback
+server.callback_click_event = clickcallback
+server.callback_impulse_event = impulsecallback
 
 # Create clients
 # Connect to pydevccu at 127.0.0.1:2001

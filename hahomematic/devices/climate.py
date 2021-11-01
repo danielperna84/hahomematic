@@ -103,14 +103,14 @@ class SimpleThermostat(CustomEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][
+        return self._server.paramsets_cache[self._interface_id][f"{self.address}:1"][
             PARAMSET_VALUES
         ][PARAM_TEMPERATURE][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][
+        return self._server.paramsets_cache[self._interface_id][f"{self.address}:1"][
             PARAMSET_VALUES
         ][PARAM_TEMPERATURE][ATTR_HM_MAX]
 
@@ -205,14 +205,14 @@ class Thermostat(CustomEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][
+        return self._server.paramsets_cache[self._interface_id][
             self._get_field_address(FIELD_TEMPERATURE)
         ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][
+        return self._server.paramsets_cache[self._interface_id][
             self._get_field_address(FIELD_TEMPERATURE)
         ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MAX]
 
@@ -360,14 +360,14 @@ class IPThermostat(CustomEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][
+        return self._server.paramsets_cache[self._interface_id][
             self._get_field_address(FIELD_TEMPERATURE)
         ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][
+        return self._server.paramsets_cache[self._interface_id][
             self._get_field_address(FIELD_TEMPERATURE)
         ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MAX]
 
@@ -462,7 +462,7 @@ def make_simple_thermostat(device, address):
         unique_id=unique_id,
         device_desc=device_desc,
     )
-    entity.add_entity_to_server_collections()
+    entity.add_to_collections()
     return [entity]
 
 
@@ -502,7 +502,7 @@ def make_ip_thermostat(device, address):
         device_desc=device_desc,
     )
 
-    entity.add_entity_to_server_collections()
+    entity.add_to_collections()
     return [entity]
 
 

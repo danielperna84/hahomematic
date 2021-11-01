@@ -10,6 +10,7 @@ from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
+
 # pylint: disable=invalid-name
 class HM_Switch(GenericEntity):
     """
@@ -41,4 +42,3 @@ class HM_Switch(GenericEntity):
             self.send_value(True)
         else:
             self.send_value(value)
-

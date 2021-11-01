@@ -10,9 +10,11 @@ import logging
 import os
 import threading
 import time
+from typing import Any
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from hahomematic import config
+from hahomematic.client import Client, ClientException
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
     BACKEND_CCU,
@@ -30,10 +32,12 @@ from hahomematic.const import (
     HH_EVENT_UPDATE_DEVICE,
     IP_ANY_V4,
     PORT_ANY,
+    PRIMARY_PORTS,
 )
 from hahomematic.data import INSTANCES
 from hahomematic.decorators import eventcallback, systemcallback
-from hahomematic.device import create_devices
+from hahomematic.device import Device, create_devices
+from hahomematic.entity import BaseEntity, GenericEntity
 
 LOG = logging.getLogger(__name__)
 
@@ -64,9 +68,11 @@ class RPCFunctions:
             str(value),
         )
         self._server.last_events[interface_id] = int(time.time())
-        if (address, value_key) in self._server.event_subscriptions:
+        if (address, value_key) in self._server.entity_event_subscriptions:
             try:
-                for callback in self._server.event_subscriptions[(address, value_key)]:
+                for callback in self._server.entity_event_subscriptions[
+                    (address, value_key)
+                ]:
                     callback(interface_id, address, value_key, value)
             except Exception:
                 LOG.exception(
@@ -77,9 +83,9 @@ class RPCFunctions:
                 )
         if ":" in address:
             device_address = address.split(":")[0]
-            if device_address in self._server.event_subscriptions_device:
+            if device_address in self._server.device_event_subscriptions:
                 try:
-                    for callback in self._server.event_subscriptions_device[
+                    for callback in self._server.device_event_subscriptions[
                         device_address
                     ]:
                         callback(interface_id, device_address)
@@ -200,11 +206,7 @@ class RPCFunctions:
                 del self._server.names_cache[interface_id][address]
                 ha_device = self._server.hm_devices.get(address)
                 if ha_device:
-                    for entity_id in ha_device.hm_entities:
-                        entity = self._server.hm_entities[entity_id]
-                        if entity:
-                            entity.remove_event_subscriptions()
-                        del self._server.hm_entities[entity_id]
+                    ha_device.remove_event_subscriptions()
                     del self._server.hm_devices[address]
             except KeyError:
                 LOG.exception("Failed to delete: %s", address)
@@ -293,31 +295,35 @@ class Server(threading.Thread):
         self.names_cache = {}
         # {interface_id, {counter, device}}
         self.devices_raw_cache = {}
-        # {{channel_address, parameter}, event_handle}
-        self.event_subscriptions = {}
-        # {device_address, event_handle}
-        self.event_subscriptions_device = {}
-        # {unique_id, entity}
-        self.hm_entities = {}
-        # {device_address, device}
-        self.hm_devices = {}
+        # {interface_id, client}
+        self.clients: dict[str, Client] = {}
+        # {url, client}
+        self.clients_by_init_url: dict[str, Client] = {}
         # {interface_id, {address, channel_address}}
         self.devices = {}
         # {interface_id, {address, dev_descriptions}
         self.devices_raw_dict = {}
-        # {interface_id, client}
-        self.clients = {}
-        # {url, client}
-        self.clients_by_init_url = {}
+        # {{channel_address, parameter}, event_handle}
+        self.entity_event_subscriptions: dict[tuple[str, str], Any] = {}
+        # {device_address, event_handle}
+        self.device_event_subscriptions: dict[tuple[str, str], Any] = {}
+        # {unique_id, entity}
+        self.hm_entities: dict[str, BaseEntity] = {}
+        # {device_address, device}
+        self.hm_devices: dict[str, Device] = {}
 
-        self._rpcfunctions = RPCFunctions(self)
+        self._rpc_functions = RPCFunctions(self)
 
         self.last_events = {}
 
         # Signature: f(name, *args)
-        self.callback_system = None
+        self.callback_system_event = None
         # Signature: f(interface_id, address, value_key, value)
-        self.callback_event = None
+        self.callback_device_event = None
+        # Signature: f(interface_id, address, value_key, value)
+        self.callback_click_event = None
+        # Signature: f(interface_id, address, value_key, value)
+        self.callback_impulse_event = None
 
         # Setup server to handle requests from CCU / Homegear
         LOG.debug("Server.__init__: Setting up server")
@@ -331,7 +337,7 @@ class Server(threading.Thread):
         self.xmlrpc_server.register_multicall_functions()
         LOG.debug("Server.__init__: Registering RPC functions")
         self.xmlrpc_server.register_instance(
-            self._rpcfunctions, allow_dotted_names=True
+            self._rpc_functions, allow_dotted_names=True
         )
         INSTANCES[instance_name] = self
         self.load_devices_raw()
@@ -379,6 +385,45 @@ class Server(threading.Thread):
         LOG.debug("Server.stop: Removing instance")
         del INSTANCES[self.instance_name]
 
+    def reconnect(self):
+        """Reinit all RPC proxy."""
+        for client in self.clients:
+            client.proxy_init()
+
+    def get_all_system_variables(self):
+        """Get all system variables from CCU / Homegear."""
+        return self._get_client().get_all_system_variables()
+
+    def get_system_variable(self, name):
+        """Get single system variable from CCU / Homegear."""
+        return self._get_client().get_system_variable(name)
+
+    def set_system_variable(self, name, value):
+        """Set a system variable on CCU / Homegear."""
+        self._get_client().set_system_variable(name, value)
+
+    def get_service_messages(self):
+        """Get service messages from CCU / Homegear."""
+        self._get_client().get_service_messages()
+
+    def set_install_mode(
+        self, interface_id, on=True, t=60, mode=1, address=None
+    ) -> None:
+        """Activate or deactivate installmode on CCU / Homegear."""
+        self._get_client(interface_id).set_install_mode(
+            on=on, t=t, mode=mode, address=address
+        )
+
+    def get_install_mode(self, interface_id) -> int:
+        """Get remaining time in seconds install mode is active from CCU / Homegear."""
+        return self._get_client(interface_id).get_install_mode()
+
+    def put_paramset(self, interface_id, address, paramset, value, rx_mode=None):
+        """Set paramsets manually."""
+        self._get_client(interface_id).put_paramset(
+            address=address, paramset=paramset, value=value, rx_mode=rx_mode
+        )
+
     def get_hm_entities_by_platform(self, platform):
         """
         Return all hm-entities by requested unique_ids
@@ -389,6 +434,41 @@ class Server(threading.Thread):
                 hm_entities.append(entity)
 
         return hm_entities
+
+    def _get_client(self, interface_id=None) -> Client:
+        """Return the client by interface_id or the first with a primary port."""
+        try:
+            if interface_id:
+                return self.clients[interface_id]
+            for client in self.clients.values():
+                if client.port in PRIMARY_PORTS:
+                    return client
+
+        except IndexError as err:
+            message = (
+                f"Can't resolve interface for {self.instance_name}: {interface_id}"
+            )
+            LOG.warning(message)
+            raise ClientException(message, err)
+
+    def get_hm_entity_by_parameter(self, address, parameter) -> GenericEntity:
+        """Get entity by address and parameter."""
+        if ":" in address:
+            device_address = address.split(":")[0]
+            device = self.hm_devices.get(device_address)
+            if device:
+                entity = device.entities.get((address, parameter))
+                if entity:
+                    return entity
+        return None
+
+    def has_address(self, address):
+        """Check if address is handled by server."""
+        device_address = address
+        if ":" in address:
+            device_address = device_address.split(":")[0]
+
+        return self.hm_devices.get(device_address) is not None
 
     def get_all_parameters(self):
         """Return all parameters"""

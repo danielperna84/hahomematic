@@ -31,9 +31,9 @@ def systemcallback(name):
                 raise Exception("args-exception systemcallback") from err
             if client:
                 client.initialized = int(time.time())
-            if client.server.callback_system is not None:
+            if client.server.callback_system_event is not None:
                 # pylint: disable=not-callable
-                client.server.callback_system(name, *args)
+                client.server.callback_system_event(name, *args)
             return return_value
 
         return wrapper_systemcallback
@@ -60,9 +60,9 @@ def eventcallback(func):
             raise Exception("args-exception eventcallback") from err
         if client:
             client.initialized = int(time.time())
-        if client.server.callback_event is not None:
+        if client.server.callback_device_event is not None:
             # pylint: disable=not-callable
-            client.server.callback_event(*args)
+            client.server.callback_device_event(*args)
         return return_value
 
     return wrapper_eventcallback

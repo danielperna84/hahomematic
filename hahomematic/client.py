@@ -434,7 +434,7 @@ class Client:
             LOG.exception("rssi_info: Exception")
 
     # pylint: disable=invalid-name
-    def set_install_mode(self, on=True, t=60, mode=1, address=None):
+    def set_install_mode(self, on=True, t=60, mode=1, address=None) -> None:
         """Activate or deactivate installmode on CCU / Homegear."""
         try:
             args = [on]
