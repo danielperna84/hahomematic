@@ -434,7 +434,7 @@ class Client:
             LOG.exception("rssi_info: Exception")
 
     # pylint: disable=invalid-name
-    def set_install_mode(self, on=True, t=60, mode=1, address=None):
+    def set_install_mode(self, on=True, t=60, mode=1, address=None) -> None:
         """Activate or deactivate installmode on CCU / Homegear."""
         try:
             args = [on]
@@ -447,7 +447,7 @@ class Client:
 
             return self.proxy.setInstallMode(*args)
         except Exception:
-            LOG.exceptoin("set_install_mode: Exception")
+            LOG.exception("set_install_mode: Exception")
 
     def get_install_mode(self):
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
@@ -613,7 +613,7 @@ class Client:
                 address,
             )
             return
-        if not address in self.server.devices_raw_dict[self.interface_id]:
+        if address not in self.server.devices_raw_dict[self.interface_id]:
             LOG.error(
                 "Channel missing in self.server.devices_raw_dict[interface_id]. Not updating paramsets for %s.",
                 address,
@@ -623,6 +623,13 @@ class Client:
             self.server.devices_raw_dict[self.interface_id][address], update=True
         )
         self.server.save_paramsets()
+
+    def fetch_names(self):
+        """ Get all names. """
+        if self.backend == BACKEND_CCU:
+            self.fetch_names_json()
+        elif self.backend == BACKEND_HOMEGEAR:
+            self.fetch_names_metadata()
 
     def fetch_names_json(self):
         """

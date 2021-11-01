@@ -5,9 +5,7 @@ Some other devices (f.ex. Bosch, Intertechno) might be supported as well.
 https://github.com/danielperna84/hahomematic
 """
 
-import json
 import logging
-import os
 import signal
 import sys
 
@@ -21,12 +19,13 @@ if sys.stdout.isatty():
 
 LOG = logging.getLogger(__name__)
 
+
 # pylint: disable=unused-argument
 def signal_handler(sig, frame):
     """Handle signal to shut down server."""
     LOG.info("Got signal: %s. Shutting down server", str(sig))
-    for server in INSTANCES.values():
-        server.stop()
+    for active_server in INSTANCES.values():
+        active_server.stop()
 
 
 if sys.stdout.isatty():

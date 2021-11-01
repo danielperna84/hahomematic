@@ -4,20 +4,26 @@
 Module for the Device class
 """
 import logging
+from typing import Optional
 
 import hahomematic.devices
-from hahomematic import config
+from hahomematic.action_event import ClickEvent, ImpulseEvent
 from hahomematic.const import (
     ATTR_HM_FIRMWARE,
     ATTR_HM_OPERATIONS,
     ATTR_HM_TYPE,
+    CLICK_EVENTS,
     HA_DOMAIN,
     HH_EVENT_DEVICES_CREATED,
     IGNORED_PARAMETERS,
     IGNORED_PARAMETERS_WILDCARDS,
+    IMPULSE_EVENTS,
     OPERATION_EVENT,
     OPERATION_WRITE,
+    PARAM_CONFIG_PENDING,
+    PARAM_UNREACH,
     PARAMSET_VALUES,
+    RELEVANT_PARAMSETS,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_ENUM,
@@ -25,8 +31,9 @@ from hahomematic.const import (
     TYPE_INTEGER,
     TYPE_STRING,
 )
-from hahomematic.entity import BaseEntity, GenericEntity
+from hahomematic.entity import GenericEntity
 from hahomematic.helpers import generate_unique_id
+from hahomematic.internal.text import HM_Text
 from hahomematic.platforms.binary_sensor import HM_Binary_Sensor
 from hahomematic.platforms.number import HM_Number
 from hahomematic.platforms.select import HM_Select
@@ -56,7 +63,8 @@ class Device:
             self.address,
         )
 
-        self.entities: dict(dict(str, str), BaseEntity) = {}
+        self.entities: dict[tuple[str, str], GenericEntity] = {}
+        self.actionevents: dict[tuple[str, str], ClickEvent] = {}
         self.device_type = self.server.devices_raw_dict[self.interface_id][
             self.address
         ][ATTR_HM_TYPE]
@@ -90,7 +98,18 @@ class Device:
         if isinstance(hm_entity, GenericEntity):
             self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
 
-    def get_hm_entity(self, address, parameter) -> GenericEntity:
+    def add_hm_actionevent(self, hm_entity: GenericEntity):
+        """add an hm entity to a device"""
+        self.actionevents[(hm_entity.address, hm_entity.parameter)] = hm_entity
+
+    def remove_event_subscriptions(self) -> None:
+        """Remove existing event subscriptions"""
+        for entity in self.entities.values():
+            entity.remove_event_subscriptions()
+        for actionevent in self.actionevents.values():
+            actionevent.remove_event_subscriptions()
+
+    def get_hm_entity(self, address, parameter) -> Optional[GenericEntity]:
         """return a hm_entity from device"""
         return self.entities.get((address, parameter))
 
@@ -104,6 +123,7 @@ class Device:
     def device_info(self):
         """Return device specific attributes."""
         return {
+            "config_entry_id": self.server.entry_id,
             "identifiers": {(HA_DOMAIN, self.address)},
             "name": self.name,
             "manufacturer": "eQ-3",
@@ -112,11 +132,32 @@ class Device:
             "via_device": (HA_DOMAIN, self.interface_id),
         }
 
-    def create_entities(self) -> dict[str, GenericEntity]:
+    @property
+    def available(self) -> bool:
+        """Return the availabiltity of the device."""
+        unreach = self.actionevents.get ((f"{self.address}:0", PARAM_UNREACH))
+        if unreach and unreach.lastupdate:
+            return not unreach.value
+        return True
+
+    def reload_paramsets(self) -> None:
+        """Reload paramset for device."""
+        for entity in self.entities.values():
+            for paramset in RELEVANT_PARAMSETS:
+                self.client.fetch_paramset(entity.address, paramset)
+                entity.update_parameter_data()
+        self.update_device()
+
+    def update_device(self) -> None:
+        """Trigger Update for all entities"""
+        for entity in self.entities.values():
+            entity.update_entity()
+
+    def create_entities(self) -> Optional[set[GenericEntity]]:
         """
         Create the entities associated to this device.
         """
-        new_entities: GenericEntity = set()
+        new_entities: set[GenericEntity] = set()
         for channel in self.channels:
             if channel not in self.server.paramsets_cache[self.interface_id]:
                 LOG.warning(
@@ -135,13 +176,20 @@ class Device:
                             "Device.create_entities: Skipping %s (no event)", parameter
                         )
                         continue
-                    entity = self.create_entity(
-                        address=channel,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
-                    if entity is not None:
-                        new_entities.add(entity)
+                    if parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS:
+                        self.create_event(
+                            address=channel,
+                            parameter=parameter,
+                            parameter_data=parameter_data,
+                        )
+                    else:
+                        entity = self.create_entity(
+                            address=channel,
+                            parameter=parameter,
+                            parameter_data=parameter_data,
+                        )
+                        if entity is not None:
+                            new_entities.add(entity)
         # create custom entities
         if self.custom_device:
             LOG.debug(
@@ -157,7 +205,44 @@ class Device:
                 new_entities.add(custom_entity)
         return new_entities
 
-    def create_entity(self, address, parameter, parameter_data) -> GenericEntity:
+    def create_event(
+        self, address, parameter, parameter_data
+    ) -> Optional[GenericEntity]:
+        if (address, parameter) not in self.server.entity_event_subscriptions:
+            self.server.entity_event_subscriptions[(address, parameter)] = []
+
+        unique_id = generate_unique_id(address, parameter)
+
+        LOG.debug(
+            "create_clickevent: Creating action_event for %s, %s, %s",
+            address,
+            parameter,
+            self.interface_id,
+        )
+        action_event = None
+        if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
+            # if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
+            if parameter in CLICK_EVENTS:
+                action_event = ClickEvent(
+                    device=self,
+                    unique_id=unique_id,
+                    address=address,
+                    parameter=parameter,
+                )
+            elif parameter in IMPULSE_EVENTS:
+                action_event = ImpulseEvent(
+                    device=self,
+                    unique_id=unique_id,
+                    address=address,
+                    parameter=parameter,
+                )
+        if action_event:
+            action_event.add_to_collections()
+        return action_event
+
+    def create_entity(
+        self, address, parameter, parameter_data
+    ) -> Optional[GenericEntity]:
         """
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
@@ -167,13 +252,13 @@ class Device:
         ):
             LOG.debug("create_entity: Ignoring parameter: %s (%s)", parameter, address)
             return None
-        if (address, parameter) not in self.server.event_subscriptions:
-            self.server.event_subscriptions[(address, parameter)] = []
-        if (address, parameter) not in self.entities:
-            self.entities[(address, parameter)] = []
+        if (address, parameter) not in self.server.entity_event_subscriptions:
+            self.server.entity_event_subscriptions[(address, parameter)] = []
 
         unique_id = generate_unique_id(address, parameter)
-
+        if unique_id in self.server.hm_entities:
+            LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
+            return None
         LOG.debug(
             "create_entity: Creating entity for %s, %s, %s",
             address,
@@ -184,9 +269,6 @@ class Device:
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
             if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
                 LOG.debug("create_entity: switch (action): %s %s", address, parameter)
-                if unique_id in self.server.hm_entities:
-                    LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
-                    return None
                 entity = HM_Switch(
                     device=self,
                     unique_id=unique_id,
@@ -197,11 +279,6 @@ class Device:
             else:
                 if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
                     LOG.debug("create_entity: switch: %s %s", address, parameter)
-                    if unique_id in self.server.hm_entities:
-                        LOG.debug(
-                            "create_entity: Skipping %s (already exists)", unique_id
-                        )
-                        return None
                     entity = HM_Switch(
                         device=self,
                         unique_id=unique_id,
@@ -211,11 +288,6 @@ class Device:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
                     LOG.debug("create_entity: select: %s %s", address, parameter)
-                    if unique_id in self.server.hm_entities:
-                        LOG.debug(
-                            "create_entity: Skipping %s (already exists)", unique_id
-                        )
-                        return None
                     entity = HM_Select(
                         device=self,
                         unique_id=unique_id,
@@ -225,11 +297,6 @@ class Device:
                     )
                 elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
                     LOG.debug("create_entity: number: %s %s", address, parameter)
-                    if unique_id in self.server.hm_entities:
-                        LOG.debug(
-                            "create_entity: Skipping %s (already exists)", unique_id
-                        )
-                        return None
                     entity = HM_Number(
                         device=self,
                         unique_id=unique_id,
@@ -239,7 +306,14 @@ class Device:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
                     # There is currently no entity platform in HA for this.
-                    return None
+                    LOG.debug("create_entity: text: %s %s", address, parameter)
+                    entity = HM_Text(
+                        device=self,
+                        unique_id=unique_id,
+                        address=address,
+                        parameter=parameter,
+                        parameter_data=parameter_data,
+                    )
                 else:
                     LOG.warning(
                         "unsupported actor: %s %s %s",
@@ -250,9 +324,6 @@ class Device:
         else:
             if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
                 LOG.debug("create_entity: binary_sensor: %s %s", address, parameter)
-                if unique_id in self.server.hm_entities:
-                    LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
-                    return None
                 entity = HM_Binary_Sensor(
                     device=self,
                     unique_id=unique_id,
@@ -262,9 +333,6 @@ class Device:
                 )
             else:
                 LOG.debug("create_entity: sensor: %s %s", address, parameter)
-                if unique_id in self.server.hm_entities:
-                    LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
-                    return None
                 entity = HM_Sensor(
                     device=self,
                     unique_id=unique_id,
@@ -273,17 +341,17 @@ class Device:
                     parameter_data=parameter_data,
                 )
         if entity:
-            entity.add_entity_to_server_collections()
+            entity.add_to_collections()
         return entity
 
 
 # pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
-def create_devices(server):
+def create_devices(server) -> None:
     """
     Trigger creation of the objects that expose the functionality.
     """
-    new_devices = set()
-    new_entities = set()
+    new_devices = set[str]()
+    new_entities = set[GenericEntity]()
     for interface_id, client in server.clients.items():
         if not client:
             LOG.warning(
@@ -298,7 +366,7 @@ def create_devices(server):
             continue
         for device_address in server.devices[interface_id]:
             # Do we check for duplicates here? For now we do.
-            device: Device = None
+            device = None
             if device_address in server.hm_devices:
                 LOG.debug(
                     "create_devices: Skipping device %s on %s, already exists.",
@@ -324,6 +392,8 @@ def create_devices(server):
                     interface_id,
                     device_address,
                 )
-    if callable(server.callback_system):
+    if callable(server.callback_system_event):
         # pylint: disable=not-callable
-        server.callback_system(HH_EVENT_DEVICES_CREATED, new_devices, new_entities)
+        server.callback_system_event(
+            HH_EVENT_DEVICES_CREATED, new_devices, new_entities
+        )

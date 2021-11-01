@@ -9,6 +9,7 @@ import xmlrpc.client
 
 LOG = logging.getLogger(__name__)
 
+
 # pylint: disable=too-few-public-methods
 class LockingServerProxy(xmlrpc.client.ServerProxy):
     """

@@ -12,7 +12,6 @@ from hahomematic.const import (
     PARAMSET_VALUES,
 )
 from hahomematic.devices.device_description import (
-    DD_DEVICE,
     FIELD_AUTO_MODE,
     FIELD_BOOST_MODE,
     FIELD_COMFORT_MODE,
@@ -30,19 +29,6 @@ from hahomematic.entity import CustomEntity
 from hahomematic.helpers import generate_unique_id
 
 LOG = logging.getLogger(__name__)
-
-NODE_ACTUAL_TEMPERATURE = "ENTITY_ACTUAL_TEMPERATURE"
-NODE_SET_TEMPERATURE = "ENTITY_SET_TEMPERATURE"
-NODE_CONTROL_MODE = "ENTITY_CONTROL_MODE"
-NODE_HUMIDITY = "ENTITY_HUMIDITY"
-NODE_AUTO_MODE = "ENTITY_AUTO_MODE"
-NODE_MANU_MODE = "ENTITY_MANU_MODE"
-NODE_BOOST_MODE = "ENTITY_BOOST_MODE"
-NODE_AWAY_MODE = "ENTITY_AWAY_MODE"
-NODE_PARTY_MODE = "ENTITY_PARTY_MODE"
-NODE_SET_POINT_MODE = "ENTITY_SET_POINT_MODE"
-NODE_COMFORT_MODE = "ENTITY_COMFORT_MODE"
-NODE_LOWERING_MODE = "ENTITY_LOWERING_MODE"
 
 PARAM_TEMPERATURE = "TEMPERATURE"
 PARAM_HUMIDITY = "HUMIDITY"
@@ -69,7 +55,6 @@ TEMP_CELSIUS = "°C"
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
 
-
 # pylint: disable=too-many-instance-attributes
 class SimpleThermostat(CustomEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
@@ -93,7 +78,7 @@ class SimpleThermostat(CustomEntity):
     @property
     def _humidity(self):
         """return the humidity of the device"""
-        self._get_entity_value(FIELD_HUMIDITY)
+        return self._get_entity_value(FIELD_HUMIDITY)
 
     @property
     def _temperature(self):
@@ -118,14 +103,14 @@ class SimpleThermostat(CustomEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][
+        return self._server.paramsets_cache[self._interface_id][f"{self.address}:1"][
             PARAMSET_VALUES
         ][PARAM_TEMPERATURE][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][f"{self.address}:1"][
+        return self._server.paramsets_cache[self._interface_id][f"{self.address}:1"][
             PARAMSET_VALUES
         ][PARAM_TEMPERATURE][ATTR_HM_MAX]
 
@@ -190,7 +175,7 @@ class Thermostat(CustomEntity):
     @property
     def _humidity(self):
         """return the humidity of the device"""
-        self._get_entity_value(FIELD_HUMIDITY)
+        return self._get_entity_value(FIELD_HUMIDITY)
 
     @property
     def _temperature(self):
@@ -203,9 +188,9 @@ class Thermostat(CustomEntity):
         return self._get_entity_value(FIELD_SETPOINT)
 
     @property
-    def control_mode(self):
+    def _control_mode(self):
         """return the control_mode of the device"""
-        return None  # self._get_entity_value(FIELD_CONTROL_MODE)
+        return self._get_entity_value(FIELD_CONTROL_MODE)
 
     @property
     def supported_features(self):
@@ -213,21 +198,21 @@ class Thermostat(CustomEntity):
         return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
     @property
-    def _temperature_unit(self):
+    def temperature_unit(self):
         """Return temperature unit."""
         return TEMP_CELSIUS
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][
+        return self._server.paramsets_cache[self._interface_id][
             self._get_field_address(FIELD_TEMPERATURE)
         ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][
+        return self._server.paramsets_cache[self._interface_id][
             self._get_field_address(FIELD_TEMPERATURE)
         ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MAX]
 
@@ -241,7 +226,7 @@ class Thermostat(CustomEntity):
         """Return hvac operation mode."""
         if self._temperature <= self.min_temp:
             return HVAC_MODE_OFF
-        if self.control_mode == HM_MODE_MANU:
+        if self._control_mode == HM_MODE_MANU:
             return HVAC_MODE_HEAT
         return HVAC_MODE_AUTO
 
@@ -253,9 +238,9 @@ class Thermostat(CustomEntity):
     @property
     def preset_mode(self):
         """Return the current preset mode."""
-        if self.control_mode is None:
+        if self._control_mode is None:
             return PRESET_NONE
-        if self.control_mode == HM_MODE_BOOST:
+        if self._control_mode == HM_MODE_BOOST:
             return PRESET_BOOST
         # elif control_mode == HM_MODE_AWAY:
         #     return PRESET_AWAY
@@ -352,7 +337,7 @@ class IPThermostat(CustomEntity):
 
     @property
     def _control_mode(self):
-        return None  # self._get_entity_value(FIELD_CONTROL_MODE)
+        return self._get_entity_value(FIELD_CONTROL_MODE)
 
     @property
     def _boost_mode(self):
@@ -375,14 +360,14 @@ class IPThermostat(CustomEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self.interface_id][
+        return self._server.paramsets_cache[self._interface_id][
             self._get_field_address(FIELD_TEMPERATURE)
         ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MIN]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self.interface_id][
+        return self._server.paramsets_cache[self._interface_id][
             self._get_field_address(FIELD_TEMPERATURE)
         ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MAX]
 
@@ -477,7 +462,7 @@ def make_simple_thermostat(device, address):
         unique_id=unique_id,
         device_desc=device_desc,
     )
-    entity.add_entity_to_server_collections()
+    entity.add_to_collections()
     return [entity]
 
 
@@ -517,7 +502,7 @@ def make_ip_thermostat(device, address):
         device_desc=device_desc,
     )
 
-    entity.add_entity_to_server_collections()
+    entity.add_to_collections()
     return [entity]
 
 

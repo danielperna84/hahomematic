@@ -10,6 +10,7 @@ from hahomematic.entity import GenericEntity
 
 LOG = logging.getLogger(__name__)
 
+
 # pylint: disable=invalid-name
 class HM_Select(GenericEntity):
     """
@@ -34,20 +35,8 @@ class HM_Select(GenericEntity):
 
     @STATE.setter
     def STATE(self, value):
-        try:
-            # We allow setting the value via index as well, just in case.
-            if isinstance(value, int):
-                self.proxy.setValue(self.address, self.parameter, value)
-            else:
-                self.proxy.setValue(
-                    self.address, self.parameter, self.value_list.index(value)
-                )
-        # pylint: disable=broad-except
-        except Exception:
-            LOG.exception(
-                "select: Failed to set state for: %s, %s, %s, %s",
-                self.device_type,
-                self.address,
-                self.parameter,
-                value,
-            )
+        # We allow setting the value via index as well, just in case.
+        if isinstance(value, int):
+            self.send_value(value)
+        else:
+            self.send_value(self.value_list.index(value))

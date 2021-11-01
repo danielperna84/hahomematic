@@ -124,3 +124,19 @@ def parse_ccu_sys_var(data):
     elif data[ATTR_TYPE] == ATTR_HM_LIST:
         return data[ATTR_NAME], int(data[ATTR_VALUE])
     return data[ATTR_NAME], data[ATTR_VALUE]
+
+
+def get_entity_name(server, interface_id, address, parameter, unique_id) -> str:
+    """generate name for entity"""
+    name = server.names_cache.get(interface_id, {}).get(address, unique_id)
+    if name.count(":") == 1:
+        d_name = name.split(":")[0]
+        p_name = parameter.title().replace("_", " ")
+        c_no = name.split(":")[1]
+        c_name = "" if c_no == "0" else f" ch{c_no}"
+        name = f"{d_name} {p_name}{c_name}"
+    else:
+        d_name = name
+        p_name = parameter.title().replace("_", " ")
+        name = f"{d_name} {p_name}"
+    return name
