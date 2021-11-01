@@ -135,7 +135,7 @@ class Device:
     @property
     def available(self) -> bool:
         """Return the availabiltity of the device."""
-        unreach = self.actionevents[PARAM_UNREACH]
+        unreach = self.actionevents.get ((f"{self.address}:0", PARAM_UNREACH))
         if unreach and unreach.lastupdate:
             return not unreach.value
         return True
