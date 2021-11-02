@@ -267,6 +267,8 @@ HA_PLATFORMS = [
     HA_PLATFORM_SWITCH,
 ]
 
+HM_ENTITY_UNIT_REPLACE = {'"': "", "100%": "%"}
+
 hm = [
     "ACCESS_AUTHORIZATION",
     "ACTIVITY_STATE",

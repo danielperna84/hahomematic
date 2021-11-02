@@ -25,6 +25,7 @@ from hahomematic.const import (
     DATA_LOAD_SUCCESS,
     DATA_NO_LOAD,
     HIDDEN_PARAMETERS,
+    HM_ENTITY_UNIT_REPLACE,
     OPERATION_READ,
     PARAM_UN_REACH,
     TYPE_ACTION,
@@ -217,7 +218,7 @@ class GenericEntity(BaseEntity):
         self._operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
         self._type = self._parameter_data.get(ATTR_HM_TYPE)
         self._control = self._parameter_data.get(ATTR_HM_CONTROL)
-        self._unit = self._parameter_data.get(ATTR_HM_UNIT)
+        self._unit = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
         self._max = self._parameter_data.get(ATTR_HM_MAX)
         self._min = self._parameter_data.get(ATTR_HM_MIN)
         self._value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
@@ -289,6 +290,16 @@ class GenericEntity(BaseEntity):
     def max(self):
         """Return max value."""
         return self._max
+
+    @property
+    def unit(self):
+        """Return unit value."""
+        return self._unit
+
+    @property
+    def value_list(self):
+        """Return the value_list."""
+        return self._value_list
 
     def send_value(self, value) -> None:
         """send value to ccu."""
@@ -452,3 +463,13 @@ class CustomEntity(BaseEntity):
         entity = self._entities.get(field_name)
         if entity:
             entity.send_value(value)
+
+
+def fix_unit(unit):
+    """replace given unit"""
+    if not unit:
+        return None
+    for (check, fix) in HM_ENTITY_UNIT_REPLACE.items():
+        if check in unit:
+            return fix
+    return unit
