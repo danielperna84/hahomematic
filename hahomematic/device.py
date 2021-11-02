@@ -7,7 +7,7 @@ import logging
 from typing import Optional
 
 import hahomematic.devices
-from hahomematic.action_event import ClickEvent, ImpulseEvent
+from hahomematic.action_event import BaseEvent, ClickEvent, ImpulseEvent
 from hahomematic.const import (
     ATTR_HM_FIRMWARE,
     ATTR_HM_OPERATIONS,
@@ -20,8 +20,7 @@ from hahomematic.const import (
     IMPULSE_EVENTS,
     OPERATION_EVENT,
     OPERATION_WRITE,
-    PARAM_CONFIG_PENDING,
-    PARAM_UNREACH,
+    PARAM_UN_REACH,
     PARAMSET_VALUES,
     RELEVANT_PARAMSETS,
     TYPE_ACTION,
@@ -33,17 +32,18 @@ from hahomematic.const import (
 )
 from hahomematic.entity import GenericEntity
 from hahomematic.helpers import generate_unique_id
-from hahomematic.internal.text import HM_Text
-from hahomematic.platforms.binary_sensor import HM_Binary_Sensor
-from hahomematic.platforms.number import HM_Number
-from hahomematic.platforms.select import HM_Select
-from hahomematic.platforms.sensor import HM_Sensor
-from hahomematic.platforms.switch import HM_Switch
+from hahomematic.internal.text import HmText
+from hahomematic.platforms.binary_sensor import HmBinarySensor
+from hahomematic.platforms.number import HmNumber
+from hahomematic.platforms.select import HmSelect
+from hahomematic.platforms.sensor import HmSensor
+from hahomematic.platforms.switch import HmSwitch
 
 LOG = logging.getLogger(__name__)
 
 
-class Device:
+# pylint: disable=too-many-instance-attributes
+class HmDevice:
     """
     Object to hold information about a device and associated entities.
     """
@@ -64,7 +64,7 @@ class Device:
         )
 
         self.entities: dict[tuple[str, str], GenericEntity] = {}
-        self.actionevents: dict[tuple[str, str], ClickEvent] = {}
+        self.action_events: dict[tuple[str, str], BaseEvent] = {}
         self.device_type = self.server.devices_raw_dict[self.interface_id][
             self.address
         ][ATTR_HM_TYPE]
@@ -98,16 +98,16 @@ class Device:
         if isinstance(hm_entity, GenericEntity):
             self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
 
-    def add_hm_actionevent(self, hm_entity: GenericEntity):
+    def add_hm_action_event(self, hm_event: BaseEvent):
         """add an hm entity to a device"""
-        self.actionevents[(hm_entity.address, hm_entity.parameter)] = hm_entity
+        self.action_events[(hm_event.address, hm_event.parameter)] = hm_event
 
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
         for entity in self.entities.values():
             entity.remove_event_subscriptions()
-        for actionevent in self.actionevents.values():
-            actionevent.remove_event_subscriptions()
+        for action_event in self.action_events.values():
+            action_event.remove_event_subscriptions()
 
     def get_hm_entity(self, address, parameter) -> Optional[GenericEntity]:
         """return a hm_entity from device"""
@@ -134,10 +134,10 @@ class Device:
 
     @property
     def available(self) -> bool:
-        """Return the availabiltity of the device."""
-        unreach = self.actionevents.get ((f"{self.address}:0", PARAM_UNREACH))
-        if unreach and unreach.lastupdate:
-            return not unreach.value
+        """Return the availability of the device."""
+        un_reach = self.action_events.get((f"{self.address}:0", PARAM_UN_REACH))
+        if un_reach and un_reach.last_update:
+            return not un_reach.value
         return True
 
     def reload_paramsets(self) -> None:
@@ -214,7 +214,7 @@ class Device:
         unique_id = generate_unique_id(address, parameter)
 
         LOG.debug(
-            "create_clickevent: Creating action_event for %s, %s, %s",
+            "create_event: Creating action_event for %s, %s, %s",
             address,
             parameter,
             self.interface_id,
@@ -269,7 +269,7 @@ class Device:
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
             if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
                 LOG.debug("create_entity: switch (action): %s %s", address, parameter)
-                entity = HM_Switch(
+                entity = HmSwitch(
                     device=self,
                     unique_id=unique_id,
                     address=address,
@@ -279,7 +279,7 @@ class Device:
             else:
                 if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
                     LOG.debug("create_entity: switch: %s %s", address, parameter)
-                    entity = HM_Switch(
+                    entity = HmSwitch(
                         device=self,
                         unique_id=unique_id,
                         address=address,
@@ -288,7 +288,7 @@ class Device:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
                     LOG.debug("create_entity: select: %s %s", address, parameter)
-                    entity = HM_Select(
+                    entity = HmSelect(
                         device=self,
                         unique_id=unique_id,
                         address=address,
@@ -297,7 +297,7 @@ class Device:
                     )
                 elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
                     LOG.debug("create_entity: number: %s %s", address, parameter)
-                    entity = HM_Number(
+                    entity = HmNumber(
                         device=self,
                         unique_id=unique_id,
                         address=address,
@@ -307,7 +307,7 @@ class Device:
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
                     # There is currently no entity platform in HA for this.
                     LOG.debug("create_entity: text: %s %s", address, parameter)
-                    entity = HM_Text(
+                    entity = HmText(
                         device=self,
                         unique_id=unique_id,
                         address=address,
@@ -324,7 +324,7 @@ class Device:
         else:
             if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
                 LOG.debug("create_entity: binary_sensor: %s %s", address, parameter)
-                entity = HM_Binary_Sensor(
+                entity = HmBinarySensor(
                     device=self,
                     unique_id=unique_id,
                     address=address,
@@ -333,7 +333,7 @@ class Device:
                 )
             else:
                 LOG.debug("create_entity: sensor: %s %s", address, parameter)
-                entity = HM_Sensor(
+                entity = HmSensor(
                     device=self,
                     unique_id=unique_id,
                     address=address,
@@ -375,7 +375,7 @@ def create_devices(server) -> None:
                 )
                 continue
             try:
-                device = Device(server, interface_id, device_address)
+                device = HmDevice(server, interface_id, device_address)
                 new_devices.add(device_address)
                 server.hm_devices[device_address] = device
             except Exception:

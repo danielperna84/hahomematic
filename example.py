@@ -84,8 +84,6 @@ def impulsecallback(
     )
 
 
-# Specify a unique name to identify our server.
-config.INTERFACE_ID = "myserver"
 # For testing we set a short INIT_TIMEOUT
 config.INIT_TIMEOUT = 10
 # We have to set the cache location of stored data so the server can load

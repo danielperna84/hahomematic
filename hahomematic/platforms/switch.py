@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
-class HM_Switch(GenericEntity):
+class HmSwitch(GenericEntity):
     """
     Implementation of a switch.
     This is a default platform that gets automatically generated.
@@ -30,15 +30,15 @@ class HM_Switch(GenericEntity):
         )
 
     @property
-    def STATE(self):
-        if self.type == TYPE_ACTION:
+    def state(self):
+        if self._type == TYPE_ACTION:
             return False
 
         return self._state
 
-    @STATE.setter
-    def STATE(self, value):
-        if self.type == TYPE_ACTION:
+    @state.setter
+    def state(self, value):
+        if self._type == TYPE_ACTION:
             self.send_value(True)
         else:
             self.send_value(value)

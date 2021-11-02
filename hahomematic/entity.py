@@ -26,7 +26,7 @@ from hahomematic.const import (
     DATA_NO_LOAD,
     HIDDEN_PARAMETERS,
     OPERATION_READ,
-    PARAM_UNREACH,
+    PARAM_UN_REACH,
     TYPE_ACTION,
 )
 from hahomematic.devices.device_description import (
@@ -53,7 +53,7 @@ class BaseEntity(ABC):
         Initialize the entity.
         """
 
-        self.lastupdate = None
+        self.last_update = None
         self._device = device
         self.create_in_ha = not self._device.custom_device
         self._entities: dict[str, GenericEntity] = {}
@@ -75,13 +75,13 @@ class BaseEntity(ABC):
 
     def _init_entities(self) -> None:
         """Init the supporting entity collection."""
-        unreach = self._device.get_hm_entity(f"{self.address}:0", PARAM_UNREACH)
-        if unreach:
-            self._entities[PARAM_UNREACH] = unreach
+        un_reach = self._device.get_hm_entity(f"{self.address}:0", PARAM_UN_REACH)
+        if un_reach:
+            self._entities[PARAM_UN_REACH] = un_reach
 
     @property
     def available(self) -> bool:
-        """Return the availabiltity of the device."""
+        """Return the availability of the device."""
         return self._device.available
 
     @property
@@ -116,7 +116,7 @@ class BaseEntity(ABC):
         if self._update_callback is None:
             LOG.debug("Entity.update_entity: No callback defined.")
             return
-        self._set_lastupdated()
+        self._set_last_update()
         # pylint: disable=not-callable
         self._update_callback(self.unique_id)
 
@@ -147,13 +147,13 @@ class BaseEntity(ABC):
     def load_data(self) -> None:
         """Load data"""
 
-    def _set_lastupdated(self) -> None:
-        self.lastupdate = datetime.datetime.now()
+    def _set_last_update(self) -> None:
+        self.last_update = datetime.datetime.now()
 
     def _updated_within_minutes(self, minutes=10) -> bool:
-        if self.lastupdate is None:
+        if self.last_update is None:
             return False
-        delta = datetime.datetime.now() - self.lastupdate
+        delta = datetime.datetime.now() - self.last_update
         if delta.seconds < minutes * 60:
             return True
         return False
@@ -198,7 +198,7 @@ class GenericEntity(BaseEntity):
         )
 
         self._state = None
-        if self.type == TYPE_ACTION:
+        if self._type == TYPE_ACTION:
             self._state = False
 
         # Subscribe for all events of this device
@@ -214,14 +214,14 @@ class GenericEntity(BaseEntity):
 
     def _assign_parameter_data(self):
         """Assign parameter data to instance variables."""
-        self.operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
-        self.type = self._parameter_data.get(ATTR_HM_TYPE)
-        self.control = self._parameter_data.get(ATTR_HM_CONTROL)
-        self.unit = self._parameter_data.get(ATTR_HM_UNIT)
-        self.max = self._parameter_data.get(ATTR_HM_MAX)
-        self.min = self._parameter_data.get(ATTR_HM_MIN)
-        self.value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
-        self.special = self._parameter_data.get(ATTR_HM_SPECIAL)
+        self._operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
+        self._type = self._parameter_data.get(ATTR_HM_TYPE)
+        self._control = self._parameter_data.get(ATTR_HM_CONTROL)
+        self._unit = self._parameter_data.get(ATTR_HM_UNIT)
+        self._max = self._parameter_data.get(ATTR_HM_MAX)
+        self._min = self._parameter_data.get(ATTR_HM_MIN)
+        self._value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
+        self._special = self._parameter_data.get(ATTR_HM_SPECIAL)
 
     def update_parameter_data(self):
         """Update parameter data"""
@@ -277,8 +277,18 @@ class GenericEntity(BaseEntity):
     @property
     @abstractmethod
     # pylint: disable=invalid-name,missing-function-docstring
-    def STATE(self):
+    def state(self):
         ...
+
+    @property
+    def min(self):
+        """Return min value."""
+        return self._min
+
+    @property
+    def max(self):
+        """Return max value."""
+        return self._max
 
     def send_value(self, value) -> None:
         """send value to ccu."""
@@ -300,7 +310,7 @@ class GenericEntity(BaseEntity):
             return DATA_NO_LOAD
         try:
 
-            if self.operations & OPERATION_READ:
+            if self._operations & OPERATION_READ:
                 self._state = self.proxy.getValue(self.address, self.parameter)
                 self.update_entity()
 
@@ -424,12 +434,21 @@ class CustomEntity(BaseEntity):
         return None
 
     def _get_entity_value(self, field_name):
+        """get entity value"""
         entity = self._entities.get(field_name)
         if entity:
-            return entity.STATE
+            return entity.state
+        return None
+
+    def _get_entity_attribute(self, field_name, attr_name):
+        """get entity attribute value"""
+        entity = self._entities.get(field_name)
+        if entity:
+            return getattr(entity, attr_name)
         return None
 
     def _send_value(self, field_name, value) -> None:
+        """send value to ccu"""
         entity = self._entities.get(field_name)
         if entity:
             entity.send_value(value)

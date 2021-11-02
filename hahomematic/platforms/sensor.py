@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
-class HM_Sensor(GenericEntity):
+class HmSensor(GenericEntity):
     """
     Implementation of a sensor.
     This is a default platform that gets automatically generated.
@@ -30,8 +30,8 @@ class HM_Sensor(GenericEntity):
         )
 
     @property
-    def STATE(self):
-        if self._state is not None and self.value_list is not None:
-            return self.value_list[self._state]
+    def state(self):
+        if self._state is not None and self._value_list is not None:
+            return self._value_list[self._state]
 
         return self._state

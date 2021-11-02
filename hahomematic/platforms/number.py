@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
-class HM_Number(GenericEntity):
+class HmNumber(GenericEntity):
     """
     Implementation of a number.
     This is a default platform that gets automatically generated.
@@ -30,23 +30,23 @@ class HM_Number(GenericEntity):
         )
 
     @property
-    def STATE(self):
+    def state(self):
         return self._state
 
-    @STATE.setter
-    def STATE(self, value):
+    @state.setter
+    def state(self, value):
         # pylint: disable=no-else-return
-        if self.min <= value <= self.max:
+        if self._min <= value <= self._max:
             self.send_value(value)
             return
-        elif self.special:
-            if [sv for sv in self.special if value == sv[ATTR_HM_VALUE]]:
+        elif self._special:
+            if [sv for sv in self._special if value == sv[ATTR_HM_VALUE]]:
                 self.send_value(value)
                 return
         LOG.error(
             "number: Invalid value: %s (min: %s, max: %s, special: %s)",
             value,
-            self.min,
-            self.max,
-            self.special,
+            self._min,
+            self._max,
+            self._special,
         )

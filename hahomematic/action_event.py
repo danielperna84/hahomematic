@@ -18,15 +18,16 @@ from hahomematic.const import (
     EVENT_CONFIG_PENDING,
     EVENT_IMPULSE,
     EVENT_KEYPRESS,
-    EVENT_UNREACH,
+    EVENT_UN_REACH,
 )
 from hahomematic.helpers import get_entity_name
 
 LOG = logging.getLogger(__name__)
 
 
+# pylint: disable=too-many-instance-attributes
 class BaseEvent(ABC):
-    """Bqse class for action events"""
+    """Base class for action events"""
 
     # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter, event_type):
@@ -49,7 +50,7 @@ class BaseEvent(ABC):
             unique_id=self.unique_id,
         )
         self.event_type = event_type
-        self.lastupdate = None
+        self.last_update = None
         self._value = None
 
         # Subscribe for all action events of this device
@@ -92,7 +93,7 @@ class BaseEvent(ABC):
             return
 
         if self._value is not value:
-            self._set_lastupdated()
+            self._set_last_update()
             self._value = value
             self.fire_event(value)
 
@@ -116,10 +117,10 @@ class BaseEvent(ABC):
 
     def add_to_collections(self) -> None:
         """add entity to server collections"""
-        self._device.add_hm_actionevent(self)
+        self._device.add_hm_action_event(self)
 
-    def _set_lastupdated(self) -> None:
-        self.lastupdate = datetime.datetime.now()
+    def _set_last_update(self) -> None:
+        self.last_update = datetime.datetime.now()
 
     @abstractmethod
     def fire_event(self, value) -> None:
@@ -175,7 +176,7 @@ class ClickEvent(BaseEvent):
 
 class ImpulseEvent(BaseEvent):
     """
-    class for handling impule events.
+    class for handling impulse events.
     """
 
     # pylint: disable=too-many-arguments
@@ -200,7 +201,7 @@ class ImpulseEvent(BaseEvent):
             if value is False:
                 self._device.reload_paramsets()
             return
-        if self.parameter == EVENT_UNREACH:
+        if self.parameter == EVENT_UN_REACH:
             self._device.update_device()
             return
 

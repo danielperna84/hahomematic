@@ -69,9 +69,11 @@ def build_api_url(host, port, path, username=None, password=None, tls=False):
 
 # pylint: disable=dangerous-default-value
 def json_rpc_post(
-    host, jsonport, method, params={}, tls=DEFAULT_TLS, verify_tls=DEFAULT_VERIFY_TLS
+    host, json_port, method, params=None, tls=DEFAULT_TLS, verify_tls=DEFAULT_VERIFY_TLS
 ):
     """Reusable JSON-RPC POST function."""
+    if params is None:
+        params = {}
     LOG.debug("helpers.json_rpc_post: Method: %s", method)
     try:
         payload = json.dumps(
@@ -80,11 +82,11 @@ def json_rpc_post(
 
         headers = {"Content-Type": "application/json", "Content-Length": len(payload)}
         if tls:
-            apiendpoint = f"https://{host}:{jsonport}{PATH_JSON_RPC}"
+            api_endpoint = f"https://{host}:{json_port}{PATH_JSON_RPC}"
         else:
-            apiendpoint = f"http://{host}:{jsonport}{PATH_JSON_RPC}"
-        LOG.debug("helpers.json_rpc_post: API-Endpoint: %s", apiendpoint)
-        req = urllib.request.Request(apiendpoint, payload, headers)
+            api_endpoint = f"http://{host}:{json_port}{PATH_JSON_RPC}"
+        LOG.debug("helpers.json_rpc_post: API-Endpoint: %s", api_endpoint)
+        req = urllib.request.Request(api_endpoint, payload, headers)
         if tls:
             if verify_tls:
                 resp = urllib.request.urlopen(
