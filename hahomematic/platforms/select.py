@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
-class HM_Select(GenericEntity):
+class HmSelect(GenericEntity):
     """
     Implementation of a select.
     This is a default platform that gets automatically generated.
@@ -30,13 +30,13 @@ class HM_Select(GenericEntity):
         )
 
     @property
-    def STATE(self):
-        return self.value_list[self._state]
+    def state(self):
+        return self._value_list[self._state]
 
-    @STATE.setter
-    def STATE(self, value):
+    @state.setter
+    def state(self, value):
         # We allow setting the value via index as well, just in case.
         if isinstance(value, int):
             self.send_value(value)
         else:
-            self.send_value(self.value_list.index(value))
+            self.send_value(self._value_list.index(value))

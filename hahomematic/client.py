@@ -26,12 +26,12 @@ from hahomematic.const import (
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     DEFAULT_CONNECT,
-    DEFAULT_JSONPORT,
+    DEFAULT_JSON_PORT,
     DEFAULT_NAME,
     DEFAULT_PASSWORD,
     DEFAULT_PATH,
     DEFAULT_TLS,
-    DEFAULT_USER,
+    DEFAULT_USERNAME,
     DEFAULT_VERIFY_TLS,
     LOCALHOST,
     PORT_RFD,
@@ -66,15 +66,15 @@ class Client:
         host=LOCALHOST,
         port=PORT_RFD,
         path=DEFAULT_PATH,
-        username=DEFAULT_USER,
+        username=DEFAULT_USERNAME,
         password=DEFAULT_PASSWORD,
         tls=DEFAULT_TLS,
         verify_tls=DEFAULT_VERIFY_TLS,
         # connect -> do init
         connect=DEFAULT_CONNECT,
-        callback_hostname=None,
+        callback_host=None,
         callback_port=None,
-        json_port=DEFAULT_JSONPORT,
+        json_port=DEFAULT_JSON_PORT,
         json_tls=DEFAULT_TLS,
     ):
         """
@@ -113,15 +113,15 @@ class Client:
         LOG.debug("Got local ip: %s", self.local_ip)
 
         # Get callback address
-        if callback_hostname is not None:
-            self.callback_hostname = callback_hostname
+        if callback_host is not None:
+            self.callback_host = callback_host
         else:
-            self.callback_hostname = self.local_ip
+            self.callback_host = self.local_ip
         if callback_port is not None:
             self.callback_port = int(callback_port)
         else:
             self.callback_port = self.server.local_port
-        self.init_url = f"http://{self.callback_hostname}:{self.callback_port}"
+        self.init_url = f"http://{self.callback_host}:{self.callback_port}"
         self.api_url = build_api_url(
             self.host,
             self.port,
@@ -625,7 +625,7 @@ class Client:
         self.server.save_paramsets()
 
     def fetch_names(self):
-        """ Get all names. """
+        """Get all names."""
         if self.backend == BACKEND_CCU:
             self.fetch_names_json()
         elif self.backend == BACKEND_HOMEGEAR:

@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
-class HM_Binary_Sensor(GenericEntity):
+class HmBinarySensor(GenericEntity):
     """
     Implementation of a binary_sensor.
     This is a default platform that gets automatically generated.
@@ -30,5 +30,5 @@ class HM_Binary_Sensor(GenericEntity):
         )
 
     @property
-    def STATE(self):
+    def state(self):
         return self._state

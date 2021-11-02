@@ -10,15 +10,13 @@ import logging
 import os
 import threading
 import time
-from typing import Any
+from typing import Any, Optional
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from hahomematic import config
 from hahomematic.client import Client, ClientException
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
-    BACKEND_CCU,
-    BACKEND_HOMEGEAR,
     DEFAULT_ENCODING,
     FILE_DEVICES,
     FILE_NAMES,
@@ -27,7 +25,7 @@ from hahomematic.const import (
     HH_EVENT_ERROR,
     HH_EVENT_LIST_DEVICES,
     HH_EVENT_NEW_DEVICES,
-    HH_EVENT_READDED_DEVICE,
+    HH_EVENT_RE_ADDED_DEVICE,
     HH_EVENT_REPLACE_DEVICE,
     HH_EVENT_UPDATE_DEVICE,
     IP_ANY_V4,
@@ -35,14 +33,15 @@ from hahomematic.const import (
     PRIMARY_PORTS,
 )
 from hahomematic.data import INSTANCES
-from hahomematic.decorators import eventcallback, systemcallback
-from hahomematic.device import Device, create_devices
+from hahomematic.decorators import callback_event, callback_system_event
+from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
 
 LOG = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
+# noinspection PyPep8Naming,SpellCheckingInspection
 class RPCFunctions:
     """
     The XML-RPC functions the CCU or Homegear will expect.
@@ -54,7 +53,7 @@ class RPCFunctions:
         LOG.debug("RPCFunctions.__init__")
         self._server = server
 
-    @eventcallback
+    @callback_event
     # pylint: disable=no-self-use
     def event(self, interface_id, address, value_key, value):
         """
@@ -101,21 +100,21 @@ class RPCFunctions:
 
         return True
 
-    @systemcallback(HH_EVENT_ERROR)
+    @callback_system_event(HH_EVENT_ERROR)
     # pylint: disable=no-self-use
-    def error(self, interface_id, errorcode, msg):
+    def error(self, interface_id, error_code, msg):
         """
         When some error occurs the CCU / Homegear will send it's error message here.
         """
         LOG.error(
-            "RPCFunctions.error: interface_id = %s, errorcode = %i, message = %s",
+            "RPCFunctions.error: interface_id = %s, error_code = %i, message = %s",
             interface_id,
-            int(errorcode),
+            int(error_code),
             str(msg),
         )
         return True
 
-    @systemcallback(HH_EVENT_LIST_DEVICES)
+    @callback_system_event(HH_EVENT_LIST_DEVICES)
     # pylint: disable=no-self-use
     def listDevices(self, interface_id):
         """
@@ -127,7 +126,7 @@ class RPCFunctions:
             self._server.devices_raw_cache[interface_id] = []
         return self._server.devices_raw_cache[interface_id]
 
-    @systemcallback(HH_EVENT_NEW_DEVICES)
+    @callback_system_event(HH_EVENT_NEW_DEVICES)
     # pylint: disable=no-self-use
     def newDevices(self, interface_id, dev_descriptions):
         """
@@ -174,7 +173,7 @@ class RPCFunctions:
         create_devices(self._server)
         return True
 
-    @systemcallback(HH_EVENT_DELETE_DEVICES)
+    @callback_system_event(HH_EVENT_DELETE_DEVICES)
     # pylint: disable=no-self-use
     def deleteDevices(self, interface_id, addresses):
         """
@@ -211,7 +210,7 @@ class RPCFunctions:
         self._server.save_names()
         return True
 
-    @systemcallback(HH_EVENT_UPDATE_DEVICE)
+    @callback_system_event(HH_EVENT_UPDATE_DEVICE)
     # pylint: disable=no-self-use
     def updateDevice(self, interface_id, address, hint):
         """
@@ -227,21 +226,21 @@ class RPCFunctions:
         )
         return True
 
-    @systemcallback(HH_EVENT_REPLACE_DEVICE)
+    @callback_system_event(HH_EVENT_REPLACE_DEVICE)
     # pylint: disable=no-self-use
-    def replaceDevice(self, interface_id, oldDeviceAddress, newDeviceAddress):
+    def replaceDevice(self, interface_id, old_device_address, new_device_address):
         """
         Replace a device. Probably irrelevant for us.
         """
         LOG.debug(
             "RPCFunctions.replaceDevice: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
             interface_id,
-            oldDeviceAddress,
-            newDeviceAddress,
+            old_device_address,
+            new_device_address,
         )
         return True
 
-    @systemcallback(HH_EVENT_READDED_DEVICE)
+    @callback_system_event(HH_EVENT_RE_ADDED_DEVICE)
     # pylint: disable=no-self-use
     def readdedDevice(self, interface_id, addresses):
         """
@@ -269,6 +268,7 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
     )
 
 
+# pylint: disable=too-many-public-methods
 class Server(threading.Thread):
     """
     XML-RPC server thread to handle messages from CCU / Homegear.
@@ -307,7 +307,7 @@ class Server(threading.Thread):
         # {unique_id, entity}
         self.hm_entities: dict[str, BaseEntity] = {}
         # {device_address, device}
-        self.hm_devices: dict[str, Device] = {}
+        self.hm_devices: dict[str, HmDevice] = {}
 
         self.last_events = {}
 
@@ -321,23 +321,23 @@ class Server(threading.Thread):
         self.callback_impulse_event = None
 
         INSTANCES[instance_name] = self
-        self._init_xmlrpc_server()
+        self._init_xml_rpc_server()
         self._load_caches()
 
-    def _init_xmlrpc_server(self):
-        """ Setup server to handle requests from CCU / Homegear. """
+    def _init_xml_rpc_server(self):
+        """Setup server to handle requests from CCU / Homegear."""
         self._rpc_functions = RPCFunctions(self)
         LOG.debug("Server.__init__: Setting up server")
-        self.xmlrpc_server = SimpleXMLRPCServer(
+        self.xml_rpc_server = SimpleXMLRPCServer(
             (self.local_ip, self.local_port),
             requestHandler=RequestHandler,
             logRequests=False,
         )
-        self.local_port = self.xmlrpc_server.socket.getsockname()[1]
-        self.xmlrpc_server.register_introspection_functions()
-        self.xmlrpc_server.register_multicall_functions()
+        self.local_port = self.xml_rpc_server.socket.getsockname()[1]
+        self.xml_rpc_server.register_introspection_functions()
+        self.xml_rpc_server.register_multicall_functions()
         LOG.debug("Server.__init__: Registering RPC functions")
-        self.xmlrpc_server.register_instance(
+        self.xml_rpc_server.register_instance(
             self._rpc_functions, allow_dotted_names=True
         )
 
@@ -350,7 +350,7 @@ class Server(threading.Thread):
                 if interface_id not in self.paramsets_cache:
                     self.paramsets_cache[interface_id] = {}
                 handle_device_descriptions(self, interface_id, device_descriptions)
-        except json.decoder.JSONDecodeError as err:
+        except json.decoder.JSONDecodeError:
             LOG.warning("Failed to load caches.")
             self.clear_all()
 
@@ -369,8 +369,8 @@ class Server(threading.Thread):
             create_devices(self)
         except Exception as err:
             LOG.exception("Server.run: Failed to create entities")
-            raise Exception("entitiy-creation-error") from err
-        self.xmlrpc_server.serve_forever()
+            raise Exception("entity-creation-error") from err
+        self.xml_rpc_server.serve_forever()
 
     def stop(self):
         """
@@ -384,16 +384,16 @@ class Server(threading.Thread):
         self.clients.clear()
         self.clients_by_init_url.clear()
         LOG.info("Server.stop: Shutting down server")
-        self.xmlrpc_server.shutdown()
+        self.xml_rpc_server.shutdown()
         LOG.debug("Server.stop: Stopping Server")
-        self.xmlrpc_server.server_close()
+        self.xml_rpc_server.server_close()
         LOG.info("Server.stop: Server stopped")
         LOG.debug("Server.stop: Removing instance")
         del INSTANCES[self.instance_name]
 
     def reconnect(self):
-        """Reinit all RPC proxy."""
-        for client in self.clients:
+        """re-init all RPC proxy."""
+        for client in self.clients.values():
             client.proxy_init()
 
     def get_all_system_variables(self):
@@ -412,10 +412,11 @@ class Server(threading.Thread):
         """Get service messages from CCU / Homegear."""
         self._get_client().get_service_messages()
 
+    # pylint: disable=too-many-arguments
     def set_install_mode(
         self, interface_id, on=True, t=60, mode=1, address=None
     ) -> None:
-        """Activate or deactivate installmode on CCU / Homegear."""
+        """Activate or deactivate install-mode on CCU / Homegear."""
         self._get_client(interface_id).set_install_mode(
             on=on, t=t, mode=mode, address=address
         )
@@ -424,6 +425,7 @@ class Server(threading.Thread):
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         return self._get_client(interface_id).get_install_mode()
 
+    # pylint: disable=too-many-arguments
     def put_paramset(self, interface_id, address, paramset, value, rx_mode=None):
         """Set paramsets manually."""
         self._get_client(interface_id).put_paramset(
@@ -457,7 +459,7 @@ class Server(threading.Thread):
             LOG.warning(message)
             raise ClientException(message, err)
 
-    def get_hm_entity_by_parameter(self, address, parameter) -> GenericEntity:
+    def get_hm_entity_by_parameter(self, address, parameter) -> Optional[GenericEntity]:
         """Get entity by address and parameter."""
         if ":" in address:
             device_address = address.split(":")[0]
@@ -503,9 +505,10 @@ class Server(threading.Thread):
         """Return used parameters"""
         parameters = set()
         for entity in self.hm_entities.values():
-            parameter = getattr(entity, "parameter", None)
-            if parameter:
-                parameters.add(entity.parameter)
+            if isinstance(entity, GenericEntity):
+                parameter = getattr(entity, "parameter", None)
+                if parameter:
+                    parameters.add(entity.parameter)
 
         return sorted(parameters)
 
@@ -545,12 +548,11 @@ class Server(threading.Thread):
         ):
             return
         with open(
-                file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
-                mode="r",
-                encoding=DEFAULT_ENCODING,
+            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
+            mode="r",
+            encoding=DEFAULT_ENCODING,
         ) as fptr:
             self.devices_raw_cache = json.load(fptr)
-
 
     def clear_devices_raw(self):
         """

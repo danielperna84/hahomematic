@@ -11,6 +11,7 @@ LOG = logging.getLogger(__name__)
 
 
 # pylint: disable=too-few-public-methods
+# noinspection PyProtectedMember,PyUnresolvedReferences
 class LockingServerProxy(xmlrpc.client.ServerProxy):
     """
     ServerProxy implementation with lock when request is executing.

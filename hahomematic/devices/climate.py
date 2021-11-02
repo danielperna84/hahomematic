@@ -5,12 +5,7 @@ Code to create the required entities for thermostat devices.
 
 import logging
 
-from hahomematic.const import (
-    ATTR_HM_MAX,
-    ATTR_HM_MIN,
-    HA_PLATFORM_CLIMATE,
-    PARAMSET_VALUES,
-)
+from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, HA_PLATFORM_CLIMATE
 from hahomematic.devices.device_description import (
     FIELD_AUTO_MODE,
     FIELD_BOOST_MODE,
@@ -29,10 +24,6 @@ from hahomematic.entity import CustomEntity
 from hahomematic.helpers import generate_unique_id
 
 LOG = logging.getLogger(__name__)
-
-PARAM_TEMPERATURE = "TEMPERATURE"
-PARAM_HUMIDITY = "HUMIDITY"
-PARAM_SETPOINT = "SETPOINT"
 
 HM_MODE_AUTO = 0
 HM_MODE_MANU = 1
@@ -54,6 +45,7 @@ PRESET_ECO = "eco"
 TEMP_CELSIUS = "°C"
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
+
 
 # pylint: disable=too-many-instance-attributes
 class SimpleThermostat(CustomEntity):
@@ -103,16 +95,12 @@ class SimpleThermostat(CustomEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self._interface_id][f"{self.address}:1"][
-            PARAMSET_VALUES
-        ][PARAM_TEMPERATURE][ATTR_HM_MIN]
+        return self._get_entity_attribute(FIELD_TEMPERATURE, ATTR_HM_MIN.lower())
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self._interface_id][f"{self.address}:1"][
-            PARAMSET_VALUES
-        ][PARAM_TEMPERATURE][ATTR_HM_MAX]
+        return self._get_entity_attribute(FIELD_TEMPERATURE, ATTR_HM_MAX.lower())
 
     @property
     def target_temperature_step(self):
@@ -205,16 +193,12 @@ class Thermostat(CustomEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self._interface_id][
-            self._get_field_address(FIELD_TEMPERATURE)
-        ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MIN]
+        return self._get_entity_attribute(FIELD_TEMPERATURE, ATTR_HM_MIN.lower())
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self._interface_id][
-            self._get_field_address(FIELD_TEMPERATURE)
-        ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MAX]
+        return self._get_entity_attribute(FIELD_TEMPERATURE, ATTR_HM_MAX.lower())
 
     @property
     def target_temperature_step(self):
@@ -360,16 +344,12 @@ class IPThermostat(CustomEntity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._server.paramsets_cache[self._interface_id][
-            self._get_field_address(FIELD_TEMPERATURE)
-        ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MIN]
+        return self._get_entity_attribute(FIELD_TEMPERATURE, ATTR_HM_MIN.lower())
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._server.paramsets_cache[self._interface_id][
-            self._get_field_address(FIELD_TEMPERATURE)
-        ][PARAMSET_VALUES][self._get_field_param(FIELD_TEMPERATURE)][ATTR_HM_MAX]
+        return self._get_entity_attribute(FIELD_TEMPERATURE, ATTR_HM_MAX.lower())
 
     @property
     def target_temperature_step(self):
