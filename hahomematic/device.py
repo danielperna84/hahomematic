@@ -248,8 +248,10 @@ class HmDevice:
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
         """
-        if (parameter in IGNORED_PARAMETERS or parameter.endswith(
-            tuple(IGNORED_PARAMETERS_WILDCARDS)) and parameter not in WHITELIST_PARAMETERS
+        if (
+            parameter in IGNORED_PARAMETERS
+            or parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS))
+            and parameter not in WHITELIST_PARAMETERS
         ):
             LOG.debug("create_entity: Ignoring parameter: %s (%s)", parameter, address)
             return None

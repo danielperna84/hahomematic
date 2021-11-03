@@ -7,7 +7,7 @@ Functions for entity creation.
 import datetime
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from hahomematic.const import (
     ATTR_ADDRESS,
@@ -69,9 +69,6 @@ class BaseEntity(ABC):
         self.name = self.client.server.names_cache.get(self._interface_id, {}).get(
             self.address, self.unique_id
         )
-
-        self.device_type = self._device.device_type
-        self.device_class = None
         self._update_callback = None
         self._remove_callback = None
 
@@ -164,7 +161,7 @@ class BaseEntity(ABC):
         """
         Provide some useful information.
         """
-        return f"address: {self.address}, type: {self.device_type}, name: {self.name}"
+        return f"address: {self.address}, type: {self._device.device_type}, name: {self.name}"
 
 
 class GenericEntity(BaseEntity):
@@ -216,7 +213,6 @@ class GenericEntity(BaseEntity):
 
     def _assign_parameter_data(self):
         """Assign parameter data to instance variables."""
-        self._control = self._parameter_data.get(ATTR_HM_CONTROL)
         self._default = self._parameter_data.get(ATTR_HM_DEFAULT)
         self._max = self._parameter_data.get(ATTR_HM_MAX)
         self._min = self._parameter_data.get(ATTR_HM_MIN)
@@ -225,7 +221,6 @@ class GenericEntity(BaseEntity):
         self._type = self._parameter_data.get(ATTR_HM_TYPE)
         self._unit = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
         self._value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
-
 
     def update_parameter_data(self):
         """Update parameter data"""
@@ -312,7 +307,7 @@ class GenericEntity(BaseEntity):
         except Exception:
             LOG.exception(
                 "generic_entity: Failed to set state for: %s, %s, %s, %s",
-                self.device_type,
+                self._device.device_type,
                 self.address,
                 self.parameter,
                 value,
@@ -323,11 +318,9 @@ class GenericEntity(BaseEntity):
         if self._updated_within_minutes():
             return DATA_NO_LOAD
         try:
-
             if self._operations & OPERATION_READ:
                 self._state = self.proxy.getValue(self.address, self.parameter)
                 self.update_entity()
-
             for entity in self._entities.values():
                 if entity:
                     entity.load_data()
@@ -339,7 +332,7 @@ class GenericEntity(BaseEntity):
             LOG.debug(
                 " %s: Failed to get state for %s, %s, %s: %s",
                 self.platform,
-                self.device_type,
+                self._device.device_type,
                 self.address,
                 self.parameter,
                 err,

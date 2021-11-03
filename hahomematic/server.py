@@ -434,7 +434,7 @@ class Server(threading.Thread):
 
     def get_hm_entities_by_platform(self, platform):
         """
-        Return all hm-entities by requested unique_ids
+        Return all hm-entities by platform
         """
         hm_entities = []
         for entity in self.hm_entities.values():
