@@ -31,7 +31,10 @@ class HmSelect(GenericEntity):
 
     @property
     def state(self):
-        return self._value_list[self._state]
+        """Return the state of the entity."""
+        if self._state:
+            return self._value_list[self._state]
+        return self._default
 
     @state.setter
     def state(self, value):

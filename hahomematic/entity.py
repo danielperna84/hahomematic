@@ -12,6 +12,7 @@ from typing import Any, Optional
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_HM_CONTROL,
+    ATTR_HM_DEFAULT,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
     ATTR_HM_OPERATIONS,
@@ -215,14 +216,16 @@ class GenericEntity(BaseEntity):
 
     def _assign_parameter_data(self):
         """Assign parameter data to instance variables."""
-        self._operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
-        self._type = self._parameter_data.get(ATTR_HM_TYPE)
         self._control = self._parameter_data.get(ATTR_HM_CONTROL)
-        self._unit = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
+        self._default = self._parameter_data.get(ATTR_HM_DEFAULT)
         self._max = self._parameter_data.get(ATTR_HM_MAX)
         self._min = self._parameter_data.get(ATTR_HM_MIN)
-        self._value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
+        self._operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
         self._special = self._parameter_data.get(ATTR_HM_SPECIAL)
+        self._type = self._parameter_data.get(ATTR_HM_TYPE)
+        self._unit = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
+        self._value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
+
 
     def update_parameter_data(self):
         """Update parameter data"""
