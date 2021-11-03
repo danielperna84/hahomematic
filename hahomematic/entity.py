@@ -430,20 +430,6 @@ class CustomEntity(BaseEntity):
         self.update_entity()
         return DATA_LOAD_SUCCESS
 
-    def _get_field_address(self, field_name) -> Optional[str]:
-        """get field address"""
-        entity = self._entities.get(field_name)
-        if entity:
-            return entity.address
-        return None
-
-    def _get_field_param(self, field_name) -> Optional[str]:
-        """get field param name"""
-        entity = self._entities.get(field_name)
-        if entity:
-            return entity.parameter
-        return None
-
     def _get_entity_value(self, field_name):
         """get entity value"""
         entity = self._entities.get(field_name)
