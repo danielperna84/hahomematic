@@ -92,10 +92,12 @@ class BaseEvent(ABC):
             )
             return
 
+        # fire an event, if the value changes
+        old_value = self._value
         if self._value is not value:
             self._set_last_update()
             self._value = value
-            self.fire_event(value)
+            self.fire_event(old_value, value)
 
     @property
     def value(self):
@@ -123,7 +125,7 @@ class BaseEvent(ABC):
         self.last_update = datetime.datetime.now()
 
     @abstractmethod
-    def fire_event(self, value) -> None:
+    def fire_event(self, old_value, new_value) -> None:
         """
         Do what is needed to fire an event.
         """
@@ -162,7 +164,7 @@ class ClickEvent(BaseEvent):
             event_type=EVENT_KEYPRESS,
         )
 
-    def fire_event(self, value) -> None:
+    def fire_event(self, old_value, new_value) -> None:
         """
         Do what is needed to fire an event.
         """
@@ -170,7 +172,7 @@ class ClickEvent(BaseEvent):
         if callable(self._server.callback_click_event):
             self._server.callback_click_event(
                 self.event_type,
-                self._event_data(value),
+                self._event_data(new_value),
             )
 
 
@@ -192,13 +194,13 @@ class ImpulseEvent(BaseEvent):
             event_type=EVENT_IMPULSE,
         )
 
-    def fire_event(self, value) -> None:
+    def fire_event(self, old_value, new_value) -> None:
         """
         Do what is needed to fire an event.
         """
         # pylint: disable=not-callable
         if self.parameter == EVENT_CONFIG_PENDING:
-            if value is False:
+            if new_value is False and old_value is True:
                 self._device.reload_paramsets()
             return
         if self.parameter == EVENT_UN_REACH:
@@ -208,5 +210,5 @@ class ImpulseEvent(BaseEvent):
         if callable(self._server.callback_impulse_event):
             self._server.callback_impulse_event(
                 self.event_type,
-                self._event_data(value),
+                self._event_data(new_value),
             )
