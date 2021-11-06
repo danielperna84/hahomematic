@@ -8,7 +8,7 @@ import time
 
 from hahomematic.data import get_client_by_interface_id
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def callback_system_event(name):
@@ -27,10 +27,10 @@ def callback_system_event(name):
                 client = get_client_by_interface_id(interface_id)
             # pylint: disable=broad-except
             except Exception as err:
-                LOG.warning("Failed to reduce args for callback_system_event.")
+                _LOGGER.warning("Failed to reduce args for callback_system_event.")
                 raise Exception("args-exception callback_system_event") from err
             if client:
-                client.initialized = int(time.time())
+                client.time_initialized = int(time.time())
             if client.server.callback_system_event is not None:
                 # pylint: disable=not-callable
                 client.server.callback_system_event(name, *args)
@@ -56,10 +56,10 @@ def callback_event(func):
             client = get_client_by_interface_id(interface_id)
         # pylint: disable=broad-except
         except Exception as err:
-            LOG.warning("Failed to reduce args for callback_event.")
+            _LOGGER.warning("Failed to reduce args for callback_event.")
             raise Exception("args-exception callback_event") from err
         if client:
-            client.initialized = int(time.time())
+            client.time_initialized = int(time.time())
         if client.server.callback_device_event is not None:
             # pylint: disable=not-callable
             client.server.callback_device_event(*args)

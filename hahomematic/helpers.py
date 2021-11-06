@@ -2,14 +2,8 @@
 """
 Helper functions used within hahomematic
 """
-
-import json
 import logging
-import ssl
-import urllib
-import urllib.request
 
-from hahomematic import config
 from hahomematic.const import (
     ATTR_HM_LIST,
     ATTR_HM_LOGIC,
@@ -17,17 +11,9 @@ from hahomematic.const import (
     ATTR_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
-    DEFAULT_TLS,
-    DEFAULT_VERIFY_TLS,
-    PATH_JSON_RPC,
 )
 
-LOG = logging.getLogger(__name__)
-
-VERIFIED_CTX = ssl.create_default_context()
-UNVERIFIED_CTX = ssl.create_default_context()
-UNVERIFIED_CTX.check_hostname = False
-UNVERIFIED_CTX.verify_mode = ssl.CERT_NONE
+_LOGGER = logging.getLogger(__name__)
 
 
 def generate_unique_id(address, parameter=None):
@@ -65,55 +51,6 @@ def build_api_url(host, port, path, username=None, password=None, tls=False):
     if tls:
         scheme += "s"
     return f"{scheme}://{credentials}{host}:{port}{path}"
-
-
-# pylint: disable=dangerous-default-value
-def json_rpc_post(
-    host, json_port, method, params=None, tls=DEFAULT_TLS, verify_tls=DEFAULT_VERIFY_TLS
-):
-    """Reusable JSON-RPC POST function."""
-    if params is None:
-        params = {}
-    LOG.debug("helpers.json_rpc_post: Method: %s", method)
-    try:
-        payload = json.dumps(
-            {"method": method, "params": params, "jsonrpc": "1.1", "id": 0}
-        ).encode("utf-8")
-
-        headers = {"Content-Type": "application/json", "Content-Length": len(payload)}
-        if tls:
-            api_endpoint = f"https://{host}:{json_port}{PATH_JSON_RPC}"
-        else:
-            api_endpoint = f"http://{host}:{json_port}{PATH_JSON_RPC}"
-        LOG.debug("helpers.json_rpc_post: API-Endpoint: %s", api_endpoint)
-        req = urllib.request.Request(api_endpoint, payload, headers)
-        if tls:
-            if verify_tls:
-                resp = urllib.request.urlopen(
-                    req, timeout=config.TIMEOUT, context=VERIFIED_CTX
-                )
-            else:
-                resp = urllib.request.urlopen(
-                    req, timeout=config.TIMEOUT, context=UNVERIFIED_CTX
-                )
-        else:
-            resp = urllib.request.urlopen(req, timeout=config.TIMEOUT)
-        if resp.status == 200:
-            try:
-                return json.loads(resp.read().decode("utf-8"))
-            except ValueError:
-                LOG.exception(
-                    "helpers.json_rpc_post: Failed to parse JSON. Trying workaround."
-                )
-                # Workaround for bug in CCU
-                return json.loads(resp.read().decode("utf-8").replace("\\", ""))
-        else:
-            LOG.error("helpers.json_rpc_post: Status: %i", resp.status)
-            return {"error": resp.status, "result": {}}
-    # pylint: disable=broad-except
-    except Exception as err:
-        LOG.exception("helpers.json_rpc_post: Exception")
-        return {"error": str(err), "result": {}}
 
 
 def parse_ccu_sys_var(data):

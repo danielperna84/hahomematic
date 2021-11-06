@@ -22,7 +22,7 @@ from hahomematic.const import (
 )
 from hahomematic.helpers import get_entity_name
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -67,25 +67,25 @@ class BaseEvent(ABC):
         """
         Handle event for which this handler has subscribed.
         """
-        LOG.debug(
+        _LOGGER.debug(
             "Entity.event: %s, %s, %s, %s", interface_id, address, parameter, value
         )
         if interface_id != self._interface_id:
-            LOG.warning(
+            _LOGGER.warning(
                 "Entity.event: Incorrect interface_id: %s - should be: %s",
                 interface_id,
                 self._interface_id,
             )
             return
         if address != self.address:
-            LOG.warning(
+            _LOGGER.warning(
                 "Entity.event: Incorrect address: %s - should be: %s",
                 address,
                 self.address,
             )
             return
         if parameter != self.parameter:
-            LOG.warning(
+            _LOGGER.warning(
                 "Entity.event: Incorrect parameter: %s - should be: %s",
                 parameter,
                 self.parameter,
@@ -104,13 +104,13 @@ class BaseEvent(ABC):
         """Return the value."""
         return self._value
 
-    def send_value(self, value) -> None:
+    async def send_value(self, value) -> None:
         """send value to ccu."""
         try:
-            self.proxy.setValue(self.address, self.parameter, value)
+            await self.proxy.setValue(self.address, self.parameter, value)
         # pylint: disable=broad-except
         except Exception:
-            LOG.exception(
+            _LOGGER.exception(
                 "action_event: Failed to set state for: %s, %s, %s",
                 self.address,
                 self.parameter,

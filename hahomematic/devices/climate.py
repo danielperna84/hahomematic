@@ -23,7 +23,7 @@ from hahomematic.devices.device_description import (
 from hahomematic.entity import CustomEntity
 from hahomematic.helpers import generate_unique_id
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 HM_MODE_AUTO = 0
 HM_MODE_MANU = 1
@@ -60,7 +60,7 @@ class SimpleThermostat(CustomEntity):
             device_desc=device_desc,
             platform=HA_PLATFORM_CLIMATE,
         )
-        LOG.debug(
+        _LOGGER.debug(
             "SimpleThermostat.__init__(%s, %s, %s)",
             self._device.interface_id,
             address,
@@ -133,12 +133,12 @@ class SimpleThermostat(CustomEntity):
         return self._setpoint
 
     # pylint: disable=inconsistent-return-statements
-    def set_temperature(self, **kwargs):
+    async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return None
-        self._send_value(FIELD_SETPOINT, float(temperature))
+        await self._send_value(FIELD_SETPOINT, float(temperature))
 
 
 class Thermostat(CustomEntity):
@@ -153,7 +153,7 @@ class Thermostat(CustomEntity):
             device_desc=device_desc,
             platform=HA_PLATFORM_CLIMATE,
         )
-        LOG.debug(
+        _LOGGER.debug(
             "Thermostat.__init__(%s, %s, %s)",
             self._device.interface_id,
             address,
@@ -258,30 +258,30 @@ class Thermostat(CustomEntity):
         return self._setpoint
 
     # pylint: disable=inconsistent-return-statements
-    def set_temperature(self, **kwargs):
+    async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return None
-        self._send_value(FIELD_SETPOINT, float(temperature))
+        await self._send_value(FIELD_SETPOINT, float(temperature))
 
-    def set_hvac_mode(self, hvac_mode):
+    async def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
-            self._send_value(FIELD_AUTO_MODE, True)
+            await self._send_value(FIELD_AUTO_MODE, True)
         elif hvac_mode == HVAC_MODE_HEAT:
-            self._send_value(FIELD_MANU_MODE, self.max_temp)
+            await self._send_value(FIELD_MANU_MODE, self.max_temp)
         elif hvac_mode == HVAC_MODE_OFF:
-            self.set_temperature(temperature=self.min_temp)
+            await self.set_temperature(temperature=self.min_temp)
 
-    def set_preset_mode(self, preset_mode):
+    async def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_BOOST:
-            self._send_value(FIELD_BOOST_MODE, True)
+            await self._send_value(FIELD_BOOST_MODE, True)
         elif preset_mode == PRESET_COMFORT:
-            self._send_value(FIELD_COMFORT_MODE, True)
+            await self._send_value(FIELD_COMFORT_MODE, True)
         elif preset_mode == PRESET_ECO:
-            self._send_value(FIELD_LOWERING_MODE, True)
+            await self._send_value(FIELD_LOWERING_MODE, True)
 
 
 class IPThermostat(CustomEntity):
@@ -296,7 +296,7 @@ class IPThermostat(CustomEntity):
             device_desc=device_desc,
             platform=HA_PLATFORM_CLIMATE,
         )
-        LOG.debug(
+        _LOGGER.debug(
             "IPThermostat.__init__(%s, %s, %s)",
             self._device.interface_id,
             address,
@@ -404,28 +404,28 @@ class IPThermostat(CustomEntity):
         return self._setpoint
 
     # pylint: disable=inconsistent-return-statements
-    def set_temperature(self, **kwargs):
+    async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return None
-        self._send_value(FIELD_SETPOINT, float(temperature))
+        await self._send_value(FIELD_SETPOINT, float(temperature))
 
-    def set_hvac_mode(self, hvac_mode):
+    async def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
-            self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_AUTO)
+            await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_AUTO)
         elif hvac_mode == HVAC_MODE_HEAT:
-            self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
-            self.set_temperature(temperature=self.max_temp)
+            await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
+            await self.set_temperature(temperature=self.max_temp)
         elif hvac_mode == HVAC_MODE_OFF:
-            self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
-            self.set_temperature(temperature=self.min_temp)
+            await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
+            await self.set_temperature(temperature=self.min_temp)
 
-    def set_preset_mode(self, preset_mode):
+    async def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_BOOST:
-            self._send_value(FIELD_BOOST_MODE, True)
+            await self._send_value(FIELD_BOOST_MODE, True)
 
 
 def make_simple_thermostat(device, address):
@@ -434,7 +434,7 @@ def make_simple_thermostat(device, address):
     """
     unique_id = generate_unique_id(address)
     if unique_id in device.server.hm_entities:
-        LOG.debug("make_simple_thermostat: Skipping %s (already exists)", unique_id)
+        _LOGGER.debug("make_simple_thermostat: Skipping %s (already exists)", unique_id)
     device_desc = device_description["SimpleThermostat"]
     entity = SimpleThermostat(
         device=device,
@@ -453,7 +453,7 @@ def make_thermostat(device, address):
     """
     unique_id = generate_unique_id(address)
     if unique_id in device.server.hm_entities:
-        LOG.debug("make_thermostat: Skipping %s (already exists)", unique_id)
+        _LOGGER.debug("make_thermostat: Skipping %s (already exists)", unique_id)
 
     device_desc = device_description["Thermostat"]
     entity = Thermostat(
@@ -473,7 +473,7 @@ def make_ip_thermostat(device, address):
     """
     unique_id = generate_unique_id(address)
     if unique_id in device.server.hm_entities:
-        LOG.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
+        _LOGGER.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
     device_desc = device_description["IPThermostat"]
     entity = IPThermostat(
         device=device,

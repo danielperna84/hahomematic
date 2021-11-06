@@ -4,19 +4,24 @@ Server module.
 Provides the XML-RPC server which handles communication
 with the CCU or Homegear
 """
-
+import asyncio
 import json
 import logging
 import os
 import threading
 import time
-from typing import Any, Optional
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Awaitable, Optional, TypeVar
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from hahomematic import config
 from hahomematic.client import Client, ClientException
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
+    DATA_LOAD_SUCCESS,
+    DATA_NO_LOAD,
+    DATA_NO_SAVE,
+    DATA_SAVE_SUCCESS,
     DEFAULT_ENCODING,
     FILE_DEVICES,
     FILE_NAMES,
@@ -37,7 +42,8 @@ from hahomematic.decorators import callback_event, callback_system_event
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
 
-LOG = logging.getLogger(__name__)
+T = TypeVar("T")
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -50,7 +56,7 @@ class RPCFunctions:
 
     # pylint: disable=too-many-branches,too-many-statements
     def __init__(self, server):
-        LOG.debug("RPCFunctions.__init__")
+        _LOGGER.debug("RPCFunctions.__init__")
         self._server = server
 
     @callback_event
@@ -59,7 +65,7 @@ class RPCFunctions:
         """
         If a device emits some sort event, we will handle it here.
         """
-        LOG.debug(
+        _LOGGER.debug(
             "RPCFunctions.event: interface_id = %s, address = %s, value_key = %s, value = %s",
             interface_id,
             address,
@@ -74,7 +80,7 @@ class RPCFunctions:
                 ]:
                     callback(interface_id, address, value_key, value)
             except Exception:
-                LOG.exception(
+                _LOGGER.exception(
                     "RPCFunctions.event: Failed to call callback for: %s, %s, %s",
                     interface_id,
                     address,
@@ -89,7 +95,7 @@ class RPCFunctions:
                     ]:
                         callback(interface_id, device_address)
                 except Exception:
-                    LOG.exception(
+                    _LOGGER.exception(
                         "RPCFunctions.event: Failed to call device-callback for: %s, %s, %s",
                         interface_id,
                         address,
@@ -106,7 +112,7 @@ class RPCFunctions:
         """
         When some error occurs the CCU / Homegear will send it's error message here.
         """
-        LOG.error(
+        _LOGGER.error(
             "RPCFunctions.error: interface_id = %s, error_code = %i, message = %s",
             interface_id,
             int(error_code),
@@ -121,7 +127,7 @@ class RPCFunctions:
         The CCU / Homegear asks for devices known to our XML-RPC server.
         We respond to that request using this method.
         """
-        LOG.debug("RPCFunctions.listDevices: interface_id = %s", interface_id)
+        _LOGGER.debug("RPCFunctions.listDevices: interface_id = %s", interface_id)
         if interface_id not in self._server.devices_raw_cache:
             self._server.devices_raw_cache[interface_id] = []
         return self._server.devices_raw_cache[interface_id]
@@ -129,86 +135,93 @@ class RPCFunctions:
     @callback_system_event(HH_EVENT_NEW_DEVICES)
     # pylint: disable=no-self-use
     def newDevices(self, interface_id, dev_descriptions):
-        """
-        The CCU / Homegear informs us about newly added devices.
-        We react on that and add those devices as well.
-        """
-        LOG.debug(
-            "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
-            interface_id,
-            len(dev_descriptions),
-        )
-
-        if interface_id not in self._server.devices_raw_cache:
-            self._server.devices_raw_cache[interface_id] = []
-        if interface_id not in self._server.devices_raw_dict:
-            self._server.devices_raw_dict[interface_id] = {}
-        if interface_id not in self._server.names_cache:
-            self._server.names_cache[interface_id] = {}
-        if interface_id not in self._server.clients:
-            LOG.error(
-                "RPCFunctions.newDevices: Missing client for interface_id %s.",
+        async def _async_newDevices():
+            """
+            The CCU / Homegear informs us about newly added devices.
+            We react on that and add those devices as well.
+            """
+            _LOGGER.debug(
+                "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
                 interface_id,
+                len(dev_descriptions),
             )
+
+            if interface_id not in self._server.devices_raw_cache:
+                self._server.devices_raw_cache[interface_id] = []
+            if interface_id not in self._server.devices_raw_dict:
+                self._server.devices_raw_dict[interface_id] = {}
+            if interface_id not in self._server.names_cache:
+                self._server.names_cache[interface_id] = {}
+            if interface_id not in self._server.clients:
+                _LOGGER.error(
+                    "RPCFunctions.newDevices: Missing client for interface_id %s.",
+                    interface_id,
+                )
+                return True
+
+            # We need this list to avoid adding duplicates.
+            known_addresses = [
+                dd[ATTR_HM_ADDRESS]
+                for dd in self._server.devices_raw_cache[interface_id]
+            ]
+            client = self._server.clients[interface_id]
+            for dd in dev_descriptions:
+                try:
+                    if dd[ATTR_HM_ADDRESS] not in known_addresses:
+                        self._server.devices_raw_cache[interface_id].append(dd)
+                        await client.fetch_paramsets(dd)
+                except Exception:
+                    _LOGGER.exception("RPCFunctions.newDevices: Exception")
+            await self._server.save_devices_raw()
+            await self._server.save_paramsets()
+
+            handle_device_descriptions(self._server, interface_id, dev_descriptions)
+            await client.fetch_names()
+            await self._server.save_names()
+            create_devices(self._server)
             return True
 
-        # We need this list to avoid adding duplicates.
-        known_addresses = [
-            dd[ATTR_HM_ADDRESS] for dd in self._server.devices_raw_cache[interface_id]
-        ]
-        client = self._server.clients[interface_id]
-        for dd in dev_descriptions:
-            try:
-                if dd[ATTR_HM_ADDRESS] not in known_addresses:
-                    self._server.devices_raw_cache[interface_id].append(dd)
-                    client.fetch_paramsets(dd)
-            except Exception:
-                LOG.exception("RPCFunctions.newDevices: Exception")
-        self._server.save_devices_raw()
-        self._server.save_paramsets()
-
-        handle_device_descriptions(self._server, interface_id, dev_descriptions)
-        client.fetch_names()
-        self._server.save_names()
-        create_devices(self._server)
-        return True
+        return self._server.run_coroutine(_async_newDevices())
 
     @callback_system_event(HH_EVENT_DELETE_DEVICES)
     # pylint: disable=no-self-use
     def deleteDevices(self, interface_id, addresses):
-        """
-        The CCU / Homegear informs us about removed devices.
-        We react on that and remove those devices as well.
-        """
-        LOG.debug(
-            "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
-            interface_id,
-            str(addresses),
-        )
+        async def _async_deleteDevices():
+            """
+            The CCU / Homegear informs us about removed devices.
+            We react on that and remove those devices as well.
+            """
+            _LOGGER.debug(
+                "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
+                interface_id,
+                str(addresses),
+            )
 
-        self._server.devices_raw_cache[interface_id] = [
-            device
-            for device in self._server.devices_raw_cache[interface_id]
-            if not device[ATTR_HM_ADDRESS] in addresses
-        ]
-        self._server.save_devices_raw()
+            self._server.devices_raw_cache[interface_id] = [
+                device
+                for device in self._server.devices_raw_cache[interface_id]
+                if not device[ATTR_HM_ADDRESS] in addresses
+            ]
+            await self._server.save_devices_raw()
 
-        for address in addresses:
-            try:
-                if ":" not in address:
-                    del self._server.devices[interface_id][address]
-                del self._server.devices_raw_dict[interface_id][address]
-                del self._server.paramsets_cache[interface_id][address]
-                del self._server.names_cache[interface_id][address]
-                ha_device = self._server.hm_devices.get(address)
-                if ha_device:
-                    ha_device.remove_event_subscriptions()
-                    del self._server.hm_devices[address]
-            except KeyError:
-                LOG.exception("Failed to delete: %s", address)
-        self._server.save_paramsets()
-        self._server.save_names()
-        return True
+            for address in addresses:
+                try:
+                    if ":" not in address:
+                        del self._server.devices[interface_id][address]
+                    del self._server.devices_raw_dict[interface_id][address]
+                    del self._server.paramsets_cache[interface_id][address]
+                    del self._server.names_cache[interface_id][address]
+                    ha_device = self._server.hm_devices.get(address)
+                    if ha_device:
+                        ha_device.remove_event_subscriptions()
+                        del self._server.hm_devices[address]
+                except KeyError:
+                    _LOGGER.exception("Failed to delete: %s", address)
+            await self._server.save_paramsets()
+            await self._server.save_names()
+            return True
+
+        return self._server.run_coroutine(_async_deleteDevices())
 
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
     # pylint: disable=no-self-use
@@ -218,7 +231,7 @@ class RPCFunctions:
         Irrelevant, as currently only changes to link
         partners are reported.
         """
-        LOG.debug(
+        _LOGGER.debug(
             "RPCFunctions.updateDevice: interface_id = %s, address = %s, hint = %s",
             interface_id,
             address,
@@ -232,7 +245,7 @@ class RPCFunctions:
         """
         Replace a device. Probably irrelevant for us.
         """
-        LOG.debug(
+        _LOGGER.debug(
             "RPCFunctions.replaceDevice: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
             interface_id,
             old_device_address,
@@ -248,7 +261,7 @@ class RPCFunctions:
         Gets called when a known devices is put into learn-mode
         while installation mode is active.
         """
-        LOG.debug(
+        _LOGGER.debug(
             "RPCFunctions.readdedDevices: interface_id = %s, addresses = %s",
             interface_id,
             str(addresses),
@@ -275,16 +288,22 @@ class Server(threading.Thread):
     """
 
     def __init__(
-        self, instance_name, entry_id, local_ip=IP_ANY_V4, local_port=PORT_ANY
+        self, instance_name, entry_id, loop, local_ip=IP_ANY_V4, local_port=PORT_ANY
     ):
-        LOG.debug("Server.__init__")
+        _LOGGER.debug("Server.__init__")
         threading.Thread.__init__(self)
 
         self.instance_name = instance_name
         self.entry_id = entry_id
         self.local_ip = local_ip
         self.local_port = int(local_port)
-
+        self.json_executor = ThreadPoolExecutor(
+            max_workers=config.JSON_EXECUTOR_MAX_WORKERS
+        )
+        self.proxy_executor = ThreadPoolExecutor(
+            max_workers=config.PROXY_EXECUTOR_MAX_WORKERS
+        )
+        self._loop = loop
         # Caches for CCU data
         # {interface_id, {address, paramsets}}
         self.paramsets_cache = {}
@@ -324,10 +343,16 @@ class Server(threading.Thread):
         self._init_xml_rpc_server()
         self._load_caches()
 
+    @property
+    def loop(self):
+        if not self._loop:
+            self._loop = asyncio.get_running_loop()
+        return self._loop
+
     def _init_xml_rpc_server(self):
         """Setup server to handle requests from CCU / Homegear."""
         self._rpc_functions = RPCFunctions(self)
-        LOG.debug("Server.__init__: Setting up server")
+        _LOGGER.debug("Server.__init__: Setting up server")
         self.xml_rpc_server = SimpleXMLRPCServer(
             (self.local_ip, self.local_port),
             requestHandler=RequestHandler,
@@ -336,7 +361,7 @@ class Server(threading.Thread):
         self.local_port = self.xml_rpc_server.socket.getsockname()[1]
         self.xml_rpc_server.register_introspection_functions()
         self.xml_rpc_server.register_multicall_functions()
-        LOG.debug("Server.__init__: Registering RPC functions")
+        _LOGGER.debug("Server.__init__: Registering RPC functions")
         self.xml_rpc_server.register_instance(
             self._rpc_functions, allow_dotted_names=True
         )
@@ -351,14 +376,14 @@ class Server(threading.Thread):
                     self.paramsets_cache[interface_id] = {}
                 handle_device_descriptions(self, interface_id, device_descriptions)
         except json.decoder.JSONDecodeError:
-            LOG.warning("Failed to load caches.")
+            _LOGGER.warning("Failed to load caches.")
             self.clear_all()
 
     def run(self):
         """
         Run the server thread.
         """
-        LOG.info(
+        _LOGGER.info(
             "Server.run: Creating entities and starting server at http://%s:%i",
             self.local_ip,
             self.local_port,
@@ -368,67 +393,87 @@ class Server(threading.Thread):
         try:
             create_devices(self)
         except Exception as err:
-            LOG.exception("Server.run: Failed to create entities")
+            _LOGGER.exception("Server.run: Failed to create entities")
             raise Exception("entity-creation-error") from err
         self.xml_rpc_server.serve_forever()
 
-    def stop(self):
+    async def stop(self):
         """
         To stop the server we de-init from the CCU / Homegear,
         then shut down our XML-RPC server.
         """
         for name, client in self.clients.items():
-            if client.proxy_de_init():
-                LOG.info("Server.stop: Proxy de-initialized: %s", name)
-        LOG.info("Server.stop: Clearing existing clients. Please recreate them!")
+            if await client.proxy_de_init():
+                _LOGGER.info("Server.stop: Proxy de-initialized: %s", name)
+
+        _LOGGER.info("Server-Executor.stop: Stopping Executors.")
+        self.json_executor.shutdown()
+        self.proxy_executor.shutdown()
+        _LOGGER.info("Server.stop: Clearing existing clients. Please recreate them!")
         self.clients.clear()
         self.clients_by_init_url.clear()
-        LOG.info("Server.stop: Shutting down server")
+        _LOGGER.info("Server.stop: Shutting down server")
         self.xml_rpc_server.shutdown()
-        LOG.debug("Server.stop: Stopping Server")
+        _LOGGER.debug("Server.stop: Stopping Server")
         self.xml_rpc_server.server_close()
-        LOG.info("Server.stop: Server stopped")
-        LOG.debug("Server.stop: Removing instance")
+        _LOGGER.info("Server.stop: Server stopped")
+        _LOGGER.debug("Server.stop: Removing instance")
         del INSTANCES[self.instance_name]
 
-    def reconnect(self):
+    def create_task(self, target: Awaitable) -> None:
+        """Add task to the executor pool."""
+        self.loop.call_soon_threadsafe(self.async_create_task, target)
+
+    def async_create_task(self, target: Awaitable) -> asyncio.Task:
+        """Create a task from within the event loop. This method must be run in the event loop."""
+        return self.loop.create_task(target)
+
+    def run_coroutine(self, coro):
+        """call coroutine from sync"""
+        return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+
+    async def async_add_executor_job(self, fn, *args, **kwargs) -> Awaitable[T]:
+        """Add an executor job from within the event loop."""
+        return await self.loop.run_in_executor(None, fn, *args)
+
+    async def reconnect(self):
         """re-init all RPC proxy."""
         for client in self.clients.values():
-            client.proxy_init()
+            await client.proxy_re_init()
 
-    def get_all_system_variables(self):
+    async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
-        return self._get_client().get_all_system_variables()
+        return await self._get_client().get_all_system_variables()
 
-    def get_system_variable(self, name):
+    async def get_system_variable(self, name):
         """Get single system variable from CCU / Homegear."""
-        return self._get_client().get_system_variable(name)
+        return await self._get_client().get_system_variable(name)
 
-    def set_system_variable(self, name, value):
+    async def set_system_variable(self, name, value):
         """Set a system variable on CCU / Homegear."""
-        self._get_client().set_system_variable(name, value)
+        await self._get_client().set_system_variable(name, value)
 
-    def get_service_messages(self):
+    async def get_service_messages(self):
         """Get service messages from CCU / Homegear."""
-        self._get_client().get_service_messages()
+        await self._get_client().get_service_messages()
 
     # pylint: disable=too-many-arguments
-    def set_install_mode(
+    async def set_install_mode(
         self, interface_id, on=True, t=60, mode=1, address=None
     ) -> None:
         """Activate or deactivate install-mode on CCU / Homegear."""
-        self._get_client(interface_id).set_install_mode(
+        await self._get_client(interface_id).set_install_mode(
             on=on, t=t, mode=mode, address=address
         )
 
-    def get_install_mode(self, interface_id) -> int:
+    async def get_install_mode(self, interface_id) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
-        return self._get_client(interface_id).get_install_mode()
+        return await self._get_client(interface_id).get_install_mode()
 
     # pylint: disable=too-many-arguments
-    def put_paramset(self, interface_id, address, paramset, value, rx_mode=None):
+    async def put_paramset(self, interface_id, address, paramset, value, rx_mode=None):
         """Set paramsets manually."""
-        self._get_client(interface_id).put_paramset(
+        await self._get_client(interface_id).put_paramset(
             address=address, paramset=paramset, value=value, rx_mode=rx_mode
         )
 
@@ -456,7 +501,7 @@ class Server(threading.Thread):
             message = (
                 f"Can't resolve interface for {self.instance_name}: {interface_id}"
             )
-            LOG.warning(message)
+            _LOGGER.warning(message)
             raise ClientException(message, err)
 
     def get_hm_entity_by_parameter(self, address, parameter) -> Optional[GenericEntity]:
@@ -524,35 +569,43 @@ class Server(threading.Thread):
 
         return sorted(parameters)
 
-    def save_devices_raw(self):
+    async def save_devices_raw(self):
         """
         Save current device data in DEVICES_RAW to disk.
         """
-        if not check_cache_dir():
-            return
-        with open(
-            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
-            mode="w",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            json.dump(self.devices_raw_cache, fptr)
+
+        def _save_devices_raw():
+            if not check_cache_dir():
+                return DATA_NO_SAVE
+            with open(
+                file=os.path.join(
+                    config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"
+                ),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                json.dump(self.devices_raw_cache, fptr)
+            return DATA_SAVE_SUCCESS
+
+        return await self.async_add_executor_job(_save_devices_raw)
 
     def load_devices_raw(self):
         """
         Load device data from disk into devices_raw.
         """
         if not check_cache_dir():
-            return
+            return DATA_NO_LOAD
         if not os.path.exists(
             os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")
         ):
-            return
+            return DATA_NO_LOAD
         with open(
             file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
             mode="r",
             encoding=DEFAULT_ENCODING,
         ) as fptr:
             self.devices_raw_cache = json.load(fptr)
+        return DATA_LOAD_SUCCESS
 
     def clear_devices_raw(self):
         """
@@ -567,31 +620,36 @@ class Server(threading.Thread):
             )
         self.devices_raw_cache.clear()
 
-    def save_paramsets(self):
+    async def save_paramsets(self):
         """
         Save current paramset data in PARAMSETS to disk.
         """
-        if not check_cache_dir():
-            return
-        with open(
-            file=os.path.join(
-                config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"
-            ),
-            mode="w",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            json.dump(self.paramsets_cache, fptr)
+
+        def _save_paramsets():
+            if not check_cache_dir():
+                return DATA_NO_SAVE
+            with open(
+                file=os.path.join(
+                    config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"
+                ),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                json.dump(self.paramsets_cache, fptr)
+            return DATA_SAVE_SUCCESS
+
+        return await self.async_add_executor_job(_save_paramsets)
 
     def load_paramsets(self):
         """
         Load paramset data from disk into PARAMSETS.
         """
         if not check_cache_dir():
-            return
+            return DATA_NO_LOAD
         if not os.path.exists(
             os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")
         ):
-            return
+            return DATA_NO_LOAD
         with open(
             file=os.path.join(
                 config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"
@@ -600,6 +658,7 @@ class Server(threading.Thread):
             encoding=DEFAULT_ENCODING,
         ) as fptr:
             self.paramsets_cache = json.load(fptr)
+        return DATA_LOAD_SUCCESS
 
     def clear_paramsets(self):
         """
@@ -614,35 +673,43 @@ class Server(threading.Thread):
             )
         self.paramsets_cache.clear()
 
-    def save_names(self):
+    async def save_names(self):
         """
         Save current name data in NAMES to disk.
         """
-        if not check_cache_dir():
-            return
-        with open(
-            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"),
-            mode="w",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            json.dump(self.names_cache, fptr)
+
+        def _save_names():
+            if not check_cache_dir():
+                return DATA_NO_SAVE
+            with open(
+                file=os.path.join(
+                    config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"
+                ),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                json.dump(self.names_cache, fptr)
+            return DATA_SAVE_SUCCESS
+
+        return await self.async_add_executor_job(_save_names)
 
     def load_names(self):
         """
         Load name data from disk into NAMES.
         """
         if not check_cache_dir():
-            return
+            return DATA_NO_LOAD
         if not os.path.exists(
             os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")
         ):
-            return
+            return DATA_NO_LOAD
         with open(
             file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"),
             mode="r",
             encoding=DEFAULT_ENCODING,
         ) as fptr:
             self.names_cache = json.load(fptr)
+        return DATA_LOAD_SUCCESS
 
     def clear_names(self):
         """

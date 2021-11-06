@@ -8,7 +8,7 @@ import logging
 from hahomematic.const import HA_PLATFORM_SWITCH, TYPE_ACTION
 from hahomematic.entity import GenericEntity
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
@@ -36,9 +36,8 @@ class HmSwitch(GenericEntity):
 
         return self._state
 
-    @state.setter
-    def state(self, value):
+    async def set_state(self, value):
         if self._type == TYPE_ACTION:
-            self.send_value(True)
+            await self.send_value(True)
         else:
-            self.send_value(value)
+            await self.send_value(value)

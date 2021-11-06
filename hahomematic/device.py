@@ -40,7 +40,7 @@ from hahomematic.platforms.select import HmSelect
 from hahomematic.platforms.sensor import HmSensor
 from hahomematic.platforms.switch import HmSwitch
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -58,7 +58,7 @@ class HmDevice:
         self.client = self.server.clients[self.interface_id]
         self.address = address
         self.channels = self.server.devices[self.interface_id][self.address]
-        LOG.debug(
+        _LOGGER.debug(
             "Device.__init__: Initializing device: %s, %s",
             self.interface_id,
             self.address,
@@ -79,14 +79,14 @@ class HmDevice:
         if self.address in self.server.names_cache.get(self.interface_id, {}):
             self.name = self.server.names_cache[self.interface_id][self.address]
         else:
-            LOG.info(
+            _LOGGER.info(
                 "Device.__init__: Using auto-generated name for %s %s",
                 self.device_type,
                 self.address,
             )
             self.name = f"{self.device_type}_{self.address}"
 
-        LOG.debug(
+        _LOGGER.debug(
             "Device.__init__: Initialized device: %s, %s, %s, %s",
             self.interface_id,
             self.address,
@@ -161,7 +161,7 @@ class HmDevice:
         new_entities: set[GenericEntity] = set()
         for channel in self.channels:
             if channel not in self.server.paramsets_cache[self.interface_id]:
-                LOG.warning(
+                _LOGGER.warning(
                     "Device.create_entities: Skipping channel %s, missing paramsets.",
                     channel,
                 )
@@ -173,7 +173,7 @@ class HmDevice:
                     self.interface_id
                 ][channel][paramset].items():
                     if not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
-                        LOG.debug(
+                        _LOGGER.debug(
                             "Device.create_entities: Skipping %s (no event)", parameter
                         )
                         continue
@@ -193,7 +193,7 @@ class HmDevice:
                             new_entities.add(entity)
         # create custom entities
         if self.custom_device:
-            LOG.debug(
+            _LOGGER.debug(
                 "Device.create_entities: Handling custom device integration: %s, %s, %s",
                 self.interface_id,
                 self.address,
@@ -214,7 +214,7 @@ class HmDevice:
 
         unique_id = generate_unique_id(address, parameter)
 
-        LOG.debug(
+        _LOGGER.debug(
             "create_event: Creating action_event for %s, %s, %s",
             address,
             parameter,
@@ -253,16 +253,18 @@ class HmDevice:
             or parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS))
             and parameter not in WHITELIST_PARAMETERS
         ):
-            LOG.debug("create_entity: Ignoring parameter: %s (%s)", parameter, address)
+            _LOGGER.debug(
+                "create_entity: Ignoring parameter: %s (%s)", parameter, address
+            )
             return None
         if (address, parameter) not in self.server.entity_event_subscriptions:
             self.server.entity_event_subscriptions[(address, parameter)] = []
 
         unique_id = generate_unique_id(address, parameter)
         if unique_id in self.server.hm_entities:
-            LOG.debug("create_entity: Skipping %s (already exists)", unique_id)
+            _LOGGER.debug("create_entity: Skipping %s (already exists)", unique_id)
             return None
-        LOG.debug(
+        _LOGGER.debug(
             "create_entity: Creating entity for %s, %s, %s",
             address,
             parameter,
@@ -271,7 +273,9 @@ class HmDevice:
         entity = None
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
             if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
-                LOG.debug("create_entity: switch (action): %s %s", address, parameter)
+                _LOGGER.debug(
+                    "create_entity: switch (action): %s %s", address, parameter
+                )
                 entity = HmSwitch(
                     device=self,
                     unique_id=unique_id,
@@ -281,7 +285,7 @@ class HmDevice:
                 )
             else:
                 if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
-                    LOG.debug("create_entity: switch: %s %s", address, parameter)
+                    _LOGGER.debug("create_entity: switch: %s %s", address, parameter)
                     entity = HmSwitch(
                         device=self,
                         unique_id=unique_id,
@@ -290,7 +294,7 @@ class HmDevice:
                         parameter_data=parameter_data,
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
-                    LOG.debug("create_entity: select: %s %s", address, parameter)
+                    _LOGGER.debug("create_entity: select: %s %s", address, parameter)
                     entity = HmSelect(
                         device=self,
                         unique_id=unique_id,
@@ -299,7 +303,7 @@ class HmDevice:
                         parameter_data=parameter_data,
                     )
                 elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
-                    LOG.debug("create_entity: number: %s %s", address, parameter)
+                    _LOGGER.debug("create_entity: number: %s %s", address, parameter)
                     entity = HmNumber(
                         device=self,
                         unique_id=unique_id,
@@ -309,7 +313,7 @@ class HmDevice:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
                     # There is currently no entity platform in HA for this.
-                    LOG.debug("create_entity: text: %s %s", address, parameter)
+                    _LOGGER.debug("create_entity: text: %s %s", address, parameter)
                     entity = HmText(
                         device=self,
                         unique_id=unique_id,
@@ -318,7 +322,7 @@ class HmDevice:
                         parameter_data=parameter_data,
                     )
                 else:
-                    LOG.warning(
+                    _LOGGER.warning(
                         "unsupported actor: %s %s %s",
                         address,
                         parameter,
@@ -326,7 +330,7 @@ class HmDevice:
                     )
         else:
             if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
-                LOG.debug("create_entity: binary_sensor: %s %s", address, parameter)
+                _LOGGER.debug("create_entity: binary_sensor: %s %s", address, parameter)
                 entity = HmBinarySensor(
                     device=self,
                     unique_id=unique_id,
@@ -335,7 +339,7 @@ class HmDevice:
                     parameter_data=parameter_data,
                 )
             else:
-                LOG.debug("create_entity: sensor: %s %s", address, parameter)
+                _LOGGER.debug("create_entity: sensor: %s %s", address, parameter)
                 entity = HmSensor(
                     device=self,
                     unique_id=unique_id,
@@ -357,12 +361,12 @@ def create_devices(server) -> None:
     new_entities = set[GenericEntity]()
     for interface_id, client in server.clients.items():
         if not client:
-            LOG.warning(
+            _LOGGER.warning(
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
         if interface_id not in server.paramsets_cache:
-            LOG.warning(
+            _LOGGER.warning(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,
             )
@@ -371,7 +375,7 @@ def create_devices(server) -> None:
             # Do we check for duplicates here? For now we do.
             device = None
             if device_address in server.hm_devices:
-                LOG.debug(
+                _LOGGER.debug(
                     "create_devices: Skipping device %s on %s, already exists.",
                     device_address,
                     interface_id,
@@ -382,7 +386,7 @@ def create_devices(server) -> None:
                 new_devices.add(device_address)
                 server.hm_devices[device_address] = device
             except Exception:
-                LOG.exception(
+                _LOGGER.exception(
                     "create_devices: Failed to create device: %s, %s",
                     interface_id,
                     device_address,
@@ -390,7 +394,7 @@ def create_devices(server) -> None:
             try:
                 new_entities.update(device.create_entities())
             except Exception:
-                LOG.exception(
+                _LOGGER.exception(
                     "create_devices: Failed to create entities: %s, %s",
                     interface_id,
                     device_address,
