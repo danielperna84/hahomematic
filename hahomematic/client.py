@@ -142,8 +142,7 @@ class Client:
             tls=self.tls,
         )
         self.proxy = ThreadPoolServerProxy(
-            self.server.proxy_executor,
-            True,
+            self.server.async_add_proxy_executor_job,
             self.api_url,
             tls=self.tls,
             verify_tls=self.verify_tls,  # , loop=self.server.loop
@@ -373,7 +372,7 @@ class Client:
                 _LOGGER.exception("helpers.json_rpc_post: Exception")
                 return {"error": str(err), "result": {}}
 
-        return self.server.json_executor.submit(_sync_json_rpc_post).result()
+        return await self.server.async_add_json_executor_job(_sync_json_rpc_post)
 
     async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""

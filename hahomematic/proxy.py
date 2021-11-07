@@ -68,13 +68,12 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
     """
 
     def __init__(
-        self, proxy_executor: ThreadPoolExecutor, is_async: bool, *args, **kwargs
+        self, executor_func, *args, **kwargs
     ):
         """
         Initialize new proxy for server and get local ip
         """
-        self._proxy_executor = proxy_executor
-        self._is_async = is_async
+        self._executor_func = executor_func
         self._tls = kwargs.pop("tls", False)
         self._verify_tls = kwargs.pop("verify_tls", True)
         if self._tls and not self._verify_tls and self._verify_tls is not None:
@@ -87,28 +86,13 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
         """
         parent = xmlrpc.client.ServerProxy
         # pylint: disable=protected-access
-        return self._proxy_executor.submit(
-            parent._ServerProxy__request, self, *args, **kwargs
-        ).result()
-
-    def __sync_request(self, *args, **kwargs):
-        """
-        Call method on server side
-        """
-        parent = xmlrpc.client.ServerProxy
-        # pylint: disable=protected-access
-        return self._proxy_executor.submit(
-            parent._ServerProxy__request, self, *args, **kwargs
-        ).result()
+        return await self._executor_func(parent._ServerProxy__request, self, *args, **kwargs)
 
     def __getattr__(self, *args, **kwargs):
         """
         Magic method dispatcher
         """
-        if self._is_async:
-            return xmlrpc.client._Method(self.__async_request, *args, **kwargs)
-        else:
-            return xmlrpc.client._Method(self.__sync_request, *args, **kwargs)
+        return xmlrpc.client._Method(self.__async_request, *args, **kwargs)
 
 
 # # pylint: disable=too-few-public-methods

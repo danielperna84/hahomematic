@@ -297,10 +297,10 @@ class Server(threading.Thread):
         self.entry_id = entry_id
         self.local_ip = local_ip
         self.local_port = int(local_port)
-        self.json_executor = ThreadPoolExecutor(
+        self._json_executor = ThreadPoolExecutor(
             max_workers=config.JSON_EXECUTOR_MAX_WORKERS
         )
-        self.proxy_executor = ThreadPoolExecutor(
+        self._proxy_executor = ThreadPoolExecutor(
             max_workers=config.PROXY_EXECUTOR_MAX_WORKERS
         )
         self._loop = loop
@@ -407,8 +407,8 @@ class Server(threading.Thread):
                 _LOGGER.info("Server.stop: Proxy de-initialized: %s", name)
 
         _LOGGER.info("Server-Executor.stop: Stopping Executors.")
-        self.json_executor.shutdown()
-        self.proxy_executor.shutdown()
+        self._json_executor.shutdown()
+        self._proxy_executor.shutdown()
         _LOGGER.info("Server.stop: Clearing existing clients. Please recreate them!")
         self.clients.clear()
         self.clients_by_init_url.clear()
@@ -432,9 +432,17 @@ class Server(threading.Thread):
         """call coroutine from sync"""
         return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
 
-    async def async_add_executor_job(self, fn, *args, **kwargs) -> Awaitable[T]:
+    async def async_add_executor_job(self, fn, *args) -> Awaitable[T]:
         """Add an executor job from within the event loop."""
         return await self.loop.run_in_executor(None, fn, *args)
+
+    async def async_add_proxy_executor_job(self, fn, *args) -> Awaitable[T]:
+        """Add an executor job from within the event loop ."""
+        return await self.loop.run_in_executor(self._proxy_executor, fn, *args)
+
+    async def async_add_json_executor_job(self, fn, *args) -> Awaitable[T]:
+        """Add an executor job from within the event loop."""
+        return await self.loop.run_in_executor(self._json_executor, fn, *args)
 
     async def reconnect(self):
         """re-init all RPC proxy."""
