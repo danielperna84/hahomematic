@@ -8,7 +8,7 @@ import logging
 from hahomematic.const import HA_PLATFORM_SELECT
 from hahomematic.entity import GenericEntity
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
@@ -36,10 +36,9 @@ class HmSelect(GenericEntity):
             return self._value_list[self._state]
         return self._default
 
-    @state.setter
-    def state(self, value):
+    async def set_state(self, value):
         # We allow setting the value via index as well, just in case.
         if isinstance(value, int):
-            self.send_value(value)
+            await self.send_value(value)
         else:
-            self.send_value(self._value_list.index(value))
+            await self.send_value(self._value_list.index(value))

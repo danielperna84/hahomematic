@@ -11,7 +11,6 @@ from typing import Any
 
 from hahomematic.const import (
     ATTR_ADDRESS,
-    ATTR_HM_CONTROL,
     ATTR_HM_DEFAULT,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
@@ -33,14 +32,16 @@ from hahomematic.const import (
 )
 from hahomematic.devices.device_description import (
     DD_ADDRESS_PREFIX,
+    DD_DEFAULT_ENTITIES,
     DD_DEVICE,
     DD_ENTITIES,
     DD_FIELDS,
     DD_PARAM_NAME,
+    device_description,
 )
 from hahomematic.helpers import get_entity_name
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -113,7 +114,7 @@ class BaseEntity(ABC):
         Do what is needed when the state of the entity has been updated.
         """
         if self._update_callback is None:
-            LOG.debug("Entity.update_entity: No callback defined.")
+            _LOGGER.debug("Entity.update_entity: No callback defined.")
             return
         self._set_last_update()
         # pylint: disable=not-callable
@@ -133,7 +134,7 @@ class BaseEntity(ABC):
         Do what is needed when the entity has been removed.
         """
         if self._remove_callback is None:
-            LOG.debug("Entity.remove_entity: No callback defined.")
+            _LOGGER.debug("Entity.remove_entity: No callback defined.")
             return
         # pylint: disable=not-callable
         self._remove_callback(self.unique_id)
@@ -143,7 +144,7 @@ class BaseEntity(ABC):
         """Remove existing event subscriptions"""
 
     @abstractmethod
-    def load_data(self) -> None:
+    async def load_data(self) -> None:
         """Load data"""
 
     def _set_last_update(self) -> None:
@@ -240,7 +241,7 @@ class GenericEntity(BaseEntity):
         if self._state is value:
             return
 
-        LOG.debug(
+        _LOGGER.debug(
             "Entity.event: %s, %s, %s, new: %s, old: %s",
             interface_id,
             address,
@@ -249,21 +250,21 @@ class GenericEntity(BaseEntity):
             self._state,
         )
         if interface_id != self._interface_id:
-            LOG.warning(
+            _LOGGER.warning(
                 "Entity.event: Incorrect interface_id: %s - should be: %s",
                 interface_id,
                 self._interface_id,
             )
             return
         if address != self.address:
-            LOG.warning(
+            _LOGGER.warning(
                 "Entity.event: Incorrect address: %s - should be: %s",
                 address,
                 self.address,
             )
             return
         if parameter != self.parameter:
-            LOG.warning(
+            _LOGGER.warning(
                 "Entity.event: Incorrect parameter: %s - should be: %s",
                 parameter,
                 self.parameter,
@@ -299,13 +300,13 @@ class GenericEntity(BaseEntity):
         """Return the value_list."""
         return self._value_list
 
-    def send_value(self, value) -> None:
+    async def send_value(self, value) -> None:
         """send value to ccu."""
         try:
-            self.proxy.setValue(self.address, self.parameter, value)
+            await self.proxy.setValue(self.address, self.parameter, value)
         # pylint: disable=broad-except
         except Exception:
-            LOG.exception(
+            _LOGGER.exception(
                 "generic_entity: Failed to set state for: %s, %s, %s, %s",
                 self._device.device_type,
                 self.address,
@@ -313,23 +314,23 @@ class GenericEntity(BaseEntity):
                 value,
             )
 
-    def load_data(self) -> int:
+    async def load_data(self) -> int:
         """Load data"""
         if self._updated_within_minutes():
             return DATA_NO_LOAD
         try:
             if self._operations & OPERATION_READ:
-                self._state = self.proxy.getValue(self.address, self.parameter)
+                self._state = await self.proxy.getValue(self.address, self.parameter)
                 self.update_entity()
             for entity in self._entities.values():
                 if entity:
-                    entity.load_data()
+                    await entity.load_data()
 
             self.update_entity()
             return DATA_LOAD_SUCCESS
         # pylint: disable=broad-except
         except Exception as err:
-            LOG.debug(
+            _LOGGER.debug(
                 " %s: Failed to get state for %s, %s, %s: %s",
                 self.platform,
                 self._device.device_type,
@@ -378,14 +379,14 @@ class CustomEntity(BaseEntity):
         """
 
         if interface_id != self._interface_id:
-            LOG.warning(
+            _LOGGER.warning(
                 "CustomEntity.event: Incorrect interface_id: %s - should be: %s",
                 interface_id,
                 self._interface_id,
             )
             return
         if address != self.address:
-            LOG.warning(
+            _LOGGER.warning(
                 "CustomEntity.event: Incorrect address: %s - should be: %s",
                 address,
                 self.address,
@@ -407,21 +408,29 @@ class CustomEntity(BaseEntity):
             entity = self._device.get_hm_entity(f_address, p_name)
             if entity:
                 self._entities[f_name] = entity
+        # add device entities
         for data in self._device_desc[DD_ENTITIES].values():
             e_address = f"{self.address}{data[DD_ADDRESS_PREFIX]}"
             ep_name = data[DD_PARAM_NAME]
             entity = self._device.get_hm_entity(e_address, ep_name)
             if entity:
                 entity.create_in_ha = True
+        # add default entities
+        for data in device_description[DD_DEFAULT_ENTITIES].values():
+            e_address = f"{self.address}{data[DD_ADDRESS_PREFIX]}"
+            ep_name = data[DD_PARAM_NAME]
+            entity = self._device.get_hm_entity(e_address, ep_name)
+            if entity:
+                entity.create_in_ha = True
 
-    def load_data(self) -> int:
+    async def load_data(self) -> int:
         """Load data"""
         if self._updated_within_minutes():
             return DATA_NO_LOAD
 
         for entity in self._entities.values():
             if entity:
-                entity.load_data()
+                await entity.load_data()
 
         self.update_entity()
         return DATA_LOAD_SUCCESS
@@ -440,11 +449,11 @@ class CustomEntity(BaseEntity):
             return getattr(entity, attr_name)
         return None
 
-    def _send_value(self, field_name, value) -> None:
+    async def _send_value(self, field_name, value) -> None:
         """send value to ccu"""
         entity = self._entities.get(field_name)
         if entity:
-            entity.send_value(value)
+            await entity.send_value(value)
 
 
 def fix_unit(unit):

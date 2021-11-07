@@ -2,10 +2,13 @@
 """
 The client-object and its methods.
 """
-
+import json
 import logging
 import socket
+import ssl
 import time
+import urllib
+import urllib.request
 
 from hahomematic import config
 from hahomematic.const import (
@@ -34,16 +37,24 @@ from hahomematic.const import (
     DEFAULT_USERNAME,
     DEFAULT_VERIFY_TLS,
     LOCALHOST,
+    PATH_JSON_RPC,
     PORT_RFD,
+    PROXY_DE_INIT_FAILED,
+    PROXY_DE_INIT_SKIPPED,
+    PROXY_DE_INIT_SUCCESS,
     PROXY_INIT_FAILED,
     PROXY_INIT_SKIPPED,
     PROXY_INIT_SUCCESS,
     RELEVANT_PARAMSETS,
 )
-from hahomematic.helpers import build_api_url, json_rpc_post, parse_ccu_sys_var
-from hahomematic.proxy import LockingServerProxy
+from hahomematic.helpers import build_api_url, parse_ccu_sys_var
+from hahomematic.proxy import ThreadPoolServerProxy
 
-LOG = logging.getLogger(__name__)
+VERIFIED_CTX = ssl.create_default_context()
+UNVERIFIED_CTX = ssl.create_default_context()
+UNVERIFIED_CTX.check_hostname = False
+UNVERIFIED_CTX.verify_mode = ssl.CERT_NONE
+_LOGGER = logging.getLogger(__name__)
 
 
 class ClientException(Exception):
@@ -103,14 +114,14 @@ class Client:
             socket.gethostbyname(self.host)
         # pylint: disable=broad-except
         except Exception as err:
-            LOG.warning("Can't resolve host for %s: %s", self.name, self.host)
+            _LOGGER.warning("Can't resolve host for %s: %s", self.name, self.host)
             raise ClientException(err) from err
         tmpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         tmpsocket.settimeout(config.TIMEOUT)
         tmpsocket.connect((self.host, self.port))
         self.local_ip = tmpsocket.getsockname()[0]
         tmpsocket.close()
-        LOG.debug("Got local ip: %s", self.local_ip)
+        _LOGGER.debug("Got local ip: %s", self.local_ip)
 
         # Get callback address
         if callback_host is not None:
@@ -130,12 +141,29 @@ class Client:
             password=self.password,
             tls=self.tls,
         )
-        self.proxy = LockingServerProxy(
-            self.api_url, tls=self.tls, verify_tls=self.verify_tls
+        self.proxy = ThreadPoolServerProxy(
+            self.server.async_add_proxy_executor_job,
+            self.api_url,
+            tls=self.tls,
+            verify_tls=self.verify_tls,  # , loop=self.server.loop
         )
-        self.initialized = 0
+        self.time_initialized = 0
+        self.version = None
+        self.backend = None
+        self.session = None
+
+        self.server.clients[self.interface_id] = self
+        if self.init_url not in self.server.clients_by_init_url:
+            self.server.clients_by_init_url[self.init_url] = []
+        self.server.clients_by_init_url[self.init_url].append(self)
+
+    async def proxy_init(self) -> int:
+        """
+        To receive events the proxy has to tell the CCU / Homegear
+        where to send the events. For that we call the init-method.
+        """
         try:
-            self.version = self.proxy.getVersion()
+            self.version = await self.proxy.getVersion()
         except Exception as err:
             raise Exception(
                 f"Failed to get backend version. Not creating client: {self.name}"
@@ -146,69 +174,70 @@ class Client:
         else:
             self.backend = BACKEND_CCU
             self.session = False
-        self.server.clients[self.interface_id] = self
-        if self.init_url not in self.server.clients_by_init_url:
-            self.server.clients_by_init_url[self.init_url] = []
-        self.server.clients_by_init_url[self.init_url].append(self)
 
-    def proxy_init(self):
-        """
-        To receive events the proxy has to tell the CCU / Homegear
-        where to send the events. For that we call the init-method.
-        """
         if not self.connect:
-            LOG.debug("proxy_init: Skipping init for %s", self.name)
+            _LOGGER.debug("proxy_init: Skipping init for %s", self.name)
             return PROXY_INIT_SKIPPED
         if self.server is None:
-            LOG.warning("proxy_init: Local server missing for %s", self.name)
-            self.initialized = 0
+            _LOGGER.warning("proxy_init: Local server missing for %s", self.name)
+            self.time_initialized = 0
             return PROXY_INIT_FAILED
         try:
-            LOG.debug("proxy_init: init('%s', '%s')", self.init_url, self.interface_id)
-            self.proxy.init(self.init_url, self.interface_id)
-            LOG.info("proxy_init: Proxy for %s initialized", self.name)
+            _LOGGER.debug(
+                "proxy_init: init('%s', '%s')", self.init_url, self.interface_id
+            )
+            await self.proxy.init(self.init_url, self.interface_id)
+            _LOGGER.info("proxy_init: Proxy for %s initialized", self.name)
         # pylint: disable=broad-except
         except Exception:
-            LOG.exception("proxy_init: Failed to initialize proxy for %s", self.name)
-            self.initialized = 0
+            _LOGGER.exception(
+                "proxy_init: Failed to initialize proxy for %s", self.name
+            )
+            self.time_initialized = 0
             return PROXY_INIT_FAILED
-        self.initialized = int(time.time())
+        self.time_initialized = int(time.time())
         return PROXY_INIT_SUCCESS
 
-    def proxy_de_init(self):
+    async def proxy_de_init(self) -> int:
         """
         De-init to stop CCU from sending events for this remote.
         """
         if self.session:
-            self.json_rpc_logout()
+            await self.json_rpc_logout()
         if not self.connect:
-            LOG.debug("proxy_de_init: Skipping de-init for %s", self.name)
-            return PROXY_INIT_SKIPPED
+            _LOGGER.debug("proxy_de_init: Skipping de-init for %s", self.name)
+            return PROXY_DE_INIT_SKIPPED
         if self.server is None:
-            LOG.warning("proxy_de_init: Local server missing for %s", self.name)
-            return PROXY_INIT_FAILED
-        if not self.initialized:
-            LOG.debug(
+            _LOGGER.warning("proxy_de_init: Local server missing for %s", self.name)
+            return PROXY_DE_INIT_FAILED
+        if not self.time_initialized:
+            _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)", self.name
             )
-            return PROXY_INIT_SKIPPED
+            return PROXY_DE_INIT_SKIPPED
         try:
-            LOG.debug("proxy_de_init: init('%s')", self.init_url)
-            self.proxy.init(self.init_url)
+            _LOGGER.debug("proxy_de_init: init('%s')", self.init_url)
+            await self.proxy.init(self.init_url)
         # pylint: disable=broad-except
         except Exception:
-            LOG.exception(
+            _LOGGER.exception(
                 "proxy_de_init: Failed to de-initialize proxy for %s", self.name
             )
-            return PROXY_INIT_FAILED
+            return PROXY_DE_INIT_FAILED
         # TODO: Should the de-init really be skipped for other clients?
         #  for client in server.clients_by_init_url.get(self.init_url, []):
-        #     LOG.debug("proxy_de_init: Setting client %s initialized status to False.", client.id)
+        #     _LOGGER.debug("proxy_de_init: Setting client %s initialized status to False.", client.id)
         #     client.initialized = False
-        self.initialized = 0
-        return PROXY_INIT_SUCCESS
+        self.time_initialized = 0
+        return PROXY_DE_INIT_SUCCESS
 
-    def json_rpc_login(self):
+    async def proxy_re_init(self) -> int:
+        """Reinit Proxy"""
+        de_init_status = await self.proxy_de_init()
+        if de_init_status is not PROXY_DE_INIT_FAILED:
+            return await self.proxy_init()
+
+    async def json_rpc_login(self):
         """Login to CCU and return session."""
         self.session = False
         try:
@@ -216,7 +245,7 @@ class Client:
                 ATTR_USERNAME: self.username,
                 ATTR_PASSWORD: self.password,
             }
-            response = json_rpc_post(
+            response = await self.json_rpc_post(
                 self.host,
                 self.json_port,
                 "Session.login",
@@ -228,21 +257,21 @@ class Client:
                 self.session = response[ATTR_RESULT]
 
             if not self.session:
-                LOG.warning(
+                _LOGGER.warning(
                     "json_rpc_login: Unable to open session: %s", response[ATTR_ERROR]
                 )
         # pylint: disable=broad-except
         except Exception:
-            LOG.exception("json_rpc_login: Exception while logging in via JSON-RPC")
+            _LOGGER.exception("json_rpc_login: Exception while logging in via JSON-RPC")
 
-    def json_rpc_renew(self):
+    async def json_rpc_renew(self):
         """Renew JSON-RPC session or perform login."""
         if not self.session:
-            self.json_rpc_login()
+            await self.json_rpc_login()
             return
 
         try:
-            response = json_rpc_post(
+            response = await self.json_rpc_post(
                 self.host,
                 self.json_port,
                 "Session.renew",
@@ -253,18 +282,20 @@ class Client:
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 self.session = response[ATTR_RESULT]
                 return
-            self.json_rpc_login()
+            await self.json_rpc_login()
         except Exception:
-            LOG.exception("json_rpc_renew: Exception while renewing JSON-RPC session.")
+            _LOGGER.exception(
+                "json_rpc_renew: Exception while renewing JSON-RPC session."
+            )
 
-    def json_rpc_logout(self):
+    async def json_rpc_logout(self):
         """Logout of CCU."""
         if not self.session:
-            LOG.warning("json_rpc_logout: Not logged in. Not logging out.")
+            _LOGGER.warning("json_rpc_logout: Not logged in. Not logging out.")
             return
         try:
             params = {"_session_id_": self.session}
-            response = json_rpc_post(
+            response = await self.json_rpc_post(
                 self.host,
                 self.json_port,
                 "Session.logout",
@@ -273,25 +304,89 @@ class Client:
                 verify_tls=self.verify_tls,
             )
             if response[ATTR_ERROR]:
-                LOG.warning("json_rpc_logout: Logout error: %s", response[ATTR_RESULT])
+                _LOGGER.warning(
+                    "json_rpc_logout: Logout error: %s", response[ATTR_RESULT]
+                )
         # pylint: disable=broad-except
         except Exception:
-            LOG.exception("json_rpc_logout: Exception while logging in via JSON-RPC")
+            _LOGGER.exception(
+                "json_rpc_logout: Exception while logging in via JSON-RPC"
+            )
         return
 
-    def get_all_system_variables(self):
+    async def json_rpc_post(
+        self,
+        host,
+        json_port,
+        method,
+        params=None,
+        tls=DEFAULT_TLS,
+        verify_tls=DEFAULT_VERIFY_TLS,
+    ):
+        if params is None:
+            params = {}
+
+        def _sync_json_rpc_post():
+            """Reusable JSON-RPC POST function."""
+            _LOGGER.debug("helpers.json_rpc_post: Method: %s", method)
+            try:
+                payload = json.dumps(
+                    {"method": method, "params": params, "jsonrpc": "1.1", "id": 0}
+                ).encode("utf-8")
+
+                headers = {
+                    "Content-Type": "application/json",
+                    "Content-Length": len(payload),
+                }
+                if tls:
+                    api_endpoint = f"https://{host}:{json_port}{PATH_JSON_RPC}"
+                else:
+                    api_endpoint = f"http://{host}:{json_port}{PATH_JSON_RPC}"
+                _LOGGER.debug("helpers.json_rpc_post: API-Endpoint: %s", api_endpoint)
+                req = urllib.request.Request(api_endpoint, payload, headers)
+                if tls:
+                    if verify_tls:
+                        resp = urllib.request.urlopen(
+                            req, timeout=config.TIMEOUT, context=VERIFIED_CTX
+                        )
+                    else:
+                        resp = urllib.request.urlopen(
+                            req, timeout=config.TIMEOUT, context=UNVERIFIED_CTX
+                        )
+                else:
+                    resp = urllib.request.urlopen(req, timeout=config.TIMEOUT)
+                if resp.status == 200:
+                    try:
+                        return json.loads(resp.read().decode("utf-8"))
+                    except ValueError:
+                        _LOGGER.exception(
+                            "helpers.json_rpc_post: Failed to parse JSON. Trying workaround."
+                        )
+                        # Workaround for bug in CCU
+                        return json.loads(resp.read().decode("utf-8").replace("\\", ""))
+                else:
+                    _LOGGER.error("helpers.json_rpc_post: Status: %i", resp.status)
+                    return {"error": resp.status, "result": {}}
+            # pylint: disable=broad-except
+            except Exception as err:
+                _LOGGER.exception("helpers.json_rpc_post: Exception")
+                return {"error": str(err), "result": {}}
+
+        return await self.server.async_add_json_executor_job(_sync_json_rpc_post)
+
+    async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
         variables = {}
         if self.backend == BACKEND_CCU and self.username and self.password:
-            LOG.debug(
+            _LOGGER.debug(
                 "get_all_system_variables: Getting all System variables via JSON-RPC"
             )
-            self.json_rpc_renew()
+            await self.json_rpc_renew()
             if not self.session:
                 return variables
             try:
                 params = {"_session_id_": self.session}
-                response = json_rpc_post(
+                response = await self.json_rpc_post(
                     self.host,
                     self.json_port,
                     "SysVar.getAll",
@@ -305,25 +400,25 @@ class Client:
                         variables[key] = value
 
             except Exception:
-                LOG.exception("get_all_system_variables: Exception")
+                _LOGGER.exception("get_all_system_variables: Exception")
         else:
             try:
-                variables = self.proxy.getAllSystemVariables()
+                variables = await self.proxy.getAllSystemVariables()
             except Exception:
-                LOG.exception("get_all_system_variables: Exception")
+                _LOGGER.exception("get_all_system_variables: Exception")
         return variables
 
-    def get_system_variable(self, name):
+    async def get_system_variable(self, name):
         """Get single system variable from CCU / Homegear."""
         var = None
         if self.backend == BACKEND_CCU and self.username and self.password:
-            LOG.debug("get_system_variable: Getting System variable via JSON-RPC")
-            self.json_rpc_renew()
+            _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
+            await self.json_rpc_renew()
             if not self.session:
                 return var
             try:
                 params = {"_session_id_": self.session, ATTR_NAME: name}
-                response = json_rpc_post(
+                response = await self.json_rpc_post(
                     self.host,
                     self.json_port,
                     "SysVar.getValueByName",
@@ -339,24 +434,26 @@ class Client:
                         var = response[ATTR_RESULT] == "true"
 
             except Exception:
-                LOG.exception("get_system_variable: Exception")
+                _LOGGER.exception("get_system_variable: Exception")
         else:
             try:
-                var = self.proxy.getSystemVariable(name)
+                var = await self.proxy.getSystemVariable(name)
             except Exception:
-                LOG.exception("get_system_variable: Exception")
+                _LOGGER.exception("get_system_variable: Exception")
         return var
 
-    def delete_system_variable(self, name):
+    async def delete_system_variable(self, name):
         """Delete a system variable from CCU / Homegear."""
         if self.backend == BACKEND_CCU and self.username and self.password:
-            LOG.debug("delete_system_variable: Getting System variable via JSON-RPC")
-            self.json_rpc_renew()
+            _LOGGER.debug(
+                "delete_system_variable: Getting System variable via JSON-RPC"
+            )
+            await self.json_rpc_renew()
             if not self.session:
                 return
             try:
                 params = {"_session_id_": self.session, ATTR_NAME: name}
-                response = json_rpc_post(
+                response = await self.json_rpc_post(
                     self.host,
                     self.json_port,
                     "SysVar.deleteSysVarByName",
@@ -366,21 +463,21 @@ class Client:
                 )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     deleted = response[ATTR_RESULT]
-                    LOG.warning("delete_system_variable: Deleted: %s", str(deleted))
+                    _LOGGER.warning("delete_system_variable: Deleted: %s", str(deleted))
 
             except Exception:
-                LOG.exception("delete_system_variable: Exception")
+                _LOGGER.exception("delete_system_variable: Exception")
         else:
             try:
-                return self.proxy.deleteSystemVariable(name)
+                return await self.proxy.deleteSystemVariable(name)
             except Exception:
-                LOG.exception("delete_system_variable: Exception")
+                _LOGGER.exception("delete_system_variable: Exception")
 
-    def set_system_variable(self, name, value):
+    async def set_system_variable(self, name, value):
         """Set a system variable on CCU / Homegear."""
         if self.backend == BACKEND_CCU and self.username and self.password:
-            LOG.debug("set_system_variable: Setting System variable via JSON-RPC")
-            self.json_rpc_renew()
+            _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
+            await self.json_rpc_renew()
             if not self.session:
                 return
             try:
@@ -391,50 +488,50 @@ class Client:
                 }
                 if value is True or value is False:
                     params[ATTR_VALUE] = int(value)
-                    response = json_rpc_post(
+                    response = await self.json_rpc_post(
                         self.host, self.json_port, "SysVar.setBool", params
                     )
                 else:
-                    response = json_rpc_post(
+                    response = await self.json_rpc_post(
                         self.host, self.json_port, "SysVar.setFloat", params
                     )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     res = response[ATTR_RESULT]
-                    LOG.debug(
+                    _LOGGER.debug(
                         "set_system_variable: Result while setting variable: %s",
                         str(res),
                     )
                 else:
                     if response[ATTR_ERROR]:
-                        LOG.debug(
+                        _LOGGER.debug(
                             "set_system_variable: Error while setting variable: %s",
                             str(response[ATTR_ERROR]),
                         )
 
             except Exception:
-                LOG.exception("set_system_variable: Exception")
+                _LOGGER.exception("set_system_variable: Exception")
         else:
             try:
-                return self.proxy.setSystemVariable(name, value)
+                return await self.proxy.setSystemVariable(name, value)
             except Exception:
-                LOG.exception("set_system_variable: Exception")
+                _LOGGER.exception("set_system_variable: Exception")
 
-    def get_service_messages(self):
+    async def get_service_messages(self):
         """Get service messages from CCU / Homegear."""
         try:
-            return self.proxy.getServiceMessages()
+            return await self.proxy.getServiceMessages()
         except Exception:
-            LOG.exception("get_service_messages: Exception")
+            _LOGGER.exception("get_service_messages: Exception")
 
-    def rssi_info(self):
+    async def rssi_info(self):
         """Get RSSI information for all devices from CCU / Homegear."""
         try:
-            return self.proxy.rssiInfo()
+            return await self.proxy.rssiInfo()
         except Exception:
-            LOG.exception("rssi_info: Exception")
+            _LOGGER.exception("rssi_info: Exception")
 
     # pylint: disable=invalid-name
-    def set_install_mode(self, on=True, t=60, mode=1, address=None) -> None:
+    async def set_install_mode(self, on=True, t=60, mode=1, address=None) -> None:
         """Activate or deactivate installmode on CCU / Homegear."""
         try:
             args = [on]
@@ -445,98 +542,105 @@ class Client:
                 else:
                     args.append(mode)
 
-            return self.proxy.setInstallMode(*args)
+            return await self.proxy.setInstallMode(*args)
         except Exception:
-            LOG.exception("set_install_mode: Exception")
+            _LOGGER.exception("set_install_mode: Exception")
 
-    def get_install_mode(self):
+    async def get_install_mode(self):
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
-            return self.proxy.getInstallMode()
+            return await self.proxy.getInstallMode()
         except Exception:
-            LOG.exception("Exception: Exception")
+            _LOGGER.exception("Exception: Exception")
 
-    def get_all_metadata(self, address):
+    async def get_all_metadata(self, address):
         """Get all metadata of device."""
         try:
-            return self.proxy.getAllMetadata(address)
+            return await self.proxy.getAllMetadata(address)
         except Exception:
-            LOG.exception("get_all_metadata: Exception")
+            _LOGGER.exception("get_all_metadata: Exception")
 
-    def get_metadata(self, address, key):
+    async def get_metadata(self, address, key):
         """Get metadata of device."""
         try:
-            return self.proxy.getMetadata(address, key)
+            return await self.proxy.getMetadata(address, key)
         except Exception:
-            LOG.exception("get_metadata: Exception")
+            _LOGGER.exception("get_metadata: Exception")
 
-    def set_metadata(self, address, key, value):
+    async def set_metadata(self, address, key, value):
         """Set metadata of device."""
         try:
-            return self.proxy.setMetadata(address, key, value)
+            return await self.proxy.setMetadata(address, key, value)
         except Exception:
-            LOG.exception(".set_metadata: Exception")
+            _LOGGER.exception(".set_metadata: Exception")
 
-    def delete_metadata(self, address, key):
+    async def delete_metadata(self, address, key):
         """Delete metadata of device."""
         try:
-            return self.proxy.deleteMetadata(address, key)
+            return await self.proxy.deleteMetadata(address, key)
         except Exception:
-            LOG.exception("delete_metadata: Exception")
+            _LOGGER.exception("delete_metadata: Exception")
 
-    def list_bidcos_interfaces(self):
+    async def list_bidcos_interfaces(self):
         """Return all available BidCos Interfaces."""
         try:
-            return self.proxy.listBidcosInterfaces()
+            return await self.proxy.listBidcosInterfaces()
         except Exception:
-            LOG.exception("list_bidcos_interfaces: Exception")
+            _LOGGER.exception("list_bidcos_interfaces: Exception")
 
-    def ping(self):
+    async def ping(self):
         """Send ping to CCU to generate PONG event."""
         try:
-            self.proxy.ping(self.interface_id)
+            success = await self.proxy.ping(self.interface_id)
+            if success:
+                self.time_initialized = int(time.time())
+                return True
         except Exception:
-            LOG.exception("ping: Exception")
+            _LOGGER.exception("ping: Exception")
+        self.time_initialized = 0
+        return False
 
-    def homegear_check_init(self):
+    async def homegear_check_init(self):
         """Check if proxy is still initialized."""
         if self.backend != BACKEND_HOMEGEAR:
             return
         try:
-            if self.proxy.clientServerInitialized(self.interface_id):
-                self.initialized = int(time.time())
-                return
+            if await self.proxy.clientServerInitialized(self.interface_id):
+                self.time_initialized = int(time.time())
+                return True
         except Exception:
-            LOG.exception("homegear_check_init: Exception")
-        LOG.warning(
+            _LOGGER.exception("homegear_check_init: Exception")
+        _LOGGER.warning(
             "homegear_check_init: Setting initialized to 0 for %s", self.interface_id
         )
-        self.initialized = 0
+        self.time_initialized = 0
+        return False
 
-    def is_connected(self):
+    async def is_connected(self):
         """
         Perform actions required for connectivity check.
         Return connectivity state.
         """
+
         if self.backend == BACKEND_CCU:
-            self.ping()
+            await self.ping()
         elif self.backend == BACKEND_HOMEGEAR:
-            self.homegear_check_init()
-        diff = int(time.time()) - self.initialized
+            await self.homegear_check_init()
+        diff = int(time.time()) - self.time_initialized
         if diff < config.INIT_TIMEOUT:
             return True
         return False
 
-    def put_paramset(self, address, paramset, value, rx_mode=None):
+    async def put_paramset(self, address, paramset, value, rx_mode=None):
         """Set paramsets manually."""
         try:
             if rx_mode is None:
-                return self.proxy.putParamset(address, paramset, value)
-            return self.proxy.putParamset(address, paramset, value, rx_mode)
+                return await self.proxy.putParamset(address, paramset, value)
+            return await self.proxy.putParamset(address, paramset, value, rx_mode)
         except Exception:
-            LOG.exception("put_paramset: Exception")
+            _LOGGER.exception("put_paramset: Exception")
 
-    def fetch_paramset(self, address, paramset, update=False):
+    async def fetch_paramset(self, address, paramset, update=False):
         """
         Fetch a specific paramset and add it to the known ones.
         """
@@ -548,20 +652,20 @@ class Client:
             not paramset in self.server.paramsets_cache[self.interface_id][address]
             or update
         ):
-            LOG.debug("Fetching paramset %s for %s", paramset, address)
+            _LOGGER.debug("Fetching paramset %s for %s", paramset, address)
             if not self.server.paramsets_cache[self.interface_id][address]:
                 self.server.paramsets_cache[self.interface_id][address] = {}
             try:
                 self.server.paramsets_cache[self.interface_id][address][
                     paramset
-                ] = self.proxy.getParamsetDescription(address, paramset)
+                ] = await self.proxy.getParamsetDescription(address, paramset)
             except Exception:
-                LOG.exception(
+                _LOGGER.exception(
                     "Unable to get paramset %s for address %s.", paramset, address
                 )
-        self.server.save_paramsets()
+        await self.server.save_paramsets()
 
-    def fetch_paramsets(self, device_description, update=False):
+    async def fetch_paramsets(self, device_description, update=False):
         """
         Fetch paramsets for provided device description.
         """
@@ -569,7 +673,7 @@ class Client:
             self.server.paramsets_cache[self.interface_id] = {}
         address = device_description[ATTR_HM_ADDRESS]
         if address not in self.server.paramsets_cache[self.interface_id] or update:
-            LOG.debug("Fetching paramsets for %s", address)
+            _LOGGER.debug("Fetching paramsets for %s", address)
             self.server.paramsets_cache[self.interface_id][address] = {}
             for paramset in RELEVANT_PARAMSETS:
                 if paramset not in device_description[ATTR_HM_PARAMSETS]:
@@ -577,16 +681,16 @@ class Client:
                 try:
                     self.server.paramsets_cache[self.interface_id][address][
                         paramset
-                    ] = self.proxy.getParamsetDescription(address, paramset)
+                    ] = await self.proxy.getParamsetDescription(address, paramset)
                 except Exception:
-                    LOG.exception(
+                    _LOGGER.exception(
                         "Unable to get paramset %s for address %s.", paramset, address
                     )
                     self.server.paramsets_cache[self.interface_id][address][
                         paramset
                     ] = {}
 
-    def fetch_all_paramsets(self, skip_existing=False):
+    async def fetch_all_paramsets(self, skip_existing=False):
         """
         Fetch all paramsets for provided interface id.
         """
@@ -600,62 +704,62 @@ class Client:
                 and address in self.server.paramsets_cache[self.interface_id]
             ):
                 continue
-            self.fetch_paramsets(dd)
-        self.server.save_paramsets()
+            await self.fetch_paramsets(dd)
+        await self.server.save_paramsets()
 
-    def update_paramsets(self, address):
+    async def update_paramsets(self, address):
         """
         Update paramsets for provided address.
         """
         if self.interface_id not in self.server.devices_raw_dict:
-            LOG.error(
+            _LOGGER.error(
                 "Interface ID missing in self.server.devices_raw_dict. Not updating paramsets for %s.",
                 address,
             )
             return
         if address not in self.server.devices_raw_dict[self.interface_id]:
-            LOG.error(
+            _LOGGER.error(
                 "Channel missing in self.server.devices_raw_dict[interface_id]. Not updating paramsets for %s.",
                 address,
             )
             return
-        self.fetch_paramsets(
+        await self.fetch_paramsets(
             self.server.devices_raw_dict[self.interface_id][address], update=True
         )
-        self.server.save_paramsets()
+        await self.server.save_paramsets()
 
-    def fetch_names(self):
+    async def fetch_names(self):
         """Get all names."""
         if self.backend == BACKEND_CCU:
-            self.fetch_names_json()
+            await self.fetch_names_json()
         elif self.backend == BACKEND_HOMEGEAR:
-            self.fetch_names_metadata()
+            await self.fetch_names_metadata()
 
-    def fetch_names_json(self):
+    async def fetch_names_json(self):
         """
         Get all names via JSON-RPS and store in data.NAMES.
         """
         if not self.backend == BACKEND_CCU:
-            LOG.warning(
+            _LOGGER.warning(
                 "fetch_names_json: No CCU detected. Not fetching names via JSON-RPC."
             )
             return
         if not self.username:
-            LOG.warning(
+            _LOGGER.warning(
                 "fetch_names_json: No username set. Not fetching names via JSON-RPC."
             )
             return
-        LOG.debug("fetch_names_json: Fetching names via JSON-RPC.")
+        _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
-            self.json_rpc_renew()
+            await self.json_rpc_renew()
             if not self.session:
-                LOG.warning(
+                _LOGGER.warning(
                     "fetch_names_json: Login failed. Not fetching names via JSON-RPC."
                 )
                 return
 
             params = {ATTR_SESSION_ID: self.session}
-            response = json_rpc_post(
+            response = await self.json_rpc_post(
                 self.host,
                 self.json_port,
                 "Interface.listInterfaces",
@@ -673,12 +777,12 @@ class Client:
                     ]:
                         interface = i[ATTR_NAME]
                         break
-            LOG.debug("fetch_names_json: Got interface: %s", interface)
+            _LOGGER.debug("fetch_names_json: Got interface: %s", interface)
             if not interface:
                 return
 
             params = {ATTR_SESSION_ID: self.session}
-            response = json_rpc_post(
+            response = await self.json_rpc_post(
                 self.host,
                 self.json_port,
                 "Device.listAllDetail",
@@ -688,7 +792,7 @@ class Client:
             )
 
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                LOG.debug("fetch_names_json: Resolving devicenames")
+                _LOGGER.debug("fetch_names_json: Resolving devicenames")
                 for device in response[ATTR_RESULT]:
                     if device[ATTR_INTERFACE] != interface:
                         continue
@@ -701,25 +805,25 @@ class Client:
                                 channel[ATTR_ADDRESS]
                             ] = channel[ATTR_NAME]
                     except Exception:
-                        LOG.exception("fetch_names_json: Exception")
+                        _LOGGER.exception("fetch_names_json: Exception")
 
         except Exception:
-            LOG.exception("fetch_names_json: General exception")
+            _LOGGER.exception("fetch_names_json: General exception")
 
-    def fetch_names_metadata(self):
+    async def fetch_names_metadata(self):
         """
         Get all names from metadata (Homegear).
         """
         if not self.backend == BACKEND_HOMEGEAR:
-            LOG.warning(
+            _LOGGER.warning(
                 "fetch_names_metadata: No Homegear detected. Not fetching names via Metadata."
             )
             return
-        LOG.debug("fetch_names_metadata: Fetching names via Metadata.")
+        _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
         for address in self.server.devices_raw_dict[self.interface_id]:
             try:
                 self.server.names_cache[self.interface_id][
                     address
-                ] = self.proxy.getMetadata(address, ATTR_HM_NAME)
+                ] = await self.proxy.getMetadata(address, ATTR_HM_NAME)
             except Exception:
-                LOG.exception("Failed to fetch name for device %s.", address)
+                _LOGGER.exception("Failed to fetch name for device %s.", address)

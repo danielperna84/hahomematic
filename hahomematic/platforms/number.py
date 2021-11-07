@@ -8,7 +8,7 @@ import logging
 from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_NUMBER
 from hahomematic.entity import GenericEntity
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
@@ -33,17 +33,16 @@ class HmNumber(GenericEntity):
     def state(self):
         return self._state
 
-    @state.setter
-    def state(self, value):
+    async def set_state(self, value):
         # pylint: disable=no-else-return
         if self._min <= value <= self._max:
-            self.send_value(value)
+            await self.send_value(value)
             return
         elif self._special:
             if [sv for sv in self._special if value == sv[ATTR_HM_VALUE]]:
-                self.send_value(value)
+                await self.send_value(value)
                 return
-        LOG.error(
+        _LOGGER.error(
             "number: Invalid value: %s (min: %s, max: %s, special: %s)",
             value,
             self._min,

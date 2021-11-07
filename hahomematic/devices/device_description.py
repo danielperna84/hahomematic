@@ -2,6 +2,7 @@
 This module contains device descriptions for custom entities.
 """
 DD_DEVICE = "device"
+DD_DEFAULT_ENTITIES = "default_entities"
 DD_ENTITIES = "entities"
 DD_FIELDS = "fields"
 DD_ADDRESS_PREFIX = "address_prefix"
@@ -20,7 +21,26 @@ FIELD_MANU_MODE = "manu_mode"
 FIELD_COMFORT_MODE = "comfort_mode"
 FIELD_LOWERING_MODE = "lowering_mode"
 
+FIELD_DUTY_CYCLE = "duty_cycle"
+FIELD_LOW_BAT = "low_bat"
+FIELD_OPERATING_VOLTAGE = "operating_voltage"
+FIELD_RSSI_DEVICE = "rssi_device"
+FIELD_RSSI_PEER = "rssi_peer"
+FIELD_SABOTAGE = "sabotage"
+
 device_description = {
+    DD_DEFAULT_ENTITIES: {
+        FIELD_DUTY_CYCLE: {DD_ADDRESS_PREFIX: ":0", DD_PARAM_NAME: "DUTY_CYCLE"},
+        FIELD_LOW_BAT: {DD_ADDRESS_PREFIX: ":0", DD_PARAM_NAME: "LOW_BAT"},
+        FIELD_LOW_BAT: {DD_ADDRESS_PREFIX: ":0", DD_PARAM_NAME: "LOWBAT"},
+        FIELD_OPERATING_VOLTAGE: {
+            DD_ADDRESS_PREFIX: ":0",
+            DD_PARAM_NAME: "OPERATING_VOLTAGE",
+        },
+        FIELD_RSSI_DEVICE: {DD_ADDRESS_PREFIX: ":0", DD_PARAM_NAME: "RSSI_DEVICE"},
+        FIELD_RSSI_PEER: {DD_ADDRESS_PREFIX: ":0", DD_PARAM_NAME: "RSSI_PEER"},
+        FIELD_SABOTAGE: {DD_ADDRESS_PREFIX: ":0", DD_PARAM_NAME: "SABOTAGE"},
+    },
     "SimpleThermostat": {
         DD_DEVICE: {
             DD_FIELDS: {

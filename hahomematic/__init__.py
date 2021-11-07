@@ -16,14 +16,14 @@ from hahomematic.server import Server
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.DEBUG)
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 # noinspection PyUnusedLocal
 def signal_handler(sig, frame):
     """Handle signal to shut down server."""
-    LOG.info("Got signal: %s. Shutting down server", str(sig))
+    _LOGGER.info("Got signal: %s. Shutting down server", str(sig))
     for active_server in INSTANCES.values():
         active_server.stop()
 

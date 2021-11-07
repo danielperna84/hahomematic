@@ -8,7 +8,7 @@ import logging
 from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_TEXT
 from hahomematic.entity import GenericEntity
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
@@ -43,7 +43,7 @@ class HmText(GenericEntity):
             if [sv for sv in self._special if value == sv[ATTR_HM_VALUE]]:
                 self.send_value(value)
                 return
-        LOG.error(
+        _LOGGER.error(
             "text: Invalid value: %s (min: %s, max: %s, special: %s)",
             value,
             self._min,

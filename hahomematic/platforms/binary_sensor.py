@@ -8,7 +8,7 @@ import logging
 from hahomematic.const import HA_PLATFORM_BINARY_SENSOR
 from hahomematic.entity import GenericEntity
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name

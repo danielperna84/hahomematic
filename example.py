@@ -1,4 +1,5 @@
-#!/usr/bin/python3
+# !/usr/bin/python3
+import asyncio
 import logging
 import sys
 import time
@@ -8,127 +9,154 @@ from hahomematic.client import Client
 from hahomematic.server import Server
 
 logging.basicConfig(level=logging.DEBUG)
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
-SLEEPCOUNTER = 0
-GOT_DEVICES = False
-
-
-# Create a server that listens on 127.0.0.1:* and identifies itself as myserver.
-server = Server("ccu-dev", "123")
+CCU_HOST = "192.168.1.173"
+CCU_USERNAME = "Admin"
+CCU_PASSWORD = ""
 
 
-def systemcallback(src, *args):
-    global GOT_DEVICES
-    print("systemcallback: %s" % src)
-    if src == const.HH_EVENT_NEW_DEVICES:
-        print("Number of new device descriptions: %i" % len(args[0]))
-        return
-    elif src == const.HH_EVENT_DEVICES_CREATED:
-        GOT_DEVICES = True
-        print("All devices:")
-        print(server.hm_devices)
-        for _, device in server.hm_devices.items():
-            print(device)
-        print("New devices:")
-        print(args[0])
-        print("New entities:")
-        print(args[1])
-        return
-    for arg in args:
-        print("argument: %s" % arg)
+class Example:
+    # Create a server that listens on 127.0.0.1:* and identifies itself as myserver.
+    got_devices = False
 
+    def __init__(self):
+        self.SLEEPCOUNTER = 0
+        self.server = None
 
-def eventcallback(address, interface_id, key, value):
-    print(
-        "eventcallback at %i: %s, %s, %s, %s"
-        % (int(time.time()), address, interface_id, key, value)
-    )
+    def systemcallback(self, src, *args):
+        self.got_devices
+        print("systemcallback: %s" % src)
+        if src == const.HH_EVENT_NEW_DEVICES:
+            print("Number of new device descriptions: %i" % len(args[0]))
+            return
+        elif src == const.HH_EVENT_DEVICES_CREATED:
+            if len(self.server.hm_devices) > 1:
+                self.got_devices = True
+                # print("All devices:")
+                # print(server.hm_devices)
+                # for _, device in server.hm_devices.items():
+                #     print(device)
+                print("New devices:")
+                print(len(args[0]))
+                print("New entities:")
+                print(len(args[1]))
+            return
+        for arg in args:
+            print("argument: %s" % arg)
 
-
-def entityupdatecallback(entity_id):
-    print("entityupdatecallback at %i: %s" % (int(time.time()), entity_id))
-
-
-def clickcallback(interface_id, address, parameter, name, unique_id, eventtype, value):
-    print(
-        "clickcallback at %i: %s, %s, %s, %s, %s, %s"
-        % (
-            int(time.time()),
-            address,
-            interface_id,
-            parameter,
-            name,
-            unique_id,
-            eventtype,
-            value,
+    def eventcallback(self, address, interface_id, key, value):
+        print(
+            "eventcallback at %i: %s, %s, %s, %s"
+            % (int(time.time()), address, interface_id, key, value)
         )
-    )
 
+    def entityupdatecallback(self, entity_id):
+        print("entityupdatecallback at %i: %s" % (int(time.time()), entity_id))
 
-def impulsecallback(
-    interface_id, address, parameter, name, unique_id, eventtype, value
-):
-    print(
-        "impulsecallback at %i: %s, %s, %s, %s, %s, %s"
-        % (
-            int(time.time()),
-            address,
-            interface_id,
-            parameter,
-            name,
-            unique_id,
-            eventtype,
-            value,
+    def clickcallback(
+        self, interface_id, address, parameter, name, unique_id, eventtype, value
+    ):
+        print(
+            "clickcallback at %i: %s, %s, %s, %s, %s, %s"
+            % (
+                int(time.time()),
+                address,
+                interface_id,
+                parameter,
+                name,
+                unique_id,
+                eventtype,
+                value,
+            )
         )
-    )
+
+    def impulsecallback(
+        self, interface_id, address, parameter, name, unique_id, eventtype, value
+    ):
+        print(
+            "impulsecallback at %i: %s, %s, %s, %s, %s, %s"
+            % (
+                int(time.time()),
+                address,
+                interface_id,
+                parameter,
+                name,
+                unique_id,
+                eventtype,
+                value,
+            )
+        )
+
+    async def example_run(self):
+
+        self.server = Server("ccu-dev", "123", asyncio.get_running_loop())
+        # For testing we set a short INIT_TIMEOUT
+        config.INIT_TIMEOUT = 10
+        # We have to set the cache location of stored data so the server can load
+        # it while initializing.
+        config.CACHE_DIR = "cache"
+        # Add callbacks to handle the events and see what happens on the system.
+        self.server.callback_system_event = self.systemcallback
+        self.server.callback_device_event = self.eventcallback
+        self.server.callback_click_event = self.clickcallback
+        self.server.callback_impulse_event = self.impulsecallback
+
+        # Create clients
+        client1 = Client(
+            server=self.server,
+            name="hmip",
+            host=CCU_HOST,
+            port=2010,
+            username=CCU_USERNAME,
+            password=CCU_PASSWORD,
+        )
+        client2 = Client(
+            server=self.server,
+            name="rf",
+            host=CCU_HOST,
+            port=2001,
+            username=CCU_USERNAME,
+            password=CCU_PASSWORD,
+        )
+        client3 = Client(
+            server=self.server,
+            name="groups",
+            host=CCU_HOST,
+            port=9292,
+            username=CCU_USERNAME,
+            password=CCU_PASSWORD,
+            path="/groups",
+        )
+
+        # Clients have to exist prior to starting the server thread!
+        self.server.start()
+        # Once the server is running we subscribe to receive messages.
+        await client1.proxy_init()
+        await client2.proxy_init()
+        await client3.proxy_init()
+
+        while not self.got_devices and self.SLEEPCOUNTER < 20:
+            print("Waiting for devices")
+            self.SLEEPCOUNTER += 1
+            await asyncio.sleep(1)
+        await asyncio.sleep(5)
+
+        for i in range(1600):
+            if i % 4 == 0:
+                for client in self.server.clients.values():
+                    if not await client.is_connected():
+                        _LOGGER.warning("Disconnected. Reconnecting for %s" % client)
+                        await client.proxy_de_init()
+                        await client.proxy_init()
+            _LOGGER.debug("Sleeping (%i)", i)
+            await asyncio.sleep(2)
+        # Stop the server thread so Python can exit properly.
+        await self.server.stop()
 
 
-# For testing we set a short INIT_TIMEOUT
-config.INIT_TIMEOUT = 10
-# We have to set the cache location of stored data so the server can load
-# it while initializing.
-config.CACHE_DIR = "cache"
-# Add callbacks to handle the events and see what happens on the system.
-server.callback_system_event = systemcallback
-server.callback_device_event = eventcallback
-server.callback_click_event = clickcallback
-server.callback_impulse_event = impulsecallback
+example = Example()
 
-# Create clients
-# Connect to pydevccu at 127.0.0.1:2001
-client1 = Client(
-    server=server, name="localhost", host="127.0.0.1", port=2001, password=""
-)
-# Connect to CCU for RF-deices at 192.168.1.173:2001
-client2 = Client(server=server, name="rf", host="192.168.1.173", port=2001, password="")
-# Connect to CCU for HmIP-deices at 192.168.1.173:2010
-client3 = Client(
-    server=server, name="hmip", host="192.168.1.173", port=2010, password=""
-)
-
-# Clients have to exist prior to starting the server thread!
-server.start()
-# Once the server is running we subscribe to receive messages.
-client1.proxy_init()
-client2.proxy_init()
-client3.proxy_init()
-
-while not GOT_DEVICES and SLEEPCOUNTER < 20:
-    print("Waiting for devices")
-    SLEEPCOUNTER += 1
-    time.sleep(1)
-time.sleep(5)
-
-for i in range(16):
-    if i % 4 == 0:
-        for client in server.clients:
-            if not server.clients[client].is_connected():
-                LOG.warning("Disconnected. Reconnecting for %s" % client)
-                server.clients[client].proxy_init()
-    LOG.debug("Sleeping (%i)", i)
-    time.sleep(2)
-# Stop the server thread so Python can exit properly.
-server.stop()
+asyncio.run(example.example_run())
 
 sys.exit(0)
