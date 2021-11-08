@@ -300,9 +300,6 @@ class Server(threading.Thread):
         self._json_executor = ThreadPoolExecutor(
             max_workers=config.JSON_EXECUTOR_MAX_WORKERS
         )
-        self._proxy_executor = ThreadPoolExecutor(
-            max_workers=config.PROXY_EXECUTOR_MAX_WORKERS
-        )
         self._loop = loop
         # Caches for CCU data
         # {interface_id, {address, paramsets}}
@@ -342,6 +339,7 @@ class Server(threading.Thread):
         INSTANCES[instance_name] = self
         self._init_xml_rpc_server()
         self._load_caches()
+        self._connection_checker = ConnectionChecker(self)
 
     @property
     def loop(self):
@@ -402,13 +400,15 @@ class Server(threading.Thread):
         To stop the server we de-init from the CCU / Homegear,
         then shut down our XML-RPC server.
         """
+        _LOGGER.info("Server.stop: Stop connection checker.")
+        await self.stop_connection_checker()
         for name, client in self.clients.items():
             if await client.proxy_de_init():
                 _LOGGER.info("Server.stop: Proxy de-initialized: %s", name)
+            client.stop()
 
         _LOGGER.info("Server-Executor.stop: Stopping Executors.")
         self._json_executor.shutdown()
-        self._proxy_executor.shutdown()
         _LOGGER.info("Server.stop: Clearing existing clients. Please recreate them!")
         self.clients.clear()
         self.clients_by_init_url.clear()
@@ -436,18 +436,37 @@ class Server(threading.Thread):
         """Add an executor job from within the event loop."""
         return await self.loop.run_in_executor(None, fn, *args)
 
-    async def async_add_proxy_executor_job(self, fn, *args) -> Awaitable[T]:
-        """Add an executor job from within the event loop ."""
-        return await self.loop.run_in_executor(self._proxy_executor, fn, *args)
-
     async def async_add_json_executor_job(self, fn, *args) -> Awaitable[T]:
-        """Add an executor job from within the event loop."""
+        """Add an executor job from within the event loop for all json related interaction"""
         return await self.loop.run_in_executor(self._json_executor, fn, *args)
 
-    async def reconnect(self):
-        """re-init all RPC proxy."""
+    def start_connection_checker(self):
+        """Start the connection checker."""
+        self._connection_checker.start()
+
+    async def stop_connection_checker(self):
+        """Start the connection checker."""
+        self._connection_checker.stop()
+
+    async def is_connected(self) -> bool:
+        """Check connection to ccu."""
         for client in self.clients.values():
-            await client.proxy_re_init()
+            if not await client.is_connected():
+                _LOGGER.warning(
+                    "Server.is_connected: No connection to %s.", client.name
+                )
+                return False
+        return True
+
+    async def reconnect(self):
+        """re-init all RPC clients."""
+        if await self.is_connected():
+            _LOGGER.info(
+                "Server.reconnect: re-connect to server %s",
+                self.instance_name,
+            )
+            for client in self.clients.values():
+                await client.proxy_re_init()
 
     async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
@@ -739,6 +758,50 @@ class Server(threading.Thread):
         self.clear_devices_raw()
         self.clear_paramsets()
         self.clear_names()
+
+
+# pylint: disable=too-many-public-methods
+class ConnectionChecker(threading.Thread):
+    """
+    Periodically check Connection to CCU / Homegear.
+    """
+
+    def __init__(self, server: Server):
+        threading.Thread.__init__(self)
+        self._server = server
+        self._active = True
+
+    def run(self):
+        """
+        Run the server thread.
+        """
+        _LOGGER.info(
+            "ConnectionCecker.run: Init connection checker to server %s",
+            self._server.instance_name,
+        )
+
+        self._server.run_coroutine(self._check_connection())
+
+    def stop(self):
+        """
+        To stop the ConnectionChecker.
+        """
+        self._active = False
+
+    async def _check_connection(self):
+        while self._active:
+            _LOGGER.debug(
+                "ConnectionCecker.check_connection: Checking connection to server %s",
+                self._server.instance_name,
+            )
+            if not await self._server.is_connected():
+                _LOGGER.warning(
+                    "ConnectionCecker.check_connection: No connection to server %s",
+                    self._server.instance_name,
+                )
+                await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL.seconds)
+                await self._server.reconnect()
+            await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL.seconds)
 
 
 def handle_device_descriptions(server, interface_id, dev_descriptions):

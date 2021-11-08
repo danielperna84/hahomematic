@@ -9,6 +9,8 @@ import ssl
 import time
 import urllib
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from typing import Awaitable, TypeVar
 
 from hahomematic import config
 from hahomematic.const import (
@@ -50,6 +52,7 @@ from hahomematic.const import (
 from hahomematic.helpers import build_api_url, parse_ccu_sys_var
 from hahomematic.proxy import ThreadPoolServerProxy
 
+T = TypeVar("T")
 VERIFIED_CTX = ssl.create_default_context()
 UNVERIFIED_CTX = ssl.create_default_context()
 UNVERIFIED_CTX.check_hostname = False
@@ -141,8 +144,12 @@ class Client:
             password=self.password,
             tls=self.tls,
         )
+        # for all device related interaction
+        self._proxy_executor = ThreadPoolExecutor(
+            max_workers=config.PROXY_EXECUTOR_MAX_WORKERS
+        )
         self.proxy = ThreadPoolServerProxy(
-            self.server.async_add_proxy_executor_job,
+            self.async_add_proxy_executor_job,
             self.api_url,
             tls=self.tls,
             verify_tls=self.verify_tls,  # , loop=self.server.loop
@@ -236,6 +243,13 @@ class Client:
         de_init_status = await self.proxy_de_init()
         if de_init_status is not PROXY_DE_INIT_FAILED:
             return await self.proxy_init()
+
+    def stop(self):
+        self._proxy_executor.shutdown()
+
+    async def async_add_proxy_executor_job(self, fn, *args) -> Awaitable:
+        """Add an executor job from within the event loop for all device related interaction."""
+        return await self.server.loop.run_in_executor(self._proxy_executor, fn, *args)
 
     async def json_rpc_login(self):
         """Login to CCU and return session."""
@@ -621,7 +635,6 @@ class Client:
         Perform actions required for connectivity check.
         Return connectivity state.
         """
-
         if self.backend == BACKEND_CCU:
             await self.ping()
         elif self.backend == BACKEND_HOMEGEAR:
