@@ -161,7 +161,7 @@ class HmDevice:
         new_entities: set[GenericEntity] = set()
         for channel in self.channels:
             if channel not in self.server.paramsets_cache[self.interface_id]:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Device.create_entities: Skipping channel %s, missing paramsets.",
                     channel,
                 )

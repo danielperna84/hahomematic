@@ -461,7 +461,7 @@ class Server(threading.Thread):
     async def reconnect(self):
         """re-init all RPC clients."""
         if await self.is_connected():
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Server.reconnect: re-connect to server %s",
                 self.instance_name,
             )

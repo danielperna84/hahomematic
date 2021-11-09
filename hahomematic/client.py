@@ -2,16 +2,12 @@
 """
 The client-object and its methods.
 """
-import json
 import logging
 import socket
-import ssl
 import time
-import urllib
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from typing import Awaitable, TypeVar
-
+from hahomematic.json_rpc import JsonRpcSession
 from hahomematic import config
 from hahomematic.const import (
     ATTR_ADDRESS,
@@ -22,11 +18,9 @@ from hahomematic.const import (
     ATTR_HM_PARAMSETS,
     ATTR_INTERFACE,
     ATTR_NAME,
-    ATTR_PASSWORD,
     ATTR_PORT,
     ATTR_RESULT,
     ATTR_SESSION_ID,
-    ATTR_USERNAME,
     ATTR_VALUE,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
@@ -39,7 +33,6 @@ from hahomematic.const import (
     DEFAULT_USERNAME,
     DEFAULT_VERIFY_TLS,
     LOCALHOST,
-    PATH_JSON_RPC,
     PORT_RFD,
     PROXY_DE_INIT_FAILED,
     PROXY_DE_INIT_SKIPPED,
@@ -53,10 +46,7 @@ from hahomematic.helpers import build_api_url, parse_ccu_sys_var
 from hahomematic.proxy import ThreadPoolServerProxy
 
 T = TypeVar("T")
-VERIFIED_CTX = ssl.create_default_context()
-UNVERIFIED_CTX = ssl.create_default_context()
-UNVERIFIED_CTX.check_hostname = False
-UNVERIFIED_CTX.verify_mode = ssl.CERT_NONE
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -119,11 +109,11 @@ class Client:
         except Exception as err:
             _LOGGER.warning("Can't resolve host for %s: %s", self.name, self.host)
             raise ClientException(err) from err
-        tmpsocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        tmpsocket.settimeout(config.TIMEOUT)
-        tmpsocket.connect((self.host, self.port))
-        self.local_ip = tmpsocket.getsockname()[0]
-        tmpsocket.close()
+        tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        tmp_socket.settimeout(config.TIMEOUT)
+        tmp_socket.connect((self.host, self.port))
+        self.local_ip = tmp_socket.getsockname()[0]
+        tmp_socket.close()
         _LOGGER.debug("Got local ip: %s", self.local_ip)
 
         # Get callback address
@@ -157,7 +147,15 @@ class Client:
         self.time_initialized = 0
         self.version = None
         self.backend = None
-        self.session = None
+        self.json_rpc = JsonRpcSession(
+            client=self,
+            host=self.host,
+            port=self.port,
+            username=self.username,
+            password=self.password,
+            tls=self.json_tls,
+            verify_tls=self.verify_tls,
+        )
 
         self.server.clients[self.interface_id] = self
         if self.init_url not in self.server.clients_by_init_url:
@@ -177,10 +175,8 @@ class Client:
             ) from err
         if "Homegear" in self.version or "pydevccu" in self.version:
             self.backend = BACKEND_HOMEGEAR
-            self.session = None
         else:
             self.backend = BACKEND_CCU
-            self.session = False
 
         if not self.connect:
             _LOGGER.debug("proxy_init: Skipping init for %s", self.name)
@@ -209,8 +205,8 @@ class Client:
         """
         De-init to stop CCU from sending events for this remote.
         """
-        if self.session:
-            await self.json_rpc_logout()
+        if self.json_rpc.is_activated:
+            await self.json_rpc.logout()
         if not self.connect:
             _LOGGER.debug("proxy_de_init: Skipping de-init for %s", self.name)
             return PROXY_DE_INIT_SKIPPED
@@ -251,143 +247,6 @@ class Client:
         """Add an executor job from within the event loop for all device related interaction."""
         return await self.server.loop.run_in_executor(self._proxy_executor, fn, *args)
 
-    async def json_rpc_login(self):
-        """Login to CCU and return session."""
-        self.session = False
-        try:
-            params = {
-                ATTR_USERNAME: self.username,
-                ATTR_PASSWORD: self.password,
-            }
-            response = await self.json_rpc_post(
-                self.host,
-                self.json_port,
-                "Session.login",
-                params,
-                tls=self.json_tls,
-                verify_tls=self.verify_tls,
-            )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                self.session = response[ATTR_RESULT]
-
-            if not self.session:
-                _LOGGER.warning(
-                    "json_rpc_login: Unable to open session: %s", response[ATTR_ERROR]
-                )
-        # pylint: disable=broad-except
-        except Exception:
-            _LOGGER.exception("json_rpc_login: Exception while logging in via JSON-RPC")
-
-    async def json_rpc_renew(self):
-        """Renew JSON-RPC session or perform login."""
-        if not self.session:
-            await self.json_rpc_login()
-            return
-
-        try:
-            response = await self.json_rpc_post(
-                self.host,
-                self.json_port,
-                "Session.renew",
-                {ATTR_SESSION_ID: self.session},
-                tls=self.json_tls,
-                verify_tls=self.verify_tls,
-            )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                self.session = response[ATTR_RESULT]
-                return
-            await self.json_rpc_login()
-        except Exception:
-            _LOGGER.exception(
-                "json_rpc_renew: Exception while renewing JSON-RPC session."
-            )
-
-    async def json_rpc_logout(self):
-        """Logout of CCU."""
-        if not self.session:
-            _LOGGER.warning("json_rpc_logout: Not logged in. Not logging out.")
-            return
-        try:
-            params = {"_session_id_": self.session}
-            response = await self.json_rpc_post(
-                self.host,
-                self.json_port,
-                "Session.logout",
-                params,
-                tls=self.json_tls,
-                verify_tls=self.verify_tls,
-            )
-            if response[ATTR_ERROR]:
-                _LOGGER.warning(
-                    "json_rpc_logout: Logout error: %s", response[ATTR_RESULT]
-                )
-        # pylint: disable=broad-except
-        except Exception:
-            _LOGGER.exception(
-                "json_rpc_logout: Exception while logging in via JSON-RPC"
-            )
-        return
-
-    async def json_rpc_post(
-        self,
-        host,
-        json_port,
-        method,
-        params=None,
-        tls=DEFAULT_TLS,
-        verify_tls=DEFAULT_VERIFY_TLS,
-    ):
-        if params is None:
-            params = {}
-
-        def _sync_json_rpc_post():
-            """Reusable JSON-RPC POST function."""
-            _LOGGER.debug("helpers.json_rpc_post: Method: %s", method)
-            try:
-                payload = json.dumps(
-                    {"method": method, "params": params, "jsonrpc": "1.1", "id": 0}
-                ).encode("utf-8")
-
-                headers = {
-                    "Content-Type": "application/json",
-                    "Content-Length": len(payload),
-                }
-                if tls:
-                    api_endpoint = f"https://{host}:{json_port}{PATH_JSON_RPC}"
-                else:
-                    api_endpoint = f"http://{host}:{json_port}{PATH_JSON_RPC}"
-                _LOGGER.debug("helpers.json_rpc_post: API-Endpoint: %s", api_endpoint)
-                req = urllib.request.Request(api_endpoint, payload, headers)
-                if tls:
-                    if verify_tls:
-                        resp = urllib.request.urlopen(
-                            req, timeout=config.TIMEOUT, context=VERIFIED_CTX
-                        )
-                    else:
-                        resp = urllib.request.urlopen(
-                            req, timeout=config.TIMEOUT, context=UNVERIFIED_CTX
-                        )
-                else:
-                    resp = urllib.request.urlopen(req, timeout=config.TIMEOUT)
-                if resp.status == 200:
-                    try:
-                        return json.loads(resp.read().decode("utf-8"))
-                    except ValueError:
-                        _LOGGER.exception(
-                            "helpers.json_rpc_post: Failed to parse JSON. Trying workaround."
-                        )
-                        # Workaround for bug in CCU
-                        return json.loads(resp.read().decode("utf-8").replace("\\", ""))
-                else:
-                    _LOGGER.error("helpers.json_rpc_post: Status: %i", resp.status)
-                    return {"error": resp.status, "result": {}}
-            # pylint: disable=broad-except
-            except Exception as err:
-                _LOGGER.exception("helpers.json_rpc_post: Exception")
-                return {"error": str(err), "result": {}}
-
-        return await self.server.async_add_json_executor_job(_sync_json_rpc_post)
-
     async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
         variables = {}
@@ -395,18 +254,11 @@ class Client:
             _LOGGER.debug(
                 "get_all_system_variables: Getting all System variables via JSON-RPC"
             )
-            await self.json_rpc_renew()
-            if not self.session:
+            if not await self.json_rpc.renew():
                 return variables
             try:
-                params = {"_session_id_": self.session}
-                response = await self.json_rpc_post(
-                    self.host,
-                    self.json_port,
+                response = await self.json_rpc.post(
                     "SysVar.getAll",
-                    params,
-                    tls=self.json_tls,
-                    verify_tls=self.verify_tls,
                 )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     for var in response[ATTR_RESULT]:
@@ -427,18 +279,13 @@ class Client:
         var = None
         if self.backend == BACKEND_CCU and self.username and self.password:
             _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
-            await self.json_rpc_renew()
-            if not self.session:
+            if not await self.json_rpc.renew():
                 return var
             try:
-                params = {"_session_id_": self.session, ATTR_NAME: name}
-                response = await self.json_rpc_post(
-                    self.host,
-                    self.json_port,
+                params = {ATTR_NAME: name}
+                response = await self.json_rpc.post(
                     "SysVar.getValueByName",
                     params,
-                    tls=self.json_tls,
-                    verify_tls=self.verify_tls,
                 )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     # TODO: This does not yet support strings
@@ -462,22 +309,17 @@ class Client:
             _LOGGER.debug(
                 "delete_system_variable: Getting System variable via JSON-RPC"
             )
-            await self.json_rpc_renew()
-            if not self.session:
+            if not await self.json_rpc.renew():
                 return
             try:
-                params = {"_session_id_": self.session, ATTR_NAME: name}
-                response = await self.json_rpc_post(
-                    self.host,
-                    self.json_port,
+                params = {ATTR_NAME: name}
+                response = await self.json_rpc.post(
                     "SysVar.deleteSysVarByName",
                     params,
-                    tls=self.json_tls,
-                    verify_tls=self.verify_tls,
                 )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     deleted = response[ATTR_RESULT]
-                    _LOGGER.warning("delete_system_variable: Deleted: %s", str(deleted))
+                    _LOGGER.info("delete_system_variable: Deleted: %s", str(deleted))
 
             except Exception:
                 _LOGGER.exception("delete_system_variable: Exception")
@@ -491,24 +333,18 @@ class Client:
         """Set a system variable on CCU / Homegear."""
         if self.backend == BACKEND_CCU and self.username and self.password:
             _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
-            await self.json_rpc_renew()
-            if not self.session:
+            if not await self.json_rpc.renew():
                 return
             try:
                 params = {
-                    "_session_id_": self.session,
                     ATTR_NAME: name,
                     ATTR_VALUE: value,
                 }
                 if value is True or value is False:
                     params[ATTR_VALUE] = int(value)
-                    response = await self.json_rpc_post(
-                        self.host, self.json_port, "SysVar.setBool", params
-                    )
+                    response = await self.json_rpc.post("SysVar.setBool", params)
                 else:
-                    response = await self.json_rpc_post(
-                        self.host, self.json_port, "SysVar.setFloat", params
-                    )
+                    response = await self.json_rpc.post("SysVar.setFloat", params)
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     res = response[ATTR_RESULT]
                     _LOGGER.debug(
@@ -725,13 +561,13 @@ class Client:
         Update paramsets for provided address.
         """
         if self.interface_id not in self.server.devices_raw_dict:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Interface ID missing in self.server.devices_raw_dict. Not updating paramsets for %s.",
                 address,
             )
             return
         if address not in self.server.devices_raw_dict[self.interface_id]:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Channel missing in self.server.devices_raw_dict[interface_id]. Not updating paramsets for %s.",
                 address,
             )
@@ -764,21 +600,14 @@ class Client:
             return
         _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
-            await self.json_rpc_renew()
-            if not self.session:
+            if not await self.json_rpc.renew():
                 _LOGGER.warning(
                     "fetch_names_json: Login failed. Not fetching names via JSON-RPC."
                 )
                 return
 
-            params = {ATTR_SESSION_ID: self.session}
-            response = await self.json_rpc_post(
-                self.host,
-                self.json_port,
+            response = await self.json_rpc.post(
                 "Interface.listInterfaces",
-                params,
-                tls=self.json_tls,
-                verify_tls=self.verify_tls,
             )
             interface = False
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
@@ -794,14 +623,8 @@ class Client:
             if not interface:
                 return
 
-            params = {ATTR_SESSION_ID: self.session}
-            response = await self.json_rpc_post(
-                self.host,
-                self.json_port,
+            response = await self.json_rpc.post(
                 "Device.listAllDetail",
-                params,
-                tls=self.json_tls,
-                verify_tls=self.verify_tls,
             )
 
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
