@@ -7,7 +7,7 @@ import socket
 import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Awaitable, TypeVar
-from hahomematic.json_rpc import JsonRpcSession
+
 from hahomematic import config
 from hahomematic.const import (
     ATTR_ADDRESS,
@@ -20,7 +20,6 @@ from hahomematic.const import (
     ATTR_NAME,
     ATTR_PORT,
     ATTR_RESULT,
-    ATTR_SESSION_ID,
     ATTR_VALUE,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
@@ -43,6 +42,7 @@ from hahomematic.const import (
     RELEVANT_PARAMSETS,
 )
 from hahomematic.helpers import build_api_url, parse_ccu_sys_var
+from hahomematic.json_rpc import JsonRpcAioHttpSession
 from hahomematic.proxy import ThreadPoolServerProxy
 
 T = TypeVar("T")
@@ -74,6 +74,7 @@ class Client:
         password=DEFAULT_PASSWORD,
         tls=DEFAULT_TLS,
         verify_tls=DEFAULT_VERIFY_TLS,
+        client_session=None,
         # connect -> do init
         connect=DEFAULT_CONNECT,
         callback_host=None,
@@ -103,6 +104,7 @@ class Client:
         self.tls = tls
         self.json_tls = json_tls
         self.verify_tls = verify_tls
+        self.client_session = client_session
         try:
             socket.gethostbyname(self.host)
         # pylint: disable=broad-except
@@ -147,15 +149,7 @@ class Client:
         self.time_initialized = 0
         self.version = None
         self.backend = None
-        self.json_rpc = JsonRpcSession(
-            client=self,
-            host=self.host,
-            port=self.port,
-            username=self.username,
-            password=self.password,
-            tls=self.json_tls,
-            verify_tls=self.verify_tls,
-        )
+        self.json_rpc_session = JsonRpcAioHttpSession(client=self)
 
         self.server.clients[self.interface_id] = self
         if self.init_url not in self.server.clients_by_init_url:
@@ -205,8 +199,8 @@ class Client:
         """
         De-init to stop CCU from sending events for this remote.
         """
-        if self.json_rpc.is_activated:
-            await self.json_rpc.logout()
+        if self.json_rpc_session.is_activated:
+            await self.json_rpc_session.logout()
         if not self.connect:
             _LOGGER.debug("proxy_de_init: Skipping de-init for %s", self.name)
             return PROXY_DE_INIT_SKIPPED
@@ -254,10 +248,10 @@ class Client:
             _LOGGER.debug(
                 "get_all_system_variables: Getting all System variables via JSON-RPC"
             )
-            if not await self.json_rpc.renew():
+            if not await self.json_rpc_session.login_or_renew():
                 return variables
             try:
-                response = await self.json_rpc.post(
+                response = await self.json_rpc_session.post(
                     "SysVar.getAll",
                 )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
@@ -279,11 +273,11 @@ class Client:
         var = None
         if self.backend == BACKEND_CCU and self.username and self.password:
             _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
-            if not await self.json_rpc.renew():
+            if not await self.json_rpc_session.login_or_renew():
                 return var
             try:
                 params = {ATTR_NAME: name}
-                response = await self.json_rpc.post(
+                response = await self.json_rpc_session.post(
                     "SysVar.getValueByName",
                     params,
                 )
@@ -309,11 +303,11 @@ class Client:
             _LOGGER.debug(
                 "delete_system_variable: Getting System variable via JSON-RPC"
             )
-            if not await self.json_rpc.renew():
+            if not await self.json_rpc_session.login_or_renew():
                 return
             try:
                 params = {ATTR_NAME: name}
-                response = await self.json_rpc.post(
+                response = await self.json_rpc_session.post(
                     "SysVar.deleteSysVarByName",
                     params,
                 )
@@ -333,7 +327,7 @@ class Client:
         """Set a system variable on CCU / Homegear."""
         if self.backend == BACKEND_CCU and self.username and self.password:
             _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
-            if not await self.json_rpc.renew():
+            if not await self.json_rpc_session.login_or_renew():
                 return
             try:
                 params = {
@@ -342,9 +336,13 @@ class Client:
                 }
                 if value is True or value is False:
                     params[ATTR_VALUE] = int(value)
-                    response = await self.json_rpc.post("SysVar.setBool", params)
+                    response = await self.json_rpc_session.post(
+                        "SysVar.setBool", params
+                    )
                 else:
-                    response = await self.json_rpc.post("SysVar.setFloat", params)
+                    response = await self.json_rpc_session.post(
+                        "SysVar.setFloat", params
+                    )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     res = response[ATTR_RESULT]
                     _LOGGER.debug(
@@ -600,13 +598,13 @@ class Client:
             return
         _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
-            if not await self.json_rpc.renew():
+            if not await self.json_rpc_session.login_or_renew():
                 _LOGGER.warning(
                     "fetch_names_json: Login failed. Not fetching names via JSON-RPC."
                 )
                 return
 
-            response = await self.json_rpc.post(
+            response = await self.json_rpc_session.post(
                 "Interface.listInterfaces",
             )
             interface = False
@@ -623,7 +621,7 @@ class Client:
             if not interface:
                 return
 
-            response = await self.json_rpc.post(
+            response = await self.json_rpc_session.post(
                 "Device.listAllDetail",
             )
 
