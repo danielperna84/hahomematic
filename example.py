@@ -5,7 +5,7 @@ import sys
 import time
 
 from hahomematic import config, const
-from hahomematic.client import Client
+from hahomematic.client import ClientFactory
 from hahomematic.server import Server
 
 logging.basicConfig(level=logging.DEBUG)
@@ -25,7 +25,7 @@ class Example:
         self.server = None
 
     def systemcallback(self, src, *args):
-        self.got_devices
+        self.got_devices = True
         print("systemcallback: %s" % src)
         if src == const.HH_EVENT_NEW_DEVICES:
             print("Number of new device descriptions: %i" % len(args[0]))
@@ -58,7 +58,7 @@ class Example:
         self, interface_id, address, parameter, name, unique_id, eventtype, value
     ):
         print(
-            "clickcallback at %i: %s, %s, %s, %s, %s, %s"
+            "clickcallback at %i: %s, %s, %s, %s, %s, %s, %s"
             % (
                 int(time.time()),
                 address,
@@ -75,7 +75,7 @@ class Example:
         self, interface_id, address, parameter, name, unique_id, eventtype, value
     ):
         print(
-            "impulsecallback at %i: %s, %s, %s, %s, %s, %s"
+            "impulsecallback at %i: %s, %s, %s, %s, %s, %s, %s"
             % (
                 int(time.time()),
                 address,
@@ -103,23 +103,23 @@ class Example:
         self.server.callback_impulse_event = self.impulsecallback
 
         # Create clients
-        client1 = Client(
+        client1 = await ClientFactory(
             server=self.server,
             name="hmip",
             host=CCU_HOST,
             port=2010,
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
-        )
-        client2 = Client(
+        ).get_client()
+        client2 = await ClientFactory(
             server=self.server,
             name="rf",
             host=CCU_HOST,
             port=2001,
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
-        )
-        client3 = Client(
+        ).get_client()
+        client3 = await ClientFactory(
             server=self.server,
             name="groups",
             host=CCU_HOST,
@@ -127,7 +127,7 @@ class Example:
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
             path="/groups",
-        )
+        ).get_client()
 
         # Clients have to exist prior to starting the server thread!
         self.server.start()

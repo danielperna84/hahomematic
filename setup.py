@@ -14,7 +14,7 @@ VERSION = "0.0.4"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
-REQUIRES = []
+REQUIRES = ["aiohttp"]
 
 setup(
     name=PACKAGE_NAME,

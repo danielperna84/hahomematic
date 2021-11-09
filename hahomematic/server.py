@@ -10,12 +10,11 @@ import logging
 import os
 import threading
 import time
-from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Awaitable, Optional, TypeVar
+from typing import Any, Awaitable, Optional, Type, TypeVar
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from hahomematic import config
-from hahomematic.client import Client, ClientException
+from hahomematic.client import Client, ClientFactory, ClientException
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
     DATA_LOAD_SUCCESS,
@@ -297,9 +296,6 @@ class Server(threading.Thread):
         self.entry_id = entry_id
         self.local_ip = local_ip
         self.local_port = int(local_port)
-        self._json_executor = ThreadPoolExecutor(
-            max_workers=config.JSON_EXECUTOR_MAX_WORKERS
-        )
         self._loop = loop
         # Caches for CCU data
         # {interface_id, {address, paramsets}}
@@ -407,8 +403,6 @@ class Server(threading.Thread):
                 _LOGGER.info("Server.stop: Proxy de-initialized: %s", name)
             client.stop()
 
-        _LOGGER.info("Server-Executor.stop: Stopping Executors.")
-        self._json_executor.shutdown()
         _LOGGER.info("Server.stop: Clearing existing clients. Please recreate them!")
         self.clients.clear()
         self.clients_by_init_url.clear()
@@ -436,10 +430,6 @@ class Server(threading.Thread):
         """Add an executor job from within the event loop."""
         return await self.loop.run_in_executor(None, fn, *args)
 
-    async def async_add_json_executor_job(self, fn, *args) -> Awaitable[T]:
-        """Add an executor job from within the event loop for all json related interaction"""
-        return await self.loop.run_in_executor(self._json_executor, fn, *args)
-
     def start_connection_checker(self):
         """Start the connection checker."""
         self._connection_checker.start()
@@ -461,7 +451,7 @@ class Server(threading.Thread):
     async def reconnect(self):
         """re-init all RPC clients."""
         if await self.is_connected():
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Server.reconnect: re-connect to server %s",
                 self.instance_name,
             )
