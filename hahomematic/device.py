@@ -3,6 +3,7 @@
 """
 Module for the Device class
 """
+import datetime
 import logging
 from typing import Optional
 
@@ -66,6 +67,9 @@ class HmDevice:
 
         self.entities: dict[tuple[str, str], GenericEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
+        self.last_update = None
+        self._update_callbacks = []
+        self._remove_callbacks = []
         self.device_type = self.server.devices_raw_dict[self.interface_id][
             self.address
         ][ATTR_HM_TYPE]
@@ -96,8 +100,19 @@ class HmDevice:
 
     def add_hm_entity(self, hm_entity: GenericEntity):
         """add an hm entity to a device"""
-        if isinstance(hm_entity, GenericEntity):
-            self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
+        if not isinstance(hm_entity, GenericEntity):
+            return
+        hm_entity.register_update_callback(self.update_device)
+        hm_entity.register_remove_callback(self.remove_device)
+        self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
+
+    def remove_hm_entity(self, hm_entity: GenericEntity):
+        """add an hm entity to a device"""
+        if not isinstance(hm_entity, GenericEntity):
+            return
+        hm_entity.unregister_update_callback(self.update_device)
+        hm_entity.unregister_remove_callback(self.remove_device)
+        del self.entities[(hm_entity.address, hm_entity.parameter)]
 
     def add_hm_action_event(self, hm_event: BaseEvent):
         """add an hm entity to a device"""
@@ -109,6 +124,47 @@ class HmDevice:
             entity.remove_event_subscriptions()
         for action_event in self.action_events.values():
             action_event.remove_event_subscriptions()
+
+    def register_update_callback(self, update_callback) -> None:
+        """register update callback"""
+        if callable(update_callback):
+            self._update_callbacks.append(update_callback)
+
+    def unregister_update_callback(self, update_callback) -> None:
+        """remove update callback"""
+        if update_callback in self._update_callbacks:
+            self._update_callbacks.remove(update_callback)
+
+    def update_device(self, *args) -> None:
+        """
+        Do what is needed when the state of the entity has been updated.
+        """
+        self._set_last_update()
+        for _callback in self._update_callbacks:
+            # pylint: disable=not-callable
+            _callback(*args)
+
+    def register_remove_callback(self, remove_callback) -> None:
+        """register remove callback"""
+        if callable(remove_callback):
+            self._remove_callbacks.append(remove_callback)
+
+    def unregister_remove_callback(self, remove_callback) -> None:
+        """remove remove callback"""
+        if remove_callback in self._remove_callbacks:
+            self._remove_callbacks.remove(remove_callback)
+
+    def remove_device(self, *args) -> None:
+        """
+        Do what is needed when the entity has been removed.
+        """
+        self._set_last_update()
+        for _callback in self._remove_callbacks:
+            # pylint: disable=not-callable
+            _callback(*args)
+
+    def _set_last_update(self) -> None:
+        self.last_update = datetime.datetime.now()
 
     def get_hm_entity(self, address, parameter) -> Optional[GenericEntity]:
         """return a hm_entity from device"""
@@ -148,11 +204,6 @@ class HmDevice:
                 self.client.fetch_paramset(entity.address, paramset)
                 entity.update_parameter_data()
         self.update_device()
-
-    def update_device(self) -> None:
-        """Trigger Update for all entities"""
-        for entity in self.entities.values():
-            entity.update_entity()
 
     def create_entities(self) -> Optional[set[GenericEntity]]:
         """

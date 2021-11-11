@@ -204,7 +204,7 @@ class ImpulseEvent(BaseEvent):
                 self._device.reload_paramsets()
             return
         if self.parameter == EVENT_UN_REACH:
-            self._device.update_device()
+            self._device.update_device(self.unique_id)
             return
 
         if callable(self._server.callback_impulse_event):

@@ -11,6 +11,7 @@ from hahomematic.const import (
     ATTR_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
+    HA_DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,8 +22,10 @@ def generate_unique_id(address, parameter=None):
     Build unique id from address and parameter.
     """
     if parameter is None:
-        return f"{address.replace(':', '_').replace('-', '_')}".lower()
-    return f"{address.replace(':', '_').replace('-', '_')}_{parameter}".lower()
+        return f"{HA_DOMAIN}_{address.replace(':', '_').replace('-', '_')}".lower()
+    return (
+        f"{HA_DOMAIN}_{address.replace(':', '_').replace('-', '_')}_{parameter}".lower()
+    )
 
 
 def make_http_credentials(username=None, password=None):
@@ -79,3 +82,13 @@ def get_entity_name(server, interface_id, address, parameter, unique_id) -> str:
         p_name = parameter.title().replace("_", " ")
         name = f"{d_name} {p_name}"
     return name
+
+
+def get_custom_entity_name(
+    server, interface_id, address, unique_id, channel_no=None
+) -> str:
+    """generate name for entity"""
+    if channel_no and not ":" in address:
+        address = f"{address}:{channel_no}"
+
+    return server.names_cache.get(interface_id, {}).get(address, unique_id)
