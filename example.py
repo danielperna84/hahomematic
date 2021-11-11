@@ -51,9 +51,6 @@ class Example:
             % (int(time.time()), address, interface_id, key, value)
         )
 
-    def entityupdatecallback(self, entity_id):
-        print("entityupdatecallback at %i: %s" % (int(time.time()), entity_id))
-
     def clickcallback(
         self, interface_id, address, parameter, name, unique_id, eventtype, value
     ):
@@ -98,7 +95,7 @@ class Example:
         config.CACHE_DIR = "cache"
         # Add callbacks to handle the events and see what happens on the system.
         self.server.callback_system_event = self.systemcallback
-        self.server.callback_device_event = self.eventcallback
+        self.server.callback_entity_event = self.eventcallback
         self.server.callback_click_event = self.clickcallback
         self.server.callback_impulse_event = self.impulsecallback
 

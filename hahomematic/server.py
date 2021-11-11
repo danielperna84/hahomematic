@@ -10,11 +10,11 @@ import logging
 import os
 import threading
 import time
-from typing import Any, Awaitable, Optional, Type, TypeVar
+from typing import Any, Awaitable, Optional, TypeVar
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from hahomematic import config
-from hahomematic.client import Client, ClientFactory, ClientException
+from hahomematic.client import Client, ClientException
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
     DATA_LOAD_SUCCESS,
@@ -56,7 +56,7 @@ class RPCFunctions:
     # pylint: disable=too-many-branches,too-many-statements
     def __init__(self, server):
         _LOGGER.debug("RPCFunctions.__init__")
-        self._server = server
+        self._server: Server = server
 
     @callback_event
     # pylint: disable=no-self-use
@@ -85,23 +85,6 @@ class RPCFunctions:
                     address,
                     value_key,
                 )
-        if ":" in address:
-            device_address = address.split(":")[0]
-            if device_address in self._server.device_event_subscriptions:
-                try:
-                    for callback in self._server.device_event_subscriptions[
-                        device_address
-                    ]:
-                        callback(interface_id, device_address)
-                except Exception:
-                    _LOGGER.exception(
-                        "RPCFunctions.event: Failed to call device-callback for: %s, %s, %s",
-                        interface_id,
-                        address,
-                        value_key,
-                    )
-        else:
-            return
 
         return True
 
@@ -314,8 +297,6 @@ class Server(threading.Thread):
         self.devices_raw_dict = {}
         # {{channel_address, parameter}, event_handle}
         self.entity_event_subscriptions: dict[tuple[str, str], Any] = {}
-        # {device_address, event_handle}
-        self.device_event_subscriptions: dict[tuple[str, str], Any] = {}
         # {unique_id, entity}
         self.hm_entities: dict[str, BaseEntity] = {}
         # {device_address, device}
@@ -326,7 +307,7 @@ class Server(threading.Thread):
         # Signature: f(name, *args)
         self.callback_system_event = None
         # Signature: f(interface_id, address, value_key, value)
-        self.callback_device_event = None
+        self.callback_entity_event = None
         # Signature: f(interface_id, address, value_key, value)
         self.callback_click_event = None
         # Signature: f(interface_id, address, value_key, value)

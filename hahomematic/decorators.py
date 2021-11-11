@@ -60,9 +60,9 @@ def callback_event(func):
             raise Exception("args-exception callback_event") from err
         if client:
             client.time_initialized = int(time.time())
-        if client.server.callback_device_event is not None:
+        if client.server.callback_entity_event is not None:
             # pylint: disable=not-callable
-            client.server.callback_device_event(*args)
+            client.server.callback_entity_event(*args)
         return return_value
 
     return wrapper_callback_event

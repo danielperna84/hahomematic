@@ -39,7 +39,7 @@ from hahomematic.devices.device_description import (
     DD_PARAM_NAME,
     device_description,
 )
-from hahomematic.helpers import get_entity_name
+from hahomematic.helpers import get_custom_entity_name, get_entity_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +57,8 @@ class BaseEntity(ABC):
         """
 
         self.last_update = None
+        self._update_callbacks = []
+        self._remove_callbacks = []
         self._device = device
         self.create_in_ha = not self._device.custom_device
         self._entities: dict[str, GenericEntity] = {}
@@ -70,8 +72,6 @@ class BaseEntity(ABC):
         self.name = self.client.server.names_cache.get(self._interface_id, {}).get(
             self.address, self.unique_id
         )
-        self._update_callback = None
-        self._remove_callback = None
 
     def _init_entities(self) -> None:
         """Init the supporting entity collection."""
@@ -103,45 +103,40 @@ class BaseEntity(ABC):
     def register_update_callback(self, update_callback) -> None:
         """register update callback"""
         if callable(update_callback):
-            self._update_callback = update_callback
+            self._update_callbacks.append(update_callback)
 
-    def unregister_update_callback(self) -> None:
+    def unregister_update_callback(self, update_callback) -> None:
         """remove update callback"""
-        self._update_callback = None
+        if update_callback in self._update_callbacks:
+            self._update_callbacks.remove(update_callback)
 
-    def update_entity(self) -> None:
+    def update_entity(self, *args) -> None:
         """
         Do what is needed when the state of the entity has been updated.
         """
-        if self._update_callback is None:
-            _LOGGER.debug("Entity.update_entity: No callback defined.")
-            return
         self._set_last_update()
-        # pylint: disable=not-callable
-        self._update_callback(self.unique_id)
+        for _callback in self._update_callbacks:
+            # pylint: disable=not-callable
+            _callback(self.unique_id)
 
     def register_remove_callback(self, remove_callback) -> None:
         """register remove callback"""
         if callable(remove_callback):
-            self._remove_callback = remove_callback
+            self._remove_callbacks.append(remove_callback)
 
-    def unregister_remove_callback(self) -> None:
+    def unregister_remove_callback(self, remove_callback) -> None:
         """remove remove callback"""
-        self._remove_callback = None
+        if remove_callback in self._remove_callbacks:
+            self._remove_callbacks.remove(remove_callback)
 
     def remove_entity(self) -> None:
         """
         Do what is needed when the entity has been removed.
         """
-        if self._remove_callback is None:
-            _LOGGER.debug("Entity.remove_entity: No callback defined.")
-            return
-        # pylint: disable=not-callable
-        self._remove_callback(self.unique_id)
-
-    @abstractmethod
-    def remove_event_subscriptions(self) -> None:
-        """Remove existing event subscriptions"""
+        self._set_last_update()
+        for _callback in self._remove_callbacks:
+            # pylint: disable=not-callable
+            _callback(self.unique_id)
 
     @abstractmethod
     async def load_data(self) -> None:
@@ -271,8 +266,9 @@ class GenericEntity(BaseEntity):
             )
             return
 
-        self._state = value
-        self.update_entity()
+        if self._state is not value:
+            self._state = value
+            self.update_entity()
 
     @property
     @abstractmethod
@@ -351,7 +347,9 @@ class CustomEntity(BaseEntity):
     """
 
     # pylint: disable=too-many-arguments
-    def __init__(self, device, unique_id, address, device_desc, platform):
+    def __init__(
+        self, device, unique_id, address, device_desc, platform, channel_no=None
+    ):
         """
         Initialize the entity.
         """
@@ -364,64 +362,55 @@ class CustomEntity(BaseEntity):
 
         self.create_in_ha = True
         self._device_desc = device_desc
-        self.channels = list(
-            self._server.devices[self._interface_id][self.address].keys()
+        self._channel_no = channel_no
+        self.name = get_custom_entity_name(
+            server=self._server,
+            interface_id=self._interface_id,
+            address=self.address,
+            unique_id=self.unique_id,
+            channel_no=channel_no,
         )
-        # Subscribe for all events of this device
-        if self.address not in self._server.device_event_subscriptions:
-            self._server.device_event_subscriptions[self.address] = []
-        self._server.device_event_subscriptions[self.address].append(self.event)
         self._init_entities()
-
-    def event(self, interface_id, address) -> None:
-        """
-        Handle events for this device.
-        """
-
-        if interface_id != self._interface_id:
-            _LOGGER.warning(
-                "CustomEntity.event: Incorrect interface_id: %s - should be: %s",
-                interface_id,
-                self._interface_id,
-            )
-            return
-        if address != self.address:
-            _LOGGER.warning(
-                "CustomEntity.event: Incorrect address: %s - should be: %s",
-                address,
-                self.address,
-            )
-            return
-
-        self.update_entity()
-
-    def remove_event_subscriptions(self) -> None:
-        """Remove existing event subscriptions"""
-        del self._server.device_event_subscriptions[self.address]
 
     def _init_entities(self) -> None:
         """init entity collection"""
         super()._init_entities()
-        for (f_name, data) in self._device_desc[DD_DEVICE][DD_FIELDS].items():
-            f_address = f"{self.address}{data[DD_ADDRESS_PREFIX]}"
-            p_name = data[DD_PARAM_NAME]
-            entity = self._device.get_hm_entity(f_address, p_name)
-            if entity:
-                self._entities[f_name] = entity
+        for c_address, channel in self._device_desc[DD_DEVICE][DD_FIELDS].items():
+            if self._channel_no and self._channel_no is not c_address:
+                continue
+            for (f_name, p_name) in channel.items():
+                f_address = f"{self.address}:{c_address}"
+                entity = self._device.get_hm_entity(f_address, p_name)
+                self._add_entity(f_name, entity)
         # add device entities
         for data in self._device_desc[DD_ENTITIES].values():
-            e_address = f"{self.address}{data[DD_ADDRESS_PREFIX]}"
+            e_address = f"{self.address}:{data[DD_ADDRESS_PREFIX]}"
             ep_name = data[DD_PARAM_NAME]
             entity = self._device.get_hm_entity(e_address, ep_name)
             if entity:
                 entity.create_in_ha = True
         # add default entities
         for data in device_description[DD_DEFAULT_ENTITIES].values():
-            e_address = f"{self.address}{data[DD_ADDRESS_PREFIX]}"
+            e_address = f"{self.address}:{data[DD_ADDRESS_PREFIX]}"
             ep_name = data[DD_PARAM_NAME]
             entity = self._device.get_hm_entity(e_address, ep_name)
             if entity:
                 entity.create_in_ha = True
+
+    def _add_entity(self, f_name, entity: GenericEntity):
+        """Add entity to collection and register callback"""
+        if not entity:
+            return
+
+        entity.register_update_callback(self.update_entity)
+        self._entities[f_name] = entity
+
+    def _remove_entity(self, f_name, entity: GenericEntity):
+        """Remove entity from collection and un-register callback"""
+        if not entity:
+            return
+        entity.unregister_update_callback(self.update_entity)
+        del self._entities[f_name]
 
     async def load_data(self) -> int:
         """Load data"""
