@@ -6,6 +6,7 @@ import time
 
 from hahomematic import config, const
 from hahomematic.client import ClientFactory
+from hahomematic.devices.device_description import validate_device_description
 from hahomematic.server import Server
 
 logging.basicConfig(level=logging.DEBUG)
@@ -152,8 +153,8 @@ class Example:
         await self.server.stop()
 
 
-example = Example()
-
-asyncio.run(example.example_run())
-
-sys.exit(0)
+# valdate the device description
+if validate_device_description():
+    example = Example()
+    asyncio.run(example.example_run())
+    sys.exit(0)
