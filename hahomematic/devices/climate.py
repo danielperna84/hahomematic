@@ -18,7 +18,9 @@ from hahomematic.devices.device_description import (
     FIELD_SET_POINT_MODE,
     FIELD_SETPOINT,
     FIELD_TEMPERATURE,
-    device_description,
+    Devices,
+    get_device_entities,
+    get_device_groups,
 )
 from hahomematic.entity import CustomEntity
 from hahomematic.helpers import generate_unique_id
@@ -52,12 +54,13 @@ class SimpleThermostat(CustomEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, device, address, unique_id, device_desc):
+    def __init__(self, device, address, unique_id, device_desc, entity_desc):
         super().__init__(
             device=device,
             address=address,
             unique_id=unique_id,
             device_desc=device_desc,
+            entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
         )
         _LOGGER.debug(
@@ -145,12 +148,13 @@ class Thermostat(CustomEntity):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, device, address, unique_id, device_desc):
+    def __init__(self, device, address, unique_id, device_desc, entity_desc):
         super().__init__(
             device=device,
             address=address,
             unique_id=unique_id,
             device_desc=device_desc,
+            entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
         )
         _LOGGER.debug(
@@ -288,12 +292,13 @@ class IPThermostat(CustomEntity):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, device, address, unique_id, device_desc):
+    def __init__(self, device, address, unique_id, device_desc, entity_desc):
         super().__init__(
             device=device,
             address=address,
             unique_id=unique_id,
             device_desc=device_desc,
+            entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
         )
         _LOGGER.debug(
@@ -435,12 +440,15 @@ def make_simple_thermostat(device, address):
     unique_id = generate_unique_id(address)
     if unique_id in device.server.hm_entities:
         _LOGGER.debug("make_simple_thermostat: Skipping %s (already exists)", unique_id)
-    device_desc = device_description["SimpleThermostat"]
+        return
+    device_desc = get_device_groups(Devices.SimpleThermostat)[0]
+    entity_desc = get_device_entities(Devices.SimpleThermostat)
     entity = SimpleThermostat(
         device=device,
         address=address,
         unique_id=unique_id,
         device_desc=device_desc,
+        entity_desc=entity_desc,
     )
     entity.add_to_collections()
     return [entity]
@@ -454,13 +462,15 @@ def make_thermostat(device, address):
     unique_id = generate_unique_id(address)
     if unique_id in device.server.hm_entities:
         _LOGGER.debug("make_thermostat: Skipping %s (already exists)", unique_id)
-
-    device_desc = device_description["Thermostat"]
+        return
+    device_desc = get_device_groups(Devices.Thermostat)[0]
+    entity_desc = get_device_entities(Devices.Thermostat)
     entity = Thermostat(
         device=device,
         address=address,
         unique_id=unique_id,
         device_desc=device_desc,
+        entity_desc=entity_desc,
     )
     device.server.hm_entities[unique_id] = entity
     return [entity]
@@ -474,12 +484,15 @@ def make_ip_thermostat(device, address):
     unique_id = generate_unique_id(address)
     if unique_id in device.server.hm_entities:
         _LOGGER.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
-    device_desc = device_description["IPThermostat"]
+        return
+    device_desc = get_device_groups(Devices.IPThermostat)[0]
+    entity_desc = get_device_entities(Devices.IPThermostat)
     entity = IPThermostat(
         device=device,
         address=address,
         unique_id=unique_id,
         device_desc=device_desc,
+        entity_desc=entity_desc,
     )
 
     entity.add_to_collections()

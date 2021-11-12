@@ -31,13 +31,11 @@ from hahomematic.const import (
     TYPE_ACTION,
 )
 from hahomematic.devices.device_description import (
-    DD_ADDRESS_PREFIX,
     DD_DEFAULT_ENTITIES,
-    DD_DEVICE,
-    DD_ENTITIES,
     DD_FIELDS,
-    DD_PARAM_NAME,
+    DD_FIELDS_REP,
     device_description,
+    get_default_entities,
 )
 from hahomematic.helpers import get_custom_entity_name, get_entity_name
 
@@ -348,7 +346,14 @@ class CustomEntity(BaseEntity):
 
     # pylint: disable=too-many-arguments
     def __init__(
-        self, device, unique_id, address, device_desc, platform, channel_no=None
+        self,
+        device,
+        unique_id,
+        address,
+        device_desc,
+        entity_desc,
+        platform,
+        channel_no=None,
     ):
         """
         Initialize the entity.
@@ -362,6 +367,7 @@ class CustomEntity(BaseEntity):
 
         self.create_in_ha = True
         self._device_desc = device_desc
+        self._entity_desc = entity_desc
         self._channel_no = channel_no
         self.name = get_custom_entity_name(
             server=self._server,
@@ -375,27 +381,35 @@ class CustomEntity(BaseEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
         super()._init_entities()
-        for c_address, channel in self._device_desc[DD_DEVICE][DD_FIELDS].items():
-            if self._channel_no and self._channel_no is not c_address:
-                continue
-            for (f_name, p_name) in channel.items():
-                f_address = f"{self.address}:{c_address}"
+        fields_rep = self._device_desc.get(DD_FIELDS_REP, {})
+
+        # Add repeating fields
+        for (f_name, p_name) in fields_rep.items():
+            f_address = f"{self.address}:{self._channel_no}"
+            entity = self._device.get_hm_entity(f_address, p_name)
+            self._add_entity(f_name, entity)
+        # Add device fields
+        for channel_no, channel in self._device_desc[DD_FIELDS].items():
+            # if self._channel_no and self._channel_no is not channel_no:
+            #     continue
+            for f_name, p_name in channel.items():
+                f_address = f"{self.address}:{channel_no}"
                 entity = self._device.get_hm_entity(f_address, p_name)
                 self._add_entity(f_name, entity)
         # add device entities
-        for data in self._device_desc[DD_ENTITIES].values():
-            e_address = f"{self.address}:{data[DD_ADDRESS_PREFIX]}"
-            ep_name = data[DD_PARAM_NAME]
-            entity = self._device.get_hm_entity(e_address, ep_name)
-            if entity:
-                entity.create_in_ha = True
+        self._mark_entity(self._entity_desc)
         # add default entities
-        for data in device_description[DD_DEFAULT_ENTITIES].values():
-            e_address = f"{self.address}:{data[DD_ADDRESS_PREFIX]}"
-            ep_name = data[DD_PARAM_NAME]
-            entity = self._device.get_hm_entity(e_address, ep_name)
-            if entity:
-                entity.create_in_ha = True
+        self._mark_entity(get_default_entities())
+        return
+
+    def _mark_entity(self, field_desc):
+        """Mark entities to be created in HA."""
+        for channel_no, field in field_desc.items():
+            f_address = f"{self.address}:{channel_no}"
+            for f_name, p_name in field.items():
+                entity = self._device.get_hm_entity(f_address, p_name)
+                if entity:
+                    entity.create_in_ha = True
 
     def _add_entity(self, f_name, entity: GenericEntity):
         """Add entity to collection and register callback"""

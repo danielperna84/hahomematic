@@ -380,7 +380,8 @@ class HmDevice:
                         parameter_data[ATTR_HM_TYPE],
                     )
         else:
-            if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
+            # Also check, if sensor could be a binary_sensor due to value_list.
+            if _is_binary_sensor(parameter_data):
                 _LOGGER.debug("create_entity: binary_sensor: %s %s", address, parameter)
                 entity = HmBinarySensor(
                     device=self,
@@ -444,7 +445,7 @@ def create_devices(server) -> None:
                 )
             try:
                 new_entities.update(device.create_entities())
-            except Exception:
+            except Exception as err:
                 _LOGGER.exception(
                     "create_devices: Failed to create entities: %s, %s",
                     interface_id,
@@ -455,3 +456,13 @@ def create_devices(server) -> None:
         server.callback_system_event(
             HH_EVENT_DEVICES_CREATED, new_devices, new_entities
         )
+
+
+def _is_binary_sensor(parameter_data) -> bool:
+    """Check, if the sensor is a binary_sensor."""
+    if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
+        return True
+    value_list = parameter_data.get("VALUE_LIST")
+    if value_list == ["CLOSED", "OPEN"] or value_list == ["CLOSED", "TILTED", "OPEN"]:
+        return True
+    return False
