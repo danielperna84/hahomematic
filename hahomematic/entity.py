@@ -31,10 +31,8 @@ from hahomematic.const import (
     TYPE_ACTION,
 )
 from hahomematic.devices.device_description import (
-    DD_DEFAULT_ENTITIES,
     DD_FIELDS,
     DD_FIELDS_REP,
-    device_description,
     get_default_entities,
 )
 from hahomematic.helpers import get_custom_entity_name, get_entity_name
@@ -59,7 +57,7 @@ class BaseEntity(ABC):
         self._remove_callbacks = []
         self._device = device
         self.create_in_ha = not self._device.custom_device
-        self._entities: dict[str, GenericEntity] = {}
+        self.data_entities: dict[str, GenericEntity] = {}
         self._server = self._device.server
         self._interface_id = self._device.interface_id
         self.client = self._server.clients[self._interface_id]
@@ -75,7 +73,7 @@ class BaseEntity(ABC):
         """Init the supporting entity collection."""
         un_reach = self._device.get_hm_entity(f"{self.address}:0", PARAM_UN_REACH)
         if un_reach:
-            self._entities[PARAM_UN_REACH] = un_reach
+            self.data_entities[PARAM_UN_REACH] = un_reach
 
     @property
     def available(self) -> bool:
@@ -207,12 +205,12 @@ class GenericEntity(BaseEntity):
 
     def _assign_parameter_data(self):
         """Assign parameter data to instance variables."""
+        self._type = self._parameter_data.get(ATTR_HM_TYPE)
         self._default = self._parameter_data.get(ATTR_HM_DEFAULT)
         self._max = self._parameter_data.get(ATTR_HM_MAX)
         self._min = self._parameter_data.get(ATTR_HM_MIN)
         self._operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
         self._special = self._parameter_data.get(ATTR_HM_SPECIAL)
-        self._type = self._parameter_data.get(ATTR_HM_TYPE)
         self._unit = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
         self._value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
 
@@ -316,7 +314,7 @@ class GenericEntity(BaseEntity):
             if self._operations & OPERATION_READ:
                 self._state = await self.proxy.getValue(self.address, self.parameter)
                 self.update_entity()
-            for entity in self._entities.values():
+            for entity in self.data_entities.values():
                 if entity:
                     await entity.load_data()
 
@@ -417,21 +415,21 @@ class CustomEntity(BaseEntity):
             return
 
         entity.register_update_callback(self.update_entity)
-        self._entities[f_name] = entity
+        self.data_entities[f_name] = entity
 
     def _remove_entity(self, f_name, entity: GenericEntity):
         """Remove entity from collection and un-register callback"""
         if not entity:
             return
         entity.unregister_update_callback(self.update_entity)
-        del self._entities[f_name]
+        del self.data_entities[f_name]
 
     async def load_data(self) -> int:
         """Load data"""
         if self._updated_within_minutes():
             return DATA_NO_LOAD
 
-        for entity in self._entities.values():
+        for entity in self.data_entities.values():
             if entity:
                 await entity.load_data()
 
@@ -440,21 +438,21 @@ class CustomEntity(BaseEntity):
 
     def _get_entity_value(self, field_name):
         """get entity value"""
-        entity = self._entities.get(field_name)
+        entity = self.data_entities.get(field_name)
         if entity:
             return entity.state
         return None
 
     def _get_entity_attribute(self, field_name, attr_name):
         """get entity attribute value"""
-        entity = self._entities.get(field_name)
-        if entity:
+        entity = self.data_entities.get(field_name)
+        if entity and hasattr(entity, attr_name):
             return getattr(entity, attr_name)
         return None
 
     async def _send_value(self, field_name, value) -> None:
         """send value to ccu"""
-        entity = self._entities.get(field_name)
+        entity = self.data_entities.get(field_name)
         if entity:
             await entity.send_value(value)
 

@@ -83,7 +83,7 @@ class BaseHmLight(CustomEntity):
 
 class HmDimmer(BaseHmLight):
     @property
-    def _level(self):
+    def _level(self) -> float:
         """return the temperature of the device"""
         return self._get_entity_value(FIELD_LEVEL)
 
@@ -166,7 +166,7 @@ class IPLightBSL(BaseHmLight):
         return self._get_entity_value(FIELD_COLOR)
 
     @property
-    def _level(self):
+    def _level(self) -> float:
         """return the temperature of the device"""
         return self._get_entity_value(FIELD_LEVEL)
 
@@ -243,21 +243,21 @@ def _convert_color(color: tuple) -> str:
     return "RED"
 
 
-def make_ip_dimmer(device, address):
+def _make_light(device, address, light_class, device_def: Devices):
     """
-    Helper to create IPThermostat entities.
+    Helper to create light entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
     entities = []
-    entity_desc = get_device_entities(Devices.IPDimmer)
-    for device_desc in get_device_groups(Devices.IPDimmer):
+    entity_desc = get_device_entities(device_def)
+    for device_desc in get_device_groups(device_def):
         channels = device_desc[DD_PHY_CHANNEL] + device_desc[DD_VIRT_CHANNEL]
         for channel_no in channels:
             unique_id = generate_unique_id(f"{address}:{channel_no}")
             if unique_id in device.server.hm_entities:
-                _LOGGER.debug("make_ip_dimmer: Skipping %s (already exists)", unique_id)
+                _LOGGER.debug("_make_light: Skipping %s (already exists)", unique_id)
                 continue
-            entity = HmDimmer(
+            entity = light_class(
                 device=device,
                 address=address,
                 unique_id=unique_id,
@@ -265,65 +265,38 @@ def make_ip_dimmer(device, address):
                 entity_desc=entity_desc,
                 channel_no=channel_no,
             )
-            entity.add_to_collections()
-            entities.append(entity)
+            if len(entity.data_entities) > 0:
+                entity.add_to_collections()
+                entities.append(entity)
     return entities
+
+
+def make_ip_dimmer(device, address):
+    """
+    Helper to create homematic ip dimmer entities.
+    """
+    return _make_light(device, address, HmDimmer, Devices.IP_DIMMER)
+
+
+def make_rf_dimmer(device, address):
+    """
+    Helper to create homematic classic dimmer entities.
+    """
+    return _make_light(device, address, HmDimmer, Devices.RF_DIMMER)
 
 
 def make_ip_light(device, address):
     """
-    Helper to create IPThermostat entities.
-    We use a helper-function to avoid raising exceptions during object-init.
+    Helper to create homematic classic light entities.
     """
-    entities = []
-    entity_desc = get_device_entities(Devices.IPLight)
-    for device_desc in get_device_groups(Devices.IPLight):
-        channels = device_desc[DD_PHY_CHANNEL] + device_desc[DD_VIRT_CHANNEL]
-        for channel_no in channels:
-            unique_id = generate_unique_id(f"{address}:{channel_no}")
-            if unique_id in device.server.hm_entities:
-                _LOGGER.debug("make_ip_light: Skipping %s (already exists)", unique_id)
-                continue
-            entity = HmLight(
-                device=device,
-                address=address,
-                unique_id=unique_id,
-                device_desc=device_desc,
-                entity_desc=entity_desc,
-                channel_no=channel_no,
-            )
-            entity.add_to_collections()
-            entities.append(entity)
-    return entities
+    return _make_light(device, address, HmLight, Devices.IP_LIGHT)
 
 
 def make_ip_light_bsl(device, address):
     """
-    Helper to create IPThermostat entities.
-    We use a helper-function to avoid raising exceptions during object-init.
+    Helper to create HmIP-BSL entities.
     """
-    entities = []
-    entity_desc = get_device_entities(Devices.IPLightBSL)
-    for device_desc in get_device_groups(Devices.IPLightBSL):
-        channels = device_desc[DD_PHY_CHANNEL] + device_desc[DD_VIRT_CHANNEL]
-        for channel_no in channels:
-            unique_id = generate_unique_id(f"{address}:{channel_no}")
-            if unique_id in device.server.hm_entities:
-                _LOGGER.debug(
-                    "make_ip_light_bsl: Skipping %s (already exists)", unique_id
-                )
-                continue
-            entity = IPLightBSL(
-                device=device,
-                address=address,
-                unique_id=unique_id,
-                device_desc=device_desc,
-                entity_desc=entity_desc,
-                channel_no=channel_no,
-            )
-            entity.add_to_collections()
-            entities.append(entity)
-    return entities
+    return _make_light(device, address, IPLightBSL, Devices.IP_LIGHT_BSL)
 
 
 DEVICES = {
@@ -331,4 +304,15 @@ DEVICES = {
     "HmIP-BSM": make_ip_light,
     "HmIP-BDT": make_ip_dimmer,
     "HmIP-FDT": make_ip_dimmer,
+    "HmIP-PDT*": make_ip_dimmer,
+    "HM-LC-Dim1*": make_rf_dimmer,
+    "HM-LC-Dim2*": make_rf_dimmer,
+    "HMW-LC-Dim1*": make_rf_dimmer,
+    "HM-DW-WM": make_rf_dimmer,
+    "HSS-DX": make_rf_dimmer,
+    "263 132": make_rf_dimmer,
+    "263 133": make_rf_dimmer,
+    "263 134": make_rf_dimmer,
+    # "HmIPW-DRD3": make_ip_dimmer,
+    # "HmIP-DRDI3": make_ip_dimmer,
 }
