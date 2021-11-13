@@ -251,7 +251,10 @@ def _make_light(device, address, light_class, device_def: Devices):
     entities = []
     entity_desc = get_device_entities(device_def)
     for device_desc in get_device_groups(device_def):
-        channels = device_desc[DD_PHY_CHANNEL] + device_desc[DD_VIRT_CHANNEL]
+        channels = device_desc[DD_PHY_CHANNEL]
+        # check if virtual channels should be used
+        if device.server.enable_virtual_channels:
+            channels += device_desc[DD_VIRT_CHANNEL]
         for channel_no in channels:
             unique_id = generate_unique_id(f"{address}:{channel_no}")
             if unique_id in device.server.hm_entities:
