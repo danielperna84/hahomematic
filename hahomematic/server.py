@@ -270,7 +270,7 @@ class Server(threading.Thread):
     """
 
     def __init__(
-        self, instance_name, entry_id, loop, local_ip=IP_ANY_V4, local_port=PORT_ANY
+        self, instance_name, entry_id, loop, local_ip=IP_ANY_V4, local_port=PORT_ANY, enable_virtual_channels=False
     ):
         _LOGGER.debug("Server.__init__")
         threading.Thread.__init__(self)
@@ -280,6 +280,7 @@ class Server(threading.Thread):
         self.local_ip = local_ip
         self.local_port = int(local_port)
         self._loop = loop
+        self.enable_virtual_channels = enable_virtual_channels
         # Caches for CCU data
         # {interface_id, {address, paramsets}}
         self.paramsets_cache = {}
