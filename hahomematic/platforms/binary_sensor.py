@@ -9,8 +9,6 @@ from hahomematic.const import HA_PLATFORM_BINARY_SENSOR
 from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
-# accept more values as ON for binary_sensors
-convert_to_binary = ["OPEN", "TILTED", True]
 
 
 # pylint: disable=invalid-name
@@ -33,4 +31,4 @@ class HmBinarySensor(GenericEntity):
 
     @property
     def state(self):
-        return self._state in convert_to_binary
+        return self._state

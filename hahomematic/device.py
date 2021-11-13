@@ -463,6 +463,6 @@ def _is_binary_sensor(parameter_data) -> bool:
     if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
         return True
     value_list = parameter_data.get("VALUE_LIST")
-    if value_list == ["CLOSED", "OPEN"] or value_list == ["CLOSED", "TILTED", "OPEN"]:
+    if value_list == ["CLOSED", "OPEN"]:
         return True
     return False
