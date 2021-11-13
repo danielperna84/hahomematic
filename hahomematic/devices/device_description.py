@@ -25,11 +25,13 @@ FIELD_COMFORT_MODE = "comfort_mode"
 FIELD_CONTROL_MODE = "control_mode"
 FIELD_CURRENT = "current"
 FIELD_DUTY_CYCLE = "duty_cycle"
+FIELD_DUTYCYCLE = "dutycycle"
 FIELD_ENERGY_COUNTER = "energy_counter"
 FIELD_FREQUENCY = "frequency"
 FIELD_HUMIDITY = "humidity"
 FIELD_LEVEL = "level"
 FIELD_LOW_BAT = "low_bat"
+FIELD_LOWBAT = "lowbat"
 FIELD_LOWERING_MODE = "lowering_mode"
 FIELD_MANU_MODE = "manu_mode"
 FIELD_OPERATING_VOLTAGE = "operating_voltage"
@@ -51,12 +53,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Devices(Enum):
-    IPLightBSL = "IPLightBSL"
-    IPDimmer = "IPDimmer"
-    IPLight = "IPLight"
-    IPThermostat = "IPThermostat"
-    SimpleThermostat = "SimpleThermostat"
-    Thermostat = "Thermostat"
+    RF_DIMMER = "RfDimmer"
+    IP_LIGHT_BSL = "IPLightBSL"
+    IP_DIMMER = "IPDimmer"
+    IP_LIGHT = "IPLight"
+    IP_THERMOSTAT = "IPThermostat"
+    SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
+    RF_THERMOSTAT = "RfThermostat"
 
 
 SCHEMA_DD_FIELD_DETAILS = Schema({Optional(str): str, Optional(str): str})
@@ -95,8 +98,9 @@ device_description = {
     DD_DEFAULT_ENTITIES: {
         0: {
             FIELD_DUTY_CYCLE: "DUTY_CYCLE",
+            FIELD_DUTYCYCLE: "DUTYCYCLE",
             FIELD_LOW_BAT: "LOW_BAT",
-            FIELD_LOW_BAT: "LOWBAT",
+            FIELD_LOWBAT: "LOWBAT",
             FIELD_OPERATING_VOLTAGE: "OPERATING_VOLTAGE",
             FIELD_RSSI_DEVICE: "RSSI_DEVICE",
             FIELD_RSSI_PEER: "RSSI_PEER",
@@ -104,7 +108,7 @@ device_description = {
         }
     },
     DD_DEVICES: {
-        Devices.SimpleThermostat: {
+        Devices.SIMPLE_RF_THERMOSTAT: {
             DD_DEVICE_GROUPS: [
                 {
                     DD_PHY_CHANNEL: [],
@@ -113,26 +117,49 @@ device_description = {
                     DD_FIELDS: {
                         1: {
                             FIELD_HUMIDITY: "HUMIDITY",
-                            FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
-                            FIELD_SETPOINT: "SET_TEMPERATURE",
-                        }
+                            FIELD_TEMPERATURE: "TEMPERATURE",
+                        },
+                        2: {
+                            FIELD_SETPOINT: "SETPOINT",
+                        },
                     },
                 },
             ],
             DD_ENTITIES: {},
         },
-        Devices.Thermostat: {
+        Devices.RF_THERMOSTAT: {
             DD_DEVICE_GROUPS: [
                 {
                     DD_PHY_CHANNEL: [],
                     DD_VIRT_CHANNEL: [],
                     DD_FIELDS_REP: {},
                     DD_FIELDS: {
-                        2: {
-                            FIELD_HUMIDITY: "HUMIDITY",
+                        1: {
+                            FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
                             FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                             FIELD_SETPOINT: "SET_TEMPERATURE",
-                            FIELD_SET_POINT_MODE: "SET_POINT_MODE",
+                            FIELD_CONTROL_MODE: "CONTROL_MODE",
+                            FIELD_BOOST_MODE: "BOOST_MODE",
+                            FIELD_AUTO_MODE: "AUTO_MODE",
+                            FIELD_MANU_MODE: "MANU_MODE",
+                            FIELD_COMFORT_MODE: "COMFORT_MODE",
+                            FIELD_LOWERING_MODE: "LOWERING_MODE",
+                        },
+                        2: {
+                            FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                            FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                            FIELD_SETPOINT: "SET_TEMPERATURE",
+                            FIELD_CONTROL_MODE: "CONTROL_MODE",
+                            FIELD_BOOST_MODE: "BOOST_MODE",
+                            FIELD_AUTO_MODE: "AUTO_MODE",
+                            FIELD_MANU_MODE: "MANU_MODE",
+                            FIELD_COMFORT_MODE: "COMFORT_MODE",
+                            FIELD_LOWERING_MODE: "LOWERING_MODE",
+                        },
+                        4: {
+                            FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                            FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                            FIELD_SETPOINT: "SET_TEMPERATURE",
                             FIELD_CONTROL_MODE: "CONTROL_MODE",
                             FIELD_BOOST_MODE: "BOOST_MODE",
                             FIELD_AUTO_MODE: "AUTO_MODE",
@@ -145,7 +172,7 @@ device_description = {
             ],
             DD_ENTITIES: {},
         },
-        Devices.IPThermostat: {
+        Devices.IP_THERMOSTAT: {
             DD_DEVICE_GROUPS: [
                 {
                     DD_PHY_CHANNEL: [],
@@ -171,7 +198,7 @@ device_description = {
                 }
             },
         },
-        Devices.IPDimmer: {
+        Devices.IP_DIMMER: {
             DD_DEVICE_GROUPS: [
                 {
                     DD_PHY_CHANNEL: [4],
@@ -188,7 +215,20 @@ device_description = {
             ],
             DD_ENTITIES: {},
         },
-        Devices.IPLight: {
+        Devices.RF_DIMMER: {
+            DD_DEVICE_GROUPS: [
+                {
+                    DD_PHY_CHANNEL: [1, 2, 3, 4],
+                    DD_VIRT_CHANNEL: [],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                    },
+                    DD_FIELDS: {},
+                },
+            ],
+            DD_ENTITIES: {},
+        },
+        Devices.IP_LIGHT: {
             DD_DEVICE_GROUPS: [
                 {
                     DD_PHY_CHANNEL: [4],
@@ -197,7 +237,7 @@ device_description = {
                         FIELD_STATE: "STATE",
                     },
                     DD_FIELDS: {
-                        3: {
+                        1: {
                             FIELD_CHANNEL_SWITCH_STATE: "STATE",
                         },
                     },
@@ -217,7 +257,7 @@ device_description = {
                 },
             },
         },
-        Devices.IPLightBSL: {
+        Devices.IP_LIGHT_BSL: {
             DD_DEVICE_GROUPS: [
                 {
                     DD_PHY_CHANNEL: [8],

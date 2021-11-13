@@ -71,17 +71,17 @@ class SimpleThermostat(CustomEntity):
         )
 
     @property
-    def _humidity(self):
+    def _humidity(self) -> int:
         """return the humidity of the device"""
         return self._get_entity_value(FIELD_HUMIDITY)
 
     @property
-    def _temperature(self):
+    def _temperature(self) -> float:
         """return the temperature of the device"""
         return self._get_entity_value(FIELD_TEMPERATURE)
 
     @property
-    def _setpoint(self):
+    def _setpoint(self) -> float:
         """return the setpoint of the device"""
         return self._get_entity_value(FIELD_SETPOINT)
 
@@ -96,17 +96,17 @@ class SimpleThermostat(CustomEntity):
         return TEMP_CELSIUS
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower())
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower())
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return 0.5
 
@@ -121,17 +121,17 @@ class SimpleThermostat(CustomEntity):
         return [HVAC_MODE_AUTO]
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> int:
         """Return the current humidity."""
         return self._humidity
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return current temperature."""
         return self._temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return target temperature."""
         return self._setpoint
 
@@ -165,17 +165,17 @@ class Thermostat(CustomEntity):
         )
 
     @property
-    def _humidity(self):
+    def _humidity(self) -> int:
         """return the humidity of the device"""
         return self._get_entity_value(FIELD_HUMIDITY)
 
     @property
-    def _temperature(self):
+    def _temperature(self) -> float:
         """return the temperature of the device"""
         return self._get_entity_value(FIELD_TEMPERATURE)
 
     @property
-    def _setpoint(self):
+    def _setpoint(self) -> float:
         """return the setpoint of the device"""
         return self._get_entity_value(FIELD_SETPOINT)
 
@@ -195,24 +195,24 @@ class Thermostat(CustomEntity):
         return TEMP_CELSIUS
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower())
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower())
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return 0.5
 
     @property
     def hvac_mode(self):
         """Return hvac operation mode."""
-        if self._temperature <= self.min_temp:
+        if self._temperature and self._temperature <= self.min_temp:
             return HVAC_MODE_OFF
         if self._control_mode == HM_MODE_MANU:
             return HVAC_MODE_HEAT
@@ -247,17 +247,17 @@ class Thermostat(CustomEntity):
         return [PRESET_BOOST, PRESET_COMFORT, PRESET_ECO]
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> int:
         """Return the current humidity."""
         return self._humidity
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return current temperature."""
         return self._temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return target temperature."""
         return self._setpoint
 
@@ -309,15 +309,15 @@ class IPThermostat(CustomEntity):
         )
 
     @property
-    def _humidity(self):
+    def _humidity(self) -> int:
         return self._get_entity_value(FIELD_HUMIDITY)
 
     @property
-    def _temperature(self):
+    def _temperature(self) -> float:
         return self._get_entity_value(FIELD_TEMPERATURE)
 
     @property
-    def _setpoint(self):
+    def _setpoint(self) -> float:
         return self._get_entity_value(FIELD_SETPOINT)
 
     @property
@@ -347,17 +347,17 @@ class IPThermostat(CustomEntity):
         return TEMP_CELSIUS
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower())
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower())
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return 0.5
 
@@ -394,17 +394,17 @@ class IPThermostat(CustomEntity):
         return [PRESET_BOOST]
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> int:
         """Return the current humidity."""
         return self._humidity
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return current temperature."""
         return self._temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return target temperature."""
         return self._setpoint
 
@@ -433,25 +433,37 @@ class IPThermostat(CustomEntity):
             await self._send_value(FIELD_BOOST_MODE, True)
 
 
-def make_simple_thermostat(device, address):
+def _make_thermostat(device, address, climate_class, device_def: Devices):
     """
-    Helper to create SimpleThermostat entities.
+    Helper to create climate entities.
+    We use a helper-function to avoid raising exceptions during object-init.
     """
     unique_id = generate_unique_id(address)
     if unique_id in device.server.hm_entities:
-        _LOGGER.debug("make_simple_thermostat: Skipping %s (already exists)", unique_id)
+        _LOGGER.debug("_make_thermostat: Skipping %s (already exists)", unique_id)
         return
-    device_desc = get_device_groups(Devices.SimpleThermostat)[0]
-    entity_desc = get_device_entities(Devices.SimpleThermostat)
-    entity = SimpleThermostat(
+    device_desc = get_device_groups(device_def)[0]
+    entity_desc = get_device_entities(device_def)
+    entity = climate_class(
         device=device,
         address=address,
         unique_id=unique_id,
         device_desc=device_desc,
         entity_desc=entity_desc,
     )
-    entity.add_to_collections()
-    return [entity]
+    if len(entity.data_entities) > 0:
+        entity.add_to_collections()
+        return [entity]
+    return []
+
+
+def make_simple_thermostat(device, address):
+    """
+    Helper to create SimpleThermostat entities.
+    """
+    return _make_thermostat(
+        device, address, SimpleThermostat, Devices.SIMPLE_RF_THERMOSTAT
+    )
 
 
 def make_thermostat(device, address):
@@ -459,82 +471,31 @@ def make_thermostat(device, address):
     Helper to create Thermostat entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
-    unique_id = generate_unique_id(address)
-    if unique_id in device.server.hm_entities:
-        _LOGGER.debug("make_thermostat: Skipping %s (already exists)", unique_id)
-        return
-    device_desc = get_device_groups(Devices.Thermostat)[0]
-    entity_desc = get_device_entities(Devices.Thermostat)
-    entity = Thermostat(
-        device=device,
-        address=address,
-        unique_id=unique_id,
-        device_desc=device_desc,
-        entity_desc=entity_desc,
-    )
-    device.server.hm_entities[unique_id] = entity
-    return [entity]
+    return _make_thermostat(device, address, Thermostat, Devices.RF_THERMOSTAT)
 
 
 def make_ip_thermostat(device, address):
     """
     Helper to create IPThermostat entities.
-    We use a helper-function to avoid raising exceptions during object-init.
     """
-    unique_id = generate_unique_id(address)
-    if unique_id in device.server.hm_entities:
-        _LOGGER.debug("make_ip_thermostat: Skipping %s (already exists)", unique_id)
-        return
-    device_desc = get_device_groups(Devices.IPThermostat)[0]
-    entity_desc = get_device_entities(Devices.IPThermostat)
-    entity = IPThermostat(
-        device=device,
-        address=address,
-        unique_id=unique_id,
-        device_desc=device_desc,
-        entity_desc=entity_desc,
-    )
-
-    entity.add_to_collections()
-    return [entity]
+    return _make_thermostat(device, address, IPThermostat, Devices.IP_THERMOSTAT)
 
 
 DEVICES = {
-    "BC-RT-TRX-CyG": make_thermostat,
-    "BC-RT-TRX-CyG-2": make_thermostat,
-    "BC-RT-TRX-CyG-3": make_thermostat,
-    "BC-RT-TRX-CyG-4": make_thermostat,
-    "BC-RT-TRX-CyN": make_thermostat,
-    "BC-TC-C-WM-2": make_thermostat,
-    "BC-TC-C-WM-4": make_thermostat,
-    "HM-CC-RT-DN": make_thermostat,
-    "HM-CC-RT-DN-BoM": make_thermostat,
+    "BC-RT-TRX-CyG*": make_thermostat,
+    "BC-RT-TRX-CyN*": make_thermostat,
+    "BC-TC-C-WM*": make_thermostat,
+    "HM-CC-RT-DN*": make_thermostat,
     "HM-CC-TC": make_simple_thermostat,
     "HM-CC-VG-1": make_thermostat,
     "HM-TC-IT-WM-W-EU": make_thermostat,
-    "HmIP-BWTH": make_ip_thermostat,
-    "HmIP-BWTH24": make_ip_thermostat,
-    "HMIP-eTRV": make_ip_thermostat,
-    "HmIP-eTRV": make_ip_thermostat,
-    "HmIP-eTRV-2": make_ip_thermostat,
-    "HmIP-eTRV-2-UK": make_ip_thermostat,
-    "HmIP-eTRV-B": make_ip_thermostat,
-    "HmIP-eTRV-B-UK": make_ip_thermostat,
-    "HmIP-eTRV-B1": make_ip_thermostat,
-    "HmIP-eTRV-C": make_ip_thermostat,
-    "HmIP-eTRV-C-2": make_ip_thermostat,
+    "HmIP-BWTH*": make_ip_thermostat,
+    "HmIP-eTRV*": make_ip_thermostat,
     "HmIP-HEATING": make_ip_thermostat,
-    "HmIP-STH": make_ip_thermostat,
-    "HmIP-STHD": make_ip_thermostat,
-    "HMIP-WTH": make_ip_thermostat,
-    "HmIP-WTH": make_ip_thermostat,
-    "HMIP-WTH-2": make_ip_thermostat,
-    "HmIP-WTH-2": make_ip_thermostat,
-    "HMIP-WTH-B": make_ip_thermostat,
-    "HmIP-WTH-B": make_ip_thermostat,
-    "HmIPW-STH": make_ip_thermostat,
-    "HmIPW-WTH": make_ip_thermostat,
-    "Thermostat AA": make_ip_thermostat,
-    "Thermostat AA GB": make_ip_thermostat,
+    "HmIP-STH*": make_ip_thermostat,
+    "HmIP-WTH*": make_ip_thermostat,
+    "HmIPW-STH*": make_ip_thermostat,
+    "HmIPW-WTH*": make_ip_thermostat,
+    "Thermostat AA*": make_ip_thermostat,
     "ZEL STG RM FWT": make_simple_thermostat,
 }

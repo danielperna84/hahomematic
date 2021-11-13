@@ -7,7 +7,6 @@ import datetime
 import logging
 from typing import Optional
 
-import hahomematic.devices
 from hahomematic.action_event import BaseEvent, ClickEvent, ImpulseEvent
 from hahomematic.const import (
     ATTR_HM_FIRMWARE,
@@ -32,6 +31,7 @@ from hahomematic.const import (
     TYPE_STRING,
     WHITELIST_PARAMETERS,
 )
+from hahomematic.devices import device_desc_exists, get_device_func
 from hahomematic.entity import GenericEntity
 from hahomematic.helpers import generate_unique_id
 from hahomematic.internal.text import HmText
@@ -74,9 +74,7 @@ class HmDevice:
             self.address
         ][ATTR_HM_TYPE]
         # marker if device will be created as custom device
-        self.custom_device = (
-            True if self.device_type in hahomematic.devices.DEVICES else False
-        )
+        self.custom_device = device_desc_exists(self.device_type)
         self.firmware = self.server.devices_raw_dict[self.interface_id][self.address][
             ATTR_HM_FIRMWARE
         ]
@@ -251,10 +249,11 @@ class HmDevice:
                 self.device_type,
             )
             # Call the custom device / entity creation function.
-            for custom_entity in hahomematic.devices.DEVICES[self.device_type](
-                self, self.address
-            ):
-                new_entities.add(custom_entity)
+
+            device_func = get_device_func(self.device_type)
+            if device_func:
+                custom_entities = device_func(self, self.address)
+                new_entities.update(custom_entities)
         return new_entities
 
     def create_event(
