@@ -1,19 +1,19 @@
 """
-Module for entities implemented using text.
+Module for entities implemented actionx.
 """
 
 import logging
 
-from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_TEXT
+from hahomematic.const import DATA_LOAD_SUCCESS, HA_PLATFORM_ACTION
 from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
-class HmText(GenericEntity):
+class HmAction(GenericEntity):
     """
-    Implementation of a text.
+    Implementation of an action.
     This is an internal default platform that gets automatically generated.
     """
 
@@ -25,8 +25,9 @@ class HmText(GenericEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_TEXT,
+            platform=HA_PLATFORM_ACTION,
         )
+        self.parameter = parameter
 
     @property
     def state(self):
@@ -48,3 +49,10 @@ class HmText(GenericEntity):
             self._max,
             self._special,
         )
+
+    async def load_data(self) -> int:
+        return DATA_LOAD_SUCCESS
+
+    def add_to_collections(self) -> None:
+        """add entity to server collections"""
+        self._device.add_hm_entity(self)

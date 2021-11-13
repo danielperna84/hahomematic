@@ -30,10 +30,12 @@ from hahomematic.const import (
     TYPE_INTEGER,
     TYPE_STRING,
     WHITELIST_PARAMETERS,
+    WRITE_ACTIONS,
 )
 from hahomematic.devices import device_desc_exists, get_device_func
 from hahomematic.entity import GenericEntity
 from hahomematic.helpers import generate_unique_id
+from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
 from hahomematic.platforms.binary_sensor import HmBinarySensor
 from hahomematic.platforms.number import HmNumber
@@ -222,10 +224,12 @@ class HmDevice:
                     self.interface_id
                 ][channel][paramset].items():
                     if not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
-                        _LOGGER.debug(
-                            "Device.create_entities: Skipping %s (no event)", parameter
-                        )
-                        continue
+                        if parameter not in WRITE_ACTIONS:
+                            _LOGGER.debug(
+                                "Device.create_entities: Skipping %s (no event)",
+                                parameter,
+                            )
+                            continue
                     if parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS:
                         self.create_event(
                             address=channel,
@@ -256,9 +260,7 @@ class HmDevice:
                 new_entities.update(custom_entities)
         return new_entities
 
-    def create_event(
-        self, address, parameter, parameter_data
-    ) -> Optional[GenericEntity]:
+    def create_event(self, address, parameter, parameter_data) -> Optional[BaseEvent]:
         if (address, parameter) not in self.server.entity_event_subscriptions:
             self.server.entity_event_subscriptions[(address, parameter)] = []
 
@@ -323,16 +325,28 @@ class HmDevice:
         entity = None
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
             if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
-                _LOGGER.debug(
-                    "create_entity: switch (action): %s %s", address, parameter
-                )
-                entity = HmSwitch(
-                    device=self,
-                    unique_id=unique_id,
-                    address=address,
-                    parameter=parameter,
-                    parameter_data=parameter_data,
-                )
+                if parameter in WRITE_ACTIONS:
+                    _LOGGER.debug(
+                        "create_entity: action (action): %s %s", address, parameter
+                    )
+                    entity = HmAction(
+                        device=self,
+                        unique_id=unique_id,
+                        address=address,
+                        parameter=parameter,
+                        parameter_data=parameter_data,
+                    )
+                else:
+                    _LOGGER.debug(
+                        "create_entity: switch (action): %s %s", address, parameter
+                    )
+                    entity = HmSwitch(
+                        device=self,
+                        unique_id=unique_id,
+                        address=address,
+                        parameter=parameter,
+                        parameter_data=parameter_data,
+                    )
             else:
                 if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
                     _LOGGER.debug("create_entity: switch: %s %s", address, parameter)

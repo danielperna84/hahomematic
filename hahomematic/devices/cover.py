@@ -91,7 +91,6 @@ class HmCover(CustomEntity):
 
 
 class HmBlind(HmCover):
-
     @property
     def _level_2(self) -> float:
         """return the temperature of the device"""
