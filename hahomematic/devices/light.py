@@ -11,6 +11,9 @@ from hahomematic.const import HA_PLATFORM_LIGHT
 from hahomematic.devices.device_description import (
     DD_PHY_CHANNEL,
     DD_VIRT_CHANNEL,
+    FIELD_CHANNEL_COLOR,
+    FIELD_CHANNEL_LEVEL,
+    FIELD_CHANNEL_STATE,
     FIELD_COLOR,
     FIELD_LEVEL,
     FIELD_STATE,
@@ -23,6 +26,9 @@ from hahomematic.helpers import generate_unique_id
 
 ATTR_BRIGHTNESS = "brightness"
 ATTR_COLOR_NAME = "color_name"
+ATTR_CHANNEL_COLOR = "channel_color"
+ATTR_CHANNEL_LEVEL = "channel_level"
+ATTR_CHANNEL_STATE = "channel_state"
 COLOR_MODE_ONOFF = "onoff"
 COLOR_MODE_BRIGHTNESS = "brightness"  # Must be the only supported mode
 COLOR_MODE_HS = "hs"
@@ -84,8 +90,13 @@ class BaseHmLight(CustomEntity):
 class HmDimmer(BaseHmLight):
     @property
     def _level(self) -> float:
-        """return the temperature of the device"""
+        """return the dim level of the device"""
         return self._get_entity_value(FIELD_LEVEL)
+
+    @property
+    def _channel_level(self) -> float:
+        """return the channel level state of the device"""
+        return self._get_entity_value(FIELD_CHANNEL_LEVEL)
 
     @property
     def is_on(self) -> bool:
@@ -117,12 +128,25 @@ class HmDimmer(BaseHmLight):
         """Turn the light off."""
         await self._send_value(FIELD_LEVEL, 0)
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the notification light sensor."""
+        state_attr = super().extra_state_attributes
+        if self._channel_level and self._channel_level != self._level:
+            state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
+        return state_attr
+
 
 class HmLight(BaseHmLight):
     @property
     def _state(self):
         """return the temperature of the device"""
         return self._get_entity_value(FIELD_STATE)
+
+    @property
+    def _channel_state(self):
+        """return the temperature of the device"""
+        return self._get_entity_value(FIELD_CHANNEL_STATE)
 
     @property
     def is_on(self) -> bool:
@@ -147,6 +171,14 @@ class HmLight(BaseHmLight):
         """Turn the light off."""
         await self._send_value(FIELD_STATE, False)
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the notification light sensor."""
+        state_attr = super().extra_state_attributes
+        if self._channel_state and self._channel_state != self._state:
+            state_attr[ATTR_CHANNEL_STATE] = self._channel_state
+        return state_attr
+
 
 class IPLightBSL(BaseHmLight):
 
@@ -162,13 +194,23 @@ class IPLightBSL(BaseHmLight):
 
     @property
     def _color(self):
-        """return the humidity of the device"""
+        """return the color of the device"""
         return self._get_entity_value(FIELD_COLOR)
 
     @property
+    def _channel_color(self):
+        """return the channel color of the device"""
+        return self._get_entity_value(FIELD_CHANNEL_COLOR)
+
+    @property
     def _level(self) -> float:
-        """return the temperature of the device"""
+        """return the level of the device"""
         return self._get_entity_value(FIELD_LEVEL)
+
+    @property
+    def _channel_level(self) -> float:
+        """return the channel level state of the device"""
+        return self._get_entity_value(FIELD_CHANNEL_LEVEL)
 
     @property
     def is_on(self) -> bool:
@@ -213,6 +255,10 @@ class IPLightBSL(BaseHmLight):
         state_attr = super().extra_state_attributes
         if self.is_on:
             state_attr[ATTR_COLOR_NAME] = self._color
+        if self._channel_level and self._channel_level != self._level:
+            state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
+        if self._channel_color and self._channel_color != self._color:
+            state_attr[ATTR_CHANNEL_COLOR] = self._channel_color
         return state_attr
 
 
@@ -275,30 +321,32 @@ def _make_light(device, address, light_class, device_def: Devices):
 
 
 def make_ip_dimmer(device, address):
-    """
-    Helper to create homematic ip dimmer entities.
-    """
+    """Helper to create homematic ip dimmer entities."""
     return _make_light(device, address, HmDimmer, Devices.IP_DIMMER)
 
 
+def make_ip_multi_dimmer(device, address):
+    """Helper to create homematic ip multi dimmer entities."""
+    return _make_light(device, address, HmDimmer, Devices.IP_MULTI_DIMMER)
+
+
+def make_ip_wired_multi_dimmer(device, address):
+    """Helper to create homematic ip multi dimmer entities."""
+    return _make_light(device, address, HmDimmer, Devices.IP_WIRED_MULTI_DIMMER)
+
+
 def make_rf_dimmer(device, address):
-    """
-    Helper to create homematic classic dimmer entities.
-    """
+    """Helper to create homematic classic dimmer entities."""
     return _make_light(device, address, HmDimmer, Devices.RF_DIMMER)
 
 
 def make_ip_light(device, address):
-    """
-    Helper to create homematic classic light entities.
-    """
+    """Helper to create homematic classic light entities."""
     return _make_light(device, address, HmLight, Devices.IP_LIGHT)
 
 
 def make_ip_light_bsl(device, address):
-    """
-    Helper to create HmIP-BSL entities.
-    """
+    """Helper to create HmIP-BSL entities."""
     return _make_light(device, address, IPLightBSL, Devices.IP_LIGHT_BSL)
 
 
@@ -316,6 +364,6 @@ DEVICES = {
     "263 132": make_rf_dimmer,
     "263 133": make_rf_dimmer,
     "263 134": make_rf_dimmer,
-    # "HmIPW-DRD3": make_ip_dimmer,
-    # "HmIP-DRDI3": make_ip_dimmer,
+    "HmIPW-DRD3": make_ip_wired_multi_dimmer,
+    "HmIP-DRDI3": make_ip_multi_dimmer,
 }

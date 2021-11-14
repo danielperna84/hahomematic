@@ -17,15 +17,20 @@ from hahomematic.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def generate_unique_id(address, parameter=None):
+def generate_unique_id(address, parameter=None, prefix=None):
     """
     Build unique id from address and parameter.
     """
-    if parameter is None:
-        return f"{HA_DOMAIN}_{address.replace(':', '_').replace('-', '_')}".lower()
-    return (
-        f"{HA_DOMAIN}_{address.replace(':', '_').replace('-', '_')}_{parameter}".lower()
-    )
+    unique_id = address.replace(':', '_').replace('-', '_')
+    if parameter:
+        unique_id = f"{unique_id}_{parameter}"
+
+    if prefix:
+        unique_id = f"{prefix}_{unique_id}"
+
+    return f"{HA_DOMAIN}_{unique_id}".lower()
+
+
 
 
 def make_http_credentials(username=None, password=None):

@@ -52,43 +52,29 @@ class Example:
             % (int(time.time()), address, interface_id, key, value)
         )
 
-    def clickcallback(
-        self, interface_id, address, parameter, name, unique_id, eventtype, value
-    ):
+    def clickcallback(self, eventtype, event_data):
         print(
-            "clickcallback at %i: %s, %s, %s, %s, %s, %s, %s"
+            "clickcallback: %s, %s"
             % (
-                int(time.time()),
-                address,
-                interface_id,
-                parameter,
-                name,
-                unique_id,
                 eventtype,
-                value,
+                event_data,
             )
         )
 
-    def impulsecallback(
-        self, interface_id, address, parameter, name, unique_id, eventtype, value
-    ):
+    def impulsecallback(self, eventtype, event_data):
         print(
-            "impulsecallback at %i: %s, %s, %s, %s, %s, %s, %s"
+            "impulsecallback: %s, %s"
             % (
-                int(time.time()),
-                address,
-                interface_id,
-                parameter,
-                name,
-                unique_id,
                 eventtype,
-                value,
+                event_data,
             )
         )
 
     async def example_run(self):
 
-        self.server = Server("ccu-dev", "123", asyncio.get_running_loop())
+        self.server = Server(
+            "ccu-dev", "123", asyncio.get_running_loop(), enable_virtual_channels=True
+        )
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10
         # We have to set the cache location of stored data so the server can load

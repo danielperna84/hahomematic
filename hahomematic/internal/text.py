@@ -1,6 +1,5 @@
 """
-Module for entities implemented using the
-text platform (https://www.home-assistant.io/integrations/text/).
+Module for entities implemented using text.
 """
 
 import logging
@@ -15,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 class HmText(GenericEntity):
     """
     Implementation of a text.
-    This is a default platform that gets automatically generated.
+    This is an internal default platform that gets automatically generated.
     """
 
     # pylint: disable=too-many-arguments
@@ -33,15 +32,14 @@ class HmText(GenericEntity):
     def state(self):
         return self._state
 
-    @state.setter
-    def state(self, value):
+    async def set_state(self, value):
         # pylint: disable=no-else-return
         if self._min <= value <= self._max:
-            self.send_value(value)
+            await self.send_value(value)
             return
         elif self._special:
             if [sv for sv in self._special if value == sv[ATTR_HM_VALUE]]:
-                self.send_value(value)
+                await self.send_value(value)
                 return
         _LOGGER.error(
             "text: Invalid value: %s (min: %s, max: %s, special: %s)",

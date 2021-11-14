@@ -17,9 +17,10 @@ DD_VIRT_CHANNEL = "virt_channel"
 
 FIELD_AUTO_MODE = "auto_mode"
 FIELD_BOOST_MODE = "boost_mode"
-FIELD_CHANNEL_COLOR_STATE = "color_state"
-FIELD_CHANNEL_LEVEL_STATE = "level_state"
-FIELD_CHANNEL_SWITCH_STATE = "switch_state"
+FIELD_CHANNEL_COLOR = "channel_color"
+FIELD_CHANNEL_LEVEL = "channel_level"
+FIELD_CHANNEL_LEVEL_2 = "channel_level_2"
+FIELD_CHANNEL_STATE = "channel_state"
 FIELD_COLOR = "color"
 FIELD_COMFORT_MODE = "comfort_mode"
 FIELD_CONTROL_MODE = "control_mode"
@@ -30,6 +31,7 @@ FIELD_ENERGY_COUNTER = "energy_counter"
 FIELD_FREQUENCY = "frequency"
 FIELD_HUMIDITY = "humidity"
 FIELD_LEVEL = "level"
+FIELD_LEVEL_2 = "level_2"
 FIELD_LOW_BAT = "low_bat"
 FIELD_LOWBAT = "lowbat"
 FIELD_LOWERING_MODE = "lowering_mode"
@@ -43,6 +45,7 @@ FIELD_SABOTAGE = "sabotage"
 FIELD_SET_POINT_MODE = "set_point_mode"
 FIELD_SETPOINT = "setpoint"
 FIELD_STATE = "state"
+FIELD_STOP = "stop"
 FIELD_SWITCH_MAIN = "switch_main"
 FIELD_SWITCH_V1 = "vswitch_1"
 FIELD_SWITCH_V2 = "vswitch_2"
@@ -56,10 +59,14 @@ class Devices(Enum):
     RF_DIMMER = "RfDimmer"
     IP_LIGHT_BSL = "IPLightBSL"
     IP_DIMMER = "IPDimmer"
+    IP_MULTI_DIMMER = "IPMultiDimmer"
+    IP_WIRED_MULTI_DIMMER = "IPWiredMultiDimmer"
     IP_LIGHT = "IPLight"
     IP_THERMOSTAT = "IPThermostat"
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
     RF_THERMOSTAT = "RfThermostat"
+    IP_COVER = "IPCover"
+    RF_COVER = "RfCover"
 
 
 SCHEMA_DD_FIELD_DETAILS = Schema({Optional(str): str, Optional(str): str})
@@ -208,7 +215,89 @@ device_description = {
                     },
                     DD_FIELDS: {
                         3: {
-                            FIELD_CHANNEL_LEVEL_STATE: "LEVEL",
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
+                        },
+                    },
+                },
+            ],
+            DD_ENTITIES: {},
+        },
+        Devices.IP_MULTI_DIMMER: {
+            DD_DEVICE_GROUPS: [
+                {
+                    DD_PHY_CHANNEL: [5],
+                    DD_VIRT_CHANNEL: [6, 7],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                    },
+                    DD_FIELDS: {
+                        4: {
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
+                        },
+                    },
+                },
+                {
+                    DD_PHY_CHANNEL: [9],
+                    DD_VIRT_CHANNEL: [10, 11],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                    },
+                    DD_FIELDS: {
+                        8: {
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
+                        },
+                    },
+                },
+                {
+                    DD_PHY_CHANNEL: [13],
+                    DD_VIRT_CHANNEL: [14, 15],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                    },
+                    DD_FIELDS: {
+                        12: {
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
+                        },
+                    },
+                },
+            ],
+            DD_ENTITIES: {},
+        },
+        Devices.IP_WIRED_MULTI_DIMMER: {
+            DD_DEVICE_GROUPS: [
+                {
+                    DD_PHY_CHANNEL: [2],
+                    DD_VIRT_CHANNEL: [3, 4],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                    },
+                    DD_FIELDS: {
+                        1: {
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
+                        },
+                    },
+                },
+                {
+                    DD_PHY_CHANNEL: [6],
+                    DD_VIRT_CHANNEL: [7, 8],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                    },
+                    DD_FIELDS: {
+                        5: {
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
+                        },
+                    },
+                },
+                {
+                    DD_PHY_CHANNEL: [10],
+                    DD_VIRT_CHANNEL: [11, 12],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                    },
+                    DD_FIELDS: {
+                        9: {
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
                         },
                     },
                 },
@@ -237,16 +326,13 @@ device_description = {
                         FIELD_STATE: "STATE",
                     },
                     DD_FIELDS: {
-                        1: {
-                            FIELD_CHANNEL_SWITCH_STATE: "STATE",
+                        3: {
+                            FIELD_CHANNEL_STATE: "STATE",
                         },
                     },
                 },
             ],
             DD_ENTITIES: {
-                3: {
-                    FIELD_STATE: "STATE",
-                },
                 7: {
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_VOLTAGE: "VOLTAGE",
@@ -268,8 +354,8 @@ device_description = {
                     },
                     DD_FIELDS: {
                         7: {
-                            FIELD_CHANNEL_COLOR_STATE: "COLOR",
-                            FIELD_CHANNEL_LEVEL_STATE: "LEVEL",
+                            FIELD_CHANNEL_COLOR: "COLOR",
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
                         },
                     },
                 },
@@ -282,8 +368,8 @@ device_description = {
                     },
                     DD_FIELDS: {
                         11: {
-                            FIELD_CHANNEL_COLOR_STATE: "COLOR",
-                            FIELD_CHANNEL_LEVEL_STATE: "LEVEL",
+                            FIELD_CHANNEL_COLOR: "COLOR",
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
                         },
                     },
                 },
@@ -302,6 +388,41 @@ device_description = {
                     FIELD_SWITCH_V2: "STATE",
                 },
             },
+        },
+        Devices.IP_COVER: {
+            DD_DEVICE_GROUPS: [
+                {
+                    DD_PHY_CHANNEL: [4],
+                    DD_VIRT_CHANNEL: [5, 6],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                        FIELD_LEVEL_2: "LEVEL_2",
+                        FIELD_STOP: "STOP",
+                    },
+                    DD_FIELDS: {
+                        3: {
+                            FIELD_CHANNEL_LEVEL: "LEVEL",
+                            FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
+                        },
+                    },
+                },
+            ],
+            DD_ENTITIES: {},
+        },
+        Devices.RF_COVER: {
+            DD_DEVICE_GROUPS: [
+                {
+                    DD_PHY_CHANNEL: [1, 2, 3, 4],
+                    DD_VIRT_CHANNEL: [],
+                    DD_FIELDS_REP: {
+                        FIELD_LEVEL: "LEVEL",
+                        FIELD_LEVEL_2: "LEVEL_2",
+                        FIELD_STOP: "STOP",
+                    },
+                    DD_FIELDS: {},
+                },
+            ],
+            DD_ENTITIES: {},
         },
     },
 }

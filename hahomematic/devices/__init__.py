@@ -2,9 +2,10 @@
 Here we provide access to the custom device creation functions.
 """
 
-from hahomematic.devices import climate, light
+from hahomematic.devices import climate, cover, light
 
 DEVICES = {}
+DEVICES.update(cover.DEVICES)
 DEVICES.update(climate.DEVICES)
 DEVICES.update(light.DEVICES)
 

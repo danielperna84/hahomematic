@@ -270,7 +270,13 @@ class Server(threading.Thread):
     """
 
     def __init__(
-        self, instance_name, entry_id, loop, local_ip=IP_ANY_V4, local_port=PORT_ANY, enable_virtual_channels=False
+        self,
+        instance_name,
+        entry_id,
+        loop,
+        local_ip=IP_ANY_V4,
+        local_port=PORT_ANY,
+        enable_virtual_channels=False,
     ):
         _LOGGER.debug("Server.__init__")
         threading.Thread.__init__(self)
@@ -309,6 +315,8 @@ class Server(threading.Thread):
         self.callback_system_event = None
         # Signature: f(interface_id, address, value_key, value)
         self.callback_entity_event = None
+        # Signature: f(interface_id, address, value_key, value)
+        self.callback_alarm_event = None
         # Signature: f(interface_id, address, value_key, value)
         self.callback_click_event = None
         # Signature: f(interface_id, address, value_key, value)
