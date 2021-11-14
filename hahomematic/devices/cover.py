@@ -5,11 +5,14 @@ Code to create the required entities for cover devices.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from hahomematic.const import HA_PLATFORM_COVER
 from hahomematic.devices.device_description import (
     DD_PHY_CHANNEL,
     DD_VIRT_CHANNEL,
+    FIELD_CHANNEL_LEVEL,
+    FIELD_CHANNEL_LEVEL_2,
     FIELD_LEVEL,
     FIELD_LEVEL_2,
     FIELD_STOP,
@@ -20,6 +23,8 @@ from hahomematic.devices.device_description import (
 from hahomematic.entity import CustomEntity
 from hahomematic.helpers import generate_unique_id
 
+ATTR_CHANNEL_COVER_LEVEL = "channel_cover_level"
+ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
 HM_OPEN = 1
 HM_CLOSED = 0
 
@@ -52,6 +57,11 @@ class HmCover(CustomEntity):
     def _level(self) -> float:
         """return the level of the cover"""
         return self._get_entity_value(FIELD_LEVEL)
+
+    @property
+    def _channel_level(self) -> float:
+        """return the channel level state of the cover"""
+        return self._get_entity_value(FIELD_CHANNEL_LEVEL)
 
     @property
     def current_cover_position(self) -> int | None:
@@ -89,12 +99,25 @@ class HmCover(CustomEntity):
         """Stop the device if in motion."""
         await self._send_value(FIELD_STOP, True)
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the cover."""
+        state_attr = super().extra_state_attributes
+        if self._channel_level and self._channel_level != self._level:
+            state_attr[ATTR_CHANNEL_COVER_LEVEL] = self._channel_level * 100
+        return state_attr
+
 
 class HmBlind(HmCover):
     @property
     def _level_2(self) -> float:
-        """return the temperature of the device"""
+        """return the level of the tilt"""
         return self._get_entity_value(FIELD_LEVEL_2)
+
+    @property
+    def _channel_level_2(self) -> float:
+        """return the channel level of the tilt"""
+        return self._get_entity_value(FIELD_CHANNEL_LEVEL_2)
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -126,6 +149,14 @@ class HmBlind(HmCover):
     async def async_stop_cover_tilt(self) -> None:
         """Stop the device if in motion."""
         await self._send_value(FIELD_STOP, True)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the cover."""
+        state_attr = super().extra_state_attributes
+        if self._channel_level_2 and self._channel_level_2 != self._level_2:
+            state_attr[ATTR_CHANNEL_TILT_LEVEL] = self._channel_level_2 * 100
+        return state_attr
 
 
 def _make_cover(device, address, cover_class, device_def: Devices):
@@ -160,37 +191,32 @@ def _make_cover(device, address, cover_class, device_def: Devices):
 
 
 def make_ip_cover(device, address):
-    """
-    Helper to create homematic ip cover entities.
-    """
+    """Helper to create homematic ip cover entities."""
     return _make_cover(device, address, HmCover, Devices.IP_COVER)
 
 
 def make_ip_multi_cover(device, address):
-    """
-    Helper to create homematic ip cover entities.
-    """
+    """Helper to create homematic ip cover entities."""
+    return _make_cover(device, address, HmCover, Devices.IP_COVER)
+
+
+def make_ip_wired_multi_cover(device, address):
+    """Helper to create homematic ip cover entities."""
     return _make_cover(device, address, HmCover, Devices.IP_COVER)
 
 
 def make_rf_cover(device, address):
-    """
-    Helper to create homematic classic cover entities.
-    """
+    """Helper to create homematic classic cover entities."""
     return _make_cover(device, address, HmCover, Devices.RF_COVER)
 
 
 def make_ip_blind(device, address):
-    """
-    Helper to create homematic ip cover entities.
-    """
+    """Helper to create homematic ip cover entities."""
     return _make_cover(device, address, HmBlind, Devices.IP_COVER)
 
 
 def make_rf_blind(device, address):
-    """
-    Helper to create homematic classic cover entities.
-    """
+    """Helper to create homematic classic cover entities."""
     return _make_cover(device, address, HmBlind, Devices.RF_COVER)
 
 

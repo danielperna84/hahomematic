@@ -56,6 +56,7 @@ class BaseEntity(ABC):
         self._update_callbacks = []
         self._remove_callbacks = []
         self._device = device
+        self.device_type = self._device.device_type
         self.create_in_ha = not self._device.custom_device
         self.data_entities: dict[str, GenericEntity] = {}
         self._server = self._device.server
@@ -92,8 +93,7 @@ class BaseEntity(ABC):
 
     def add_to_collections(self) -> None:
         """add entity to server collections"""
-        if isinstance(self, GenericEntity):
-            self._device.add_hm_entity(self)
+        self._device.add_hm_entity(self)
         self._server.hm_entities[self.unique_id] = self
 
     def register_update_callback(self, update_callback) -> None:
@@ -436,19 +436,19 @@ class CustomEntity(BaseEntity):
         self.update_entity()
         return DATA_LOAD_SUCCESS
 
-    def _get_entity_value(self, field_name):
+    def _get_entity_value(self, field_name, default=None):
         """get entity value"""
         entity = self.data_entities.get(field_name)
         if entity:
             return entity.state
-        return None
+        return default
 
-    def _get_entity_attribute(self, field_name, attr_name):
+    def _get_entity_attribute(self, field_name, attr_name, default=None):
         """get entity attribute value"""
         entity = self.data_entities.get(field_name)
         if entity and hasattr(entity, attr_name):
             return getattr(entity, attr_name)
-        return None
+        return default
 
     async def _send_value(self, field_name, value) -> None:
         """send value to ccu"""

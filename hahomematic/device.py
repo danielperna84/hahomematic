@@ -7,8 +7,9 @@ import datetime
 import logging
 from typing import Optional
 
-from hahomematic.action_event import BaseEvent, ClickEvent, ImpulseEvent
+from hahomematic.action_event import AlarmEvent, BaseEvent, ClickEvent, ImpulseEvent
 from hahomematic.const import (
+    ALARM_EVENTS,
     ATTR_HM_FIRMWARE,
     ATTR_HM_OPERATIONS,
     ATTR_HM_TYPE,
@@ -33,7 +34,7 @@ from hahomematic.const import (
     WRITE_ACTIONS,
 )
 from hahomematic.devices import device_desc_exists, get_device_func
-from hahomematic.entity import GenericEntity
+from hahomematic.entity import BaseEntity, CustomEntity, GenericEntity
 from hahomematic.helpers import generate_unique_id
 from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
@@ -68,6 +69,7 @@ class HmDevice:
         )
 
         self.entities: dict[tuple[str, str], GenericEntity] = {}
+        self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
         self.last_update = None
         self._update_callbacks = []
@@ -98,21 +100,23 @@ class HmDevice:
             self.name,
         )
 
-    def add_hm_entity(self, hm_entity: GenericEntity):
+    def add_hm_entity(self, hm_entity: BaseEntity):
         """add an hm entity to a device"""
-        if not isinstance(hm_entity, GenericEntity):
-            return
-        hm_entity.register_update_callback(self.update_device)
-        hm_entity.register_remove_callback(self.remove_device)
-        self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
+        if isinstance(hm_entity, GenericEntity):
+            hm_entity.register_update_callback(self.update_device)
+            hm_entity.register_remove_callback(self.remove_device)
+            self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
+        elif isinstance(hm_entity, CustomEntity):
+            self.custom_entities[hm_entity.unique_id] = hm_entity
 
-    def remove_hm_entity(self, hm_entity: GenericEntity):
+    def remove_hm_entity(self, hm_entity: BaseEntity):
         """add an hm entity to a device"""
-        if not isinstance(hm_entity, GenericEntity):
-            return
-        hm_entity.unregister_update_callback(self.update_device)
-        hm_entity.unregister_remove_callback(self.remove_device)
-        del self.entities[(hm_entity.address, hm_entity.parameter)]
+        if isinstance(hm_entity, GenericEntity):
+            hm_entity.unregister_update_callback(self.update_device)
+            hm_entity.unregister_remove_callback(self.remove_device)
+            del self.entities[(hm_entity.address, hm_entity.parameter)]
+        elif isinstance(hm_entity, CustomEntity):
+            del self.custom_entities[hm_entity.unique_id]
 
     def add_hm_action_event(self, hm_event: BaseEvent):
         """add an hm entity to a device"""
@@ -230,13 +234,16 @@ class HmDevice:
                                 parameter,
                             )
                             continue
-                    if parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS:
+                    if (
+                        parameter in ALARM_EVENTS or
+                        parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS
+                    ):
                         self.create_event(
                             address=channel,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
-                    else:
+                    if not (parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS):
                         entity = self.create_entity(
                             address=channel,
                             parameter=parameter,
@@ -264,7 +271,7 @@ class HmDevice:
         if (address, parameter) not in self.server.entity_event_subscriptions:
             self.server.entity_event_subscriptions[(address, parameter)] = []
 
-        unique_id = generate_unique_id(address, parameter)
+        unique_id = generate_unique_id(address, parameter, "event")
 
         _LOGGER.debug(
             "create_event: Creating action_event for %s, %s, %s",
@@ -284,6 +291,13 @@ class HmDevice:
                 )
             elif parameter in IMPULSE_EVENTS:
                 action_event = ImpulseEvent(
+                    device=self,
+                    unique_id=unique_id,
+                    address=address,
+                    parameter=parameter,
+                )
+            elif parameter in ALARM_EVENTS:
+                action_event = AlarmEvent(
                     device=self,
                     unique_id=unique_id,
                     address=address,

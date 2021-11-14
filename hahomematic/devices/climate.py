@@ -98,12 +98,12 @@ class SimpleThermostat(CustomEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower())
+        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower(), 4.5)
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower())
+        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower(), 30.5)
 
     @property
     def target_temperature_step(self) -> float:
@@ -197,12 +197,12 @@ class Thermostat(CustomEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower())
+        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower(), 4.5)
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower())
+        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower(), 30.5)
 
     @property
     def target_temperature_step(self) -> float:
@@ -349,12 +349,12 @@ class IPThermostat(CustomEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower())
+        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower(), 4.5)
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower())
+        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower(), 30.5)
 
     @property
     def target_temperature_step(self) -> float:

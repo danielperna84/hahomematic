@@ -72,7 +72,9 @@ class Example:
 
     async def example_run(self):
 
-        self.server = Server("ccu-dev", "123", asyncio.get_running_loop())
+        self.server = Server(
+            "ccu-dev", "123", asyncio.get_running_loop(), enable_virtual_channels=True
+        )
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10
         # We have to set the cache location of stored data so the server can load

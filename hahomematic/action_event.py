@@ -15,6 +15,7 @@ from hahomematic.const import (
     ATTR_PARAMETER,
     ATTR_UNIQUE_ID,
     ATTR_VALUE,
+    EVENT_ALARM,
     EVENT_CONFIG_PENDING,
     EVENT_IMPULSE,
     EVENT_KEYPRESS,
@@ -144,6 +145,36 @@ class BaseEvent(ABC):
             ATTR_UNIQUE_ID: self.unique_id,
             ATTR_VALUE: value,
         }
+
+
+class AlarmEvent(BaseEvent):
+    """
+    class for handling alarm events.
+    """
+
+    # pylint: disable=too-many-arguments
+    def __init__(self, device, unique_id, address, parameter):
+        """
+        Initialize the event handler.
+        """
+        super().__init__(
+            device=device,
+            unique_id=unique_id,
+            address=address,
+            parameter=parameter,
+            event_type=EVENT_ALARM,
+        )
+
+    def fire_event(self, old_value, new_value) -> None:
+        """
+        Do what is needed to fire an event.
+        """
+        # pylint: disable=not-callable
+        if callable(self._server.callback_alarm_event):
+            self._server.callback_alarm_event(
+                self.event_type,
+                self._event_data(new_value),
+            )
 
 
 class ClickEvent(BaseEvent):

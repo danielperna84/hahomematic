@@ -316,6 +316,8 @@ class Server(threading.Thread):
         # Signature: f(interface_id, address, value_key, value)
         self.callback_entity_event = None
         # Signature: f(interface_id, address, value_key, value)
+        self.callback_alarm_event = None
+        # Signature: f(interface_id, address, value_key, value)
         self.callback_click_event = None
         # Signature: f(interface_id, address, value_key, value)
         self.callback_impulse_event = None
