@@ -161,48 +161,47 @@ class HmBlind(HmCover):
         return state_attr
 
 
-def make_ip_cover(device, address):
+def make_ip_cover(device, address, group_base_channels: [int]):
     """Helper to create homematic ip cover entities."""
-    return make_custom_entity(device, address, HmCover, Devices.IP_COVER)
+    return make_custom_entity(
+        device, address, HmCover, Devices.IP_COVER, group_base_channels
+    )
 
 
-def make_ip_multi_cover(device, address):
-    """Helper to create homematic ip cover entities."""
-    return make_custom_entity(device, address, HmCover, Devices.IP_MULTI_COVER)
-
-
-def make_ip_wired_multi_cover(device, address):
-    """Helper to create homematic ip cover entities."""
-    return make_custom_entity(device, address, HmCover, Devices.IP_WIRED_MULTI_COVER)
-
-
-def make_rf_cover(device, address):
+def make_rf_cover(device, address, group_base_channels: [int]):
     """Helper to create homematic classic cover entities."""
-    return make_custom_entity(device, address, HmCover, Devices.RF_COVER)
+    return make_custom_entity(
+        device, address, HmCover, Devices.RF_COVER, group_base_channels
+    )
 
 
-def make_ip_blind(device, address):
+def make_ip_blind(device, address, group_base_channels: [int]):
     """Helper to create homematic ip cover entities."""
-    return make_custom_entity(device, address, HmBlind, Devices.IP_COVER)
+    return make_custom_entity(
+        device, address, HmBlind, Devices.IP_COVER, group_base_channels
+    )
 
 
-def make_rf_blind(device, address):
+def make_rf_blind(device, address, group_base_channels: [int]):
     """Helper to create homematic classic cover entities."""
-    return make_custom_entity(device, address, HmBlind, Devices.RF_COVER)
+    return make_custom_entity(
+        device, address, HmBlind, Devices.RF_COVER, group_base_channels
+    )
 
 
 DEVICES = {
-    "HmIP-BROLL": make_ip_cover,
-    "HmIP-FROLL": make_ip_cover,
-    "HmIP-BBL": make_ip_blind,
-    "HmIP-FBL": make_ip_blind,
-    "HmIP-DRBLI4": make_ip_multi_cover,
-    "HmIPW-DRBL4": make_ip_wired_multi_cover,
-    "HM-LC-Bl1*": make_rf_blind,
-    "HM-LC-Ja1PBU-FM": make_rf_blind,
-    "ZEL STG RM FEP 230V": make_rf_blind,
-    "263 146": make_rf_blind,
-    "263 147": make_rf_blind,
-    "HM-LC-BlX": make_rf_blind,
-    "HM-Sec-Win": make_rf_blind,
+    "HmIP-BROLL": (make_ip_cover, [3]),
+    "HmIP-FROLL": (make_ip_cover, [3]),
+    "HmIP-BBL": (make_ip_blind, [3]),
+    "HmIP-FBL": (make_ip_blind, [3]),
+    "HmIP-HDM1": (make_ip_blind, [0]),
+    "HmIP-DRBLI4": (make_ip_cover, [9, 13, 17, 21]),
+    "HmIPW-DRBL4": (make_ip_cover, [1, 5, 9, 13]),
+    "HM-LC-Bl1*": (make_rf_blind, []),
+    "HM-LC-Ja1PBU-FM": (make_rf_blind, []),
+    "ZEL STG RM FEP 230V": (make_rf_blind, []),
+    "263 146": (make_rf_blind, []),
+    "263 147": (make_rf_blind, []),
+    "HM-LC-BlX": (make_rf_blind, []),
+    "HM-Sec-Win": (make_rf_blind, []),
 }

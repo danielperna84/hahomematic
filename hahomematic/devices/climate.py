@@ -440,38 +440,46 @@ class IPThermostat(CustomEntity):
             await self._send_value(FIELD_BOOST_MODE, True)
 
 
-def make_simple_thermostat(device, address):
+def make_simple_thermostat(device, address, group_base_channels: [int]):
     """Helper to create SimpleThermostat entities."""
     return make_custom_entity(
-        device, address, SimpleThermostat, Devices.SIMPLE_RF_THERMOSTAT
+        device,
+        address,
+        SimpleThermostat,
+        Devices.SIMPLE_RF_THERMOSTAT,
+        group_base_channels,
     )
 
 
-def make_thermostat(device, address):
+def make_thermostat(device, address, group_base_channels: [int]):
     """Helper to create Thermostat entities."""
-    return make_custom_entity(device, address, Thermostat, Devices.RF_THERMOSTAT)
+    return make_custom_entity(
+        device, address, Thermostat, Devices.RF_THERMOSTAT, group_base_channels
+    )
 
 
-def make_ip_thermostat(device, address):
+def make_ip_thermostat(device, address, group_base_channels: [int]):
     """Helper to create IPThermostat entities."""
-    return make_custom_entity(device, address, IPThermostat, Devices.IP_THERMOSTAT)
+    return make_custom_entity(
+        device, address, IPThermostat, Devices.IP_THERMOSTAT, group_base_channels
+    )
 
 
 DEVICES = {
-    "BC-RT-TRX-CyG*": make_thermostat,
-    "BC-RT-TRX-CyN*": make_thermostat,
-    "BC-TC-C-WM*": make_thermostat,
-    "HM-CC-RT-DN*": make_thermostat,
-    "HM-CC-TC": make_simple_thermostat,
-    "HM-CC-VG-1": make_thermostat,
-    "HM-TC-IT-WM-W-EU": make_thermostat,
-    "HmIP-BWTH*": make_ip_thermostat,
-    "HmIP-eTRV*": make_ip_thermostat,
-    "HmIP-HEATING": make_ip_thermostat,
-    "HmIP-STHD": make_ip_thermostat,
-    "HmIP-WTH*": make_ip_thermostat,
-    "HmIPW-STHD": make_ip_thermostat,
-    "HmIPW-WTH*": make_ip_thermostat,
-    "Thermostat AA*": make_ip_thermostat,
-    "ZEL STG RM FWT": make_simple_thermostat,
+    "BC-RT-TRX-CyG*": (make_thermostat, []),
+    "BC-RT-TRX-CyN*": (make_thermostat, []),
+    "BC-TC-C-WM*": (make_thermostat, []),
+    "HM-CC-RT-DN*": (make_thermostat, []),
+    "HM-CC-TC": (make_simple_thermostat, []),
+    "HM-CC-VG-1": (make_thermostat, []),
+    "HM-TC-IT-WM-W-EU": (make_thermostat, []),
+    "HmIP-BWTH*": (make_ip_thermostat, []),
+    "HmIP-eTRV*": (make_ip_thermostat, []),
+    "HmIP-HEATING": (make_ip_thermostat, []),
+    "HmIP-STHD": (make_ip_thermostat, []),
+    "HmIP-WTH*": (make_ip_thermostat, []),
+    "HmIPW-STHD": (make_ip_thermostat, []),
+    "HmIPW-WTH*": (make_ip_thermostat, []),
+    "Thermostat AA*": (make_ip_thermostat, []),
+    "ZEL STG RM FWT": (make_simple_thermostat, []),
 }
