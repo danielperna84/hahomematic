@@ -116,7 +116,6 @@ PARAM_CONFIG_PENDING = "CONFIG_PENDING"
 
 # Parameters within the paramsets for which we create entities.
 WHITELIST_PARAMETERS = []
-#WHITELIST_PARAMETERS.extend(ALARM_EVENTS)
 
 WRITE_ACTIONS = ["STOP", "RAMP_STOP"]
 

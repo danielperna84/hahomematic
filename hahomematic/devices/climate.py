@@ -19,11 +19,9 @@ from hahomematic.devices.device_description import (
     FIELD_SETPOINT,
     FIELD_TEMPERATURE,
     Devices,
-    get_device_entities,
-    get_device_groups,
+    make_custom_entity,
 )
 from hahomematic.entity import CustomEntity
-from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +52,9 @@ class SimpleThermostat(CustomEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, device, address, unique_id, device_desc, entity_desc):
+    def __init__(
+        self, device, address, unique_id, device_desc, entity_desc, channel_no
+    ):
         super().__init__(
             device=device,
             address=address,
@@ -62,6 +62,7 @@ class SimpleThermostat(CustomEntity):
             device_desc=device_desc,
             entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
+            channel_no=channel_no,
         )
         _LOGGER.debug(
             "SimpleThermostat.__init__(%s, %s, %s)",
@@ -148,7 +149,9 @@ class Thermostat(CustomEntity):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, device, address, unique_id, device_desc, entity_desc):
+    def __init__(
+        self, device, address, unique_id, device_desc, entity_desc, channel_no
+    ):
         super().__init__(
             device=device,
             address=address,
@@ -156,6 +159,7 @@ class Thermostat(CustomEntity):
             device_desc=device_desc,
             entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
+            channel_no=channel_no,
         )
         _LOGGER.debug(
             "Thermostat.__init__(%s, %s, %s)",
@@ -292,7 +296,9 @@ class IPThermostat(CustomEntity):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
     # pylint: disable=too-many-arguments
-    def __init__(self, device, address, unique_id, device_desc, entity_desc):
+    def __init__(
+        self, device, address, unique_id, device_desc, entity_desc, channel_no
+    ):
         super().__init__(
             device=device,
             address=address,
@@ -300,6 +306,7 @@ class IPThermostat(CustomEntity):
             device_desc=device_desc,
             entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
+            channel_no=channel_no,
         )
         _LOGGER.debug(
             "IPThermostat.__init__(%s, %s, %s)",
@@ -433,52 +440,21 @@ class IPThermostat(CustomEntity):
             await self._send_value(FIELD_BOOST_MODE, True)
 
 
-def _make_thermostat(device, address, climate_class, device_def: Devices):
-    """
-    Helper to create climate entities.
-    We use a helper-function to avoid raising exceptions during object-init.
-    """
-    unique_id = generate_unique_id(address)
-    if unique_id in device.server.hm_entities:
-        _LOGGER.debug("_make_thermostat: Skipping %s (already exists)", unique_id)
-        return
-    device_desc = get_device_groups(device_def)[0]
-    entity_desc = get_device_entities(device_def)
-    entity = climate_class(
-        device=device,
-        address=address,
-        unique_id=unique_id,
-        device_desc=device_desc,
-        entity_desc=entity_desc,
-    )
-    if len(entity.data_entities) > 0:
-        entity.add_to_collections()
-        return [entity]
-    return []
-
-
 def make_simple_thermostat(device, address):
-    """
-    Helper to create SimpleThermostat entities.
-    """
-    return _make_thermostat(
+    """Helper to create SimpleThermostat entities."""
+    return make_custom_entity(
         device, address, SimpleThermostat, Devices.SIMPLE_RF_THERMOSTAT
     )
 
 
 def make_thermostat(device, address):
-    """
-    Helper to create Thermostat entities.
-    We use a helper-function to avoid raising exceptions during object-init.
-    """
-    return _make_thermostat(device, address, Thermostat, Devices.RF_THERMOSTAT)
+    """Helper to create Thermostat entities."""
+    return make_custom_entity(device, address, Thermostat, Devices.RF_THERMOSTAT)
 
 
 def make_ip_thermostat(device, address):
-    """
-    Helper to create IPThermostat entities.
-    """
-    return _make_thermostat(device, address, IPThermostat, Devices.IP_THERMOSTAT)
+    """Helper to create IPThermostat entities."""
+    return make_custom_entity(device, address, IPThermostat, Devices.IP_THERMOSTAT)
 
 
 DEVICES = {
@@ -492,9 +468,9 @@ DEVICES = {
     "HmIP-BWTH*": make_ip_thermostat,
     "HmIP-eTRV*": make_ip_thermostat,
     "HmIP-HEATING": make_ip_thermostat,
-    "HmIP-STH*": make_ip_thermostat,
+    "HmIP-STHD": make_ip_thermostat,
     "HmIP-WTH*": make_ip_thermostat,
-    "HmIPW-STH*": make_ip_thermostat,
+    "HmIPW-STHD": make_ip_thermostat,
     "HmIPW-WTH*": make_ip_thermostat,
     "Thermostat AA*": make_ip_thermostat,
     "ZEL STG RM FWT": make_simple_thermostat,

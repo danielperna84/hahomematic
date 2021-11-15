@@ -2,26 +2,33 @@
 Here we provide access to the custom device creation functions.
 """
 
-from hahomematic.devices import climate, cover, light
+from hahomematic.devices import climate, cover, light, switch
 
-DEVICES = {}
-DEVICES.update(cover.DEVICES)
-DEVICES.update(climate.DEVICES)
-DEVICES.update(light.DEVICES)
+_ALL_DEVICES = [
+    cover.DEVICES,
+    climate.DEVICES,
+    light.DEVICES,
+    switch.DEVICES,
+]
 
 
-def get_device_func(device_type: str):
+def get_device_funcs(device_type: str):
     """Return the function to"""
-    for name, func in DEVICES.items():
-        if "*" in name:
-            name = name.replace("*", "")
-            if device_type.startswith(name):
-                return func
-        if name.lower() == device_type.lower():
-            return func
-    return None
+
+    funcs = []
+    for platform_devices in _ALL_DEVICES:
+        for name, func in platform_devices.items():
+            if "*" in name:
+                name = name.replace("*", "").lower()
+                if device_type.lower().startswith(name):
+                    funcs.append(func)
+                    continue
+            if name.lower() == device_type.lower():
+                funcs.append(func)
+                continue
+    return funcs
 
 
 def device_desc_exists(device_type: str) -> bool:
     """Check if device desc exits."""
-    return get_device_func(device_type) is not None
+    return len(get_device_funcs(device_type)) > 0
