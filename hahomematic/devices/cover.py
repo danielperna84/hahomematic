@@ -57,7 +57,10 @@ class HmCover(CustomEntity):
     @property
     def _channel_level(self) -> float:
         """return the channel level state of the cover"""
-        return self._get_entity_value(FIELD_CHANNEL_LEVEL)
+        channel_level = self._get_entity_value(FIELD_CHANNEL_LEVEL)
+        if channel_level:
+            return channel_level
+        return self._level
 
     @property
     def current_cover_position(self) -> int | None:
@@ -65,8 +68,8 @@ class HmCover(CustomEntity):
         Return current position of cover.
         HA:  0 means closed and 100 is fully open
         """
-        if self._level is not None:
-            return int(self._level * 100)
+        if self._channel_level is not None:
+            return int(self._channel_level * 100)
         return None
 
     async def async_set_cover_position(self, position) -> None:
@@ -79,8 +82,8 @@ class HmCover(CustomEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self._level is not None:
-            return self._level == HM_OPEN
+        if self._channel_level is not None:
+            return self._channel_level == HM_OPEN
         return None
 
     async def async_open_cover(self) -> None:
@@ -113,7 +116,10 @@ class HmBlind(HmCover):
     @property
     def _channel_level_2(self) -> float:
         """return the channel level of the tilt"""
-        return self._get_entity_value(FIELD_CHANNEL_LEVEL_2)
+        channel_level_2 = self._get_entity_value(FIELD_CHANNEL_LEVEL_2)
+        if channel_level_2:
+            return channel_level_2
+        return self._level_2
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -121,8 +127,8 @@ class HmBlind(HmCover):
         Return current tilt position of cover.
         HA:  0 means closed and 100 is fully open
         """
-        if self._level_2 is not None:
-            return int(self._level_2 * 100)
+        if self._channel_level_2 is not None:
+            return int(self._channel_level_2 * 100)
         return None
 
     async def async_set_cover_tilt_position(self, position) -> None:
@@ -162,12 +168,12 @@ def make_ip_cover(device, address):
 
 def make_ip_multi_cover(device, address):
     """Helper to create homematic ip cover entities."""
-    return make_custom_entity(device, address, HmCover, Devices.IP_COVER)
+    return make_custom_entity(device, address, HmCover, Devices.IP_MULTI_COVER)
 
 
 def make_ip_wired_multi_cover(device, address):
     """Helper to create homematic ip cover entities."""
-    return make_custom_entity(device, address, HmCover, Devices.IP_COVER)
+    return make_custom_entity(device, address, HmCover, Devices.IP_WIRED_MULTI_COVER)
 
 
 def make_rf_cover(device, address):
@@ -191,6 +197,7 @@ DEVICES = {
     "HmIP-BBL": make_ip_blind,
     "HmIP-FBL": make_ip_blind,
     "HmIP-DRBLI4": make_ip_multi_cover,
+    "HmIPW-DRBL4": make_ip_wired_multi_cover,
     "HM-LC-Bl1*": make_rf_blind,
     "HM-LC-Ja1PBU-FM": make_rf_blind,
     "ZEL STG RM FEP 230V": make_rf_blind,

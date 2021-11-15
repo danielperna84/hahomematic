@@ -63,11 +63,13 @@ class Devices(Enum):
     IP_PLUG_SWITCH = "IPKeySwitch"
     IP_LIGHT = "IPLight"
     IP_LIGHT_BSL = "IPLightBSL"
+    IP_MULTI_COVER = "IPMultiCover"
     IP_MULTI_DIMMER = "IPMultiDimmer"
     IP_MULTI_SWITCH = "IPMultiSwitch"
     IP_SWITCH = "IPSwitch"
     IP_SWITCH_BSL = "IPSwitchBSL"
     IP_THERMOSTAT = "IPThermostat"
+    IP_WIRED_MULTI_COVER = "IPWiredMultiCover"
     IP_WIRED_MULTI_DIMMER = "IPWiredMultiDimmer"
     IP_WIRED_MULTI_SWITCH = "IPWiredMultiSwitch"
     RF_COVER = "RfCover"
@@ -112,6 +114,7 @@ SCHEMA_DEVICE_DESCRIPTION = Schema(
 device_description = {
     DD_DEFAULT_ENTITIES: {
         0: {
+            FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
             FIELD_DUTY_CYCLE: "DUTY_CYCLE",
             FIELD_DUTYCYCLE: "DUTYCYCLE",
             FIELD_LOW_BAT: "LOW_BAT",
@@ -310,14 +313,14 @@ device_description = {
         },
         Devices.IP_WIRED_MULTI_SWITCH: {
             DD_DEVICE_GROUP: {
-                DD_GROUP_BASE_CHANNEL: [1, 5, 9, 13],
-                DD_PHY_CHANNEL: [2],
-                DD_VIRT_CHANNEL: [3, 4],
+                DD_GROUP_BASE_CHANNEL: [1, 5, 9, 13, 17, 21, 25, 29],
+                DD_PHY_CHANNEL: [1],
+                DD_VIRT_CHANNEL: [2, 3],
                 DD_FIELDS_REP: {
                     FIELD_STATE: "STATE",
                 },
                 DD_FIELDS: {
-                    1: {
+                    0: {
                         FIELD_CHANNEL_STATE: "STATE",
                     },
                 },
@@ -382,7 +385,7 @@ device_description = {
         Devices.IP_COVER: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [4],
-                DD_VIRT_CHANNEL: [5, 6],
+                DD_VIRT_CHANNEL: [],
                 DD_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_LEVEL_2: "LEVEL_2",
@@ -390,6 +393,42 @@ device_description = {
                 },
                 DD_FIELDS: {
                     3: {
+                        FIELD_CHANNEL_LEVEL: "LEVEL",
+                        FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
+                    },
+                },
+            },
+        },
+        Devices.IP_MULTI_COVER: {
+            DD_DEVICE_GROUP: {
+                DD_GROUP_BASE_CHANNEL: [9, 13, 17, 21],
+                DD_PHY_CHANNEL: [1],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_LEVEL_2: "LEVEL_2",
+                    FIELD_STOP: "STOP",
+                },
+                DD_FIELDS: {
+                    0: {
+                        FIELD_CHANNEL_LEVEL: "LEVEL",
+                        FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
+                    },
+                },
+            },
+        },
+        Devices.IP_WIRED_MULTI_COVER: {
+            DD_DEVICE_GROUP: {
+                DD_GROUP_BASE_CHANNEL: [1 ,5, 9, 13],
+                DD_PHY_CHANNEL: [1],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_LEVEL_2: "LEVEL_2",
+                    FIELD_STOP: "STOP",
+                },
+                DD_FIELDS: {
+                    0: {
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                         FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
                     },
