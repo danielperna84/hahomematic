@@ -108,5 +108,5 @@ DEVICES = {
     "HmIP-PS*": make_ip_plug_switch,
     "HmIP-BSL": make_ip_switch_bsl,
     "HmIP-DRSI4": make_ip_multi_switch,
-    "HmIPW-DRS4": make_ip_wired_multi_switch,
+    "HmIPW-DRS*": make_ip_wired_multi_switch,
 }
