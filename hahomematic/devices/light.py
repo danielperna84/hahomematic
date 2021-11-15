@@ -285,50 +285,48 @@ def _convert_color(color: tuple) -> str:
     return "RED"
 
 
-def make_ip_dimmer(device, address):
+def make_ip_dimmer(device, address, group_base_channels: [int]):
     """Helper to create homematic ip dimmer entities."""
-    return make_custom_entity(device, address, HmDimmer, Devices.IP_DIMMER)
+    return make_custom_entity(
+        device, address, HmDimmer, Devices.IP_DIMMER, group_base_channels
+    )
 
 
-def make_ip_multi_dimmer(device, address):
-    """Helper to create homematic ip multi dimmer entities."""
-    return make_custom_entity(device, address, HmDimmer, Devices.IP_MULTI_DIMMER)
-
-
-def make_ip_wired_multi_dimmer(device, address):
-    """Helper to create homematic ip multi dimmer entities."""
-    return make_custom_entity(device, address, HmDimmer, Devices.IP_WIRED_MULTI_DIMMER)
-
-
-def make_rf_dimmer(device, address):
+def make_rf_dimmer(device, address, group_base_channels: [int]):
     """Helper to create homematic classic dimmer entities."""
-    return make_custom_entity(device, address, HmDimmer, Devices.RF_DIMMER)
+    return make_custom_entity(
+        device, address, HmDimmer, Devices.RF_DIMMER, group_base_channels
+    )
 
 
-def make_ip_light(device, address):
+def make_ip_light(device, address, group_base_channels: [int]):
     """Helper to create homematic classic light entities."""
-    return make_custom_entity(device, address, HmLight, Devices.IP_LIGHT)
+    return make_custom_entity(
+        device, address, HmLight, Devices.IP_LIGHT_SWITCH, group_base_channels
+    )
 
 
-def make_ip_light_bsl(device, address):
+def make_ip_light_bsl(device, address, group_base_channels: [int]):
     """Helper to create HmIP-BSL entities."""
-    return make_custom_entity(device, address, IPLightBSL, Devices.IP_LIGHT_BSL)
+    return make_custom_entity(
+        device, address, IPLightBSL, Devices.IP_LIGHT_BSL, group_base_channels
+    )
 
 
 DEVICES = {
-    "HmIP-BSL": make_ip_light_bsl,
-    "HmIP-BSM": make_ip_light,
-    "HmIP-BDT": make_ip_dimmer,
-    "HmIP-FDT": make_ip_dimmer,
-    "HmIP-PDT*": make_ip_dimmer,
-    "HM-LC-Dim1*": make_rf_dimmer,
-    "HM-LC-Dim2*": make_rf_dimmer,
-    "HMW-LC-Dim1*": make_rf_dimmer,
-    "HM-DW-WM": make_rf_dimmer,
-    "HSS-DX": make_rf_dimmer,
-    "263 132": make_rf_dimmer,
-    "263 133": make_rf_dimmer,
-    "263 134": make_rf_dimmer,
-    "HmIPW-DRD3": make_ip_wired_multi_dimmer,
-    "HmIP-DRDI3": make_ip_multi_dimmer,
+    "HmIP-BSL": (make_ip_light_bsl, [7, 11]),
+    "HmIP-BSM": (make_ip_light, [3]),
+    "HmIP-BDT": (make_ip_dimmer, [3]),
+    "HmIP-FDT": (make_ip_dimmer, [3]),
+    "HmIP-PDT*": (make_ip_dimmer, [3]),
+    "HM-LC-Dim1*": (make_rf_dimmer, []),
+    "HM-LC-Dim2*": (make_rf_dimmer, []),
+    "HMW-LC-Dim1*": (make_rf_dimmer, []),
+    "HM-DW-WM": (make_rf_dimmer, []),
+    "HSS-DX": (make_rf_dimmer, []),
+    "263 132": (make_rf_dimmer, []),
+    "263 133": (make_rf_dimmer, []),
+    "263 134": (make_rf_dimmer, []),
+    "HmIPW-DRD3": (make_ip_dimmer, [1, 5, 9, 13]),
+    "HmIP-DRDI3": (make_ip_dimmer, [5, 9, 13]),
 }
