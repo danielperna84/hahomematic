@@ -33,7 +33,7 @@ from hahomematic.const import (
     WHITELIST_PARAMETERS,
     WRITE_ACTIONS,
 )
-from hahomematic.devices import device_desc_exists, get_device_func
+from hahomematic.devices import device_desc_exists, get_device_funcs
 from hahomematic.entity import BaseEntity, CustomEntity, GenericEntity
 from hahomematic.helpers import generate_unique_id
 from hahomematic.internal.action import HmAction
@@ -78,7 +78,7 @@ class HmDevice:
             self.address
         ][ATTR_HM_TYPE]
         # marker if device will be created as custom device
-        self.custom_device = device_desc_exists(self.device_type)
+        self.is_custom_device = device_desc_exists(self.device_type)
         self.firmware = self.server.devices_raw_dict[self.interface_id][self.address][
             ATTR_HM_FIRMWARE
         ]
@@ -235,8 +235,9 @@ class HmDevice:
                             )
                             continue
                     if (
-                        parameter in ALARM_EVENTS or
-                        parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS
+                        parameter in ALARM_EVENTS
+                        or parameter in CLICK_EVENTS
+                        or parameter in IMPULSE_EVENTS
                     ):
                         self.create_event(
                             address=channel,
@@ -252,7 +253,7 @@ class HmDevice:
                         if entity is not None:
                             new_entities.add(entity)
         # create custom entities
-        if self.custom_device:
+        if self.is_custom_device:
             _LOGGER.debug(
                 "Device.create_entities: Handling custom device integration: %s, %s, %s",
                 self.interface_id,
@@ -261,8 +262,7 @@ class HmDevice:
             )
             # Call the custom device / entity creation function.
 
-            device_func = get_device_func(self.device_type)
-            if device_func:
+            for device_func in get_device_funcs(self.device_type):
                 custom_entities = device_func(self, self.address)
                 new_entities.update(custom_entities)
         return new_entities

@@ -57,7 +57,7 @@ class BaseEntity(ABC):
         self._remove_callbacks = []
         self._device = device
         self.device_type = self._device.device_type
-        self.create_in_ha = not self._device.custom_device
+        self.create_in_ha = not self._device.is_custom_device
         self.data_entities: dict[str, GenericEntity] = {}
         self._server = self._device.server
         self._interface_id = self._device.interface_id
@@ -380,14 +380,14 @@ class CustomEntity(BaseEntity):
         """init entity collection"""
         super()._init_entities()
         fields_rep = self._device_desc.get(DD_FIELDS_REP, {})
-
         # Add repeating fields
         for (f_name, p_name) in fields_rep.items():
             f_address = f"{self.address}:{self._channel_no}"
             entity = self._device.get_hm_entity(f_address, p_name)
             self._add_entity(f_name, entity)
         # Add device fields
-        for channel_no, channel in self._device_desc[DD_FIELDS].items():
+        fields = self._device_desc.get(DD_FIELDS, {})
+        for channel_no, channel in fields.items():
             # if self._channel_no and self._channel_no is not channel_no:
             #     continue
             for f_name, p_name in channel.items():
@@ -402,6 +402,8 @@ class CustomEntity(BaseEntity):
 
     def _mark_entity(self, field_desc):
         """Mark entities to be created in HA."""
+        if not field_desc:
+            return
         for channel_no, field in field_desc.items():
             f_address = f"{self.address}:{channel_no}"
             for f_name, p_name in field.items():

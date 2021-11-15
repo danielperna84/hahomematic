@@ -21,7 +21,7 @@ def generate_unique_id(address, parameter=None, prefix=None):
     """
     Build unique id from address and parameter.
     """
-    unique_id = address.replace(':', '_').replace('-', '_')
+    unique_id = address.replace(":", "_").replace("-", "_")
     if parameter:
         unique_id = f"{unique_id}_{parameter}"
 
@@ -29,8 +29,6 @@ def generate_unique_id(address, parameter=None, prefix=None):
         unique_id = f"{prefix}_{unique_id}"
 
     return f"{HA_DOMAIN}_{unique_id}".lower()
-
-
 
 
 def make_http_credentials(username=None, password=None):

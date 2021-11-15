@@ -9,19 +9,15 @@ from typing import Any
 
 from hahomematic.const import HA_PLATFORM_COVER
 from hahomematic.devices.device_description import (
-    DD_PHY_CHANNEL,
-    DD_VIRT_CHANNEL,
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
     FIELD_LEVEL,
     FIELD_LEVEL_2,
     FIELD_STOP,
     Devices,
-    get_device_entities,
-    get_device_groups,
+    make_custom_entity,
 )
 from hahomematic.entity import CustomEntity
-from hahomematic.helpers import generate_unique_id
 
 ATTR_CHANNEL_COVER_LEVEL = "channel_cover_level"
 ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
@@ -159,65 +155,34 @@ class HmBlind(HmCover):
         return state_attr
 
 
-def _make_cover(device, address, cover_class, device_def: Devices):
-    """
-    Helper to create light entities.
-    We use a helper-function to avoid raising exceptions during object-init.
-    """
-    entities = []
-    entity_desc = get_device_entities(device_def)
-    for device_desc in get_device_groups(device_def):
-        channels = device_desc[DD_PHY_CHANNEL]
-        # check if virtual channels should be used
-        if device.server.enable_virtual_channels:
-            channels += device_desc[DD_VIRT_CHANNEL]
-        for channel_no in channels:
-            unique_id = generate_unique_id(f"{address}:{channel_no}")
-            if unique_id in device.server.hm_entities:
-                _LOGGER.debug("_make_cover: Skipping %s (already exists)", unique_id)
-                continue
-            entity = cover_class(
-                device=device,
-                address=address,
-                unique_id=unique_id,
-                device_desc=device_desc,
-                entity_desc=entity_desc,
-                channel_no=channel_no,
-            )
-            if len(entity.data_entities) > 0:
-                entity.add_to_collections()
-                entities.append(entity)
-    return entities
-
-
 def make_ip_cover(device, address):
     """Helper to create homematic ip cover entities."""
-    return _make_cover(device, address, HmCover, Devices.IP_COVER)
+    return make_custom_entity(device, address, HmCover, Devices.IP_COVER)
 
 
 def make_ip_multi_cover(device, address):
     """Helper to create homematic ip cover entities."""
-    return _make_cover(device, address, HmCover, Devices.IP_COVER)
+    return make_custom_entity(device, address, HmCover, Devices.IP_COVER)
 
 
 def make_ip_wired_multi_cover(device, address):
     """Helper to create homematic ip cover entities."""
-    return _make_cover(device, address, HmCover, Devices.IP_COVER)
+    return make_custom_entity(device, address, HmCover, Devices.IP_COVER)
 
 
 def make_rf_cover(device, address):
     """Helper to create homematic classic cover entities."""
-    return _make_cover(device, address, HmCover, Devices.RF_COVER)
+    return make_custom_entity(device, address, HmCover, Devices.RF_COVER)
 
 
 def make_ip_blind(device, address):
     """Helper to create homematic ip cover entities."""
-    return _make_cover(device, address, HmBlind, Devices.IP_COVER)
+    return make_custom_entity(device, address, HmBlind, Devices.IP_COVER)
 
 
 def make_rf_blind(device, address):
     """Helper to create homematic classic cover entities."""
-    return _make_cover(device, address, HmBlind, Devices.RF_COVER)
+    return make_custom_entity(device, address, HmBlind, Devices.RF_COVER)
 
 
 DEVICES = {
