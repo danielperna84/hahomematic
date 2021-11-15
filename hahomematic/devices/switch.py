@@ -78,35 +78,19 @@ class HmSwitch(CustomEntity):
         return state_attr
 
 
-def make_ip_switch(device, address):
+def make_ip_switch(device, address, group_base_channels: [int]):
     """Helper to create homematic ip switch entities."""
-    return make_custom_entity(device, address, HmSwitch, Devices.IP_SWITCH)
-
-
-def make_ip_switch_bsl(device, address):
-    """Helper to create homematic ip switch entities."""
-    return make_custom_entity(device, address, HmSwitch, Devices.IP_SWITCH_BSL)
-
-
-def make_ip_plug_switch(device, address):
-    """Helper to create homematic ip switch entities."""
-    return make_custom_entity(device, address, HmSwitch, Devices.IP_PLUG_SWITCH)
-
-
-def make_ip_multi_switch(device, address):
-    """Helper to create homematic ip multi switch entities."""
-    return make_custom_entity(device, address, HmSwitch, Devices.IP_MULTI_SWITCH)
-
-
-def make_ip_wired_multi_switch(device, address):
-    """Helper to create homematic ip multi switch entities."""
-    return make_custom_entity(device, address, HmSwitch, Devices.IP_WIRED_MULTI_SWITCH)
+    return make_custom_entity(
+        device, address, HmSwitch, Devices.IP_LIGHT_SWITCH, group_base_channels
+    )
 
 
 DEVICES = {
-    "HmIP-FSM": make_ip_switch,
-    "HmIP-PS*": make_ip_plug_switch,
-    "HmIP-BSL": make_ip_switch_bsl,
-    "HmIP-DRSI4": make_ip_multi_switch,
-    "HmIPW-DRS*": make_ip_wired_multi_switch,
+    "HmIP-FSM*": (make_ip_switch, [1]),
+    "HmIP-FSI*16": (make_ip_switch, [2]),
+    "HmIP-PS*": (make_ip_switch, [2]),
+    "HmIP-BSL": (make_ip_switch, [3]),
+    "HmIP-DRSI1": (make_ip_switch, [2]),
+    "HmIP-DRSI4": (make_ip_switch, [5, 9, 13, 17]),
+    "HmIPW-DRS*": (make_ip_switch, [1, 5, 9, 13, 17, 21, 25, 29]),
 }

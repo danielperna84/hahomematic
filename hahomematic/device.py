@@ -262,8 +262,8 @@ class HmDevice:
             )
             # Call the custom device / entity creation function.
 
-            for device_func in get_device_funcs(self.device_type):
-                custom_entities = device_func(self, self.address)
+            for (device_func, group_base_channels) in get_device_funcs(self.device_type):
+                custom_entities = device_func(self, self.address, group_base_channels)
                 new_entities.update(custom_entities)
         return new_entities
 

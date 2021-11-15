@@ -2,9 +2,11 @@
 This module contains device descriptions for custom entities.
 """
 import logging
-from enum import Enum
 from copy import copy
+from enum import Enum
+
 from voluptuous import Invalid, Optional, Required, Schema
+
 from hahomematic.helpers import generate_unique_id
 
 DD_DEFAULT_ENTITIES = "default_entities"
@@ -13,7 +15,6 @@ DD_DEVICES = "devices"
 DD_ADDITIONAL_ENTITIES = "additional_entities"
 DD_FIELDS = "fields"
 DD_FIELDS_REP = "fields_rep"
-DD_GROUP_BASE_CHANNEL = "group_base_channel"
 DD_PHY_CHANNEL = "phy_channel"
 DD_VIRT_CHANNEL = "virt_channel"
 
@@ -60,18 +61,9 @@ _LOGGER = logging.getLogger(__name__)
 class Devices(Enum):
     IP_COVER = "IPCover"
     IP_DIMMER = "IPDimmer"
-    IP_PLUG_SWITCH = "IPKeySwitch"
-    IP_LIGHT = "IPLight"
+    IP_LIGHT_SWITCH = "IPLightSwitch"
     IP_LIGHT_BSL = "IPLightBSL"
-    IP_MULTI_COVER = "IPMultiCover"
-    IP_MULTI_DIMMER = "IPMultiDimmer"
-    IP_MULTI_SWITCH = "IPMultiSwitch"
-    IP_SWITCH = "IPSwitch"
-    IP_SWITCH_BSL = "IPSwitchBSL"
     IP_THERMOSTAT = "IPThermostat"
-    IP_WIRED_MULTI_COVER = "IPWiredMultiCover"
-    IP_WIRED_MULTI_DIMMER = "IPWiredMultiDimmer"
-    IP_WIRED_MULTI_SWITCH = "IPWiredMultiSwitch"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
     RF_THERMOSTAT = "RfThermostat"
@@ -84,7 +76,6 @@ SCHEMA_DD_FIELD = Schema({Optional(int): SCHEMA_DD_FIELD_DETAILS})
 
 SCHEMA_DD_DEVICE_GROUP = Schema(
     {
-        Optional(DD_GROUP_BASE_CHANNEL): [int],
         Required(DD_PHY_CHANNEL): [int],
         Required(DD_VIRT_CHANNEL): [int],
         Required(DD_FIELDS_REP, default={}): SCHEMA_DD_FIELD_DETAILS,
@@ -182,36 +173,6 @@ device_description = {
         },
         Devices.IP_DIMMER: {
             DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [4],
-                DD_VIRT_CHANNEL: [5, 6],
-                DD_FIELDS_REP: {
-                    FIELD_LEVEL: "LEVEL",
-                },
-                DD_FIELDS: {
-                    3: {
-                        FIELD_CHANNEL_LEVEL: "LEVEL",
-                    },
-                },
-            },
-        },
-        Devices.IP_MULTI_DIMMER: {
-            DD_DEVICE_GROUP: {
-                DD_GROUP_BASE_CHANNEL: [5, 9, 13],
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [2, 3],
-                DD_FIELDS_REP: {
-                    FIELD_LEVEL: "LEVEL",
-                },
-                DD_FIELDS: {
-                    0: {
-                        FIELD_CHANNEL_LEVEL: "LEVEL",
-                    },
-                },
-            },
-        },
-        Devices.IP_WIRED_MULTI_DIMMER: {
-            DD_DEVICE_GROUP: {
-                DD_GROUP_BASE_CHANNEL: [1, 5, 9, 13],
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [2, 3],
                 DD_FIELDS_REP: {
@@ -234,71 +195,8 @@ device_description = {
                 DD_FIELDS: {},
             },
         },
-        Devices.IP_LIGHT: {
+        Devices.IP_LIGHT_SWITCH: {
             DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [4],
-                DD_VIRT_CHANNEL: [5, 6],
-                DD_FIELDS_REP: {
-                    FIELD_STATE: "STATE",
-                },
-                DD_FIELDS: {
-                    3: {
-                        FIELD_CHANNEL_STATE: "STATE",
-                    },
-                },
-            },
-            DD_ADDITIONAL_ENTITIES: {
-                7: {
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
-                    FIELD_CURRENT: "CURRENT",
-                    FIELD_ENERGY_COUNTER: "ENERGY_COUNTER",
-                    FIELD_FREQUENCY: "FREQUENCY",
-                    FIELD_POWER: "POWER",
-                    FIELD_VOLTAGE: "VOLTAGE",
-                },
-            },
-        },
-        Devices.IP_SWITCH: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [2],
-                DD_VIRT_CHANNEL: [3, 4],
-                DD_FIELDS_REP: {
-                    FIELD_STATE: "STATE",
-                },
-                DD_FIELDS: {
-                    1: {
-                        FIELD_CHANNEL_STATE: "STATE",
-                    },
-                },
-            },
-            DD_ADDITIONAL_ENTITIES: {
-                5: {
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
-                    FIELD_CURRENT: "CURRENT",
-                    FIELD_ENERGY_COUNTER: "ENERGY_COUNTER",
-                    FIELD_FREQUENCY: "FREQUENCY",
-                    FIELD_POWER: "POWER",
-                    FIELD_VOLTAGE: "VOLTAGE",
-                },
-            },
-        },
-        Devices.IP_SWITCH_BSL: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [4],
-                DD_VIRT_CHANNEL: [5, 6],
-                DD_FIELDS_REP: {
-                    FIELD_STATE: "STATE",
-                },
-                DD_FIELDS: {
-                    3: {
-                        FIELD_CHANNEL_STATE: "STATE",
-                    },
-                },
-            },
-        },
-        Devices.IP_MULTI_SWITCH: {
-            DD_DEVICE_GROUP: {
-                DD_GROUP_BASE_CHANNEL: [5, 9, 13, 17],
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [2, 3],
                 DD_FIELDS_REP: {
@@ -310,38 +208,8 @@ device_description = {
                     },
                 },
             },
-        },
-        Devices.IP_WIRED_MULTI_SWITCH: {
-            DD_DEVICE_GROUP: {
-                DD_GROUP_BASE_CHANNEL: [1, 5, 9, 13, 17, 21, 25, 29],
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [2, 3],
-                DD_FIELDS_REP: {
-                    FIELD_STATE: "STATE",
-                },
-                DD_FIELDS: {
-                    0: {
-                        FIELD_CHANNEL_STATE: "STATE",
-                    },
-                },
-            },
-            DD_ADDITIONAL_ENTITIES: {},
-        },
-        Devices.IP_PLUG_SWITCH: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [3],
-                DD_VIRT_CHANNEL: [4, 5],
-                DD_FIELDS_REP: {
-                    FIELD_STATE: "STATE",
-                },
-                DD_FIELDS: {
-                    2: {
-                        FIELD_CHANNEL_STATE: "STATE",
-                    },
-                },
-            },
             DD_ADDITIONAL_ENTITIES: {
-                6: {
+                4: {
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_CURRENT: "CURRENT",
                     FIELD_ENERGY_COUNTER: "ENERGY_COUNTER",
@@ -353,7 +221,6 @@ device_description = {
         },
         Devices.IP_LIGHT_BSL: {
             DD_DEVICE_GROUP: {
-                DD_GROUP_BASE_CHANNEL: [7, 12],
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [2, 3],
                 DD_FIELDS_REP: {
@@ -367,59 +234,9 @@ device_description = {
                     },
                 },
             },
-            DD_ADDITIONAL_ENTITIES: {
-                3: {
-                    FIELD_STATE: "STATE",
-                },
-                4: {
-                    FIELD_SWITCH_MAIN: "STATE",
-                },
-                5: {
-                    FIELD_SWITCH_V1: "STATE",
-                },
-                6: {
-                    FIELD_SWITCH_V2: "STATE",
-                },
-            },
         },
         Devices.IP_COVER: {
             DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [4],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
-                    FIELD_LEVEL: "LEVEL",
-                    FIELD_LEVEL_2: "LEVEL_2",
-                    FIELD_STOP: "STOP",
-                },
-                DD_FIELDS: {
-                    3: {
-                        FIELD_CHANNEL_LEVEL: "LEVEL",
-                        FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
-                    },
-                },
-            },
-        },
-        Devices.IP_MULTI_COVER: {
-            DD_DEVICE_GROUP: {
-                DD_GROUP_BASE_CHANNEL: [9, 13, 17, 21],
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
-                    FIELD_LEVEL: "LEVEL",
-                    FIELD_LEVEL_2: "LEVEL_2",
-                    FIELD_STOP: "STOP",
-                },
-                DD_FIELDS: {
-                    0: {
-                        FIELD_CHANNEL_LEVEL: "LEVEL",
-                        FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
-                    },
-                },
-            },
-        },
-        Devices.IP_WIRED_MULTI_COVER: {
-            DD_DEVICE_GROUP: {
-                DD_GROUP_BASE_CHANNEL: [1 ,5, 9, 13],
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [],
                 DD_FIELDS_REP: {
@@ -460,16 +277,26 @@ def validate_device_description():
         return None
 
 
-def make_custom_entity(device, address, custom_entity_class, device_def: Devices):
+def make_custom_entity(
+    device,
+    address,
+    custom_entity_class,
+    device_def: Devices,
+    group_base_channels: [int],
+):
     """
-    Helper to create switch entities.
+    Helper to create customentities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
     entities = []
-    entity_desc = _get_device_entities(device_def)
-    for base_channel in _get_group_base_channels(device_def):
-        device_desc = _get_device_group(device_def, base_channel)
+    entity_desc = {}
+    if not group_base_channels:
+        group_base_channels = [0]
 
+    entity_desc = _get_device_entities(device_def, group_base_channels[0])
+
+    for base_channel in group_base_channels:
+        device_desc = _get_device_group(device_def, base_channel)
         channels = device_desc[DD_PHY_CHANNEL]
         # check if virtual channels should be used
         if device.server.enable_virtual_channels:
@@ -507,12 +334,6 @@ def _get_device(device_enum: Devices):
         return copy(device)
 
 
-def _get_group_base_channels(device_enum: Devices):
-    """Return the group base channel."""
-    device = _get_device(device_enum)
-    return device[DD_DEVICE_GROUP].get(DD_GROUP_BASE_CHANNEL) or [0]
-
-
 def _get_device_group(device_enum: Devices, base_channel_no: int):
     """Return the device group."""
     device = _get_device(device_enum)
@@ -541,9 +362,16 @@ def _get_device_group(device_enum: Devices, base_channel_no: int):
     return group
 
 
-def _get_device_entities(device_enum: Devices):
+def _get_device_entities(device_enum: Devices, base_channel_no: int):
     """Return the device entities."""
-    additional_entities = device_description[DD_DEVICES].get(device_enum, {}).get(DD_ADDITIONAL_ENTITIES, {})
+    additional_entities = (
+        device_description[DD_DEVICES]
+        .get(device_enum, {})
+        .get(DD_ADDITIONAL_ENTITIES, {})
+    )
     if additional_entities:
-        return copy(additional_entities)
+        new_entities = {}
+        for channel_no, field in copy(additional_entities).items():
+            new_entities[channel_no + base_channel_no] = field
+        return new_entities
     return None
