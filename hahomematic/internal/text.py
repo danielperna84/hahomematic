@@ -1,6 +1,4 @@
-"""
-Module for entities implemented using text.
-"""
+"""Module for entities implemented using text."""
 
 import logging
 
@@ -10,14 +8,12 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=invalid-name
 class HmText(GenericEntity):
     """
     Implementation of a text.
     This is an internal default platform that gets automatically generated.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter, parameter_data):
         super().__init__(
             device=device,
@@ -30,9 +26,11 @@ class HmText(GenericEntity):
 
     @property
     def state(self):
+        """Get the state of the entity."""
         return self._state
 
     async def set_state(self, value):
+        """Set the state of the entity."""
         # pylint: disable=no-else-return
         if self._min <= value <= self._max:
             await self.send_value(value)

@@ -9,7 +9,6 @@ import xmlrpc.client
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=too-few-public-methods
 # noinspection PyProtectedMember,PyUnresolvedReferences
 class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
     """
@@ -32,9 +31,12 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
         Call method on server side
         """
         parent = xmlrpc.client.ServerProxy
-        # pylint: disable=protected-access
         return await self._executor_func(
-            parent._ServerProxy__request, self, *args, **kwargs
+            # pylint: disable=protected-access
+            parent._ServerProxy__request,
+            self,
+            *args,
+            **kwargs,
         )
 
     def __getattr__(self, *args, **kwargs):
@@ -44,7 +46,6 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
         return xmlrpc.client._Method(self.__async_request, *args, **kwargs)
 
 
-# pylint: disable=too-few-public-methods
 # noinspection PyProtectedMember,PyUnresolvedReferences
 class SimpleServerProxy(xmlrpc.client.ServerProxy):
     """

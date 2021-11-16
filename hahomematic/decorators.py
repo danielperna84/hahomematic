@@ -25,14 +25,12 @@ def callback_system_event(name):
                 args = args[1:]
                 interface_id = args[0]
                 client = get_client_by_interface_id(interface_id)
-            # pylint: disable=broad-except
             except Exception as err:
                 _LOGGER.warning("Failed to reduce args for callback_system_event.")
                 raise Exception("args-exception callback_system_event") from err
             if client:
                 client.time_initialized = int(time.time())
             if client.server.callback_system_event is not None:
-                # pylint: disable=not-callable
                 client.server.callback_system_event(name, *args)
             return return_value
 
@@ -54,14 +52,12 @@ def callback_event(func):
             args = args[1:]
             interface_id = args[0]
             client = get_client_by_interface_id(interface_id)
-        # pylint: disable=broad-except
         except Exception as err:
             _LOGGER.warning("Failed to reduce args for callback_event.")
             raise Exception("args-exception callback_event") from err
         if client:
             client.time_initialized = int(time.time())
         if client.server.callback_entity_event is not None:
-            # pylint: disable=not-callable
             client.server.callback_entity_event(*args)
         return return_value
 

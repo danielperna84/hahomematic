@@ -1,12 +1,10 @@
-# pylint: disable=line-too-long
-
 """
 Functions for entity creation.
 """
 
+from abc import ABC, abstractmethod
 import datetime
 import logging
-from abc import ABC, abstractmethod
 from typing import Any
 
 from hahomematic.const import (
@@ -40,13 +38,11 @@ from hahomematic.helpers import get_custom_entity_name, get_entity_name
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-instance-attributes
 class BaseEntity(ABC):
     """
     Base class for regular entities.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, platform):
         """
         Initialize the entity.
@@ -112,7 +108,6 @@ class BaseEntity(ABC):
         """
         self._set_last_update()
         for _callback in self._update_callbacks:
-            # pylint: disable=not-callable
             _callback(self.unique_id)
 
     def register_remove_callback(self, remove_callback) -> None:
@@ -131,7 +126,6 @@ class BaseEntity(ABC):
         """
         self._set_last_update()
         for _callback in self._remove_callbacks:
-            # pylint: disable=not-callable
             _callback(self.unique_id)
 
     @abstractmethod
@@ -161,7 +155,6 @@ class GenericEntity(BaseEntity):
     Base class for generic entities.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter, parameter_data, platform):
         """
         Initialize the entity.
@@ -268,8 +261,8 @@ class GenericEntity(BaseEntity):
 
     @property
     @abstractmethod
-    # pylint: disable=invalid-name,missing-function-docstring
     def state(self):
+        """Return the state of the entity."""
         ...
 
     @property
@@ -296,7 +289,6 @@ class GenericEntity(BaseEntity):
         """send value to ccu."""
         try:
             await self.proxy.setValue(self.address, self.parameter, value)
-        # pylint: disable=broad-except
         except Exception:
             _LOGGER.exception(
                 "generic_entity: Failed to set state for: %s, %s, %s, %s",
@@ -320,7 +312,6 @@ class GenericEntity(BaseEntity):
 
             self.update_entity()
             return DATA_LOAD_SUCCESS
-        # pylint: disable=broad-except
         except Exception as err:
             _LOGGER.debug(
                 " %s: Failed to get state for %s, %s, %s: %s",
@@ -342,7 +333,6 @@ class CustomEntity(BaseEntity):
     Base class for custom entities.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
         device,
@@ -398,7 +388,6 @@ class CustomEntity(BaseEntity):
         self._mark_entity(self._entity_desc)
         # add default entities
         self._mark_entity(get_default_entities())
-        return
 
     def _mark_entity(self, field_desc):
         """Mark entities to be created in HA."""
@@ -406,7 +395,7 @@ class CustomEntity(BaseEntity):
             return
         for channel_no, field in field_desc.items():
             f_address = f"{self.address}:{channel_no}"
-            for f_name, p_name in field.items():
+            for p_name in field.values():
                 entity = self._device.get_hm_entity(f_address, p_name)
                 if entity:
                     entity.create_in_ha = True

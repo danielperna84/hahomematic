@@ -1,9 +1,9 @@
 """
 This module contains device descriptions for custom entities.
 """
-import logging
 from copy import copy
 from enum import Enum
+import logging
 
 from voluptuous import Invalid, Optional, Required, Schema
 
@@ -35,6 +35,8 @@ FIELD_FREQUENCY = "frequency"
 FIELD_HUMIDITY = "humidity"
 FIELD_LEVEL = "level"
 FIELD_LEVEL_2 = "level_2"
+FIELD_LOCK_STATE = "lock_state"
+FIELD_LOCK_TARGET_LEVEL = "lock_target_level"
 FIELD_LOW_BAT = "low_bat"
 FIELD_LOWBAT = "lowbat"
 FIELD_LOWERING_MODE = "lowering_mode"
@@ -59,10 +61,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Devices(Enum):
+    """Enum for device_descriptions."""
+
     IP_COVER = "IPCover"
     IP_DIMMER = "IPDimmer"
     IP_LIGHT_SWITCH = "IPLightSwitch"
     IP_LIGHT_BSL = "IPLightBSL"
+    IP_LOCK = "IPLock"
     IP_THERMOSTAT = "IPThermostat"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
@@ -117,58 +122,21 @@ device_description = {
         }
     },
     DD_DEVICES: {
-        Devices.SIMPLE_RF_THERMOSTAT: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {},
-                DD_FIELDS: {
-                    1: {
-                        FIELD_HUMIDITY: "HUMIDITY",
-                        FIELD_TEMPERATURE: "TEMPERATURE",
-                    },
-                    2: {
-                        FIELD_SETPOINT: "SETPOINT",
-                    },
-                },
-            },
-        },
-        Devices.RF_THERMOSTAT: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1, 2, 3, 4],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
-                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
-                    FIELD_SETPOINT: "SET_TEMPERATURE",
-                    FIELD_CONTROL_MODE: "CONTROL_MODE",
-                    FIELD_BOOST_MODE: "BOOST_MODE",
-                    FIELD_AUTO_MODE: "AUTO_MODE",
-                    FIELD_MANU_MODE: "MANU_MODE",
-                    FIELD_COMFORT_MODE: "COMFORT_MODE",
-                    FIELD_LOWERING_MODE: "LOWERING_MODE",
-                },
-            },
-        },
-        Devices.IP_THERMOSTAT: {
+        Devices.IP_COVER: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [],
                 DD_FIELDS_REP: {
-                    FIELD_HUMIDITY: "HUMIDITY",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
-                    FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
-                    FIELD_SET_POINT_MODE: "SET_POINT_MODE",
-                    FIELD_CONTROL_MODE: "CONTROL_MODE",
-                    FIELD_BOOST_MODE: "BOOST_MODE",
-                    FIELD_PARTY_MODE: "PARTY_MODE",
-                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_LEVEL_2: "LEVEL_2",
+                    FIELD_STOP: "STOP",
                 },
-            },
-            DD_ADDITIONAL_ENTITIES: {
-                1: {
-                    FIELD_HUMIDITY: "HUMIDITY",
-                }
+                DD_FIELDS: {
+                    0: {
+                        FIELD_CHANNEL_LEVEL: "LEVEL",
+                        FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
+                    },
+                },
             },
         },
         Devices.IP_DIMMER: {
@@ -185,14 +153,20 @@ device_description = {
                 },
             },
         },
-        Devices.RF_DIMMER: {
+        Devices.IP_LIGHT_BSL: {
             DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1, 2, 3, 4],
-                DD_VIRT_CHANNEL: [],
+                DD_PHY_CHANNEL: [1],
+                DD_VIRT_CHANNEL: [2, 3],
                 DD_FIELDS_REP: {
+                    FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
                 },
-                DD_FIELDS: {},
+                DD_FIELDS: {
+                    0: {
+                        FIELD_CHANNEL_COLOR: "COLOR",
+                        FIELD_CHANNEL_LEVEL: "LEVEL",
+                    },
+                },
             },
         },
         Devices.IP_LIGHT_SWITCH: {
@@ -219,37 +193,38 @@ device_description = {
                 },
             },
         },
-        Devices.IP_LIGHT_BSL: {
+        Devices.IP_LOCK: {
             DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [2, 3],
-                DD_FIELDS_REP: {
-                    FIELD_COLOR: "COLOR",
-                    FIELD_LEVEL: "LEVEL",
-                },
+                DD_PHY_CHANNEL: [],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {},
                 DD_FIELDS: {
-                    0: {
-                        FIELD_CHANNEL_COLOR: "COLOR",
-                        FIELD_CHANNEL_LEVEL: "LEVEL",
-                    },
+                    1: {
+                        FIELD_LOCK_STATE: "LOCK_STATE",
+                        FIELD_LOCK_TARGET_LEVEL: "LOCK_TARGET_LEVEL",
+                    }
                 },
             },
         },
-        Devices.IP_COVER: {
+        Devices.IP_THERMOSTAT: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [],
                 DD_FIELDS_REP: {
-                    FIELD_LEVEL: "LEVEL",
-                    FIELD_LEVEL_2: "LEVEL_2",
-                    FIELD_STOP: "STOP",
+                    FIELD_HUMIDITY: "HUMIDITY",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                    FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
+                    FIELD_SET_POINT_MODE: "SET_POINT_MODE",
+                    FIELD_CONTROL_MODE: "CONTROL_MODE",
+                    FIELD_BOOST_MODE: "BOOST_MODE",
+                    FIELD_PARTY_MODE: "PARTY_MODE",
+                    FIELD_AUTO_MODE: "AUTO_MODE",
                 },
-                DD_FIELDS: {
-                    0: {
-                        FIELD_CHANNEL_LEVEL: "LEVEL",
-                        FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
-                    },
-                },
+            },
+            DD_ADDITIONAL_ENTITIES: {
+                1: {
+                    FIELD_HUMIDITY: "HUMIDITY",
+                }
             },
         },
         Devices.RF_COVER: {
@@ -263,11 +238,55 @@ device_description = {
                 },
             },
         },
+        Devices.RF_DIMMER: {
+            DD_DEVICE_GROUP: {
+                DD_PHY_CHANNEL: [1, 2, 3, 4],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {
+                    FIELD_LEVEL: "LEVEL",
+                },
+                DD_FIELDS: {},
+            },
+        },
+        Devices.RF_THERMOSTAT: {
+            DD_DEVICE_GROUP: {
+                DD_PHY_CHANNEL: [1, 2, 3, 4],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {
+                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                    FIELD_SETPOINT: "SET_TEMPERATURE",
+                    FIELD_CONTROL_MODE: "CONTROL_MODE",
+                    FIELD_BOOST_MODE: "BOOST_MODE",
+                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_MANU_MODE: "MANU_MODE",
+                    FIELD_COMFORT_MODE: "COMFORT_MODE",
+                    FIELD_LOWERING_MODE: "LOWERING_MODE",
+                },
+            },
+        },
+        Devices.SIMPLE_RF_THERMOSTAT: {
+            DD_DEVICE_GROUP: {
+                DD_PHY_CHANNEL: [],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {},
+                DD_FIELDS: {
+                    1: {
+                        FIELD_HUMIDITY: "HUMIDITY",
+                        FIELD_TEMPERATURE: "TEMPERATURE",
+                    },
+                    2: {
+                        FIELD_SETPOINT: "SETPOINT",
+                    },
+                },
+            },
+        },
     },
 }
 
 
 def validate_device_description():
+    """Validate the device_description."""
     try:
         return SCHEMA_DEVICE_DESCRIPTION(device_description)
     except Invalid as err:
@@ -285,11 +304,10 @@ def make_custom_entity(
     group_base_channels: [int],
 ):
     """
-    Helper to create customentities.
+    Creates custom_entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
     entities = []
-    entity_desc = {}
     if not group_base_channels:
         group_base_channels = [0]
 
@@ -300,25 +318,59 @@ def make_custom_entity(
         channels = device_desc[DD_PHY_CHANNEL]
         # check if virtual channels should be used
         if device.server.enable_virtual_channels:
-            channels += device_desc[DD_VIRT_CHANNEL]
-        for channel_no in channels:
-            unique_id = generate_unique_id(f"{address}:{channel_no}")
-            if unique_id in device.server.hm_entities:
-                _LOGGER.debug(
-                    "make_custom_entity: Skipping %s (already exists)", unique_id
+            channels.extend(device_desc[DD_VIRT_CHANNEL])
+        for channel_no in set(channels):
+            entities.extend(
+                _create_entities(
+                    device=device,
+                    address=address,
+                    custom_entity_class=custom_entity_class,
+                    device_desc=device_desc,
+                    entity_desc=entity_desc,
+                    channel_no=channel_no,
                 )
-                continue
-            entity = custom_entity_class(
-                device=device,
-                address=address,
-                unique_id=unique_id,
-                device_desc=device_desc,
-                entity_desc=entity_desc,
-                channel_no=channel_no,
             )
-            if len(entity.data_entities) > 0:
-                entity.add_to_collections()
-                entities.append(entity)
+        # DD_PHY_CHANNEL is empty -> try to create entities based on DD_FIELDS
+        if not channels:
+            entities.extend(
+                _create_entities(
+                    device=device,
+                    address=address,
+                    custom_entity_class=custom_entity_class,
+                    device_desc=device_desc,
+                    entity_desc=entity_desc,
+                    channel_no=None,
+                )
+            )
+
+    return entities
+
+
+def _create_entities(
+    device,
+    address,
+    custom_entity_class,
+    device_desc,
+    entity_desc,
+    channel_no,
+):
+    """Create custom entities."""
+    entities = []
+    unique_id = generate_unique_id(f"{address}:{channel_no}")
+    if unique_id in device.server.hm_entities:
+        _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_id)
+        return
+    entity = custom_entity_class(
+        device=device,
+        address=address,
+        unique_id=unique_id,
+        device_desc=device_desc,
+        entity_desc=entity_desc,
+        channel_no=channel_no,
+    )
+    if len(entity.data_entities) > 0:
+        entity.add_to_collections()
+        entities.append(entity)
     return entities
 
 
@@ -332,17 +384,18 @@ def _get_device(device_enum: Devices):
     device = device_description[DD_DEVICES].get(device_enum)
     if device:
         return copy(device)
+    return None
 
 
 def _get_device_group(device_enum: Devices, base_channel_no: int):
     """Return the device group."""
     device = _get_device(device_enum)
-    group = None
+    group = {}
     if device:
         group = copy(device[DD_DEVICE_GROUP])
         if group and base_channel_no == 0:
             return group
-        elif not group:
+        if not group:
             return None
 
     p_channel = group[DD_PHY_CHANNEL]
@@ -358,7 +411,6 @@ def _get_device_group(device_enum: Devices, base_channel_no: int):
         for channel_no, field in fields.items():
             new_fields[channel_no + base_channel_no] = field
         group[DD_FIELDS] = new_fields
-
     return group
 
 

@@ -1,10 +1,7 @@
-# pylint: disable=line-too-long
-"""
-Code to create the required entities for light entities.
-"""
+"""Code to create the required entities for light entities."""
 
-import logging
 from abc import abstractmethod
+import logging
 from typing import Any
 
 from hahomematic.const import HA_PLATFORM_LIGHT
@@ -35,8 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class BaseHmLight(CustomEntity):
+    """Base class for homematic light entities."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self, device, address, unique_id, device_desc, entity_desc, channel_no
     ):
@@ -70,6 +67,7 @@ class BaseHmLight(CustomEntity):
     @property
     @abstractmethod
     def supported_color_modes(self) -> set[str]:
+        """Return the supported color_modes."""
         ...
 
     @abstractmethod
@@ -84,14 +82,16 @@ class BaseHmLight(CustomEntity):
 
 
 class HmDimmer(BaseHmLight):
+    """Class for homematic dimmer entities."""
+
     @property
     def _level(self) -> float:
-        """return the dim level of the device"""
+        """Return the dim level of the device."""
         return self._get_entity_value(FIELD_LEVEL)
 
     @property
     def _channel_level(self) -> float:
-        """return the channel level of the device"""
+        """Return the channel level of the device."""
         return self._get_entity_value(FIELD_CHANNEL_LEVEL)
 
     @property
@@ -134,14 +134,16 @@ class HmDimmer(BaseHmLight):
 
 
 class HmLight(BaseHmLight):
+    """Class for homematic light entities."""
+
     @property
     def _state(self):
-        """return the temperature of the light"""
+        """Return the temperature of the light."""
         return self._get_entity_value(FIELD_STATE)
 
     @property
     def _channel_state(self):
-        """return the temperature of the light"""
+        """Return the temperature of the light."""
         return self._get_entity_value(FIELD_CHANNEL_STATE)
 
     @property
@@ -177,6 +179,7 @@ class HmLight(BaseHmLight):
 
 
 class IPLightBSL(BaseHmLight):
+    """Class for homematic HmIP-BSL light entities."""
 
     _color_switcher: dict[str, tuple[float, float]] = {
         "WHITE": (0.0, 0.0),
@@ -190,22 +193,22 @@ class IPLightBSL(BaseHmLight):
 
     @property
     def _color(self):
-        """return the color of the device"""
+        """Return the color of the device."""
         return self._get_entity_value(FIELD_COLOR)
 
     @property
     def _channel_color(self):
-        """return the channel color of the device"""
+        """Return the channel color of the device."""
         return self._get_entity_value(FIELD_CHANNEL_COLOR)
 
     @property
     def _level(self) -> float:
-        """return the level of the device"""
+        """Return the level of the device."""
         return self._get_entity_value(FIELD_LEVEL)
 
     @property
     def _channel_level(self) -> float:
-        """return the channel level state of the device"""
+        """Return the channel level state of the device."""
         return self._get_entity_value(FIELD_CHANNEL_LEVEL)
 
     @property
@@ -265,49 +268,52 @@ def _convert_color(color: tuple) -> str:
     Device contains only 8 colors including white and black,
     so a conversion is required.
     """
+
     if color is None:
         return "WHITE"
 
     hue = int(color[0])
     saturation = int(color[1])
     if saturation < 5:
-        return "WHITE"
-    if 30 < hue <= 90:
-        return "YELLOW"
-    if 90 < hue <= 160:
-        return "GREEN"
-    if 150 < hue <= 210:
-        return "TURQUOISE"
-    if 210 < hue <= 270:
-        return "BLUE"
-    if 270 < hue <= 330:
-        return "PURPLE"
-    return "RED"
+        bsl_color = "WHITE"
+    elif 30 < hue <= 90:
+        bsl_color = "YELLOW"
+    elif 90 < hue <= 160:
+        bsl_color = "GREEN"
+    elif 150 < hue <= 210:
+        bsl_color = "TURQUOISE"
+    elif 210 < hue <= 270:
+        bsl_color = "BLUE"
+    elif 270 < hue <= 330:
+        bsl_color = "PURPLE"
+    else:
+        bsl_color = "RED"
+    return bsl_color
 
 
 def make_ip_dimmer(device, address, group_base_channels: [int]):
-    """Helper to create homematic ip dimmer entities."""
+    """Creates homematic ip dimmer entities."""
     return make_custom_entity(
         device, address, HmDimmer, Devices.IP_DIMMER, group_base_channels
     )
 
 
 def make_rf_dimmer(device, address, group_base_channels: [int]):
-    """Helper to create homematic classic dimmer entities."""
+    """Creates homematic classic dimmer entities."""
     return make_custom_entity(
         device, address, HmDimmer, Devices.RF_DIMMER, group_base_channels
     )
 
 
 def make_ip_light(device, address, group_base_channels: [int]):
-    """Helper to create homematic classic light entities."""
+    """Creates homematic classic light entities."""
     return make_custom_entity(
         device, address, HmLight, Devices.IP_LIGHT_SWITCH, group_base_channels
     )
 
 
 def make_ip_light_bsl(device, address, group_base_channels: [int]):
-    """Helper to create HmIP-BSL entities."""
+    """Creates HmIP-BSL entities."""
     return make_custom_entity(
         device, address, IPLightBSL, Devices.IP_LIGHT_BSL, group_base_channels
     )

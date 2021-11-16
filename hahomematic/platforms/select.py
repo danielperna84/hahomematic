@@ -11,14 +11,12 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=invalid-name
 class HmSelect(GenericEntity):
     """
     Implementation of a select.
     This is a default platform that gets automatically generated.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter, parameter_data):
         super().__init__(
             device=device,
@@ -31,13 +29,14 @@ class HmSelect(GenericEntity):
 
     @property
     def state(self):
-        """Return the state of the entity."""
+        """Get the state of the entity."""
         if self._state:
             return self._value_list[self._state]
         return self._default
 
     async def set_state(self, value):
         # We allow setting the value via index as well, just in case.
+        """Set the state of the entity."""
         if isinstance(value, int):
             await self.send_value(value)
         else:

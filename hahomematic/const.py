@@ -117,7 +117,7 @@ PARAM_CONFIG_PENDING = "CONFIG_PENDING"
 # Parameters within the paramsets for which we create entities.
 WHITELIST_PARAMETERS = []
 
-WRITE_ACTIONS = ["STOP", "RAMP_STOP", "RESET_MOTION"]
+WRITE_ACTIONS = ["STOP", "RAMP_STOP", "RESET_MOTION", "LOCK_TARGET_LEVEL"]
 
 # Parameters within the paramsets for which we don't create entities.
 IGNORED_PARAMETERS = [
@@ -136,7 +136,7 @@ IGNORED_PARAMETERS = [
     "ERROR_OVERLOAD",
     "ERROR_POWER_FAILURE",
     "ERROR_REDUCED",
-    "ERROR_UNDERVOLTAGE,"
+    "ERROR_UNDERVOLTAGE",
     "ERROR_UPDATE",
     "ERROR_WIND_COMMUNICATION",
     "ERROR_WIND_NORTH",

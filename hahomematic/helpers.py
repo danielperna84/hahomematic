@@ -1,4 +1,3 @@
-# pylint: disable=line-too-long
 """
 Helper functions used within hahomematic
 """
@@ -45,7 +44,6 @@ def make_http_credentials(username=None, password=None):
     return f"{credentials}@"
 
 
-# pylint: disable=too-many-arguments
 def build_api_url(host, port, path, username=None, password=None, tls=False):
     """Build XML-RPC API URL from components."""
     credentials = make_http_credentials(username, password)
