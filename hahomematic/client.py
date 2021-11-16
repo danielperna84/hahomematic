@@ -1,13 +1,11 @@
-# pylint: disable=line-too-long,broad-except,inconsistent-return-statements
-"""
-The client-object and its methods.
-"""
+"""The client-object and its methods."""
+from abc import ABC, abstractmethod
+from collections.abc import Awaitable
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import socket
 import time
-from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
-from typing import Awaitable, Type, TypeVar
+from typing import TypeVar
 
 from hahomematic import config
 from hahomematic.const import (
@@ -53,7 +51,6 @@ class ClientException(Exception):
     """hahomematic Client exception."""
 
 
-# pylint: disable=too-many-instance-attributes,too-many-public-methods
 class Client(ABC):
     """
     Client object that initializes the XML-RPC proxy
@@ -61,7 +58,6 @@ class Client(ABC):
     or JSON-RPC.
     """
 
-    # pylint: disable=too-many-arguments,too-many-locals,too-many-statements,too-many-branches
     def __init__(self, client_config):
         """
         Initialize the Client.
@@ -70,7 +66,6 @@ class Client(ABC):
         # Referred to as 'remote' in other places
         self.name = client_config.name
         # This is the actual interface_id used for init
-        # pylint: disable=invalid-name
         self.interface_id = f"{self.server.instance_name}-{self.name}"
         self.host = client_config.host
         self.port = client_config.port
@@ -88,7 +83,6 @@ class Client(ABC):
         self.client_session = client_config.client_session
         try:
             socket.gethostbyname(self.host)
-        # pylint: disable=broad-except
         except Exception as err:
             _LOGGER.warning("Can't resolve host for %s: %s", self.name, self.host)
             raise ClientException(err) from err
@@ -153,7 +147,6 @@ class Client(ABC):
             )
             await self.proxy.init(self.init_url, self.interface_id)
             _LOGGER.info("proxy_init: Proxy for %s initialized", self.name)
-        # pylint: disable=broad-except
         except Exception:
             _LOGGER.exception(
                 "proxy_init: Failed to initialize proxy for %s", self.name
@@ -183,16 +176,12 @@ class Client(ABC):
         try:
             _LOGGER.debug("proxy_de_init: init('%s')", self.init_url)
             await self.proxy.init(self.init_url)
-        # pylint: disable=broad-except
         except Exception:
             _LOGGER.exception(
                 "proxy_de_init: Failed to de-initialize proxy for %s", self.name
             )
             return PROXY_DE_INIT_FAILED
-        # TODO: Should the de-init really be skipped for other clients?
-        #  for client in server.clients_by_init_url.get(self.init_url, []):
-        #     _LOGGER.debug("proxy_de_init: Setting client %s initialized status to False.", client.id)
-        #     client.initialized = False
+
         self.time_initialized = 0
         return PROXY_DE_INIT_SUCCESS
 
@@ -203,14 +192,16 @@ class Client(ABC):
             return await self.proxy_init()
 
     def stop(self):
+        """Stop depending services."""
         self._proxy_executor.shutdown()
 
-    async def async_add_proxy_executor_job(self, fn, *args) -> Awaitable:
+    async def async_add_proxy_executor_job(self, func, *args) -> Awaitable:
         """Add an executor job from within the event loop for all device related interaction."""
-        return await self.server.loop.run_in_executor(self._proxy_executor, fn, *args)
+        return await self.server.loop.run_in_executor(self._proxy_executor, func, *args)
 
     @abstractmethod
     async def fetch_names(self):
+        """Fetch names from backend."""
         ...
 
     async def is_connected(self):
@@ -421,6 +412,8 @@ class Client(ABC):
 
 
 class ClientCCU(Client):
+    """Client implementation for CCU backend."""
+
     async def fetch_names(self):
         """
         Get all names via JSON-RPS and store in data.NAMES.
@@ -474,7 +467,6 @@ class ClientCCU(Client):
                             ] = channel[ATTR_NAME]
                     except Exception:
                         _LOGGER.exception("fetch_names_json: Exception")
-
         except Exception:
             _LOGGER.exception("fetch_names_json: General exception")
 
@@ -522,7 +514,6 @@ class ClientCCU(Client):
                             "set_system_variable: Error while setting variable: %s",
                             str(response[ATTR_ERROR]),
                         )
-
             except Exception:
                 _LOGGER.exception("set_system_variable: Exception")
         else:
@@ -548,7 +539,6 @@ class ClientCCU(Client):
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                     deleted = response[ATTR_RESULT]
                     _LOGGER.info("delete_system_variable: Deleted: %s", str(deleted))
-
             except Exception:
                 _LOGGER.exception("delete_system_variable: Exception")
         else:
@@ -571,12 +561,11 @@ class ClientCCU(Client):
                     params,
                 )
                 if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                    # TODO: This does not yet support strings
+                    # This does not yet support strings
                     try:
                         var = float(response[ATTR_RESULT])
                     except Exception:
                         var = response[ATTR_RESULT] == "true"
-
             except Exception:
                 _LOGGER.exception("get_system_variable: Exception")
         else:
@@ -615,6 +604,8 @@ class ClientCCU(Client):
 
 
 class ClientHomegear(Client):
+    """Client implementation for Homegear backend."""
+
     async def fetch_names(self):
         """
         Get all names from metadata (Homegear).
@@ -734,5 +725,4 @@ class ClientFactory:
             ) from err
         if "Homegear" in version or "pydevccu" in version:
             return ClientHomegear(self)
-        else:
-            return ClientCCU(self)
+        return ClientCCU(self)

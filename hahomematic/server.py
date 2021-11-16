@@ -1,16 +1,18 @@
-# pylint: disable=broad-except,invalid-name,logging-not-lazy,line-too-long,protected-access,inconsistent-return-statements
 """
 Server module.
 Provides the XML-RPC server which handles communication
 with the CCU or Homegear
 """
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable
 import json
 import logging
 import os
 import threading
 import time
-from typing import Any, Awaitable, Optional, TypeVar
+from typing import Any, TypeVar
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from hahomematic import config
@@ -44,22 +46,18 @@ from hahomematic.entity import BaseEntity, GenericEntity
 T = TypeVar("T")
 _LOGGER = logging.getLogger(__name__)
 
-
-# pylint: disable=too-many-instance-attributes
-# noinspection PyPep8Naming,SpellCheckingInspection
+# pylint: disable=invalid-name
 class RPCFunctions:
     """
     The XML-RPC functions the CCU or Homegear will expect.
     Additionally there are some internal functions for hahomematic itself.
     """
 
-    # pylint: disable=too-many-branches,too-many-statements
     def __init__(self, server):
         _LOGGER.debug("RPCFunctions.__init__")
         self._server: Server = server
 
     @callback_event
-    # pylint: disable=no-self-use
     def event(self, interface_id, address, value_key, value):
         """
         If a device emits some sort event, we will handle it here.
@@ -103,7 +101,6 @@ class RPCFunctions:
         return True
 
     @callback_system_event(HH_EVENT_LIST_DEVICES)
-    # pylint: disable=no-self-use
     def listDevices(self, interface_id):
         """
         The CCU / Homegear asks for devices known to our XML-RPC server.
@@ -115,13 +112,14 @@ class RPCFunctions:
         return self._server.devices_raw_cache[interface_id]
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
-    # pylint: disable=no-self-use
     def newDevices(self, interface_id, dev_descriptions):
-        async def _async_newDevices():
-            """
-            The CCU / Homegear informs us about newly added devices.
-            We react on that and add those devices as well.
-            """
+        """
+        The CCU / Homegear informs us about newly added devices.
+        We react on that and add those devices as well.
+        """
+
+        async def _async_new_devices():
+            """Async implementation"""
             _LOGGER.debug(
                 "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
                 interface_id,
@@ -163,16 +161,17 @@ class RPCFunctions:
             create_devices(self._server)
             return True
 
-        return self._server.run_coroutine(_async_newDevices())
+        return self._server.run_coroutine(_async_new_devices())
 
     @callback_system_event(HH_EVENT_DELETE_DEVICES)
-    # pylint: disable=no-self-use
     def deleteDevices(self, interface_id, addresses):
-        async def _async_deleteDevices():
-            """
-            The CCU / Homegear informs us about removed devices.
-            We react on that and remove those devices as well.
-            """
+        """
+        The CCU / Homegear informs us about removed devices.
+        We react on that and remove those devices as well.
+        """
+
+        async def _async_delete_devices():
+            """async implementation."""
             _LOGGER.debug(
                 "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
                 interface_id,
@@ -203,7 +202,7 @@ class RPCFunctions:
             await self._server.save_names()
             return True
 
-        return self._server.run_coroutine(_async_deleteDevices())
+        return self._server.run_coroutine(_async_delete_devices())
 
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
     # pylint: disable=no-self-use
@@ -263,7 +262,6 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
     )
 
 
-# pylint: disable=too-many-public-methods
 class Server(threading.Thread):
     """
     XML-RPC server thread to handle messages from CCU / Homegear.
@@ -329,6 +327,7 @@ class Server(threading.Thread):
 
     @property
     def loop(self):
+        """Return the loop for async operations."""
         if not self._loop:
             self._loop = asyncio.get_running_loop()
         return self._loop
@@ -464,7 +463,6 @@ class Server(threading.Thread):
         """Get service messages from CCU / Homegear."""
         await self._get_client().get_service_messages()
 
-    # pylint: disable=too-many-arguments
     async def set_install_mode(
         self, interface_id, on=True, t=60, mode=1, address=None
     ) -> None:
@@ -477,7 +475,6 @@ class Server(threading.Thread):
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         return await self._get_client(interface_id).get_install_mode()
 
-    # pylint: disable=too-many-arguments
     async def put_paramset(self, interface_id, address, paramset, value, rx_mode=None):
         """Set paramsets manually."""
         await self._get_client(interface_id).put_paramset(
@@ -509,9 +506,9 @@ class Server(threading.Thread):
                 f"Can't resolve interface for {self.instance_name}: {interface_id}"
             )
             _LOGGER.warning(message)
-            raise ClientException(message, err)
+            raise ClientException(message) from err
 
-    def get_hm_entity_by_parameter(self, address, parameter) -> Optional[GenericEntity]:
+    def get_hm_entity_by_parameter(self, address, parameter) -> GenericEntity | None:
         """Get entity by address and parameter."""
         if ":" in address:
             device_address = address.split(":")[0]
@@ -740,7 +737,6 @@ class Server(threading.Thread):
         self.clear_names()
 
 
-# pylint: disable=too-many-public-methods
 class ConnectionChecker(threading.Thread):
     """
     Periodically check Connection to CCU / Homegear.

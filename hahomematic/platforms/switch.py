@@ -11,14 +11,12 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=invalid-name
 class HmSwitch(GenericEntity):
     """
     Implementation of a switch.
     This is a default platform that gets automatically generated.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter, parameter_data):
         super().__init__(
             device=device,
@@ -31,12 +29,14 @@ class HmSwitch(GenericEntity):
 
     @property
     def state(self):
+        """Get the state of the entity."""
         if self._type == TYPE_ACTION:
             return False
 
         return self._state
 
     async def set_state(self, value):
+        """Set the state of the entity."""
         if self._type == TYPE_ACTION:
             await self.send_value(True)
         else:

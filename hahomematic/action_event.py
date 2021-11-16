@@ -1,12 +1,8 @@
-# pylint: disable=line-too-long
+"""Functions for event handling."""
 
-"""
-Functions for event handling.
-"""
-
+from abc import ABC, abstractmethod
 import datetime
 import logging
-from abc import ABC, abstractmethod
 
 from hahomematic.const import (
     ATTR_ADDRESS,
@@ -26,11 +22,9 @@ from hahomematic.helpers import get_entity_name
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-instance-attributes
 class BaseEvent(ABC):
     """Base class for action events"""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter, event_type):
         """
         Initialize the event handler.
@@ -106,10 +100,9 @@ class BaseEvent(ABC):
         return self._value
 
     async def send_value(self, value) -> None:
-        """send value to ccu."""
+        """Send value to ccu."""
         try:
             await self.proxy.setValue(self.address, self.parameter, value)
-        # pylint: disable=broad-except
         except Exception:
             _LOGGER.exception(
                 "action_event: Failed to set state for: %s, %s, %s",
@@ -119,7 +112,7 @@ class BaseEvent(ABC):
             )
 
     def add_to_collections(self) -> None:
-        """add entity to server collections"""
+        """Add entity to server collections."""
         self._device.add_hm_action_event(self)
 
     def _set_last_update(self) -> None:
@@ -152,7 +145,6 @@ class AlarmEvent(BaseEvent):
     class for handling alarm events.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter):
         """
         Initialize the event handler.
@@ -169,7 +161,6 @@ class AlarmEvent(BaseEvent):
         """
         Do what is needed to fire an event.
         """
-        # pylint: disable=not-callable
         if callable(self._server.callback_alarm_event):
             self._server.callback_alarm_event(
                 self.event_type,
@@ -182,7 +173,6 @@ class ClickEvent(BaseEvent):
     class for handling click events.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter):
         """
         Initialize the event handler.
@@ -199,7 +189,6 @@ class ClickEvent(BaseEvent):
         """
         Do what is needed to fire an event.
         """
-        # pylint: disable=not-callable
         if callable(self._server.callback_click_event):
             self._server.callback_click_event(
                 self.event_type,
@@ -212,7 +201,6 @@ class ImpulseEvent(BaseEvent):
     class for handling impulse events.
     """
 
-    # pylint: disable=too-many-arguments
     def __init__(self, device, unique_id, address, parameter):
         """
         Initialize the event handler.
@@ -229,7 +217,6 @@ class ImpulseEvent(BaseEvent):
         """
         Do what is needed to fire an event.
         """
-        # pylint: disable=not-callable
         if self.parameter == EVENT_CONFIG_PENDING:
             if new_value is False and old_value is True:
                 self._device.reload_paramsets()

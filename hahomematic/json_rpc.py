@@ -1,8 +1,11 @@
+"""
+Implementation of an async json-rpc client.
+"""
 import json
 import logging
 import ssl
 
-from aiohttp import ClientSession
+from aiohttp import ClientError, ClientSession
 
 from hahomematic import config
 from hahomematic.const import (
@@ -58,7 +61,7 @@ class JsonRpcAioHttpSession:
                 self._session_id = response[ATTR_RESULT]
                 return True
             return await self._login()
-        except Exception:
+        except ClientError:
             _LOGGER.exception(
                 "json_rpc.renew: Exception while renewing JSON-RPC session."
             )
@@ -87,8 +90,7 @@ class JsonRpcAioHttpSession:
                 )
                 return False
             return True
-        # pylint: disable=broad-except
-        except Exception:
+        except ClientError:
             _LOGGER.exception("json_rpc.login: Exception while logging in via JSON-RPC")
             return False
 
@@ -138,8 +140,7 @@ class JsonRpcAioHttpSession:
             else:
                 _LOGGER.error("helpers.json_rpc.post: Status: %i", resp.status)
                 return {"error": resp.status, "result": {}}
-        # pylint: disable=broad-except
-        except Exception as err:
+        except ClientError as err:
             _LOGGER.exception("helpers.json_rpc.post: Exception")
             return {"error": str(err), "result": {}}
 
@@ -158,8 +159,7 @@ class JsonRpcAioHttpSession:
                 _LOGGER.warning(
                     "json_rpc.logout: Logout error: %s", response[ATTR_RESULT]
                 )
-        # pylint: disable=broad-except
-        except Exception:
+        except ClientError:
             _LOGGER.exception(
                 "json_rpc.logout: Exception while logging in via JSON-RPC"
             )

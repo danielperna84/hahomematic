@@ -1,0 +1,4 @@
+aiohttp==3.8.0
+voluptuous==0.12.2
+pylint==2.11.1
+pylint-strict-informational==0.1

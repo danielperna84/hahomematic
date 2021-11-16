@@ -1,13 +1,12 @@
-"""
-Here we provide access to the custom device creation functions.
-"""
+"""Here we provide access to the custom device creation functions."""
 
-from hahomematic.devices import climate, cover, light, switch
+from hahomematic.devices import climate, cover, light, lock, switch
 
 _ALL_DEVICES = [
     cover.DEVICES,
     climate.DEVICES,
     light.DEVICES,
+    lock.DEVICES,
     switch.DEVICES,
 ]
 

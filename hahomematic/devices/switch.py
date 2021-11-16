@@ -1,7 +1,4 @@
-# pylint: disable=line-too-long
-"""
-Code to create the required entities for switch entities.
-"""
+"""Code to create the required entities for switch entities."""
 
 import logging
 from typing import Any
@@ -21,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HmSwitch(CustomEntity):
+    """Class for homematic switch entities."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self, device, address, unique_id, device_desc, entity_desc, channel_no
     ):
@@ -44,12 +41,12 @@ class HmSwitch(CustomEntity):
 
     @property
     def _state(self):
-        """return the temperature of the device"""
+        """Return the temperature of the device."""
         return self._get_entity_value(FIELD_STATE)
 
     @property
     def _channel_state(self):
-        """return the temperature of the device"""
+        """Return the temperature of the device."""
         return self._get_entity_value(FIELD_CHANNEL_STATE)
 
     @property
@@ -58,7 +55,7 @@ class HmSwitch(CustomEntity):
         return self._state
 
     async def set_state(self, value):
-        """Set the state of the switch"""
+        """Set the state of the switch."""
         await self._send_value(FIELD_STATE, value)
 
     async def async_turn_on(self) -> None:
@@ -79,7 +76,7 @@ class HmSwitch(CustomEntity):
 
 
 def make_ip_switch(device, address, group_base_channels: [int]):
-    """Helper to create homematic ip switch entities."""
+    """Creates homematic ip switch entities."""
     return make_custom_entity(
         device, address, HmSwitch, Devices.IP_LIGHT_SWITCH, group_base_channels
     )

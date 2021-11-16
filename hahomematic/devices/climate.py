@@ -1,7 +1,4 @@
-# pylint: disable=line-too-long
-"""
-Code to create the required entities for thermostat devices.
-"""
+"""Code to create the required entities for thermostat devices."""
 
 import logging
 
@@ -47,11 +44,9 @@ SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
 
 
-# pylint: disable=too-many-instance-attributes
 class SimpleThermostat(CustomEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self, device, address, unique_id, device_desc, entity_desc, channel_no
     ):
@@ -73,17 +68,17 @@ class SimpleThermostat(CustomEntity):
 
     @property
     def _humidity(self) -> int:
-        """return the humidity of the device"""
+        """Return the humidity of the device."""
         return self._get_entity_value(FIELD_HUMIDITY)
 
     @property
     def _temperature(self) -> float:
-        """return the temperature of the device"""
+        """Return the temperature of the device."""
         return self._get_entity_value(FIELD_TEMPERATURE)
 
     @property
     def _setpoint(self) -> float:
-        """return the setpoint of the device"""
+        """Return the setpoint of the device."""
         return self._get_entity_value(FIELD_SETPOINT)
 
     @property
@@ -136,7 +131,6 @@ class SimpleThermostat(CustomEntity):
         """Return target temperature."""
         return self._setpoint
 
-    # pylint: disable=inconsistent-return-statements
     async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -148,7 +142,6 @@ class SimpleThermostat(CustomEntity):
 class Thermostat(CustomEntity):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self, device, address, unique_id, device_desc, entity_desc, channel_no
     ):
@@ -170,22 +163,22 @@ class Thermostat(CustomEntity):
 
     @property
     def _humidity(self) -> int:
-        """return the humidity of the device"""
+        """Return the humidity of the device."""
         return self._get_entity_value(FIELD_HUMIDITY)
 
     @property
     def _temperature(self) -> float:
-        """return the temperature of the device"""
+        """Return the temperature of the device."""
         return self._get_entity_value(FIELD_TEMPERATURE)
 
     @property
     def _setpoint(self) -> float:
-        """return the setpoint of the device"""
+        """Return the setpoint of the device."""
         return self._get_entity_value(FIELD_SETPOINT)
 
     @property
     def _control_mode(self):
-        """return the control_mode of the device"""
+        """Return the control_mode of the device."""
         return self._get_entity_value(FIELD_CONTROL_MODE)
 
     @property
@@ -265,7 +258,6 @@ class Thermostat(CustomEntity):
         """Return target temperature."""
         return self._setpoint
 
-    # pylint: disable=inconsistent-return-statements
     async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -295,7 +287,6 @@ class Thermostat(CustomEntity):
 class IPThermostat(CustomEntity):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self, device, address, unique_id, device_desc, entity_desc, channel_no
     ):
@@ -415,7 +406,6 @@ class IPThermostat(CustomEntity):
         """Return target temperature."""
         return self._setpoint
 
-    # pylint: disable=inconsistent-return-statements
     async def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -441,7 +431,7 @@ class IPThermostat(CustomEntity):
 
 
 def make_simple_thermostat(device, address, group_base_channels: [int]):
-    """Helper to create SimpleThermostat entities."""
+    """Creates SimpleThermostat entities."""
     return make_custom_entity(
         device,
         address,
@@ -452,14 +442,14 @@ def make_simple_thermostat(device, address, group_base_channels: [int]):
 
 
 def make_thermostat(device, address, group_base_channels: [int]):
-    """Helper to create Thermostat entities."""
+    """Creates Thermostat entities."""
     return make_custom_entity(
         device, address, Thermostat, Devices.RF_THERMOSTAT, group_base_channels
     )
 
 
 def make_ip_thermostat(device, address, group_base_channels: [int]):
-    """Helper to create IPThermostat entities."""
+    """Creates IPThermostat entities."""
     return make_custom_entity(
         device, address, IPThermostat, Devices.IP_THERMOSTAT, group_base_channels
     )

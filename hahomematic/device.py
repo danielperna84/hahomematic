@@ -1,11 +1,10 @@
-# pylint: disable=line-too-long
+"""
+Module for the Device class.
+"""
+from __future__ import annotations
 
-"""
-Module for the Device class
-"""
 import datetime
 import logging
-from typing import Optional
 
 from hahomematic.action_event import AlarmEvent, BaseEvent, ClickEvent, ImpulseEvent
 from hahomematic.const import (
@@ -47,7 +46,6 @@ from hahomematic.platforms.switch import HmSwitch
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=too-many-instance-attributes
 class HmDevice:
     """
     Object to hold information about a device and associated entities.
@@ -101,7 +99,7 @@ class HmDevice:
         )
 
     def add_hm_entity(self, hm_entity: BaseEntity):
-        """add an hm entity to a device"""
+        """Add an hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
             hm_entity.register_update_callback(self.update_device)
             hm_entity.register_remove_callback(self.remove_device)
@@ -110,7 +108,7 @@ class HmDevice:
             self.custom_entities[hm_entity.unique_id] = hm_entity
 
     def remove_hm_entity(self, hm_entity: BaseEntity):
-        """add an hm entity to a device"""
+        """Add an hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
             hm_entity.unregister_update_callback(self.update_device)
             hm_entity.unregister_remove_callback(self.remove_device)
@@ -119,23 +117,23 @@ class HmDevice:
             del self.custom_entities[hm_entity.unique_id]
 
     def add_hm_action_event(self, hm_event: BaseEvent):
-        """add an hm entity to a device"""
+        """Add an hm entity to a device."""
         self.action_events[(hm_event.address, hm_event.parameter)] = hm_event
 
     def remove_event_subscriptions(self) -> None:
-        """Remove existing event subscriptions"""
+        """Remove existing event subscriptions."""
         for entity in self.entities.values():
             entity.remove_event_subscriptions()
         for action_event in self.action_events.values():
             action_event.remove_event_subscriptions()
 
     def register_update_callback(self, update_callback) -> None:
-        """register update callback"""
+        """Register update callback."""
         if callable(update_callback):
             self._update_callbacks.append(update_callback)
 
     def unregister_update_callback(self, update_callback) -> None:
-        """remove update callback"""
+        """Remove update callback."""
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
 
@@ -145,16 +143,15 @@ class HmDevice:
         """
         self._set_last_update()
         for _callback in self._update_callbacks:
-            # pylint: disable=not-callable
             _callback(*args)
 
     def register_remove_callback(self, remove_callback) -> None:
-        """register remove callback"""
+        """Register remove callback."""
         if callable(remove_callback):
             self._remove_callbacks.append(remove_callback)
 
     def unregister_remove_callback(self, remove_callback) -> None:
-        """remove remove callback"""
+        """Remove remove callback."""
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
 
@@ -164,14 +161,13 @@ class HmDevice:
         """
         self._set_last_update()
         for _callback in self._remove_callbacks:
-            # pylint: disable=not-callable
             _callback(*args)
 
     def _set_last_update(self) -> None:
         self.last_update = datetime.datetime.now()
 
-    def get_hm_entity(self, address, parameter) -> Optional[GenericEntity]:
-        """return a hm_entity from device"""
+    def get_hm_entity(self, address, parameter) -> GenericEntity | None:
+        """Return a hm_entity from device."""
         return self.entities.get((address, parameter))
 
     def __str__(self):
@@ -209,7 +205,7 @@ class HmDevice:
                 entity.update_parameter_data()
         self.update_device()
 
-    def create_entities(self) -> Optional[set[GenericEntity]]:
+    def create_entities(self) -> set[GenericEntity] | None:
         """
         Create the entities associated to this device.
         """
@@ -262,12 +258,15 @@ class HmDevice:
             )
             # Call the custom device / entity creation function.
 
-            for (device_func, group_base_channels) in get_device_funcs(self.device_type):
+            for (device_func, group_base_channels) in get_device_funcs(
+                self.device_type
+            ):
                 custom_entities = device_func(self, self.address, group_base_channels)
                 new_entities.update(custom_entities)
         return new_entities
 
-    def create_event(self, address, parameter, parameter_data) -> Optional[BaseEvent]:
+    def create_event(self, address, parameter, parameter_data) -> BaseEvent | None:
+        """Create action event entity."""
         if (address, parameter) not in self.server.entity_event_subscriptions:
             self.server.entity_event_subscriptions[(address, parameter)] = []
 
@@ -307,9 +306,7 @@ class HmDevice:
             action_event.add_to_collections()
         return action_event
 
-    def create_entity(
-        self, address, parameter, parameter_data
-    ) -> Optional[GenericEntity]:
+    def create_entity(self, address, parameter, parameter_data) -> GenericEntity | None:
         """
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
@@ -431,7 +428,6 @@ class HmDevice:
         return entity
 
 
-# pylint: disable=too-many-return-statements,too-many-branches,too-many-statements
 def create_devices(server) -> None:
     """
     Trigger creation of the objects that expose the functionality.
@@ -472,14 +468,13 @@ def create_devices(server) -> None:
                 )
             try:
                 new_entities.update(device.create_entities())
-            except Exception as err:
+            except Exception:
                 _LOGGER.exception(
                     "create_devices: Failed to create entities: %s, %s",
                     interface_id,
                     device_address,
                 )
     if callable(server.callback_system_event):
-        # pylint: disable=not-callable
         server.callback_system_event(
             HH_EVENT_DEVICES_CREATED, new_devices, new_entities
         )

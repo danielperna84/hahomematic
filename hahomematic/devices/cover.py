@@ -1,7 +1,5 @@
-# pylint: disable=line-too-long
-"""
-Code to create the required entities for cover devices.
-"""
+"""Code to create the required entities for cover devices."""
+
 from __future__ import annotations
 
 import logging
@@ -28,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HmCover(CustomEntity):
+    """Class for homematic cover entities."""
 
-    # pylint: disable=too-many-arguments
     def __init__(
         self, device, address, unique_id, device_desc, entity_desc, channel_no
     ):
@@ -51,12 +49,12 @@ class HmCover(CustomEntity):
 
     @property
     def _level(self) -> float:
-        """return the level of the cover"""
+        """Return the level of the cover."""
         return self._get_entity_value(FIELD_LEVEL)
 
     @property
     def _channel_level(self) -> float:
-        """return the channel level state of the cover"""
+        """Return the channel level state of the cover."""
         channel_level = self._get_entity_value(FIELD_CHANNEL_LEVEL)
         if channel_level:
             return channel_level
@@ -64,10 +62,7 @@ class HmCover(CustomEntity):
 
     @property
     def current_cover_position(self) -> int | None:
-        """
-        Return current position of cover.
-        HA:  0 means closed and 100 is fully open
-        """
+        """Return current position of cover."""
         if self._channel_level is not None:
             return int(self._channel_level * 100)
         return None
@@ -108,14 +103,16 @@ class HmCover(CustomEntity):
 
 
 class HmBlind(HmCover):
+    """Class for homematic blind entities."""
+
     @property
     def _level_2(self) -> float:
-        """return the level of the tilt"""
+        """Return the level of the tilt."""
         return self._get_entity_value(FIELD_LEVEL_2)
 
     @property
     def _channel_level_2(self) -> float:
-        """return the channel level of the tilt"""
+        """Return the channel level of the tilt."""
         channel_level_2 = self._get_entity_value(FIELD_CHANNEL_LEVEL_2)
         if channel_level_2:
             return channel_level_2
@@ -123,17 +120,13 @@ class HmBlind(HmCover):
 
     @property
     def current_cover_tilt_position(self) -> int | None:
-        """
-        Return current tilt position of cover.
-        HA:  0 means closed and 100 is fully open
-        """
+        """Return current tilt position of cover."""
         if self._channel_level_2 is not None:
             return int(self._channel_level_2 * 100)
         return None
 
     async def async_set_cover_tilt_position(self, position) -> None:
         """Move the cover to a specific tilt position."""
-
         position = min(100, max(0, position))
         level = position / 100.0
         await self._send_value(FIELD_LEVEL_2, level)
@@ -162,28 +155,28 @@ class HmBlind(HmCover):
 
 
 def make_ip_cover(device, address, group_base_channels: [int]):
-    """Helper to create homematic ip cover entities."""
+    """Creates homematic ip cover entities."""
     return make_custom_entity(
         device, address, HmCover, Devices.IP_COVER, group_base_channels
     )
 
 
 def make_rf_cover(device, address, group_base_channels: [int]):
-    """Helper to create homematic classic cover entities."""
+    """Creates homematic classic cover entities."""
     return make_custom_entity(
         device, address, HmCover, Devices.RF_COVER, group_base_channels
     )
 
 
 def make_ip_blind(device, address, group_base_channels: [int]):
-    """Helper to create homematic ip cover entities."""
+    """Creates homematic ip cover entities."""
     return make_custom_entity(
         device, address, HmBlind, Devices.IP_COVER, group_base_channels
     )
 
 
 def make_rf_blind(device, address, group_base_channels: [int]):
-    """Helper to create homematic classic cover entities."""
+    """Creates homematic classic cover entities."""
     return make_custom_entity(
         device, address, HmBlind, Devices.RF_COVER, group_base_channels
     )
