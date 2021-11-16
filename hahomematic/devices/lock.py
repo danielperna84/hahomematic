@@ -16,9 +16,9 @@ from hahomematic.entity import CustomEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-HM_LOCKED = "LOCKED"
-HM_UNLOCKED = "UNLOCKED"
-HM_OPEN = "OPEN"
+HM_LOCKED = 0
+HM_UNLOCKED = 1
+HM_OPEN = 2
 
 
 class HmLock(CustomEntity):
