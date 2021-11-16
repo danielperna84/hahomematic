@@ -1,3 +1,17 @@
+Version 0.0.3 (2021-)
+- Reduce back to parameters with events
+- Rewrite climate-entity creation
+- Refactor to Async
+- Remove entity_id and replace by unique_id
+- Reorg Client/Server/Caches
+- Use One Server per backend (CCU/Homegear) with multiple clients/interfaces
+- Define device_description for custom_entities
+- Create custom_entities for climate, cover, light, lock and switch
+- maintain ignored parameters
+- add collection with wildcard parameters to ignore
+- enable click, impulse and alarm events
+- add connection checker
+
 Version 0.0.2 (2021-04-20)
 - Use input_select for ENUM actors (Issue #8)
 - Added `DEVICE_IN_BOOTLOADER` and `INSTALL_TEST` to ignored parameters

@@ -1,19 +1,11 @@
 """
 Module to store data required for operation.
 """
+# {instance_name, server}
+INSTANCES = {}
 
-DEVICES = {}
-DEVICES_ALL = {}
-DEVICES_RAW = {}
-DEVICES_RAW_DICT = {}
-PARAMSETS = {}
-PROXIES = {}
-REMOTES = {}
-CLIENTS = {}
-CLIENTS_BY_INIT_URL = {}
-NAMES = {}
-ENTITIES = {}
-SERVER = None
-EVENT_SUBSCRIPTIONS = {}
-EVENT_SUBSCRIPTIONS_DEVICE = {}
-HA_DEVICES = {}
+
+def get_client_by_interface_id(interface_id):
+    """Return client by interface_id"""
+    for server in INSTANCES.values():
+        return server.clients.get(interface_id)

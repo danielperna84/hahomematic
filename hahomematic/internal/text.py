@@ -1,20 +1,17 @@
-"""
-Module for entities implemented using the
-number platform (https://www.home-assistant.io/integrations/number/).
-"""
+"""Module for entities implemented using text."""
 
 import logging
 
-from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_NUMBER
+from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_TEXT
 from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmNumber(GenericEntity):
+class HmText(GenericEntity):
     """
-    Implementation of a number.
-    This is a default platform that gets automatically generated.
+    Implementation of a text.
+    This is an internal default platform that gets automatically generated.
     """
 
     def __init__(self, device, unique_id, address, parameter, parameter_data):
@@ -24,7 +21,7 @@ class HmNumber(GenericEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_NUMBER,
+            platform=HA_PLATFORM_TEXT,
         )
 
     @property
@@ -43,7 +40,7 @@ class HmNumber(GenericEntity):
                 await self.send_value(value)
                 return
         _LOGGER.error(
-            "number: Invalid value: %s (min: %s, max: %s, special: %s)",
+            "text: Invalid value: %s (min: %s, max: %s, special: %s)",
             value,
             self._min,
             self._max,

@@ -5,32 +5,31 @@ sensor platform (https://www.home-assistant.io/integrations/sensor/).
 
 import logging
 
-from hahomematic.entity import Entity
-from hahomematic.const import OPERATION_READ
+from hahomematic.const import HA_PLATFORM_SENSOR
+from hahomematic.entity import GenericEntity
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
-# pylint: disable=invalid-name
-class sensor(Entity):
+
+class HmSensor(GenericEntity):
     """
     Implementation of a sensor.
     This is a default platform that gets automatically generated.
     """
-    # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
-        super().__init__(interface_id, "sensor.{}".format(unique_id),
-                         address, parameter, parameter_data)
+
+    def __init__(self, device, unique_id, address, parameter, parameter_data):
+        super().__init__(
+            device=device,
+            unique_id=unique_id,
+            address=address,
+            parameter=parameter,
+            parameter_data=parameter_data,
+            platform=HA_PLATFORM_SENSOR,
+        )
 
     @property
-    def STATE(self):
-        try:
-            if self._state is None and self.operations & OPERATION_READ:
-                self._state = self.proxy.getValue(self.address, self.parameter)
-            if self._state is not None and self.value_list is not None:
-                return self.value_list[self._state]
-        # pylint: disable=broad-except
-        except Exception as err:
-            LOG.info("switch: Failed to get state for %s, %s, %s: %s",
-                     self.device_type, self.address, self.parameter, err)
-            return None
+    def state(self):
+        if self._state is not None and self._value_list is not None:
+            return self._value_list[self._state]
+
         return self._state

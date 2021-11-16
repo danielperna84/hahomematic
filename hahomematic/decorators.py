@@ -2,58 +2,63 @@
 Decorators used within hahomematic.
 """
 
-import time
 import functools
 import logging
+import time
 
-from hahomematic import config, data
+from hahomematic.data import get_client_by_interface_id
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
-def systemcallback(name):
+
+def callback_system_event(name):
     """
-    Check if systemcallback is set and call it AFTER original function.
+    Check if callback_system is set and call it AFTER original function.
     """
-    def decorator_systemcallback(func):
+
+    def decorator_callback_system_event(func):
         @functools.wraps(func)
-        def wrapper_systemcallback(*args):
+        def wrapper_callback_system_event(*args):
             return_value = func(*args)
             try:
                 # We don't want to pass the function itself
                 args = args[1:]
                 interface_id = args[0]
-            # pylint: disable=broad-except
+                client = get_client_by_interface_id(interface_id)
             except Exception as err:
-                LOG.warning("Failed to reduce args for systemcallback.")
-                raise Exception("args-exception systemcallback") from err
-            if interface_id in data.CLIENTS:
-                data.CLIENTS[interface_id].initialized = int(time.time())
-            if config.CALLBACK_SYSTEM is not None:
-                # pylint: disable=not-callable
-                config.CALLBACK_SYSTEM(name, *args)
+                _LOGGER.warning("Failed to reduce args for callback_system_event.")
+                raise Exception("args-exception callback_system_event") from err
+            if client:
+                client.time_initialized = int(time.time())
+            if client.server.callback_system_event is not None:
+                client.server.callback_system_event(name, *args)
             return return_value
-        return wrapper_systemcallback
-    return decorator_systemcallback
 
-def eventcallback(func):
+        return wrapper_callback_system_event
+
+    return decorator_callback_system_event
+
+
+def callback_event(func):
     """
-    Check if eventcallback is set and call it AFTER original function.
+    Check if callback_event is set and call it AFTER original function.
     """
+
     @functools.wraps(func)
-    def wrapper_eventcallback(*args):
+    def wrapper_callback_event(*args):
         return_value = func(*args)
         try:
             # We don't want to pass the function itself
             args = args[1:]
             interface_id = args[0]
-        # pylint: disable=broad-except
+            client = get_client_by_interface_id(interface_id)
         except Exception as err:
-            LOG.warning("Failed to reduce args for eventcallback.")
-            raise Exception("args-exception eventcallback") from err
-        if interface_id in data.CLIENTS:
-            data.CLIENTS[interface_id].initialized = int(time.time())
-        if config.CALLBACK_EVENT is not None:
-            # pylint: disable=not-callable
-            config.CALLBACK_EVENT(*args)
+            _LOGGER.warning("Failed to reduce args for callback_event.")
+            raise Exception("args-exception callback_event") from err
+        if client:
+            client.time_initialized = int(time.time())
+        if client.server.callback_entity_event is not None:
+            client.server.callback_entity_event(*args)
         return return_value
-    return wrapper_eventcallback
+
+    return wrapper_callback_event

@@ -5,30 +5,28 @@ binary_sensor platform (https://www.home-assistant.io/integrations/binary_sensor
 
 import logging
 
-from hahomematic.entity import Entity
-from hahomematic.const import OPERATION_READ
+from hahomematic.const import HA_PLATFORM_BINARY_SENSOR
+from hahomematic.entity import GenericEntity
 
-LOG = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
-# pylint: disable=invalid-name
-class binary_sensor(Entity):
+
+class HmBinarySensor(GenericEntity):
     """
     Implementation of a binary_sensor.
     This is a default platform that gets automatically generated.
     """
-    # pylint: disable=too-many-arguments
-    def __init__(self, interface_id, unique_id, address, parameter, parameter_data):
-        super().__init__(interface_id, "binary_sensor.{}".format(unique_id),
-                         address, parameter, parameter_data)
+
+    def __init__(self, device, unique_id, address, parameter, parameter_data):
+        super().__init__(
+            device=device,
+            unique_id=unique_id,
+            address=address,
+            parameter=parameter,
+            parameter_data=parameter_data,
+            platform=HA_PLATFORM_BINARY_SENSOR,
+        )
 
     @property
-    def STATE(self):
-        try:
-            if self._state is None and self.operations & OPERATION_READ:
-                self._state = self.proxy.getValue(self.address, self.parameter)
-        # pylint: disable=broad-except
-        except Exception as err:
-            LOG.info("binary_sensor: Failed to get state for %s, %s, %s: %s",
-                     self.device_type, self.address, self.parameter, err)
-            return None
+    def state(self):
         return self._state

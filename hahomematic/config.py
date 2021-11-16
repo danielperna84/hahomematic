@@ -1,19 +1,13 @@
 """
 Global configuration parameters.
 """
+from datetime import timedelta
 
-from hahomematic.const import DEFAULT_INTERFACE_ID, DEFAULT_TIMEOUT, DEFAULT_INIT_TIMEOUT
+from hahomematic.const import DEFAULT_INIT_TIMEOUT, DEFAULT_TIMEOUT
 
-INTERFACE_ID = DEFAULT_INTERFACE_ID
-TIMEOUT = DEFAULT_TIMEOUT
+CACHE_DIR = None
+CONNECTION_CHECKER_INTERVAL = timedelta(seconds=30)
 INIT_TIMEOUT = DEFAULT_INIT_TIMEOUT
-FILE_DEVICES = None
-FILE_PARAMSETS = None
-FILE_NAMES = None
-
-# Signature: f(name, *args)
-CALLBACK_SYSTEM = None
-# Signature: f(interface_id, address, value_key, value)
-CALLBACK_EVENT = None
-# Signature: f(entity_id)
-CALLBACK_ENTITY_UPDATE = None
+JSON_EXECUTOR_MAX_WORKERS = 4
+PROXY_EXECUTOR_MAX_WORKERS = 1
+TIMEOUT = DEFAULT_TIMEOUT
