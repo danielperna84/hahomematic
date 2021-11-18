@@ -12,3 +12,5 @@
 # Tox stuff, lint
 /.tox/
 /.pylint.d/
+/*_mj.py
+/.idea/*

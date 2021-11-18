@@ -9,6 +9,10 @@ import xmlrpc.client
 _LOGGER = logging.getLogger(__name__)
 
 
+class ProxyException(Exception):
+    """hahomematic Proxy exception."""
+
+
 # noinspection PyProtectedMember,PyUnresolvedReferences
 class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
     """
@@ -31,13 +35,16 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
         Call method on server side
         """
         parent = xmlrpc.client.ServerProxy
-        return await self._executor_func(
-            # pylint: disable=protected-access
-            parent._ServerProxy__request,
-            self,
-            *args,
-            **kwargs,
-        )
+        try:
+            return await self._executor_func(
+                # pylint: disable=protected-access
+                parent._ServerProxy__request,
+                self,
+                *args,
+                **kwargs,
+            )
+        except Exception as ex:
+            raise ProxyException(ex) from ex
 
     def __getattr__(self, *args, **kwargs):
         """
@@ -68,7 +75,10 @@ class SimpleServerProxy(xmlrpc.client.ServerProxy):
         """
         parent = xmlrpc.client.ServerProxy
         # pylint: disable=protected-access
-        return parent._ServerProxy__request(self, *args, **kwargs)
+        try:
+            return parent._ServerProxy__request(self, *args, **kwargs)
+        except Exception as ex:
+            raise ProxyException(ex) from ex
 
     def __getattr__(self, *args, **kwargs):
         """

@@ -11,9 +11,7 @@ import json
 import logging
 import os
 import threading
-import time
-from typing import Any, TypeVar
-from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
+from typing import Any
 
 from hahomematic import config
 from hahomematic.client import Client, ClientException
@@ -27,242 +25,17 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
-    HH_EVENT_DELETE_DEVICES,
-    HH_EVENT_ERROR,
-    HH_EVENT_LIST_DEVICES,
-    HH_EVENT_NEW_DEVICES,
-    HH_EVENT_RE_ADDED_DEVICE,
-    HH_EVENT_REPLACE_DEVICE,
-    HH_EVENT_UPDATE_DEVICE,
-    IP_ANY_V4,
-    PORT_ANY,
     PRIMARY_PORTS,
 )
 from hahomematic.data import INSTANCES
-from hahomematic.decorators import callback_event, callback_system_event
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
+import hahomematic.xml_rpc_server as xml_rpc
 
-T = TypeVar("T")
 _LOGGER = logging.getLogger(__name__)
 
-# pylint: disable=invalid-name
-class RPCFunctions:
-    """
-    The XML-RPC functions the CCU or Homegear will expect.
-    Additionally there are some internal functions for hahomematic itself.
-    """
 
-    def __init__(self, server):
-        _LOGGER.debug("RPCFunctions.__init__")
-        self._server: Server = server
-
-    @callback_event
-    def event(self, interface_id, address, value_key, value):
-        """
-        If a device emits some sort event, we will handle it here.
-        """
-        _LOGGER.debug(
-            "RPCFunctions.event: interface_id = %s, address = %s, value_key = %s, value = %s",
-            interface_id,
-            address,
-            value_key,
-            str(value),
-        )
-        self._server.last_events[interface_id] = int(time.time())
-        if (address, value_key) in self._server.entity_event_subscriptions:
-            try:
-                for callback in self._server.entity_event_subscriptions[
-                    (address, value_key)
-                ]:
-                    callback(interface_id, address, value_key, value)
-            except Exception:
-                _LOGGER.exception(
-                    "RPCFunctions.event: Failed to call callback for: %s, %s, %s",
-                    interface_id,
-                    address,
-                    value_key,
-                )
-
-        return True
-
-    @callback_system_event(HH_EVENT_ERROR)
-    # pylint: disable=no-self-use
-    def error(self, interface_id, error_code, msg):
-        """
-        When some error occurs the CCU / Homegear will send it's error message here.
-        """
-        _LOGGER.error(
-            "RPCFunctions.error: interface_id = %s, error_code = %i, message = %s",
-            interface_id,
-            int(error_code),
-            str(msg),
-        )
-        return True
-
-    @callback_system_event(HH_EVENT_LIST_DEVICES)
-    def listDevices(self, interface_id):
-        """
-        The CCU / Homegear asks for devices known to our XML-RPC server.
-        We respond to that request using this method.
-        """
-        _LOGGER.debug("RPCFunctions.listDevices: interface_id = %s", interface_id)
-        if interface_id not in self._server.devices_raw_cache:
-            self._server.devices_raw_cache[interface_id] = []
-        return self._server.devices_raw_cache[interface_id]
-
-    @callback_system_event(HH_EVENT_NEW_DEVICES)
-    def newDevices(self, interface_id, dev_descriptions):
-        """
-        The CCU / Homegear informs us about newly added devices.
-        We react on that and add those devices as well.
-        """
-
-        async def _async_new_devices():
-            """Async implementation"""
-            _LOGGER.debug(
-                "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
-                interface_id,
-                len(dev_descriptions),
-            )
-
-            if interface_id not in self._server.devices_raw_cache:
-                self._server.devices_raw_cache[interface_id] = []
-            if interface_id not in self._server.devices_raw_dict:
-                self._server.devices_raw_dict[interface_id] = {}
-            if interface_id not in self._server.names_cache:
-                self._server.names_cache[interface_id] = {}
-            if interface_id not in self._server.clients:
-                _LOGGER.error(
-                    "RPCFunctions.newDevices: Missing client for interface_id %s.",
-                    interface_id,
-                )
-                return True
-
-            # We need this list to avoid adding duplicates.
-            known_addresses = [
-                dd[ATTR_HM_ADDRESS]
-                for dd in self._server.devices_raw_cache[interface_id]
-            ]
-            client = self._server.clients[interface_id]
-            for dd in dev_descriptions:
-                try:
-                    if dd[ATTR_HM_ADDRESS] not in known_addresses:
-                        self._server.devices_raw_cache[interface_id].append(dd)
-                        await client.fetch_paramsets(dd)
-                except Exception:
-                    _LOGGER.exception("RPCFunctions.newDevices: Exception")
-            await self._server.save_devices_raw()
-            await self._server.save_paramsets()
-
-            handle_device_descriptions(self._server, interface_id, dev_descriptions)
-            await client.fetch_names()
-            await self._server.save_names()
-            create_devices(self._server)
-            return True
-
-        return self._server.run_coroutine(_async_new_devices())
-
-    @callback_system_event(HH_EVENT_DELETE_DEVICES)
-    def deleteDevices(self, interface_id, addresses):
-        """
-        The CCU / Homegear informs us about removed devices.
-        We react on that and remove those devices as well.
-        """
-
-        async def _async_delete_devices():
-            """async implementation."""
-            _LOGGER.debug(
-                "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
-                interface_id,
-                str(addresses),
-            )
-
-            self._server.devices_raw_cache[interface_id] = [
-                device
-                for device in self._server.devices_raw_cache[interface_id]
-                if not device[ATTR_HM_ADDRESS] in addresses
-            ]
-            await self._server.save_devices_raw()
-
-            for address in addresses:
-                try:
-                    if ":" not in address:
-                        del self._server.devices[interface_id][address]
-                    del self._server.devices_raw_dict[interface_id][address]
-                    del self._server.paramsets_cache[interface_id][address]
-                    del self._server.names_cache[interface_id][address]
-                    ha_device = self._server.hm_devices.get(address)
-                    if ha_device:
-                        ha_device.remove_event_subscriptions()
-                        del self._server.hm_devices[address]
-                except KeyError:
-                    _LOGGER.exception("Failed to delete: %s", address)
-            await self._server.save_paramsets()
-            await self._server.save_names()
-            return True
-
-        return self._server.run_coroutine(_async_delete_devices())
-
-    @callback_system_event(HH_EVENT_UPDATE_DEVICE)
-    # pylint: disable=no-self-use
-    def updateDevice(self, interface_id, address, hint):
-        """
-        Update a device.
-        Irrelevant, as currently only changes to link
-        partners are reported.
-        """
-        _LOGGER.debug(
-            "RPCFunctions.updateDevice: interface_id = %s, address = %s, hint = %s",
-            interface_id,
-            address,
-            str(hint),
-        )
-        return True
-
-    @callback_system_event(HH_EVENT_REPLACE_DEVICE)
-    # pylint: disable=no-self-use
-    def replaceDevice(self, interface_id, old_device_address, new_device_address):
-        """
-        Replace a device. Probably irrelevant for us.
-        """
-        _LOGGER.debug(
-            "RPCFunctions.replaceDevice: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
-            interface_id,
-            old_device_address,
-            new_device_address,
-        )
-        return True
-
-    @callback_system_event(HH_EVENT_RE_ADDED_DEVICE)
-    # pylint: disable=no-self-use
-    def readdedDevice(self, interface_id, addresses):
-        """
-        Readded device. Probably irrelevant for us.
-        Gets called when a known devices is put into learn-mode
-        while installation mode is active.
-        """
-        _LOGGER.debug(
-            "RPCFunctions.readdedDevices: interface_id = %s, addresses = %s",
-            interface_id,
-            str(addresses),
-        )
-        return True
-
-
-# Restrict to specific paths.
-class RequestHandler(SimpleXMLRPCRequestHandler):
-    """
-    We handle requests to / and /RPC2.
-    """
-
-    rpc_paths = (
-        "/",
-        "/RPC2",
-    )
-
-
-class Server(threading.Thread):
+class Server:
     """
     XML-RPC server thread to handle messages from CCU / Homegear.
     """
@@ -272,17 +45,15 @@ class Server(threading.Thread):
         instance_name,
         entry_id,
         loop,
-        local_ip=IP_ANY_V4,
-        local_port=PORT_ANY,
+        xml_rpc_server: xml_rpc.XMLRPCServer,
         enable_virtual_channels=False,
     ):
         _LOGGER.debug("Server.__init__")
-        threading.Thread.__init__(self)
 
         self.instance_name = instance_name
         self.entry_id = entry_id
-        self.local_ip = local_ip
-        self.local_port = int(local_port)
+        self._xml_rpc_server = xml_rpc_server
+        self._xml_rpc_server.register_server(self)
         self._loop = loop
         self.enable_virtual_channels = enable_virtual_channels
         # Caches for CCU data
@@ -321,9 +92,18 @@ class Server(threading.Thread):
         self.callback_impulse_event = None
 
         INSTANCES[instance_name] = self
-        self._init_xml_rpc_server()
         self._load_caches()
         self._connection_checker = ConnectionChecker(self)
+
+    @property
+    def local_ip(self):
+        """Return the local ip of the xmlrpc_server."""
+        return self._xml_rpc_server.local_ip
+
+    @property
+    def local_port(self):
+        """Return the local port of the xmlrpc_server."""
+        return self._xml_rpc_server.local_port
 
     @property
     def loop(self):
@@ -331,23 +111,6 @@ class Server(threading.Thread):
         if not self._loop:
             self._loop = asyncio.get_running_loop()
         return self._loop
-
-    def _init_xml_rpc_server(self):
-        """Setup server to handle requests from CCU / Homegear."""
-        self._rpc_functions = RPCFunctions(self)
-        _LOGGER.debug("Server.__init__: Setting up server")
-        self.xml_rpc_server = SimpleXMLRPCServer(
-            (self.local_ip, self.local_port),
-            requestHandler=RequestHandler,
-            logRequests=False,
-        )
-        self.local_port = self.xml_rpc_server.socket.getsockname()[1]
-        self.xml_rpc_server.register_introspection_functions()
-        self.xml_rpc_server.register_multicall_functions()
-        _LOGGER.debug("Server.__init__: Registering RPC functions")
-        self.xml_rpc_server.register_instance(
-            self._rpc_functions, allow_dotted_names=True
-        )
 
     def _load_caches(self):
         try:
@@ -362,23 +125,15 @@ class Server(threading.Thread):
             _LOGGER.warning("Failed to load caches.")
             self.clear_all()
 
-    def run(self):
-        """
-        Run the server thread.
-        """
-        _LOGGER.info(
-            "Server.run: Creating entities and starting server at http://%s:%i",
-            self.local_ip,
-            self.local_port,
-        )
+    def create_devices(self):
+        """Create the devices."""
         if not self.clients:
             raise Exception("No clients initialized. Not starting server.")
         try:
             create_devices(self)
         except Exception as err:
-            _LOGGER.exception("Server.run: Failed to create entities")
+            _LOGGER.exception("Server.init: Failed to create entities")
             raise Exception("entity-creation-error") from err
-        self.xml_rpc_server.serve_forever()
 
     async def stop(self):
         """
@@ -395,11 +150,12 @@ class Server(threading.Thread):
         _LOGGER.info("Server.stop: Clearing existing clients. Please recreate them!")
         self.clients.clear()
         self.clients_by_init_url.clear()
-        _LOGGER.info("Server.stop: Shutting down server")
-        self.xml_rpc_server.shutdown()
-        _LOGGER.debug("Server.stop: Stopping Server")
-        self.xml_rpc_server.server_close()
-        _LOGGER.info("Server.stop: Server stopped")
+
+        # un-register this instance from XMLRPCServer
+        self._xml_rpc_server.un_register_server(self)
+        # un-register and stop XMLRPCServer, if possible
+        xml_rpc.un_register_xml_rpc_server()
+
         _LOGGER.debug("Server.stop: Removing instance")
         del INSTANCES[self.instance_name]
 
@@ -415,9 +171,9 @@ class Server(threading.Thread):
         """call coroutine from sync"""
         return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
 
-    async def async_add_executor_job(self, fn, *args) -> Awaitable[T]:
+    async def async_add_executor_job(self, executor_func, *args) -> Awaitable:
         """Add an executor job from within the event loop."""
-        return await self.loop.run_in_executor(None, fn, *args)
+        return await self.loop.run_in_executor(None, executor_func, *args)
 
     def start_connection_checker(self):
         """Start the connection checker."""
@@ -463,6 +219,7 @@ class Server(threading.Thread):
         """Get service messages from CCU / Homegear."""
         await self._get_client().get_service_messages()
 
+    # pylint: disable=invalid-name
     async def set_install_mode(
         self, interface_id, on=True, t=60, mode=1, address=None
     ) -> None:
@@ -765,39 +522,23 @@ class ConnectionChecker(threading.Thread):
         self._active = False
 
     async def _check_connection(self):
+        sleep_time = config.CONNECTION_CHECKER_INTERVAL
         while self._active:
             _LOGGER.debug(
                 "ConnectionCecker.check_connection: Checking connection to server %s",
                 self._server.instance_name,
             )
-            if not await self._server.is_connected():
-                _LOGGER.warning(
-                    "ConnectionCecker.check_connection: No connection to server %s",
-                    self._server.instance_name,
-                )
-                await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL.seconds)
-                await self._server.reconnect()
-            await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL.seconds)
-
-
-def handle_device_descriptions(server, interface_id, dev_descriptions):
-    """
-    Handle provided list of device descriptions.
-    """
-    if interface_id not in server.devices:
-        server.devices[interface_id] = {}
-    if interface_id not in server.devices_raw_dict:
-        server.devices_raw_dict[interface_id] = {}
-    for dd in dev_descriptions:
-        address = dd[ATTR_HM_ADDRESS]
-        server.devices_raw_dict[interface_id][address] = dd
-        if ":" not in address and address not in server.devices[interface_id]:
-            server.devices[interface_id][address] = {}
-        if ":" in address:
-            main, _ = address.split(":")
-            if main not in server.devices[interface_id]:
-                server.devices[interface_id][main] = {}
-            server.devices[interface_id][main][address] = {}
+            try:
+                if not await self._server.is_connected():
+                    _LOGGER.warning(
+                        "ConnectionCecker.check_connection: No connection to server %s",
+                        self._server.instance_name,
+                    )
+                    await asyncio.sleep(sleep_time)
+                    await self._server.reconnect()
+                await asyncio.sleep(sleep_time)
+            except Exception as ex:
+                _LOGGER.exception("check_connection: Exception")
 
 
 def check_cache_dir():
@@ -807,3 +548,23 @@ def check_cache_dir():
     if not os.path.exists(config.CACHE_DIR):
         os.makedirs(config.CACHE_DIR)
     return True
+
+
+def handle_device_descriptions(server: Server, interface_id, dev_descriptions):
+    """
+    Handle provided list of device descriptions.
+    """
+    if interface_id not in server.devices:
+        server.devices[interface_id] = {}
+    if interface_id not in server.devices_raw_dict:
+        server.devices_raw_dict[interface_id] = {}
+    for desc in dev_descriptions:
+        address = desc[ATTR_HM_ADDRESS]
+        server.devices_raw_dict[interface_id][address] = desc
+        if ":" not in address and address not in server.devices[interface_id]:
+            server.devices[interface_id][address] = {}
+        if ":" in address:
+            main, _ = address.split(":")
+            if main not in server.devices[interface_id]:
+                server.devices[interface_id][main] = {}
+            server.devices[interface_id][main][address] = {}

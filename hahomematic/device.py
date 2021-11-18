@@ -186,7 +186,7 @@ class HmDevice:
             "manufacturer": "eQ-3",
             "model": self.device_type,
             "sw_version": self.firmware,
-            "via_device": (HA_DOMAIN, self.interface_id),
+            "via_device": (HA_DOMAIN, self.server.instance_name),
         }
 
     @property

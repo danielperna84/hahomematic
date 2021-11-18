@@ -16,6 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 CCU_HOST = "192.168.1.173"
 CCU_USERNAME = "Admin"
 CCU_PASSWORD = ""
+CCU2_HOST = "192.168.1.173"
+CCU2_USERNAME = "Admin"
+CCU2_PASSWORD = ""
 
 
 class Example:
@@ -25,6 +28,7 @@ class Example:
     def __init__(self):
         self.SLEEPCOUNTER = 0
         self.server = None
+        self.server2 = None
 
     def systemcallback(self, src, *args):
         self.got_devices = True
@@ -35,10 +39,23 @@ class Example:
         elif src == const.HH_EVENT_DEVICES_CREATED:
             if len(self.server.hm_devices) > 1:
                 self.got_devices = True
-                # print("All devices:")
-                # print(server.hm_devices)
-                # for _, device in server.hm_devices.items():
-                #     print(device)
+                print("New devices:")
+                print(len(args[0]))
+                print("New entities:")
+                print(len(args[1]))
+            return
+        for arg in args:
+            print("argument: %s" % arg)
+
+    def systemcallback2(self, src, *args):
+        self.got_devices = True
+        print("systemcallback: %s" % src)
+        if src == const.HH_EVENT_NEW_DEVICES:
+            print("Number of new device descriptions: %i" % len(args[0]))
+            return
+        elif src == const.HH_EVENT_DEVICES_CREATED:
+            if len(self.server2.hm_devices) > 1:
+                self.got_devices = True
                 print("New devices:")
                 print(len(args[0]))
                 print("New entities:")
@@ -79,6 +96,13 @@ class Example:
             xml_rpc_server=register_xml_rpc_server(),
             enable_virtual_channels=True,
         )
+        self.server2 = Server(
+            "ccu-2-dev",
+            "456",
+            asyncio.get_running_loop(),
+            xml_rpc_server=register_xml_rpc_server(),
+            enable_virtual_channels=True,
+        )
 
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10
@@ -90,6 +114,8 @@ class Example:
         self.server.callback_entity_event = self.eventcallback
         self.server.callback_click_event = self.clickcallback
         self.server.callback_impulse_event = self.impulsecallback
+        self.server2.callback_system_event = self.systemcallback2
+        self.server2.callback_entity_event = self.eventcallback
 
         # Create clients
         client1 = await ClientFactory(
@@ -117,13 +143,25 @@ class Example:
             password=CCU_PASSWORD,
             path="/groups",
         ).get_client()
+        client1_1 = await ClientFactory(
+            server=self.server2,
+            name="rf",
+            host=CCU2_HOST,
+            port=2001,
+            username=CCU2_USERNAME,
+            password=CCU2_PASSWORD,
+        ).get_client()
 
         # Clients have to exist prior to creating the devices
         self.server.create_devices()
+        self.server.start_connection_checker()
+        self.server2.create_devices()
+        self.server2.start_connection_checker()
         # Once the server is running we subscribe to receive messages.
         await client1.proxy_init()
         await client2.proxy_init()
         await client3.proxy_init()
+        await client1_1.proxy_init()
 
         while not self.got_devices and self.SLEEPCOUNTER < 20:
             print("Waiting for devices")
@@ -136,6 +174,7 @@ class Example:
             await asyncio.sleep(2)
         # Stop the server thread so Python can exit properly.
         await self.server.stop()
+        await self.server2.stop()
 
 
 # valdate the device description
