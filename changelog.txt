@@ -1,4 +1,4 @@
-Version 0.0.4 (2021-11-16)
+Version 0.0.4 (2021-11-18)
 - use one XMLRPC-Server for all backends
 
 Version 0.0.3 (2021-11-16)
