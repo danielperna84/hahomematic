@@ -8,4 +8,6 @@ INSTANCES = {}
 def get_client_by_interface_id(interface_id):
     """Return client by interface_id"""
     for server in INSTANCES.values():
-        return server.clients.get(interface_id)
+        client = server.clients.get(interface_id)
+        if client:
+            return client
