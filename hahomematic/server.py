@@ -14,7 +14,7 @@ import threading
 from typing import Any
 
 from hahomematic import config
-from hahomematic.client import Client, ClientException
+import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
     DATA_LOAD_SUCCESS,
@@ -25,6 +25,8 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
+    HM_VIRTUAL_REMOTE_HM,
+    HM_VIRTUAL_REMOTE_HMIP,
     PRIMARY_PORTS,
 )
 from hahomematic.data import INSTANCES
@@ -64,9 +66,9 @@ class Server:
         # {interface_id, {counter, device}}
         self.devices_raw_cache = {}
         # {interface_id, client}
-        self.clients: dict[str, Client] = {}
+        self.clients: dict[str, hm_client.Client] = {}
         # {url, client}
-        self.clients_by_init_url: dict[str, Client] = {}
+        self.clients_by_init_url: dict[str, hm_client.Client] = {}
         # {interface_id, {address, channel_address}}
         self.devices = {}
         # {interface_id, {address, dev_descriptions}
@@ -238,6 +240,38 @@ class Server:
             address=address, paramset=paramset, value=value, rx_mode=rx_mode
         )
 
+    def _get_virtual_remote(self, address):
+        """Get the virtual remote for the Client."""
+        for client in self.clients.values():
+            virtual_remote = client.get_virtual_remote()
+            if virtual_remote and virtual_remote.address == address:
+                return virtual_remote
+        return None
+
+    async def press_virtual_remote_key(self, address, parameter):
+        """Simulate a key press on the virtual remote."""
+        if ":" not in address:
+            _LOGGER.warning(
+                "Server.press_virtual_remote_key: address is missing channel information."
+            )
+
+        if address.startswith(HM_VIRTUAL_REMOTE_HM.upper()):
+            address = address.replace(
+                HM_VIRTUAL_REMOTE_HM.upper(), HM_VIRTUAL_REMOTE_HM
+            )
+        if address.startswith(HM_VIRTUAL_REMOTE_HMIP.upper()):
+            address = address.replace(
+                HM_VIRTUAL_REMOTE_HMIP.upper(), HM_VIRTUAL_REMOTE_HMIP
+            )
+
+        device_address = address.split(":")[0]
+        virtual_remote: HmDevice = self._get_virtual_remote(device_address)
+        if virtual_remote:
+            virtual_remote_channel = virtual_remote.action_events.get(
+                (address, parameter)
+            )
+            await virtual_remote_channel.send_value(True)
+
     def get_hm_entities_by_platform(self, platform):
         """
         Return all hm-entities by platform
@@ -249,7 +283,7 @@ class Server:
 
         return hm_entities
 
-    def _get_client(self, interface_id=None) -> Client:
+    def _get_client(self, interface_id=None) -> hm_client.Client:
         """Return the client by interface_id or the first with a primary port."""
         try:
             if interface_id:
@@ -263,7 +297,7 @@ class Server:
                 f"Can't resolve interface for {self.instance_name}: {interface_id}"
             )
             _LOGGER.warning(message)
-            raise ClientException(message) from err
+            raise hm_client.ClientException(message) from err
 
     def get_hm_entity_by_parameter(self, address, parameter) -> GenericEntity | None:
         """Get entity by address and parameter."""
@@ -537,7 +571,7 @@ class ConnectionChecker(threading.Thread):
                     await asyncio.sleep(sleep_time)
                     await self._server.reconnect()
                 await asyncio.sleep(sleep_time)
-            except Exception as ex:
+            except Exception:
                 _LOGGER.exception("check_connection: Exception")
 
 

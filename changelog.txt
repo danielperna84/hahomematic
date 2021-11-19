@@ -1,3 +1,6 @@
+Version 0.0.5 (2021-11-)
+- add method for virtual remote
+
 Version 0.0.4 (2021-11-18)
 - use one XMLRPC-Server for all backends
 

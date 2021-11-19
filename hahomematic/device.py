@@ -197,11 +197,11 @@ class HmDevice:
             return not un_reach.value
         return True
 
-    def reload_paramsets(self) -> None:
+    async def reload_paramsets(self) -> None:
         """Reload paramset for device."""
         for entity in self.entities.values():
             for paramset in RELEVANT_PARAMSETS:
-                self.client.fetch_paramset(entity.address, paramset)
+                await self.client.fetch_paramset(entity.address, paramset)
                 entity.update_parameter_data()
         self.update_device()
 
