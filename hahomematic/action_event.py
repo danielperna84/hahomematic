@@ -8,6 +8,7 @@ from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
+    ATTR_TYPE,
     ATTR_VALUE,
     EVENT_ALARM,
     EVENT_CONFIG_PENDING,
@@ -113,6 +114,10 @@ class BaseEvent(ABC):
         self.last_update = datetime.datetime.now()
 
     @abstractmethod
+    def get_event_data(self, value=None):
+        """Get the event_data."""
+
+    @abstractmethod
     def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
@@ -140,27 +145,30 @@ class AlarmEvent(BaseEvent):
             event_type=EVENT_ALARM,
         )
 
+    def get_event_data(self, value=None):
+        """Get the event_data."""
+        address = self.address.split(":")[0]
+        click_type = self.parameter.lower()
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: address,
+            ATTR_TYPE: click_type,
+        }
+
     def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
         """
-        if self._value == value:
+        if self._value == value and value is False:
             return
 
         self._set_last_update()
         self._value = value
 
-        event_data = {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.address,
-            ATTR_PARAMETER: self.parameter,
-            ATTR_VALUE: value,
-        }
-
         if callable(self._server.callback_alarm_event):
             self._server.callback_alarm_event(
                 self.event_type,
-                event_data,
+                self.get_event_data(value),
             )
 
 
@@ -181,20 +189,24 @@ class ClickEvent(BaseEvent):
             event_type=EVENT_KEYPRESS,
         )
 
+    def get_event_data(self, value=None):
+        """Get the event_data."""
+        (address, channel_no) = self.address.split(":")
+        click_type = f"channel_{channel_no}_{self.parameter}".lower()
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: address,
+            ATTR_TYPE: click_type,
+        }
+
     def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
         """
-        event_date = {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.address,
-            ATTR_PARAMETER: self.parameter,
-        }
-
         if callable(self._server.callback_click_event):
             self._server.callback_click_event(
                 self.event_type,
-                event_date,
+                self.get_event_data(),
             )
 
 
@@ -215,6 +227,15 @@ class ImpulseEvent(BaseEvent):
             event_type=EVENT_IMPULSE,
         )
 
+    def get_event_data(self, value=None):
+        """Get the event_data."""
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: self.address,
+            ATTR_PARAMETER: self.parameter,
+            ATTR_VALUE: value,
+        }
+
     def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
@@ -233,15 +254,8 @@ class ImpulseEvent(BaseEvent):
             self._device.update_device(self.unique_id)
             return
 
-        event_data = {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.address,
-            ATTR_PARAMETER: self.parameter,
-            ATTR_VALUE: value,
-        }
-
         if callable(self._server.callback_impulse_event):
             self._server.callback_impulse_event(
                 self.event_type,
-                event_data,
+                self.get_event_data(value),
             )
