@@ -7,9 +7,8 @@ import logging
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_INTERFACE_ID,
-    ATTR_NAME,
     ATTR_PARAMETER,
-    ATTR_UNIQUE_ID,
+    ATTR_TYPE,
     ATTR_VALUE,
     EVENT_ALARM,
     EVENT_CONFIG_PENDING,
@@ -87,12 +86,8 @@ class BaseEvent(ABC):
             )
             return
 
-        # fire an event, if the value changes
-        old_value = self._value
-        if self._value is not value:
-            self._set_last_update()
-            self._value = value
-            self.fire_event(old_value, value)
+        # fire an event
+        self.fire_event(value)
 
     @property
     def value(self):
@@ -119,7 +114,11 @@ class BaseEvent(ABC):
         self.last_update = datetime.datetime.now()
 
     @abstractmethod
-    def fire_event(self, old_value, new_value) -> None:
+    def get_event_data(self, value=None):
+        """Get the event_data."""
+
+    @abstractmethod
+    def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
         """
@@ -127,17 +126,6 @@ class BaseEvent(ABC):
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
         del self._server.entity_event_subscriptions[(self.address, self.parameter)]
-
-    def _event_data(self, value):
-        """Return the required event data."""
-        return {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.address,
-            ATTR_PARAMETER: self.parameter,
-            ATTR_NAME: self.name,
-            ATTR_UNIQUE_ID: self.unique_id,
-            ATTR_VALUE: value,
-        }
 
 
 class AlarmEvent(BaseEvent):
@@ -157,14 +145,30 @@ class AlarmEvent(BaseEvent):
             event_type=EVENT_ALARM,
         )
 
-    def fire_event(self, old_value, new_value) -> None:
+    def get_event_data(self, value=None):
+        """Get the event_data."""
+        address = self.address.split(":")[0]
+        click_type = self.parameter.lower()
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: address,
+            ATTR_TYPE: click_type,
+        }
+
+    def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
         """
+        if self._value == value and value is False:
+            return
+
+        self._set_last_update()
+        self._value = value
+
         if callable(self._server.callback_alarm_event):
             self._server.callback_alarm_event(
                 self.event_type,
-                self._event_data(new_value),
+                self.get_event_data(value),
             )
 
 
@@ -185,14 +189,24 @@ class ClickEvent(BaseEvent):
             event_type=EVENT_KEYPRESS,
         )
 
-    def fire_event(self, old_value, new_value) -> None:
+    def get_event_data(self, value=None):
+        """Get the event_data."""
+        (address, channel_no) = self.address.split(":")
+        click_type = f"channel_{channel_no}_{self.parameter}".lower()
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: address,
+            ATTR_TYPE: click_type,
+        }
+
+    def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
         """
         if callable(self._server.callback_click_event):
             self._server.callback_click_event(
                 self.event_type,
-                self._event_data(new_value),
+                self.get_event_data(),
             )
 
 
@@ -213,13 +227,28 @@ class ImpulseEvent(BaseEvent):
             event_type=EVENT_IMPULSE,
         )
 
-    def fire_event(self, old_value, new_value) -> None:
+    def get_event_data(self, value=None):
+        """Get the event_data."""
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: self.address,
+            ATTR_PARAMETER: self.parameter,
+            ATTR_VALUE: value,
+        }
+
+    def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
         """
+        if self._value == value:
+            return
+        old_value = self._value
+        self._set_last_update()
+        self._value = value
+
         if self.parameter == EVENT_CONFIG_PENDING:
-            if new_value is False and old_value is True:
-                self._device.reload_paramsets()
+            if value is False and old_value is True:
+                self.client.server.create_task(self._device.reload_paramsets())
             return
         if self.parameter == EVENT_UN_REACH:
             self._device.update_device(self.unique_id)
@@ -228,5 +257,5 @@ class ImpulseEvent(BaseEvent):
         if callable(self._server.callback_impulse_event):
             self._server.callback_impulse_event(
                 self.event_type,
-                self._event_data(new_value),
+                self.get_event_data(value),
             )

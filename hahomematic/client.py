@@ -27,6 +27,7 @@ from hahomematic.const import (
     DEFAULT_TLS,
     DEFAULT_USERNAME,
     DEFAULT_VERIFY_TLS,
+    HM_VIRTUAL_REMOTES,
     LOCALHOST,
     PORT_RFD,
     PROXY_DE_INIT_FAILED,
@@ -39,7 +40,8 @@ from hahomematic.const import (
 )
 from hahomematic.helpers import build_api_url, parse_ccu_sys_var
 from hahomematic.json_rpc import JsonRpcAioHttpSession
-from hahomematic.proxy import ProxyException, ThreadPoolServerProxy
+from hahomematic.proxy import NoConnection, ProxyException, ThreadPoolServerProxy
+import hahomematic.server as hm_server
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +61,7 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self.server = client_config.server
+        self.server: hm_server.Server = client_config.server
         # Referred to as 'remote' in other places
         self.name = client_config.name
         # This is the actual interface_id used for init
@@ -100,9 +102,7 @@ class Client(ABC):
             tls=self.tls,
         )
         # for all device related interaction
-        self._proxy_executor = ThreadPoolExecutor(
-            max_workers=1
-        )
+        self._proxy_executor = ThreadPoolExecutor(max_workers=1)
         self.proxy = ThreadPoolServerProxy(
             self.async_add_proxy_executor_job,
             self.api_url,
@@ -213,7 +213,9 @@ class Client(ABC):
         Perform actions required for connectivity check.
         Return connectivity state.
         """
-        await self._check_connection()
+        is_connected = await self._check_connection()
+        if not is_connected:
+            return False
 
         diff = int(time.time()) - self.time_initialized
         if diff < config.INIT_TIMEOUT:
@@ -243,6 +245,11 @@ class Client(ABC):
     @abstractmethod
     async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
+        ...
+
+    @abstractmethod
+    def get_virtual_remote(self):
+        """Get the virtual remote for the Client."""
         ...
 
     async def get_service_messages(self):
@@ -478,6 +485,8 @@ class ClientCCU(Client):
             if success:
                 self.time_initialized = int(time.time())
                 return True
+        except NoConnection:
+            _LOGGER.exception("ping: NoConnection")
         except ProxyException:
             _LOGGER.exception("ping: ProxyException")
         self.time_initialized = 0
@@ -603,6 +612,14 @@ class ClientCCU(Client):
                 _LOGGER.exception("get_all_system_variables: ProxyException")
         return variables
 
+    def get_virtual_remote(self):
+        """Get the virtual remote for the Client."""
+        for virtual_address in HM_VIRTUAL_REMOTES:
+            virtual_remote = self.server.hm_devices.get(virtual_address)
+            if virtual_remote and virtual_remote.interface_id == self.interface_id:
+                return virtual_remote
+        return None
+
 
 class ClientHomegear(Client):
     """Client implementation for Homegear backend."""
@@ -626,6 +643,8 @@ class ClientHomegear(Client):
             if await self.proxy.clientServerInitialized(self.interface_id):
                 self.time_initialized = int(time.time())
                 return True
+        except NoConnection:
+            _LOGGER.exception("ping: NoConnection")
         except ProxyException:
             _LOGGER.exception("homegear_check_init: ProxyException")
         _LOGGER.warning(
@@ -661,6 +680,10 @@ class ClientHomegear(Client):
             return await self.proxy.getAllSystemVariables()
         except ProxyException:
             _LOGGER.exception("get_all_system_variables: ProxyException")
+
+    def get_virtual_remote(self):
+        """Get the virtual remote for the Client."""
+        return None
 
 
 class ClientFactory:

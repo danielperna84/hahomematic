@@ -70,6 +70,7 @@ class HmDevice:
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
         self.last_update = None
+        self._available = True
         self._update_callbacks = []
         self._remove_callbacks = []
         self.device_type = self.server.devices_raw_dict[self.interface_id][
@@ -192,16 +193,25 @@ class HmDevice:
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
+        if self._available is False:
+            return False
         un_reach = self.action_events.get((f"{self.address}:0", PARAM_UN_REACH))
         if un_reach and un_reach.last_update:
             return not un_reach.value
         return True
 
-    def reload_paramsets(self) -> None:
+    def set_availability(self, value: bool) -> None:
+        """Set the availability of the device."""
+        if not self._available == value:
+            self._available = value
+            for entity in self.entities.values():
+                entity.update_entity()
+
+    async def reload_paramsets(self) -> None:
         """Reload paramset for device."""
         for entity in self.entities.values():
             for paramset in RELEVANT_PARAMSETS:
-                self.client.fetch_paramset(entity.address, paramset)
+                await self.client.fetch_paramset(entity.address, paramset)
                 entity.update_parameter_data()
         self.update_device()
 
