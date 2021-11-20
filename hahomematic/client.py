@@ -40,7 +40,7 @@ from hahomematic.const import (
 )
 from hahomematic.helpers import build_api_url, parse_ccu_sys_var
 from hahomematic.json_rpc import JsonRpcAioHttpSession
-from hahomematic.proxy import ProxyException, ThreadPoolServerProxy
+from hahomematic.proxy import NoConnection, ProxyException, ThreadPoolServerProxy
 import hahomematic.server as hm_server
 
 _LOGGER = logging.getLogger(__name__)
@@ -213,7 +213,9 @@ class Client(ABC):
         Perform actions required for connectivity check.
         Return connectivity state.
         """
-        await self._check_connection()
+        is_connected = await self._check_connection()
+        if not is_connected:
+            return False
 
         diff = int(time.time()) - self.time_initialized
         if diff < config.INIT_TIMEOUT:
@@ -483,6 +485,8 @@ class ClientCCU(Client):
             if success:
                 self.time_initialized = int(time.time())
                 return True
+        except NoConnection:
+            _LOGGER.exception("ping: NoConnection")
         except ProxyException:
             _LOGGER.exception("ping: ProxyException")
         self.time_initialized = 0
@@ -639,6 +643,8 @@ class ClientHomegear(Client):
             if await self.proxy.clientServerInitialized(self.interface_id):
                 self.time_initialized = int(time.time())
                 return True
+        except NoConnection:
+            _LOGGER.exception("ping: NoConnection")
         except ProxyException:
             _LOGGER.exception("homegear_check_init: ProxyException")
         _LOGGER.warning(

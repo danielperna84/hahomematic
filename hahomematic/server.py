@@ -32,6 +32,7 @@ from hahomematic.const import (
 from hahomematic.data import INSTANCES
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
+from hahomematic.proxy import NoConnection
 import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +55,7 @@ class Server:
 
         self.instance_name = instance_name
         self.entry_id = entry_id
+        self._available = True
         self._xml_rpc_server = xml_rpc_server
         self._xml_rpc_server.register_server(self)
         self._loop = loop
@@ -185,6 +187,11 @@ class Server:
         """Start the connection checker."""
         self._connection_checker.stop()
 
+    @property
+    def available(self):
+        """Return the availability of the server."""
+        return self._available
+
     async def is_connected(self) -> bool:
         """Check connection to ccu."""
         for client in self.clients.values():
@@ -192,7 +199,13 @@ class Server:
                 _LOGGER.warning(
                     "Server.is_connected: No connection to %s.", client.name
                 )
+                if self._available:
+                    self.mark_all_devices_availability(False)
+                    self._available = False
                 return False
+        if not self._available:
+            self.mark_all_devices_availability(True)
+            self._available = True
         return True
 
     async def reconnect(self):
@@ -204,6 +217,11 @@ class Server:
             )
             for client in self.clients.values():
                 await client.proxy_re_init()
+
+    def mark_all_devices_availability(self, available: bool) -> None:
+        """Mark all devices availability state."""
+        for hm_device in self.hm_devices.values():
+            hm_device.set_availability(available)
 
     async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
@@ -571,6 +589,10 @@ class ConnectionChecker(threading.Thread):
                     await asyncio.sleep(sleep_time)
                     await self._server.reconnect()
                 await asyncio.sleep(sleep_time)
+            except NoConnection as nex:
+                _LOGGER.exception("check_connection: no connection: %s", nex.args)
+                await asyncio.sleep(sleep_time)
+                continue
             except Exception:
                 _LOGGER.exception("check_connection: Exception")
 

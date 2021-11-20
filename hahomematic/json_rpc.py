@@ -5,7 +5,7 @@ import json
 import logging
 import ssl
 
-from aiohttp import ClientError, ClientSession
+from aiohttp import ClientConnectorError, ClientError, ClientSession
 
 from hahomematic import config
 from hahomematic.const import (
@@ -140,9 +140,12 @@ class JsonRpcAioHttpSession:
             else:
                 _LOGGER.error("helpers.json_rpc.post: Status: %i", resp.status)
                 return {"error": resp.status, "result": {}}
-        except ClientError as err:
-            _LOGGER.exception("helpers.json_rpc.post: Exception")
+        except ClientConnectorError as err:
+            _LOGGER.exception("helpers.json_rpc.post: ClientConnectorError")
             return {"error": str(err), "result": {}}
+        except ClientError as cce:
+            _LOGGER.exception("helpers.json_rpc.post: ClientError")
+            return {"error": str(cce), "result": {}}
 
     async def logout(self):
         """Logout of CCU."""

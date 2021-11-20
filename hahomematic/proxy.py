@@ -13,6 +13,10 @@ class ProxyException(Exception):
     """hahomematic Proxy exception."""
 
 
+class NoConnection(Exception):
+    """hahomematic NoConnection exception."""
+
+
 # noinspection PyProtectedMember,PyUnresolvedReferences
 class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
     """
@@ -43,6 +47,9 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
                 *args,
                 **kwargs,
             )
+        except OSError as ose:
+            _LOGGER.exception(ose.args)
+            raise NoConnection(ose) from ose
         except Exception as ex:
             raise ProxyException(ex) from ex
 
