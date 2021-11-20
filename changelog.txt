@@ -1,4 +1,4 @@
-Version 0.0.5 (2021-11-)
+Version 0.0.5 (2021-11-20)
 - add method for virtual remote
 - update entity availability based on connection status
 - fix action_event for ha device trigger
