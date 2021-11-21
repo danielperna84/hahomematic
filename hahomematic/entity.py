@@ -55,9 +55,9 @@ class BaseEntity(ABC):
         self.device_type = self._device.device_type
         self.create_in_ha = not self._device.is_custom_device
         self.data_entities: dict[str, GenericEntity] = {}
-        self._server = self._device.central
+        self._central = self._device.central
         self._interface_id = self._device.interface_id
-        self.client = self._server.clients[self._interface_id]
+        self.client = self._central.clients[self._interface_id]
         self.proxy = self.client.proxy
         self.unique_id = unique_id
         self.platform = platform
@@ -90,7 +90,7 @@ class BaseEntity(ABC):
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
         self._device.add_hm_entity(self)
-        self._server.hm_entities[self.unique_id] = self
+        self._central.hm_entities[self.unique_id] = self
 
     def register_update_callback(self, update_callback) -> None:
         """register update callback"""
@@ -174,7 +174,7 @@ class GenericEntity(BaseEntity):
         self._assign_parameter_data()
 
         self.name = get_entity_name(
-            central=self._server,
+            central=self._central,
             interface_id=self._interface_id,
             address=self.address,
             parameter=self.parameter,
@@ -189,9 +189,9 @@ class GenericEntity(BaseEntity):
         if (
             self.address,
             self.parameter,
-        ) not in self._server.entity_event_subscriptions:
-            self._server.entity_event_subscriptions[(self.address, self.parameter)] = []
-        self._server.entity_event_subscriptions[(self.address, self.parameter)].append(
+        ) not in self._central.entity_event_subscriptions:
+            self._central.entity_event_subscriptions[(self.address, self.parameter)] = []
+        self._central.entity_event_subscriptions[(self.address, self.parameter)].append(
             self.event
         )
         self._init_entities()
@@ -325,7 +325,7 @@ class GenericEntity(BaseEntity):
 
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
-        del self._server.entity_event_subscriptions[(self.address, self.parameter)]
+        del self._central.entity_event_subscriptions[(self.address, self.parameter)]
 
 
 class CustomEntity(BaseEntity):
@@ -358,7 +358,7 @@ class CustomEntity(BaseEntity):
         self._entity_desc = entity_desc
         self._channel_no = channel_no
         self.name = get_custom_entity_name(
-            central=self._server,
+            central=self._central,
             interface_id=self._interface_id,
             address=self.address,
             unique_id=self.unique_id,
