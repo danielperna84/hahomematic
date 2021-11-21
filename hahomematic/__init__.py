@@ -11,7 +11,7 @@ import sys
 from hahomematic import config
 from hahomematic.client import Client
 from hahomematic.data import INSTANCES
-from hahomematic.server import Server
+from hahomematic.central_unit import Server
 
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.DEBUG)

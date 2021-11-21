@@ -7,7 +7,7 @@ import time
 from hahomematic import config, const
 from hahomematic.client import ClientFactory
 from hahomematic.devices.device_description import validate_device_description
-from hahomematic.server import Server
+from hahomematic.central_unit import Server
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)

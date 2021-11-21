@@ -39,9 +39,9 @@ from hahomematic.const import (
     RELEVANT_PARAMSETS,
 )
 from hahomematic.helpers import build_api_url, parse_ccu_sys_var
-from hahomematic.json_rpc import JsonRpcAioHttpSession
+from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.proxy import NoConnection, ProxyException, ThreadPoolServerProxy
-import hahomematic.server as hm_server
+import hahomematic.central_unit as hm_central
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self.server: hm_server.Server = client_config.server
+        self.server: hm_central.Server = client_config.server
         # Referred to as 'remote' in other places
         self.name = client_config.name
         # This is the actual interface_id used for init
@@ -110,7 +110,7 @@ class Client(ABC):
             verify_tls=self.verify_tls,
         )
         self.time_initialized = 0
-        self.json_rpc_session = JsonRpcAioHttpSession(client=self)
+        self.json_rpc_session = JsonRpcAioHttpClient(client=self)
 
         self.server.clients[self.interface_id] = self
         if self.init_url not in self.server.clients_by_init_url:

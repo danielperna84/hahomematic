@@ -24,7 +24,7 @@ from hahomematic.const import (
 )
 from hahomematic.decorators import callback_event, callback_system_event
 from hahomematic.device import create_devices
-import hahomematic.server as hm_server
+import hahomematic.central_unit as hm_central
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,7 +139,7 @@ class RPCFunctions:
             await server.save_devices_raw()
             await server.save_paramsets()
 
-            hm_server.handle_device_descriptions(server, interface_id, dev_descriptions)
+            hm_central.handle_device_descriptions(server, interface_id, dev_descriptions)
             await client.fetch_names()
             await server.save_names()
             create_devices(server)
@@ -300,17 +300,17 @@ class XMLRPCServer(threading.Thread):
         self.simple_xml_rpc_server.server_close()
         _LOGGER.info("XMLRPCServer.stop: Server XMLRPCServer")
 
-    def register_server(self, server: hm_server.Server):
+    def register_server(self, server: hm_central.Server):
         """Register a server in the xml_rpc_server"""
         if not self._servers.get(server.instance_name):
             self._servers[server.instance_name] = server
 
-    def un_register_server(self, server: hm_server.Server):
+    def un_register_server(self, server: hm_central.Server):
         """Unregister a server from xml_rpc_server"""
         if self._servers.get(server.instance_name):
             del self._servers[server.instance_name]
 
-    def get_server(self, interface_id) -> hm_server.Server:
+    def get_server(self, interface_id) -> hm_central.Server:
         """Return a server by interface_id"""
         for server in self._servers.values():
             client = server.clients.get(interface_id)

@@ -24,7 +24,7 @@ UNVERIFIED_CTX.check_hostname = False
 UNVERIFIED_CTX.verify_mode = ssl.CERT_NONE
 
 
-class JsonRpcAioHttpSession:
+class JsonRpcAioHttpClient:
     """Connection to CCU JSON-RPC Server."""
 
     def __init__(
