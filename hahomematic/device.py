@@ -7,6 +7,7 @@ import datetime
 import logging
 
 from hahomematic.action_event import AlarmEvent, BaseEvent, ClickEvent, ImpulseEvent
+import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ALARM_EVENTS,
     ATTR_HM_FIRMWARE,
@@ -51,15 +52,15 @@ class HmDevice:
     Object to hold information about a device and associated entities.
     """
 
-    def __init__(self, server, interface_id, address):
+    def __init__(self, central: hm_central.CentralUnit, interface_id, address):
         """
         Initialize the device object.
         """
-        self.server = server
+        self.central = central
         self.interface_id = interface_id
-        self.client = self.server.clients[self.interface_id]
+        self.client = self.central.clients[self.interface_id]
         self.address = address
-        self.channels = self.server.devices[self.interface_id][self.address]
+        self.channels = self.central.devices[self.interface_id][self.address]
         _LOGGER.debug(
             "Device.__init__: Initializing device: %s, %s",
             self.interface_id,
@@ -73,16 +74,16 @@ class HmDevice:
         self._available = True
         self._update_callbacks = []
         self._remove_callbacks = []
-        self.device_type = self.server.devices_raw_dict[self.interface_id][
+        self.device_type = self.central.devices_raw_dict[self.interface_id][
             self.address
         ][ATTR_HM_TYPE]
         # marker if device will be created as custom device
         self.is_custom_device = device_desc_exists(self.device_type)
-        self.firmware = self.server.devices_raw_dict[self.interface_id][self.address][
+        self.firmware = self.central.devices_raw_dict[self.interface_id][self.address][
             ATTR_HM_FIRMWARE
         ]
-        if self.address in self.server.names_cache.get(self.interface_id, {}):
-            self.name = self.server.names_cache[self.interface_id][self.address]
+        if self.address in self.central.names_cache.get(self.interface_id, {}):
+            self.name = self.central.names_cache[self.interface_id][self.address]
         else:
             _LOGGER.info(
                 "Device.__init__: Using auto-generated name for %s %s",
@@ -181,13 +182,13 @@ class HmDevice:
     def device_info(self):
         """Return device specific attributes."""
         return {
-            "config_entry_id": self.server.entry_id,
+            "config_entry_id": self.central.entry_id,
             "identifiers": {(HA_DOMAIN, self.address)},
             "name": self.name,
             "manufacturer": "eQ-3",
             "model": self.device_type,
             "sw_version": self.firmware,
-            "via_device": (HA_DOMAIN, self.server.instance_name),
+            "via_device": (HA_DOMAIN, self.central.instance_name),
         }
 
     @property
@@ -221,16 +222,16 @@ class HmDevice:
         """
         new_entities: set[GenericEntity] = set()
         for channel in self.channels:
-            if channel not in self.server.paramsets_cache[self.interface_id]:
+            if channel not in self.central.paramsets_cache[self.interface_id]:
                 _LOGGER.debug(
                     "Device.create_entities: Skipping channel %s, missing paramsets.",
                     channel,
                 )
                 continue
-            for paramset in self.server.paramsets_cache[self.interface_id][channel]:
+            for paramset in self.central.paramsets_cache[self.interface_id][channel]:
                 if paramset != PARAMSET_VALUES:
                     continue
-                for parameter, parameter_data in self.server.paramsets_cache[
+                for parameter, parameter_data in self.central.paramsets_cache[
                     self.interface_id
                 ][channel][paramset].items():
                     if not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
@@ -277,8 +278,8 @@ class HmDevice:
 
     def create_event(self, address, parameter, parameter_data) -> BaseEvent | None:
         """Create action event entity."""
-        if (address, parameter) not in self.server.entity_event_subscriptions:
-            self.server.entity_event_subscriptions[(address, parameter)] = []
+        if (address, parameter) not in self.central.entity_event_subscriptions:
+            self.central.entity_event_subscriptions[(address, parameter)] = []
 
         unique_id = generate_unique_id(address, parameter, "event")
 
@@ -330,11 +331,11 @@ class HmDevice:
                 "create_entity: Ignoring parameter: %s (%s)", parameter, address
             )
             return None
-        if (address, parameter) not in self.server.entity_event_subscriptions:
-            self.server.entity_event_subscriptions[(address, parameter)] = []
+        if (address, parameter) not in self.central.entity_event_subscriptions:
+            self.central.entity_event_subscriptions[(address, parameter)] = []
 
         unique_id = generate_unique_id(address, parameter)
-        if unique_id in self.server.hm_entities:
+        if unique_id in self.central.hm_entities:
             _LOGGER.debug("create_entity: Skipping %s (already exists)", unique_id)
             return None
         _LOGGER.debug(
@@ -438,28 +439,28 @@ class HmDevice:
         return entity
 
 
-def create_devices(server) -> None:
+def create_devices(central: hm_central.CentralUnit) -> None:
     """
     Trigger creation of the objects that expose the functionality.
     """
     new_devices = set[str]()
     new_entities = set[GenericEntity]()
-    for interface_id, client in server.clients.items():
+    for interface_id, client in central.clients.items():
         if not client:
             _LOGGER.warning(
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
-        if interface_id not in server.paramsets_cache:
+        if interface_id not in central.paramsets_cache:
             _LOGGER.warning(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,
             )
             continue
-        for device_address in server.devices[interface_id]:
+        for device_address in central.devices[interface_id]:
             # Do we check for duplicates here? For now we do.
             device = None
-            if device_address in server.hm_devices:
+            if device_address in central.hm_devices:
                 _LOGGER.debug(
                     "create_devices: Skipping device %s on %s, already exists.",
                     device_address,
@@ -467,9 +468,9 @@ def create_devices(server) -> None:
                 )
                 continue
             try:
-                device = HmDevice(server, interface_id, device_address)
+                device = HmDevice(central, interface_id, device_address)
                 new_devices.add(device_address)
-                server.hm_devices[device_address] = device
+                central.hm_devices[device_address] = device
             except Exception:
                 _LOGGER.exception(
                     "create_devices: Failed to create device: %s, %s",
@@ -484,8 +485,8 @@ def create_devices(server) -> None:
                     interface_id,
                     device_address,
                 )
-    if callable(server.callback_system_event):
-        server.callback_system_event(
+    if callable(central.callback_system_event):
+        central.callback_system_event(
             HH_EVENT_DEVICES_CREATED, new_devices, new_entities
         )
 

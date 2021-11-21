@@ -1,7 +1,5 @@
 """
-Server module.
-Provides the XML-RPC server which handles communication
-with the CCU or Homegear
+CentralUnit module.
 """
 from __future__ import annotations
 
@@ -38,10 +36,8 @@ import hahomematic.xml_rpc_server as xml_rpc
 _LOGGER = logging.getLogger(__name__)
 
 
-class Server:
-    """
-    XML-RPC server thread to handle messages from CCU / Homegear.
-    """
+class CentralUnit:
+    """Central unit that collects everything required to handle communication from/to CCU/Homegear."""
 
     def __init__(
         self,
@@ -51,13 +47,13 @@ class Server:
         xml_rpc_server: xml_rpc.XMLRPCServer,
         enable_virtual_channels=False,
     ):
-        _LOGGER.debug("Server.__init__")
+        _LOGGER.debug("CentralUnit.__init__")
 
         self.instance_name = instance_name
         self.entry_id = entry_id
         self._available = True
         self._xml_rpc_server = xml_rpc_server
-        self._xml_rpc_server.register_server(self)
+        self._xml_rpc_server.register_central(self)
         self._loop = loop
         self.enable_virtual_channels = enable_virtual_channels
         # Caches for CCU data
@@ -132,35 +128,37 @@ class Server:
     def create_devices(self):
         """Create the devices."""
         if not self.clients:
-            raise Exception("No clients initialized. Not starting server.")
+            raise Exception("No clients initialized. Not starting central_unit.")
         try:
             create_devices(self)
         except Exception as err:
-            _LOGGER.exception("Server.init: Failed to create entities")
+            _LOGGER.exception("CentralUnit.init: Failed to create entities")
             raise Exception("entity-creation-error") from err
 
     async def stop(self):
         """
-        To stop the server we de-init from the CCU / Homegear,
         then shut down our XML-RPC server.
+        To stop the central_unit we de-init from the CCU / Homegear,
         """
-        _LOGGER.info("Server.stop: Stop connection checker.")
+        _LOGGER.info("CentralUnit.stop: Stop connection checker.")
         await self.stop_connection_checker()
         for name, client in self.clients.items():
             if await client.proxy_de_init():
-                _LOGGER.info("Server.stop: Proxy de-initialized: %s", name)
+                _LOGGER.info("CentralUnit.stop: Proxy de-initialized: %s", name)
             client.stop()
 
-        _LOGGER.info("Server.stop: Clearing existing clients. Please recreate them!")
+        _LOGGER.info(
+            "CentralUnit.stop: Clearing existing clients. Please recreate them!"
+        )
         self.clients.clear()
         self.clients_by_init_url.clear()
 
         # un-register this instance from XMLRPCServer
-        self._xml_rpc_server.un_register_server(self)
+        self._xml_rpc_server.un_register_central(self)
         # un-register and stop XMLRPCServer, if possible
         xml_rpc.un_register_xml_rpc_server()
 
-        _LOGGER.debug("Server.stop: Removing instance")
+        _LOGGER.debug("CentralUnit.stop: Removing instance")
         del INSTANCES[self.instance_name]
 
     def create_task(self, target: Awaitable) -> None:
@@ -189,7 +187,7 @@ class Server:
 
     @property
     def available(self):
-        """Return the availability of the server."""
+        """Return the availability of the central_unit."""
         return self._available
 
     async def is_connected(self) -> bool:
@@ -197,7 +195,7 @@ class Server:
         for client in self.clients.values():
             if not await client.is_connected():
                 _LOGGER.warning(
-                    "Server.is_connected: No connection to %s.", client.name
+                    "CentralUnit.is_connected: No connection to %s.", client.name
                 )
                 if self._available:
                     self.mark_all_devices_availability(False)
@@ -212,7 +210,7 @@ class Server:
         """re-init all RPC clients."""
         if await self.is_connected():
             _LOGGER.warning(
-                "Server.reconnect: re-connect to server %s",
+                "CentralUnit.reconnect: re-connect to central_unit %s",
                 self.instance_name,
             )
             for client in self.clients.values():
@@ -270,7 +268,7 @@ class Server:
         """Simulate a key press on the virtual remote."""
         if ":" not in address:
             _LOGGER.warning(
-                "Server.press_virtual_remote_key: address is missing channel information."
+                "CentralUnit.press_virtual_remote_key: address is missing channel information."
             )
 
         if address.startswith(HM_VIRTUAL_REMOTE_HM.upper()):
@@ -329,7 +327,7 @@ class Server:
         return None
 
     def has_address(self, address):
-        """Check if address is handled by server."""
+        """Check if address is handled by central_unit."""
         device_address = address
         if ":" in address:
             device_address = device_address.split(":")[0]
@@ -551,21 +549,21 @@ class ConnectionChecker(threading.Thread):
     Periodically check Connection to CCU / Homegear.
     """
 
-    def __init__(self, server: Server):
+    def __init__(self, central: CentralUnit):
         threading.Thread.__init__(self)
-        self._server = server
+        self._central = central
         self._active = True
 
     def run(self):
         """
-        Run the server thread.
+        Run the central thread.
         """
         _LOGGER.info(
             "ConnectionCecker.run: Init connection checker to server %s",
-            self._server.instance_name,
+            self._central.instance_name,
         )
 
-        self._server.run_coroutine(self._check_connection())
+        self._central.run_coroutine(self._check_connection())
 
     def stop(self):
         """
@@ -578,16 +576,16 @@ class ConnectionChecker(threading.Thread):
         while self._active:
             _LOGGER.debug(
                 "ConnectionCecker.check_connection: Checking connection to server %s",
-                self._server.instance_name,
+                self._central.instance_name,
             )
             try:
-                if not await self._server.is_connected():
+                if not await self._central.is_connected():
                     _LOGGER.warning(
                         "ConnectionCecker.check_connection: No connection to server %s",
-                        self._server.instance_name,
+                        self._central.instance_name,
                     )
                     await asyncio.sleep(sleep_time)
-                    await self._server.reconnect()
+                    await self._central.reconnect()
                 await asyncio.sleep(sleep_time)
             except NoConnection as nex:
                 _LOGGER.exception("check_connection: no connection: %s", nex.args)
@@ -606,21 +604,21 @@ def check_cache_dir():
     return True
 
 
-def handle_device_descriptions(server: Server, interface_id, dev_descriptions):
+def handle_device_descriptions(central: CentralUnit, interface_id, dev_descriptions):
     """
     Handle provided list of device descriptions.
     """
-    if interface_id not in server.devices:
-        server.devices[interface_id] = {}
-    if interface_id not in server.devices_raw_dict:
-        server.devices_raw_dict[interface_id] = {}
+    if interface_id not in central.devices:
+        central.devices[interface_id] = {}
+    if interface_id not in central.devices_raw_dict:
+        central.devices_raw_dict[interface_id] = {}
     for desc in dev_descriptions:
         address = desc[ATTR_HM_ADDRESS]
-        server.devices_raw_dict[interface_id][address] = desc
-        if ":" not in address and address not in server.devices[interface_id]:
-            server.devices[interface_id][address] = {}
+        central.devices_raw_dict[interface_id][address] = desc
+        if ":" not in address and address not in central.devices[interface_id]:
+            central.devices[interface_id][address] = {}
         if ":" in address:
             main, _ = address.split(":")
-            if main not in server.devices[interface_id]:
-                server.devices[interface_id][main] = {}
-            server.devices[interface_id][main][address] = {}
+            if main not in central.devices[interface_id]:
+                central.devices[interface_id][main] = {}
+            central.devices[interface_id][main][address] = {}

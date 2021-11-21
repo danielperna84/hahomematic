@@ -55,14 +55,14 @@ class BaseEntity(ABC):
         self.device_type = self._device.device_type
         self.create_in_ha = not self._device.is_custom_device
         self.data_entities: dict[str, GenericEntity] = {}
-        self._server = self._device.server
+        self._server = self._device.central
         self._interface_id = self._device.interface_id
         self.client = self._server.clients[self._interface_id]
         self.proxy = self.client.proxy
         self.unique_id = unique_id
         self.platform = platform
         self.address = address
-        self.name = self.client.server.names_cache.get(self._interface_id, {}).get(
+        self.name = self.client.central.names_cache.get(self._interface_id, {}).get(
             self.address, self.unique_id
         )
 
@@ -88,7 +88,7 @@ class BaseEntity(ABC):
         return {ATTR_INTERFACE_ID: self._interface_id, ATTR_ADDRESS: self.address}
 
     def add_to_collections(self) -> None:
-        """add entity to server collections"""
+        """add entity to central_unit collections"""
         self._device.add_hm_entity(self)
         self._server.hm_entities[self.unique_id] = self
 
@@ -174,7 +174,7 @@ class GenericEntity(BaseEntity):
         self._assign_parameter_data()
 
         self.name = get_entity_name(
-            server=self._server,
+            central=self._server,
             interface_id=self._interface_id,
             address=self.address,
             parameter=self.parameter,
@@ -358,7 +358,7 @@ class CustomEntity(BaseEntity):
         self._entity_desc = entity_desc
         self._channel_no = channel_no
         self.name = get_custom_entity_name(
-            server=self._server,
+            central=self._server,
             interface_id=self._interface_id,
             address=self.address,
             unique_id=self.unique_id,

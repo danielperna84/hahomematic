@@ -7,6 +7,7 @@ import socket
 import time
 
 from hahomematic import config
+import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
@@ -41,7 +42,6 @@ from hahomematic.const import (
 from hahomematic.helpers import build_api_url, parse_ccu_sys_var
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.proxy import NoConnection, ProxyException, ThreadPoolServerProxy
-import hahomematic.central_unit as hm_central
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +61,11 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self.server: hm_central.Server = client_config.server
+        self.central: hm_central.CentralUnit = client_config.central
         # Referred to as 'remote' in other places
         self.name = client_config.name
         # This is the actual interface_id used for init
-        self.interface_id = f"{self.server.instance_name}-{self.name}"
+        self.interface_id = f"{self.central.instance_name}-{self.name}"
         self.host = client_config.host
         self.port = client_config.port
         self.json_port = client_config.json_port
@@ -91,7 +91,7 @@ class Client(ABC):
         if client_config.callback_port is not None:
             self.callback_port = int(client_config.callback_port)
         else:
-            self.callback_port = self.server.local_port
+            self.callback_port = self.central.local_port
         self.init_url = f"http://{self.callback_host}:{self.callback_port}"
         self.api_url = build_api_url(
             self.host,
@@ -112,10 +112,10 @@ class Client(ABC):
         self.time_initialized = 0
         self.json_rpc_session = JsonRpcAioHttpClient(client=self)
 
-        self.server.clients[self.interface_id] = self
-        if self.init_url not in self.server.clients_by_init_url:
-            self.server.clients_by_init_url[self.init_url] = []
-        self.server.clients_by_init_url[self.init_url].append(self)
+        self.central.clients[self.interface_id] = self
+        if self.init_url not in self.central.clients_by_init_url:
+            self.central.clients_by_init_url[self.init_url] = []
+        self.central.clients_by_init_url[self.init_url].append(self)
 
     # pylint: disable=no-member
     def _get_local_ip(self):
@@ -140,8 +140,8 @@ class Client(ABC):
         if not self.connect:
             _LOGGER.debug("proxy_init: Skipping init for %s", self.name)
             return PROXY_INIT_SKIPPED
-        if self.server is None:
-            _LOGGER.warning("proxy_init: Local server missing for %s", self.name)
+        if self.central is None:
+            _LOGGER.warning("proxy_init: Local central_unit missing for %s", self.name)
             self.time_initialized = 0
             return PROXY_INIT_FAILED
         try:
@@ -168,8 +168,8 @@ class Client(ABC):
         if not self.connect:
             _LOGGER.debug("proxy_de_init: Skipping de-init for %s", self.name)
             return PROXY_DE_INIT_SKIPPED
-        if self.server is None:
-            _LOGGER.warning("proxy_de_init: Local server missing for %s", self.name)
+        if self.central is None:
+            _LOGGER.warning("proxy_de_init: Local central missing for %s", self.name)
             return PROXY_DE_INIT_FAILED
         if not self.time_initialized:
             _LOGGER.debug(
@@ -201,7 +201,9 @@ class Client(ABC):
     async def async_add_proxy_executor_job(self, func, *args) -> Awaitable:
         """Add an executor job from within the event loop for all device related interaction."""
 
-        return await self.server.loop.run_in_executor(self._proxy_executor, func, *args)
+        return await self.central.loop.run_in_executor(
+            self._proxy_executor, func, *args
+        )
 
     @abstractmethod
     async def fetch_names(self):
@@ -337,49 +339,49 @@ class Client(ABC):
         """
         Fetch a specific paramset and add it to the known ones.
         """
-        if self.interface_id not in self.server.paramsets_cache:
-            self.server.paramsets_cache[self.interface_id] = {}
-        if address not in self.server.paramsets_cache[self.interface_id]:
-            self.server.paramsets_cache[self.interface_id][address] = {}
+        if self.interface_id not in self.central.paramsets_cache:
+            self.central.paramsets_cache[self.interface_id] = {}
+        if address not in self.central.paramsets_cache[self.interface_id]:
+            self.central.paramsets_cache[self.interface_id][address] = {}
         if (
-            paramset not in self.server.paramsets_cache[self.interface_id][address]
+            paramset not in self.central.paramsets_cache[self.interface_id][address]
             or update
         ):
             _LOGGER.debug("Fetching paramset %s for %s", paramset, address)
-            if not self.server.paramsets_cache[self.interface_id][address]:
-                self.server.paramsets_cache[self.interface_id][address] = {}
+            if not self.central.paramsets_cache[self.interface_id][address]:
+                self.central.paramsets_cache[self.interface_id][address] = {}
             try:
-                self.server.paramsets_cache[self.interface_id][address][
+                self.central.paramsets_cache[self.interface_id][address][
                     paramset
                 ] = await self.proxy.getParamsetDescription(address, paramset)
             except ProxyException:
                 _LOGGER.exception(
                     "Unable to get paramset %s for address %s.", paramset, address
                 )
-        await self.server.save_paramsets()
+        await self.central.save_paramsets()
 
     async def fetch_paramsets(self, device_description, update=False):
         """
         Fetch paramsets for provided device description.
         """
-        if self.interface_id not in self.server.paramsets_cache:
-            self.server.paramsets_cache[self.interface_id] = {}
+        if self.interface_id not in self.central.paramsets_cache:
+            self.central.paramsets_cache[self.interface_id] = {}
         address = device_description[ATTR_HM_ADDRESS]
-        if address not in self.server.paramsets_cache[self.interface_id] or update:
+        if address not in self.central.paramsets_cache[self.interface_id] or update:
             _LOGGER.debug("Fetching paramsets for %s", address)
-            self.server.paramsets_cache[self.interface_id][address] = {}
+            self.central.paramsets_cache[self.interface_id][address] = {}
             for paramset in RELEVANT_PARAMSETS:
                 if paramset not in device_description[ATTR_HM_PARAMSETS]:
                     continue
                 try:
-                    self.server.paramsets_cache[self.interface_id][address][
+                    self.central.paramsets_cache[self.interface_id][address][
                         paramset
                     ] = await self.proxy.getParamsetDescription(address, paramset)
                 except ProxyException:
                     _LOGGER.exception(
                         "Unable to get paramset %s for address %s.", paramset, address
                     )
-                    self.server.paramsets_cache[self.interface_id][address][
+                    self.central.paramsets_cache[self.interface_id][address][
                         paramset
                     ] = {}
 
@@ -387,39 +389,39 @@ class Client(ABC):
         """
         Fetch all paramsets for provided interface id.
         """
-        if self.interface_id not in self.server.devices_raw_dict:
-            self.server.devices_raw_dict[self.interface_id] = {}
-        if self.interface_id not in self.server.paramsets_cache:
-            self.server.paramsets_cache[self.interface_id] = {}
-        for address, dd in self.server.devices_raw_dict[self.interface_id].items():
+        if self.interface_id not in self.central.devices_raw_dict:
+            self.central.devices_raw_dict[self.interface_id] = {}
+        if self.interface_id not in self.central.paramsets_cache:
+            self.central.paramsets_cache[self.interface_id] = {}
+        for address, dd in self.central.devices_raw_dict[self.interface_id].items():
             if (
                 skip_existing
-                and address in self.server.paramsets_cache[self.interface_id]
+                and address in self.central.paramsets_cache[self.interface_id]
             ):
                 continue
             await self.fetch_paramsets(dd)
-        await self.server.save_paramsets()
+        await self.central.save_paramsets()
 
     async def update_paramsets(self, address):
         """
         Update paramsets for provided address.
         """
-        if self.interface_id not in self.server.devices_raw_dict:
+        if self.interface_id not in self.central.devices_raw_dict:
             _LOGGER.warning(
-                "Interface ID missing in self.server.devices_raw_dict. Not updating paramsets for %s.",
+                "Interface ID missing in central_unit.devices_raw_dict. Not updating paramsets for %s.",
                 address,
             )
             return
-        if address not in self.server.devices_raw_dict[self.interface_id]:
+        if address not in self.central.devices_raw_dict[self.interface_id]:
             _LOGGER.warning(
-                "Channel missing in self.server.devices_raw_dict[_interface_id]. Not updating paramsets for %s.",
+                "Channel missing in central_unit.devices_raw_dict[_interface_id]. Not updating paramsets for %s.",
                 address,
             )
             return
         await self.fetch_paramsets(
-            self.server.devices_raw_dict[self.interface_id][address], update=True
+            self.central.devices_raw_dict[self.interface_id][address], update=True
         )
-        await self.server.save_paramsets()
+        await self.central.save_paramsets()
 
 
 class ClientCCU(Client):
@@ -468,11 +470,11 @@ class ClientCCU(Client):
                 for device in response[ATTR_RESULT]:
                     if device[ATTR_INTERFACE] != interface:
                         continue
-                    self.server.names_cache[self.interface_id][
+                    self.central.names_cache[self.interface_id][
                         device[ATTR_ADDRESS]
                     ] = device[ATTR_NAME]
                     for channel in device.get(ATTR_CHANNELS, []):
-                        self.server.names_cache[self.interface_id][
+                        self.central.names_cache[self.interface_id][
                             channel[ATTR_ADDRESS]
                         ] = channel[ATTR_NAME]
         except Exception:
@@ -615,7 +617,7 @@ class ClientCCU(Client):
     def get_virtual_remote(self):
         """Get the virtual remote for the Client."""
         for virtual_address in HM_VIRTUAL_REMOTES:
-            virtual_remote = self.server.hm_devices.get(virtual_address)
+            virtual_remote = self.central.hm_devices.get(virtual_address)
             if virtual_remote and virtual_remote.interface_id == self.interface_id:
                 return virtual_remote
         return None
@@ -629,9 +631,9 @@ class ClientHomegear(Client):
         Get all names from metadata (Homegear).
         """
         _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in self.server.devices_raw_dict[self.interface_id]:
+        for address in self.central.devices_raw_dict[self.interface_id]:
             try:
-                self.server.names_cache[self.interface_id][
+                self.central.names_cache[self.interface_id][
                     address
                 ] = await self.proxy.getMetadata(address, ATTR_HM_NAME)
             except ProxyException:
@@ -691,7 +693,7 @@ class ClientFactory:
 
     def __init__(
         self,
-        server,
+        central,
         name=DEFAULT_NAME,
         host=LOCALHOST,
         port=PORT_RFD,
@@ -707,7 +709,7 @@ class ClientFactory:
         json_port=DEFAULT_JSON_PORT,
         json_tls=DEFAULT_TLS,
     ):
-        self.server = server
+        self.central = central
         self.name = name
         self.host = host
         self.port: int = port
@@ -736,7 +738,7 @@ class ClientFactory:
         )
 
         proxy = ThreadPoolServerProxy(
-            self.server.async_add_executor_job,
+            self.central.async_add_executor_job,
             api_url,
             tls=self.tls,
             verify_tls=self.verify_tls,

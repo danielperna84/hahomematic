@@ -69,9 +69,9 @@ def parse_ccu_sys_var(data):
     return data[ATTR_NAME], data[ATTR_VALUE]
 
 
-def get_entity_name(server, interface_id, address, parameter, unique_id) -> str:
+def get_entity_name(central, interface_id, address, parameter, unique_id) -> str:
     """generate name for entity"""
-    name = server.names_cache.get(interface_id, {}).get(address, unique_id)
+    name = central.names_cache.get(interface_id, {}).get(address, unique_id)
     if name.count(":") == 1:
         d_name = name.split(":")[0]
         p_name = parameter.title().replace("_", " ")
@@ -86,10 +86,10 @@ def get_entity_name(server, interface_id, address, parameter, unique_id) -> str:
 
 
 def get_custom_entity_name(
-    server, interface_id, address, unique_id, channel_no=None
+    central, interface_id, address, unique_id, channel_no=None
 ) -> str:
     """generate name for entity"""
     if channel_no and not ":" in address:
         address = f"{address}:{channel_no}"
 
-    return server.names_cache.get(interface_id, {}).get(address, unique_id)
+    return central.names_cache.get(interface_id, {}).get(address, unique_id)

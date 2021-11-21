@@ -29,15 +29,15 @@ class BaseEvent(ABC):
         Initialize the event handler.
         """
         self._device = device
-        self._server = self._device.server
+        self._central = self._device.central
         self._interface_id = self._device.interface_id
-        self.client = self._server.clients[self._interface_id]
+        self.client = self._central.clients[self._interface_id]
         self.proxy = self.client.proxy
         self.unique_id = unique_id
         self.address = address
         self.parameter = parameter
         self.name = get_entity_name(
-            server=self._server,
+            central=self._central,
             interface_id=self._interface_id,
             address=self.address,
             parameter=self.parameter,
@@ -51,9 +51,11 @@ class BaseEvent(ABC):
         if (
             self.address,
             self.parameter,
-        ) not in self._server.entity_event_subscriptions:
-            self._server.entity_event_subscriptions[(self.address, self.parameter)] = []
-        self._server.entity_event_subscriptions[(self.address, self.parameter)].append(
+        ) not in self._central.entity_event_subscriptions:
+            self._central.entity_event_subscriptions[
+                (self.address, self.parameter)
+            ] = []
+        self._central.entity_event_subscriptions[(self.address, self.parameter)].append(
             self.event
         )
 
@@ -107,7 +109,7 @@ class BaseEvent(ABC):
             )
 
     def add_to_collections(self) -> None:
-        """Add entity to server collections."""
+        """Add entity to central_unit collections."""
         self._device.add_hm_action_event(self)
 
     def _set_last_update(self) -> None:
@@ -125,7 +127,7 @@ class BaseEvent(ABC):
 
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
-        del self._server.entity_event_subscriptions[(self.address, self.parameter)]
+        del self._central.entity_event_subscriptions[(self.address, self.parameter)]
 
 
 class AlarmEvent(BaseEvent):
@@ -165,8 +167,8 @@ class AlarmEvent(BaseEvent):
         self._set_last_update()
         self._value = value
 
-        if callable(self._server.callback_alarm_event):
-            self._server.callback_alarm_event(
+        if callable(self._central.callback_alarm_event):
+            self._central.callback_alarm_event(
                 self.event_type,
                 self.get_event_data(value),
             )
@@ -203,8 +205,8 @@ class ClickEvent(BaseEvent):
         """
         Do what is needed to fire an event.
         """
-        if callable(self._server.callback_click_event):
-            self._server.callback_click_event(
+        if callable(self._central.callback_click_event):
+            self._central.callback_click_event(
                 self.event_type,
                 self.get_event_data(),
             )
@@ -248,14 +250,14 @@ class ImpulseEvent(BaseEvent):
 
         if self.parameter == EVENT_CONFIG_PENDING:
             if value is False and old_value is True:
-                self.client.server.create_task(self._device.reload_paramsets())
+                self.client.central.create_task(self._device.reload_paramsets())
             return
         if self.parameter == EVENT_UN_REACH:
             self._device.update_device(self.unique_id)
             return
 
-        if callable(self._server.callback_impulse_event):
-            self._server.callback_impulse_event(
+        if callable(self._central.callback_impulse_event):
+            self._central.callback_impulse_event(
                 self.event_type,
                 self.get_event_data(value),
             )

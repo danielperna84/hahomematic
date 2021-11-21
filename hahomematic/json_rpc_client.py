@@ -72,7 +72,7 @@ class JsonRpcAioHttpClient:
         self._session_id = False
         try:
             if self._client_session is None:
-                self._client_session = ClientSession(loop=self._client.server.loop)
+                self._client_session = ClientSession(loop=self._client.central.loop)
 
             params = {
                 ATTR_USERNAME: self._username,

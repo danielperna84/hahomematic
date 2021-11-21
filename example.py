@@ -7,7 +7,7 @@ import time
 from hahomematic import config, const
 from hahomematic.client import ClientFactory
 from hahomematic.devices.device_description import validate_device_description
-from hahomematic.central_unit import Server
+from hahomematic.central_unit import CentralUnit
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
@@ -24,7 +24,7 @@ class Example:
 
     def __init__(self):
         self.SLEEPCOUNTER = 0
-        self.server = None
+        self.central = None
 
     def systemcallback(self, src, *args):
         self.got_devices = True
@@ -33,11 +33,11 @@ class Example:
             print("Number of new device descriptions: %i" % len(args[0]))
             return
         elif src == const.HH_EVENT_DEVICES_CREATED:
-            if len(self.server.hm_devices) > 1:
+            if len(self.central.hm_devices) > 1:
                 self.got_devices = True
                 # print("All devices:")
-                # print(server.hm_devices)
-                # for _, device in server.hm_devices.items():
+                # print(central_1.hm_devices)
+                # for _, device in central_1.hm_devices.items():
                 #     print(device)
                 print("New devices:")
                 print(len(args[0]))
@@ -72,7 +72,7 @@ class Example:
         )
 
     async def example_run(self):
-        self.server = Server(
+        self.central = CentralUnit(
             "ccu-dev",
             "123",
             asyncio.get_running_loop(),
@@ -82,18 +82,18 @@ class Example:
 
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10
-        # We have to set the cache location of stored data so the server can load
+        # We have to set the cache location of stored data so the central_1 can load
         # it while initializing.
         config.CACHE_DIR = "cache"
         # Add callbacks to handle the events and see what happens on the system.
-        self.server.callback_system_event = self.systemcallback
-        self.server.callback_entity_event = self.eventcallback
-        self.server.callback_click_event = self.clickcallback
-        self.server.callback_impulse_event = self.impulsecallback
+        self.central.callback_system_event = self.systemcallback
+        self.central.callback_entity_event = self.eventcallback
+        self.central.callback_click_event = self.clickcallback
+        self.central.callback_impulse_event = self.impulsecallback
 
         # Create clients
         client1 = await ClientFactory(
-            server=self.server,
+            central=self.central,
             name="hmip",
             host=CCU_HOST,
             port=2010,
@@ -101,7 +101,7 @@ class Example:
             password=CCU_PASSWORD,
         ).get_client()
         client2 = await ClientFactory(
-            server=self.server,
+            central=self.central,
             name="rf",
             host=CCU_HOST,
             port=2001,
@@ -109,7 +109,7 @@ class Example:
             password=CCU_PASSWORD,
         ).get_client()
         client3 = await ClientFactory(
-            server=self.server,
+            central=self.central,
             name="groups",
             host=CCU_HOST,
             port=9292,
@@ -119,8 +119,8 @@ class Example:
         ).get_client()
 
         # Clients have to exist prior to creating the devices
-        self.server.create_devices()
-        # Once the server is running we subscribe to receive messages.
+        self.central.create_devices()
+        # Once the central_1 is running we subscribe to receive messages.
         await client1.proxy_init()
         await client2.proxy_init()
         await client3.proxy_init()
@@ -134,8 +134,8 @@ class Example:
         for i in range(1600):
             _LOGGER.debug("Sleeping (%i)", i)
             await asyncio.sleep(2)
-        # Stop the server thread so Python can exit properly.
-        await self.server.stop()
+        # Stop the central_1 thread so Python can exit properly.
+        await self.central.stop()
 
 
 # valdate the device description

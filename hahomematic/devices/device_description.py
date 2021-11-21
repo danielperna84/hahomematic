@@ -317,7 +317,7 @@ def make_custom_entity(
         device_desc = _get_device_group(device_def, base_channel)
         channels = device_desc[DD_PHY_CHANNEL]
         # check if virtual channels should be used
-        if device.server.enable_virtual_channels:
+        if device.central.enable_virtual_channels:
             channels.extend(device_desc[DD_VIRT_CHANNEL])
         for channel_no in set(channels):
             entities.extend(
@@ -357,7 +357,7 @@ def _create_entities(
     """Create custom entities."""
     entities = []
     unique_id = generate_unique_id(f"{address}:{channel_no}")
-    if unique_id in device.server.hm_entities:
+    if unique_id in device.central.hm_entities:
         _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_id)
         return
     entity = custom_entity_class(
