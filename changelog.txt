@@ -1,3 +1,7 @@
+Version 0.0.6 (2021-11-)
+- rename server to central_unit (after the extraction of the XMLRPC-Server server has not been a server anymore).
+- rename json_rpc to json_rpc_client
+
 Version 0.0.5 (2021-11-20)
 - add method for virtual remote
 - update entity availability based on connection status

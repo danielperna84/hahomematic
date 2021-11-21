@@ -24,7 +24,7 @@ UNVERIFIED_CTX.check_hostname = False
 UNVERIFIED_CTX.verify_mode = ssl.CERT_NONE
 
 
-class JsonRpcAioHttpSession:
+class JsonRpcAioHttpClient:
     """Connection to CCU JSON-RPC Server."""
 
     def __init__(
@@ -72,7 +72,7 @@ class JsonRpcAioHttpSession:
         self._session_id = False
         try:
             if self._client_session is None:
-                self._client_session = ClientSession(loop=self._client.server.loop)
+                self._client_session = ClientSession(loop=self._client.central.loop)
 
             params = {
                 ATTR_USERNAME: self._username,

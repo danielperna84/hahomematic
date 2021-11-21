@@ -7,7 +7,7 @@ import time
 from hahomematic import config, const
 from hahomematic.client import ClientFactory
 from hahomematic.devices.device_description import validate_device_description
-from hahomematic.server import Server
+from hahomematic.central_unit import CentralUnit
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
@@ -27,8 +27,8 @@ class Example:
 
     def __init__(self):
         self.SLEEPCOUNTER = 0
-        self.server = None
-        self.server2 = None
+        self.central_1 = None
+        self.central_2 = None
 
     def systemcallback(self, src, *args):
         self.got_devices = True
@@ -37,7 +37,7 @@ class Example:
             print("Number of new device descriptions: %i" % len(args[0]))
             return
         elif src == const.HH_EVENT_DEVICES_CREATED:
-            if len(self.server.hm_devices) > 1:
+            if len(self.central_1.hm_devices) > 1:
                 self.got_devices = True
                 print("New devices:")
                 print(len(args[0]))
@@ -54,7 +54,7 @@ class Example:
             print("Number of new device descriptions: %i" % len(args[0]))
             return
         elif src == const.HH_EVENT_DEVICES_CREATED:
-            if len(self.server2.hm_devices) > 1:
+            if len(self.central_2.hm_devices) > 1:
                 self.got_devices = True
                 print("New devices:")
                 print(len(args[0]))
@@ -89,14 +89,14 @@ class Example:
         )
 
     async def example_run(self):
-        self.server = Server(
+        self.central_1 = CentralUnit(
             "ccu-dev",
             "123",
             asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
             enable_virtual_channels=True,
         )
-        self.server2 = Server(
+        self.central_2 = CentralUnit(
             "ccu-2-dev",
             "456",
             asyncio.get_running_loop(),
@@ -106,20 +106,20 @@ class Example:
 
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10
-        # We have to set the cache location of stored data so the server can load
+        # We have to set the cache location of stored data so the central_1 can load
         # it while initializing.
         config.CACHE_DIR = "cache"
         # Add callbacks to handle the events and see what happens on the system.
-        self.server.callback_system_event = self.systemcallback
-        self.server.callback_entity_event = self.eventcallback
-        self.server.callback_click_event = self.clickcallback
-        self.server.callback_impulse_event = self.impulsecallback
-        self.server2.callback_system_event = self.systemcallback2
-        self.server2.callback_entity_event = self.eventcallback
+        self.central_1.callback_system_event = self.systemcallback
+        self.central_1.callback_entity_event = self.eventcallback
+        self.central_1.callback_click_event = self.clickcallback
+        self.central_1.callback_impulse_event = self.impulsecallback
+        self.central_2.callback_system_event = self.systemcallback2
+        self.central_2.callback_entity_event = self.eventcallback
 
         # Create clients
         client1 = await ClientFactory(
-            server=self.server,
+            central=self.central_1,
             name="hmip",
             host=CCU_HOST,
             port=2010,
@@ -127,7 +127,7 @@ class Example:
             password=CCU_PASSWORD,
         ).get_client()
         client2 = await ClientFactory(
-            server=self.server,
+            central=self.central_1,
             name="rf",
             host=CCU_HOST,
             port=2001,
@@ -135,7 +135,7 @@ class Example:
             password=CCU_PASSWORD,
         ).get_client()
         client3 = await ClientFactory(
-            server=self.server,
+            central=self.central_1,
             name="groups",
             host=CCU_HOST,
             port=9292,
@@ -144,7 +144,7 @@ class Example:
             path="/groups",
         ).get_client()
         client1_1 = await ClientFactory(
-            server=self.server2,
+            central=self.central_2,
             name="rf",
             host=CCU2_HOST,
             port=2001,
@@ -153,11 +153,11 @@ class Example:
         ).get_client()
 
         # Clients have to exist prior to creating the devices
-        self.server.create_devices()
-        self.server.start_connection_checker()
-        self.server2.create_devices()
-        self.server2.start_connection_checker()
-        # Once the server is running we subscribe to receive messages.
+        self.central_1.create_devices()
+        self.central_1.start_connection_checker()
+        self.central_2.create_devices()
+        self.central_2.start_connection_checker()
+        # Once the central_1 is running we subscribe to receive messages.
         await client1.proxy_init()
         await client2.proxy_init()
         await client3.proxy_init()
@@ -172,9 +172,9 @@ class Example:
         for i in range(1600):
             _LOGGER.debug("Sleeping (%i)", i)
             await asyncio.sleep(2)
-        # Stop the server thread so Python can exit properly.
-        await self.server.stop()
-        await self.server2.stop()
+        # Stop the central_1 thread so Python can exit properly.
+        await self.central_1.stop()
+        await self.central_2.stop()
 
 
 # valdate the device description

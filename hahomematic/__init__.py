@@ -9,9 +9,9 @@ import signal
 import sys
 
 from hahomematic import config
+from hahomematic.central_unit import CentralUnit
 from hahomematic.client import Client
 from hahomematic.data import INSTANCES
-from hahomematic.server import Server
 
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.DEBUG)
@@ -22,10 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 # noinspection PyUnusedLocal
 def signal_handler(sig, frame):
-    """Handle signal to shut down server."""
-    _LOGGER.info("Got signal: %s. Shutting down server", str(sig))
-    for active_server in INSTANCES.values():
-        active_server.stop()
+    """Handle signal to shut down central_unit."""
+    _LOGGER.info("Got signal: %s. Shutting down central_unit", str(sig))
+    for central in INSTANCES.values():
+        central.stop()
 
 
 if sys.stdout.isatty():

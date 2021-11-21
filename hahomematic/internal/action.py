@@ -33,5 +33,5 @@ class HmAction(GenericEntity):
         return DATA_LOAD_SUCCESS
 
     def add_to_collections(self) -> None:
-        """Add entity to server collections."""
+        """Add entity to central collections."""
         self._device.add_hm_entity(self)

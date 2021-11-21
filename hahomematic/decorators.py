@@ -30,8 +30,8 @@ def callback_system_event(name):
                 raise Exception("args-exception callback_system_event") from err
             if client:
                 client.time_initialized = int(time.time())
-            if client.server.callback_system_event is not None:
-                client.server.callback_system_event(name, *args)
+            if client.central.callback_system_event is not None:
+                client.central.callback_system_event(name, *args)
             return return_value
 
         return wrapper_callback_system_event
@@ -57,8 +57,8 @@ def callback_event(func):
             raise Exception("args-exception callback_event") from err
         if client:
             client.time_initialized = int(time.time())
-        if client.server.callback_entity_event is not None:
-            client.server.callback_entity_event(*args)
+        if client.central.callback_entity_event is not None:
+            client.central.callback_entity_event(*args)
         return return_value
 
     return wrapper_callback_event
