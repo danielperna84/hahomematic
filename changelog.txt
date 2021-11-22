@@ -1,6 +1,8 @@
-Version 0.0.6 (2021-11-)
+Version 0.0.6 (2021-11-22)
 - rename server to central_unit (after the extraction of the XMLRPC-Server server has not been a server anymore).
 - rename json_rpc to json_rpc_client
+- move json_rpc from client to central_unit to remove number of active sessions
+- add hub with option to enable own system variables as sensors
 
 Version 0.0.5 (2021-11-20)
 - add method for virtual remote
