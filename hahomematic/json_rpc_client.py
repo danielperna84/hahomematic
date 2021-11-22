@@ -5,7 +5,7 @@ import json
 import logging
 import ssl
 
-from aiohttp import ClientConnectorError, ClientError, ClientSession
+from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnector
 
 from hahomematic import config
 from hahomematic.const import (
@@ -29,18 +29,24 @@ class JsonRpcAioHttpClient:
 
     def __init__(
         self,
-        client,
+        central_config,
     ):
         """Session setup."""
-        self._client = client
-        self._client_session = client.client_session
+        self._central_config = central_config
+        if self._central_config.client_session:
+            self._client_session = self._central_config.client_session
+        else:
+            conn = TCPConnector(limit=5)
+            self._client_session = ClientSession(
+                connector=conn, loop=self._central_config.loop
+            )
         self._session_id = None
-        self._host = client.host
-        self._port = client.json_port
-        self._username = client.username
-        self._password = client.password
-        self._tls = client.json_tls
-        self._verify_tls = client.verify_tls
+        self._host = self._central_config.host
+        self._port = self._central_config.json_port
+        self._username = self._central_config.username
+        self._password = self._central_config.password
+        self._tls = self._central_config.json_tls
+        self._verify_tls = self._central_config.verify_tls
 
     @property
     def is_activated(self):
@@ -71,9 +77,6 @@ class JsonRpcAioHttpClient:
         """Login to CCU and return session."""
         self._session_id = False
         try:
-            if self._client_session is None:
-                self._client_session = ClientSession(loop=self._client.central.loop)
-
             params = {
                 ATTR_USERNAME: self._username,
                 ATTR_PASSWORD: self._password,
@@ -106,7 +109,7 @@ class JsonRpcAioHttpClient:
 
             headers = {
                 "Content-Type": "application/json",
-                "Content-Length": len(payload),
+                "Content-Length": str(len(payload)),
             }
 
             _LOGGER.debug("helpers.json_rpc.post: API-Endpoint: %s", self._url)
@@ -124,7 +127,7 @@ class JsonRpcAioHttpClient:
                 )
             else:
                 resp = await self._client_session.post(
-                    self._url, data=payload, timeout=config.TIMEOUT
+                    self._url, data=payload, headers=headers, timeout=config.TIMEOUT
                 )
             if resp.status == 200:
                 try:

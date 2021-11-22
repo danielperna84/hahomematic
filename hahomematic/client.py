@@ -20,16 +20,9 @@ from hahomematic.const import (
     ATTR_PORT,
     ATTR_RESULT,
     ATTR_VALUE,
-    DEFAULT_CONNECT,
-    DEFAULT_JSON_PORT,
     DEFAULT_NAME,
-    DEFAULT_PASSWORD,
     DEFAULT_PATH,
-    DEFAULT_TLS,
-    DEFAULT_USERNAME,
-    DEFAULT_VERIFY_TLS,
     HM_VIRTUAL_REMOTES,
-    LOCALHOST,
     PORT_RFD,
     PROXY_DE_INIT_FAILED,
     PROXY_DE_INIT_SKIPPED,
@@ -40,7 +33,6 @@ from hahomematic.const import (
     RELEVANT_PARAMSETS,
 )
 from hahomematic.helpers import build_api_url, parse_ccu_sys_var
-from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.proxy import NoConnection, ProxyException, ThreadPoolServerProxy
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,25 +53,16 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self.central: hm_central.CentralUnit = client_config.central
+        self.client_config: ClientConfig = client_config
+        self.central: hm_central.CentralUnit = self.client_config.central
+        self._version = self.client_config.version
         # Referred to as 'remote' in other places
-        self.name = client_config.name
+        self.name = self.client_config.name
+        self.host = self.central.host
+        self.port = self.client_config.port
         # This is the actual interface_id used for init
         self.interface_id = f"{self.central.instance_name}-{self.name}"
-        self.host = client_config.host
-        self.port = client_config.port
-        self.json_port = client_config.json_port
-        self.connect = client_config.connect
-        self.path = client_config.path
-        self.password = client_config.password
-        if self.password is None:
-            self.username = None
-        else:
-            self.username = client_config.username
-        self.tls = client_config.tls
-        self.json_tls = client_config.json_tls
-        self.verify_tls = client_config.verify_tls
-        self.client_session = client_config.client_session
+        self.path = self.client_config.path
         self.local_ip = self._get_local_ip()
         _LOGGER.debug("Got local ip: %s", self.local_ip)
 
@@ -88,8 +71,8 @@ class Client(ABC):
             self.callback_host = client_config.callback_host
         else:
             self.callback_host = self.local_ip
-        if client_config.callback_port is not None:
-            self.callback_port = int(client_config.callback_port)
+        if self.client_config.callback_port is not None:
+            self.callback_port = int(self.client_config.callback_port)
         else:
             self.callback_port = self.central.local_port
         self.init_url = f"http://{self.callback_host}:{self.callback_port}"
@@ -97,27 +80,31 @@ class Client(ABC):
             self.host,
             self.port,
             self.path,
-            username=self.username,
-            password=self.password,
-            tls=self.tls,
+            username=self.central.username,
+            password=self.central.password,
+            tls=self.central.tls,
         )
         # for all device related interaction
         self._proxy_executor = ThreadPoolExecutor(max_workers=1)
         self.proxy = ThreadPoolServerProxy(
             self.async_add_proxy_executor_job,
             self.api_url,
-            tls=self.tls,
-            verify_tls=self.verify_tls,
+            tls=self.central.tls,
+            verify_tls=self.central.verify_tls,
         )
         self.time_initialized = 0
-        self.json_rpc_session = JsonRpcAioHttpClient(client=self)
+        self.json_rpc_session = self.central.json_rpc_session
 
         self.central.clients[self.interface_id] = self
         if self.init_url not in self.central.clients_by_init_url:
             self.central.clients_by_init_url[self.init_url] = []
         self.central.clients_by_init_url[self.init_url].append(self)
 
-    # pylint: disable=no-member
+    @property
+    def version(self):
+        """Return the version of the backend."""
+        return self._version
+
     def _get_local_ip(self):
         """Get local_ip from socket."""
         try:
@@ -137,7 +124,7 @@ class Client(ABC):
         To receive events the proxy has to tell the CCU / Homegear
         where to send the events. For that we call the init-method.
         """
-        if not self.connect:
+        if not self.central.connect:
             _LOGGER.debug("proxy_init: Skipping init for %s", self.name)
             return PROXY_INIT_SKIPPED
         if self.central is None:
@@ -165,7 +152,7 @@ class Client(ABC):
         """
         if self.json_rpc_session.is_activated:
             await self.json_rpc_session.logout()
-        if not self.connect:
+        if not self.central.connect:
             _LOGGER.debug("proxy_de_init: Skipping de-init for %s", self.name)
             return PROXY_DE_INIT_SKIPPED
         if self.central is None:
@@ -427,11 +414,16 @@ class Client(ABC):
 class ClientCCU(Client):
     """Client implementation for CCU backend."""
 
+    @property
+    def model(self):
+        """Return the model of the backend."""
+        return "CCU"
+
     async def fetch_names(self):
         """
         Get all names via JSON-RPS and store in data.NAMES.
         """
-        if not self.username:
+        if not self.central.username:
             _LOGGER.warning(
                 "fetch_names_json: No username set. Not fetching names via JSON-RPC."
             )
@@ -496,7 +488,7 @@ class ClientCCU(Client):
 
     async def set_system_variable(self, name, value):
         """Set a system variable on CCU / Homegear."""
-        if self.username and self.password:
+        if self.central.username and self.central.password:
             _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
             if not await self.json_rpc_session.login_or_renew():
                 return
@@ -536,7 +528,7 @@ class ClientCCU(Client):
 
     async def delete_system_variable(self, name):
         """Delete a system variable from CCU / Homegear."""
-        if self.username and self.password:
+        if self.central.username and self.central.password:
             _LOGGER.debug(
                 "delete_system_variable: Getting System variable via JSON-RPC"
             )
@@ -562,7 +554,7 @@ class ClientCCU(Client):
     async def get_system_variable(self, name):
         """Get single system variable from CCU / Homegear."""
         var = None
-        if self.username and self.password:
+        if self.central.username and self.central.password:
             _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
             if not await self.json_rpc_session.login_or_renew():
                 return var
@@ -590,7 +582,7 @@ class ClientCCU(Client):
     async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
         variables = {}
-        if self.username and self.password:
+        if self.central.username and self.central.password:
             _LOGGER.debug(
                 "get_all_system_variables: Getting all System variables via JSON-RPC"
             )
@@ -625,6 +617,11 @@ class ClientCCU(Client):
 
 class ClientHomegear(Client):
     """Client implementation for Homegear backend."""
+
+    @property
+    def model(self):
+        """Return the model of the backend."""
+        return "Homegear"
 
     async def fetch_names(self):
         """
@@ -688,67 +685,50 @@ class ClientHomegear(Client):
         return None
 
 
-class ClientFactory:
+class ClientConfig:
     """Config for a Client."""
 
     def __init__(
         self,
         central,
         name=DEFAULT_NAME,
-        host=LOCALHOST,
         port=PORT_RFD,
         path=DEFAULT_PATH,
-        username=DEFAULT_USERNAME,
-        password=DEFAULT_PASSWORD,
-        tls=DEFAULT_TLS,
-        verify_tls=DEFAULT_VERIFY_TLS,
-        client_session=None,
-        connect=DEFAULT_CONNECT,
         callback_host=None,
         callback_port=None,
-        json_port=DEFAULT_JSON_PORT,
-        json_tls=DEFAULT_TLS,
     ):
         self.central = central
         self.name = name
-        self.host = host
         self.port: int = port
         self.path = path
-        self.username = username
-        self.password = password
-        self.tls = tls
-        self.verify_tls = verify_tls
-        self.client_session = client_session
-        self.connect = connect
         self.callback_host = callback_host
         self.callback_port = callback_port
-        self.json_port = json_port
-        self.json_tls = json_tls
+        self.version = None
 
     async def get_client(self) -> Client:
         """Identify the used client."""
 
         api_url = build_api_url(
-            host=self.host,
+            host=self.central.host,
             port=self.port,
             path=self.path,
-            username=self.username,
-            password=self.password,
-            tls=self.tls,
+            username=self.central.username,
+            password=self.central.password,
+            tls=self.central.tls,
         )
 
         proxy = ThreadPoolServerProxy(
             self.central.async_add_executor_job,
             api_url,
-            tls=self.tls,
-            verify_tls=self.verify_tls,
+            tls=self.central.tls,
+            verify_tls=self.central.verify_tls,
         )
         try:
-            version = await proxy.getVersion()
+            self.version = await proxy.getVersion()
         except ProxyException as err:
             raise ProxyException(
                 f"Failed to get backend version. Not creating client: {api_url}"
             ) from err
-        if "Homegear" in version or "pydevccu" in version:
+        if "Homegear" in self.version or "pydevccu" in self.version:
             return ClientHomegear(self)
         return ClientCCU(self)
