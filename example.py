@@ -5,9 +5,9 @@ import sys
 import time
 
 from hahomematic import config, const
-from hahomematic.client import ClientFactory
+from hahomematic.central_unit import CentralConfig
+from hahomematic.client import ClientConfig
 from hahomematic.devices.device_description import validate_device_description
-from hahomematic.central_unit import CentralUnit
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
@@ -35,10 +35,6 @@ class Example:
         elif src == const.HH_EVENT_DEVICES_CREATED:
             if len(self.central.hm_devices) > 1:
                 self.got_devices = True
-                # print("All devices:")
-                # print(central_1.hm_devices)
-                # for _, device in central_1.hm_devices.items():
-                #     print(device)
                 print("New devices:")
                 print(len(args[0]))
                 print("New entities:")
@@ -72,13 +68,16 @@ class Example:
         )
 
     async def example_run(self):
-        self.central = CentralUnit(
-            "ccu-dev",
-            "123",
-            asyncio.get_running_loop(),
+        self.central = CentralConfig(
+            name="ccu-dev",
+            entry_id="123",
+            loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
+            host=CCU_HOST,
+            username=CCU_USERNAME,
+            password=CCU_PASSWORD,
             enable_virtual_channels=True,
-        )
+        ).get_central()
 
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10
@@ -92,29 +91,20 @@ class Example:
         self.central.callback_impulse_event = self.impulsecallback
 
         # Create clients
-        client1 = await ClientFactory(
+        client1 = await ClientConfig(
             central=self.central,
             name="hmip",
-            host=CCU_HOST,
             port=2010,
-            username=CCU_USERNAME,
-            password=CCU_PASSWORD,
         ).get_client()
-        client2 = await ClientFactory(
+        client2 = await ClientConfig(
             central=self.central,
             name="rf",
-            host=CCU_HOST,
             port=2001,
-            username=CCU_USERNAME,
-            password=CCU_PASSWORD,
         ).get_client()
-        client3 = await ClientFactory(
+        client3 = await ClientConfig(
             central=self.central,
             name="groups",
-            host=CCU_HOST,
             port=9292,
-            username=CCU_USERNAME,
-            password=CCU_PASSWORD,
             path="/groups",
         ).get_client()
 

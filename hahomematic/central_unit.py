@@ -19,17 +19,27 @@ from hahomematic.const import (
     DATA_NO_LOAD,
     DATA_NO_SAVE,
     DATA_SAVE_SUCCESS,
+    DEFAULT_CONNECT,
     DEFAULT_ENCODING,
+    DEFAULT_JSON_PORT,
+    DEFAULT_NAME,
+    DEFAULT_PASSWORD,
+    DEFAULT_TLS,
+    DEFAULT_USERNAME,
+    DEFAULT_VERIFY_TLS,
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
     HM_VIRTUAL_REMOTE_HM,
     HM_VIRTUAL_REMOTE_HMIP,
+    LOCALHOST,
     PRIMARY_PORTS,
 )
 from hahomematic.data import INSTANCES
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
+from hahomematic.hub import HmHub
+from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.proxy import NoConnection
 import hahomematic.xml_rpc_server as xml_rpc
 
@@ -39,23 +49,29 @@ _LOGGER = logging.getLogger(__name__)
 class CentralUnit:
     """Central unit that collects everything required to handle communication from/to CCU/Homegear."""
 
-    def __init__(
-        self,
-        instance_name,
-        entry_id,
-        loop,
-        xml_rpc_server: xml_rpc.XMLRPCServer,
-        enable_virtual_channels=False,
-    ):
+    def __init__(self, central_config):
         _LOGGER.debug("CentralUnit.__init__")
+        self.central_config: CentralConfig = central_config
 
-        self.instance_name = instance_name
-        self.entry_id = entry_id
+        self.instance_name = self.central_config.name
+        self.entry_id = self.central_config.entry_id
         self._available = True
-        self._xml_rpc_server = xml_rpc_server
+        self._loop = self.central_config.loop
+        self._xml_rpc_server = self.central_config.xml_rpc_server
         self._xml_rpc_server.register_central(self)
-        self._loop = loop
-        self.enable_virtual_channels = enable_virtual_channels
+        self.enable_virtual_channels = self.central_config.enable_virtual_channels
+        self.host = self.central_config.host
+        self.json_port = self.central_config.json_port
+        self.connect = self.central_config.connect
+        self.password = self.central_config.password
+        if self.password is None:
+            self.username = None
+        else:
+            self.username = self.central_config.username
+        self.tls = self.central_config.json_tls
+        self.verify_tls = self.central_config.verify_tls
+        self.client_session = self.central_config.client_session
+
         # Caches for CCU data
         # {interface_id, {address, paramsets}}
         self.paramsets_cache = {}
@@ -91,9 +107,30 @@ class CentralUnit:
         # Signature: f(interface_id, address, value_key, value)
         self.callback_impulse_event = None
 
-        INSTANCES[instance_name] = self
+        self.json_rpc_session = JsonRpcAioHttpClient(central_config=self.central_config)
+
+        INSTANCES[self.instance_name] = self
         self._load_caches()
         self._connection_checker = ConnectionChecker(self)
+        self.hub = None
+
+    async def init_hub(self):
+        """Init the hub."""
+        self.hub = HmHub(
+            self,
+            use_entities=self.central_config.enable_sensors_for_own_system_variables,
+        )
+        await self.hub.fetch_data()
+
+    @property
+    def version(self):
+        """Return the version of the backend."""
+        return self._get_client().version
+
+    @property
+    def model(self):
+        """Return the model of the backend."""
+        return self._get_client().model
 
     @property
     def local_ip(self):
@@ -226,7 +263,7 @@ class CentralUnit:
         return await self._get_client().get_all_system_variables()
 
     async def get_system_variable(self, name):
-        """Get single system variable from CCU / Homegear."""
+        """Get system variable from CCU / Homegear."""
         return await self._get_client().get_system_variable(name)
 
     async def set_system_variable(self, name, value):
@@ -622,3 +659,51 @@ def handle_device_descriptions(central: CentralUnit, interface_id, dev_descripti
             if main not in central.devices[interface_id]:
                 central.devices[interface_id][main] = {}
             central.devices[interface_id][main][address] = {}
+
+
+class CentralConfig:
+    """Config for a Client."""
+
+    def __init__(
+        self,
+        entry_id,
+        loop,
+        xml_rpc_server: xml_rpc.XMLRPCServer,
+        name=DEFAULT_NAME,
+        host=LOCALHOST,
+        username=DEFAULT_USERNAME,
+        password=DEFAULT_PASSWORD,
+        tls=DEFAULT_TLS,
+        verify_tls=DEFAULT_VERIFY_TLS,
+        client_session=None,
+        connect=DEFAULT_CONNECT,
+        callback_host=None,
+        callback_port=None,
+        json_port=DEFAULT_JSON_PORT,
+        json_tls=DEFAULT_TLS,
+        enable_virtual_channels=False,
+        enable_sensors_for_own_system_variables=False,
+    ):
+        self.entry_id = entry_id
+        self.loop = loop
+        self.xml_rpc_server = xml_rpc_server
+        self.name = name
+        self.host = host
+        self.username = username
+        self.password = password
+        self.tls = tls
+        self.verify_tls = verify_tls
+        self.client_session = client_session
+        self.connect = connect
+        self.callback_host = callback_host
+        self.callback_port = callback_port
+        self.json_port = json_port
+        self.json_tls = json_tls
+        self.enable_virtual_channels = enable_virtual_channels
+        self.enable_sensors_for_own_system_variables = (
+            enable_sensors_for_own_system_variables
+        )
+
+    def get_central(self) -> CentralUnit:
+        """Identify the used client."""
+        return CentralUnit(self)

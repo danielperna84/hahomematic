@@ -190,7 +190,9 @@ class GenericEntity(BaseEntity):
             self.address,
             self.parameter,
         ) not in self._central.entity_event_subscriptions:
-            self._central.entity_event_subscriptions[(self.address, self.parameter)] = []
+            self._central.entity_event_subscriptions[
+                (self.address, self.parameter)
+            ] = []
         self._central.entity_event_subscriptions[(self.address, self.parameter)].append(
             self.event
         )
