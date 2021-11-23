@@ -419,7 +419,6 @@ class IPThermostat(CustomEntity):
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_AUTO)
         elif hvac_mode == HVAC_MODE_HEAT:
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
-            await self.set_temperature(temperature=self.max_temp)
         elif hvac_mode == HVAC_MODE_OFF:
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
             await self.set_temperature(temperature=self.min_temp)

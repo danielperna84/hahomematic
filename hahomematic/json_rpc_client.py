@@ -36,7 +36,7 @@ class JsonRpcAioHttpClient:
         if self._central_config.client_session:
             self._client_session = self._central_config.client_session
         else:
-            conn = TCPConnector(limit=5)
+            conn = TCPConnector(limit=3)
             self._client_session = ClientSession(
                 connector=conn, loop=self._central_config.loop
             )
@@ -56,52 +56,97 @@ class JsonRpcAioHttpClient:
     async def login_or_renew(self):
         """Renew JSON-RPC session or perform login."""
         if not self.is_activated:
-            return await self._login()
+            self._session_id = await self._login()
+            return self._session_id is not None
 
+        self._session_id = await self._renew_login(self._session_id)
+        return self._session_id is not None
+
+    async def _renew_login(self, session_id) -> str:
+        """Renew JSON-RPC session or perform login."""
         try:
-            response = await self.post(
-                "Session.renew",
-                {ATTR_SESSION_ID: self._session_id},
+            response = await self._post(
+                session_id=session_id,
+                method="Session.renew",
+                extra_params={ATTR_SESSION_ID: session_id},
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                self._session_id = response[ATTR_RESULT]
-                return True
+                return response[ATTR_RESULT]
             return await self._login()
         except ClientError:
             _LOGGER.exception(
                 "json_rpc.renew: Exception while renewing JSON-RPC session."
             )
-            return False
+            return None
 
-    async def _login(self):
+    async def _login(self) -> str:
         """Login to CCU and return session."""
-        self._session_id = False
+        session_id = False
         try:
             params = {
                 ATTR_USERNAME: self._username,
                 ATTR_PASSWORD: self._password,
             }
-            response = await self.post(
-                method="Session.login", extra_params=params, use_default_params=False
+            response = await self._post(
+                session_id=False,
+                method="Session.login",
+                extra_params=params,
+                use_default_params=False,
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                self._session_id = response[ATTR_RESULT]
+                session_id = response[ATTR_RESULT]
 
-            if not self._session_id:
+            if not session_id:
                 _LOGGER.warning(
                     "json_rpc.login: Unable to open session: %s", response[ATTR_ERROR]
                 )
-                return False
-            return True
-        except ClientError:
+                return None
+            return session_id
+        except Exception as ex:
             _LOGGER.exception("json_rpc.login: Exception while logging in via JSON-RPC")
-            return False
+            return None
 
-    async def post(self, method, extra_params=None, use_default_params=True):
+    async def post(
+        self, method, extra_params=None, use_default_params=True, keep_session=False
+    ):
         """Reusable JSON-RPC POST function."""
-        params = self._get_params(extra_params, use_default_params)
+        if keep_session:
+            await self.login_or_renew()
+            session_id = self._session_id
+        else:
+            session_id = await self._login()
 
-        _LOGGER.debug("helpers.json_rpc.post: Method: %s", method)
+        if not session_id:
+            _LOGGER.exception("json_rpc.post: Exception while logging in via JSON-RPC.")
+            return {"error": "Unable to open session.", "result": {}}
+
+        result = await self._post(
+            session_id=session_id,
+            method=method,
+            extra_params=extra_params,
+            use_default_params=use_default_params,
+        )
+
+        if not keep_session:
+            await self._logout(session_id=session_id)
+        return result
+
+    async def _post(
+        self, session_id, method, extra_params=None, use_default_params=True
+    ):
+        """Reusable JSON-RPC POST function."""
+        if not self._username:
+            no_username = "json_rpc_client._post: No username set."
+            _LOGGER.warning(no_username)
+            return {"error": str(no_username), "result": {}}
+        if not self._password:
+            no_password = "json_rpc_client._post: No password set."
+            _LOGGER.warning(no_password)
+            return {"error": str(no_password), "result": {}}
+
+        params = _get_params(session_id, extra_params, use_default_params)
+
+        _LOGGER.debug("json_rpc_client._post: Method: %s", method)
         try:
             payload = json.dumps(
                 {"method": method, "params": params, "jsonrpc": "1.1", "id": 0}
@@ -112,7 +157,7 @@ class JsonRpcAioHttpClient:
                 "Content-Length": str(len(payload)),
             }
 
-            _LOGGER.debug("helpers.json_rpc.post: API-Endpoint: %s", self._url)
+            _LOGGER.debug("json_rpc_client._post: API-Endpoint: %s", self._url)
             if self._tls:
                 ssl_context = UNVERIFIED_CTX
                 if self._verify_tls:
@@ -134,32 +179,37 @@ class JsonRpcAioHttpClient:
                     return await resp.json(encoding="utf-8")
                 except ValueError:
                     _LOGGER.exception(
-                        "helpers.json_rpc.post: Failed to parse JSON. Trying workaround."
+                        "json_rpc_client._post: Failed to parse JSON. Trying workaround."
                     )
                     # Workaround for bug in CCU
                     return json.loads(
                         await resp.json(encoding="utf-8").replace("\\", "")
                     )
             else:
-                _LOGGER.error("helpers.json_rpc.post: Status: %i", resp.status)
+                _LOGGER.error("json_rpc_client._post: Status: %i", resp.status)
                 return {"error": resp.status, "result": {}}
         except ClientConnectorError as err:
-            _LOGGER.exception("helpers.json_rpc.post: ClientConnectorError")
+            _LOGGER.exception("json_rpc_client._post: ClientConnectorError")
             return {"error": str(err), "result": {}}
         except ClientError as cce:
-            _LOGGER.exception("helpers.json_rpc.post: ClientError")
+            _LOGGER.exception("json_rpc_client._post: ClientError")
             return {"error": str(cce), "result": {}}
 
     async def logout(self):
         """Logout of CCU."""
-        if not self._session_id:
+        await self._logout(self._session_id)
+
+    async def _logout(self, session_id):
+        """Logout of CCU."""
+        if not session_id:
             _LOGGER.warning("json_rpc.logout: Not logged in. Not logging out.")
             return
         try:
-            params = {"_session_id_": self._session_id}
-            response = await self.post(
-                "Session.logout",
-                params,
+            params = {"_session_id_": session_id}
+            response = await self._post(
+                session_id=session_id,
+                method="Session.logout",
+                extra_params=params,
             )
             if response[ATTR_ERROR]:
                 _LOGGER.warning(
@@ -171,16 +221,17 @@ class JsonRpcAioHttpClient:
             )
         return
 
-    def _get_params(self, extra_params, use_default_params) -> dict[str, str]:
-        """Add additional params to default prams."""
-        params = {"_session_id_": self._session_id} if use_default_params else {}
-        if extra_params:
-            params.update(extra_params)
-        return params
-
     @property
     def _url(self):
         """Return the required url."""
         if self._tls:
             return f"https://{self._host}:{self._port}{PATH_JSON_RPC}"
         return f"http://{self._host}:{self._port}{PATH_JSON_RPC}"
+
+
+def _get_params(session_id, extra_params, use_default_params) -> dict[str, str]:
+    """Add additional params to default prams."""
+    params = {"_session_id_": session_id} if use_default_params else {}
+    if extra_params:
+        params.update(extra_params)
+    return params

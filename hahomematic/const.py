@@ -117,8 +117,6 @@ PARAM_CONFIG_PENDING = "CONFIG_PENDING"
 # Parameters within the paramsets for which we create entities.
 WHITELIST_PARAMETERS = ["SMOKE_DETECTOR_ALARM_STATUS"]
 
-WRITE_ACTIONS = ["STOP", "RAMP_STOP", "RESET_MOTION", "LOCK_TARGET_LEVEL"]
-
 # Parameters within the paramsets for which we don't create entities.
 IGNORED_PARAMETERS = [
     "ACTIVITY_STATE",
@@ -229,6 +227,7 @@ ATTR_VALUE = "value"
 ATTR_VALUE_TYPE = "value_type"
 ATTR_VERIFY_TLS = "verify_tls"
 
+ATTR_HM_ALARM = "ALARM"
 ATTR_HM_ADDRESS = "ADDRESS"
 ATTR_HM_CONTROL = "CONTROL"
 ATTR_HM_DEFAULT = "DEFAULT"
