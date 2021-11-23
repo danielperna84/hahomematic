@@ -51,10 +51,12 @@ class BaseHubEntity(ABC):
         """Return the state of the entity."""
         return self._state
 
+    # pylint: disable=no-self-use
     async def load_data(self):
         """Do not load data for the hub here."""
         return
 
+    # pylint: disable=no-self-use
     async def fetch_data(self):
         """fetch data for the hub."""
         return
