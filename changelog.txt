@@ -1,3 +1,9 @@
+Version 0.0.7 (2021-11-23)
+- Switch to a non-permanent session for jsonrpc calls
+  The json capabilities of a ccu are limited (3 parallel session!?!).
+  So we no longer us a persisted session. (like pyhomematic)
+- enable write-only params as HMAction(solves a problem with climate writing CONTROL_MODE)
+
 Version 0.0.6 (2021-11-22)
 - rename server to central_unit (after the extraction of the XMLRPC-Server server has not been a server anymore).
 - rename json_rpc to json_rpc_client
