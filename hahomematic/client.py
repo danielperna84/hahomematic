@@ -423,19 +423,13 @@ class ClientCCU(Client):
         """
         Get all names via JSON-RPS and store in data.NAMES.
         """
-        if not self.central.username:
+        if not self.central.username and self.central.password:
             _LOGGER.warning(
                 "fetch_names_json: No username set. Not fetching names via JSON-RPC."
             )
             return
         _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
-            if not await self.json_rpc_session.login_or_renew():
-                _LOGGER.warning(
-                    "fetch_names_json: Login failed. Not fetching names via JSON-RPC."
-                )
-                return
-
             response = await self.json_rpc_session.post(
                 "Interface.listInterfaces",
             )
@@ -490,8 +484,6 @@ class ClientCCU(Client):
         """Set a system variable on CCU / Homegear."""
         if self.central.username and self.central.password:
             _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
-            if not await self.json_rpc_session.login_or_renew():
-                return
             try:
                 params = {
                     ATTR_NAME: name,
@@ -532,8 +524,6 @@ class ClientCCU(Client):
             _LOGGER.debug(
                 "delete_system_variable: Getting System variable via JSON-RPC"
             )
-            if not await self.json_rpc_session.login_or_renew():
-                return
             try:
                 params = {ATTR_NAME: name}
                 response = await self.json_rpc_session.post(
@@ -556,8 +546,6 @@ class ClientCCU(Client):
         var = None
         if self.central.username and self.central.password:
             _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
-            if not await self.json_rpc_session.login_or_renew():
-                return var
             try:
                 params = {ATTR_NAME: name}
                 response = await self.json_rpc_session.post(
@@ -586,8 +574,6 @@ class ClientCCU(Client):
             _LOGGER.debug(
                 "get_all_system_variables: Getting all System variables via JSON-RPC"
             )
-            if not await self.json_rpc_session.login_or_renew():
-                return variables
             try:
                 response = await self.json_rpc_session.post(
                     "SysVar.getAll",

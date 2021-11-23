@@ -4,6 +4,7 @@ Helper functions used within hahomematic
 import logging
 
 from hahomematic.const import (
+    ATTR_HM_ALARM,
     ATTR_HM_LIST,
     ATTR_HM_LOGIC,
     ATTR_HM_NUMBER,
@@ -61,6 +62,8 @@ def parse_ccu_sys_var(data):
     """Helper to parse type of system variables of CCU."""
     # pylint: disable=no-else-return
     if data[ATTR_TYPE] == ATTR_HM_LOGIC:
+        return data[ATTR_NAME], data[ATTR_VALUE] == "true"
+    if data[ATTR_TYPE] == ATTR_HM_ALARM:
         return data[ATTR_NAME], data[ATTR_VALUE] == "true"
     elif data[ATTR_TYPE] == ATTR_HM_NUMBER:
         return data[ATTR_NAME], float(data[ATTR_VALUE])
