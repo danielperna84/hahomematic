@@ -165,7 +165,6 @@ class HmLight(BaseHmLight):
         await self._send_value(FIELD_STATE, True)
 
     async def turn_off(self) -> None:
-
         """Turn the light off."""
         await self._send_value(FIELD_STATE, False)
 
