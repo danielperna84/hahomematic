@@ -20,6 +20,9 @@ from hahomematic.const import (
     ATTR_PORT,
     ATTR_RESULT,
     ATTR_VALUE,
+    BACKEND_CCU,
+    BACKEND_HOMEGEAR,
+    BACKEND_PYDEVCCU,
     DEFAULT_NAME,
     DEFAULT_PATH,
     HM_VIRTUAL_REMOTES,
@@ -105,6 +108,7 @@ class Client(ABC):
         """Return the version of the backend."""
         return self._version
 
+    # pylint: disable=no-member
     def _get_local_ip(self):
         """Get local_ip from socket."""
         try:
@@ -417,7 +421,7 @@ class ClientCCU(Client):
     @property
     def model(self):
         """Return the model of the backend."""
-        return "CCU"
+        return BACKEND_CCU
 
     async def fetch_names(self):
         """
@@ -607,7 +611,11 @@ class ClientHomegear(Client):
     @property
     def model(self):
         """Return the model of the backend."""
-        return "Homegear"
+        return (
+            BACKEND_PYDEVCCU
+            if BACKEND_PYDEVCCU.lower() in self.version
+            else BACKEND_HOMEGEAR
+        )
 
     async def fetch_names(self):
         """

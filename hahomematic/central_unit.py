@@ -15,6 +15,7 @@ from hahomematic import config
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
+    BACKEND_PYDEVCCU,
     DATA_LOAD_SUCCESS,
     DATA_NO_LOAD,
     DATA_NO_SAVE,
@@ -38,7 +39,7 @@ from hahomematic.const import (
 from hahomematic.data import INSTANCES
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
-from hahomematic.hub import HmHub
+from hahomematic.hub import HmDummyHub, HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.proxy import NoConnection
 import hahomematic.xml_rpc_server as xml_rpc
@@ -116,11 +117,14 @@ class CentralUnit:
 
     async def init_hub(self):
         """Init the hub."""
-        self.hub = HmHub(
-            self,
-            use_entities=self.central_config.enable_sensors_for_own_system_variables,
-        )
-        await self.hub.fetch_data()
+        if self.model is not BACKEND_PYDEVCCU:
+            self.hub = HmHub(
+                self,
+                use_entities=self.central_config.enable_sensors_for_own_system_variables,
+            )
+            await self.hub.fetch_data()
+        else:
+            self.hub = HmDummyHub(self)
 
     @property
     def version(self):
