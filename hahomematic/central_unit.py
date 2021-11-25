@@ -220,7 +220,8 @@ class CentralUnit:
 
     def start_connection_checker(self):
         """Start the connection checker."""
-        self._connection_checker.start()
+        if self.model is not BACKEND_PYDEVCCU:
+            self._connection_checker.start()
 
     async def stop_connection_checker(self):
         """Start the connection checker."""
