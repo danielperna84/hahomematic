@@ -1,22 +1,26 @@
+Version 0.0.8 (2021-11-25)
+- Add button platform. This allows to use the virtual remotes of a ccu in automations.
+- Cleanup entity inheritance.
+
 Version 0.0.7 (2021-11-23)
 - Switch to a non-permanent session for jsonrpc calls
   The json capabilities of a ccu are limited (3 parallel session!?!).
   So we no longer us a persisted session. (like pyhomematic)
-- enable write-only params as HMAction(solves a problem with climate writing CONTROL_MODE)
+- Enable write-only params as HMAction(solves a problem with climate writing CONTROL_MODE)
 
 Version 0.0.6 (2021-11-22)
-- rename server to central_unit (after the extraction of the XMLRPC-Server server has not been a server anymore).
-- rename json_rpc to json_rpc_client
-- move json_rpc from client to central_unit to remove number of active sessions
-- add hub with option to enable own system variables as sensors
+- Rename server to central_unit (after the extraction of the XMLRPC-Server server has not been a server anymore).
+- Rename json_rpc to json_rpc_client
+- Move json_rpc from client to central_unit to remove number of active sessions
+- Add hub with option to enable own system variables as sensors
 
 Version 0.0.5 (2021-11-20)
-- add method for virtual remote
-- update entity availability based on connection status
-- fix action_event for ha device trigger
+- Add method for virtual remote
+- Update entity availability based on connection status
+- Fix action_event for ha device trigger
 
 Version 0.0.4 (2021-11-18)
-- use one XMLRPC-Server for all backends
+- Use one XMLRPC-Server for all backends
 
 Version 0.0.3 (2021-11-16)
 - Reduce back to parameters with events
@@ -27,10 +31,10 @@ Version 0.0.3 (2021-11-16)
 - Use One Server per backend (CCU/Homegear) with multiple clients/interfaces
 - Define device_description for custom_entities
 - Create custom_entities for climate, cover, light, lock and switch
-- maintain ignored parameters
-- add collection with wildcard parameters to ignore
-- enable click, impulse and alarm events
-- add connection checker
+- Maintain ignored parameters
+- Add collection with wildcard parameters to ignore
+- Enable click, impulse and alarm events
+- Add connection checker
 
 Version 0.0.2 (2021-04-20)
 - Use input_select for ENUM actors (Issue #8)
