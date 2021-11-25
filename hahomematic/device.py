@@ -6,7 +6,6 @@ from __future__ import annotations
 import datetime
 import logging
 
-from hahomematic.action_event import AlarmEvent, BaseEvent, ClickEvent, ImpulseEvent
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ALARM_EVENTS,
@@ -16,6 +15,7 @@ from hahomematic.const import (
     CLICK_EVENTS,
     HA_DOMAIN,
     HH_EVENT_DEVICES_CREATED,
+    HM_VIRTUAL_REMOTES,
     IGNORED_PARAMETERS,
     IGNORED_PARAMETERS_WILDCARDS,
     IMPULSE_EVENTS,
@@ -33,11 +33,21 @@ from hahomematic.const import (
     WHITELIST_PARAMETERS,
 )
 from hahomematic.devices import device_desc_exists, get_device_funcs
-from hahomematic.entity import BaseEntity, CustomEntity, GenericEntity
+from hahomematic.entity import (
+    AlarmEvent,
+    BaseEntity,
+    BaseEvent,
+    CallbackEntity,
+    ClickEvent,
+    CustomEntity,
+    GenericEntity,
+    ImpulseEvent,
+)
 from hahomematic.helpers import generate_unique_id
 from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
 from hahomematic.platforms.binary_sensor import HmBinarySensor
+from hahomematic.platforms.button import HmButton
 from hahomematic.platforms.number import HmNumber
 from hahomematic.platforms.select import HmSelect
 from hahomematic.platforms.sensor import HmSensor
@@ -108,9 +118,9 @@ class HmDevice:
         elif isinstance(hm_entity, CustomEntity):
             self.custom_entities[hm_entity.unique_id] = hm_entity
 
-    def remove_hm_entity(self, hm_entity: BaseEntity):
+    def remove_hm_entity(self, hm_entity: GenericEntity):
         """Add an hm entity to a device."""
-        if isinstance(hm_entity, GenericEntity):
+        if isinstance(hm_entity, CallbackEntity):
             hm_entity.unregister_update_callback(self.update_device)
             hm_entity.unregister_remove_callback(self.remove_device)
             del self.entities[(hm_entity.address, hm_entity.parameter)]
@@ -180,9 +190,13 @@ class HmDevice:
     @property
     def device_info(self):
         """Return device specific attributes."""
+        address = self.address
+        if self.address in HM_VIRTUAL_REMOTES:
+            address = f"{self.central.instance_name}_{self.address}"
+
         return {
             "config_entry_id": self.central.entry_id,
-            "identifiers": {(HA_DOMAIN, self.address)},
+            "identifiers": {(HA_DOMAIN, address)},
             "name": self.name,
             "manufacturer": "eQ-3",
             "model": self.device_type,
@@ -252,6 +266,14 @@ class HmDevice:
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
+                        if self.address.startswith(tuple(HM_VIRTUAL_REMOTES)):
+                            entity = self.create_buttons(
+                                address=channel,
+                                parameter=parameter,
+                                parameter_data=parameter_data,
+                            )
+                            if entity is not None:
+                                new_entities.add(entity)
                     if not (parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS):
                         entity = self.create_entity(
                             address=channel,
@@ -277,12 +299,37 @@ class HmDevice:
                 new_entities.update(custom_entities)
         return new_entities
 
+    def create_buttons(self, address, parameter, parameter_data) -> HmButton | None:
+        """Create the buttons associated to this device"""
+        unique_id = generate_unique_id(
+            address, parameter, f"button_{self.central.instance_name}"
+        )
+        _LOGGER.debug(
+            "create_event: Creating button for %s, %s, %s",
+            address,
+            parameter,
+            self.interface_id,
+        )
+
+        button = HmButton(
+            device=self,
+            unique_id=unique_id,
+            address=address,
+            parameter=parameter,
+            parameter_data=parameter_data,
+        )
+        if button:
+            button.add_to_collections()
+        return button
+
     def create_event(self, address, parameter, parameter_data) -> BaseEvent | None:
         """Create action event entity."""
         if (address, parameter) not in self.central.entity_event_subscriptions:
             self.central.entity_event_subscriptions[(address, parameter)] = []
 
-        unique_id = generate_unique_id(address, parameter, "event")
+        unique_id = generate_unique_id(
+            address, parameter, f"event_{self.central.instance_name}"
+        )
 
         _LOGGER.debug(
             "create_event: Creating action_event for %s, %s, %s",
@@ -298,6 +345,7 @@ class HmDevice:
                     unique_id=unique_id,
                     address=address,
                     parameter=parameter,
+                    parameter_data=parameter_data,
                 )
             elif parameter in IMPULSE_EVENTS:
                 action_event = ImpulseEvent(
@@ -305,6 +353,7 @@ class HmDevice:
                     unique_id=unique_id,
                     address=address,
                     parameter=parameter,
+                    parameter_data=parameter_data,
                 )
             elif parameter in ALARM_EVENTS:
                 action_event = AlarmEvent(
@@ -312,6 +361,7 @@ class HmDevice:
                     unique_id=unique_id,
                     address=address,
                     parameter=parameter,
+                    parameter_data=parameter_data,
                 )
         if action_event:
             action_event.add_to_collections()

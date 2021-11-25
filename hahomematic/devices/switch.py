@@ -58,11 +58,11 @@ class HmSwitch(CustomEntity):
         """Set the state of the switch."""
         await self._send_value(FIELD_STATE, value)
 
-    async def async_turn_on(self) -> None:
+    async def turn_on(self) -> None:
         """Turn the switch on."""
         await self._send_value(FIELD_STATE, True)
 
-    async def async_turn_off(self) -> None:
+    async def turn_off(self) -> None:
         """Turn the switch off."""
         await self._send_value(FIELD_STATE, False)
 

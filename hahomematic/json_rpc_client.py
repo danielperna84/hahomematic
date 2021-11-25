@@ -102,7 +102,7 @@ class JsonRpcAioHttpClient:
                 )
                 return None
             return session_id
-        except Exception as ex:
+        except Exception:
             _LOGGER.exception("json_rpc.login: Exception while logging in via JSON-RPC")
             return None
 

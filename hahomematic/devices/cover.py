@@ -67,7 +67,7 @@ class HmCover(CustomEntity):
             return int(self._channel_level * 100)
         return None
 
-    async def async_set_cover_position(self, position) -> None:
+    async def set_cover_position(self, position) -> None:
         """Move the cover to a specific position."""
         # Hm cover is closed:1 -> open:0
         position = min(100, max(0, position))
@@ -81,15 +81,15 @@ class HmCover(CustomEntity):
             return self._channel_level == HM_OPEN
         return None
 
-    async def async_open_cover(self) -> None:
+    async def open_cover(self) -> None:
         """Open the cover."""
         await self._send_value(FIELD_LEVEL, HM_OPEN)
 
-    async def async_close_cover(self) -> None:
+    async def close_cover(self) -> None:
         """Close the cover."""
         await self._send_value(FIELD_LEVEL, HM_CLOSED)
 
-    async def async_stop_cover(self) -> None:
+    async def stop_cover(self) -> None:
         """Stop the device if in motion."""
         await self._send_value(FIELD_STOP, True)
 
@@ -125,23 +125,23 @@ class HmBlind(HmCover):
             return int(self._channel_level_2 * 100)
         return None
 
-    async def async_set_cover_tilt_position(self, position) -> None:
+    async def set_cover_tilt_position(self, position) -> None:
         """Move the cover to a specific tilt position."""
         position = min(100, max(0, position))
         level = position / 100.0
         await self._send_value(FIELD_LEVEL_2, level)
 
-    async def async_open_cover_tilt(
+    async def open_cover_tilt(
         self,
     ) -> None:
         """Open the tilt."""
         await self._send_value(FIELD_LEVEL_2, HM_OPEN)
 
-    async def async_close_cover_tilt(self) -> None:
+    async def close_cover_tilt(self) -> None:
         """Close the tilt."""
         await self._send_value(FIELD_LEVEL_2, HM_CLOSED)
 
-    async def async_stop_cover_tilt(self) -> None:
+    async def stop_cover_tilt(self) -> None:
         """Stop the device if in motion."""
         await self._send_value(FIELD_STOP, True)
 

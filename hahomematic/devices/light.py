@@ -71,12 +71,12 @@ class BaseHmLight(CustomEntity):
         ...
 
     @abstractmethod
-    async def async_turn_on(self, hs_color, brightness) -> None:
+    async def turn_on(self, hs_color, brightness) -> None:
         """Turn the light on."""
         ...
 
     @abstractmethod
-    async def async_turn_off(self) -> None:
+    async def turn_off(self) -> None:
         """Turn the light off."""
         ...
 
@@ -113,14 +113,14 @@ class HmDimmer(BaseHmLight):
     def supported_color_modes(self) -> set[str]:
         return {COLOR_MODE_BRIGHTNESS}
 
-    async def async_turn_on(self, hs_color, brightness) -> None:
+    async def turn_on(self, hs_color, brightness) -> None:
         """Turn the light on."""
         # Minimum brightness is 10, otherwise the led is disabled
         brightness = max(10, brightness)
         dim_level = brightness / 255.0
         await self._send_value(FIELD_LEVEL, dim_level)
 
-    async def async_turn_off(self) -> None:
+    async def turn_off(self) -> None:
         """Turn the light off."""
         await self._send_value(FIELD_LEVEL, 0)
 
@@ -160,12 +160,11 @@ class HmLight(BaseHmLight):
     def supported_color_modes(self) -> set[str]:
         return {COLOR_MODE_ONOFF}
 
-    async def async_turn_on(self, hs_color, brightness) -> None:
+    async def turn_on(self, hs_color, brightness) -> None:
         """Turn the light on."""
         await self._send_value(FIELD_STATE, True)
 
-    async def async_turn_off(self) -> None:
-
+    async def turn_off(self) -> None:
         """Turn the light off."""
         await self._send_value(FIELD_STATE, False)
 
@@ -235,7 +234,7 @@ class IPLightBSL(BaseHmLight):
     def supported_color_modes(self) -> set[str]:
         return {COLOR_MODE_HS}
 
-    async def async_turn_on(self, hs_color, brightness) -> None:
+    async def turn_on(self, hs_color, brightness) -> None:
         """Turn the light on."""
         simple_rgb_color = _convert_color(hs_color)
         # Minimum brightness is 10, otherwise the led is disabled
@@ -244,7 +243,7 @@ class IPLightBSL(BaseHmLight):
         await self._send_value(FIELD_COLOR, simple_rgb_color)
         await self._send_value(FIELD_LEVEL, dim_level)
 
-    async def async_turn_off(self) -> None:
+    async def turn_off(self) -> None:
         """Turn the light off."""
         await self._send_value(FIELD_LEVEL, 0)
 
