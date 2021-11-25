@@ -203,14 +203,19 @@ class BaseParameterEntity(BaseEntity):
         return state_attr
 
     @property
+    def default(self):
+        """Return default value."""
+        return self._convert_value(self._default)
+
+    @property
     def min(self):
         """Return min value."""
-        return self._min
+        return self._convert_value(self._min)
 
     @property
     def max(self):
         """Return max value."""
-        return self._max
+        return self._convert_value(self._max)
 
     @property
     def unit(self):
@@ -221,6 +226,19 @@ class BaseParameterEntity(BaseEntity):
     def value_list(self):
         """Return the value_list."""
         return self._value_list
+
+    @property
+    def hmtype(self):
+        """Return the homematic type."""
+        return self._type
+
+    def _convert_value(self, value):
+        """Convert value to a given hm_type."""
+        if self._type == "FLOAT":
+            return float(value)
+        if self._type == "INTEGER":
+            return int(value)
+        return value
 
     async def send_value(self, value) -> None:
         """send value to ccu."""

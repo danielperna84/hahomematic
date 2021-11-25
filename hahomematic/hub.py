@@ -130,7 +130,6 @@ class HmSystemVariable(BaseHubEntity):
             value = float(value)
 
         self._state = value
-        # await self._hub.set_system_variable(self.name, self._state)
         self.update_entity()
 
 
@@ -224,3 +223,47 @@ class HmHub(BaseHubEntity):
             return
 
         await self._central.set_system_variable(name, value)
+
+
+class HmDummyHub(BaseHubEntity):
+    """The HomeMatic hub. (CCU/HomeGear)."""
+
+    def __init__(self, central, use_entities=False):
+        """Initialize HomeMatic hub."""
+        unique_id = generate_unique_id(central.instance_name, prefix="hub")
+        name = central.instance_name
+        super().__init__(central, unique_id, name)
+        self.hub_entities: dict[str, BaseHubEntity] = {}
+        self._use_entities = use_entities
+
+    @property
+    def device_info(self) -> dict[str, str]:
+        """Return device specific attributes."""
+        return {
+            "config_entry_id": self._central.entry_id,
+            "identifiers": {(HA_DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "eQ-3",
+            "model": self._central.model,
+            "sw_version": self._central.version,
+            "via_device": (HA_DOMAIN, self._central.instance_name),
+        }
+
+    @property
+    def should_poll(self) -> bool:
+        """polling needed."""
+        return False
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {}
+
+    async def fetch_data(self):
+        """do not fetch data for the hub."""
+        return
+
+    # pylint: disable=no-self-use
+    async def set_system_variable(self, name, value):
+        """Do not set variable value on CCU/Homegear."""
+        return

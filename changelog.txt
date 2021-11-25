@@ -1,3 +1,8 @@
+Version 0.0.9 (2021-11-25)
+- Don't start connection checker for pydevccu
+- Use a dummy hub for pydevccu
+- Convert min, max, default values (fix for cover)
+
 Version 0.0.8 (2021-11-25)
 - Add button platform. This allows to use the virtual remotes of a ccu in automations.
 - Cleanup entity inheritance.

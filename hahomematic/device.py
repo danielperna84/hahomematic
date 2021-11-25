@@ -229,6 +229,7 @@ class HmDevice:
                 entity.update_parameter_data()
         self.update_device()
 
+    # pylint: disable=too-many-nested-blocks
     def create_entities(self) -> set[GenericEntity] | None:
         """
         Create the entities associated to this device.
