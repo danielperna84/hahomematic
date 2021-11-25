@@ -9,6 +9,7 @@ This is intended to become the successor of [pyhomematic](https://github.com/dan
 ## Project goal and features
 
 [pyhomematic](https://github.com/danielperna84/pyhomematic) has the requirement to manually add support for devices to make them usable in [Home Assistant](https://www.home-assistant.io/). `hahomematic` automatically create entities for each parameter on each channel on every device (if it not black listed). To achieve this, all paramsets (`VALUES`) are fetched (and cached for quick successive startups).
+[Homematic Devices supported by custom entities](https://github.com/danielperna84/hahomematic/wiki/Homematic-Devices-supported-by-custom-entity)
 
 On top of that it is possible to add custom entity-classes to implement more complex entities, if it makes sense for a device. Much like the [devicetypes](https://github.com/danielperna84/pyhomematic/tree/master/pyhomematic/devicetypes) of [pyhomematic](https://github.com/danielperna84/pyhomematic). This will be needed for thermostats, lights, covers, climate, lock etc..
 
