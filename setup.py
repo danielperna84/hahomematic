@@ -14,7 +14,7 @@ VERSION = "0.0.9"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
-REQUIRES = ["aiohttp==3.8.0", "voluptuous==0.12.2"]
+REQUIRES = ["aiohttp>=3.8.0", "voluptuous>=0.12.2"]
 
 setup(
     name=PACKAGE_NAME,
@@ -29,14 +29,14 @@ setup(
     include_package_data=True,
     zip_safe=False,
     platforms="any",
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     install_requires=REQUIRES,
     keywords=["home", "assistant", "homematic"],
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.8",
         "Topic :: Home Automation",
     ],
 )
