@@ -1,3 +1,6 @@
+Version 0.0.10 (2021-11-26)
+- Fix TLS handling
+
 Version 0.0.9 (2021-11-25)
 - Don't start connection checker for pydevccu
 - Use a dummy hub for pydevccu
