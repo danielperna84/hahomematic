@@ -349,12 +349,12 @@ def register_xml_rpc_server(local_ip=IP_ANY_V4, local_port=PORT_ANY) -> XMLRPCSe
     return xml_rpc
 
 
-def un_register_xml_rpc_server() -> bool:
+async def un_register_xml_rpc_server() -> bool:
     """Unregister the xml rpc server."""
     xml_rpc = get_xml_rpc_server()
     _LOGGER.info("XMLRPCServer.stop: Shutting down server")
     if xml_rpc.no_central_registered:
-        xml_rpc.stop()
+        await xml_rpc.stop()
         _set_xml_rpc_server(None)
         _LOGGER.info("XMLRPCServer.stop: Server stopped")
         return True

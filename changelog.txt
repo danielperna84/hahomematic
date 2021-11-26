@@ -1,3 +1,8 @@
+Version 0.0.11 (2021-11-26)
+- Fix: cover open/close default values to float
+- Fix: add missing async/await
+- make get_primary_client public
+
 Version 0.0.10 (2021-11-26)
 - Fix TLS handling
 
