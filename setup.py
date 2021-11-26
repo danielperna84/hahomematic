@@ -18,6 +18,7 @@ REQUIRES = ["aiohttp>=3.8.0", "voluptuous>=0.12.2"]
 
 setup(
     name=PACKAGE_NAME,
+    version=VERSION,
     license="MIT License",
     url="https://github.com/danielperna84/hahomematic",
     download_url="https://github.com/danielperna84/hahomematic/tarball/" + VERSION,
