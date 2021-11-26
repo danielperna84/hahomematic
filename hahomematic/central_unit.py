@@ -129,12 +129,12 @@ class CentralUnit:
     @property
     def version(self):
         """Return the version of the backend."""
-        return self._get_client().version
+        return self.get_primary_client().version
 
     @property
     def model(self):
         """Return the model of the backend."""
-        return self._get_client().model
+        return self.get_primary_client().model
 
     @property
     def local_ip(self):
@@ -197,7 +197,7 @@ class CentralUnit:
         # un-register this instance from XMLRPCServer
         self._xml_rpc_server.un_register_central(self)
         # un-register and stop XMLRPCServer, if possible
-        xml_rpc.un_register_xml_rpc_server()
+        await xml_rpc.un_register_xml_rpc_server()
 
         _LOGGER.debug("CentralUnit.stop: Removing instance")
         del INSTANCES[self.instance_name]
@@ -265,36 +265,36 @@ class CentralUnit:
 
     async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
-        return await self._get_client().get_all_system_variables()
+        return await self.get_primary_client().get_all_system_variables()
 
     async def get_system_variable(self, name):
         """Get system variable from CCU / Homegear."""
-        return await self._get_client().get_system_variable(name)
+        return await self.get_primary_client().get_system_variable(name)
 
     async def set_system_variable(self, name, value):
         """Set a system variable on CCU / Homegear."""
-        await self._get_client().set_system_variable(name, value)
+        await self.get_primary_client().set_system_variable(name, value)
 
     async def get_service_messages(self):
         """Get service messages from CCU / Homegear."""
-        await self._get_client().get_service_messages()
+        await self.get_primary_client().get_service_messages()
 
     # pylint: disable=invalid-name
     async def set_install_mode(
         self, interface_id, on=True, t=60, mode=1, address=None
     ) -> None:
         """Activate or deactivate install-mode on CCU / Homegear."""
-        await self._get_client(interface_id).set_install_mode(
+        await self.get_primary_client(interface_id).set_install_mode(
             on=on, t=t, mode=mode, address=address
         )
 
     async def get_install_mode(self, interface_id) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
-        return await self._get_client(interface_id).get_install_mode()
+        return await self.get_primary_client(interface_id).get_install_mode()
 
     async def put_paramset(self, interface_id, address, paramset, value, rx_mode=None):
         """Set paramsets manually."""
-        await self._get_client(interface_id).put_paramset(
+        await self.get_primary_client(interface_id).put_paramset(
             address=address, paramset=paramset, value=value, rx_mode=rx_mode
         )
 
@@ -341,7 +341,7 @@ class CentralUnit:
 
         return hm_entities
 
-    def _get_client(self, interface_id=None) -> hm_client.Client:
+    def get_primary_client(self, interface_id=None) -> hm_client.Client:
         """Return the client by interface_id or the first with a primary port."""
         try:
             if interface_id:
