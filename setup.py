@@ -10,7 +10,7 @@ def readme():
 
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.0.10"
+VERSION = "0.0.11"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
@@ -18,7 +18,6 @@ REQUIRES = ["aiohttp>=3.8.0", "voluptuous>=0.12.2"]
 
 setup(
     name=PACKAGE_NAME,
-    version=VERSION,
     license="MIT License",
     url="https://github.com/danielperna84/hahomematic",
     download_url="https://github.com/danielperna84/hahomematic/tarball/" + VERSION,
