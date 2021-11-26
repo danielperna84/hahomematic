@@ -69,7 +69,7 @@ class CentralUnit:
             self.username = None
         else:
             self.username = self.central_config.username
-        self.tls = self.central_config.json_tls
+        self.tls = self.central_config.tls
         self.verify_tls = self.central_config.verify_tls
         self.client_session = self.central_config.client_session
 

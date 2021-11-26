@@ -45,8 +45,20 @@ class JsonRpcAioHttpClient:
         self._port = self._central_config.json_port
         self._username = self._central_config.username
         self._password = self._central_config.password
-        self._tls = self._central_config.json_tls
+        self._json_tls = self._central_config.json_tls
         self._verify_tls = self._central_config.verify_tls
+        self._ssl_context = self._get_tls_context()
+
+    def _get_tls_context(self):
+        ssl_context = None
+        if self._json_tls:
+            if self._verify_tls:
+                ssl_context = ssl.create_default_context()
+            else:
+                ssl_context = ssl.create_default_context()
+                ssl_context.check_hostname = False
+                ssl_context.verify_mode = ssl.CERT_NONE
+        return ssl_context
 
     @property
     def is_activated(self):
@@ -158,17 +170,13 @@ class JsonRpcAioHttpClient:
             }
 
             _LOGGER.debug("json_rpc_client._post: API-Endpoint: %s", self._url)
-            if self._tls:
-                ssl_context = UNVERIFIED_CTX
-                if self._verify_tls:
-                    ssl_context = VERIFIED_CTX
-
+            if self._json_tls:
                 resp = await self._client_session.post(
                     self._url,
                     data=payload,
                     headers=headers,
                     timeout=config.TIMEOUT,
-                    context=ssl_context,
+                    ssl=self._ssl_context,
                 )
             else:
                 resp = await self._client_session.post(
@@ -194,6 +202,9 @@ class JsonRpcAioHttpClient:
         except ClientError as cce:
             _LOGGER.exception("json_rpc_client._post: ClientError")
             return {"error": str(cce), "result": {}}
+        except TypeError as ter:
+            _LOGGER.exception("json_rpc_client._post: TypeError")
+            return {"error": str(ter), "result": {}}
 
     async def logout(self):
         """Logout of CCU."""
@@ -224,9 +235,13 @@ class JsonRpcAioHttpClient:
     @property
     def _url(self):
         """Return the required url."""
-        if self._tls:
-            return f"https://{self._host}:{self._port}{PATH_JSON_RPC}"
-        return f"http://{self._host}:{self._port}{PATH_JSON_RPC}"
+        url = "http://"
+        if self._json_tls:
+            url = "https://"
+        url = f"{url}{self._host}"
+        if self._port:
+            url = f"{url}:{self._port}"
+        return f"{url}{PATH_JSON_RPC}"
 
 
 def _get_params(session_id, extra_params, use_default_params) -> dict[str, str]:
