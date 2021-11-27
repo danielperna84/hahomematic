@@ -126,8 +126,7 @@ class CentralUnit:
             self.hub = HmDummyHub(self)
 
     def init_address_parameter_list(self):
-        """ Do something """
-        # address, parameter channels
+        """Initialize an address/parameter list to identify if a parameter name exists is in multiple channels."""
         for device_paramsets in self.paramsets_cache.values():
             for address, paramsets in device_paramsets.items():
                 if ":" not in address:
@@ -139,15 +138,15 @@ class CentralUnit:
                     for parameter in paramset:
                         if (d_address, parameter) not in self.address_parameter_cache:
                             self.address_parameter_cache[(d_address, parameter)] = []
-                        self.address_parameter_cache[(d_address, parameter)].append(p_channel)
+                        self.address_parameter_cache[(d_address, parameter)].append(
+                            p_channel
+                        )
 
     def has_multiple_channels(self, address, parameter) -> bool:
         """Check if parameter is in multiple channels per device."""
         if ":" not in address:
             return False
         d_address = address.split(":")[0]
-        p_channel = address.split(":")[1]
-
         channels = self.address_parameter_cache.get((d_address, parameter))
         if channels:
             return len(set(channels)) > 1
