@@ -5,12 +5,15 @@ Implementation of a locking ServerProxy for XML-RPC communication.
 import logging
 import ssl
 import xmlrpc.client
+
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
+from hahomematic.helpers import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONTEXT = "context"
 ATTR_ENCODING_ISO_8859_1 = "ISO-8859-1"
+
 
 class ProxyException(Exception):
     """hahomematic Proxy exception."""
@@ -34,19 +37,10 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
         self._tls = kwargs.pop(ATTR_TLS, False)
         self._verify_tls = kwargs.pop(ATTR_VERIFY_TLS, True)
         if self._tls:
-            kwargs[ATTR_CONTEXT] = self._get_tls_context()
-        xmlrpc.client.ServerProxy.__init__(self, encoding=ATTR_ENCODING_ISO_8859_1, *args, **kwargs)
-
-    def _get_tls_context(self):
-        ssl_context = None
-        if self._tls:
-            if self._verify_tls:
-                ssl_context = ssl.create_default_context()
-            else:
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
-        return ssl_context
+            kwargs[ATTR_CONTEXT] = get_tls_context(self._verify_tls)
+        xmlrpc.client.ServerProxy.__init__(
+            self, encoding=ATTR_ENCODING_ISO_8859_1, *args, **kwargs
+        )
 
     async def __async_request(self, *args, **kwargs):
         """

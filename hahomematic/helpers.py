@@ -2,6 +2,7 @@
 Helper functions used within hahomematic
 """
 import logging
+import ssl
 
 from hahomematic.const import (
     ATTR_HM_ALARM,
@@ -96,3 +97,14 @@ def get_custom_entity_name(
         address = f"{address}:{channel_no}"
 
     return central.names_cache.get(interface_id, {}).get(address, unique_id)
+
+
+def get_tls_context(verify_tls):
+    """Return tls verified/unverified ssl/tls context"""
+    if verify_tls:
+        ssl_context = ssl.create_default_context()
+    else:
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+    return ssl_context

@@ -16,12 +16,9 @@ from hahomematic.const import (
     ATTR_USERNAME,
     PATH_JSON_RPC,
 )
+from hahomematic.helpers import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
-VERIFIED_CTX = ssl.create_default_context()
-UNVERIFIED_CTX = ssl.create_default_context()
-UNVERIFIED_CTX.check_hostname = False
-UNVERIFIED_CTX.verify_mode = ssl.CERT_NONE
 
 
 class JsonRpcAioHttpClient:
@@ -47,18 +44,7 @@ class JsonRpcAioHttpClient:
         self._password = self._central_config.password
         self._json_tls = self._central_config.json_tls
         self._verify_tls = self._central_config.verify_tls
-        self._ssl_context = self._get_tls_context()
-
-    def _get_tls_context(self):
-        ssl_context = None
-        if self._json_tls:
-            if self._verify_tls:
-                ssl_context = ssl.create_default_context()
-            else:
-                ssl_context = ssl.create_default_context()
-                ssl_context.check_hostname = False
-                ssl_context.verify_mode = ssl.CERT_NONE
-        return ssl_context
+        self._tls_context = get_tls_context(self._verify_tls)
 
     @property
     def is_activated(self):
@@ -176,7 +162,7 @@ class JsonRpcAioHttpClient:
                     data=payload,
                     headers=headers,
                     timeout=config.TIMEOUT,
-                    ssl=self._ssl_context,
+                    ssl=self._tls_context,
                 )
             else:
                 resp = await self._client_session.post(
