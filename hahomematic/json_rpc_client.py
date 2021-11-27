@@ -3,7 +3,6 @@ Implementation of an async json-rpc client.
 """
 import json
 import logging
-import ssl
 
 from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnector
 

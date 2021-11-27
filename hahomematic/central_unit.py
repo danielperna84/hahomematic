@@ -20,10 +20,7 @@ from hahomematic.const import (
     DATA_NO_LOAD,
     DATA_NO_SAVE,
     DATA_SAVE_SUCCESS,
-    DEFAULT_CONNECT,
     DEFAULT_ENCODING,
-    DEFAULT_JSON_PORT,
-    DEFAULT_NAME,
     DEFAULT_PASSWORD,
     DEFAULT_TLS,
     DEFAULT_USERNAME,
@@ -63,7 +60,6 @@ class CentralUnit:
         self.enable_virtual_channels = self.central_config.enable_virtual_channels
         self.host = self.central_config.host
         self.json_port = self.central_config.json_port
-        self.connect = self.central_config.connect
         self.password = self.central_config.password
         if self.password is None:
             self.username = None
@@ -674,17 +670,16 @@ class CentralConfig:
         entry_id,
         loop,
         xml_rpc_server: xml_rpc.XMLRPCServer,
-        name=DEFAULT_NAME,
+        name,
         host=LOCALHOST,
         username=DEFAULT_USERNAME,
         password=DEFAULT_PASSWORD,
         tls=DEFAULT_TLS,
         verify_tls=DEFAULT_VERIFY_TLS,
         client_session=None,
-        connect=DEFAULT_CONNECT,
         callback_host=None,
         callback_port=None,
-        json_port=DEFAULT_JSON_PORT,
+        json_port=None,
         json_tls=DEFAULT_TLS,
         enable_virtual_channels=False,
         enable_sensors_for_own_system_variables=False,
@@ -699,7 +694,6 @@ class CentralConfig:
         self.tls = tls
         self.verify_tls = verify_tls
         self.client_session = client_session
-        self.connect = connect
         self.callback_host = callback_host
         self.callback_port = callback_port
         self.json_port = json_port

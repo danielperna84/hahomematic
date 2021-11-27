@@ -3,7 +3,6 @@ Implementation of a locking ServerProxy for XML-RPC communication.
 """
 
 import logging
-import ssl
 import xmlrpc.client
 
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
@@ -80,8 +79,8 @@ class SimpleServerProxy(xmlrpc.client.ServerProxy):
         """
         self._tls = kwargs.pop("tls", False)
         self._verify_tls = kwargs.pop("verify_tls", True)
-        if self._tls and not self._verify_tls and self._verify_tls is not None:
-            kwargs["context"] = ssl._create_unverified_context()
+        if self._tls:
+            kwargs["context"] = get_tls_context(self._verify_tls)
         xmlrpc.client.ServerProxy.__init__(self, encoding="ISO-8859-1", *args, **kwargs)
 
     def __request(self, *args, **kwargs):

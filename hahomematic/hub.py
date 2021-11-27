@@ -130,8 +130,6 @@ class HmSystemVariable(BaseHubEntity):
             value = int(value)
         elif isinstance(old_state, str):
             value = str(value)
-        else:
-            value = value
 
         self._state = value
         self.update_entity()
