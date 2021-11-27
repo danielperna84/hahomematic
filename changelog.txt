@@ -1,3 +1,10 @@
+Version 0.0.12 (2021-11-27)
+- Add more type converter
+- Move get_tls_context to helper
+- Update requirements
+- Cleanup constants
+- Use flags from parameter_data
+
 Version 0.0.11 (2021-11-26)
 - Fix: cover open/close default values to float
 - Fix: add missing async/await

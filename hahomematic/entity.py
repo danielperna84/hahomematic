@@ -10,6 +10,7 @@ from typing import Any
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_HM_DEFAULT,
+    ATTR_HM_FLAGS,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
     ATTR_HM_OPERATIONS,
@@ -29,6 +30,9 @@ from hahomematic.const import (
     EVENT_IMPULSE,
     EVENT_KEYPRESS,
     EVENT_UN_REACH,
+    FLAG_INTERAL,
+    FLAG_SERVICE,
+    FLAG_VISIBLE,
     HA_PLATFORM_EVENT,
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
@@ -36,8 +40,8 @@ from hahomematic.const import (
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_FLOAT,
+    TYPE_INTEGER,
     TYPE_STRING,
-    TYPE_INTEGER
 )
 from hahomematic.devices.device_description import (
     DD_FIELDS,
@@ -188,6 +192,10 @@ class BaseParameterEntity(BaseEntity):
         """Assign parameter data to instance variables."""
         self._type = self._parameter_data.get(ATTR_HM_TYPE)
         self._default = self._parameter_data.get(ATTR_HM_DEFAULT)
+        flags = self._parameter_data.get(ATTR_HM_FLAGS, 0)
+        self._internal = flags & FLAG_INTERAL == FLAG_INTERAL
+        self._visible = flags & FLAG_VISIBLE == FLAG_VISIBLE
+        self._service = flags & FLAG_SERVICE == FLAG_SERVICE
         self._max = self._parameter_data.get(ATTR_HM_MAX)
         self._min = self._parameter_data.get(ATTR_HM_MIN)
         self._operations = self._parameter_data.get(ATTR_HM_OPERATIONS)

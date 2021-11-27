@@ -10,9 +10,11 @@ import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ALARM_EVENTS,
     ATTR_HM_FIRMWARE,
+    ATTR_HM_FLAGS,
     ATTR_HM_OPERATIONS,
     ATTR_HM_TYPE,
     CLICK_EVENTS,
+    FLAG_INTERAL,
     HA_DOMAIN,
     HH_EVENT_DEVICES_CREATED,
     HM_VIRTUAL_REMOTES,
@@ -251,7 +253,7 @@ class HmDevice:
                     if (
                         not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
-                    ):
+                    ) or parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL:
                         _LOGGER.debug(
                             "Device.create_entities: Skipping %s (no event)",
                             parameter,
