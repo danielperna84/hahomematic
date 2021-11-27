@@ -20,10 +20,7 @@ from hahomematic.const import (
     DATA_NO_LOAD,
     DATA_NO_SAVE,
     DATA_SAVE_SUCCESS,
-    DEFAULT_CONNECT,
     DEFAULT_ENCODING,
-    DEFAULT_JSON_PORT,
-    DEFAULT_NAME,
     DEFAULT_PASSWORD,
     DEFAULT_TLS,
     DEFAULT_USERNAME,
@@ -63,7 +60,6 @@ class CentralUnit:
         self.enable_virtual_channels = self.central_config.enable_virtual_channels
         self.host = self.central_config.host
         self.json_port = self.central_config.json_port
-        self.connect = self.central_config.connect
         self.password = self.central_config.password
         if self.password is None:
             self.username = None
@@ -76,6 +72,8 @@ class CentralUnit:
         # Caches for CCU data
         # {interface_id, {address, paramsets}}
         self.paramsets_cache = {}
+
+        self.address_parameter_cache = {}
         # {interface_id,  {address, name}}
         self.names_cache = {}
         # {interface_id, {counter, device}}
@@ -112,6 +110,7 @@ class CentralUnit:
 
         INSTANCES[self.instance_name] = self
         self._load_caches()
+        self.init_address_parameter_list()
         self._connection_checker = ConnectionChecker(self)
         self.hub = None
 
@@ -125,6 +124,33 @@ class CentralUnit:
             await self.hub.fetch_data()
         else:
             self.hub = HmDummyHub(self)
+
+    def init_address_parameter_list(self):
+        """Initialize an address/parameter list to identify if a parameter name exists is in multiple channels."""
+        for device_paramsets in self.paramsets_cache.values():
+            for address, paramsets in device_paramsets.items():
+                if ":" not in address:
+                    continue
+                d_address = address.split(":")[0]
+                p_channel = address.split(":")[1]
+
+                for paramset in paramsets.values():
+                    for parameter in paramset:
+                        if (d_address, parameter) not in self.address_parameter_cache:
+                            self.address_parameter_cache[(d_address, parameter)] = []
+                        self.address_parameter_cache[(d_address, parameter)].append(
+                            p_channel
+                        )
+
+    def has_multiple_channels(self, address, parameter) -> bool:
+        """Check if parameter is in multiple channels per device."""
+        if ":" not in address:
+            return False
+        d_address = address.split(":")[0]
+        channels = self.address_parameter_cache.get((d_address, parameter))
+        if channels:
+            return len(set(channels)) > 1
+        return False
 
     @property
     def version(self):
@@ -491,6 +517,7 @@ class CentralUnit:
                 json.dump(self.paramsets_cache, fptr)
             return DATA_SAVE_SUCCESS
 
+        self.init_address_parameter_list()
         return await self.async_add_executor_job(_save_paramsets)
 
     def load_paramsets(self):
@@ -674,17 +701,16 @@ class CentralConfig:
         entry_id,
         loop,
         xml_rpc_server: xml_rpc.XMLRPCServer,
-        name=DEFAULT_NAME,
+        name,
         host=LOCALHOST,
         username=DEFAULT_USERNAME,
         password=DEFAULT_PASSWORD,
         tls=DEFAULT_TLS,
         verify_tls=DEFAULT_VERIFY_TLS,
         client_session=None,
-        connect=DEFAULT_CONNECT,
         callback_host=None,
         callback_port=None,
-        json_port=DEFAULT_JSON_PORT,
+        json_port=None,
         json_tls=DEFAULT_TLS,
         enable_virtual_channels=False,
         enable_sensors_for_own_system_variables=False,
@@ -699,7 +725,6 @@ class CentralConfig:
         self.tls = tls
         self.verify_tls = verify_tls
         self.client_session = client_session
-        self.connect = connect
         self.callback_host = callback_host
         self.callback_port = callback_port
         self.json_port = json_port

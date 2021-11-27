@@ -23,7 +23,6 @@ from hahomematic.const import (
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
-    DEFAULT_NAME,
     DEFAULT_PATH,
     HM_VIRTUAL_REMOTES,
     PORT_RFD,
@@ -31,7 +30,6 @@ from hahomematic.const import (
     PROXY_DE_INIT_SKIPPED,
     PROXY_DE_INIT_SUCCESS,
     PROXY_INIT_FAILED,
-    PROXY_INIT_SKIPPED,
     PROXY_INIT_SUCCESS,
     RELEVANT_PARAMSETS,
 )
@@ -128,9 +126,6 @@ class Client(ABC):
         To receive events the proxy has to tell the CCU / Homegear
         where to send the events. For that we call the init-method.
         """
-        if not self.central.connect:
-            _LOGGER.debug("proxy_init: Skipping init for %s", self.name)
-            return PROXY_INIT_SKIPPED
         if self.central is None:
             _LOGGER.warning("proxy_init: Local central_unit missing for %s", self.name)
             self.time_initialized = 0
@@ -156,9 +151,6 @@ class Client(ABC):
         """
         if self.json_rpc_session.is_activated:
             await self.json_rpc_session.logout()
-        if not self.central.connect:
-            _LOGGER.debug("proxy_de_init: Skipping de-init for %s", self.name)
-            return PROXY_DE_INIT_SKIPPED
         if self.central is None:
             _LOGGER.warning("proxy_de_init: Local central missing for %s", self.name)
             return PROXY_DE_INIT_FAILED
@@ -685,7 +677,7 @@ class ClientConfig:
     def __init__(
         self,
         central,
-        name=DEFAULT_NAME,
+        name,
         port=PORT_RFD,
         path=DEFAULT_PATH,
         callback_host=None,

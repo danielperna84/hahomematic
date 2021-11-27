@@ -124,10 +124,12 @@ class HmSystemVariable(BaseHubEntity):
         old_state = self._state
         if isinstance(old_state, bool):
             value = bool(value)
+        elif isinstance(old_state, float):
+            value = float(value)
+        elif isinstance(old_state, int):
+            value = int(value)
         elif isinstance(old_state, str):
             value = str(value)
-        else:
-            value = float(value)
 
         self._state = value
         self.update_entity()
@@ -141,8 +143,8 @@ class HmHub(BaseHubEntity):
         unique_id = generate_unique_id(central.instance_name, prefix="hub")
         name = central.instance_name
         super().__init__(central, unique_id, name)
-        self.hub_entities: dict[str, BaseHubEntity] = {}
-        self._variables: dict[str, BaseHubEntity] = {}
+        self.hub_entities: dict[str, HmSystemVariable] = {}
+        self._variables: dict[str, Any] = {}
         self._use_entities = use_entities
 
     @property
@@ -194,7 +196,7 @@ class HmHub(BaseHubEntity):
             ):
                 self._variables[name] = value
                 continue
-            entity = self.hub_entities.get(name)
+            entity: HmSystemVariable = self.hub_entities.get(name)
             if entity:
                 await entity.set_state(value)
             else:

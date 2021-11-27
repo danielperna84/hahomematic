@@ -10,6 +10,7 @@ from typing import Any
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_HM_DEFAULT,
+    ATTR_HM_FLAGS,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
     ATTR_HM_OPERATIONS,
@@ -29,11 +30,17 @@ from hahomematic.const import (
     EVENT_IMPULSE,
     EVENT_KEYPRESS,
     EVENT_UN_REACH,
+    FLAG_SERVICE,
+    FLAG_VISIBLE,
     HA_PLATFORM_EVENT,
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
     OPERATION_READ,
     TYPE_ACTION,
+    TYPE_BOOL,
+    TYPE_FLOAT,
+    TYPE_INTEGER,
+    TYPE_STRING,
 )
 from hahomematic.devices.device_description import (
     DD_FIELDS,
@@ -184,6 +191,9 @@ class BaseParameterEntity(BaseEntity):
         """Assign parameter data to instance variables."""
         self._type = self._parameter_data.get(ATTR_HM_TYPE)
         self._default = self._parameter_data.get(ATTR_HM_DEFAULT)
+        flags = self._parameter_data.get(ATTR_HM_FLAGS, 0)
+        self._visible = flags & FLAG_VISIBLE == FLAG_VISIBLE
+        self._service = flags & FLAG_SERVICE == FLAG_SERVICE
         self._max = self._parameter_data.get(ATTR_HM_MAX)
         self._min = self._parameter_data.get(ATTR_HM_MIN)
         self._operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
@@ -234,10 +244,14 @@ class BaseParameterEntity(BaseEntity):
 
     def _convert_value(self, value):
         """Convert value to a given hm_type."""
-        if self._type == "FLOAT":
+        if self._type == TYPE_BOOL:
+            return bool(value)
+        if self._type == TYPE_FLOAT:
             return float(value)
-        if self._type == "INTEGER":
+        if self._type == TYPE_INTEGER:
             return int(value)
+        if self._type == TYPE_STRING:
+            return str(value)
         return value
 
     async def send_value(self, value) -> None:
