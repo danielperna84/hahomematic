@@ -4,6 +4,7 @@ Version 0.0.12 (2021-11-27)
 - Update requirements
 - Cleanup constants
 - Use flags from parameter_data
+- Add wildcard start to exclude parameters that start with word
 
 Version 0.0.11 (2021-11-26)
 - Fix: cover open/close default values to float

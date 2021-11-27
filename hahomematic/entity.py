@@ -30,7 +30,6 @@ from hahomematic.const import (
     EVENT_IMPULSE,
     EVENT_KEYPRESS,
     EVENT_UN_REACH,
-    FLAG_INTERAL,
     FLAG_SERVICE,
     FLAG_VISIBLE,
     HA_PLATFORM_EVENT,
@@ -193,7 +192,6 @@ class BaseParameterEntity(BaseEntity):
         self._type = self._parameter_data.get(ATTR_HM_TYPE)
         self._default = self._parameter_data.get(ATTR_HM_DEFAULT)
         flags = self._parameter_data.get(ATTR_HM_FLAGS, 0)
-        self._internal = flags & FLAG_INTERAL == FLAG_INTERAL
         self._visible = flags & FLAG_VISIBLE == FLAG_VISIBLE
         self._service = flags & FLAG_SERVICE == FLAG_SERVICE
         self._max = self._parameter_data.get(ATTR_HM_MAX)

@@ -19,7 +19,8 @@ from hahomematic.const import (
     HH_EVENT_DEVICES_CREATED,
     HM_VIRTUAL_REMOTES,
     IGNORED_PARAMETERS,
-    IGNORED_PARAMETERS_WILDCARDS,
+    IGNORED_PARAMETERS_WILDCARDS_END,
+    IGNORED_PARAMETERS_WILDCARDS_START,
     IMPULSE_EVENTS,
     OPERATION_EVENT,
     OPERATION_WRITE,
@@ -255,7 +256,7 @@ class HmDevice:
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
                     ) or parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL:
                         _LOGGER.debug(
-                            "Device.create_entities: Skipping %s (no event)",
+                            "Device.create_entities: Skipping %s (no event or internal)",
                             parameter,
                         )
                         continue
@@ -335,7 +336,7 @@ class HmDevice:
         )
 
         _LOGGER.debug(
-            "create_event: Creating action_event for %s, %s, %s",
+            "create_event: Creating event for %s, %s, %s",
             address,
             parameter,
             self.interface_id,
@@ -377,9 +378,9 @@ class HmDevice:
         """
         if (
             parameter in IGNORED_PARAMETERS
-            or parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS))
-            and parameter not in WHITELIST_PARAMETERS
-        ):
+            or parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS_END))
+            or parameter.startswith(tuple(IGNORED_PARAMETERS_WILDCARDS_START))
+        ) and parameter not in WHITELIST_PARAMETERS:
             _LOGGER.debug(
                 "create_entity: Ignoring parameter: %s (%s)", parameter, address
             )
