@@ -79,8 +79,10 @@ def get_entity_name(central, interface_id, address, parameter, unique_id) -> str
     if name.count(":") == 1:
         d_name = name.split(":")[0]
         p_name = parameter.title().replace("_", " ")
-        c_no = name.split(":")[1]
-        c_name = "" if c_no == "0" else f" ch{c_no}"
+        c_name = ""
+        if central.has_multiple_channels(address=address, parameter=parameter):
+            c_no = name.split(":")[1]
+            c_name = "" if c_no == "0" else f" ch{c_no}"
         name = f"{d_name} {p_name}{c_name}"
     else:
         d_name = name

@@ -72,6 +72,8 @@ class CentralUnit:
         # Caches for CCU data
         # {interface_id, {address, paramsets}}
         self.paramsets_cache = {}
+
+        self.address_parameter_cache = {}
         # {interface_id,  {address, name}}
         self.names_cache = {}
         # {interface_id, {counter, device}}
@@ -108,6 +110,7 @@ class CentralUnit:
 
         INSTANCES[self.instance_name] = self
         self._load_caches()
+        self.init_address_parameter_list()
         self._connection_checker = ConnectionChecker(self)
         self.hub = None
 
@@ -121,6 +124,34 @@ class CentralUnit:
             await self.hub.fetch_data()
         else:
             self.hub = HmDummyHub(self)
+
+    def init_address_parameter_list(self):
+        """ Do something """
+        # address, parameter channels
+        for device_paramsets in self.paramsets_cache.values():
+            for address, paramsets in device_paramsets.items():
+                if ":" not in address:
+                    continue
+                d_address = address.split(":")[0]
+                p_channel = address.split(":")[1]
+
+                for paramset in paramsets.values():
+                    for parameter in paramset:
+                        if (d_address, parameter) not in self.address_parameter_cache:
+                            self.address_parameter_cache[(d_address, parameter)] = []
+                        self.address_parameter_cache[(d_address, parameter)].append(p_channel)
+
+    def has_multiple_channels(self, address, parameter) -> bool:
+        """Check if parameter is in multiple channels per device."""
+        if ":" not in address:
+            return False
+        d_address = address.split(":")[0]
+        p_channel = address.split(":")[1]
+
+        channels = self.address_parameter_cache.get((d_address, parameter))
+        if channels:
+            return len(set(channels)) > 1
+        return False
 
     @property
     def version(self):
@@ -487,6 +518,7 @@ class CentralUnit:
                 json.dump(self.paramsets_cache, fptr)
             return DATA_SAVE_SUCCESS
 
+        self.init_address_parameter_list()
         return await self.async_add_executor_job(_save_paramsets)
 
     def load_paramsets(self):
