@@ -1,4 +1,5 @@
 """Here we provide access to the custom device creation functions."""
+from __future__ import annotations
 
 from hahomematic.devices import climate, cover, light, lock, switch
 

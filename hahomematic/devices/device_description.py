@@ -1,6 +1,8 @@
 """
 This module contains device descriptions for custom entities.
 """
+from __future__ import annotations
+
 from copy import copy
 from enum import Enum
 import logging

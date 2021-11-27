@@ -1,4 +1,5 @@
 """Code to create the required entities for switch entities."""
+from __future__ import annotations
 
 import logging
 from typing import Any

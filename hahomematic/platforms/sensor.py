@@ -2,6 +2,7 @@
 Module for entities implemented using the
 sensor platform (https://www.home-assistant.io/integrations/sensor/).
 """
+from __future__ import annotations
 
 import logging
 

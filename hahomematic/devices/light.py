@@ -1,4 +1,5 @@
 """Code to create the required entities for light entities."""
+from __future__ import annotations
 
 from abc import abstractmethod
 import logging

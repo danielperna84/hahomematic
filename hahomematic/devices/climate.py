@@ -1,4 +1,5 @@
 """Code to create the required entities for thermostat devices."""
+from __future__ import annotations
 
 import logging
 

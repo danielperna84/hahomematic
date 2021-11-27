@@ -2,6 +2,7 @@
 Module for entities implemented using the
 button platform (https://www.home-assistant.io/integrations/button/).
 """
+from __future__ import annotations
 
 import logging
 

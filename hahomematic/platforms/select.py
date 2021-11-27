@@ -2,6 +2,7 @@
 Module for entities implemented using the
 select platform (https://www.home-assistant.io/integrations/select/).
 """
+from __future__ import annotations
 
 import logging
 

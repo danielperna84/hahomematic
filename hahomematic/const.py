@@ -1,6 +1,8 @@
 """
 Constants used by hahomematic.
 """
+from __future__ import annotations
+
 DEFAULT_ENCODING = "UTF-8"
 
 LOCALHOST = "localhost"

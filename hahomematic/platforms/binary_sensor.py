@@ -2,6 +2,7 @@
 Module for entities implemented using the
 binary_sensor platform (https://www.home-assistant.io/integrations/binary_sensor/).
 """
+from __future__ import annotations
 
 import logging
 
