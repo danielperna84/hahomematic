@@ -34,6 +34,10 @@ from hahomematic.const import (
     HM_ENTITY_UNIT_REPLACE,
     OPERATION_READ,
     TYPE_ACTION,
+    TYPE_BOOL,
+    TYPE_FLOAT,
+    TYPE_STRING,
+    TYPE_INTEGER
 )
 from hahomematic.devices.device_description import (
     DD_FIELDS,
@@ -234,10 +238,14 @@ class BaseParameterEntity(BaseEntity):
 
     def _convert_value(self, value):
         """Convert value to a given hm_type."""
-        if self._type == "FLOAT":
+        if self._type == TYPE_BOOL:
+            return bool(value)
+        if self._type == TYPE_FLOAT:
             return float(value)
-        if self._type == "INTEGER":
+        if self._type == TYPE_INTEGER:
             return int(value)
+        if self._type == TYPE_STRING:
+            return str(value)
         return value
 
     async def send_value(self, value) -> None:
