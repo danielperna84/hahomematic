@@ -19,7 +19,9 @@ from hahomematic.entity import CustomEntity
 
 ATTR_CHANNEL_COVER_LEVEL = "channel_cover_level"
 ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
+# must be float!
 HM_OPEN = 1.0
+# must be float!
 HM_CLOSED = 0.0
 
 _LOGGER = logging.getLogger(__name__)
