@@ -178,6 +178,11 @@ class Thermostat(CustomEntity):
         return self._get_entity_value(FIELD_SETPOINT)
 
     @property
+    def _boost_mode(self):
+        """Return the boost_mode of the device."""
+        return self._get_entity_value(FIELD_BOOST_MODE)
+
+    @property
     def _control_mode(self):
         """Return the control_mode of the device."""
         return self._get_entity_value(FIELD_CONTROL_MODE)

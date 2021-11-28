@@ -123,6 +123,7 @@ class BaseEntity(ABC):
         self._central = self._device.central
         self._interface_id = self._device.interface_id
         self.device_type = self._device.device_type
+        self.sub_type = self._device.sub_type
         self.create_in_ha = not self._device.is_custom_device
         self.client = self._central.clients[self._interface_id]
         self.proxy = self.client.proxy

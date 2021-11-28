@@ -226,7 +226,7 @@ device_description = {
             DD_ADDITIONAL_ENTITIES: {
                 1: {
                     FIELD_HUMIDITY: "HUMIDITY",
-                    FIELD_LEVEL: 'LEVEL',
+                    FIELD_LEVEL: "LEVEL",
                 },
                 9: {
                     FIELD_STATE: "STATE",
