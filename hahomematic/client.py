@@ -59,7 +59,6 @@ class Client(ABC):
         self.client_config: ClientConfig = client_config
         self.central: hm_central.CentralUnit = self.client_config.central
         self._version = self.client_config.version
-        # Referred to as 'remote' in other places
         self.name = self.client_config.name
         self.host = self.central.host
         self.port = self.client_config.port
@@ -80,9 +79,9 @@ class Client(ABC):
             self.callback_port = self.central.local_port
         self.init_url = f"http://{self.callback_host}:{self.callback_port}"
         self.api_url = build_api_url(
-            self.host,
-            self.port,
-            self.path,
+            host=self.host,
+            port=self.port,
+            path=self.path,
             username=self.central.username,
             password=self.central.password,
             tls=self.central.tls,

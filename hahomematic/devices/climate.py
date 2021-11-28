@@ -242,7 +242,7 @@ class Thermostat(CustomEntity):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return [PRESET_BOOST, PRESET_COMFORT, PRESET_ECO]
+        return [PRESET_BOOST, PRESET_COMFORT, PRESET_ECO, PRESET_NONE]
 
     @property
     def current_humidity(self) -> int:
@@ -274,6 +274,9 @@ class Thermostat(CustomEntity):
             await self._send_value(FIELD_MANU_MODE, self.max_temp)
         elif hvac_mode == HVAC_MODE_OFF:
             await self.set_temperature(temperature=self.min_temp)
+        # if switching hvac_mode then disable boost_mode
+        if self._boost_mode:
+            await self.set_preset_mode(PRESET_NONE)
 
     async def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
@@ -283,6 +286,8 @@ class Thermostat(CustomEntity):
             await self._send_value(FIELD_COMFORT_MODE, True)
         elif preset_mode == PRESET_ECO:
             await self._send_value(FIELD_LOWERING_MODE, True)
+        elif preset_mode == PRESET_NONE:
+            await self._send_value(FIELD_BOOST_MODE, False)
 
 
 class IPThermostat(CustomEntity):
@@ -390,7 +395,7 @@ class IPThermostat(CustomEntity):
     @property
     def preset_modes(self):
         """Return available preset modes."""
-        return [PRESET_BOOST]
+        return [PRESET_BOOST, PRESET_NONE]
 
     @property
     def current_humidity(self) -> int:
@@ -423,11 +428,16 @@ class IPThermostat(CustomEntity):
         elif hvac_mode == HVAC_MODE_OFF:
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
             await self.set_temperature(temperature=self.min_temp)
+        # if switching hvac_mode then disable boost_mode
+        if self._boost_mode:
+            await self.set_preset_mode(PRESET_NONE)
 
     async def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         if preset_mode == PRESET_BOOST:
             await self._send_value(FIELD_BOOST_MODE, True)
+        if preset_mode == PRESET_NONE:
+            await self._send_value(FIELD_BOOST_MODE, False)
 
 
 def make_simple_thermostat(device, address, group_base_channels: [int]):
