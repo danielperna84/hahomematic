@@ -93,4 +93,5 @@ DEVICES = {
     "HmIP-DRSI1": (make_ip_switch, [2]),
     "HmIP-DRSI4": (make_ip_switch, [5, 9, 13, 17]),
     "HmIPW-DRS*": (make_ip_switch, [1, 5, 9, 13, 17, 21, 25, 29]),
+    "HmIP-MOD-OC8": (make_ip_switch, [9, 13, 17, 21, 25, 29, 33, 37]),
 }
