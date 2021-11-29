@@ -12,7 +12,7 @@ def readme():
 
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.0.13.2"
+VERSION = "0.0.14"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
