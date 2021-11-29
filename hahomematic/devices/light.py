@@ -319,6 +319,8 @@ def make_ip_light_bsl(device, address, group_base_channels: [int]):
     )
 
 
+# Case for device model is not relevant
+# device_type and sub_type(IP-only) can be used here
 DEVICES = {
     "HmIP-BSL": (make_ip_light_bsl, [7, 11]),
     "HmIP-BSM": (make_ip_light, [3]),

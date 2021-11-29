@@ -73,6 +73,8 @@ def make_ip_lock(device, address, group_base_channels: [int]):
     )
 
 
+# Case for device model is not relevant
+# device_type and sub_type(IP-only) can be used here
 DEVICES = {
     "HmIP-DLD": (make_ip_lock, []),
 }

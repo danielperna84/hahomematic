@@ -470,6 +470,8 @@ def make_ip_thermostat(device, address, group_base_channels: [int]):
     )
 
 
+# Case for device model is not relevant
+# device_type and sub_type(IP-only) can be used here
 DEVICES = {
     "BC-RT-TRX-CyG*": (make_thermostat, []),
     "BC-RT-TRX-CyN*": (make_thermostat, []),
