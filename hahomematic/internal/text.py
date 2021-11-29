@@ -1,4 +1,5 @@
 """Module for entities implemented using text."""
+from __future__ import annotations
 
 import logging
 

@@ -12,6 +12,7 @@ from hahomematic.const import (
     ATTR_HM_FIRMWARE,
     ATTR_HM_FLAGS,
     ATTR_HM_OPERATIONS,
+    ATTR_HM_SUBTYPE,
     ATTR_HM_TYPE,
     CLICK_EVENTS,
     FLAG_INTERAL,
@@ -89,8 +90,11 @@ class HmDevice:
         self.device_type = self.central.devices_raw_dict[self.interface_id][
             self.address
         ][ATTR_HM_TYPE]
+        self.sub_type = self.central.devices_raw_dict[self.interface_id][
+            self.address
+        ].get(ATTR_HM_SUBTYPE)
         # marker if device will be created as custom device
-        self.is_custom_device = device_desc_exists(self.device_type)
+        self.is_custom_device = device_desc_exists(self.device_type, self.sub_type)
         self.firmware = self.central.devices_raw_dict[self.interface_id][self.address][
             ATTR_HM_FIRMWARE
         ]
@@ -297,7 +301,7 @@ class HmDevice:
             # Call the custom device / entity creation function.
 
             for (device_func, group_base_channels) in get_device_funcs(
-                self.device_type
+                self.device_type, self.sub_type
             ):
                 custom_entities = device_func(self, self.address, group_base_channels)
                 new_entities.update(custom_entities)

@@ -1,4 +1,5 @@
 """Code to create the required entities for switch entities."""
+from __future__ import annotations
 
 import logging
 from typing import Any
@@ -82,9 +83,11 @@ def make_ip_switch(device, address, group_base_channels: [int]):
     )
 
 
+# Case for device model is not relevant
+# device_type and sub_type(IP-only) can be used here
 DEVICES = {
     "HmIP-FSM*": (make_ip_switch, [1]),
-    "HmIP-FSI*16": (make_ip_switch, [2]),
+    "HmIP-FSI*": (make_ip_switch, [2]),
     "HmIP-PS*": (make_ip_switch, [2]),
     "HmIP-BSL": (make_ip_switch, [3]),
     "HmIP-DRSI1": (make_ip_switch, [2]),

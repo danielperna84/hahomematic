@@ -2,6 +2,7 @@
 Module for entities implemented using the
 switch platform (https://www.home-assistant.io/integrations/switch/).
 """
+from __future__ import annotations
 
 import logging
 

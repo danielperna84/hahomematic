@@ -1,6 +1,8 @@
 """
 Constants used by hahomematic.
 """
+from __future__ import annotations
+
 DEFAULT_ENCODING = "UTF-8"
 
 LOCALHOST = "localhost"
@@ -220,6 +222,7 @@ ATTR_HM_FLAGS = "FLAGS"
 ATTR_HM_OPERATIONS = "OPERATIONS"
 ATTR_HM_PARAMSETS = "PARAMSETS"
 ATTR_HM_TYPE = "TYPE"
+ATTR_HM_SUBTYPE = "SUBTYPE"
 ATTR_HM_LIST = "LIST"
 ATTR_HM_LOGIC = "LOGIC"
 ATTR_HM_NAME = "NAME"

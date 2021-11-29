@@ -2,6 +2,7 @@
 Module for entities implemented using the
 number platform (https://www.home-assistant.io/integrations/number/).
 """
+from __future__ import annotations
 
 import logging
 

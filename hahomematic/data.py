@@ -1,6 +1,8 @@
 """
 Module to store data required for operation.
 """
+from __future__ import annotations
+
 # {instance_name, central_unit}
 INSTANCES = {}
 

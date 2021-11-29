@@ -1,6 +1,8 @@
 """
 This module contains device descriptions for custom entities.
 """
+from __future__ import annotations
+
 from copy import copy
 from enum import Enum
 import logging
@@ -28,6 +30,8 @@ FIELD_COLOR = "color"
 FIELD_COMFORT_MODE = "comfort_mode"
 FIELD_CONTROL_MODE = "control_mode"
 FIELD_CURRENT = "current"
+FIELD_DOOR_COMMAND = "door_command"
+FIELD_DOOR_STATE = "door_state"
 FIELD_DUTY_CYCLE = "duty_cycle"
 FIELD_DUTYCYCLE = "dutycycle"
 FIELD_ENERGY_COUNTER = "energy_counter"
@@ -65,6 +69,7 @@ class Devices(Enum):
 
     IP_COVER = "IPCover"
     IP_DIMMER = "IPDimmer"
+    IP_GARAGE = "IPGarage"
     IP_LIGHT_SWITCH = "IPLightSwitch"
     IP_LIGHT_BSL = "IPLightBSL"
     IP_LOCK = "IPLock"
@@ -153,6 +158,17 @@ device_description = {
                 },
             },
         },
+        Devices.IP_COVER: {
+            DD_DEVICE_GROUP: {
+                DD_PHY_CHANNEL: [1],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {
+                    FIELD_DOOR_STATE: "DOOR_STATE",
+                    FIELD_DOOR_COMMAND: "DOOR_COMMAND,",
+                },
+                DD_FIELDS: {},
+            },
+        },
         Devices.IP_LIGHT_BSL: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
@@ -224,7 +240,11 @@ device_description = {
             DD_ADDITIONAL_ENTITIES: {
                 1: {
                     FIELD_HUMIDITY: "HUMIDITY",
-                }
+                    FIELD_LEVEL: "LEVEL",
+                },
+                9: {
+                    FIELD_STATE: "STATE",
+                },
             },
         },
         Devices.RF_COVER: {

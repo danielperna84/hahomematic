@@ -1,3 +1,9 @@
+Version 0.0.13 (2021-11-29)
+- Add HmIP-MOD-HO, HmIP-MOD-TM
+- Add sub_type to device/entity
+- Add PRESET_NONE to climate
+- Add level und state as additional entities for climate
+
 Version 0.0.12 (2021-11-27)
 - Add more type converter
 - Move get_tls_context to helper

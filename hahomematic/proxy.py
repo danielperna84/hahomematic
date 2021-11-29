@@ -1,6 +1,7 @@
 """
 Implementation of a locking ServerProxy for XML-RPC communication.
 """
+from __future__ import annotations
 
 import logging
 import xmlrpc.client

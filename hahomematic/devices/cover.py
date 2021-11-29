@@ -9,6 +9,8 @@ from hahomematic.const import HA_PLATFORM_COVER
 from hahomematic.devices.device_description import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
+    FIELD_DOOR_COMMAND,
+    FIELD_DOOR_STATE,
     FIELD_LEVEL,
     FIELD_LEVEL_2,
     FIELD_STOP,
@@ -19,8 +21,21 @@ from hahomematic.entity import CustomEntity
 
 ATTR_CHANNEL_COVER_LEVEL = "channel_cover_level"
 ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
+# must be float!
 HM_OPEN = 1.0
+# must be float!
 HM_CLOSED = 0.0
+
+GARAGE_DOOR_COMMAND_NOP = 0
+GARAGE_DOOR_COMMAND_OPEN = 1
+GARAGE_DOOR_COMMAND_STOP = 2
+GARAGE_DOOR_COMMAND_CLOSE = 3
+GARAGE_DOOR_COMMAND_PARTIAL_OPEN = 4
+
+GARAGE_DOOR_STATE_CLOSED = 0
+GARAGE_DOOR_STATE_OPEN = 1
+GARAGE_DOOR_STATE_VENTILATION_POSITION = 2
+GARAGE_DOOR_STATE_POSITION_UNKNOWN = 3
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,6 +169,77 @@ class HmBlind(HmCover):
         return state_attr
 
 
+class HmGarage(CustomEntity):
+    """Class for homematic garage entities."""
+
+    def __init__(
+        self, device, address, unique_id, device_desc, entity_desc, channel_no
+    ):
+        super().__init__(
+            device=device,
+            address=address,
+            unique_id=unique_id,
+            device_desc=device_desc,
+            entity_desc=entity_desc,
+            platform=HA_PLATFORM_COVER,
+            channel_no=channel_no,
+        )
+        _LOGGER.debug(
+            "HmGarage.__init__(%s, %s, %s)",
+            self._device.interface_id,
+            address,
+            unique_id,
+        )
+
+    @property
+    def _door_state(self) -> int:
+        """Return the state of the garage door."""
+        return self._get_entity_value(FIELD_DOOR_STATE)
+
+    @property
+    def current_cover_position(self) -> int | None:
+        """Return current position of the garage door ."""
+        if self._door_state == GARAGE_DOOR_STATE_OPEN:
+            return 100
+        if self._door_state == GARAGE_DOOR_STATE_VENTILATION_POSITION:
+            return 10
+        if self._door_state == GARAGE_DOOR_STATE_CLOSED:
+            return 0
+        return None
+
+    async def set_cover_position(self, position) -> None:
+        """Move the garage door to a specific position."""
+        if 66 < position <= 100:
+            await self.open_cover()
+        elif 33 < position <= 66:
+            await self.vent_cover()
+        elif 0 <= position <= 33:
+            await self.close_cover()
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the garage door is closed."""
+        if self._door_state is not None:
+            return self._door_state == GARAGE_DOOR_STATE_CLOSED
+        return None
+
+    async def open_cover(self) -> None:
+        """Open the garage door."""
+        await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_OPEN)
+
+    async def close_cover(self) -> None:
+        """Close the garage door."""
+        await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_CLOSE)
+
+    async def stop_cover(self) -> None:
+        """Stop the device if in motion."""
+        await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_STOP)
+
+    async def vent_cover(self) -> None:
+        """Move the garage door to vent position."""
+        await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
+
+
 def make_ip_cover(device, address, group_base_channels: [int]):
     """Creates homematic ip cover entities."""
     return make_custom_entity(
@@ -175,6 +261,13 @@ def make_ip_blind(device, address, group_base_channels: [int]):
     )
 
 
+def make_ip_garage(device, address, group_base_channels: [int]):
+    """Creates homematic ip garage entities."""
+    return make_custom_entity(
+        device, address, HmBlind, Devices.IP_GARAGE, group_base_channels
+    )
+
+
 def make_rf_blind(device, address, group_base_channels: [int]):
     """Creates homematic classic cover entities."""
     return make_custom_entity(
@@ -182,14 +275,18 @@ def make_rf_blind(device, address, group_base_channels: [int]):
     )
 
 
+# Case for device model is not relevant
+# device_type and sub_type(IP-only) can be used here
 DEVICES = {
     "HmIP-BROLL": (make_ip_cover, [3]),
     "HmIP-FROLL": (make_ip_cover, [3]),
     "HmIP-BBL": (make_ip_blind, [3]),
     "HmIP-FBL": (make_ip_blind, [3]),
-    "HmIP-HDM1": (make_ip_blind, [0]),
-    "HmIP-DRBLI4": (make_ip_cover, [9, 13, 17, 21]),
-    "HmIPW-DRBL4": (make_ip_cover, [1, 5, 9, 13]),
+    "HmIP-HDM1": (make_ip_blind, [0]),  # 0 is correct, HDM1 has no status channel.
+    "HmIP-DRBLI4": (make_ip_blind, [9, 13, 17, 21]),
+    "HmIPW-DRBL4": (make_ip_blind, [1, 5, 9, 13]),
+    "HmIP-MOD-HO": (make_ip_garage, []),
+    "HmIP-MOD-TM": (make_ip_garage, []),
     "HM-LC-Bl1*": (make_rf_blind, []),
     "HM-LC-Ja1PBU-FM": (make_rf_blind, []),
     "ZEL STG RM FEP 230V": (make_rf_blind, []),
