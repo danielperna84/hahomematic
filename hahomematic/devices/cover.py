@@ -264,7 +264,7 @@ def make_ip_blind(device, address, group_base_channels: [int]):
 def make_ip_garage(device, address, group_base_channels: [int]):
     """Creates homematic ip garage entities."""
     return make_custom_entity(
-        device, address, HmBlind, Devices.IP_GARAGE, group_base_channels
+        device, address, HmGarage, Devices.IP_GARAGE, group_base_channels
     )
 
 

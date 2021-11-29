@@ -158,7 +158,7 @@ device_description = {
                 },
             },
         },
-        Devices.IP_COVER: {
+        Devices.IP_GARAGE: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [],
