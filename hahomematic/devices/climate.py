@@ -483,10 +483,11 @@ DEVICES = {
     "HmIP-BWTH*": (make_ip_thermostat, []),
     "HmIP-eTRV*": (make_ip_thermostat, []),
     "HmIP-HEATING": (make_ip_thermostat, []),
-    "HmIP-STHD": (make_ip_thermostat, []),
+    "HmIP-STH*": (make_ip_thermostat, []),
     "HmIP-WTH*": (make_ip_thermostat, []),
-    "HmIPW-STHD": (make_ip_thermostat, []),
+    "HmIPW-STH*": (make_ip_thermostat, []),
     "HmIPW-WTH*": (make_ip_thermostat, []),
     "Thermostat AA*": (make_ip_thermostat, []),
     "ZEL STG RM FWT": (make_simple_thermostat, []),
 }
+

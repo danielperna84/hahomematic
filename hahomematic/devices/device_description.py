@@ -46,6 +46,7 @@ FIELD_LOWBAT = "lowbat"
 FIELD_LOWERING_MODE = "lowering_mode"
 FIELD_MANU_MODE = "manu_mode"
 FIELD_OPERATING_VOLTAGE = "operating_voltage"
+FIELD_OPEN = "open"
 FIELD_PARTY_MODE = "party_mode"
 FIELD_POWER = "power"
 FIELD_RSSI_DEVICE = "rssi_device"
@@ -76,6 +77,7 @@ class Devices(Enum):
     IP_THERMOSTAT = "IPThermostat"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
+    RF_LOCK = "RfLock"
     RF_THERMOSTAT = "RfThermostat"
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
 
@@ -266,6 +268,19 @@ device_description = {
                     FIELD_LEVEL: "LEVEL",
                 },
                 DD_FIELDS: {},
+            },
+        },
+        Devices.RF_LOCK: {
+            DD_DEVICE_GROUP: {
+                DD_PHY_CHANNEL: [],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {},
+                DD_FIELDS: {
+                    1: {
+                        FIELD_STATE: "STATE",
+                        FIELD_OPEN: "OPEN",
+                    }
+                },
             },
         },
         Devices.RF_THERMOSTAT: {
