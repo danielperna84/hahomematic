@@ -479,114 +479,114 @@ class ClientCCU(Client):
 
     async def set_system_variable(self, name, value):
         """Set a system variable on CCU / Homegear."""
-        if self.central.username and self.central.password:
-            _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
-            try:
-                params = {
-                    ATTR_NAME: name,
-                    ATTR_VALUE: value,
-                }
-                if value is True or value is False:
-                    params[ATTR_VALUE] = int(value)
-                    response = await self.json_rpc_session.post(
-                        "SysVar.setBool", params
-                    )
-                else:
-                    response = await self.json_rpc_session.post(
-                        "SysVar.setFloat", params
-                    )
-                if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                    res = response[ATTR_RESULT]
+        if not self.central.username and self.central.password:
+            _LOGGER.warning(
+                "set_system_variable: You have to set username ans password to set a system variable via JSON-RPC"
+            )
+            return
+        _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
+        try:
+            params = {
+                ATTR_NAME: name,
+                ATTR_VALUE: value,
+            }
+            if value is True or value is False:
+                params[ATTR_VALUE] = int(value)
+                response = await self.json_rpc_session.post(
+                    "SysVar.setBool", params
+                )
+            else:
+                response = await self.json_rpc_session.post(
+                    "SysVar.setFloat", params
+                )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                res = response[ATTR_RESULT]
+                _LOGGER.debug(
+                    "set_system_variable: Result while setting variable: %s",
+                    str(res),
+                )
+            else:
+                if response[ATTR_ERROR]:
                     _LOGGER.debug(
-                        "set_system_variable: Result while setting variable: %s",
-                        str(res),
+                        "set_system_variable: Error while setting variable: %s",
+                        str(response[ATTR_ERROR]),
                     )
-                else:
-                    if response[ATTR_ERROR]:
-                        _LOGGER.debug(
-                            "set_system_variable: Error while setting variable: %s",
-                            str(response[ATTR_ERROR]),
-                        )
-            except Exception:
-                _LOGGER.exception("set_system_variable: Exception")
-        else:
-            try:
-                return await self.proxy.setSystemVariable(name, value)
-            except ProxyException:
-                _LOGGER.exception("set_system_variable: ProxyException")
+        except Exception:
+            _LOGGER.exception("set_system_variable: Exception")
 
     async def delete_system_variable(self, name):
         """Delete a system variable from CCU / Homegear."""
-        if self.central.username and self.central.password:
-            _LOGGER.debug(
-                "delete_system_variable: Getting System variable via JSON-RPC"
+        if not self.central.username and self.central.password:
+            _LOGGER.warning(
+                "delete_system_variable: You have to set username ans password to delete a system variable via JSON-RPC"
             )
-            try:
-                params = {ATTR_NAME: name}
-                response = await self.json_rpc_session.post(
-                    "SysVar.deleteSysVarByName",
-                    params,
-                )
-                if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                    deleted = response[ATTR_RESULT]
-                    _LOGGER.info("delete_system_variable: Deleted: %s", str(deleted))
-            except Exception:
+            return
+        
+        _LOGGER.debug(
+            "delete_system_variable: Getting System variable via JSON-RPC"
+        )
+        try:
+            params = {ATTR_NAME: name}
+            response = await self.json_rpc_session.post(
+                "SysVar.deleteSysVarByName",
+                params,
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                deleted = response[ATTR_RESULT]
+                _LOGGER.info("delete_system_variable: Deleted: %s", str(deleted))
+        except Exception:
                 _LOGGER.exception("delete_system_variable: Exception")
-        else:
-            try:
-                return await self.proxy.deleteSystemVariable(name)
-            except ProxyException:
-                _LOGGER.exception("delete_system_variable: ProxyException")
 
     async def get_system_variable(self, name):
         """Get single system variable from CCU / Homegear."""
         var = None
-        if self.central.username and self.central.password:
-            _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
-            try:
-                params = {ATTR_NAME: name}
-                response = await self.json_rpc_session.post(
-                    "SysVar.getValueByName",
-                    params,
-                )
-                if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                    # This does not yet support strings
-                    try:
-                        var = float(response[ATTR_RESULT])
-                    except Exception:
-                        var = response[ATTR_RESULT] == "true"
-            except Exception:
-                _LOGGER.exception("get_system_variable: Exception")
-        else:
-            try:
-                var = await self.proxy.getSystemVariable(name)
-            except ProxyException:
-                _LOGGER.exception("get_system_variable: ProxyException")
+        if not self.central.username and self.central.password:
+            _LOGGER.warning(
+                "get_system_variable: You have to set username ans password to get a system variable via JSON-RPC"
+            )
+            return var
+
+        _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
+        try:
+            params = {ATTR_NAME: name}
+            response = await self.json_rpc_session.post(
+                "SysVar.getValueByName",
+                params,
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                # This does not yet support strings
+                try:
+                    var = float(response[ATTR_RESULT])
+                except Exception:
+                    var = response[ATTR_RESULT] == "true"
+        except Exception:
+            _LOGGER.exception("get_system_variable: Exception")
+
         return var
 
     async def get_all_system_variables(self):
         """Get all system variables from CCU / Homegear."""
         variables = {}
-        if self.central.username and self.central.password:
-            _LOGGER.debug(
-                "get_all_system_variables: Getting all System variables via JSON-RPC"
+        if not self.central.username and self.central.password:
+            _LOGGER.warning(
+                "get_all_system_variables: You have to set username ans password to get system variables via JSON-RPC"
             )
-            try:
-                response = await self.json_rpc_session.post(
-                    "SysVar.getAll",
-                )
-                if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                    for var in response[ATTR_RESULT]:
-                        key, value = parse_ccu_sys_var(var)
-                        variables[key] = value
+            return variables
 
-            except Exception:
-                _LOGGER.exception("get_all_system_variables: Exception")
-        else:
-            try:
-                variables = await self.proxy.getAllSystemVariables()
-            except ProxyException:
-                _LOGGER.exception("get_all_system_variables: ProxyException")
+        _LOGGER.debug(
+            "get_all_system_variables: Getting all System variables via JSON-RPC"
+        )
+        try:
+            response = await self.json_rpc_session.post(
+                "SysVar.getAll",
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                for var in response[ATTR_RESULT]:
+                    key, value = parse_ccu_sys_var(var)
+                    variables[key] = value
+        except Exception:
+            _LOGGER.exception("get_all_system_variables: Exception")
+
         return variables
 
     def get_virtual_remote(self):
