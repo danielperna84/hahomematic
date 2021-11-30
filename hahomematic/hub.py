@@ -53,6 +53,15 @@ class BaseHubEntity(ABC):
         """Return the state of the entity."""
         return self._state
 
+    @property
+    def unit(self):
+        """Return the unit of the entity."""
+        if isinstance(self._state, (bool, str)):
+            return None
+        if isinstance(self._state, (int, float)):
+            return '#'
+        return None
+
     # pylint: disable=no-self-use
     async def load_data(self):
         """Do not load data for the hub here."""
