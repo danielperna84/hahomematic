@@ -98,4 +98,6 @@ DEVICES = {
     "HmIP-PCBS2": (make_ip_switch, [3, 7]),
     "HmIP-PCBS-BAT": (make_ip_switch, [2]),
     "HmIP-USBSM": (make_ip_switch, [2]),
+    # HmIP-MIO16-PCB : Don't add it. Too much functionality. Device is better supported without custom entities.
+    # HmIP-MIOB : Don't add it. Too much functionality. Device is better supported without custom entities.
 }
