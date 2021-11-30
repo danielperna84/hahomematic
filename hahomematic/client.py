@@ -492,13 +492,9 @@ class ClientCCU(Client):
             }
             if value is True or value is False:
                 params[ATTR_VALUE] = int(value)
-                response = await self.json_rpc_session.post(
-                    "SysVar.setBool", params
-                )
+                response = await self.json_rpc_session.post("SysVar.setBool", params)
             else:
-                response = await self.json_rpc_session.post(
-                    "SysVar.setFloat", params
-                )
+                response = await self.json_rpc_session.post("SysVar.setFloat", params)
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 res = response[ATTR_RESULT]
                 _LOGGER.debug(
@@ -521,10 +517,8 @@ class ClientCCU(Client):
                 "delete_system_variable: You have to set username ans password to delete a system variable via JSON-RPC"
             )
             return
-        
-        _LOGGER.debug(
-            "delete_system_variable: Getting System variable via JSON-RPC"
-        )
+
+        _LOGGER.debug("delete_system_variable: Getting System variable via JSON-RPC")
         try:
             params = {ATTR_NAME: name}
             response = await self.json_rpc_session.post(
@@ -535,7 +529,7 @@ class ClientCCU(Client):
                 deleted = response[ATTR_RESULT]
                 _LOGGER.info("delete_system_variable: Deleted: %s", str(deleted))
         except Exception:
-                _LOGGER.exception("delete_system_variable: Exception")
+            _LOGGER.exception("delete_system_variable: Exception")
 
     async def get_system_variable(self, name):
         """Get single system variable from CCU / Homegear."""

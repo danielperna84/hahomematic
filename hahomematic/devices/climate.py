@@ -490,4 +490,3 @@ DEVICES = {
     "Thermostat AA*": (make_ip_thermostat, []),
     "ZEL STG RM FWT": (make_simple_thermostat, []),
 }
-

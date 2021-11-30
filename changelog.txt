@@ -2,6 +2,8 @@ Version 0.0.14 (2021-11-30)
 - Add KeyMatic
 - Add HmIP-MOD-OC8
 - Add HmIP-PCBS, HmIP-PCBS2, HmIP-PCBS-BAT, HmIP-USBSM
+- Remove xmlrpc calls related to ccu system variables (not supported by api)
+- Update hub sensor excludes
 
 Version 0.0.13 (2021-11-29)
 - Add HmIP-MOD-HO, HmIP-MOD-TM
