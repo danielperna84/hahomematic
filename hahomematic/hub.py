@@ -11,12 +11,12 @@ from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
-EXCLUDED_FROM_SENSOR_PREFIXES = [
-    "sv",
-    "WatchDog",
+EXCLUDED_FROM_SENSOR = [
     "DutyCycle",
+    "OldVal",
     "pcCCUID",
     "RF-Gateway-Alarm",
+    "WatchDog",
 ]
 
 
@@ -133,8 +133,9 @@ class HmSystemVariable(BaseHubEntity):
         elif isinstance(old_state, str):
             value = str(value)
 
-        self._state = value
-        self.update_entity()
+        if self._state != value:
+            self._state = value
+            self.update_entity()
 
 
 class HmHub(BaseHubEntity):
@@ -193,11 +194,10 @@ class HmHub(BaseHubEntity):
         if not variables:
             return
         for name, value in variables.items():
-            if not self._use_entities or name.startswith(
-                tuple(EXCLUDED_FROM_SENSOR_PREFIXES)
-            ):
+            if not self._use_entities or _is_excluded(name):
                 self._variables[name] = value
                 continue
+
             entity: HmSystemVariable = self.hub_entities.get(name)
             if entity:
                 await entity.set_state(value)
@@ -214,6 +214,13 @@ class HmHub(BaseHubEntity):
         for to_delete in del_entities:
             del self.hub_entities[to_delete]
         self.update_entity()
+
+    def _contains(variable):
+        """Check if marker is in EXCLUDED_FROM_SENSOR."""
+        for marker in EXCLUDED_FROM_SENSOR:
+            if marker in variable:
+                return True
+        return False
 
     def _create_system_variable(self, name, value):
         """Create system variable as entity."""
@@ -271,3 +278,11 @@ class HmDummyHub(BaseHubEntity):
     async def set_system_variable(self, name, value):
         """Do not set variable value on CCU/Homegear."""
         return
+
+
+def _is_excluded(variable):
+    """Check if variable is excluded by EXCLUDED_FROM_SENSOR."""
+    for marker in EXCLUDED_FROM_SENSOR:
+        if marker in variable:
+            return True
+    return False

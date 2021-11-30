@@ -93,4 +93,11 @@ DEVICES = {
     "HmIP-DRSI1": (make_ip_switch, [2]),
     "HmIP-DRSI4": (make_ip_switch, [5, 9, 13, 17]),
     "HmIPW-DRS*": (make_ip_switch, [1, 5, 9, 13, 17, 21, 25, 29]),
+    "HmIP-MOD-OC8": (make_ip_switch, [9, 13, 17, 21, 25, 29, 33, 37]),
+    "HmIP-PCBS": (make_ip_switch, [2]),
+    "HmIP-PCBS2": (make_ip_switch, [3, 7]),
+    "HmIP-PCBS-BAT": (make_ip_switch, [2]),
+    "HmIP-USBSM": (make_ip_switch, [2]),
+    # HmIP-MIO16-PCB : Don't add it. Too much functionality. Device is better supported without custom entities.
+    # HmIP-MIOB : Don't add it. Too much functionality. Device is better supported without custom entities.
 }

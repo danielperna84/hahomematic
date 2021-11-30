@@ -294,4 +294,5 @@ DEVICES = {
     "263 147": (make_rf_blind, []),
     "HM-LC-BlX": (make_rf_blind, []),
     "HM-Sec-Win": (make_rf_blind, []),
+    "HMW-LC-Bl1*": (make_rf_blind, []),
 }

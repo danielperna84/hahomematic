@@ -335,6 +335,7 @@ DEVICES = {
     "263 132": (make_rf_dimmer, []),
     "263 133": (make_rf_dimmer, []),
     "263 134": (make_rf_dimmer, []),
+    "HSS-DX": (make_rf_dimmer, []),
     "HmIPW-DRD3": (make_ip_dimmer, [1, 5, 9, 13]),
     "HmIP-DRDI3": (make_ip_dimmer, [5, 9, 13]),
 }
