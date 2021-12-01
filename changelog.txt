@@ -1,3 +1,7 @@
+Version 0.0.15 (2021-12-01)
+- Fix: remove wildcard for HmIP-STHD
+- Add unit to hub entities
+
 Version 0.0.14 (2021-11-30)
 - Add KeyMatic
 - Add HmIP-MOD-OC8
