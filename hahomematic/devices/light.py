@@ -36,12 +36,20 @@ class BaseHmLight(CustomEntity):
     """Base class for homematic light entities."""
 
     def __init__(
-        self, device, address, unique_id, device_desc, entity_desc, channel_no
+        self,
+        device,
+        address,
+        unique_id,
+        device_enum,
+        device_desc,
+        entity_desc,
+        channel_no,
     ):
         super().__init__(
             device=device,
-            address=address,
             unique_id=unique_id,
+            address=address,
+            device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
             platform=HA_PLATFORM_LIGHT,
@@ -335,7 +343,6 @@ DEVICES = {
     "263 132": (make_rf_dimmer, []),
     "263 133": (make_rf_dimmer, []),
     "263 134": (make_rf_dimmer, []),
-    "HSS-DX": (make_rf_dimmer, []),
     "HmIPW-DRD3": (make_ip_dimmer, [1, 5, 9, 13]),
     "HmIP-DRDI3": (make_ip_dimmer, [5, 9, 13]),
 }

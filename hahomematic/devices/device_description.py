@@ -12,6 +12,7 @@ from voluptuous import Invalid, Optional, Required, Schema
 from hahomematic.helpers import generate_unique_id
 
 DD_DEFAULT_ENTITIES = "default_entities"
+DD_INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
 DD_DEVICE_GROUP = "device_group"
 DD_DEVICES = "devices"
 DD_ADDITIONAL_ENTITIES = "additional_entities"
@@ -19,6 +20,7 @@ DD_FIELDS = "fields"
 DD_FIELDS_REP = "fields_rep"
 DD_PHY_CHANNEL = "phy_channel"
 DD_VIRT_CHANNEL = "virt_channel"
+DEFAULT_INCLUDE_DEFAULT_ENTITIES = True
 
 FIELD_AUTO_MODE = "auto_mode"
 FIELD_BOOST_MODE = "boost_mode"
@@ -75,10 +77,12 @@ class Devices(Enum):
     IP_LIGHT_BSL = "IPLightBSL"
     IP_LOCK = "IPLock"
     IP_THERMOSTAT = "IPThermostat"
+    IP_THERMOSTAT_GROUP = "IPThermostatGroup"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
     RF_LOCK = "RfLock"
     RF_THERMOSTAT = "RfThermostat"
+    RF_THERMOSTAT_GROUP = "RfThermostatGroup"
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
 
 
@@ -99,6 +103,7 @@ SCHEMA_DD_DEVICE_GROUPS = Schema(
     {
         Required(DD_DEVICE_GROUP): SCHEMA_DD_DEVICE_GROUP,
         Optional(DD_ADDITIONAL_ENTITIES): SCHEMA_DD_FIELD,
+        Optional(DD_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES): bool,
     }
 )
 
@@ -249,6 +254,23 @@ device_description = {
                 },
             },
         },
+        Devices.IP_THERMOSTAT_GROUP: {
+            DD_DEVICE_GROUP: {
+                DD_PHY_CHANNEL: [1],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {
+                    FIELD_HUMIDITY: "HUMIDITY",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                    FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
+                    FIELD_SET_POINT_MODE: "SET_POINT_MODE",
+                    FIELD_CONTROL_MODE: "CONTROL_MODE",
+                    FIELD_BOOST_MODE: "BOOST_MODE",
+                    FIELD_PARTY_MODE: "PARTY_MODE",
+                    FIELD_AUTO_MODE: "AUTO_MODE",
+                },
+            },
+            DD_INCLUDE_DEFAULT_ENTITIES: False,
+        },
         Devices.RF_COVER: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1, 2, 3, 4],
@@ -300,6 +322,24 @@ device_description = {
                 },
             },
         },
+        Devices.RF_THERMOSTAT_GROUP: {
+            DD_DEVICE_GROUP: {
+                DD_PHY_CHANNEL: [1, 2, 3, 4],
+                DD_VIRT_CHANNEL: [],
+                DD_FIELDS_REP: {
+                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                    FIELD_SETPOINT: "SET_TEMPERATURE",
+                    FIELD_CONTROL_MODE: "CONTROL_MODE",
+                    FIELD_BOOST_MODE: "BOOST_MODE",
+                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_MANU_MODE: "MANU_MODE",
+                    FIELD_COMFORT_MODE: "COMFORT_MODE",
+                    FIELD_LOWERING_MODE: "LOWERING_MODE",
+                },
+            },
+            DD_INCLUDE_DEFAULT_ENTITIES: False,
+        },
         Devices.SIMPLE_RF_THERMOSTAT: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [],
@@ -335,7 +375,7 @@ def make_custom_entity(
     device,
     address,
     custom_entity_class,
-    device_def: Devices,
+    device_enum: Devices,
     group_base_channels: [int],
 ):
     """
@@ -346,10 +386,10 @@ def make_custom_entity(
     if not group_base_channels:
         group_base_channels = [0]
 
-    entity_desc = _get_device_entities(device_def, group_base_channels[0])
+    entity_desc = _get_device_entities(device_enum, group_base_channels[0])
 
     for base_channel in group_base_channels:
-        device_desc = _get_device_group(device_def, base_channel)
+        device_desc = _get_device_group(device_enum, base_channel)
         channels = device_desc[DD_PHY_CHANNEL]
         # check if virtual channels should be used
         if device.central.enable_virtual_channels:
@@ -360,6 +400,7 @@ def make_custom_entity(
                     device=device,
                     address=address,
                     custom_entity_class=custom_entity_class,
+                    device_enum=device_enum,
                     device_desc=device_desc,
                     entity_desc=entity_desc,
                     channel_no=channel_no,
@@ -372,6 +413,7 @@ def make_custom_entity(
                     device=device,
                     address=address,
                     custom_entity_class=custom_entity_class,
+                    device_enum=device_enum,
                     device_desc=device_desc,
                     entity_desc=entity_desc,
                     channel_no=None,
@@ -385,6 +427,7 @@ def _create_entities(
     device,
     address,
     custom_entity_class,
+    device_enum,
     device_desc,
     entity_desc,
     channel_no,
@@ -399,6 +442,7 @@ def _create_entities(
         device=device,
         address=address,
         unique_id=unique_id,
+        device_enum=device_enum,
         device_desc=device_desc,
         entity_desc=entity_desc,
         channel_no=channel_no,
@@ -412,6 +456,14 @@ def _create_entities(
 def get_default_entities():
     """Return the default entities."""
     return copy(device_description[DD_DEFAULT_ENTITIES])
+
+
+def get_include_default_entities(device_enum: Devices) -> True:
+    """Return if default entities should be included."""
+    device = _get_device(device_enum)
+    if device:
+        return device.get(DD_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES)
+    return DEFAULT_INCLUDE_DEFAULT_ENTITIES
 
 
 def _get_device(device_enum: Devices):

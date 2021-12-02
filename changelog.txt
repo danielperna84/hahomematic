@@ -1,3 +1,6 @@
+Version 0.0.16 (2021-12-02)
+- Don't use default entities for climate groups (already included in device)
+
 Version 0.0.15 (2021-12-01)
 - Fix: remove wildcard for HmIP-STHD
 - Add unit to hub entities
