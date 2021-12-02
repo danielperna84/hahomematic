@@ -59,7 +59,7 @@ class BaseHubEntity(ABC):
         if isinstance(self._state, (bool, str)):
             return None
         if isinstance(self._state, (int, float)):
-            return '#'
+            return "#"
         return None
 
     # pylint: disable=no-self-use
@@ -223,13 +223,6 @@ class HmHub(BaseHubEntity):
         for to_delete in del_entities:
             del self.hub_entities[to_delete]
         self.update_entity()
-
-    def _contains(variable):
-        """Check if marker is in EXCLUDED_FROM_SENSOR."""
-        for marker in EXCLUDED_FROM_SENSOR:
-            if marker in variable:
-                return True
-        return False
 
     def _create_system_variable(self, name, value):
         """Create system variable as entity."""

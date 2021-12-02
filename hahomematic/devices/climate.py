@@ -49,12 +49,20 @@ class SimpleThermostat(CustomEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
 
     def __init__(
-        self, device, address, unique_id, device_desc, entity_desc, channel_no
+        self,
+        device,
+        address,
+        unique_id,
+        device_enum,
+        device_desc,
+        entity_desc,
+        channel_no,
     ):
         super().__init__(
             device=device,
-            address=address,
             unique_id=unique_id,
+            address=address,
+            device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
@@ -144,12 +152,20 @@ class Thermostat(CustomEntity):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
     def __init__(
-        self, device, address, unique_id, device_desc, entity_desc, channel_no
+        self,
+        device,
+        address,
+        unique_id,
+        device_enum,
+        device_desc,
+        entity_desc,
+        channel_no,
     ):
         super().__init__(
             device=device,
-            address=address,
             unique_id=unique_id,
+            address=address,
+            device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
@@ -299,12 +315,20 @@ class IPThermostat(CustomEntity):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
     def __init__(
-        self, device, address, unique_id, device_desc, entity_desc, channel_no
+        self,
+        device,
+        address,
+        unique_id,
+        device_enum,
+        device_desc,
+        entity_desc,
+        channel_no,
     ):
         super().__init__(
             device=device,
-            address=address,
             unique_id=unique_id,
+            address=address,
+            device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
             platform=HA_PLATFORM_CLIMATE,
@@ -463,10 +487,24 @@ def make_thermostat(device, address, group_base_channels: [int]):
     )
 
 
+def make_thermostat_group(device, address, group_base_channels: [int]):
+    """Creates Thermostat group entities."""
+    return make_custom_entity(
+        device, address, Thermostat, Devices.RF_THERMOSTAT_GROUP, group_base_channels
+    )
+
+
 def make_ip_thermostat(device, address, group_base_channels: [int]):
     """Creates IPThermostat entities."""
     return make_custom_entity(
         device, address, IPThermostat, Devices.IP_THERMOSTAT, group_base_channels
+    )
+
+
+def make_ip_thermostat_group(device, address, group_base_channels: [int]):
+    """Creates IPThermostat group entities."""
+    return make_custom_entity(
+        device, address, IPThermostat, Devices.IP_THERMOSTAT_GROUP, group_base_channels
     )
 
 
@@ -478,11 +516,11 @@ DEVICES = {
     "BC-TC-C-WM*": (make_thermostat, []),
     "HM-CC-RT-DN*": (make_thermostat, []),
     "HM-CC-TC": (make_simple_thermostat, []),
-    "HM-CC-VG-1": (make_thermostat, []),
+    "HM-CC-VG-1": (make_thermostat_group, []),
     "HM-TC-IT-WM-W-EU": (make_thermostat, []),
     "HmIP-BWTH*": (make_ip_thermostat, []),
     "HmIP-eTRV*": (make_ip_thermostat, []),
-    "HmIP-HEATING": (make_ip_thermostat, []),
+    "HmIP-HEATING": (make_ip_thermostat_group, []),
     "HmIP-STHD": (make_ip_thermostat, []),
     "HmIP-WTH*": (make_ip_thermostat, []),
     "HmIPW-STH*": (make_ip_thermostat, []),

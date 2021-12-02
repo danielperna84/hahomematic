@@ -22,12 +22,20 @@ class HmSwitch(CustomEntity):
     """Class for homematic switch entities."""
 
     def __init__(
-        self, device, address, unique_id, device_desc, entity_desc, channel_no
+        self,
+        device,
+        address,
+        unique_id,
+        device_enum,
+        device_desc,
+        entity_desc,
+        channel_no,
     ):
         super().__init__(
             device=device,
-            address=address,
             unique_id=unique_id,
+            address=address,
+            device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
             platform=HA_PLATFORM_SWITCH,

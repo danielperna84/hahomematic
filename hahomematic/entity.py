@@ -47,6 +47,7 @@ from hahomematic.devices.device_description import (
     DD_FIELDS,
     DD_FIELDS_REP,
     get_default_entities,
+    get_include_default_entities,
 )
 from hahomematic.helpers import get_custom_entity_name, get_entity_name
 
@@ -390,6 +391,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         device,
         unique_id,
         address,
+        device_enum,
         device_desc,
         entity_desc,
         platform,
@@ -409,6 +411,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         CallbackEntity.__init__(self)
 
         self.create_in_ha = True
+        self._device_enum = device_enum
         self._device_desc = device_desc
         self._entity_desc = entity_desc
         self._channel_no = channel_no
@@ -424,6 +427,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
     def _init_entities(self) -> None:
         """init entity collection"""
+
         fields_rep = self._device_desc.get(DD_FIELDS_REP, {})
         # Add repeating fields
         for (f_name, p_name) in fields_rep.items():
@@ -442,7 +446,8 @@ class CustomEntity(BaseEntity, CallbackEntity):
         # add device entities
         self._mark_entity(self._entity_desc)
         # add default entities
-        self._mark_entity(get_default_entities())
+        if get_include_default_entities(self._device_enum):
+            self._mark_entity(get_default_entities())
 
     def _mark_entity(self, field_desc):
         """Mark entities to be created in HA."""
