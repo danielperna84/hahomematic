@@ -148,8 +148,7 @@ class CentralUnit:
         if ":" not in address:
             return False
         d_address = address.split(":")[0]
-        channels = self.address_parameter_cache.get((d_address, parameter))
-        if channels:
+        if channels := self.address_parameter_cache.get((d_address, parameter)):
             return len(set(channels)) > 1
         return False
 
@@ -350,8 +349,7 @@ class CentralUnit:
             )
 
         device_address = address.split(":")[0]
-        virtual_remote: HmDevice = self._get_virtual_remote(device_address)
-        if virtual_remote:
+        if virtual_remote := self._get_virtual_remote(device_address):
             virtual_remote_channel = virtual_remote.action_events.get(
                 (address, parameter)
             )
@@ -388,10 +386,8 @@ class CentralUnit:
         """Get entity by address and parameter."""
         if ":" in address:
             device_address = address.split(":")[0]
-            device = self.hm_devices.get(device_address)
-            if device:
-                entity = device.entities.get((address, parameter))
-                if entity:
+            if device := self.hm_devices.get(device_address):
+                if entity := device.entities.get((address, parameter)):
                     return entity
         return None
 
@@ -431,8 +427,7 @@ class CentralUnit:
         parameters = set()
         for entity in self.hm_entities.values():
             if isinstance(entity, GenericEntity):
-                parameter = getattr(entity, "parameter", None)
-                if parameter:
+                if parameter := getattr(entity, "parameter", None):
                     parameters.add(entity.parameter)
 
         return sorted(parameters)
@@ -440,11 +435,9 @@ class CentralUnit:
     def get_used_parameters(self, address):
         """Return used parameters"""
         parameters = set()
-        device = self.hm_devices.get(address)
-        if device:
+        if device := self.hm_devices.get(address):
             for entity in device.entities.values():
-                parameter = getattr(entity, "parameter", None)
-                if parameter:
+                if parameter := getattr(entity, "parameter", None):
                     parameters.add(entity.parameter)
 
         return sorted(parameters)

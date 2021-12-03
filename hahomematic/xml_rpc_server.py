@@ -181,8 +181,7 @@ class RPCFunctions:
                     del central.devices_raw_dict[interface_id][address]
                     del central.paramsets_cache[interface_id][address]
                     del central.names_cache[interface_id][address]
-                    ha_device = central.hm_devices.get(address)
-                    if ha_device:
+                    if ha_device := central.hm_devices.get(address):
                         ha_device.remove_event_subscriptions()
                         del central.hm_devices[address]
                 except KeyError:
@@ -317,8 +316,7 @@ class XMLRPCServer(threading.Thread):
     def get_central(self, interface_id) -> hm_central.CentralUnit:
         """Return a central by interface_id"""
         for central in self._centrals.values():
-            client = central.clients.get(interface_id)
-            if client:
+            if client := central.clients.get(interface_id):
                 return central
 
     @property
@@ -341,8 +339,7 @@ def _set_xml_rpc_server(xml_rpc_server: XMLRPCServer) -> None:
 
 def register_xml_rpc_server(local_ip=IP_ANY_V4, local_port=PORT_ANY) -> XMLRPCServer:
     """Register the xml rpc server."""
-    xml_rpc = get_xml_rpc_server()
-    if not xml_rpc:
+    if (xml_rpc := get_xml_rpc_server()) is None:
         xml_rpc = XMLRPCServer(local_ip, local_port)
         xml_rpc.start()
         _set_xml_rpc_server(xml_rpc)
