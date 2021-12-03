@@ -32,6 +32,7 @@ from hahomematic.const import (
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
     PRIMARY_PORTS,
+    HmPlatform,
 )
 from hahomematic.data import INSTANCES
 from hahomematic.device import HmDevice, create_devices
@@ -356,7 +357,7 @@ class CentralUnit:
             )
             await virtual_remote_channel.send_value(True)
 
-    def get_hm_entities_by_platform(self, platform):
+    def get_hm_entities_by_hmplatform(self, platform: HmPlatform):
         """
         Return all hm-entities by platform
         """

@@ -5,13 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hahomematic.const import HA_PLATFORM_LOCK
+from hahomematic.const import HmPlatform
 from hahomematic.devices.device_description import (
     FIELD_LOCK_STATE,
     FIELD_LOCK_TARGET_LEVEL,
     FIELD_OPEN,
     FIELD_STATE,
-    Devices,
+    DeviceDescription,
     make_custom_entity,
 )
 from hahomematic.entity import CustomEntity
@@ -43,7 +43,7 @@ class IpLock(CustomEntity):
             device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
-            platform=HA_PLATFORM_LOCK,
+            platform=HmPlatform.LOCK,
             channel_no=channel_no,
         )
         _LOGGER.debug(
@@ -96,7 +96,7 @@ class RfLock(CustomEntity):
             device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
-            platform=HA_PLATFORM_LOCK,
+            platform=HmPlatform.LOCK,
             channel_no=channel_no,
         )
         _LOGGER.debug(
@@ -132,14 +132,14 @@ class RfLock(CustomEntity):
 def make_ip_lock(device, address, group_base_channels: [int]):
     """Creates homematic ip lock entities."""
     return make_custom_entity(
-        device, address, IpLock, Devices.IP_LOCK, group_base_channels
+        device, address, IpLock, DeviceDescription.IP_LOCK, group_base_channels
     )
 
 
 def make_rf_lock(device, address, group_base_channels: [int]):
     """Creates homematic rf lock entities."""
     return make_custom_entity(
-        device, address, RfLock, Devices.RF_LOCK, group_base_channels
+        device, address, RfLock, DeviceDescription.RF_LOCK, group_base_channels
     )
 
 

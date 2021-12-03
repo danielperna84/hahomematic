@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_TEXT
+from hahomematic.const import ATTR_HM_VALUE, HmPlatform
 from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class HmText(GenericEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_TEXT,
+            platform=HmPlatform.TEXT,
         )
 
     @property

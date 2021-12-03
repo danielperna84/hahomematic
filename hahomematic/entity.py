@@ -26,14 +26,10 @@ from hahomematic.const import (
     DATA_LOAD_FAIL,
     DATA_LOAD_SUCCESS,
     DATA_NO_LOAD,
-    EVENT_ALARM,
     EVENT_CONFIG_PENDING,
-    EVENT_IMPULSE,
-    EVENT_KEYPRESS,
     EVENT_UN_REACH,
     FLAG_SERVICE,
     FLAG_VISIBLE,
-    HA_PLATFORM_EVENT,
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
     OPERATION_READ,
@@ -42,10 +38,14 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
+    HmEventType,
+    HmPlatform,
 )
+import hahomematic.device as hm_device
 from hahomematic.devices.device_description import (
     DD_FIELDS,
     DD_FIELDS_REP,
+    DeviceDescription,
     get_default_entities,
     get_include_default_entities,
 )
@@ -113,7 +113,13 @@ class CallbackEntity(ABC):
 class BaseEntity(ABC):
     """Base class for regular entities."""
 
-    def __init__(self, device, unique_id, address, platform):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        platform: HmPlatform,
+    ):
         """
         Initialize the entity.
         """
@@ -164,7 +170,15 @@ class BaseParameterEntity(BaseEntity):
     Base class for stateless entities.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data, platform):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+        platform: HmPlatform,
+    ):
         """
         Initialize the entity.
         """
@@ -276,7 +290,15 @@ class GenericEntity(BaseParameterEntity, CallbackEntity):
     Base class for generic entities.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data, platform):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+        platform: HmPlatform,
+    ):
         """
         Initialize the entity.
         """
@@ -388,14 +410,14 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
     def __init__(
         self,
-        device,
-        unique_id,
-        address,
-        device_enum,
-        device_desc,
-        entity_desc,
-        platform,
-        channel_no=None,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        device_enum: DeviceDescription,
+        device_desc: dict[str, Any],
+        entity_desc: dict[str, Any],
+        platform: HmPlatform,
+        channel_no: int | None = None,
     ):
         """
         Initialize the entity.
@@ -513,13 +535,12 @@ class BaseEvent(BaseParameterEntity):
 
     def __init__(
         self,
-        device,
-        unique_id,
-        address,
-        parameter,
-        parameter_data,
-        event_type,
-        platform,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+        event_type: HmEventType,
     ):
         """
         Initialize the event handler.
@@ -530,7 +551,7 @@ class BaseEvent(BaseParameterEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=platform,
+            platform=HmPlatform.EVENT,
         )
 
         self.name = get_entity_name(
@@ -632,7 +653,14 @@ class AlarmEvent(BaseEvent):
     class for handling alarm events.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
         """
         Initialize the event handler.
         """
@@ -642,8 +670,7 @@ class AlarmEvent(BaseEvent):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            event_type=EVENT_ALARM,
-            platform=HA_PLATFORM_EVENT,
+            event_type=HmEventType.ALARM,
         )
 
     def get_event_data(self, value=None):
@@ -678,7 +705,14 @@ class ClickEvent(BaseEvent):
     class for handling click events.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
         """
         Initialize the event handler.
         """
@@ -688,8 +722,7 @@ class ClickEvent(BaseEvent):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            event_type=EVENT_KEYPRESS,
-            platform=HA_PLATFORM_EVENT,
+            event_type=HmEventType.KEYPRESS,
         )
 
     def get_event_data(self, value=None):
@@ -718,7 +751,14 @@ class ImpulseEvent(BaseEvent):
     class for handling impulse events.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
         """
         Initialize the event handler.
         """
@@ -728,8 +768,7 @@ class ImpulseEvent(BaseEvent):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            event_type=EVENT_IMPULSE,
-            platform=HA_PLATFORM_EVENT,
+            event_type=HmEventType.IMPULSE,
         )
 
     def get_event_data(self, value=None):

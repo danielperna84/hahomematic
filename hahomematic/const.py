@@ -3,6 +3,8 @@ Constants used by hahomematic.
 """
 from __future__ import annotations
 
+from enum import Enum
+
 DEFAULT_ENCODING = "UTF-8"
 
 LOCALHOST = "localhost"
@@ -84,10 +86,6 @@ EVENT_PRESS_LONG_RELEASE = "PRESS_LONG_RELEASE"
 EVENT_PRESS_LONG_START = "PRESS_LONG_START"
 EVENT_SEQUENCE_OK = "SEQUENCE_OK"
 EVENT_UN_REACH = "UNREACH"
-
-EVENT_ALARM = "homematic.alarm"
-EVENT_KEYPRESS = "homematic.keypress"
-EVENT_IMPULSE = "homematic.impulse"
 
 CLICK_EVENTS = [
     EVENT_PRESS,
@@ -274,35 +272,63 @@ DEFAULT_INIT_TIMEOUT = 90
 DEFAULT_TLS = False
 DEFAULT_VERIFY_TLS = False
 
-HA_PLATFORM_ACTION = "action"
-HA_PLATFORM_BINARY_SENSOR = "binary_sensor"
-HA_PLATFORM_BUTTON = "button"
-HA_PLATFORM_CLIMATE = "climate"
-HA_PLATFORM_COVER = "cover"
-HA_PLATFORM_EVENT = "event"
-HA_PLATFORM_LIGHT = "light"
-HA_PLATFORM_LOCK = "lock"
-HA_PLATFORM_NUMBER = "number"
-HA_PLATFORM_SELECT = "select"
-HA_PLATFORM_SENSOR = "sensor"
-HA_PLATFORM_SWITCH = "switch"
-HA_PLATFORM_TEXT = "text"
-
-HA_PLATFORMS = [
-    HA_PLATFORM_BINARY_SENSOR,
-    HA_PLATFORM_BUTTON,
-    HA_PLATFORM_CLIMATE,
-    HA_PLATFORM_COVER,
-    HA_PLATFORM_LIGHT,
-    HA_PLATFORM_LOCK,
-    HA_PLATFORM_NUMBER,
-    HA_PLATFORM_SELECT,
-    HA_PLATFORM_SENSOR,
-    HA_PLATFORM_SWITCH,
-]
-
 HM_ENTITY_UNIT_REPLACE = {'"': "", "100%": "%", "% rF": "%"}
 
 HM_VIRTUAL_REMOTE_HM = "BidCoS-RF"
 HM_VIRTUAL_REMOTE_HMIP = "HmIP-RCV-1"
 HM_VIRTUAL_REMOTES = [HM_VIRTUAL_REMOTE_HM, HM_VIRTUAL_REMOTE_HMIP]
+
+
+class HmPlatform(Enum):
+    """Enum with platforms relevant for Home Assistant."""
+
+    ACTION = "action"
+    BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
+    CLIMATE = "climate"
+    COVER = "cover"
+    EVENT = "event"
+    LIGHT = "light"
+    LOCK = "lock"
+    NUMBER = "number"
+    SELECT = "select"
+    SENSOR = "sensor"
+    SWITCH = "switch"
+    TEXT = "text"
+
+    @classmethod
+    def value_of(cls, value):
+        for k, v in cls.__members__.items():
+            if k == value:
+                return v
+        else:
+            raise ValueError(f"'{cls.__name__}' enum not found for '{value}'")
+
+    def __str__(self) -> str:
+        """Return self.value."""
+        return str(self.value)
+
+
+class HmEventType(Enum):
+    """Enum with hahm event types."""
+
+    ALARM = "homematic.alarm"
+    KEYPRESS = "homematic.keypress"
+    IMPULSE = "homematic.impulse"
+
+    def __str__(self) -> str:
+        """Return self.value."""
+        return str(self.value)
+
+AVAILABLE_HM_PLATFORMS = [
+    HmPlatform.BINARY_SENSOR,
+    HmPlatform.BUTTON,
+    HmPlatform.CLIMATE,
+    HmPlatform.COVER,
+    HmPlatform.LIGHT,
+    HmPlatform.LOCK,
+    HmPlatform.NUMBER,
+    HmPlatform.SELECT,
+    HmPlatform.SENSOR,
+    HmPlatform.SWITCH,
+]

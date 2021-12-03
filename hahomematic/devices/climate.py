@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, HA_PLATFORM_CLIMATE
+from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, HmPlatform
 from hahomematic.devices.device_description import (
     FIELD_AUTO_MODE,
     FIELD_BOOST_MODE,
@@ -16,7 +16,7 @@ from hahomematic.devices.device_description import (
     FIELD_SET_POINT_MODE,
     FIELD_SETPOINT,
     FIELD_TEMPERATURE,
-    Devices,
+    DeviceDescription,
     make_custom_entity,
 )
 from hahomematic.entity import CustomEntity
@@ -65,7 +65,7 @@ class SimpleThermostat(CustomEntity):
             device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
-            platform=HA_PLATFORM_CLIMATE,
+            platform=HmPlatform.CLIMATE,
             channel_no=channel_no,
         )
         _LOGGER.debug(
@@ -168,7 +168,7 @@ class Thermostat(CustomEntity):
             device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
-            platform=HA_PLATFORM_CLIMATE,
+            platform=HmPlatform.CLIMATE,
             channel_no=channel_no,
         )
         _LOGGER.debug(
@@ -331,7 +331,7 @@ class IPThermostat(CustomEntity):
             device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
-            platform=HA_PLATFORM_CLIMATE,
+            platform=HmPlatform.CLIMATE,
             channel_no=channel_no,
         )
         _LOGGER.debug(
@@ -475,7 +475,7 @@ def make_simple_thermostat(device, address, group_base_channels: [int]):
         device,
         address,
         SimpleThermostat,
-        Devices.SIMPLE_RF_THERMOSTAT,
+        DeviceDescription.SIMPLE_RF_THERMOSTAT,
         group_base_channels,
     )
 
@@ -483,28 +483,44 @@ def make_simple_thermostat(device, address, group_base_channels: [int]):
 def make_thermostat(device, address, group_base_channels: [int]):
     """Creates Thermostat entities."""
     return make_custom_entity(
-        device, address, Thermostat, Devices.RF_THERMOSTAT, group_base_channels
+        device,
+        address,
+        Thermostat,
+        DeviceDescription.RF_THERMOSTAT,
+        group_base_channels,
     )
 
 
 def make_thermostat_group(device, address, group_base_channels: [int]):
     """Creates Thermostat group entities."""
     return make_custom_entity(
-        device, address, Thermostat, Devices.RF_THERMOSTAT_GROUP, group_base_channels
+        device,
+        address,
+        Thermostat,
+        DeviceDescription.RF_THERMOSTAT_GROUP,
+        group_base_channels,
     )
 
 
 def make_ip_thermostat(device, address, group_base_channels: [int]):
     """Creates IPThermostat entities."""
     return make_custom_entity(
-        device, address, IPThermostat, Devices.IP_THERMOSTAT, group_base_channels
+        device,
+        address,
+        IPThermostat,
+        DeviceDescription.IP_THERMOSTAT,
+        group_base_channels,
     )
 
 
 def make_ip_thermostat_group(device, address, group_base_channels: [int]):
     """Creates IPThermostat group entities."""
     return make_custom_entity(
-        device, address, IPThermostat, Devices.IP_THERMOSTAT_GROUP, group_base_channels
+        device,
+        address,
+        IPThermostat,
+        DeviceDescription.IP_THERMOSTAT_GROUP,
+        group_base_channels,
     )
 
 

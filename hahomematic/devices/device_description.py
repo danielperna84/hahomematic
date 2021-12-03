@@ -67,7 +67,7 @@ FIELD_VOLTAGE = "voltage"
 _LOGGER = logging.getLogger(__name__)
 
 
-class Devices(Enum):
+class DeviceDescription(Enum):
     """Enum for device_descriptions."""
 
     IP_COVER = "IPCover"
@@ -84,6 +84,10 @@ class Devices(Enum):
     RF_THERMOSTAT = "RfThermostat"
     RF_THERMOSTAT_GROUP = "RfThermostatGroup"
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
+
+    def __str__(self) -> str:
+        """Return self.value."""
+        return str(self.value)
 
 
 SCHEMA_DD_FIELD_DETAILS = Schema({Optional(str): str, Optional(str): str})
@@ -112,7 +116,7 @@ SCHEMA_DEVICE_DESCRIPTION = Schema(
         Required(DD_DEFAULT_ENTITIES): SCHEMA_DD_FIELD,
         Required(DD_DEVICES): Schema(
             {
-                Required(Devices): SCHEMA_DD_DEVICE_GROUPS,
+                Required(DeviceDescription): SCHEMA_DD_DEVICE_GROUPS,
             }
         ),
     }
@@ -134,7 +138,7 @@ device_description = {
         }
     },
     DD_DEVICES: {
-        Devices.IP_COVER: {
+        DeviceDescription.IP_COVER: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [],
@@ -151,7 +155,7 @@ device_description = {
                 },
             },
         },
-        Devices.IP_DIMMER: {
+        DeviceDescription.IP_DIMMER: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [2, 3],
@@ -165,7 +169,7 @@ device_description = {
                 },
             },
         },
-        Devices.IP_GARAGE: {
+        DeviceDescription.IP_GARAGE: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [],
@@ -176,7 +180,7 @@ device_description = {
                 DD_FIELDS: {},
             },
         },
-        Devices.IP_LIGHT_BSL: {
+        DeviceDescription.IP_LIGHT_BSL: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [2, 3],
@@ -192,7 +196,7 @@ device_description = {
                 },
             },
         },
-        Devices.IP_LIGHT_SWITCH: {
+        DeviceDescription.IP_LIGHT_SWITCH: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [2, 3],
@@ -216,7 +220,7 @@ device_description = {
                 },
             },
         },
-        Devices.IP_LOCK: {
+        DeviceDescription.IP_LOCK: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [],
                 DD_VIRT_CHANNEL: [],
@@ -229,7 +233,7 @@ device_description = {
                 },
             },
         },
-        Devices.IP_THERMOSTAT: {
+        DeviceDescription.IP_THERMOSTAT: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [],
@@ -254,7 +258,7 @@ device_description = {
                 },
             },
         },
-        Devices.IP_THERMOSTAT_GROUP: {
+        DeviceDescription.IP_THERMOSTAT_GROUP: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1],
                 DD_VIRT_CHANNEL: [],
@@ -271,7 +275,7 @@ device_description = {
             },
             DD_INCLUDE_DEFAULT_ENTITIES: False,
         },
-        Devices.RF_COVER: {
+        DeviceDescription.RF_COVER: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1, 2, 3, 4],
                 DD_VIRT_CHANNEL: [],
@@ -282,7 +286,7 @@ device_description = {
                 },
             },
         },
-        Devices.RF_DIMMER: {
+        DeviceDescription.RF_DIMMER: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1, 2, 3, 4],
                 DD_VIRT_CHANNEL: [],
@@ -292,7 +296,7 @@ device_description = {
                 DD_FIELDS: {},
             },
         },
-        Devices.RF_LOCK: {
+        DeviceDescription.RF_LOCK: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [],
                 DD_VIRT_CHANNEL: [],
@@ -305,7 +309,7 @@ device_description = {
                 },
             },
         },
-        Devices.RF_THERMOSTAT: {
+        DeviceDescription.RF_THERMOSTAT: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1, 2, 3, 4],
                 DD_VIRT_CHANNEL: [],
@@ -322,7 +326,7 @@ device_description = {
                 },
             },
         },
-        Devices.RF_THERMOSTAT_GROUP: {
+        DeviceDescription.RF_THERMOSTAT_GROUP: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [1, 2, 3, 4],
                 DD_VIRT_CHANNEL: [],
@@ -340,7 +344,7 @@ device_description = {
             },
             DD_INCLUDE_DEFAULT_ENTITIES: False,
         },
-        Devices.SIMPLE_RF_THERMOSTAT: {
+        DeviceDescription.SIMPLE_RF_THERMOSTAT: {
             DD_DEVICE_GROUP: {
                 DD_PHY_CHANNEL: [],
                 DD_VIRT_CHANNEL: [],
@@ -375,7 +379,7 @@ def make_custom_entity(
     device,
     address,
     custom_entity_class,
-    device_enum: Devices,
+    device_enum: DeviceDescription,
     group_base_channels: [int],
 ):
     """
@@ -458,7 +462,7 @@ def get_default_entities():
     return copy(device_description[DD_DEFAULT_ENTITIES])
 
 
-def get_include_default_entities(device_enum: Devices) -> True:
+def get_include_default_entities(device_enum: DeviceDescription) -> True:
     """Return if default entities should be included."""
     device = _get_device(device_enum)
     if device:
@@ -466,7 +470,7 @@ def get_include_default_entities(device_enum: Devices) -> True:
     return DEFAULT_INCLUDE_DEFAULT_ENTITIES
 
 
-def _get_device(device_enum: Devices):
+def _get_device(device_enum: DeviceDescription):
     """Return device from device_descriptions."""
     device = device_description[DD_DEVICES].get(device_enum)
     if device:
@@ -474,7 +478,7 @@ def _get_device(device_enum: Devices):
     return None
 
 
-def _get_device_group(device_enum: Devices, base_channel_no: int):
+def _get_device_group(device_enum: DeviceDescription, base_channel_no: int):
     """Return the device group."""
     device = _get_device(device_enum)
     group = {}
@@ -501,7 +505,7 @@ def _get_device_group(device_enum: Devices, base_channel_no: int):
     return group
 
 
-def _get_device_entities(device_enum: Devices, base_channel_no: int):
+def _get_device_entities(device_enum: DeviceDescription, base_channel_no: int):
     """Return the device entities."""
     additional_entities = (
         device_description[DD_DEVICES]

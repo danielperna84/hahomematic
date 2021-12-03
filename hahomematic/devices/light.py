@@ -5,7 +5,7 @@ from abc import abstractmethod
 import logging
 from typing import Any
 
-from hahomematic.const import HA_PLATFORM_LIGHT
+from hahomematic.const import HmPlatform
 from hahomematic.devices.device_description import (
     FIELD_CHANNEL_COLOR,
     FIELD_CHANNEL_LEVEL,
@@ -13,7 +13,7 @@ from hahomematic.devices.device_description import (
     FIELD_COLOR,
     FIELD_LEVEL,
     FIELD_STATE,
-    Devices,
+    DeviceDescription,
     make_custom_entity,
 )
 from hahomematic.entity import CustomEntity
@@ -52,7 +52,7 @@ class BaseHmLight(CustomEntity):
             device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
-            platform=HA_PLATFORM_LIGHT,
+            platform=HmPlatform.LIGHT,
             channel_no=channel_no,
         )
         _LOGGER.debug(
@@ -302,28 +302,28 @@ def _convert_color(color: tuple) -> str:
 def make_ip_dimmer(device, address, group_base_channels: [int]):
     """Creates homematic ip dimmer entities."""
     return make_custom_entity(
-        device, address, HmDimmer, Devices.IP_DIMMER, group_base_channels
+        device, address, HmDimmer, DeviceDescription.IP_DIMMER, group_base_channels
     )
 
 
 def make_rf_dimmer(device, address, group_base_channels: [int]):
     """Creates homematic classic dimmer entities."""
     return make_custom_entity(
-        device, address, HmDimmer, Devices.RF_DIMMER, group_base_channels
+        device, address, HmDimmer, DeviceDescription.RF_DIMMER, group_base_channels
     )
 
 
 def make_ip_light(device, address, group_base_channels: [int]):
     """Creates homematic classic light entities."""
     return make_custom_entity(
-        device, address, HmLight, Devices.IP_LIGHT_SWITCH, group_base_channels
+        device, address, HmLight, DeviceDescription.IP_LIGHT_SWITCH, group_base_channels
     )
 
 
 def make_ip_light_bsl(device, address, group_base_channels: [int]):
     """Creates HmIP-BSL entities."""
     return make_custom_entity(
-        device, address, IPLightBSL, Devices.IP_LIGHT_BSL, group_base_channels
+        device, address, IPLightBSL, DeviceDescription.IP_LIGHT_BSL, group_base_channels
     )
 
 

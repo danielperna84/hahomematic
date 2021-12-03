@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic.const import DATA_LOAD_SUCCESS, HA_PLATFORM_ACTION
+from hahomematic.const import DATA_LOAD_SUCCESS, HmPlatform
 from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ class HmAction(GenericEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_ACTION,
+            platform=HmPlatform.ACTION,
         )
 
     @property
