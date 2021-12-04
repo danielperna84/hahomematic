@@ -189,8 +189,8 @@ class HmHub(BaseHubEntity):
 
     async def _update_hub_state(self):
         """Retrieve latest state."""
-        service_message = await self._central.get_service_messages()
-        state = 0 if service_message is None else len(service_message)
+        service_messages = await self._central.get_service_messages()
+        state = 0 if service_messages is None else len(service_messages)
 
         if self._state != state:
             self._state = state

@@ -303,7 +303,12 @@ class CentralUnit:
 
     async def get_service_messages(self):
         """Get service messages from CCU / Homegear."""
-        await self.get_primary_client().get_service_messages()
+        service_messages = []
+        for client in self.clients.values():
+            if client.port in PRIMARY_PORTS:
+                if client_messages := await client.get_service_messages():
+                    service_messages.extend(client_messages)
+        return service_messages
 
     # pylint: disable=invalid-name
     async def set_install_mode(
