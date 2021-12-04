@@ -61,7 +61,7 @@ class JsonRpcAioHttpClient:
         self._session_id = await self._renew_login(self._session_id)
         return self._session_id is not None
 
-    async def _renew_login(self, session_id) -> str:
+    async def _renew_login(self, session_id) -> str | None:
         """Renew JSON-RPC session or perform login."""
         try:
             response = await self._post(
@@ -78,9 +78,9 @@ class JsonRpcAioHttpClient:
             )
             return None
 
-    async def _login(self) -> str:
+    async def _login(self) -> str | None:
         """Login to CCU and return session."""
-        session_id = False
+        session_id = None
         try:
             params = {
                 ATTR_USERNAME: self._username,

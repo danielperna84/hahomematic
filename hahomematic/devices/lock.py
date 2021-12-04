@@ -129,14 +129,14 @@ class RfLock(CustomEntity):
         await self._send_value(FIELD_OPEN, True)
 
 
-def make_ip_lock(device, address, group_base_channels: [int]):
+def make_ip_lock(device, address, group_base_channels: list[int]):
     """Creates homematic ip lock entities."""
     return make_custom_entity(
         device, address, IpLock, DeviceDescription.IP_LOCK, group_base_channels
     )
 
 
-def make_rf_lock(device, address, group_base_channels: [int]):
+def make_rf_lock(device, address, group_base_channels: list[int]):
     """Creates homematic rf lock entities."""
     return make_custom_entity(
         device, address, RfLock, DeviceDescription.RF_LOCK, group_base_channels
@@ -145,7 +145,7 @@ def make_rf_lock(device, address, group_base_channels: [int]):
 
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
-DEVICES = {
+DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-DLD": (make_ip_lock, []),
     "HM-Sec-Key*": (make_rf_lock, []),
 }

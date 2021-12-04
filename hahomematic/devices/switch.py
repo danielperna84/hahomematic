@@ -84,7 +84,7 @@ class HmSwitch(CustomEntity):
         return state_attr
 
 
-def make_ip_switch(device, address, group_base_channels: [int]):
+def make_ip_switch(device, address, group_base_channels: list[int]):
     """Creates homematic ip switch entities."""
     return make_custom_entity(
         device,
@@ -97,7 +97,7 @@ def make_ip_switch(device, address, group_base_channels: [int]):
 
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
-DEVICES = {
+DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-FSM*": (make_ip_switch, [1]),
     "HmIP-FSI*": (make_ip_switch, [2]),
     "HmIP-PS*": (make_ip_switch, [2]),

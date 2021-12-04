@@ -69,7 +69,7 @@ class BaseHmLight(CustomEntity):
         ...
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return None
 
@@ -299,28 +299,28 @@ def _convert_color(color: tuple) -> str:
     return bsl_color
 
 
-def make_ip_dimmer(device, address, group_base_channels: [int]):
+def make_ip_dimmer(device, address, group_base_channels: list[int]):
     """Creates homematic ip dimmer entities."""
     return make_custom_entity(
         device, address, HmDimmer, DeviceDescription.IP_DIMMER, group_base_channels
     )
 
 
-def make_rf_dimmer(device, address, group_base_channels: [int]):
+def make_rf_dimmer(device, address, group_base_channels: list[int]):
     """Creates homematic classic dimmer entities."""
     return make_custom_entity(
         device, address, HmDimmer, DeviceDescription.RF_DIMMER, group_base_channels
     )
 
 
-def make_ip_light(device, address, group_base_channels: [int]):
+def make_ip_light(device, address, group_base_channels: list[int]):
     """Creates homematic classic light entities."""
     return make_custom_entity(
         device, address, HmLight, DeviceDescription.IP_LIGHT_SWITCH, group_base_channels
     )
 
 
-def make_ip_light_bsl(device, address, group_base_channels: [int]):
+def make_ip_light_bsl(device, address, group_base_channels: list[int]):
     """Creates HmIP-BSL entities."""
     return make_custom_entity(
         device, address, IPLightBSL, DeviceDescription.IP_LIGHT_BSL, group_base_channels
@@ -329,7 +329,7 @@ def make_ip_light_bsl(device, address, group_base_channels: [int]):
 
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
-DEVICES = {
+DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-BSL": (make_ip_light_bsl, [7, 11]),
     "HmIP-BSM": (make_ip_light, [3]),
     "HmIP-BDT": (make_ip_dimmer, [3]),

@@ -380,7 +380,7 @@ def make_custom_entity(
     address,
     custom_entity_class,
     device_enum: DeviceDescription,
-    group_base_channels: [int],
+    group_base_channels: list[int],
 ):
     """
     Creates custom_entities.
@@ -462,7 +462,7 @@ def get_default_entities():
     return copy(device_description[DD_DEFAULT_ENTITIES])
 
 
-def get_include_default_entities(device_enum: DeviceDescription) -> True:
+def get_include_default_entities(device_enum: DeviceDescription) -> bool:
     """Return if default entities should be included."""
     device = _get_device(device_enum)
     if device:

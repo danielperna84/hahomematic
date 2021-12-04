@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 from abc import ABC
-import datetime
+from datetime import datetime
 import logging
 from typing import Any
 
-from hahomematic.const import HA_DOMAIN
+from hahomematic.const import HA_DOMAIN, INIT_DATETIME
 from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class BaseHubEntity(ABC):
         self.unique_id = unique_id
         self.name = name
         self._state = state
-        self.last_update = None
+        self.last_update: datetime = INIT_DATETIME
         self._update_callbacks = []
         self._remove_callbacks = []
         self.create_in_ha = True
@@ -109,7 +109,7 @@ class BaseHubEntity(ABC):
             _callback(self.unique_id)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.now()
 
 
 class HmSystemVariable(BaseHubEntity):
@@ -160,7 +160,7 @@ class HmHub(BaseHubEntity):
         self._use_entities = use_entities
 
     @property
-    def device_info(self) -> dict[str, str]:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
             "config_entry_id": self._central.entry_id,
@@ -250,7 +250,7 @@ class HmDummyHub(BaseHubEntity):
         self._use_entities = use_entities
 
     @property
-    def device_info(self) -> dict[str, str]:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
             "config_entry_id": self._central.entry_id,

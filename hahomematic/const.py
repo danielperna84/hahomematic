@@ -3,10 +3,12 @@ Constants used by hahomematic.
 """
 from __future__ import annotations
 
+from datetime import datetime
 from enum import Enum
 
 DEFAULT_ENCODING = "UTF-8"
-
+HA_DOMAIN = "hahm"
+INIT_DATETIME = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
 LOCALHOST = "localhost"
 IP_LOCALHOST_V4 = "127.0.0.1"
 IP_LOCALHOST_V6 = "::1"
@@ -58,8 +60,6 @@ RELEVANT_PARAMSETS = [
     PARAMSET_VALUES,
     # PARAMSET_MASTER,
 ]
-
-HA_DOMAIN = "hahm"
 
 HH_EVENT_DELETE_DEVICES = "deleteDevices"
 HH_EVENT_DEVICES_CREATED = "devicesCreated"
@@ -296,14 +296,6 @@ class HmPlatform(Enum):
     SWITCH = "switch"
     TEXT = "text"
 
-    @classmethod
-    def value_of(cls, value):
-        for k, v in cls.__members__.items():
-            if k == value:
-                return v
-        else:
-            raise ValueError(f"'{cls.__name__}' enum not found for '{value}'")
-
     def __str__(self) -> str:
         """Return self.value."""
         return str(self.value)
@@ -319,6 +311,7 @@ class HmEventType(Enum):
     def __str__(self) -> str:
         """Return self.value."""
         return str(self.value)
+
 
 AVAILABLE_HM_PLATFORMS = [
     HmPlatform.BINARY_SENSOR,

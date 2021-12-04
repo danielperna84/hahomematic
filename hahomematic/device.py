@@ -3,7 +3,8 @@ Module for the Device class.
 """
 from __future__ import annotations
 
-import datetime
+from collections.abc import Callable
+from datetime import datetime
 import logging
 
 import hahomematic.central_unit as hm_central
@@ -23,6 +24,7 @@ from hahomematic.const import (
     IGNORED_PARAMETERS_WILDCARDS_END,
     IGNORED_PARAMETERS_WILDCARDS_START,
     IMPULSE_EVENTS,
+    INIT_DATETIME,
     OPERATION_EVENT,
     OPERATION_WRITE,
     PARAM_UN_REACH,
@@ -41,6 +43,7 @@ from hahomematic.entity import (
     AlarmEvent,
     BaseEntity,
     BaseEvent,
+    BaseParameterEntity,
     CallbackEntity,
     ClickEvent,
     CustomEntity,
@@ -65,7 +68,9 @@ class HmDevice:
     Object to hold information about a device and associated entities.
     """
 
-    def __init__(self, central: hm_central.CentralUnit, interface_id, address):
+    def __init__(
+        self, central: hm_central.CentralUnit, interface_id: str, address: str
+    ):
         """
         Initialize the device object.
         """
@@ -83,21 +88,24 @@ class HmDevice:
         self.entities: dict[tuple[str, str], GenericEntity] = {}
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
-        self.last_update = None
+        self.last_update: datetime = INIT_DATETIME
         self._available = True
-        self._update_callbacks = []
-        self._remove_callbacks = []
-        self.device_type = self.central.devices_raw_dict[self.interface_id][
+        self._update_callbacks: list[Callable] = []
+        self._remove_callbacks: list[Callable] = []
+        self.device_type: str = self.central.devices_raw_dict[self.interface_id][
             self.address
         ][ATTR_HM_TYPE]
-        self.sub_type = self.central.devices_raw_dict[self.interface_id][
+        self.sub_type: str = self.central.devices_raw_dict[self.interface_id][
             self.address
         ].get(ATTR_HM_SUBTYPE)
         # marker if device will be created as custom device
-        self.is_custom_device = device_desc_exists(self.device_type, self.sub_type)
-        self.firmware = self.central.devices_raw_dict[self.interface_id][self.address][
-            ATTR_HM_FIRMWARE
-        ]
+        self.is_custom_device: bool = device_desc_exists(
+            self.device_type, self.sub_type
+        )
+        self.firmware: str = self.central.devices_raw_dict[self.interface_id][
+            self.address
+        ][ATTR_HM_FIRMWARE]
+        self.name: str = ""
         if self.address in self.central.names_cache.get(self.interface_id, {}):
             self.name = self.central.names_cache[self.interface_id][self.address]
         else:
@@ -182,7 +190,7 @@ class HmDevice:
             _callback(*args)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.now()
 
     def get_hm_entity(self, address, parameter) -> GenericEntity | None:
         """Return a hm_entity from device."""
@@ -237,11 +245,11 @@ class HmDevice:
         self.update_device()
 
     # pylint: disable=too-many-nested-blocks
-    def create_entities(self) -> set[GenericEntity] | None:
+    def create_entities(self) -> set[BaseEntity]:
         """
         Create the entities associated to this device.
         """
-        new_entities: set[GenericEntity] = set()
+        new_entities: list[BaseEntity] = []
         for channel in self.channels:
             if channel not in self.central.paramsets_cache[self.interface_id]:
                 _LOGGER.debug(
@@ -255,6 +263,7 @@ class HmDevice:
                 for parameter, parameter_data in self.central.paramsets_cache[
                     self.interface_id
                 ][channel][paramset].items():
+                    entity: BaseParameterEntity | None
                     if (
                         not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
@@ -275,13 +284,13 @@ class HmDevice:
                             parameter_data=parameter_data,
                         )
                         if self.address.startswith(tuple(HM_VIRTUAL_REMOTES)):
-                            entity = self.create_buttons(
+                            entity = self.create_button(
                                 address=channel,
                                 parameter=parameter,
                                 parameter_data=parameter_data,
                             )
                             if entity is not None:
-                                new_entities.add(entity)
+                                new_entities.append(entity)
                     if not (parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS):
                         entity = self.create_entity(
                             address=channel,
@@ -289,7 +298,7 @@ class HmDevice:
                             parameter_data=parameter_data,
                         )
                         if entity is not None:
-                            new_entities.add(entity)
+                            new_entities.append(entity)
         # create custom entities
         if self.is_custom_device:
             _LOGGER.debug(
@@ -303,11 +312,13 @@ class HmDevice:
             for (device_func, group_base_channels) in get_device_funcs(
                 self.device_type, self.sub_type
             ):
-                custom_entities = device_func(self, self.address, group_base_channels)
-                new_entities.update(custom_entities)
-        return new_entities
+                custom_entities: list[CustomEntity] = device_func(
+                    self, self.address, group_base_channels
+                )
+                new_entities.extend(custom_entities)
+        return set(new_entities)
 
-    def create_buttons(self, address, parameter, parameter_data) -> HmButton | None:
+    def create_button(self, address, parameter, parameter_data) -> HmButton | None:
         """Create the buttons associated to this device"""
         unique_id = generate_unique_id(
             address, parameter, f"button_{self.central.instance_name}"
@@ -319,16 +330,16 @@ class HmDevice:
             self.interface_id,
         )
 
-        button = HmButton(
+        if button := HmButton(
             device=self,
             unique_id=unique_id,
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-        )
-        if button:
+        ):
             button.add_to_collections()
-        return button
+            return button
+        return None
 
     def create_event(self, address, parameter, parameter_data) -> BaseEvent | None:
         """Create action event entity."""
@@ -345,7 +356,7 @@ class HmDevice:
             parameter,
             self.interface_id,
         )
-        action_event = None
+        action_event: BaseEvent | None = None
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
             if parameter in CLICK_EVENTS:
                 action_event = ClickEvent(
@@ -402,7 +413,7 @@ class HmDevice:
             parameter,
             self.interface_id,
         )
-        entity = None
+        entity: GenericEntity | None = None
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
             if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
                 if parameter_data[ATTR_HM_OPERATIONS] == OPERATION_WRITE:
@@ -513,7 +524,7 @@ def create_devices(central: hm_central.CentralUnit) -> None:
     Trigger creation of the objects that expose the functionality.
     """
     new_devices = set[str]()
-    new_entities = set[GenericEntity]()
+    new_entities: list[BaseEntity] = []
     for interface_id, client in central.clients.items():
         if not client:
             _LOGGER.warning(
@@ -528,7 +539,7 @@ def create_devices(central: hm_central.CentralUnit) -> None:
             continue
         for device_address in central.devices[interface_id]:
             # Do we check for duplicates here? For now we do.
-            device = None
+            device: HmDevice | None = None
             if device_address in central.hm_devices:
                 _LOGGER.debug(
                     "create_devices: Skipping device %s on %s, already exists.",
@@ -547,7 +558,8 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                     device_address,
                 )
             try:
-                new_entities.update(device.create_entities())
+                if device:
+                    new_entities.extend(device.create_entities())
             except Exception:
                 _LOGGER.exception(
                     "create_devices: Failed to create entities: %s, %s",
@@ -556,7 +568,7 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                 )
     if callable(central.callback_system_event):
         central.callback_system_event(
-            HH_EVENT_DEVICES_CREATED, new_devices, new_entities
+            HH_EVENT_DEVICES_CREATED, new_devices, set(new_entities)
         )
 
 

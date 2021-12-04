@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, HmPlatform
 from hahomematic.devices.device_description import (
@@ -469,7 +470,7 @@ class IPThermostat(CustomEntity):
             await self._send_value(FIELD_BOOST_MODE, False)
 
 
-def make_simple_thermostat(device, address, group_base_channels: [int]):
+def make_simple_thermostat(device, address, group_base_channels: list[int]):
     """Creates SimpleRfThermostat entities."""
     return make_custom_entity(
         device,
@@ -480,7 +481,7 @@ def make_simple_thermostat(device, address, group_base_channels: [int]):
     )
 
 
-def make_thermostat(device, address, group_base_channels: [int]):
+def make_thermostat(device, address, group_base_channels: list[int]):
     """Creates RfThermostat entities."""
     return make_custom_entity(
         device,
@@ -491,7 +492,7 @@ def make_thermostat(device, address, group_base_channels: [int]):
     )
 
 
-def make_thermostat_group(device, address, group_base_channels: [int]):
+def make_thermostat_group(device, address, group_base_channels: list[int]):
     """Creates RfThermostat group entities."""
     return make_custom_entity(
         device,
@@ -502,7 +503,7 @@ def make_thermostat_group(device, address, group_base_channels: [int]):
     )
 
 
-def make_ip_thermostat(device, address, group_base_channels: [int]):
+def make_ip_thermostat(device, address, group_base_channels: list[int]):
     """Creates IPThermostat entities."""
     return make_custom_entity(
         device,
@@ -513,7 +514,7 @@ def make_ip_thermostat(device, address, group_base_channels: [int]):
     )
 
 
-def make_ip_thermostat_group(device, address, group_base_channels: [int]):
+def make_ip_thermostat_group(device, address, group_base_channels: list[int]):
     """Creates IPThermostat group entities."""
     return make_custom_entity(
         device,
@@ -526,7 +527,7 @@ def make_ip_thermostat_group(device, address, group_base_channels: [int]):
 
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
-DEVICES = {
+DEVICES: dict[str, tuple[Any, list[int]]] = {
     "BC-RT-TRX-CyG*": (make_thermostat, []),
     "BC-RT-TRX-CyN*": (make_thermostat, []),
     "BC-TC-C-WM*": (make_thermostat, []),

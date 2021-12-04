@@ -4,7 +4,8 @@ Functions for entity creation.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import datetime
+from collections.abc import Callable
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -32,6 +33,7 @@ from hahomematic.const import (
     FLAG_VISIBLE,
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
+    INIT_DATETIME,
     OPERATION_READ,
     TYPE_ACTION,
     TYPE_BOOL,
@@ -58,9 +60,9 @@ class CallbackEntity(ABC):
     """Base class for callback entities."""
 
     def __init__(self):
-        self.last_update = None
-        self._update_callbacks = []
-        self._remove_callbacks = []
+        self.last_update: datetime = INIT_DATETIME
+        self._update_callbacks: list[Callable] = []
+        self._remove_callbacks: list[Callable] = []
 
     def register_update_callback(self, update_callback) -> None:
         """register update callback"""
@@ -99,12 +101,10 @@ class CallbackEntity(ABC):
             _callback(*args)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.now()
 
     def _updated_within_minutes(self, minutes=10) -> bool:
-        if self.last_update is None:
-            return False
-        delta = datetime.datetime.now() - self.last_update
+        delta = datetime.now() - self.last_update
         if delta.seconds < minutes * 60:
             return True
         return False
@@ -128,15 +128,15 @@ class BaseEntity(ABC):
         self.address = address
         self.platform = platform
         self._central = self._device.central
-        self._interface_id = self._device.interface_id
-        self.device_type = self._device.device_type
-        self.sub_type = self._device.sub_type
-        self.create_in_ha = not self._device.is_custom_device
+        self._interface_id: str = self._device.interface_id
+        self.device_type: str = self._device.device_type
+        self.sub_type: str = self._device.sub_type
+        self.create_in_ha: bool = not self._device.is_custom_device
         self.client = self._central.clients[self._interface_id]
         self.proxy = self.client.proxy
-        self.name = self.client.central.names_cache.get(self._interface_id, {}).get(
-            self.address, self.unique_id
-        )
+        self.name: str = self.client.central.names_cache.get(
+            self._interface_id, {}
+        ).get(self.address, self.unique_id)
 
     @property
     def available(self) -> bool:
@@ -482,7 +482,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 if entity:
                     entity.create_in_ha = True
 
-    def _add_entity(self, f_name, entity: GenericEntity):
+    def _add_entity(self, f_name, entity: GenericEntity | None):
         """Add entity to collection and register callback"""
         if not entity:
             return
@@ -490,7 +490,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         entity.register_update_callback(self.update_entity)
         self.data_entities[f_name] = entity
 
-    def _remove_entity(self, f_name, entity: GenericEntity):
+    def _remove_entity(self, f_name, entity: GenericEntity | None):
         """Remove entity from collection and un-register callback"""
         if not entity:
             return
@@ -562,7 +562,7 @@ class BaseEvent(BaseParameterEntity):
             unique_id=self.unique_id,
         )
         self.event_type = event_type
-        self.last_update = None
+        self.last_update: datetime = INIT_DATETIME
         self._value = None
 
         # Subscribe for all action events of this device
@@ -631,7 +631,7 @@ class BaseEvent(BaseParameterEntity):
         self._device.add_hm_action_event(self)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.now()
 
     @abstractmethod
     def get_event_data(self, value=None):

@@ -113,7 +113,7 @@ class CentralUnit:
         self._load_caches()
         self.init_address_parameter_list()
         self._connection_checker = ConnectionChecker(self)
-        self.hub = None
+        self.hub: HmHub | None = None
 
     async def init_hub(self):
         """Init the hub."""
@@ -310,13 +310,14 @@ class CentralUnit:
         self, interface_id, on=True, t=60, mode=1, address=None
     ) -> None:
         """Activate or deactivate install-mode on CCU / Homegear."""
-        await self.get_primary_client(interface_id).set_install_mode(
-            on=on, t=t, mode=mode, address=address
-        )
+        if client := self.get_primary_client(interface_id):
+            await client.set_install_mode(on=on, t=t, mode=mode, address=address)
 
     async def get_install_mode(self, interface_id) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
-        return await self.get_primary_client(interface_id).get_install_mode()
+        if client := self.get_primary_client(interface_id):
+            return await client.get_install_mode()
+        return 0
 
     async def put_paramset(self, interface_id, address, paramset, value, rx_mode=None):
         """Set paramsets manually."""
@@ -366,7 +367,7 @@ class CentralUnit:
 
         return hm_entities
 
-    def get_primary_client(self, interface_id=None) -> hm_client.Client:
+    def get_primary_client(self, interface_id=None) -> hm_client.Client | None:
         """Return the client by interface_id or the first with a primary port."""
         try:
             if interface_id:
@@ -381,6 +382,7 @@ class CentralUnit:
             )
             _LOGGER.warning(message)
             raise hm_client.ClientException(message) from err
+        return None
 
     def get_hm_entity_by_parameter(self, address, parameter) -> GenericEntity | None:
         """Get entity by address and parameter."""
@@ -427,7 +429,7 @@ class CentralUnit:
         parameters = set()
         for entity in self.hm_entities.values():
             if isinstance(entity, GenericEntity):
-                if parameter := getattr(entity, "parameter", None):
+                if getattr(entity, "parameter", None):
                     parameters.add(entity.parameter)
 
         return sorted(parameters)
@@ -437,7 +439,7 @@ class CentralUnit:
         parameters = set()
         if device := self.hm_devices.get(address):
             for entity in device.entities.values():
-                if parameter := getattr(entity, "parameter", None):
+                if getattr(entity, "parameter", None):
                     parameters.add(entity.parameter)
 
         return sorted(parameters)

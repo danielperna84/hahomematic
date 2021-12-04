@@ -256,35 +256,35 @@ class HmGarage(CustomEntity):
         await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
 
 
-def make_ip_cover(device, address, group_base_channels: [int]):
+def make_ip_cover(device, address, group_base_channels: list[int]):
     """Creates homematic ip cover entities."""
     return make_custom_entity(
         device, address, HmCover, DeviceDescription.IP_COVER, group_base_channels
     )
 
 
-def make_rf_cover(device, address, group_base_channels: [int]):
+def make_rf_cover(device, address, group_base_channels: list[int]):
     """Creates homematic classic cover entities."""
     return make_custom_entity(
         device, address, HmCover, DeviceDescription.RF_COVER, group_base_channels
     )
 
 
-def make_ip_blind(device, address, group_base_channels: [int]):
+def make_ip_blind(device, address, group_base_channels: list[int]):
     """Creates homematic ip cover entities."""
     return make_custom_entity(
         device, address, HmBlind, DeviceDescription.IP_COVER, group_base_channels
     )
 
 
-def make_ip_garage(device, address, group_base_channels: [int]):
+def make_ip_garage(device, address, group_base_channels: list[int]):
     """Creates homematic ip garage entities."""
     return make_custom_entity(
         device, address, HmGarage, DeviceDescription.IP_GARAGE, group_base_channels
     )
 
 
-def make_rf_blind(device, address, group_base_channels: [int]):
+def make_rf_blind(device, address, group_base_channels: list[int]):
     """Creates homematic classic cover entities."""
     return make_custom_entity(
         device, address, HmBlind, DeviceDescription.RF_COVER, group_base_channels
@@ -293,7 +293,7 @@ def make_rf_blind(device, address, group_base_channels: [int]):
 
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
-DEVICES = {
+DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-BROLL": (make_ip_cover, [3]),
     "HmIP-FROLL": (make_ip_cover, [3]),
     "HmIP-BBL": (make_ip_blind, [3]),
