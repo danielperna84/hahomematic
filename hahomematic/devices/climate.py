@@ -45,7 +45,7 @@ SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
 
 
-class SimpleThermostat(CustomEntity):
+class SimpleRfThermostat(CustomEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
 
     def __init__(
@@ -69,7 +69,7 @@ class SimpleThermostat(CustomEntity):
             channel_no=channel_no,
         )
         _LOGGER.debug(
-            "SimpleThermostat.__init__(%s, %s, %s)",
+            "SimpleRfThermostat.__init__(%s, %s, %s)",
             self._device.interface_id,
             address,
             unique_id,
@@ -148,7 +148,7 @@ class SimpleThermostat(CustomEntity):
         await self._send_value(FIELD_SETPOINT, float(temperature))
 
 
-class Thermostat(CustomEntity):
+class RfThermostat(CustomEntity):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
     def __init__(
@@ -172,7 +172,7 @@ class Thermostat(CustomEntity):
             channel_no=channel_no,
         )
         _LOGGER.debug(
-            "Thermostat.__init__(%s, %s, %s)",
+            "RfThermostat.__init__(%s, %s, %s)",
             self._device.interface_id,
             address,
             unique_id,
@@ -470,33 +470,33 @@ class IPThermostat(CustomEntity):
 
 
 def make_simple_thermostat(device, address, group_base_channels: [int]):
-    """Creates SimpleThermostat entities."""
+    """Creates SimpleRfThermostat entities."""
     return make_custom_entity(
         device,
         address,
-        SimpleThermostat,
+        SimpleRfThermostat,
         DeviceDescription.SIMPLE_RF_THERMOSTAT,
         group_base_channels,
     )
 
 
 def make_thermostat(device, address, group_base_channels: [int]):
-    """Creates Thermostat entities."""
+    """Creates RfThermostat entities."""
     return make_custom_entity(
         device,
         address,
-        Thermostat,
+        RfThermostat,
         DeviceDescription.RF_THERMOSTAT,
         group_base_channels,
     )
 
 
 def make_thermostat_group(device, address, group_base_channels: [int]):
-    """Creates Thermostat group entities."""
+    """Creates RfThermostat group entities."""
     return make_custom_entity(
         device,
         address,
-        Thermostat,
+        RfThermostat,
         DeviceDescription.RF_THERMOSTAT_GROUP,
         group_base_channels,
     )
@@ -541,6 +541,6 @@ DEVICES = {
     "HmIP-WTH*": (make_ip_thermostat, []),
     "HmIPW-STH*": (make_ip_thermostat, []),
     "HmIPW-WTH*": (make_ip_thermostat, []),
-    "Thermostat AA*": (make_ip_thermostat, []),
+    "RfThermostat AA*": (make_ip_thermostat, []),
     "ZEL STG RM FWT": (make_simple_thermostat, []),
 }
