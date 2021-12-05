@@ -681,15 +681,15 @@ class AlarmEvent(BaseEvent):
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: address,
             ATTR_TYPE: click_type,
+            ATTR_VALUE: value,
         }
 
     def fire_event(self, value) -> None:
         """
         Do what is needed to fire an event.
         """
-        if self._value == value and value is False:
+        if self._value == value:
             return
-
         self._set_last_update()
         self._value = value
 
