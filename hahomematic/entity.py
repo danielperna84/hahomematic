@@ -693,8 +693,8 @@ class AlarmEvent(BaseEvent):
         self._set_last_update()
         self._value = value
 
-        if callable(self._central.callback_alarm_event):
-            self._central.callback_alarm_event(
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
                 self.event_type,
                 self.get_event_data(value),
             )
@@ -739,8 +739,8 @@ class ClickEvent(BaseEvent):
         """
         Do what is needed to fire an event.
         """
-        if callable(self._central.callback_click_event):
-            self._central.callback_click_event(
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
                 self.event_type,
                 self.get_event_data(),
             )
@@ -798,8 +798,8 @@ class SpecialEvent(BaseEvent):
             self._device.update_device(self.unique_id)
             return
 
-        if callable(self._central.callback_special_event):
-            self._central.callback_special_event(
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
                 self.event_type,
                 self.get_event_data(value),
             )

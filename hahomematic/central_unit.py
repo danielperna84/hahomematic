@@ -96,16 +96,12 @@ class CentralUnit:
 
         self.last_events = {}
 
-        # Signature: f(name, *args)
+        # Signature: (name, *args)
         self.callback_system_event = None
-        # Signature: f(interface_id, address, value_key, value)
+        # Signature: (interface_id, address, value_key, value)
         self.callback_entity_event = None
-        # Signature: f(interface_id, address, value_key, value)
-        self.callback_alarm_event = None
-        # Signature: f(interface_id, address, value_key, value)
-        self.callback_click_event = None
-        # Signature: f(interface_id, address, value_key, value)
-        self.callback_special_event = None
+        # Signature: (event_type, event_data)
+        self.callback_ha_event = None
 
         self.json_rpc_session = JsonRpcAioHttpClient(central_config=self.central_config)
 
