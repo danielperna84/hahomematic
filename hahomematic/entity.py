@@ -746,9 +746,9 @@ class ClickEvent(BaseEvent):
             )
 
 
-class ImpulseEvent(BaseEvent):
+class SpecialEvent(BaseEvent):
     """
-    class for handling impulse events.
+    class for handling special events.
     """
 
     def __init__(
@@ -768,7 +768,7 @@ class ImpulseEvent(BaseEvent):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            event_type=HmEventType.IMPULSE,
+            event_type=HmEventType.SPECIAL,
         )
 
     def get_event_data(self, value=None):
@@ -798,8 +798,8 @@ class ImpulseEvent(BaseEvent):
             self._device.update_device(self.unique_id)
             return
 
-        if callable(self._central.callback_impulse_event):
-            self._central.callback_impulse_event(
+        if callable(self._central.callback_special_event):
+            self._central.callback_special_event(
                 self.event_type,
                 self.get_event_data(value),
             )

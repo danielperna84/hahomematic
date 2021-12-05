@@ -105,7 +105,7 @@ class CentralUnit:
         # Signature: f(interface_id, address, value_key, value)
         self.callback_click_event = None
         # Signature: f(interface_id, address, value_key, value)
-        self.callback_impulse_event = None
+        self.callback_special_event = None
 
         self.json_rpc_session = JsonRpcAioHttpClient(central_config=self.central_config)
 

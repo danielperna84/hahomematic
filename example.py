@@ -58,9 +58,9 @@ class Example:
             )
         )
 
-    def impulsecallback(self, eventtype, event_data):
+    def specialcallback(self, eventtype, event_data):
         print(
-            "impulsecallback: %s, %s"
+            "specialcallback: %s, %s"
             % (
                 eventtype,
                 event_data,
@@ -88,7 +88,7 @@ class Example:
         self.central.callback_system_event = self.systemcallback
         self.central.callback_entity_event = self.eventcallback
         self.central.callback_click_event = self.clickcallback
-        self.central.callback_impulse_event = self.impulsecallback
+        self.central.callback_special_event = self.specialcallback
 
         # Create clients
         client1 = await ClientConfig(

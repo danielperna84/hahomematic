@@ -23,13 +23,13 @@ from hahomematic.const import (
     IGNORED_PARAMETERS,
     IGNORED_PARAMETERS_WILDCARDS_END,
     IGNORED_PARAMETERS_WILDCARDS_START,
-    IMPULSE_EVENTS,
     INIT_DATETIME,
     OPERATION_EVENT,
     OPERATION_WRITE,
     PARAM_UN_REACH,
     PARAMSET_VALUES,
     RELEVANT_PARAMSETS,
+    SPECIAL_EVENTS,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_ENUM,
@@ -48,7 +48,7 @@ from hahomematic.entity import (
     ClickEvent,
     CustomEntity,
     GenericEntity,
-    ImpulseEvent,
+    SpecialEvent,
 )
 from hahomematic.helpers import generate_unique_id
 from hahomematic.internal.action import HmAction
@@ -276,7 +276,7 @@ class HmDevice:
                     if (
                         parameter in ALARM_EVENTS
                         or parameter in CLICK_EVENTS
-                        or parameter in IMPULSE_EVENTS
+                        or parameter in SPECIAL_EVENTS
                     ):
                         self.create_event(
                             address=channel,
@@ -291,7 +291,7 @@ class HmDevice:
                             )
                             if entity is not None:
                                 new_entities.append(entity)
-                    if not (parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS):
+                    if not (parameter in CLICK_EVENTS or parameter in SPECIAL_EVENTS):
                         entity = self.create_entity(
                             address=channel,
                             parameter=parameter,
@@ -366,8 +366,8 @@ class HmDevice:
                     parameter=parameter,
                     parameter_data=parameter_data,
                 )
-            elif parameter in IMPULSE_EVENTS:
-                action_event = ImpulseEvent(
+            elif parameter in SPECIAL_EVENTS:
+                action_event = SpecialEvent(
                     device=self,
                     unique_id=unique_id,
                     address=address,
