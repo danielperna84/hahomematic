@@ -1,3 +1,11 @@
+Version 0.0.17 (2021-12-05)
+- Remove variables that are covered by other sensors (CCU only)
+- Remove dummy from service message (HmIP-RF always sends 0001D3C98DD4B6:3 unreach)
+- Rename Bidcos thermostats to SimpleRfThermostat and RfThermostat
+- Use more Enums (like HA does): HmPlatform, HmEventType
+- Use assignment expressions
+- Add more type hints (fix most mypy errors)
+
 Version 0.0.16 (2021-12-02)
 - Don't use default entities for climate groups (already included in device)
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic.const import HA_PLATFORM_SWITCH, TYPE_ACTION
+from hahomematic.const import TYPE_ACTION, HmPlatform
 from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class HmSwitch(GenericEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_SWITCH,
+            platform=HmPlatform.SWITCH,
         )
 
     @property

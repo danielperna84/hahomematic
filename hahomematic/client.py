@@ -177,6 +177,7 @@ class Client(ABC):
         de_init_status = await self.proxy_de_init()
         if de_init_status is not PROXY_DE_INIT_FAILED:
             return await self.proxy_init()
+        return PROXY_DE_INIT_FAILED
 
     def stop(self):
         """Stop depending services."""
@@ -268,12 +269,13 @@ class Client(ABC):
         except ProxyException:
             _LOGGER.exception("set_install_mode: ProxyException")
 
-    async def get_install_mode(self):
+    async def get_install_mode(self) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
             return await self.proxy.getInstallMode()
         except ProxyException:
             _LOGGER.exception("get_install_mode: ProxyException")
+        return 0
 
     async def get_all_metadata(self, address):
         """Get all metadata of device."""

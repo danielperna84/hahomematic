@@ -28,7 +28,7 @@ from hahomematic.device import create_devices
 
 _LOGGER = logging.getLogger(__name__)
 
-_XML_RPC_SERVER: XMLRPCServer = None
+_XML_RPC_SERVER: XMLRPCServer | None = None
 
 
 # pylint: disable=invalid-name
@@ -181,8 +181,7 @@ class RPCFunctions:
                     del central.devices_raw_dict[interface_id][address]
                     del central.paramsets_cache[interface_id][address]
                     del central.names_cache[interface_id][address]
-                    ha_device = central.hm_devices.get(address)
-                    if ha_device:
+                    if ha_device := central.hm_devices.get(address):
                         ha_device.remove_event_subscriptions()
                         del central.hm_devices[address]
                 except KeyError:
@@ -314,12 +313,12 @@ class XMLRPCServer(threading.Thread):
         if self._centrals.get(central.instance_name):
             del self._centrals[central.instance_name]
 
-    def get_central(self, interface_id) -> hm_central.CentralUnit:
+    def get_central(self, interface_id) -> hm_central.CentralUnit | None:
         """Return a central by interface_id"""
         for central in self._centrals.values():
-            client = central.clients.get(interface_id)
-            if client:
+            if central.clients.get(interface_id):
                 return central
+        return None
 
     @property
     def no_central_registered(self) -> bool:
@@ -327,12 +326,12 @@ class XMLRPCServer(threading.Thread):
         return len(self._centrals) == 0
 
 
-def get_xml_rpc_server() -> XMLRPCServer:
+def get_xml_rpc_server() -> XMLRPCServer | None:
     """Return the XMLRPCServer."""
     return _XML_RPC_SERVER
 
 
-def _set_xml_rpc_server(xml_rpc_server: XMLRPCServer) -> None:
+def _set_xml_rpc_server(xml_rpc_server: XMLRPCServer | None) -> None:
     """Add a XMLRPCServer."""
     # pylint: disable=global-statement
     global _XML_RPC_SERVER
@@ -341,8 +340,7 @@ def _set_xml_rpc_server(xml_rpc_server: XMLRPCServer) -> None:
 
 def register_xml_rpc_server(local_ip=IP_ANY_V4, local_port=PORT_ANY) -> XMLRPCServer:
     """Register the xml rpc server."""
-    xml_rpc = get_xml_rpc_server()
-    if not xml_rpc:
+    if (xml_rpc := get_xml_rpc_server()) is None:
         xml_rpc = XMLRPCServer(local_ip, local_port)
         xml_rpc.start()
         _set_xml_rpc_server(xml_rpc)
@@ -353,7 +351,7 @@ async def un_register_xml_rpc_server() -> bool:
     """Unregister the xml rpc server."""
     xml_rpc = get_xml_rpc_server()
     _LOGGER.info("XMLRPCServer.stop: Shutting down server")
-    if xml_rpc.no_central_registered:
+    if xml_rpc and xml_rpc.no_central_registered:
         await xml_rpc.stop()
         _set_xml_rpc_server(None)
         _LOGGER.info("XMLRPCServer.stop: Server stopped")

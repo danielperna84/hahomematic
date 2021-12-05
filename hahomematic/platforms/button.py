@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic.const import HA_PLATFORM_BUTTON
+from hahomematic.const import HmPlatform
 from hahomematic.entity import BaseParameterEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class HmButton(BaseParameterEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_BUTTON,
+            platform=HmPlatform.BUTTON,
         )
 
     async def press(self) -> None:

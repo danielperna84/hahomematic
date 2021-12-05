@@ -2,21 +2,27 @@
 from __future__ import annotations
 
 from abc import ABC
-import datetime
+from datetime import datetime
 import logging
 from typing import Any
 
-from hahomematic.const import HA_DOMAIN
+from hahomematic.const import BACKEND_CCU, HA_DOMAIN, INIT_DATETIME
 from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
 EXCLUDED_FROM_SENSOR = [
-    "DutyCycle",
-    "OldVal",
+    "Connection",
     "pcCCUID",
     "RF-Gateway-Alarm",
     "WatchDog",
+]
+
+EXCLUDED = [
+    "CarrierSense",
+    "DutyCycle",
+    "OldVal",
+    "Servicemeldungen",
 ]
 
 
@@ -33,7 +39,7 @@ class BaseHubEntity(ABC):
         self.unique_id = unique_id
         self.name = name
         self._state = state
-        self.last_update = None
+        self.last_update: datetime = INIT_DATETIME
         self._update_callbacks = []
         self._remove_callbacks = []
         self.create_in_ha = True
@@ -109,7 +115,7 @@ class BaseHubEntity(ABC):
             _callback(self.unique_id)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.now()
 
 
 class HmSystemVariable(BaseHubEntity):
@@ -160,7 +166,7 @@ class HmHub(BaseHubEntity):
         self._use_entities = use_entities
 
     @property
-    def device_info(self) -> dict[str, str]:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
             "config_entry_id": self._central.entry_id,
@@ -189,8 +195,8 @@ class HmHub(BaseHubEntity):
 
     async def _update_hub_state(self):
         """Retrieve latest state."""
-        service_message = await self._central.get_service_messages()
-        state = 0 if service_message is None else len(service_message)
+        service_messages = await self._central.get_service_messages()
+        state = 0 if service_messages is None else len(service_messages)
 
         if self._state != state:
             self._state = state
@@ -202,8 +208,16 @@ class HmHub(BaseHubEntity):
         variables = await self._central.get_all_system_variables()
         if not variables:
             return
+
+        # remove some variables in case of CCU Backend
+        # - DutyCycle/CarrierSense are covered by real sensors
+        # - OldValue(s) are for internal calculations
+        # - Servicemeldungen are wrong in case of hmip (contains a dummy)
+        if self._central.model is BACKEND_CCU:
+            variables = _clean_variables(variables)
+
         for name, value in variables.items():
-            if not self._use_entities or _is_excluded(name):
+            if not self._use_entities or _is_excluded(name, EXCLUDED_FROM_SENSOR):
                 self._variables[name] = value
                 continue
 
@@ -250,7 +264,7 @@ class HmDummyHub(BaseHubEntity):
         self._use_entities = use_entities
 
     @property
-    def device_info(self) -> dict[str, str]:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
             "config_entry_id": self._central.entry_id,
@@ -282,9 +296,18 @@ class HmDummyHub(BaseHubEntity):
         return
 
 
-def _is_excluded(variable):
-    """Check if variable is excluded by EXCLUDED_FROM_SENSOR."""
-    for marker in EXCLUDED_FROM_SENSOR:
+def _is_excluded(variable, exclude_list):
+    """Check if variable is excluded by exclude_list."""
+    for marker in exclude_list:
         if marker in variable:
             return True
     return False
+
+
+def _clean_variables(variables):
+    cleaned_variables = {}
+    for name, value in variables.items():
+        if _is_excluded(name, EXCLUDED):
+            continue
+        cleaned_variables[name] = value
+    return cleaned_variables

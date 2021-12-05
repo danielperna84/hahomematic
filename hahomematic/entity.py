@@ -4,7 +4,8 @@ Functions for entity creation.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import datetime
+from collections.abc import Callable
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -26,26 +27,27 @@ from hahomematic.const import (
     DATA_LOAD_FAIL,
     DATA_LOAD_SUCCESS,
     DATA_NO_LOAD,
-    EVENT_ALARM,
     EVENT_CONFIG_PENDING,
-    EVENT_IMPULSE,
-    EVENT_KEYPRESS,
     EVENT_UN_REACH,
     FLAG_SERVICE,
     FLAG_VISIBLE,
-    HA_PLATFORM_EVENT,
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
+    INIT_DATETIME,
     OPERATION_READ,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
+    HmEventType,
+    HmPlatform,
 )
+import hahomematic.device as hm_device
 from hahomematic.devices.device_description import (
     DD_FIELDS,
     DD_FIELDS_REP,
+    DeviceDescription,
     get_default_entities,
     get_include_default_entities,
 )
@@ -58,9 +60,9 @@ class CallbackEntity(ABC):
     """Base class for callback entities."""
 
     def __init__(self):
-        self.last_update = None
-        self._update_callbacks = []
-        self._remove_callbacks = []
+        self.last_update: datetime = INIT_DATETIME
+        self._update_callbacks: list[Callable] = []
+        self._remove_callbacks: list[Callable] = []
 
     def register_update_callback(self, update_callback) -> None:
         """register update callback"""
@@ -99,12 +101,10 @@ class CallbackEntity(ABC):
             _callback(*args)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.now()
 
     def _updated_within_minutes(self, minutes=10) -> bool:
-        if self.last_update is None:
-            return False
-        delta = datetime.datetime.now() - self.last_update
+        delta = datetime.now() - self.last_update
         if delta.seconds < minutes * 60:
             return True
         return False
@@ -113,7 +113,13 @@ class CallbackEntity(ABC):
 class BaseEntity(ABC):
     """Base class for regular entities."""
 
-    def __init__(self, device, unique_id, address, platform):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        platform: HmPlatform,
+    ):
         """
         Initialize the entity.
         """
@@ -122,15 +128,15 @@ class BaseEntity(ABC):
         self.address = address
         self.platform = platform
         self._central = self._device.central
-        self._interface_id = self._device.interface_id
-        self.device_type = self._device.device_type
-        self.sub_type = self._device.sub_type
-        self.create_in_ha = not self._device.is_custom_device
+        self._interface_id: str = self._device.interface_id
+        self.device_type: str = self._device.device_type
+        self.sub_type: str = self._device.sub_type
+        self.create_in_ha: bool = not self._device.is_custom_device
         self.client = self._central.clients[self._interface_id]
         self.proxy = self.client.proxy
-        self.name = self.client.central.names_cache.get(self._interface_id, {}).get(
-            self.address, self.unique_id
-        )
+        self.name: str = self.client.central.names_cache.get(
+            self._interface_id, {}
+        ).get(self.address, self.unique_id)
 
     @property
     def available(self) -> bool:
@@ -164,7 +170,15 @@ class BaseParameterEntity(BaseEntity):
     Base class for stateless entities.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data, platform):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+        platform: HmPlatform,
+    ):
         """
         Initialize the entity.
         """
@@ -276,7 +290,15 @@ class GenericEntity(BaseParameterEntity, CallbackEntity):
     Base class for generic entities.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data, platform):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+        platform: HmPlatform,
+    ):
         """
         Initialize the entity.
         """
@@ -388,14 +410,14 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
     def __init__(
         self,
-        device,
-        unique_id,
-        address,
-        device_enum,
-        device_desc,
-        entity_desc,
-        platform,
-        channel_no=None,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        device_enum: DeviceDescription,
+        device_desc: dict[str, Any],
+        entity_desc: dict[str, Any],
+        platform: HmPlatform,
+        channel_no: int | None = None,
     ):
         """
         Initialize the entity.
@@ -460,7 +482,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 if entity:
                     entity.create_in_ha = True
 
-    def _add_entity(self, f_name, entity: GenericEntity):
+    def _add_entity(self, f_name, entity: GenericEntity | None):
         """Add entity to collection and register callback"""
         if not entity:
             return
@@ -468,7 +490,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         entity.register_update_callback(self.update_entity)
         self.data_entities[f_name] = entity
 
-    def _remove_entity(self, f_name, entity: GenericEntity):
+    def _remove_entity(self, f_name, entity: GenericEntity | None):
         """Remove entity from collection and un-register callback"""
         if not entity:
             return
@@ -513,13 +535,12 @@ class BaseEvent(BaseParameterEntity):
 
     def __init__(
         self,
-        device,
-        unique_id,
-        address,
-        parameter,
-        parameter_data,
-        event_type,
-        platform,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+        event_type: HmEventType,
     ):
         """
         Initialize the event handler.
@@ -530,7 +551,7 @@ class BaseEvent(BaseParameterEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=platform,
+            platform=HmPlatform.EVENT,
         )
 
         self.name = get_entity_name(
@@ -541,7 +562,7 @@ class BaseEvent(BaseParameterEntity):
             unique_id=self.unique_id,
         )
         self.event_type = event_type
-        self.last_update = None
+        self.last_update: datetime = INIT_DATETIME
         self._value = None
 
         # Subscribe for all action events of this device
@@ -610,7 +631,7 @@ class BaseEvent(BaseParameterEntity):
         self._device.add_hm_action_event(self)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.datetime.now()
+        self.last_update = datetime.now()
 
     @abstractmethod
     def get_event_data(self, value=None):
@@ -632,7 +653,14 @@ class AlarmEvent(BaseEvent):
     class for handling alarm events.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
         """
         Initialize the event handler.
         """
@@ -642,8 +670,7 @@ class AlarmEvent(BaseEvent):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            event_type=EVENT_ALARM,
-            platform=HA_PLATFORM_EVENT,
+            event_type=HmEventType.ALARM,
         )
 
     def get_event_data(self, value=None):
@@ -678,7 +705,14 @@ class ClickEvent(BaseEvent):
     class for handling click events.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
         """
         Initialize the event handler.
         """
@@ -688,8 +722,7 @@ class ClickEvent(BaseEvent):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            event_type=EVENT_KEYPRESS,
-            platform=HA_PLATFORM_EVENT,
+            event_type=HmEventType.KEYPRESS,
         )
 
     def get_event_data(self, value=None):
@@ -718,7 +751,14 @@ class ImpulseEvent(BaseEvent):
     class for handling impulse events.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
         """
         Initialize the event handler.
         """
@@ -728,8 +768,7 @@ class ImpulseEvent(BaseEvent):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            event_type=EVENT_IMPULSE,
-            platform=HA_PLATFORM_EVENT,
+            event_type=HmEventType.IMPULSE,
         )
 
     def get_event_data(self, value=None):

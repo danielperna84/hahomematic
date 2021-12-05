@@ -32,6 +32,7 @@ from hahomematic.const import (
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
     PRIMARY_PORTS,
+    HmPlatform,
 )
 from hahomematic.data import INSTANCES
 from hahomematic.device import HmDevice, create_devices
@@ -112,14 +113,14 @@ class CentralUnit:
         self._load_caches()
         self.init_address_parameter_list()
         self._connection_checker = ConnectionChecker(self)
-        self.hub = None
+        self.hub: HmHub | None = None
 
     async def init_hub(self):
         """Init the hub."""
         if self.model is not BACKEND_PYDEVCCU:
             self.hub = HmHub(
                 self,
-                use_entities=self.central_config.enable_sensors_for_own_system_variables,
+                use_entities=self.central_config.enable_sensors_for_system_variables,
             )
             await self.hub.fetch_data()
         else:
@@ -147,8 +148,7 @@ class CentralUnit:
         if ":" not in address:
             return False
         d_address = address.split(":")[0]
-        channels = self.address_parameter_cache.get((d_address, parameter))
-        if channels:
+        if channels := self.address_parameter_cache.get((d_address, parameter)):
             return len(set(channels)) > 1
         return False
 
@@ -303,20 +303,26 @@ class CentralUnit:
 
     async def get_service_messages(self):
         """Get service messages from CCU / Homegear."""
-        await self.get_primary_client().get_service_messages()
+        service_messages = []
+        for client in self.clients.values():
+            if client.port in PRIMARY_PORTS:
+                if client_messages := await client.get_service_messages():
+                    service_messages.append(client_messages)
+        return _remove_dummy_service_message(service_messages)
 
     # pylint: disable=invalid-name
     async def set_install_mode(
         self, interface_id, on=True, t=60, mode=1, address=None
     ) -> None:
         """Activate or deactivate install-mode on CCU / Homegear."""
-        await self.get_primary_client(interface_id).set_install_mode(
-            on=on, t=t, mode=mode, address=address
-        )
+        if client := self.get_primary_client(interface_id):
+            await client.set_install_mode(on=on, t=t, mode=mode, address=address)
 
     async def get_install_mode(self, interface_id) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
-        return await self.get_primary_client(interface_id).get_install_mode()
+        if client := self.get_primary_client(interface_id):
+            return await client.get_install_mode()
+        return 0
 
     async def put_paramset(self, interface_id, address, paramset, value, rx_mode=None):
         """Set paramsets manually."""
@@ -349,14 +355,13 @@ class CentralUnit:
             )
 
         device_address = address.split(":")[0]
-        virtual_remote: HmDevice = self._get_virtual_remote(device_address)
-        if virtual_remote:
+        if virtual_remote := self._get_virtual_remote(device_address):
             virtual_remote_channel = virtual_remote.action_events.get(
                 (address, parameter)
             )
             await virtual_remote_channel.send_value(True)
 
-    def get_hm_entities_by_platform(self, platform):
+    def get_hm_entities_by_hmplatform(self, platform: HmPlatform):
         """
         Return all hm-entities by platform
         """
@@ -367,7 +372,7 @@ class CentralUnit:
 
         return hm_entities
 
-    def get_primary_client(self, interface_id=None) -> hm_client.Client:
+    def get_primary_client(self, interface_id=None) -> hm_client.Client | None:
         """Return the client by interface_id or the first with a primary port."""
         try:
             if interface_id:
@@ -382,15 +387,14 @@ class CentralUnit:
             )
             _LOGGER.warning(message)
             raise hm_client.ClientException(message) from err
+        return None
 
     def get_hm_entity_by_parameter(self, address, parameter) -> GenericEntity | None:
         """Get entity by address and parameter."""
         if ":" in address:
             device_address = address.split(":")[0]
-            device = self.hm_devices.get(device_address)
-            if device:
-                entity = device.entities.get((address, parameter))
-                if entity:
+            if device := self.hm_devices.get(device_address):
+                if entity := device.entities.get((address, parameter)):
                     return entity
         return None
 
@@ -430,8 +434,7 @@ class CentralUnit:
         parameters = set()
         for entity in self.hm_entities.values():
             if isinstance(entity, GenericEntity):
-                parameter = getattr(entity, "parameter", None)
-                if parameter:
+                if getattr(entity, "parameter", None):
                     parameters.add(entity.parameter)
 
         return sorted(parameters)
@@ -439,11 +442,9 @@ class CentralUnit:
     def get_used_parameters(self, address):
         """Return used parameters"""
         parameters = set()
-        device = self.hm_devices.get(address)
-        if device:
+        if device := self.hm_devices.get(address):
             for entity in device.entities.values():
-                parameter = getattr(entity, "parameter", None)
-                if parameter:
+                if getattr(entity, "parameter", None):
                     parameters.add(entity.parameter)
 
         return sorted(parameters)
@@ -713,7 +714,7 @@ class CentralConfig:
         json_port=None,
         json_tls=DEFAULT_TLS,
         enable_virtual_channels=False,
-        enable_sensors_for_own_system_variables=False,
+        enable_sensors_for_system_variables=False,
     ):
         self.entry_id = entry_id
         self.loop = loop
@@ -730,10 +731,19 @@ class CentralConfig:
         self.json_port = json_port
         self.json_tls = json_tls
         self.enable_virtual_channels = enable_virtual_channels
-        self.enable_sensors_for_own_system_variables = (
-            enable_sensors_for_own_system_variables
-        )
+        self.enable_sensors_for_system_variables = enable_sensors_for_system_variables
 
     def get_central(self) -> CentralUnit:
         """Identify the used client."""
         return CentralUnit(self)
+
+
+def _remove_dummy_service_message(service_messages):
+    """Remove dummy SM, that hmip server always sends."""
+    new_service_messages = []
+    for client_messages in service_messages:
+        if "0001D3C98DD4B6:3" not in [
+            client_message[0] for client_message in client_messages
+        ]:
+            new_service_messages.append(client_messages)
+    return new_service_messages

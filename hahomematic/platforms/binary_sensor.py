@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic.const import HA_PLATFORM_BINARY_SENSOR
+from hahomematic.const import HmPlatform
 from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class HmBinarySensor(GenericEntity):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_BINARY_SENSOR,
+            platform=HmPlatform.BINARY_SENSOR,
         )
 
     @property

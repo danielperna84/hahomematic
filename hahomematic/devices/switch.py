@@ -4,11 +4,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hahomematic.const import HA_PLATFORM_SWITCH
+from hahomematic.const import HmPlatform
 from hahomematic.devices.device_description import (
     FIELD_CHANNEL_STATE,
     FIELD_STATE,
-    Devices,
+    DeviceDescription,
     make_custom_entity,
 )
 from hahomematic.entity import CustomEntity
@@ -38,7 +38,7 @@ class HmSwitch(CustomEntity):
             device_enum=device_enum,
             device_desc=device_desc,
             entity_desc=entity_desc,
-            platform=HA_PLATFORM_SWITCH,
+            platform=HmPlatform.SWITCH,
             channel_no=channel_no,
         )
         _LOGGER.debug(
@@ -84,16 +84,20 @@ class HmSwitch(CustomEntity):
         return state_attr
 
 
-def make_ip_switch(device, address, group_base_channels: [int]):
+def make_ip_switch(device, address, group_base_channels: list[int]):
     """Creates homematic ip switch entities."""
     return make_custom_entity(
-        device, address, HmSwitch, Devices.IP_LIGHT_SWITCH, group_base_channels
+        device,
+        address,
+        HmSwitch,
+        DeviceDescription.IP_LIGHT_SWITCH,
+        group_base_channels,
     )
 
 
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
-DEVICES = {
+DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-FSM*": (make_ip_switch, [1]),
     "HmIP-FSI*": (make_ip_switch, [2]),
     "HmIP-PS*": (make_ip_switch, [2]),
