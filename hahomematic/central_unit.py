@@ -120,7 +120,7 @@ class CentralUnit:
         if self.model is not BACKEND_PYDEVCCU:
             self.hub = HmHub(
                 self,
-                use_entities=self.central_config.enable_sensors_for_own_system_variables,
+                use_entities=self.central_config.enable_sensors_for_system_variables,
             )
             await self.hub.fetch_data()
         else:
@@ -714,7 +714,7 @@ class CentralConfig:
         json_port=None,
         json_tls=DEFAULT_TLS,
         enable_virtual_channels=False,
-        enable_sensors_for_own_system_variables=False,
+        enable_sensors_for_system_variables=False,
     ):
         self.entry_id = entry_id
         self.loop = loop
@@ -731,9 +731,7 @@ class CentralConfig:
         self.json_port = json_port
         self.json_tls = json_tls
         self.enable_virtual_channels = enable_virtual_channels
-        self.enable_sensors_for_own_system_variables = (
-            enable_sensors_for_own_system_variables
-        )
+        self.enable_sensors_for_system_variables = enable_sensors_for_system_variables
 
     def get_central(self) -> CentralUnit:
         """Identify the used client."""
@@ -744,6 +742,8 @@ def _remove_dummy_service_message(service_messages):
     """Remove dummy SM, that hmip server always sends."""
     new_service_messages = []
     for client_messages in service_messages:
-        if "0001D3C98DD4B6:3" not in [client_message[0] for client_message in client_messages]:
+        if "0001D3C98DD4B6:3" not in [
+            client_message[0] for client_message in client_messages
+        ]:
             new_service_messages.append(client_messages)
     return new_service_messages

@@ -6,17 +6,23 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from hahomematic.const import HA_DOMAIN, INIT_DATETIME
+from hahomematic.const import BACKEND_CCU, HA_DOMAIN, INIT_DATETIME
 from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
 EXCLUDED_FROM_SENSOR = [
-    "DutyCycle",
-    "OldVal",
+    "Connection",
     "pcCCUID",
     "RF-Gateway-Alarm",
     "WatchDog",
+]
+
+EXCLUDED = [
+    "CarrierSense",
+    "DutyCycle",
+    "OldVal",
+    "Servicemeldungen",
 ]
 
 
@@ -202,8 +208,16 @@ class HmHub(BaseHubEntity):
         variables = await self._central.get_all_system_variables()
         if not variables:
             return
+
+        # remove some variables in case of CCU Backend
+        # - DutyCycle/CarrierSense are covered by real sensors
+        # - OldValue(s) are for internal calculations
+        # - Servicemeldungen are wrong in case of hmip (contains a dummy)
+        if self._central.model is BACKEND_CCU:
+            variables = _clean_variables(variables)
+
         for name, value in variables.items():
-            if not self._use_entities or _is_excluded(name):
+            if not self._use_entities or _is_excluded(name, EXCLUDED_FROM_SENSOR):
                 self._variables[name] = value
                 continue
 
@@ -282,9 +296,18 @@ class HmDummyHub(BaseHubEntity):
         return
 
 
-def _is_excluded(variable):
-    """Check if variable is excluded by EXCLUDED_FROM_SENSOR."""
-    for marker in EXCLUDED_FROM_SENSOR:
+def _is_excluded(variable, exclude_list):
+    """Check if variable is excluded by exclude_list."""
+    for marker in exclude_list:
         if marker in variable:
             return True
     return False
+
+
+def _clean_variables(variables):
+    cleaned_variables = {}
+    for name, value in variables.items():
+        if _is_excluded(name, EXCLUDED):
+            continue
+        cleaned_variables[name] = value
+    return cleaned_variables
