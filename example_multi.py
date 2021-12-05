@@ -70,18 +70,9 @@ class Example:
             % (int(time.time()), address, interface_id, key, value)
         )
 
-    def clickcallback(self, eventtype, event_data):
+    def hacallback(self, eventtype, event_data):
         print(
-            "clickcallback: %s, %s"
-            % (
-                eventtype,
-                event_data,
-            )
-        )
-
-    def specialcallback(self, eventtype, event_data):
-        print(
-            "specialcallback: %s, %s"
+            "hacallback: %s, %s"
             % (
                 eventtype,
                 event_data,
@@ -118,8 +109,7 @@ class Example:
         # Add callbacks to handle the events and see what happens on the system.
         self.central_1.callback_system_event = self.systemcallback
         self.central_1.callback_entity_event = self.eventcallback
-        self.central_1.callback_click_event = self.clickcallback
-        self.central_1.callback_special_event = self.specialcallback
+        self.central_1.callback_ha_event = self.hacallback
         self.central_2.callback_system_event = self.systemcallback2
         self.central_2.callback_entity_event = self.eventcallback
 
