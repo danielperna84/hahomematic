@@ -307,8 +307,8 @@ class CentralUnit:
         for client in self.clients.values():
             if client.port in PRIMARY_PORTS:
                 if client_messages := await client.get_service_messages():
-                    service_messages.extend(client_messages)
-        return service_messages
+                    service_messages.append(client_messages)
+        return _remove_dummy_service_message(service_messages)
 
     # pylint: disable=invalid-name
     async def set_install_mode(
@@ -738,3 +738,12 @@ class CentralConfig:
     def get_central(self) -> CentralUnit:
         """Identify the used client."""
         return CentralUnit(self)
+
+
+def _remove_dummy_service_message(service_messages):
+    """Remove dummy SM, that hmip server always sends."""
+    new_service_messages = []
+    for client_messages in service_messages:
+        if "0001D3C98DD4B6:3" not in [client_message[0] for client_message in client_messages]:
+            new_service_messages.append(client_messages)
+    return new_service_messages
