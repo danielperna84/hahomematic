@@ -169,6 +169,7 @@ IGNORED_PARAMETERS = [
     "WOCHENPROGRAMM",
 ]
 
+# Ignore Parameter that end with
 IGNORED_PARAMETERS_WILDCARDS_END = [
     "OVERFLOW",
     "OVERHEAT",
@@ -179,6 +180,8 @@ IGNORED_PARAMETERS_WILDCARDS_END = [
     "SUBMIT",
     "WORKING",
 ]
+
+# Ignore Parameter that start with
 IGNORED_PARAMETERS_WILDCARDS_START = [
     "ADJUSTING",
     "ERROR",
