@@ -115,17 +115,17 @@ class Example:
 
         # Create clients
         client1 = await ClientConfig(
-            central=self.central,
+            central=self.central_1,
             name="hmip",
             port=2010,
         ).get_client()
         client2 = await ClientConfig(
-            central=self.central,
+            central=self.central_1,
             name="rf",
             port=2001,
         ).get_client()
         client3 = await ClientConfig(
-            central=self.central,
+            central=self.central_1,
             name="groups",
             port=9292,
             path="/groups",
