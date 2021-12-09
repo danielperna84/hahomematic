@@ -122,7 +122,6 @@ SCHEMA_DEVICE_DESCRIPTION = Schema(
     }
 )
 
-
 device_description = {
     DD_DEFAULT_ENTITIES: {
         0: {

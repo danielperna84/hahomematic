@@ -34,8 +34,8 @@ _XML_RPC_SERVER: XMLRPCServer | None = None
 # pylint: disable=invalid-name
 class RPCFunctions:
     """
-    The XML-RPC functions the CCU or Homegear will expect.
-    Additionally there are some internal functions for hahomematic itself.
+    The XML-RPC functions the CCU or Homegear will expect,
+    additionally there are some internal functions for hahomematic itself.
     """
 
     def __init__(self, xml_rpc_server: XMLRPCServer):
@@ -76,7 +76,7 @@ class RPCFunctions:
     # pylint: disable=no-self-use
     def error(self, interface_id, error_code, msg):
         """
-        When some error occurs the CCU / Homegear will send it's error message here.
+        When some error occurs the CCU / Homegear will send its error message here.
         """
         _LOGGER.error(
             "RPCFunctions.error: interface_id = %s, error_code = %i, message = %s",

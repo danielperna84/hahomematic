@@ -63,15 +63,15 @@ class IpLock(CustomEntity):
         """Return true if lock is on."""
         return self._lock_state == HM_LOCKED
 
-    async def lock(self, **kwargs):
+    async def lock(self):
         """Lock the lock."""
         await self._send_value(FIELD_LOCK_TARGET_LEVEL, HM_LOCKED)
 
-    async def unlock(self, **kwargs):
+    async def unlock(self):
         """Unlock the lock."""
         await self._send_value(FIELD_LOCK_TARGET_LEVEL, HM_UNLOCKED)
 
-    async def open(self, **kwargs: Any) -> None:
+    async def open(self) -> None:
         """Open the lock."""
         await self._send_value(FIELD_LOCK_TARGET_LEVEL, HM_OPEN)
 
@@ -116,15 +116,15 @@ class RfLock(CustomEntity):
         """Return true if lock is on."""
         return not self._state
 
-    async def lock(self, **kwargs):
+    async def lock(self):
         """Lock the lock."""
         await self._send_value(FIELD_STATE, True)
 
-    async def unlock(self, **kwargs):
+    async def unlock(self):
         """Unlock the lock."""
         await self._send_value(FIELD_STATE, False)
 
-    async def open(self, **kwargs: Any) -> None:
+    async def open(self) -> None:
         """Open the lock."""
         await self._send_value(FIELD_OPEN, True)
 

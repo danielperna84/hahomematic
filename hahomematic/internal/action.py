@@ -27,6 +27,7 @@ class HmAction(GenericEntity):
 
     @property
     def state(self):
+        """Return the state."""
         return None
 
     async def load_data(self) -> int:

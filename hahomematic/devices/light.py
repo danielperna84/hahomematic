@@ -120,11 +120,12 @@ class HmDimmer(BaseHmLight):
 
     @property
     def supported_color_modes(self) -> set[str]:
+        """Return the supported color modes."""
         return {COLOR_MODE_BRIGHTNESS}
 
     async def turn_on(self, hs_color, brightness) -> None:
         """Turn the light on."""
-        # Minimum brightness is 10, otherwise the led is disabled
+        # Minimum brightness is 10, otherwise the LED is disabled
         brightness = max(10, brightness)
         dim_level = brightness / 255.0
         await self._send_value(FIELD_LEVEL, dim_level)
@@ -167,6 +168,7 @@ class HmLight(BaseHmLight):
 
     @property
     def supported_color_modes(self) -> set[str]:
+        """Return the supported color modes."""
         return {COLOR_MODE_ONOFF}
 
     async def turn_on(self, hs_color, brightness) -> None:
@@ -241,12 +243,13 @@ class IPLightBSL(BaseHmLight):
 
     @property
     def supported_color_modes(self) -> set[str]:
+        """Return the supported color modes."""
         return {COLOR_MODE_HS}
 
     async def turn_on(self, hs_color, brightness) -> None:
         """Turn the light on."""
         simple_rgb_color = _convert_color(hs_color)
-        # Minimum brightness is 10, otherwise the led is disabled
+        # Minimum brightness is 10, otherwise the LED is disabled
         brightness = max(10, brightness)
         dim_level = brightness / 255.0
         await self._send_value(FIELD_COLOR, simple_rgb_color)

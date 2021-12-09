@@ -97,7 +97,7 @@ def get_custom_entity_name(
     central, interface_id, address, unique_id, channel_no=None
 ) -> str:
     """generate name for entity"""
-    if channel_no and not ":" in address:
+    if channel_no and ":" not in address:
         address = f"{address}:{channel_no}"
 
     return central.names_cache.get(interface_id, {}).get(address, unique_id)

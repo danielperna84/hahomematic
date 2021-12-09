@@ -149,14 +149,19 @@ class CentralUnit:
         return False
 
     @property
-    def version(self):
-        """Return the version of the backend."""
-        return self.get_primary_client().version
+    def available(self):
+        """Return the availability of the central_unit."""
+        return self._available
 
     @property
     def model(self):
         """Return the model of the backend."""
-        return self.get_primary_client().model
+        return self.get_primary_client().xmodel
+
+    @property
+    def version(self):
+        """Return the version of the backend."""
+        return self.get_primary_client().version
 
     @property
     def local_ip(self):
@@ -249,11 +254,6 @@ class CentralUnit:
         """Start the connection checker."""
         self._connection_checker.stop()
 
-    @property
-    def available(self):
-        """Return the availability of the central_unit."""
-        return self._available
-
     async def is_connected(self) -> bool:
         """Check connection to ccu."""
         for client in self.clients.values():
@@ -281,7 +281,7 @@ class CentralUnit:
                 await client.proxy_re_init()
 
     def mark_all_devices_availability(self, available: bool) -> None:
-        """Mark all devices availability state."""
+        """Mark all device's availability state."""
         for hm_device in self.hm_devices.values():
             hm_device.set_availability(available)
 

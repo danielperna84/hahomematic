@@ -30,4 +30,5 @@ class HmBinarySensor(GenericEntity):
 
     @property
     def state(self):
+        """Return the state."""
         return self._state

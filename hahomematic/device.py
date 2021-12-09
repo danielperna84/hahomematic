@@ -125,7 +125,7 @@ class HmDevice:
         )
 
     def add_hm_entity(self, hm_entity: BaseEntity):
-        """Add an hm entity to a device."""
+        """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
             hm_entity.register_update_callback(self.update_device)
             hm_entity.register_remove_callback(self.remove_device)
@@ -134,7 +134,7 @@ class HmDevice:
             self.custom_entities[hm_entity.unique_id] = hm_entity
 
     def remove_hm_entity(self, hm_entity: GenericEntity):
-        """Add an hm entity to a device."""
+        """Add a hm entity to a device."""
         if isinstance(hm_entity, CallbackEntity):
             hm_entity.unregister_update_callback(self.update_device)
             hm_entity.unregister_remove_callback(self.remove_device)
@@ -143,7 +143,7 @@ class HmDevice:
             del self.custom_entities[hm_entity.unique_id]
 
     def add_hm_action_event(self, hm_event: BaseEvent):
-        """Add an hm entity to a device."""
+        """Add a hm entity to a device."""
         self.action_events[(hm_event.address, hm_event.parameter)] = hm_event
 
     def remove_event_subscriptions(self) -> None:
@@ -172,12 +172,12 @@ class HmDevice:
             _callback(*args)
 
     def register_remove_callback(self, remove_callback) -> None:
-        """Register remove callback."""
+        """Register the remove callback."""
         if callable(remove_callback):
             self._remove_callbacks.append(remove_callback)
 
     def unregister_remove_callback(self, remove_callback) -> None:
-        """Remove remove callback."""
+        """Remove the remove callback."""
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
 
@@ -538,7 +538,7 @@ def create_devices(central: hm_central.CentralUnit) -> None:
             )
             continue
         for device_address in central.devices[interface_id]:
-            # Do we check for duplicates here? For now we do.
+            # Do we check for duplicates here? For now, we do.
             device: HmDevice | None = None
             if device_address in central.hm_devices:
                 _LOGGER.debug(

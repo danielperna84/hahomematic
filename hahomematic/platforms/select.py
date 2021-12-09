@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class HmSelect(GenericEntity):
     """
-    Implementation of a select.
+    Implementation of a select entity.
     This is a default platform that gets automatically generated.
     """
 

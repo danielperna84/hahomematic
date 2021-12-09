@@ -18,8 +18,10 @@ def callback_system_event(name):
     """
 
     def decorator_callback_system_event(func):
+        """Decorator for callback system event."""
         @functools.wraps(func)
         def wrapper_callback_system_event(*args):
+            """Wrapper for callback system event."""
             return_value = func(*args)
             try:
                 # We don't want to pass the function itself
@@ -47,6 +49,7 @@ def callback_event(func):
 
     @functools.wraps(func)
     def wrapper_callback_event(*args):
+        """Wrapper for callback event."""
         return_value = func(*args)
         try:
             # We don't want to pass the function itself
