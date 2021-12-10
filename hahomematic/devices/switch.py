@@ -6,10 +6,10 @@ from typing import Any
 
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.devices.device_description import (
+from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_STATE,
     FIELD_STATE,
-    DeviceDescription,
+    EntityDefinition,
     make_custom_entity,
 )
 import hahomematic.entity as hm_entity
@@ -28,9 +28,9 @@ class HmSwitch(CustomEntity):
         device: hm_device.HmDevice,
         address: str,
         unique_id: str,
-        device_enum: DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         channel_no: int,
     ):
         super().__init__(
@@ -38,8 +38,8 @@ class HmSwitch(CustomEntity):
             unique_id=unique_id,
             address=address,
             device_enum=device_enum,
-            device_desc=device_desc,
-            entity_desc=entity_desc,
+            device_def=device_def,
+            entity_def=entity_def,
             platform=HmPlatform.SWITCH,
             channel_no=channel_no,
         )
@@ -94,7 +94,7 @@ def make_ip_switch(
         device,
         address,
         HmSwitch,
-        DeviceDescription.IP_LIGHT_SWITCH,
+        EntityDefinition.IP_LIGHT_SWITCH,
         group_base_channels,
     )
 

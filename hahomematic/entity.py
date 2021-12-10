@@ -46,7 +46,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 import hahomematic.device as hm_device
-import hahomematic.devices.device_description as hm_entity_definition
+import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.helpers import get_custom_entity_name, get_entity_name
 import hahomematic.proxy as hm_proxy
 
@@ -128,7 +128,7 @@ class BaseEntity(ABC):
         self._interface_id: str = self._device.interface_id
         self.device_type: str = self._device.device_type
         self.sub_type: str = self._device.sub_type
-        self.create_in_ha: bool = not self._device.is_custom_device
+        self.create_in_ha: bool = not self._device.is_custom_entity
         self.client: hm_client.Client = self._central.clients[self._interface_id]
         self.proxy: hm_proxy.ThreadPoolServerProxy = self.client.proxy
         self.name: str = self.client.central.names_cache.get(
@@ -416,9 +416,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
         device: hm_device.HmDevice,
         unique_id: str,
         address: str,
-        device_enum: hm_entity_definition.DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: hm_entity_definition.EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         platform: HmPlatform,
         channel_no: int | None = None,
     ):
@@ -437,8 +437,8 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
         self.create_in_ha = True
         self._device_enum = device_enum
-        self._device_desc = device_desc
-        self._entity_desc = entity_desc
+        self._device_desc = device_def
+        self._entity_def = entity_def
         self._channel_no = channel_no
         self.name = get_custom_entity_name(
             central=self._central,
@@ -453,14 +453,14 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
 
-        fields_rep = self._device_desc.get(hm_entity_definition.DD_FIELDS_REP, {})
+        fields_rep = self._device_desc.get(hm_entity_definition.ED_FIELDS_REP, {})
         # Add repeating fields
         for (f_name, p_name) in fields_rep.items():
             f_address = f"{self.address}:{self._channel_no}"
             entity = self._device.get_hm_entity(f_address, p_name)
             self._add_entity(f_name, entity)
         # Add device fields
-        fields = self._device_desc.get(hm_entity_definition.DD_FIELDS, {})
+        fields = self._device_desc.get(hm_entity_definition.ED_FIELDS, {})
         for channel_no, channel in fields.items():
             # if self._channel_no and self._channel_no is not channel_no:
             #     continue
@@ -469,7 +469,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 entity = self._device.get_hm_entity(f_address, p_name)
                 self._add_entity(f_name, entity)
         # add device entities
-        self._mark_entity(self._entity_desc)
+        self._mark_entity(self._entity_def)
         # add default entities
         if hm_entity_definition.get_include_default_entities(self._device_enum):
             self._mark_entity(hm_entity_definition.get_default_entities())

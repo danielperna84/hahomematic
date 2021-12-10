@@ -7,7 +7,7 @@ from typing import Any
 
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.devices.device_description import (
+from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
     FIELD_DOOR_COMMAND,
@@ -15,7 +15,7 @@ from hahomematic.devices.device_description import (
     FIELD_LEVEL,
     FIELD_LEVEL_2,
     FIELD_STOP,
-    DeviceDescription,
+    EntityDefinition,
     make_custom_entity,
 )
 import hahomematic.entity as hm_entity
@@ -50,9 +50,9 @@ class HmCover(CustomEntity):
         device: hm_device.HmDevice,
         address: str,
         unique_id: str,
-        device_enum: DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         channel_no: int,
     ):
         super().__init__(
@@ -60,8 +60,8 @@ class HmCover(CustomEntity):
             unique_id=unique_id,
             address=address,
             device_enum=device_enum,
-            device_desc=device_desc,
-            entity_desc=entity_desc,
+            device_def=device_def,
+            entity_def=entity_def,
             platform=HmPlatform.COVER,
             channel_no=channel_no,
         )
@@ -185,9 +185,9 @@ class HmGarage(CustomEntity):
         device: hm_device.HmDevice,
         address: str,
         unique_id: str,
-        device_enum: DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         channel_no: int,
     ):
         super().__init__(
@@ -195,8 +195,8 @@ class HmGarage(CustomEntity):
             unique_id=unique_id,
             address=address,
             device_enum=device_enum,
-            device_desc=device_desc,
-            entity_desc=entity_desc,
+            device_def=device_def,
+            entity_def=entity_def,
             platform=HmPlatform.COVER,
             channel_no=channel_no,
         )
@@ -261,7 +261,7 @@ def make_ip_cover(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip cover entities."""
     return make_custom_entity(
-        device, address, HmCover, DeviceDescription.IP_COVER, group_base_channels
+        device, address, HmCover, EntityDefinition.IP_COVER, group_base_channels
     )
 
 
@@ -270,7 +270,7 @@ def make_rf_cover(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic cover entities."""
     return make_custom_entity(
-        device, address, HmCover, DeviceDescription.RF_COVER, group_base_channels
+        device, address, HmCover, EntityDefinition.RF_COVER, group_base_channels
     )
 
 
@@ -279,7 +279,7 @@ def make_ip_blind(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip cover entities."""
     return make_custom_entity(
-        device, address, HmBlind, DeviceDescription.IP_COVER, group_base_channels
+        device, address, HmBlind, EntityDefinition.IP_COVER, group_base_channels
     )
 
 
@@ -288,7 +288,7 @@ def make_ip_garage(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip garage entities."""
     return make_custom_entity(
-        device, address, HmGarage, DeviceDescription.IP_GARAGE, group_base_channels
+        device, address, HmGarage, EntityDefinition.IP_GARAGE, group_base_channels
     )
 
 
@@ -297,7 +297,7 @@ def make_rf_blind(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic cover entities."""
     return make_custom_entity(
-        device, address, HmBlind, DeviceDescription.RF_COVER, group_base_channels
+        device, address, HmBlind, EntityDefinition.RF_COVER, group_base_channels
     )
 
 

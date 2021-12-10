@@ -1,4 +1,4 @@
-"""Here we provide access to the custom device creation functions."""
+"""Here we provide access to the custom entity creation functions."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -39,6 +39,6 @@ def get_device_funcs(
     return funcs
 
 
-def device_desc_exists(device_type: str, sub_type: str) -> bool:
+def entity_definition_exists(device_type: str, sub_type: str) -> bool:
     """Check if device desc exits."""
     return len(get_device_funcs(device_type, sub_type)) > 0

@@ -39,7 +39,7 @@ from hahomematic.const import (
     TYPE_STRING,
     WHITELIST_PARAMETERS,
 )
-from hahomematic.devices import device_desc_exists, get_device_funcs
+from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
     AlarmEvent,
     BaseEntity,
@@ -99,8 +99,8 @@ class HmDevice:
         self.sub_type: str = self.central.devices_raw_dict[self.interface_id][
             self.address
         ].get(ATTR_HM_SUBTYPE)
-        # marker if device will be created as custom device
-        self.is_custom_device: bool = device_desc_exists(
+        # marker if device will be created as custom entity
+        self.is_custom_entity: bool = entity_definition_exists(
             self.device_type, self.sub_type
         )
         self.firmware: str = self.central.devices_raw_dict[self.interface_id][
@@ -302,14 +302,14 @@ class HmDevice:
                         if entity is not None:
                             new_entities.append(entity)
         # create custom entities
-        if self.is_custom_device:
+        if self.is_custom_entity:
             _LOGGER.debug(
-                "Device.create_entities: Handling custom device integration: %s, %s, %s",
+                "Device.create_entities: Handling custom entity integration: %s, %s, %s",
                 self.interface_id,
                 self.address,
                 self.device_type,
             )
-            # Call the custom device / entity creation function.
+            # Call the custom creation function.
 
             for (device_func, group_base_channels) in get_device_funcs(
                 self.device_type, self.sub_type

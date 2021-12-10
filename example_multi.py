@@ -7,7 +7,7 @@ import time
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig
 from hahomematic.client import ClientConfig
-from hahomematic.devices.device_description import validate_device_description
+from hahomematic.devices.entity_definition import validate_entity_definition
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
@@ -162,7 +162,7 @@ class Example:
 
 
 # valdate the device description
-if validate_device_description():
+if validate_entity_definition():
     example = Example()
     asyncio.run(example.example_run())
     sys.exit(0)

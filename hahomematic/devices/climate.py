@@ -6,7 +6,7 @@ from typing import Any
 
 from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.devices.device_description import (
+from hahomematic.devices.entity_definition import (
     FIELD_AUTO_MODE,
     FIELD_BOOST_MODE,
     FIELD_COMFORT_MODE,
@@ -18,7 +18,7 @@ from hahomematic.devices.device_description import (
     FIELD_SET_POINT_MODE,
     FIELD_SETPOINT,
     FIELD_TEMPERATURE,
-    DeviceDescription,
+    EntityDefinition,
     make_custom_entity,
 )
 import hahomematic.entity as hm_entity
@@ -56,9 +56,9 @@ class BaseClimateEntity(CustomEntity):
         device: hm_device.HmDevice,
         address: str,
         unique_id: str,
-        device_enum: DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         channel_no: int,
     ):
         super().__init__(
@@ -66,8 +66,8 @@ class BaseClimateEntity(CustomEntity):
             unique_id=unique_id,
             address=address,
             device_enum=device_enum,
-            device_desc=device_desc,
-            entity_desc=entity_desc,
+            device_def=device_def,
+            entity_def=entity_def,
             platform=HmPlatform.CLIMATE,
             channel_no=channel_no,
         )
@@ -328,7 +328,7 @@ def make_simple_thermostat(
         device,
         address,
         SimpleRfThermostat,
-        DeviceDescription.SIMPLE_RF_THERMOSTAT,
+        EntityDefinition.SIMPLE_RF_THERMOSTAT,
         group_base_channels,
     )
 
@@ -341,7 +341,7 @@ def make_thermostat(
         device,
         address,
         RfThermostat,
-        DeviceDescription.RF_THERMOSTAT,
+        EntityDefinition.RF_THERMOSTAT,
         group_base_channels,
     )
 
@@ -354,7 +354,7 @@ def make_thermostat_group(
         device,
         address,
         RfThermostat,
-        DeviceDescription.RF_THERMOSTAT_GROUP,
+        EntityDefinition.RF_THERMOSTAT_GROUP,
         group_base_channels,
     )
 
@@ -367,7 +367,7 @@ def make_ip_thermostat(
         device,
         address,
         IPThermostat,
-        DeviceDescription.IP_THERMOSTAT,
+        EntityDefinition.IP_THERMOSTAT,
         group_base_channels,
     )
 
@@ -380,7 +380,7 @@ def make_ip_thermostat_group(
         device,
         address,
         IPThermostat,
-        DeviceDescription.IP_THERMOSTAT_GROUP,
+        EntityDefinition.IP_THERMOSTAT_GROUP,
         group_base_channels,
     )
 

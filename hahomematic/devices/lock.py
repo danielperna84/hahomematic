@@ -7,12 +7,12 @@ from typing import Any
 
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.devices.device_description import (
+from hahomematic.devices.entity_definition import (
     FIELD_LOCK_STATE,
     FIELD_LOCK_TARGET_LEVEL,
     FIELD_OPEN,
     FIELD_STATE,
-    DeviceDescription,
+    EntityDefinition,
     make_custom_entity,
 )
 import hahomematic.entity as hm_entity
@@ -33,9 +33,9 @@ class IpLock(CustomEntity):
         device: hm_device.HmDevice,
         address: str,
         unique_id: str,
-        device_enum: DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         channel_no: int,
     ):
         super().__init__(
@@ -43,8 +43,8 @@ class IpLock(CustomEntity):
             unique_id=unique_id,
             address=address,
             device_enum=device_enum,
-            device_desc=device_desc,
-            entity_desc=entity_desc,
+            device_def=device_def,
+            entity_def=entity_def,
             platform=HmPlatform.LOCK,
             channel_no=channel_no,
         )
@@ -86,9 +86,9 @@ class RfLock(CustomEntity):
         device: hm_device.HmDevice,
         address: str,
         unique_id: str,
-        device_enum: DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         channel_no: int,
     ):
         super().__init__(
@@ -96,8 +96,8 @@ class RfLock(CustomEntity):
             unique_id=unique_id,
             address=address,
             device_enum=device_enum,
-            device_desc=device_desc,
-            entity_desc=entity_desc,
+            device_def=device_def,
+            entity_def=entity_def,
             platform=HmPlatform.LOCK,
             channel_no=channel_no,
         )
@@ -136,7 +136,7 @@ def make_ip_lock(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip lock entities."""
     return make_custom_entity(
-        device, address, IpLock, DeviceDescription.IP_LOCK, group_base_channels
+        device, address, IpLock, EntityDefinition.IP_LOCK, group_base_channels
     )
 
 
@@ -145,7 +145,7 @@ def make_rf_lock(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic rf lock entities."""
     return make_custom_entity(
-        device, address, RfLock, DeviceDescription.RF_LOCK, group_base_channels
+        device, address, RfLock, EntityDefinition.RF_LOCK, group_base_channels
     )
 
 

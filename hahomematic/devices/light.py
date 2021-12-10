@@ -7,14 +7,14 @@ from typing import Any
 
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.devices.device_description import (
+from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_COLOR,
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_STATE,
     FIELD_COLOR,
     FIELD_LEVEL,
     FIELD_STATE,
-    DeviceDescription,
+    EntityDefinition,
     make_custom_entity,
 )
 import hahomematic.entity as hm_entity
@@ -42,9 +42,9 @@ class BaseHmLight(CustomEntity):
         device: hm_device.HmDevice,
         address: str,
         unique_id: str,
-        device_enum: DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         channel_no: int,
     ):
         super().__init__(
@@ -52,8 +52,8 @@ class BaseHmLight(CustomEntity):
             unique_id=unique_id,
             address=address,
             device_enum=device_enum,
-            device_desc=device_desc,
-            entity_desc=entity_desc,
+            device_def=device_def,
+            entity_def=entity_def,
             platform=HmPlatform.LIGHT,
             channel_no=channel_no,
         )
@@ -311,7 +311,7 @@ def make_ip_dimmer(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip dimmer entities."""
     return make_custom_entity(
-        device, address, HmDimmer, DeviceDescription.IP_DIMMER, group_base_channels
+        device, address, HmDimmer, EntityDefinition.IP_DIMMER, group_base_channels
     )
 
 
@@ -320,7 +320,7 @@ def make_rf_dimmer(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic dimmer entities."""
     return make_custom_entity(
-        device, address, HmDimmer, DeviceDescription.RF_DIMMER, group_base_channels
+        device, address, HmDimmer, EntityDefinition.RF_DIMMER, group_base_channels
     )
 
 
@@ -329,7 +329,7 @@ def make_ip_light(
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic light entities."""
     return make_custom_entity(
-        device, address, HmLight, DeviceDescription.IP_LIGHT_SWITCH, group_base_channels
+        device, address, HmLight, EntityDefinition.IP_LIGHT_SWITCH, group_base_channels
     )
 
 
@@ -338,7 +338,7 @@ def make_ip_light_bsl(
 ) -> list[hm_entity.BaseEntity]:
     """Creates HmIP-BSL entities."""
     return make_custom_entity(
-        device, address, IPLightBSL, DeviceDescription.IP_LIGHT_BSL, group_base_channels
+        device, address, IPLightBSL, EntityDefinition.IP_LIGHT_BSL, group_base_channels
     )
 
 

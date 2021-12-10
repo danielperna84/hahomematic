@@ -14,15 +14,15 @@ import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
 from hahomematic.helpers import generate_unique_id
 
-DD_DEFAULT_ENTITIES = "default_entities"
-DD_INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
-DD_DEVICE_GROUP = "device_group"
-DD_DEVICES = "devices"
-DD_ADDITIONAL_ENTITIES = "additional_entities"
-DD_FIELDS = "fields"
-DD_FIELDS_REP = "fields_rep"
-DD_PHY_CHANNEL = "phy_channel"
-DD_VIRT_CHANNEL = "virt_channel"
+ED_DEFAULT_ENTITIES = "default_entities"
+ED_INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
+ED_DEVICE_GROUP = "device_group"
+ED_DEVICES = "devices"
+ED_ADDITIONAL_ENTITIES = "additional_entities"
+ED_FIELDS = "fields"
+ED_FIELDS_REP = "fields_rep"
+ED_PHY_CHANNEL = "phy_channel"
+ED_VIRT_CHANNEL = "virt_channel"
 DEFAULT_INCLUDE_DEFAULT_ENTITIES = True
 
 FIELD_AUTO_MODE = "auto_mode"
@@ -70,8 +70,8 @@ FIELD_VOLTAGE = "voltage"
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeviceDescription(Enum):
-    """Enum for device_descriptions."""
+class EntityDefinition(Enum):
+    """Enum for entity definitions."""
 
     IP_COVER = "IPCover"
     IP_DIMMER = "IPDimmer"
@@ -93,40 +93,40 @@ class DeviceDescription(Enum):
         return str(self.value)
 
 
-SCHEMA_DD_FIELD_DETAILS = Schema({Optional(str): str, Optional(str): str})
+SCHEMA_ED_FIELD_DETAILS = Schema({Optional(str): str, Optional(str): str})
 
-SCHEMA_DD_FIELD = Schema({Optional(int): SCHEMA_DD_FIELD_DETAILS})
+SCHEMA_ED_FIELD = Schema({Optional(int): SCHEMA_ED_FIELD_DETAILS})
 
-SCHEMA_DD_DEVICE_GROUP = Schema(
+SCHEMA_ED_DEVICE_GROUP = Schema(
     {
-        Required(DD_PHY_CHANNEL): [int],
-        Required(DD_VIRT_CHANNEL): [int],
-        Required(DD_FIELDS_REP, default={}): SCHEMA_DD_FIELD_DETAILS,
-        Optional(DD_FIELDS): SCHEMA_DD_FIELD,
+        Required(ED_PHY_CHANNEL): [int],
+        Required(ED_VIRT_CHANNEL): [int],
+        Required(ED_FIELDS_REP, default={}): SCHEMA_ED_FIELD_DETAILS,
+        Optional(ED_FIELDS): SCHEMA_ED_FIELD,
     }
 )
 
-SCHEMA_DD_DEVICE_GROUPS = Schema(
+SCHEMA_ED_DEVICE_GROUPS = Schema(
     {
-        Required(DD_DEVICE_GROUP): SCHEMA_DD_DEVICE_GROUP,
-        Optional(DD_ADDITIONAL_ENTITIES): SCHEMA_DD_FIELD,
-        Optional(DD_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES): bool,
+        Required(ED_DEVICE_GROUP): SCHEMA_ED_DEVICE_GROUP,
+        Optional(ED_ADDITIONAL_ENTITIES): SCHEMA_ED_FIELD,
+        Optional(ED_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES): bool,
     }
 )
 
 SCHEMA_DEVICE_DESCRIPTION = Schema(
     {
-        Required(DD_DEFAULT_ENTITIES): SCHEMA_DD_FIELD,
-        Required(DD_DEVICES): Schema(
+        Required(ED_DEFAULT_ENTITIES): SCHEMA_ED_FIELD,
+        Required(ED_DEVICES): Schema(
             {
-                Required(DeviceDescription): SCHEMA_DD_DEVICE_GROUPS,
+                Required(EntityDefinition): SCHEMA_ED_DEVICE_GROUPS,
             }
         ),
     }
 )
 
-device_description: dict[str, dict[int | DeviceDescription, Any]] = {
-    DD_DEFAULT_ENTITIES: {
+entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
+    ED_DEFAULT_ENTITIES: {
         0: {
             FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
             FIELD_DUTY_CYCLE: "DUTY_CYCLE",
@@ -139,17 +139,17 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
             FIELD_SABOTAGE: "SABOTAGE",
         }
     },
-    DD_DEVICES: {
-        DeviceDescription.IP_COVER: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
+    ED_DEVICES: {
+        EntityDefinition.IP_COVER: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_LEVEL_2: "LEVEL_2",
                     FIELD_STOP: "STOP",
                 },
-                DD_FIELDS: {
+                ED_FIELDS: {
                     0: {
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                         FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
@@ -157,40 +157,40 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                 },
             },
         },
-        DeviceDescription.IP_DIMMER: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [2, 3],
-                DD_FIELDS_REP: {
+        EntityDefinition.IP_DIMMER: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1],
+                ED_VIRT_CHANNEL: [2, 3],
+                ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
                 },
-                DD_FIELDS: {
+                ED_FIELDS: {
                     0: {
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                     },
                 },
             },
         },
-        DeviceDescription.IP_GARAGE: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
+        EntityDefinition.IP_GARAGE: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
                     FIELD_DOOR_STATE: "DOOR_STATE",
                     FIELD_DOOR_COMMAND: "DOOR_COMMAND,",
                 },
-                DD_FIELDS: {},
+                ED_FIELDS: {},
             },
         },
-        DeviceDescription.IP_LIGHT_BSL: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [2, 3],
-                DD_FIELDS_REP: {
+        EntityDefinition.IP_LIGHT_BSL: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1],
+                ED_VIRT_CHANNEL: [2, 3],
+                ED_FIELDS_REP: {
                     FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
                 },
-                DD_FIELDS: {
+                ED_FIELDS: {
                     0: {
                         FIELD_CHANNEL_COLOR: "COLOR",
                         FIELD_CHANNEL_LEVEL: "LEVEL",
@@ -198,20 +198,20 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                 },
             },
         },
-        DeviceDescription.IP_LIGHT_SWITCH: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [2, 3],
-                DD_FIELDS_REP: {
+        EntityDefinition.IP_LIGHT_SWITCH: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1],
+                ED_VIRT_CHANNEL: [2, 3],
+                ED_FIELDS_REP: {
                     FIELD_STATE: "STATE",
                 },
-                DD_FIELDS: {
+                ED_FIELDS: {
                     0: {
                         FIELD_CHANNEL_STATE: "STATE",
                     },
                 },
             },
-            DD_ADDITIONAL_ENTITIES: {
+            ED_ADDITIONAL_ENTITIES: {
                 4: {
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_CURRENT: "CURRENT",
@@ -222,12 +222,12 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                 },
             },
         },
-        DeviceDescription.IP_LOCK: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {},
-                DD_FIELDS: {
+        EntityDefinition.IP_LOCK: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {},
+                ED_FIELDS: {
                     1: {
                         FIELD_LOCK_STATE: "LOCK_STATE",
                         FIELD_LOCK_TARGET_LEVEL: "LOCK_TARGET_LEVEL",
@@ -235,11 +235,11 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                 },
             },
         },
-        DeviceDescription.IP_THERMOSTAT: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
+        EntityDefinition.IP_THERMOSTAT: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
                     FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
@@ -250,7 +250,7 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                     FIELD_AUTO_MODE: "AUTO_MODE",
                 },
             },
-            DD_ADDITIONAL_ENTITIES: {
+            ED_ADDITIONAL_ENTITIES: {
                 1: {
                     FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_LEVEL: "LEVEL",
@@ -260,11 +260,11 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                 },
             },
         },
-        DeviceDescription.IP_THERMOSTAT_GROUP: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
+        EntityDefinition.IP_THERMOSTAT_GROUP: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
                     FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
@@ -275,35 +275,35 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                     FIELD_AUTO_MODE: "AUTO_MODE",
                 },
             },
-            DD_INCLUDE_DEFAULT_ENTITIES: False,
+            ED_INCLUDE_DEFAULT_ENTITIES: False,
         },
-        DeviceDescription.RF_COVER: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1, 2, 3, 4],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
+        EntityDefinition.RF_COVER: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1, 2, 3, 4],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_LEVEL_2: "LEVEL_2",
                     FIELD_STOP: "STOP",
                 },
             },
         },
-        DeviceDescription.RF_DIMMER: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1, 2, 3, 4],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
+        EntityDefinition.RF_DIMMER: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1, 2, 3, 4],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
                 },
-                DD_FIELDS: {},
+                ED_FIELDS: {},
             },
         },
-        DeviceDescription.RF_LOCK: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {},
-                DD_FIELDS: {
+        EntityDefinition.RF_LOCK: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {},
+                ED_FIELDS: {
                     1: {
                         FIELD_STATE: "STATE",
                         FIELD_OPEN: "OPEN",
@@ -311,11 +311,11 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                 },
             },
         },
-        DeviceDescription.RF_THERMOSTAT: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1, 2, 3, 4],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
+        EntityDefinition.RF_THERMOSTAT: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1, 2, 3, 4],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
                     FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
@@ -328,11 +328,11 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                 },
             },
         },
-        DeviceDescription.RF_THERMOSTAT_GROUP: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [1, 2, 3, 4],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {
+        EntityDefinition.RF_THERMOSTAT_GROUP: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [1, 2, 3, 4],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
                     FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
@@ -344,14 +344,14 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
                     FIELD_LOWERING_MODE: "LOWERING_MODE",
                 },
             },
-            DD_INCLUDE_DEFAULT_ENTITIES: False,
+            ED_INCLUDE_DEFAULT_ENTITIES: False,
         },
-        DeviceDescription.SIMPLE_RF_THERMOSTAT: {
-            DD_DEVICE_GROUP: {
-                DD_PHY_CHANNEL: [],
-                DD_VIRT_CHANNEL: [],
-                DD_FIELDS_REP: {},
-                DD_FIELDS: {
+        EntityDefinition.SIMPLE_RF_THERMOSTAT: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {},
+                ED_FIELDS: {
                     1: {
                         FIELD_HUMIDITY: "HUMIDITY",
                         FIELD_TEMPERATURE: "TEMPERATURE",
@@ -366,10 +366,10 @@ device_description: dict[str, dict[int | DeviceDescription, Any]] = {
 }
 
 
-def validate_device_description() -> Any:
-    """Validate the device_description."""
+def validate_entity_definition() -> Any:
+    """Validate the entity_definition."""
     try:
-        return SCHEMA_DEVICE_DESCRIPTION(device_description)
+        return SCHEMA_DEVICE_DESCRIPTION(entity_definition)
     except Invalid as err:
         _LOGGER.error(
             "The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg
@@ -381,7 +381,7 @@ def make_custom_entity(
     device: hm_device.HmDevice,
     address: str,
     custom_entity_class: type,
-    device_enum: DeviceDescription,
+    device_enum: EntityDefinition,
     group_base_channels: list[int],
 ) -> list[hm_entity.BaseEntity]:
     """
@@ -392,14 +392,14 @@ def make_custom_entity(
     if not group_base_channels:
         group_base_channels = [0]
 
-    entity_desc = _get_device_entities(device_enum, group_base_channels[0])
+    entity_def = _get_device_entities(device_enum, group_base_channels[0])
 
     for base_channel in group_base_channels:
-        device_desc = _get_device_group(device_enum, base_channel)
-        channels = device_desc[DD_PHY_CHANNEL]
+        device_def = _get_device_group(device_enum, base_channel)
+        channels = device_def[ED_PHY_CHANNEL]
         # check if virtual channels should be used
         if device.central.enable_virtual_channels:
-            channels.extend(device_desc[DD_VIRT_CHANNEL])
+            channels.extend(device_def[ED_VIRT_CHANNEL])
         for channel_no in set(channels):
             entities.extend(
                 _create_entities(
@@ -407,12 +407,12 @@ def make_custom_entity(
                     address=address,
                     custom_entity_class=custom_entity_class,
                     device_enum=device_enum,
-                    device_desc=device_desc,
-                    entity_desc=entity_desc,
+                    device_def=device_def,
+                    entity_def=entity_def,
                     channel_no=channel_no,
                 )
             )
-        # DD_PHY_CHANNEL is empty -> try to create entities based on DD_FIELDS
+        # ED_PHY_CHANNEL is empty -> try to create entities based on ED_FIELDS
         if not channels:
             entities.extend(
                 _create_entities(
@@ -420,8 +420,8 @@ def make_custom_entity(
                     address=address,
                     custom_entity_class=custom_entity_class,
                     device_enum=device_enum,
-                    device_desc=device_desc,
-                    entity_desc=entity_desc,
+                    device_def=device_def,
+                    entity_def=entity_def,
                 )
             )
 
@@ -432,9 +432,9 @@ def _create_entities(
     device: hm_device.HmDevice,
     address: str,
     custom_entity_class: type,
-    device_enum: DeviceDescription,
-    device_desc: dict[str, Any],
-    entity_desc: dict[str, Any],
+    device_enum: EntityDefinition,
+    device_def: dict[str, Any],
+    entity_def: dict[str, Any],
     channel_no: int | None = None,
 ) -> list[hm_entity.BaseEntity]:
     """Create custom entities."""
@@ -448,8 +448,8 @@ def _create_entities(
         address=address,
         unique_id=unique_id,
         device_enum=device_enum,
-        device_desc=device_desc,
-        entity_desc=entity_desc,
+        device_def=device_def,
+        entity_def=entity_def,
         channel_no=channel_no,
     )
     if len(entity.data_entities) > 0:
@@ -460,62 +460,62 @@ def _create_entities(
 
 def get_default_entities() -> dict[str, Any]:
     """Return the default entities."""
-    return deepcopy(device_description[DD_DEFAULT_ENTITIES]) # type: ignore[arg-type]
+    return deepcopy(entity_definition[ED_DEFAULT_ENTITIES]) # type: ignore[arg-type]
 
 
-def get_include_default_entities(device_enum: DeviceDescription) -> bool:
+def get_include_default_entities(device_enum: EntityDefinition) -> bool:
     """Return if default entities should be included."""
     device = _get_device(device_enum)
     if device:
-        return device.get(DD_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES)
+        return device.get(ED_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES)
     return DEFAULT_INCLUDE_DEFAULT_ENTITIES
 
 
-def _get_device(device_enum: DeviceDescription) -> dict[str, Any] | None:
-    """Return device from device_descriptions."""
-    device = device_description[DD_DEVICES].get(device_enum)
+def _get_device(device_enum: EntityDefinition) -> dict[str, Any] | None:
+    """Return device from entity definitions."""
+    device = entity_definition[ED_DEVICES].get(device_enum)
     if device:
         return deepcopy(device)  # type: ignore[no-any-return]
     return None
 
 
 def _get_device_group(
-    device_enum: DeviceDescription, base_channel_no: int
+    device_enum: EntityDefinition, base_channel_no: int
 ) -> dict[str, Any]:
     """Return the device group."""
     device = _get_device(device_enum)
     group: dict[str, Any] = {}
     if device:
-        group = deepcopy(device[DD_DEVICE_GROUP])
+        group = deepcopy(device[ED_DEVICE_GROUP])
         if group and base_channel_no == 0:
             return group
         if not group:
             return {}
 
-    p_channel = group[DD_PHY_CHANNEL]
-    group[DD_PHY_CHANNEL] = [x + base_channel_no for x in p_channel]
+    p_channel = group[ED_PHY_CHANNEL]
+    group[ED_PHY_CHANNEL] = [x + base_channel_no for x in p_channel]
 
-    v_channel = group[DD_VIRT_CHANNEL]
+    v_channel = group[ED_VIRT_CHANNEL]
     if v_channel:
-        group[DD_VIRT_CHANNEL] = [x + base_channel_no for x in v_channel]
+        group[ED_VIRT_CHANNEL] = [x + base_channel_no for x in v_channel]
 
-    fields = group.get(DD_FIELDS)
+    fields = group.get(ED_FIELDS)
     if fields:
         new_fields = {}
         for channel_no, field in fields.items():
             new_fields[channel_no + base_channel_no] = field
-        group[DD_FIELDS] = new_fields
+        group[ED_FIELDS] = new_fields
     return group
 
 
 def _get_device_entities(
-    device_enum: DeviceDescription, base_channel_no: int
+    device_enum: EntityDefinition, base_channel_no: int
 ) -> dict[str, Any]:
     """Return the device entities."""
     additional_entities = (
-        device_description[DD_DEVICES]
+        entity_definition[ED_DEVICES]
         .get(device_enum, {})
-        .get(DD_ADDITIONAL_ENTITIES, {})
+        .get(ED_ADDITIONAL_ENTITIES, {})
     )
     new_entities: dict[str, Any] = {}
     if additional_entities:
