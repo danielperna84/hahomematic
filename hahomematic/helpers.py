@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import logging
 import ssl
+from typing import Any
 
+import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ATTR_HM_ALARM,
     ATTR_HM_LIST,
@@ -20,7 +22,9 @@ from hahomematic.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def generate_unique_id(address, parameter=None, prefix=None):
+def generate_unique_id(
+    address: str, parameter: str | None = None, prefix: str | None = None
+) -> str:
     """
     Build unique id from address and parameter.
     """
@@ -34,7 +38,9 @@ def generate_unique_id(address, parameter=None, prefix=None):
     return f"{HA_DOMAIN}_{unique_id}".lower()
 
 
-def make_http_credentials(username=None, password=None):
+def make_http_credentials(
+    username: str | None = None, password: str | None = None
+) -> str:
     """Build auth part for api_url."""
     credentials = ""
     if username is None:
@@ -48,7 +54,14 @@ def make_http_credentials(username=None, password=None):
     return f"{credentials}@"
 
 
-def build_api_url(host, port, path, username=None, password=None, tls=False):
+def build_api_url(
+    host: str,
+    port: int,
+    path: str | None,
+    username: str | None = None,
+    password: str | None = None,
+    tls: bool = False,
+) -> str:
     """Build XML-RPC API URL from components."""
     credentials = make_http_credentials(username, password)
     scheme = "http"
@@ -61,7 +74,7 @@ def build_api_url(host, port, path, username=None, password=None, tls=False):
     return f"{scheme}://{credentials}{host}:{port}{path}"
 
 
-def parse_ccu_sys_var(data):
+def parse_ccu_sys_var(data: dict[str, Any]) -> tuple[str, Any]:
     """Helper to parse type of system variables of CCU."""
     # pylint: disable=no-else-return
     if data[ATTR_TYPE] == ATTR_HM_LOGIC:
@@ -75,7 +88,13 @@ def parse_ccu_sys_var(data):
     return data[ATTR_NAME], data[ATTR_VALUE]
 
 
-def get_entity_name(central, interface_id, address, parameter, unique_id) -> str:
+def get_entity_name(
+    central: hm_central.CentralUnit,
+    interface_id: str,
+    address: str,
+    parameter: str,
+    unique_id: str,
+) -> str:
     """generate name for entity"""
     name = central.names_cache.get(interface_id, {}).get(address, unique_id)
     if name.count(":") == 1:
@@ -94,7 +113,11 @@ def get_entity_name(central, interface_id, address, parameter, unique_id) -> str
 
 
 def get_custom_entity_name(
-    central, interface_id, address, unique_id, channel_no=None
+    central: hm_central.CentralUnit,
+    interface_id: str,
+    address: str,
+    unique_id: str,
+    channel_no: int | None = None,
 ) -> str:
     """generate name for entity"""
     if channel_no and ":" not in address:
@@ -103,7 +126,7 @@ def get_custom_entity_name(
     return central.names_cache.get(interface_id, {}).get(address, unique_id)
 
 
-def get_tls_context(verify_tls):
+def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
     """Return tls verified/unverified ssl/tls context"""
     if verify_tls:
         ssl_context = ssl.create_default_context()

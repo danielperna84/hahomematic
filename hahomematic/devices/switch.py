@@ -5,12 +5,14 @@ import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform
+import hahomematic.device as hm_device
 from hahomematic.devices.device_description import (
     FIELD_CHANNEL_STATE,
     FIELD_STATE,
     DeviceDescription,
     make_custom_entity,
 )
+import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 
 ATTR_CHANNEL_STATE = "channel_state"
@@ -23,13 +25,13 @@ class HmSwitch(CustomEntity):
 
     def __init__(
         self,
-        device,
-        address,
-        unique_id,
-        device_enum,
-        device_desc,
-        entity_desc,
-        channel_no,
+        device: hm_device.HmDevice,
+        address: str,
+        unique_id: str,
+        device_enum: DeviceDescription,
+        device_desc: dict[str, Any],
+        entity_desc: dict[str, Any],
+        channel_no: int,
     ):
         super().__init__(
             device=device,
@@ -49,21 +51,21 @@ class HmSwitch(CustomEntity):
         )
 
     @property
-    def _state(self):
+    def _state(self) -> bool | None:
         """Return the temperature of the device."""
         return self._get_entity_value(FIELD_STATE)
 
     @property
-    def _channel_state(self):
+    def _channel_state(self) -> bool | None:
         """Return the temperature of the device."""
         return self._get_entity_value(FIELD_CHANNEL_STATE)
 
     @property
-    def state(self):
+    def state(self) -> bool | None:
         """Return the current state of the switch."""
         return self._state
 
-    async def set_state(self, value):
+    async def set_state(self, value: bool | None) -> None:
         """Set the state of the switch."""
         await self._send_value(FIELD_STATE, value)
 
@@ -84,7 +86,9 @@ class HmSwitch(CustomEntity):
         return state_attr
 
 
-def make_ip_switch(device, address, group_base_channels: list[int]):
+def make_ip_switch(
+    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip switch entities."""
     return make_custom_entity(
         device,

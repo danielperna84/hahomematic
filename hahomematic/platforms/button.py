@@ -5,8 +5,10 @@ button platform (https://www.home-assistant.io/integrations/button/).
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from hahomematic.const import HmPlatform
+import hahomematic.device as hm_device
 from hahomematic.entity import BaseParameterEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +20,14 @@ class HmButton(BaseParameterEntity):
     This is a default platform that gets automatically generated.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
         super().__init__(
             device=device,
             unique_id=unique_id,

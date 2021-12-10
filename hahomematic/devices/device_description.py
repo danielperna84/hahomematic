@@ -3,12 +3,15 @@ This module contains device descriptions for custom entities.
 """
 from __future__ import annotations
 
-from copy import copy
+from copy import deepcopy
 from enum import Enum
 import logging
+from typing import Any
 
 from voluptuous import Invalid, Optional, Required, Schema
 
+import hahomematic.device as hm_device
+import hahomematic.entity as hm_entity
 from hahomematic.helpers import generate_unique_id
 
 DD_DEFAULT_ENTITIES = "default_entities"
@@ -122,7 +125,7 @@ SCHEMA_DEVICE_DESCRIPTION = Schema(
     }
 )
 
-device_description = {
+device_description: dict[str, dict[int | DeviceDescription, Any]] = {
     DD_DEFAULT_ENTITIES: {
         0: {
             FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
@@ -363,7 +366,7 @@ device_description = {
 }
 
 
-def validate_device_description():
+def validate_device_description() -> Any:
     """Validate the device_description."""
     try:
         return SCHEMA_DEVICE_DESCRIPTION(device_description)
@@ -375,17 +378,17 @@ def validate_device_description():
 
 
 def make_custom_entity(
-    device,
-    address,
-    custom_entity_class,
+    device: hm_device.HmDevice,
+    address: str,
+    custom_entity_class: type,
     device_enum: DeviceDescription,
     group_base_channels: list[int],
-):
+) -> list[hm_entity.BaseEntity]:
     """
     Creates custom_entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
-    entities = []
+    entities: list[hm_entity.BaseEntity] = []
     if not group_base_channels:
         group_base_channels = [0]
 
@@ -419,7 +422,6 @@ def make_custom_entity(
                     device_enum=device_enum,
                     device_desc=device_desc,
                     entity_desc=entity_desc,
-                    channel_no=None,
                 )
             )
 
@@ -427,20 +429,20 @@ def make_custom_entity(
 
 
 def _create_entities(
-    device,
-    address,
-    custom_entity_class,
-    device_enum,
-    device_desc,
-    entity_desc,
-    channel_no,
-):
+    device: hm_device.HmDevice,
+    address: str,
+    custom_entity_class: type,
+    device_enum: DeviceDescription,
+    device_desc: dict[str, Any],
+    entity_desc: dict[str, Any],
+    channel_no: int | None = None,
+) -> list[hm_entity.BaseEntity]:
     """Create custom entities."""
-    entities = []
+    entities: list[hm_entity.BaseEntity] = []
     unique_id = generate_unique_id(f"{address}:{channel_no}")
     if unique_id in device.central.hm_entities:
         _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_id)
-        return
+        return entities
     entity = custom_entity_class(
         device=device,
         address=address,
@@ -456,9 +458,9 @@ def _create_entities(
     return entities
 
 
-def get_default_entities():
+def get_default_entities() -> dict[str, Any]:
     """Return the default entities."""
-    return copy(device_description[DD_DEFAULT_ENTITIES])
+    return deepcopy(device_description[DD_DEFAULT_ENTITIES]) # type: ignore[arg-type]
 
 
 def get_include_default_entities(device_enum: DeviceDescription) -> bool:
@@ -469,24 +471,26 @@ def get_include_default_entities(device_enum: DeviceDescription) -> bool:
     return DEFAULT_INCLUDE_DEFAULT_ENTITIES
 
 
-def _get_device(device_enum: DeviceDescription):
+def _get_device(device_enum: DeviceDescription) -> dict[str, Any] | None:
     """Return device from device_descriptions."""
     device = device_description[DD_DEVICES].get(device_enum)
     if device:
-        return copy(device)
+        return deepcopy(device)  # type: ignore[no-any-return]
     return None
 
 
-def _get_device_group(device_enum: DeviceDescription, base_channel_no: int):
+def _get_device_group(
+    device_enum: DeviceDescription, base_channel_no: int
+) -> dict[str, Any]:
     """Return the device group."""
     device = _get_device(device_enum)
-    group = {}
+    group: dict[str, Any] = {}
     if device:
-        group = copy(device[DD_DEVICE_GROUP])
+        group = deepcopy(device[DD_DEVICE_GROUP])
         if group and base_channel_no == 0:
             return group
         if not group:
-            return None
+            return {}
 
     p_channel = group[DD_PHY_CHANNEL]
     group[DD_PHY_CHANNEL] = [x + base_channel_no for x in p_channel]
@@ -504,16 +508,17 @@ def _get_device_group(device_enum: DeviceDescription, base_channel_no: int):
     return group
 
 
-def _get_device_entities(device_enum: DeviceDescription, base_channel_no: int):
+def _get_device_entities(
+    device_enum: DeviceDescription, base_channel_no: int
+) -> dict[str, Any]:
     """Return the device entities."""
     additional_entities = (
         device_description[DD_DEVICES]
         .get(device_enum, {})
         .get(DD_ADDITIONAL_ENTITIES, {})
     )
+    new_entities: dict[str, Any] = {}
     if additional_entities:
-        new_entities = {}
-        for channel_no, field in copy(additional_entities).items():
+        for channel_no, field in deepcopy(additional_entities).items():
             new_entities[channel_no + base_channel_no] = field
-        return new_entities
-    return None
+    return new_entities

@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from abc import ABC
+from collections.abc import Callable
 from datetime import datetime
 import logging
 from typing import Any
 
+import hahomematic.central_unit as hm_central
 from hahomematic.const import BACKEND_CCU, HA_DOMAIN, INIT_DATETIME
 from hahomematic.helpers import generate_unique_id
 
@@ -31,7 +33,13 @@ class BaseHubEntity(ABC):
     Base class for hub entities.
     """
 
-    def __init__(self, central, unique_id, name, state=None):
+    def __init__(
+        self,
+        central: hm_central.CentralUnit,
+        unique_id: str,
+        name: str,
+        state: Any | None = None,
+    ):
         """
         Initialize the entity.
         """
@@ -40,9 +48,9 @@ class BaseHubEntity(ABC):
         self.name = name
         self._state = state
         self.last_update: datetime = INIT_DATETIME
-        self._update_callbacks = []
-        self._remove_callbacks = []
-        self.create_in_ha = True
+        self._update_callbacks: list[Callable] = []
+        self._remove_callbacks: list[Callable] = []
+        self.create_in_ha: bool = True
 
     @property
     def available(self) -> bool:
@@ -55,12 +63,12 @@ class BaseHubEntity(ABC):
         return {}
 
     @property
-    def state(self):
+    def state(self) -> Any:
         """Return the state of the entity."""
         return self._state
 
     @property
-    def unit(self):
+    def unit(self) -> str | None:
         """Return the unit of the entity."""
         if isinstance(self._state, (bool, str)):
             return None
@@ -69,26 +77,26 @@ class BaseHubEntity(ABC):
         return None
 
     # pylint: disable=no-self-use
-    async def load_data(self):
+    async def load_data(self) -> None:
         """Do not load data for the hub here."""
         return
 
     # pylint: disable=no-self-use
-    async def fetch_data(self):
+    async def fetch_data(self) -> None:
         """fetch data for the hub."""
         return
 
-    def register_update_callback(self, update_callback) -> None:
+    def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
         if callable(update_callback):
             self._update_callbacks.append(update_callback)
 
-    def unregister_update_callback(self, update_callback) -> None:
+    def unregister_update_callback(self, update_callback: Callable) -> None:
         """remove update callback"""
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
 
-    def update_entity(self, *args) -> None:
+    def update_entity(self, *args: Any) -> None:
         """
         Do what is needed when the state of the entity has been updated.
         """
@@ -96,12 +104,12 @@ class BaseHubEntity(ABC):
         for _callback in self._update_callbacks:
             _callback(self.unique_id)
 
-    def register_remove_callback(self, remove_callback) -> None:
+    def register_remove_callback(self, remove_callback: Callable) -> None:
         """register the remove callback"""
         if callable(remove_callback):
             self._remove_callbacks.append(remove_callback)
 
-    def unregister_remove_callback(self, remove_callback) -> None:
+    def unregister_remove_callback(self, remove_callback: Callable) -> None:
         """remove the remove callback"""
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
@@ -121,22 +129,24 @@ class BaseHubEntity(ABC):
 class HmSystemVariable(BaseHubEntity):
     """Class for a homematic system variable."""
 
-    def __init__(self, central, name, state):
-        self._hub = central.hub
+    def __init__(self, central: hm_central.CentralUnit, name: str, state: Any):
+        self._hub: HmHub | HmDummyHub | None = central.hub
         unique_id = generate_unique_id(central.instance_name, name, prefix="hub")
         super().__init__(central=central, unique_id=unique_id, name=name, state=state)
 
     @property
-    def device_info(self) -> dict[str, str]:
+    def device_info(self) -> dict[str, str] | None:
         """Return device specific attributes."""
-        return self._hub.device_info
+        if self._hub:
+            return self._hub.device_info
+        return None
 
     @property
     def should_poll(self) -> bool:
         """No polling needed."""
         return False
 
-    async def set_state(self, value):
+    async def set_state(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         old_state = self._state
         if isinstance(old_state, bool):
@@ -156,10 +166,10 @@ class HmSystemVariable(BaseHubEntity):
 class HmHub(BaseHubEntity):
     """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(self, central, use_entities=False):
+    def __init__(self, central: hm_central.CentralUnit, use_entities: bool = False):
         """Initialize HomeMatic hub."""
-        unique_id = generate_unique_id(central.instance_name, prefix="hub")
-        name = central.instance_name
+        unique_id: str = generate_unique_id(central.instance_name, prefix="hub")
+        name: str = central.instance_name
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, HmSystemVariable] = {}
         self._variables: dict[str, Any] = {}
@@ -184,16 +194,16 @@ class HmHub(BaseHubEntity):
         return True
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._variables.copy()
 
-    async def fetch_data(self):
+    async def fetch_data(self) -> None:
         """fetch data for the hub."""
         await self._update_hub_state()
         await self._update_entities()
 
-    async def _update_hub_state(self):
+    async def _update_hub_state(self) -> None:
         """Retrieve latest state."""
         service_messages = await self._central.get_service_messages()
         state = 0 if service_messages is None else len(service_messages)
@@ -202,7 +212,7 @@ class HmHub(BaseHubEntity):
             self._state = state
             self.update_entity()
 
-    async def _update_entities(self):
+    async def _update_entities(self) -> None:
         """Retrieve all variable data and update hmvariable states."""
         self._variables.clear()
         variables = await self._central.get_all_system_variables()
@@ -221,7 +231,7 @@ class HmHub(BaseHubEntity):
                 self._variables[name] = value
                 continue
 
-            entity: HmSystemVariable = self.hub_entities.get(name)
+            entity: HmSystemVariable | None = self.hub_entities.get(name)
             if entity:
                 await entity.set_state(value)
             else:
@@ -238,12 +248,12 @@ class HmHub(BaseHubEntity):
             del self.hub_entities[to_delete]
         self.update_entity()
 
-    def _create_system_variable(self, name, value):
+    def _create_system_variable(self, name: str, value: Any) -> None:
         """Create system variable as entity."""
         variable = HmSystemVariable(central=self._central, name=name, state=value)
         self.hub_entities[name] = variable
 
-    async def set_system_variable(self, name, value):
+    async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         if name not in self.hub_entities:
             _LOGGER.error("Variable %s not found on %s", name, self.name)
@@ -255,10 +265,10 @@ class HmHub(BaseHubEntity):
 class HmDummyHub(BaseHubEntity):
     """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(self, central, use_entities=False):
+    def __init__(self, central: hm_central.CentralUnit, use_entities: bool = False):
         """Initialize HomeMatic hub."""
-        unique_id = generate_unique_id(central.instance_name, prefix="hub")
-        name = central.instance_name
+        unique_id: str = generate_unique_id(central.instance_name, prefix="hub")
+        name: str = central.instance_name
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, BaseHubEntity] = {}
         self._use_entities = use_entities
@@ -282,21 +292,21 @@ class HmDummyHub(BaseHubEntity):
         return False
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {}
 
-    async def fetch_data(self):
+    async def fetch_data(self) -> None:
         """do not fetch data for the hub."""
         return
 
-    # pylint: disable=no-self-use
-    async def set_system_variable(self, name, value):
+    # pylint: disable=unnecessary-pass
+    async def set_system_variable(self, name: str, value: Any) -> None:
         """Do not set variable value on CCU/Homegear."""
-        return
+        pass
 
 
-def _is_excluded(variable, exclude_list):
+def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
     """Check if variable is excluded by exclude_list."""
     for marker in exclude_list:
         if marker in variable:
@@ -304,8 +314,8 @@ def _is_excluded(variable, exclude_list):
     return False
 
 
-def _clean_variables(variables):
-    cleaned_variables = {}
+def _clean_variables(variables: dict[str, Any]) -> dict[str, Any]:
+    cleaned_variables: dict[str, Any] = {}
     for name, value in variables.items():
         if _is_excluded(name, EXCLUDED):
             continue
