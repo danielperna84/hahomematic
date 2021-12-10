@@ -38,6 +38,6 @@ class HmBinarySensor(GenericEntity):
         )
 
     @property
-    def state(self) -> bool | None:
+    def state(self) -> bool:
         """Return the state."""
-        return self._state
+        return self._state is True
