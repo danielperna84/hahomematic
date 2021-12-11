@@ -14,7 +14,7 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmNumber(GenericEntity):
+class HmNumber(GenericEntity[float]):
     """
     Implementation of a number.
     This is a default platform that gets automatically generated.
@@ -36,11 +36,6 @@ class HmNumber(GenericEntity):
             parameter_data=parameter_data,
             platform=HmPlatform.NUMBER,
         )
-
-    @property
-    def state(self) -> float | None:
-        """Get the state of the entity."""
-        return self._state
 
     async def set_state(self, value: float) -> None:
         """Set the state of the entity."""

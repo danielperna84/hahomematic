@@ -14,7 +14,7 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmSelect(GenericEntity):
+class HmSelect(GenericEntity[int]):
     """
     Implementation of a select entity.
     This is a default platform that gets automatically generated.
@@ -38,13 +38,13 @@ class HmSelect(GenericEntity):
         )
 
     @property
-    def state(self) -> Any | None:
+    def value(self) -> str | None:
         """Get the state of the entity."""
         if self._value_list and self._state:
             return self._value_list[self._state]
-        return self._default
+        return None
 
-    async def set_state(self, value: Any) -> None:
+    async def set_state(self, value: int | str) -> None:
         # We allow setting the value via index as well, just in case.
         """Set the state of the entity."""
         if isinstance(value, int):

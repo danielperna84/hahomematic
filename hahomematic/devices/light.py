@@ -76,25 +76,24 @@ class BaseHmLight(CustomEntity):
         return 0
 
     @property
-    @abstractmethod
     def color_mode(self) -> str:
         """Return the color mode of the light."""
-        ...
+        return COLOR_MODE_ONOFF
 
     @property
-    @abstractmethod
+    def supported_color_modes(self) -> set[str]:
+        """Return the supported color modes."""
+        return {COLOR_MODE_ONOFF}
+
+    @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
-        ...
-
-    @property
-    @abstractmethod
-    def supported_color_modes(self) -> set[str]:
-        """Return the supported color_modes."""
-        ...
+        return 0.0, 0.0
 
     @abstractmethod
-    async def turn_on(self, hs_color: tuple[float, float] | None, brightness: int | None) -> None:
+    async def turn_on(
+        self, hs_color: tuple[float, float] | None, brightness: int | None
+    ) -> None:
         """Turn the light on."""
         ...
 
@@ -137,7 +136,9 @@ class HmDimmer(BaseHmLight):
         """Return the supported color modes."""
         return {COLOR_MODE_BRIGHTNESS}
 
-    async def turn_on(self, hs_color: tuple[float, float] | None, brightness: int | None) -> None:
+    async def turn_on(
+        self, hs_color: tuple[float, float] | None, brightness: int | None
+    ) -> None:
         """Turn the light on."""
         # Minimum brightness is 10, otherwise the LED is disabled
         if brightness:
@@ -176,17 +177,9 @@ class HmLight(BaseHmLight):
         """Return true if light is on."""
         return self._state is True
 
-    @property
-    def color_mode(self) -> str:
-        """Return the color mode of the light."""
-        return COLOR_MODE_ONOFF
-
-    @property
-    def supported_color_modes(self) -> set[str]:
-        """Return the supported color modes."""
-        return {COLOR_MODE_ONOFF}
-
-    async def turn_on(self, hs_color: tuple[float, float] | None, brightness: int | None) -> None:
+    async def turn_on(
+        self, hs_color: tuple[float, float] | None, brightness: int | None
+    ) -> None:
         """Turn the light on."""
         await self._send_value(FIELD_STATE, True)
 
@@ -263,7 +256,9 @@ class IPLightBSL(BaseHmLight):
         """Return the supported color modes."""
         return {COLOR_MODE_HS}
 
-    async def turn_on(self, hs_color: tuple[float, float] | None, brightness: int | None) -> None:
+    async def turn_on(
+        self, hs_color: tuple[float, float] | None, brightness: int | None
+    ) -> None:
         """Turn the light on."""
         if hs_color:
             simple_rgb_color = _convert_color(hs_color)
@@ -273,7 +268,6 @@ class IPLightBSL(BaseHmLight):
             brightness = max(10, brightness)
             dim_level = brightness / 255.0
             await self._send_value(FIELD_LEVEL, dim_level)
-
 
     async def turn_off(self) -> None:
         """Turn the light off."""

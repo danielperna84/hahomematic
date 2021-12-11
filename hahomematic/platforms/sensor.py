@@ -14,7 +14,7 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmSensor(GenericEntity):
+class HmSensor(GenericEntity[Any]):
     """
     Implementation of a sensor.
     This is a default platform that gets automatically generated.

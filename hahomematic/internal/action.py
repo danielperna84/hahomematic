@@ -11,7 +11,7 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmAction(GenericEntity):
+class HmAction(GenericEntity[None]):
     """
     Implementation of an action.
     This is an internal default platform that gets automatically generated.

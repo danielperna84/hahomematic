@@ -14,7 +14,7 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmSwitch(GenericEntity):
+class HmSwitch(GenericEntity[bool]):
     """
     Implementation of a switch.
     This is a default platform that gets automatically generated.
@@ -42,7 +42,6 @@ class HmSwitch(GenericEntity):
         """Get the state of the entity."""
         if self._type == TYPE_ACTION:
             return False
-
         return self._state
 
     async def turn_on(self) -> None:

@@ -14,7 +14,7 @@ from hahomematic.entity import BaseParameterEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmButton(BaseParameterEntity):
+class HmButton(BaseParameterEntity[None]):
     """
     Implementation of a button.
     This is a default platform that gets automatically generated.

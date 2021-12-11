@@ -14,7 +14,7 @@ from hahomematic.entity import GenericEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmBinarySensor(GenericEntity):
+class HmBinarySensor(GenericEntity[bool]):
     """
     Implementation of a binary_sensor.
     This is a default platform that gets automatically generated.
@@ -38,6 +38,6 @@ class HmBinarySensor(GenericEntity):
         )
 
     @property
-    def state(self) -> bool:
+    def value(self) -> bool:
         """Return the state."""
         return self._state is True

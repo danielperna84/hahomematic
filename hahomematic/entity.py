@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
@@ -37,7 +37,6 @@ from hahomematic.const import (
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
     OPERATION_READ,
-    TYPE_ACTION,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -51,6 +50,7 @@ from hahomematic.helpers import get_custom_entity_name, get_entity_name
 import hahomematic.proxy as hm_proxy
 
 _LOGGER = logging.getLogger(__name__)
+ParameterType = TypeVar("ParameterType", bool, int, float, str, None)
 
 
 class CallbackEntity(ABC):
@@ -162,7 +162,7 @@ class BaseEntity(ABC):
         return f"address: {self.address}, type: {self._device.device_type}, name: {self.name}"
 
 
-class BaseParameterEntity(BaseEntity):
+class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     """
     Base class for stateless entities.
     """
@@ -204,12 +204,12 @@ class BaseParameterEntity(BaseEntity):
     def _assign_parameter_data(self) -> None:
         """Assign parameter data to instance variables."""
         self._type: str = self._parameter_data[ATTR_HM_TYPE]
-        self._default: Any = self._parameter_data[ATTR_HM_DEFAULT]
+        self._default: ParameterType = self._parameter_data[ATTR_HM_DEFAULT]
         flags: int = self._parameter_data[ATTR_HM_FLAGS]
         self._visible: bool = flags & FLAG_VISIBLE == FLAG_VISIBLE
         self._service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
-        self._max: Any = self._parameter_data[ATTR_HM_MAX]
-        self._min: Any = self._parameter_data[ATTR_HM_MIN]
+        self._max: ParameterType = self._parameter_data[ATTR_HM_MAX]
+        self._min: ParameterType = self._parameter_data[ATTR_HM_MIN]
         self._operations: int = self._parameter_data[ATTR_HM_OPERATIONS]
         self._special: dict[str, Any] | None = self._parameter_data.get(ATTR_HM_SPECIAL)
         self._unit: str | None = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
@@ -229,19 +229,19 @@ class BaseParameterEntity(BaseEntity):
         return state_attr
 
     @property
-    def default(self) -> Any | None:
+    def default(self) -> ParameterType | None:
         """Return default value."""
-        return self._convert_value(self._default)
+        return self._default
 
     @property
-    def min(self) -> Any | None:
+    def min(self) -> ParameterType | None:
         """Return min value."""
-        return self._convert_value(self._min)
+        return self._min
 
     @property
-    def max(self) -> Any | None:
+    def max(self) -> ParameterType | None:
         """Return max value."""
-        return self._convert_value(self._max)
+        return self._max
 
     @property
     def unit(self) -> str | None:
@@ -249,7 +249,7 @@ class BaseParameterEntity(BaseEntity):
         return self._unit
 
     @property
-    def value_list(self) -> list[Any] | None:
+    def value_list(self) -> list[str] | None:
         """Return the value_list."""
         return self._value_list
 
@@ -286,7 +286,7 @@ class BaseParameterEntity(BaseEntity):
             )
 
 
-class GenericEntity(BaseParameterEntity, CallbackEntity):
+class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
     """
     Base class for generic entities.
     """
@@ -314,7 +314,7 @@ class GenericEntity(BaseParameterEntity, CallbackEntity):
         )
         CallbackEntity.__init__(self)
 
-        self._state: Any | None = None
+        self._state: ParameterType | None = None
         # if self._type == TYPE_ACTION:
         #     self._state = False
 
@@ -374,10 +374,9 @@ class GenericEntity(BaseParameterEntity, CallbackEntity):
             self.update_entity(self.unique_id)
 
     @property
-    @abstractmethod
-    def state(self) -> Any | None:
+    def state(self) -> ParameterType | None:
         """Return the state of the entity."""
-        ...
+        return self._state
 
     async def load_data(self) -> int:
         """Load data"""
@@ -528,7 +527,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             await entity.send_value(value)
 
 
-class BaseEvent(BaseParameterEntity):
+class BaseEvent(BaseParameterEntity[bool]):
     """Base class for action events"""
 
     def __init__(
