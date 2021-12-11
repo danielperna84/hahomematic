@@ -112,18 +112,21 @@ class CentralUnit:
         self._load_caches()
         self.init_address_parameter_list()
         self._connection_checker = ConnectionChecker(self)
-        self.hub: HmHub | HmDummyHub | None = None
+        self.hub: HmHub | HmDummyHub = self.create_hub()
+
+    def create_hub(self) -> HmHub | HmDummyHub:
+        """Create the hub."""
+        hub: HmHub | HmDummyHub
+        if self.model is BACKEND_PYDEVCCU:
+            hub = HmDummyHub(self)
+        else:
+            hub = HmHub(self, use_entities=self.central_config.enable_sensors_for_system_variables)
+        return hub
 
     async def init_hub(self) -> None:
         """Init the hub."""
-        if self.model is not BACKEND_PYDEVCCU:
-            self.hub = HmHub(
-                self,
-                use_entities=self.central_config.enable_sensors_for_system_variables,
-            )
+        if isinstance(self.hub, HmHub):
             await self.hub.fetch_data()
-        else:
-            self.hub = HmDummyHub(self)
 
     def init_address_parameter_list(self) -> None:
         """Initialize an address/parameter list to identify if a parameter name exists is in multiple channels."""
