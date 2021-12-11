@@ -460,7 +460,7 @@ def _create_entities(
 
 def get_default_entities() -> dict[str, Any]:
     """Return the default entities."""
-    return deepcopy(entity_definition[ED_DEFAULT_ENTITIES]) # type: ignore[arg-type]
+    return deepcopy(entity_definition[ED_DEFAULT_ENTITIES])  # type: ignore[arg-type]
 
 
 def get_include_default_entities(device_enum: EntityDefinition) -> bool:

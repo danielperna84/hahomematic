@@ -40,11 +40,11 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
         self._verify_tls = kwargs.pop(ATTR_VERIFY_TLS, True)
         if self._tls:
             kwargs[ATTR_CONTEXT] = get_tls_context(self._verify_tls)
-        xmlrpc.client.ServerProxy.__init__(   # type: ignore[misc]
+        xmlrpc.client.ServerProxy.__init__(  # type: ignore[misc]
             self, encoding=ATTR_ENCODING_ISO_8859_1, *args, **kwargs
         )
 
-    async def __async_request(self, *args, **kwargs):   # type: ignore[no-untyped-def]
+    async def __async_request(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         Call method on server side
         """
@@ -63,7 +63,7 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
         except Exception as ex:
             raise ProxyException(ex) from ex
 
-    def __getattr__(self, *args, **kwargs):   # type: ignore[no-untyped-def]
+    def __getattr__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         Magic method dispatcher
         """
