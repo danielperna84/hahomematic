@@ -56,17 +56,10 @@ class BaseLock(CustomEntity):
             unique_id,
         )
 
-    @abstractmethod
-    @property
-    def _state(self) -> bool | None:
-        """Return the level of the device."""
-        ...
-
-    @abstractmethod
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        ...
+        return True
 
     @abstractmethod
     async def lock(self) -> None:
