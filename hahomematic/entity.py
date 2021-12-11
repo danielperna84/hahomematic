@@ -7,8 +7,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Generic, TypeVar
 
+import hahomematic.central_unit as hm_central
+import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_HM_DEFAULT,
@@ -35,7 +37,6 @@ from hahomematic.const import (
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
     OPERATION_READ,
-    TYPE_ACTION,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -44,37 +45,33 @@ from hahomematic.const import (
     HmPlatform,
 )
 import hahomematic.device as hm_device
-from hahomematic.devices.device_description import (
-    DD_FIELDS,
-    DD_FIELDS_REP,
-    DeviceDescription,
-    get_default_entities,
-    get_include_default_entities,
-)
+import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.helpers import get_custom_entity_name, get_entity_name
+import hahomematic.proxy as hm_proxy
 
 _LOGGER = logging.getLogger(__name__)
+ParameterType = TypeVar("ParameterType", bool, int, float, str, None)
 
 
 class CallbackEntity(ABC):
     """Base class for callback entities."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.last_update: datetime = INIT_DATETIME
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
 
-    def register_update_callback(self, update_callback) -> None:
+    def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
         if callable(update_callback):
             self._update_callbacks.append(update_callback)
 
-    def unregister_update_callback(self, update_callback) -> None:
+    def unregister_update_callback(self, update_callback: Callable) -> None:
         """remove update callback"""
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
 
-    def update_entity(self, *args) -> None:
+    def update_entity(self, *args: Any) -> None:
         """
         Do what is needed when the state of the entity has been updated.
         """
@@ -82,17 +79,17 @@ class CallbackEntity(ABC):
         for _callback in self._update_callbacks:
             _callback(*args)
 
-    def register_remove_callback(self, remove_callback) -> None:
-        """register remove callback"""
+    def register_remove_callback(self, remove_callback: Callable) -> None:
+        """register the remove callback"""
         if callable(remove_callback):
             self._remove_callbacks.append(remove_callback)
 
-    def unregister_remove_callback(self, remove_callback) -> None:
-        """remove remove callback"""
+    def unregister_remove_callback(self, remove_callback: Callable) -> None:
+        """remove the remove callback"""
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
 
-    def remove_entity(self, *args) -> None:
+    def remove_entity(self, *args: Any) -> None:
         """
         Do what is needed when the entity has been removed.
         """
@@ -103,7 +100,7 @@ class CallbackEntity(ABC):
     def _set_last_update(self) -> None:
         self.last_update = datetime.now()
 
-    def _updated_within_minutes(self, minutes=10) -> bool:
+    def _updated_within_minutes(self, minutes: int = 10) -> bool:
         delta = datetime.now() - self.last_update
         if delta.seconds < minutes * 60:
             return True
@@ -127,13 +124,13 @@ class BaseEntity(ABC):
         self.unique_id = unique_id
         self.address = address
         self.platform = platform
-        self._central = self._device.central
+        self._central: hm_central.CentralUnit = self._device.central
         self._interface_id: str = self._device.interface_id
         self.device_type: str = self._device.device_type
         self.sub_type: str = self._device.sub_type
-        self.create_in_ha: bool = not self._device.is_custom_device
-        self.client = self._central.clients[self._interface_id]
-        self.proxy = self.client.proxy
+        self.create_in_ha: bool = not self._device.is_custom_entity
+        self.client: hm_client.Client = self._central.clients[self._interface_id]
+        self.proxy: hm_proxy.ThreadPoolServerProxy = self.client.proxy
         self.name: str = self.client.central.names_cache.get(
             self._interface_id, {}
         ).get(self.address, self.unique_id)
@@ -144,7 +141,7 @@ class BaseEntity(ABC):
         return self._device.available
 
     @property
-    def device_info(self) -> dict[str, str]:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return self._device.device_info
 
@@ -165,7 +162,7 @@ class BaseEntity(ABC):
         return f"address: {self.address}, type: {self._device.device_type}, name: {self.name}"
 
 
-class BaseParameterEntity(BaseEntity):
+class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     """
     Base class for stateless entities.
     """
@@ -189,7 +186,7 @@ class BaseParameterEntity(BaseEntity):
             platform=platform,
         )
 
-        self.parameter = parameter
+        self.parameter: str = parameter
         # Do not create some Entities in HA
         if self.parameter in HIDDEN_PARAMETERS:
             self.create_in_ha = False
@@ -204,21 +201,23 @@ class BaseParameterEntity(BaseEntity):
             unique_id=self.unique_id,
         )
 
-    def _assign_parameter_data(self):
+    def _assign_parameter_data(self) -> None:
         """Assign parameter data to instance variables."""
-        self._type = self._parameter_data.get(ATTR_HM_TYPE)
-        self._default = self._parameter_data.get(ATTR_HM_DEFAULT)
-        flags = self._parameter_data.get(ATTR_HM_FLAGS, 0)
-        self._visible = flags & FLAG_VISIBLE == FLAG_VISIBLE
-        self._service = flags & FLAG_SERVICE == FLAG_SERVICE
-        self._max = self._parameter_data.get(ATTR_HM_MAX)
-        self._min = self._parameter_data.get(ATTR_HM_MIN)
-        self._operations = self._parameter_data.get(ATTR_HM_OPERATIONS)
-        self._special = self._parameter_data.get(ATTR_HM_SPECIAL)
-        self._unit = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
-        self._value_list = self._parameter_data.get(ATTR_HM_VALUE_LIST)
+        self._type: str = self._parameter_data[ATTR_HM_TYPE]
+        self._default: ParameterType = self._parameter_data[ATTR_HM_DEFAULT]
+        flags: int = self._parameter_data[ATTR_HM_FLAGS]
+        self._visible: bool = flags & FLAG_VISIBLE == FLAG_VISIBLE
+        self._service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
+        self._max: ParameterType = self._parameter_data[ATTR_HM_MAX]
+        self._min: ParameterType = self._parameter_data[ATTR_HM_MIN]
+        self._operations: int = self._parameter_data[ATTR_HM_OPERATIONS]
+        self._special: dict[str, Any] | None = self._parameter_data.get(ATTR_HM_SPECIAL)
+        self._unit: str | None = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
+        self._value_list: list[str] | None = self._parameter_data.get(
+            ATTR_HM_VALUE_LIST
+        )
 
-    def update_parameter_data(self):
+    def update_parameter_data(self) -> None:
         """Update parameter data"""
         self._assign_parameter_data()
 
@@ -230,37 +229,39 @@ class BaseParameterEntity(BaseEntity):
         return state_attr
 
     @property
-    def default(self):
+    def default(self) -> ParameterType:
         """Return default value."""
-        return self._convert_value(self._default)
+        return self._default
 
     @property
-    def min(self):
+    def min(self) -> ParameterType:
         """Return min value."""
-        return self._convert_value(self._min)
+        return self._min
 
     @property
-    def max(self):
+    def max(self) -> ParameterType:
         """Return max value."""
-        return self._convert_value(self._max)
+        return self._max
 
     @property
-    def unit(self):
+    def unit(self) -> str | None:
         """Return unit value."""
         return self._unit
 
     @property
-    def value_list(self):
+    def value_list(self) -> list[str] | None:
         """Return the value_list."""
         return self._value_list
 
     @property
-    def hmtype(self):
+    def hmtype(self) -> str | None:
         """Return the homematic type."""
         return self._type
 
-    def _convert_value(self, value):
+    def _convert_value(self, value: Any | None) -> Any | None:
         """Convert value to a given hm_type."""
+        if value is None:
+            return None
         if self._type == TYPE_BOOL:
             return bool(value)
         if self._type == TYPE_FLOAT:
@@ -271,7 +272,7 @@ class BaseParameterEntity(BaseEntity):
             return str(value)
         return value
 
-    async def send_value(self, value) -> None:
+    async def send_value(self, value: Any) -> None:
         """send value to ccu."""
         try:
             await self.proxy.setValue(self.address, self.parameter, value)
@@ -285,7 +286,7 @@ class BaseParameterEntity(BaseEntity):
             )
 
 
-class GenericEntity(BaseParameterEntity, CallbackEntity):
+class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
     """
     Base class for generic entities.
     """
@@ -313,9 +314,9 @@ class GenericEntity(BaseParameterEntity, CallbackEntity):
         )
         CallbackEntity.__init__(self)
 
-        self._state = None
-        if self._type == TYPE_ACTION:
-            self._state = False
+        self._state: ParameterType | None = None
+        # if self._type == TYPE_ACTION:
+        #     self._state = False
 
         # Subscribe for all events of this device
         if (
@@ -329,7 +330,9 @@ class GenericEntity(BaseParameterEntity, CallbackEntity):
             self.event
         )
 
-    def event(self, interface_id, address, parameter, value) -> None:
+    def event(
+        self, interface_id: str, address: str, parameter: str, value: Any
+    ) -> None:
         """
         Handle event for which this entity has subscribed.
         """
@@ -371,10 +374,9 @@ class GenericEntity(BaseParameterEntity, CallbackEntity):
             self.update_entity(self.unique_id)
 
     @property
-    @abstractmethod
-    def state(self):
+    def state(self) -> ParameterType | None:
         """Return the state of the entity."""
-        ...
+        return self._state
 
     async def load_data(self) -> int:
         """Load data"""
@@ -413,9 +415,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
         device: hm_device.HmDevice,
         unique_id: str,
         address: str,
-        device_enum: DeviceDescription,
-        device_desc: dict[str, Any],
-        entity_desc: dict[str, Any],
+        device_enum: hm_entity_definition.EntityDefinition,
+        device_def: dict[str, Any],
+        entity_def: dict[str, Any],
         platform: HmPlatform,
         channel_no: int | None = None,
     ):
@@ -434,8 +436,8 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
         self.create_in_ha = True
         self._device_enum = device_enum
-        self._device_desc = device_desc
-        self._entity_desc = entity_desc
+        self._device_desc = device_def
+        self._entity_def = entity_def
         self._channel_no = channel_no
         self.name = get_custom_entity_name(
             central=self._central,
@@ -450,14 +452,14 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
 
-        fields_rep = self._device_desc.get(DD_FIELDS_REP, {})
+        fields_rep = self._device_desc.get(hm_entity_definition.ED_FIELDS_REP, {})
         # Add repeating fields
         for (f_name, p_name) in fields_rep.items():
             f_address = f"{self.address}:{self._channel_no}"
             entity = self._device.get_hm_entity(f_address, p_name)
             self._add_entity(f_name, entity)
         # Add device fields
-        fields = self._device_desc.get(DD_FIELDS, {})
+        fields = self._device_desc.get(hm_entity_definition.ED_FIELDS, {})
         for channel_no, channel in fields.items():
             # if self._channel_no and self._channel_no is not channel_no:
             #     continue
@@ -466,15 +468,15 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 entity = self._device.get_hm_entity(f_address, p_name)
                 self._add_entity(f_name, entity)
         # add device entities
-        self._mark_entity(self._entity_desc)
+        self._mark_entity(self._entity_def)
         # add default entities
-        if get_include_default_entities(self._device_enum):
-            self._mark_entity(get_default_entities())
+        if hm_entity_definition.get_include_default_entities(self._device_enum):
+            self._mark_entity(hm_entity_definition.get_default_entities())
 
-    def _mark_entity(self, field_desc):
+    def _mark_entity(self, field_desc: dict[str, Any]) -> None:
         """Mark entities to be created in HA."""
         if not field_desc:
-            return
+            return None
         for channel_no, field in field_desc.items():
             f_address = f"{self.address}:{channel_no}"
             for p_name in field.values():
@@ -482,18 +484,18 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 if entity:
                     entity.create_in_ha = True
 
-    def _add_entity(self, f_name, entity: GenericEntity | None):
+    def _add_entity(self, f_name: str, entity: GenericEntity | None) -> None:
         """Add entity to collection and register callback"""
         if not entity:
-            return
+            return None
 
         entity.register_update_callback(self.update_entity)
         self.data_entities[f_name] = entity
 
-    def _remove_entity(self, f_name, entity: GenericEntity | None):
+    def _remove_entity(self, f_name: str, entity: GenericEntity | None) -> None:
         """Remove entity from collection and un-register callback"""
         if not entity:
-            return
+            return None
         entity.unregister_update_callback(self.update_entity)
         del self.data_entities[f_name]
 
@@ -509,28 +511,23 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self.update_entity()
         return DATA_LOAD_SUCCESS
 
-    def _get_entity_value(self, field_name, default=None):
+    def _get_entity_value(
+        self, field_name: str, default: Any | None = None
+    ) -> Any | None:
         """get entity value"""
         entity = self.data_entities.get(field_name)
         if entity:
             return entity.state
         return default
 
-    def _get_entity_attribute(self, field_name, attr_name, default=None):
-        """get entity attribute value"""
-        entity = self.data_entities.get(field_name)
-        if entity and hasattr(entity, attr_name):
-            return getattr(entity, attr_name)
-        return default
-
-    async def _send_value(self, field_name, value) -> None:
+    async def _send_value(self, field_name: str, value: Any) -> None:
         """send value to ccu"""
         entity = self.data_entities.get(field_name)
         if entity:
             await entity.send_value(value)
 
 
-class BaseEvent(BaseParameterEntity):
+class BaseEvent(BaseParameterEntity[bool]):
     """Base class for action events"""
 
     def __init__(
@@ -554,16 +551,16 @@ class BaseEvent(BaseParameterEntity):
             platform=HmPlatform.EVENT,
         )
 
-        self.name = get_entity_name(
+        self.name: str = get_entity_name(
             central=self._central,
             interface_id=self._interface_id,
             address=self.address,
             parameter=self.parameter,
             unique_id=self.unique_id,
         )
-        self.event_type = event_type
+        self.event_type: HmEventType = event_type
         self.last_update: datetime = INIT_DATETIME
-        self._value = None
+        self._value: Any | None = None
 
         # Subscribe for all action events of this device
         if (
@@ -577,7 +574,9 @@ class BaseEvent(BaseParameterEntity):
             self.event
         )
 
-    def event(self, interface_id, address, parameter, value) -> None:
+    def event(
+        self, interface_id: str, address: str, parameter: str, value: Any
+    ) -> None:
         """
         Handle event for which this handler has subscribed.
         """
@@ -610,11 +609,11 @@ class BaseEvent(BaseParameterEntity):
         self.fire_event(value)
 
     @property
-    def value(self):
+    def value(self) -> Any:
         """Return the value."""
         return self._value
 
-    async def send_value(self, value) -> None:
+    async def send_value(self, value: Any) -> None:
         """Send value to ccu."""
         try:
             await self.proxy.setValue(self.address, self.parameter, value)
@@ -634,11 +633,11 @@ class BaseEvent(BaseParameterEntity):
         self.last_update = datetime.now()
 
     @abstractmethod
-    def get_event_data(self, value=None):
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
 
     @abstractmethod
-    def fire_event(self, value) -> None:
+    def fire_event(self, value: Any) -> None:
         """
         Do what is needed to fire an event.
         """
@@ -673,7 +672,7 @@ class AlarmEvent(BaseEvent):
             event_type=HmEventType.ALARM,
         )
 
-    def get_event_data(self, value=None):
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         address = self.address.split(":")[0]
         click_type = self.parameter.lower()
@@ -681,20 +680,20 @@ class AlarmEvent(BaseEvent):
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: address,
             ATTR_TYPE: click_type,
+            ATTR_VALUE: value,
         }
 
-    def fire_event(self, value) -> None:
+    def fire_event(self, value: Any) -> None:
         """
         Do what is needed to fire an event.
         """
-        if self._value == value and value is False:
+        if self._value == value:
             return
-
         self._set_last_update()
         self._value = value
 
-        if callable(self._central.callback_alarm_event):
-            self._central.callback_alarm_event(
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
                 self.event_type,
                 self.get_event_data(value),
             )
@@ -725,7 +724,7 @@ class ClickEvent(BaseEvent):
             event_type=HmEventType.KEYPRESS,
         )
 
-    def get_event_data(self, value=None):
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         (address, channel_no) = self.address.split(":")
         click_type = f"channel_{channel_no}_{self.parameter}".lower()
@@ -735,20 +734,20 @@ class ClickEvent(BaseEvent):
             ATTR_TYPE: click_type,
         }
 
-    def fire_event(self, value) -> None:
+    def fire_event(self, value: Any) -> None:
         """
         Do what is needed to fire an event.
         """
-        if callable(self._central.callback_click_event):
-            self._central.callback_click_event(
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
                 self.event_type,
                 self.get_event_data(),
             )
 
 
-class ImpulseEvent(BaseEvent):
+class SpecialEvent(BaseEvent):
     """
-    class for handling impulse events.
+    class for handling special events.
     """
 
     def __init__(
@@ -768,10 +767,10 @@ class ImpulseEvent(BaseEvent):
             address=address,
             parameter=parameter,
             parameter_data=parameter_data,
-            event_type=HmEventType.IMPULSE,
+            event_type=HmEventType.SPECIAL,
         )
 
-    def get_event_data(self, value=None):
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         return {
             ATTR_INTERFACE_ID: self._interface_id,
@@ -780,12 +779,12 @@ class ImpulseEvent(BaseEvent):
             ATTR_VALUE: value,
         }
 
-    def fire_event(self, value) -> None:
+    def fire_event(self, value: bool | None) -> None:
         """
         Do what is needed to fire an event.
         """
         if self._value == value:
-            return
+            return None
         old_value = self._value
         self._set_last_update()
         self._value = value
@@ -793,19 +792,19 @@ class ImpulseEvent(BaseEvent):
         if self.parameter == EVENT_CONFIG_PENDING:
             if value is False and old_value is True:
                 self.client.central.create_task(self._device.reload_paramsets())
-            return
+            return None
         if self.parameter == EVENT_UN_REACH:
             self._device.update_device(self.unique_id)
-            return
+            return None
 
-        if callable(self._central.callback_impulse_event):
-            self._central.callback_impulse_event(
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
                 self.event_type,
                 self.get_event_data(value),
             )
 
 
-def fix_unit(unit):
+def fix_unit(unit: str | None) -> str | None:
     """replace given unit"""
     if not unit:
         return None

@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 # noinspection PyUnusedLocal
-def signal_handler(sig, frame):
+def signal_handler(sig, frame):  # type: ignore[no-untyped-def]
     """Handle signal to shut down central_unit."""
     _LOGGER.info("Got signal: %s. Shutting down central_unit", str(sig))
     for central in INSTANCES.values():

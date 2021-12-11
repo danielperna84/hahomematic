@@ -5,10 +5,13 @@ from __future__ import annotations
 
 import json
 import logging
+import ssl
+from typing import Any
 
 from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnector
 
 from hahomematic import config
+import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ATTR_ERROR,
     ATTR_PASSWORD,
@@ -27,7 +30,7 @@ class JsonRpcAioHttpClient:
 
     def __init__(
         self,
-        central_config,
+        central_config: hm_central.CentralConfig,
     ):
         """Session setup."""
         self._central_config = central_config
@@ -38,30 +41,30 @@ class JsonRpcAioHttpClient:
             self._client_session = ClientSession(
                 connector=conn, loop=self._central_config.loop
             )
-        self._session_id = None
-        self._host = self._central_config.host
-        self._port = self._central_config.json_port
-        self._username = self._central_config.username
-        self._password = self._central_config.password
-        self._json_tls = self._central_config.json_tls
-        self._verify_tls = self._central_config.verify_tls
-        self._tls_context = get_tls_context(self._verify_tls)
+        self._session_id: str | None = None
+        self._host: str = self._central_config.host
+        self._port: int | None = self._central_config.json_port
+        self._username: str = self._central_config.username
+        self._password: str | None = self._central_config.password
+        self._json_tls: bool = self._central_config.json_tls
+        self._verify_tls: bool = self._central_config.verify_tls
+        self._tls_context: ssl.SSLContext = get_tls_context(self._verify_tls)
 
     @property
-    def is_activated(self):
+    def is_activated(self) -> bool:
         """If session exists, then it is activated."""
         return self._session_id is not None
 
-    async def login_or_renew(self):
+    async def login_or_renew(self) -> bool:
         """Renew JSON-RPC session or perform login."""
         if not self.is_activated:
             self._session_id = await self._login()
             return self._session_id is not None
-
-        self._session_id = await self._renew_login(self._session_id)
+        if self._session_id:
+            self._session_id = await self._renew_login(self._session_id)
         return self._session_id is not None
 
-    async def _renew_login(self, session_id) -> str | None:
+    async def _renew_login(self, session_id: str) -> str | None:
         """Renew JSON-RPC session or perform login."""
         try:
             response = await self._post(
@@ -70,7 +73,7 @@ class JsonRpcAioHttpClient:
                 extra_params={ATTR_SESSION_ID: session_id},
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                return response[ATTR_RESULT]
+                return str(response[ATTR_RESULT])
             return await self._login()
         except ClientError:
             _LOGGER.exception(
@@ -80,8 +83,15 @@ class JsonRpcAioHttpClient:
 
     async def _login(self) -> str | None:
         """Login to CCU and return session."""
-        session_id = None
+        session_id: str | None = None
         try:
+            if not self._username:
+                _LOGGER.warning("json_rpc_client._post: No username set.")
+                return None
+            if not self._password:
+                _LOGGER.warning("json_rpc_client._post: No password set.")
+                return None
+
             params = {
                 ATTR_USERNAME: self._username,
                 ATTR_PASSWORD: self._password,
@@ -106,8 +116,12 @@ class JsonRpcAioHttpClient:
             return None
 
     async def post(
-        self, method, extra_params=None, use_default_params=True, keep_session=False
-    ):
+        self,
+        method: str,
+        extra_params: dict[str, str] | None = None,
+        use_default_params: bool = True,
+        keep_session: bool = False,
+    ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST function."""
         if keep_session:
             await self.login_or_renew()
@@ -131,8 +145,12 @@ class JsonRpcAioHttpClient:
         return result
 
     async def _post(
-        self, session_id, method, extra_params=None, use_default_params=True
-    ):
+        self,
+        session_id: bool | str,
+        method: str,
+        extra_params: dict[str, str] | None = None,
+        use_default_params: bool = True,
+    ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST function."""
         if not self._username:
             no_username = "json_rpc_client._post: No username set."
@@ -178,7 +196,7 @@ class JsonRpcAioHttpClient:
                     )
                     # Workaround for bug in CCU
                     return json.loads(
-                        await resp.json(encoding="utf-8").replace("\\", "")
+                        (await resp.json(encoding="utf-8")).replace("\\", "")
                     )
             else:
                 _LOGGER.error("json_rpc_client._post: Status: %i", resp.status)
@@ -193,11 +211,11 @@ class JsonRpcAioHttpClient:
             _LOGGER.exception("json_rpc_client._post: TypeError")
             return {"error": str(ter), "result": {}}
 
-    async def logout(self):
+    async def logout(self) -> None:
         """Logout of CCU."""
         await self._logout(self._session_id)
 
-    async def _logout(self, session_id):
+    async def _logout(self, session_id: str | None) -> None:
         """Logout of CCU."""
         if not session_id:
             _LOGGER.warning("json_rpc.logout: Not logged in. Not logging out.")
@@ -220,7 +238,7 @@ class JsonRpcAioHttpClient:
         return
 
     @property
-    def _url(self):
+    def _url(self) -> str:
         """Return the required url."""
         url = "http://"
         if self._json_tls:
@@ -231,9 +249,13 @@ class JsonRpcAioHttpClient:
         return f"{url}{PATH_JSON_RPC}"
 
 
-def _get_params(session_id, extra_params, use_default_params) -> dict[str, str]:
+def _get_params(
+    session_id: bool | str,
+    extra_params: dict[str, Any] | None,
+    use_default_params: bool,
+) -> dict[str, Any]:
     """Add additional params to default prams."""
-    params = {"_session_id_": session_id} if use_default_params else {}
+    params: dict[str, Any] = {"_session_id_": session_id} if use_default_params else {}
     if extra_params:
         params.update(extra_params)
     return params

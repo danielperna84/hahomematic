@@ -1,3 +1,10 @@
+Version 0.0.18 (2021-12-12)
+- Add type hints based on HA coding guidelines
+- Rename device_description to entity_definition
+- Send alarm event on value change
+- Rename impulse to special events
+- reduce event_callbacks
+
 Version 0.0.17 (2021-12-05)
 - Remove variables that are covered by other sensors (CCU only)
 - Remove dummy from service message (HmIP-RF always sends 0001D3C98DD4B6:3 unreach)

@@ -7,7 +7,7 @@ import time
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig
 from hahomematic.client import ClientConfig
-from hahomematic.devices.device_description import validate_device_description
+from hahomematic.devices.entity_definition import validate_entity_definition
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
@@ -49,18 +49,9 @@ class Example:
             % (int(time.time()), address, interface_id, key, value)
         )
 
-    def clickcallback(self, eventtype, event_data):
+    def hacallback(self, eventtype, event_data):
         print(
-            "clickcallback: %s, %s"
-            % (
-                eventtype,
-                event_data,
-            )
-        )
-
-    def impulsecallback(self, eventtype, event_data):
-        print(
-            "impulsecallback: %s, %s"
+            "hacallback: %s, %s"
             % (
                 eventtype,
                 event_data,
@@ -87,8 +78,7 @@ class Example:
         # Add callbacks to handle the events and see what happens on the system.
         self.central.callback_system_event = self.systemcallback
         self.central.callback_entity_event = self.eventcallback
-        self.central.callback_click_event = self.clickcallback
-        self.central.callback_impulse_event = self.impulsecallback
+        self.central.callback_ha_event = self.hacallback
 
         # Create clients
         client1 = await ClientConfig(
@@ -129,7 +119,7 @@ class Example:
 
 
 # valdate the device description
-if validate_device_description():
+if validate_entity_definition():
     example = Example()
     asyncio.run(example.example_run())
     sys.exit(0)

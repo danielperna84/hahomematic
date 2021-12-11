@@ -3,23 +3,28 @@ Decorators used within hahomematic.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
 import logging
 import time
+from typing import Any
 
 from hahomematic.data import get_client_by_interface_id
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def callback_system_event(name):
+def callback_system_event(name: str) -> Callable:
     """
     Check if callback_system is set and call it AFTER original function.
     """
 
-    def decorator_callback_system_event(func):
+    def decorator_callback_system_event(func: Callable) -> Callable:
+        """Decorator for callback system event."""
+
         @functools.wraps(func)
-        def wrapper_callback_system_event(*args):
+        def wrapper_callback_system_event(*args: Any) -> Any:
+            """Wrapper for callback system event."""
             return_value = func(*args)
             try:
                 # We don't want to pass the function itself
@@ -31,8 +36,8 @@ def callback_system_event(name):
                 raise Exception("args-exception callback_system_event") from err
             if client:
                 client.time_initialized = int(time.time())
-            if client.central.callback_system_event is not None:
-                client.central.callback_system_event(name, *args)
+                if client.central.callback_system_event is not None:
+                    client.central.callback_system_event(name, *args)
             return return_value
 
         return wrapper_callback_system_event
@@ -40,13 +45,14 @@ def callback_system_event(name):
     return decorator_callback_system_event
 
 
-def callback_event(func):
+def callback_event(func: Callable) -> Callable:
     """
     Check if callback_event is set and call it AFTER original function.
     """
 
     @functools.wraps(func)
-    def wrapper_callback_event(*args):
+    def wrapper_callback_event(*args: Any) -> Any:
+        """Wrapper for callback event."""
         return_value = func(*args)
         try:
             # We don't want to pass the function itself
@@ -58,8 +64,8 @@ def callback_event(func):
             raise Exception("args-exception callback_event") from err
         if client:
             client.time_initialized = int(time.time())
-        if client.central.callback_entity_event is not None:
-            client.central.callback_entity_event(*args)
+            if client.central.callback_entity_event is not None:
+                client.central.callback_entity_event(*args)
         return return_value
 
     return wrapper_callback_event

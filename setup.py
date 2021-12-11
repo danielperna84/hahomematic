@@ -9,14 +9,16 @@ def readme():
     with open("README.md") as fptr:
         return fptr.read()
 
-
+package_data = {
+        'foopkg': ['py.typed'],
+    },
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.0.17"
+VERSION = "0.0.18"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
-REQUIRES = ["aiohttp>=3.8.0", "voluptuous>=0.12.2"]
+REQUIRES = ["aiohttp>=3.8.1", "voluptuous>=0.12.2"]
 
 setup(
     name=PACKAGE_NAME,
@@ -28,7 +30,7 @@ setup(
     author_email="danielperna84@gmail.com",
     description="Homematic interface for Home Assistant",
     packages=PACKAGES,
-    include_package_data=True,
+    package_data={ 'hahomematic': ['py.typed'],},
     zip_safe=False,
     platforms="any",
     python_requires=">=3.8",

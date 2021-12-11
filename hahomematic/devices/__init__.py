@@ -1,5 +1,7 @@
-"""Here we provide access to the custom device creation functions."""
+"""Here we provide access to the custom entity creation functions."""
 from __future__ import annotations
+
+from collections.abc import Callable
 
 from hahomematic.devices import climate, cover, light, lock, switch
 
@@ -12,7 +14,9 @@ _ALL_DEVICES = [
 ]
 
 
-def get_device_funcs(device_type: str, sub_type: str):
+def get_device_funcs(
+    device_type: str, sub_type: str
+) -> list[tuple[Callable, list[int]]]:
     """Return the function to"""
 
     funcs = []
@@ -35,6 +39,6 @@ def get_device_funcs(device_type: str, sub_type: str):
     return funcs
 
 
-def device_desc_exists(device_type: str, sub_type) -> bool:
+def entity_definition_exists(device_type: str, sub_type: str) -> bool:
     """Check if device desc exits."""
     return len(get_device_funcs(device_type, sub_type)) > 0

@@ -6,6 +6,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 import logging
+from typing import Any
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
@@ -23,13 +24,13 @@ from hahomematic.const import (
     IGNORED_PARAMETERS,
     IGNORED_PARAMETERS_WILDCARDS_END,
     IGNORED_PARAMETERS_WILDCARDS_START,
-    IMPULSE_EVENTS,
     INIT_DATETIME,
     OPERATION_EVENT,
     OPERATION_WRITE,
     PARAM_UN_REACH,
     PARAMSET_VALUES,
     RELEVANT_PARAMSETS,
+    SPECIAL_EVENTS,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_ENUM,
@@ -38,7 +39,7 @@ from hahomematic.const import (
     TYPE_STRING,
     WHITELIST_PARAMETERS,
 )
-from hahomematic.devices import device_desc_exists, get_device_funcs
+from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
     AlarmEvent,
     BaseEntity,
@@ -48,7 +49,7 @@ from hahomematic.entity import (
     ClickEvent,
     CustomEntity,
     GenericEntity,
-    ImpulseEvent,
+    SpecialEvent,
 )
 from hahomematic.helpers import generate_unique_id
 from hahomematic.internal.action import HmAction
@@ -89,7 +90,7 @@ class HmDevice:
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
         self.last_update: datetime = INIT_DATETIME
-        self._available = True
+        self._available: bool = True
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
         self.device_type: str = self.central.devices_raw_dict[self.interface_id][
@@ -98,8 +99,8 @@ class HmDevice:
         self.sub_type: str = self.central.devices_raw_dict[self.interface_id][
             self.address
         ].get(ATTR_HM_SUBTYPE)
-        # marker if device will be created as custom device
-        self.is_custom_device: bool = device_desc_exists(
+        # marker if device will be created as custom entity
+        self.is_custom_entity: bool = entity_definition_exists(
             self.device_type, self.sub_type
         )
         self.firmware: str = self.central.devices_raw_dict[self.interface_id][
@@ -124,26 +125,27 @@ class HmDevice:
             self.name,
         )
 
-    def add_hm_entity(self, hm_entity: BaseEntity):
-        """Add an hm entity to a device."""
+    def add_hm_entity(self, hm_entity: BaseEntity) -> None:
+        """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
             hm_entity.register_update_callback(self.update_device)
             hm_entity.register_remove_callback(self.remove_device)
+
             self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
         elif isinstance(hm_entity, CustomEntity):
             self.custom_entities[hm_entity.unique_id] = hm_entity
 
-    def remove_hm_entity(self, hm_entity: GenericEntity):
-        """Add an hm entity to a device."""
-        if isinstance(hm_entity, CallbackEntity):
-            hm_entity.unregister_update_callback(self.update_device)
-            hm_entity.unregister_remove_callback(self.remove_device)
+    def remove_hm_entity(self, hm_entity: CallbackEntity) -> None:
+        """Add a hm entity to a device."""
+        hm_entity.unregister_update_callback(self.update_device)
+        hm_entity.unregister_remove_callback(self.remove_device)
+        if isinstance(hm_entity, BaseParameterEntity):
             del self.entities[(hm_entity.address, hm_entity.parameter)]
-        elif isinstance(hm_entity, CustomEntity):
+        if isinstance(hm_entity, CustomEntity):
             del self.custom_entities[hm_entity.unique_id]
 
-    def add_hm_action_event(self, hm_event: BaseEvent):
-        """Add an hm entity to a device."""
+    def add_hm_action_event(self, hm_event: BaseEvent) -> None:
+        """Add a hm entity to a device."""
         self.action_events[(hm_event.address, hm_event.parameter)] = hm_event
 
     def remove_event_subscriptions(self) -> None:
@@ -153,17 +155,17 @@ class HmDevice:
         for action_event in self.action_events.values():
             action_event.remove_event_subscriptions()
 
-    def register_update_callback(self, update_callback) -> None:
+    def register_update_callback(self, update_callback: Callable) -> None:
         """Register update callback."""
         if callable(update_callback):
             self._update_callbacks.append(update_callback)
 
-    def unregister_update_callback(self, update_callback) -> None:
+    def unregister_update_callback(self, update_callback: Callable) -> None:
         """Remove update callback."""
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
 
-    def update_device(self, *args) -> None:
+    def update_device(self, *args: Any) -> None:
         """
         Do what is needed when the state of the entity has been updated.
         """
@@ -171,17 +173,17 @@ class HmDevice:
         for _callback in self._update_callbacks:
             _callback(*args)
 
-    def register_remove_callback(self, remove_callback) -> None:
-        """Register remove callback."""
+    def register_remove_callback(self, remove_callback: Callable) -> None:
+        """Register the remove callback."""
         if callable(remove_callback):
             self._remove_callbacks.append(remove_callback)
 
-    def unregister_remove_callback(self, remove_callback) -> None:
-        """Remove remove callback."""
+    def unregister_remove_callback(self, remove_callback: Callable) -> None:
+        """Remove the remove callback."""
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
 
-    def remove_device(self, *args) -> None:
+    def remove_device(self, *args: Any) -> None:
         """
         Do what is needed when the entity has been removed.
         """
@@ -192,18 +194,18 @@ class HmDevice:
     def _set_last_update(self) -> None:
         self.last_update = datetime.now()
 
-    def get_hm_entity(self, address, parameter) -> GenericEntity | None:
+    def get_hm_entity(self, address: str, parameter: str) -> GenericEntity | None:
         """Return a hm_entity from device."""
         return self.entities.get((address, parameter))
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         Provide some useful information.
         """
         return f"address: {self.address}, type: {self.device_type}, name: {self.name}, entities: {self.entities}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         address = self.address
         if self.address in HM_VIRTUAL_REMOTES:
@@ -276,7 +278,7 @@ class HmDevice:
                     if (
                         parameter in ALARM_EVENTS
                         or parameter in CLICK_EVENTS
-                        or parameter in IMPULSE_EVENTS
+                        or parameter in SPECIAL_EVENTS
                     ):
                         self.create_event(
                             address=channel,
@@ -291,7 +293,7 @@ class HmDevice:
                             )
                             if entity is not None:
                                 new_entities.append(entity)
-                    if not (parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS):
+                    if not (parameter in CLICK_EVENTS or parameter in SPECIAL_EVENTS):
                         entity = self.create_entity(
                             address=channel,
                             parameter=parameter,
@@ -300,14 +302,14 @@ class HmDevice:
                         if entity is not None:
                             new_entities.append(entity)
         # create custom entities
-        if self.is_custom_device:
+        if self.is_custom_entity:
             _LOGGER.debug(
-                "Device.create_entities: Handling custom device integration: %s, %s, %s",
+                "Device.create_entities: Handling custom entity integration: %s, %s, %s",
                 self.interface_id,
                 self.address,
                 self.device_type,
             )
-            # Call the custom device / entity creation function.
+            # Call the custom creation function.
 
             for (device_func, group_base_channels) in get_device_funcs(
                 self.device_type, self.sub_type
@@ -318,7 +320,9 @@ class HmDevice:
                 new_entities.extend(custom_entities)
         return set(new_entities)
 
-    def create_button(self, address, parameter, parameter_data) -> HmButton | None:
+    def create_button(
+        self, address: str, parameter: str, parameter_data: dict[str, Any]
+    ) -> HmButton | None:
         """Create the buttons associated to this device"""
         unique_id = generate_unique_id(
             address, parameter, f"button_{self.central.instance_name}"
@@ -341,7 +345,9 @@ class HmDevice:
             return button
         return None
 
-    def create_event(self, address, parameter, parameter_data) -> BaseEvent | None:
+    def create_event(
+        self, address: str, parameter: str, parameter_data: dict[str, Any]
+    ) -> BaseEvent | None:
         """Create action event entity."""
         if (address, parameter) not in self.central.entity_event_subscriptions:
             self.central.entity_event_subscriptions[(address, parameter)] = []
@@ -366,8 +372,8 @@ class HmDevice:
                     parameter=parameter,
                     parameter_data=parameter_data,
                 )
-            elif parameter in IMPULSE_EVENTS:
-                action_event = ImpulseEvent(
+            elif parameter in SPECIAL_EVENTS:
+                action_event = SpecialEvent(
                     device=self,
                     unique_id=unique_id,
                     address=address,
@@ -386,7 +392,9 @@ class HmDevice:
             action_event.add_to_collections()
         return action_event
 
-    def create_entity(self, address, parameter, parameter_data) -> GenericEntity | None:
+    def create_entity(
+        self, address: str, parameter: str, parameter_data: dict[str, Any]
+    ) -> GenericEntity | None:
         """
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
@@ -538,7 +546,7 @@ def create_devices(central: hm_central.CentralUnit) -> None:
             )
             continue
         for device_address in central.devices[interface_id]:
-            # Do we check for duplicates here? For now we do.
+            # Do we check for duplicates here? For now, we do.
             device: HmDevice | None = None
             if device_address in central.hm_devices:
                 _LOGGER.debug(
@@ -572,7 +580,7 @@ def create_devices(central: hm_central.CentralUnit) -> None:
         )
 
 
-def _is_binary_sensor(parameter_data) -> bool:
+def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
     if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
         return True

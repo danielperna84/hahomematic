@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from typing import Any
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 import hahomematic.central_unit as hm_central
@@ -34,8 +35,8 @@ _XML_RPC_SERVER: XMLRPCServer | None = None
 # pylint: disable=invalid-name
 class RPCFunctions:
     """
-    The XML-RPC functions the CCU or Homegear will expect.
-    Additionally there are some internal functions for hahomematic itself.
+    The XML-RPC functions the CCU or Homegear will expect,
+    additionally there are some internal functions for hahomematic itself.
     """
 
     def __init__(self, xml_rpc_server: XMLRPCServer):
@@ -43,7 +44,9 @@ class RPCFunctions:
         self._xml_rpc_server: XMLRPCServer = xml_rpc_server
 
     @callback_event
-    def event(self, interface_id, address, value_key, value):
+    def event(
+        self, interface_id: str, address: str, value_key: str, value: Any
+    ) -> None:
         """
         If a device emits some sort event, we will handle it here.
         """
@@ -54,7 +57,9 @@ class RPCFunctions:
             value_key,
             str(value),
         )
-        central = self._xml_rpc_server.get_central(interface_id)
+        central: hm_central.CentralUnit | None
+        if (central := self._xml_rpc_server.get_central(interface_id)) is None:
+            return
         central.last_events[interface_id] = int(time.time())
         if (address, value_key) in central.entity_event_subscriptions:
             try:
@@ -70,13 +75,11 @@ class RPCFunctions:
                     value_key,
                 )
 
-        return True
-
     @callback_system_event(HH_EVENT_ERROR)
     # pylint: disable=no-self-use
-    def error(self, interface_id, error_code, msg):
+    def error(self, interface_id: str, error_code: str, msg: str) -> None:
         """
-        When some error occurs the CCU / Homegear will send it's error message here.
+        When some error occurs the CCU / Homegear will send its error message here.
         """
         _LOGGER.error(
             "RPCFunctions.error: interface_id = %s, error_code = %i, message = %s",
@@ -84,28 +87,31 @@ class RPCFunctions:
             int(error_code),
             str(msg),
         )
-        return True
 
     @callback_system_event(HH_EVENT_LIST_DEVICES)
-    def listDevices(self, interface_id):
+    def listDevices(self, interface_id: str) -> list[dict[str, Any]]:
         """
         The CCU / Homegear asks for devices known to our XML-RPC server.
         We respond to that request using this method.
         """
-        central = self._xml_rpc_server.get_central(interface_id)
+        central: hm_central.CentralUnit | None
+        if (central := self._xml_rpc_server.get_central(interface_id)) is None:
+            return []
         _LOGGER.debug("RPCFunctions.listDevices: interface_id = %s", interface_id)
         if interface_id not in central.devices_raw_cache:
             central.devices_raw_cache[interface_id] = []
         return central.devices_raw_cache[interface_id]
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
-    def newDevices(self, interface_id, dev_descriptions):
+    def newDevices(
+        self, interface_id: str, dev_descriptions: list[dict[str, Any]]
+    ) -> None:
         """
         The CCU / Homegear informs us about newly added devices.
         We react on that and add those devices as well.
         """
 
-        async def _async_new_devices():
+        async def _async_new_devices(central_unit: hm_central.CentralUnit) -> None:
             """Async implementation"""
             _LOGGER.debug(
                 "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
@@ -113,53 +119,54 @@ class RPCFunctions:
                 len(dev_descriptions),
             )
 
-            if interface_id not in central.devices_raw_cache:
-                central.devices_raw_cache[interface_id] = []
-            if interface_id not in central.devices_raw_dict:
-                central.devices_raw_dict[interface_id] = {}
-            if interface_id not in central.names_cache:
-                central.names_cache[interface_id] = {}
-            if interface_id not in central.clients:
+            if interface_id not in central_unit.devices_raw_cache:
+                central_unit.devices_raw_cache[interface_id] = []
+            if interface_id not in central_unit.devices_raw_dict:
+                central_unit.devices_raw_dict[interface_id] = {}
+            if interface_id not in central_unit.names_cache:
+                central_unit.names_cache[interface_id] = {}
+            if interface_id not in central_unit.clients:
                 _LOGGER.error(
                     "RPCFunctions.newDevices: Missing client for interface_id %s.",
                     interface_id,
                 )
-                return True
+                return None
 
             # We need this list to avoid adding duplicates.
             known_addresses = [
-                dd[ATTR_HM_ADDRESS] for dd in central.devices_raw_cache[interface_id]
+                dd[ATTR_HM_ADDRESS]
+                for dd in central_unit.devices_raw_cache[interface_id]
             ]
-            client = central.clients[interface_id]
+            client = central_unit.clients[interface_id]
             for dd in dev_descriptions:
                 try:
                     if dd[ATTR_HM_ADDRESS] not in known_addresses:
-                        central.devices_raw_cache[interface_id].append(dd)
+                        central_unit.devices_raw_cache[interface_id].append(dd)
                         await client.fetch_paramsets(dd)
                 except Exception:
                     _LOGGER.exception("RPCFunctions.newDevices: Exception")
-            await central.save_devices_raw()
-            await central.save_paramsets()
+            await central_unit.save_devices_raw()
+            await central_unit.save_paramsets()
 
             hm_central.handle_device_descriptions(
-                central, interface_id, dev_descriptions
+                central_unit, interface_id, dev_descriptions
             )
             await client.fetch_names()
-            await central.save_names()
-            create_devices(central)
-            return True
+            await central_unit.save_names()
+            create_devices(central_unit)
 
-        central = self._xml_rpc_server.get_central(interface_id)
-        return central.run_coroutine(_async_new_devices())
+        central: hm_central.CentralUnit | None
+        if central := self._xml_rpc_server.get_central(interface_id):
+            central.run_coroutine(_async_new_devices(central))
 
     @callback_system_event(HH_EVENT_DELETE_DEVICES)
-    def deleteDevices(self, interface_id, addresses):
+    def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
         """
         The CCU / Homegear informs us about removed devices.
         We react on that and remove those devices as well.
         """
 
-        async def _async_delete_devices():
+        async def _async_delete_devices(central_unit: hm_central.CentralUnit) -> None:
             """async implementation."""
             _LOGGER.debug(
                 "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
@@ -167,35 +174,35 @@ class RPCFunctions:
                 str(addresses),
             )
 
-            central.devices_raw_cache[interface_id] = [
+            central_unit.devices_raw_cache[interface_id] = [
                 device
-                for device in central.devices_raw_cache[interface_id]
+                for device in central_unit.devices_raw_cache[interface_id]
                 if not device[ATTR_HM_ADDRESS] in addresses
             ]
-            await central.save_devices_raw()
+            await central_unit.save_devices_raw()
 
             for address in addresses:
                 try:
                     if ":" not in address:
-                        del central.devices[interface_id][address]
-                    del central.devices_raw_dict[interface_id][address]
-                    del central.paramsets_cache[interface_id][address]
-                    del central.names_cache[interface_id][address]
-                    if ha_device := central.hm_devices.get(address):
+                        del central_unit.devices[interface_id][address]
+                    del central_unit.devices_raw_dict[interface_id][address]
+                    del central_unit.paramsets_cache[interface_id][address]
+                    del central_unit.names_cache[interface_id][address]
+                    if ha_device := central_unit.hm_devices.get(address):
                         ha_device.remove_event_subscriptions()
-                        del central.hm_devices[address]
+                        del central_unit.hm_devices[address]
                 except KeyError:
                     _LOGGER.exception("Failed to delete: %s", address)
-            await central.save_paramsets()
-            await central.save_names()
-            return True
+            await central_unit.save_paramsets()
+            await central_unit.save_names()
 
-        central = self._xml_rpc_server.get_central(interface_id)
-        return central.run_coroutine(_async_delete_devices())
+        central: hm_central.CentralUnit | None
+        if central := self._xml_rpc_server.get_central(interface_id):
+            central.run_coroutine(_async_delete_devices(central))
 
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
     # pylint: disable=no-self-use
-    def updateDevice(self, interface_id, address, hint):
+    def updateDevice(self, interface_id: str, address: str, hint: int) -> None:
         """
         Update a device.
         Irrelevant, as currently only changes to link
@@ -207,11 +214,12 @@ class RPCFunctions:
             address,
             str(hint),
         )
-        return True
 
     @callback_system_event(HH_EVENT_REPLACE_DEVICE)
     # pylint: disable=no-self-use
-    def replaceDevice(self, interface_id, old_device_address, new_device_address):
+    def replaceDevice(
+        self, interface_id: str, old_device_address: str, new_device_address: str
+    ) -> None:
         """
         Replace a device. Probably irrelevant for us.
         """
@@ -221,11 +229,10 @@ class RPCFunctions:
             old_device_address,
             new_device_address,
         )
-        return True
 
     @callback_system_event(HH_EVENT_RE_ADDED_DEVICE)
     # pylint: disable=no-self-use
-    def readdedDevice(self, interface_id, addresses):
+    def readdedDevice(self, interface_id: str, addresses: list[str]) -> None:
         """
         Readded device. Probably irrelevant for us.
         Gets called when a known devices is put into learn-mode
@@ -236,7 +243,6 @@ class RPCFunctions:
             interface_id,
             str(addresses),
         )
-        return True
 
 
 # Restrict to specific paths.
@@ -258,14 +264,14 @@ class XMLRPCServer(threading.Thread):
 
     def __init__(
         self,
-        local_ip=IP_ANY_V4,
-        local_port=PORT_ANY,
+        local_ip: str = IP_ANY_V4,
+        local_port: int = PORT_ANY,
     ):
         _LOGGER.debug("Server.__init__")
         threading.Thread.__init__(self)
 
-        self.local_ip = local_ip
-        self.local_port = int(local_port)
+        self.local_ip: str = local_ip
+        self.local_port: int = int(local_port)
 
         rpc_functions = RPCFunctions(self)
         _LOGGER.debug("Server.__init__: Setting up server")
@@ -273,6 +279,7 @@ class XMLRPCServer(threading.Thread):
             (self.local_ip, self.local_port),
             requestHandler=RequestHandler,
             logRequests=False,
+            allow_none=True,
         )
 
         self.local_port = self.simple_xml_rpc_server.socket.getsockname()[1]
@@ -282,9 +289,9 @@ class XMLRPCServer(threading.Thread):
         self.simple_xml_rpc_server.register_instance(
             rpc_functions, allow_dotted_names=True
         )
-        self._centrals = {}
+        self._centrals: dict[str, hm_central.CentralUnit] = {}
 
-    def run(self):
+    def run(self) -> None:
         """
         Run the XMLRPCServer thread.
         """
@@ -295,7 +302,7 @@ class XMLRPCServer(threading.Thread):
         )
         self.simple_xml_rpc_server.serve_forever()
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stops the XMLRPCServer."""
         _LOGGER.info("XMLRPCServer.stop: Shutting down XMLRPCServer")
         self.simple_xml_rpc_server.shutdown()
@@ -303,17 +310,17 @@ class XMLRPCServer(threading.Thread):
         self.simple_xml_rpc_server.server_close()
         _LOGGER.info("XMLRPCServer.stop: Server XMLRPCServer")
 
-    def register_central(self, central: hm_central.CentralUnit):
+    def register_central(self, central: hm_central.CentralUnit) -> None:
         """Register a central in the xml_rpc_server"""
         if not self._centrals.get(central.instance_name):
             self._centrals[central.instance_name] = central
 
-    def un_register_central(self, central: hm_central.CentralUnit):
+    def un_register_central(self, central: hm_central.CentralUnit) -> None:
         """Unregister a central from xml_rpc_server"""
         if self._centrals.get(central.instance_name):
             del self._centrals[central.instance_name]
 
-    def get_central(self, interface_id) -> hm_central.CentralUnit | None:
+    def get_central(self, interface_id: str) -> hm_central.CentralUnit | None:
         """Return a central by interface_id"""
         for central in self._centrals.values():
             if central.clients.get(interface_id):
@@ -338,7 +345,9 @@ def _set_xml_rpc_server(xml_rpc_server: XMLRPCServer | None) -> None:
     _XML_RPC_SERVER = xml_rpc_server
 
 
-def register_xml_rpc_server(local_ip=IP_ANY_V4, local_port=PORT_ANY) -> XMLRPCServer:
+def register_xml_rpc_server(
+    local_ip: str = IP_ANY_V4, local_port: int = PORT_ANY
+) -> XMLRPCServer:
     """Register the xml rpc server."""
     if (xml_rpc := get_xml_rpc_server()) is None:
         xml_rpc = XMLRPCServer(local_ip, local_port)
