@@ -186,7 +186,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
             platform=platform,
         )
 
-        self.parameter = parameter
+        self.parameter: str = parameter
         # Do not create some Entities in HA
         if self.parameter in HIDDEN_PARAMETERS:
             self.create_in_ha = False
@@ -229,17 +229,17 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return state_attr
 
     @property
-    def default(self) -> ParameterType | None:
+    def default(self) -> ParameterType:
         """Return default value."""
         return self._default
 
     @property
-    def min(self) -> ParameterType | None:
+    def min(self) -> ParameterType:
         """Return min value."""
         return self._min
 
     @property
-    def max(self) -> ParameterType | None:
+    def max(self) -> ParameterType:
         """Return max value."""
         return self._max
 
@@ -284,7 +284,6 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 self.parameter,
                 value,
             )
-
 
 class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
     """

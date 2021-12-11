@@ -148,6 +148,11 @@ class BaseClimateEntity(CustomEntity):
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_AUTO]
 
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_TARGET_TEMPERATURE
+
     async def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -177,11 +182,6 @@ class BaseClimateEntity(CustomEntity):
 
 class SimpleRfThermostat(BaseClimateEntity):
     """Simple classic HomeMatic thermostat HM-CC-TC."""
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
 
 
 class RfThermostat(BaseClimateEntity):
