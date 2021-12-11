@@ -92,10 +92,10 @@ class HmCover(CustomEntity):
             return int(self._channel_level * 100)
         return None
 
-    async def set_cover_position(self, position: int) -> None:
+    async def set_cover_position(self, position: float) -> None:
         """Move the cover to a specific position."""
         # Hm cover is closed:1 -> open:0
-        position = min(100, max(0, position))
+        position = min(100.0, max(0.0, position))
         level = position / 100.0
         await self._send_value(FIELD_LEVEL, level)
 
@@ -150,9 +150,9 @@ class HmBlind(HmCover):
             return int(self._channel_level_2 * 100)
         return None
 
-    async def set_cover_tilt_position(self, position: int) -> None:
+    async def set_cover_tilt_position(self, position: float) -> None:
         """Move the cover to a specific tilt position."""
-        position = min(100, max(0, position))
+        position = min(100.0, max(0.0, position))
         level = position / 100.0
         await self._send_value(FIELD_LEVEL_2, level)
 
@@ -223,13 +223,13 @@ class HmGarage(CustomEntity):
             return 0
         return None
 
-    async def set_cover_position(self, position: int) -> None:
+    async def set_cover_position(self, position: float) -> None:
         """Move the garage door to a specific position."""
-        if 66 < position <= 100:
+        if 50.0 < position <= 100.0:
             await self.open_cover()
-        elif 33 < position <= 66:
+        elif 10.0 < position <= 50.0:
             await self.vent_cover()
-        elif 0 <= position <= 33:
+        elif 0.0 <= position <= 10.0:
             await self.close_cover()
 
     @property

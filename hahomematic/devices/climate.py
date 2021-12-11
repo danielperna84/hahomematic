@@ -128,12 +128,40 @@ class BaseClimateEntity(CustomEntity):
         """Return target temperature."""
         return self._setpoint
 
+    @property
+    def preset_mode(self) -> str:
+        """Return the current preset mode."""
+        return PRESET_NONE
+
+    @property
+    def preset_modes(self) -> list[str]:
+        """Return available preset modes."""
+        return [PRESET_NONE]
+
+    @property
+    def hvac_mode(self) -> str:
+        """Return hvac operation mode."""
+        return HVAC_MODE_AUTO
+
+    @property
+    def hvac_modes(self) -> list[str]:
+        """Return the list of available hvac operation modes."""
+        return [HVAC_MODE_AUTO]
+
     async def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return None
         await self._send_value(FIELD_SETPOINT, float(temperature))
+
+    async def set_hvac_mode(self, hvac_mode: str) -> None:
+        """Set new target hvac mode."""
+        return None
+
+    async def set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        return None
 
     def _get_entity_attribute(
         self, field_name: str, attr_name: str, default: float
@@ -152,16 +180,6 @@ class SimpleRfThermostat(BaseClimateEntity):
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation mode."""
-        return HVAC_MODE_AUTO
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_AUTO]
 
 
 class RfThermostat(BaseClimateEntity):

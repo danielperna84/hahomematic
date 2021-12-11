@@ -61,7 +61,7 @@ class IpLock(CustomEntity):
         return self._get_entity_value(FIELD_LOCK_STATE)
 
     @property
-    def is_locked(self) -> bool | None:
+    def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._lock_state == HM_LOCKED
 
@@ -114,9 +114,9 @@ class RfLock(CustomEntity):
         return self._get_entity_value(FIELD_STATE)
 
     @property
-    def is_locked(self) -> bool | None:
+    def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return not self._state
+        return not self._state is True
 
     async def lock(self) -> None:
         """Lock the lock."""

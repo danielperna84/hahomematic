@@ -288,6 +288,7 @@ class HmPlatform(Enum):
     CLIMATE = "climate"
     COVER = "cover"
     EVENT = "event"
+    HUB = "hub"
     LIGHT = "light"
     LOCK = "lock"
     NUMBER = "number"
