@@ -120,7 +120,10 @@ class CentralUnit:
         if self.model is BACKEND_PYDEVCCU:
             hub = HmDummyHub(self)
         else:
-            hub = HmHub(self, use_entities=self.central_config.enable_sensors_for_system_variables)
+            hub = HmHub(
+                self,
+                use_entities=self.central_config.enable_sensors_for_system_variables,
+            )
         return hub
 
     async def init_hub(self) -> None:

@@ -285,6 +285,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 value,
             )
 
+
 class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
     """
     Base class for generic entities.
