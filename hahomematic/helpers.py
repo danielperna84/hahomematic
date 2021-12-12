@@ -135,3 +135,17 @@ def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
     return ssl_context
+
+
+def get_device_address(address: str) -> str:
+    """Return the device part of an address"""
+    if ":" in address:
+        return address.split(":")[0]
+    return address
+
+
+def get_device_channel(address: str) -> int:
+    """Return the channel part of an address"""
+    if ":" not in address:
+        raise Exception("Address has no channel part.")
+    return int(address.split(":")[1])
