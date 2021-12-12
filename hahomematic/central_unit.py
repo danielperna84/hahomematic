@@ -39,6 +39,7 @@ from hahomematic.const import (
 from hahomematic.data import INSTANCES
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
+from hahomematic.helpers import get_device_address, get_device_channel
 from hahomematic.hub import HmDummyHub, HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.proxy import NoConnection
@@ -112,7 +113,7 @@ class CentralUnit:
         self._load_caches()
         self.init_address_parameter_list()
         self._connection_checker = ConnectionChecker(self)
-        self.hub: HmHub | HmDummyHub = self.create_hub()
+        self.hub: HmHub | HmDummyHub | None = None
 
     def create_hub(self) -> HmHub | HmDummyHub:
         """Create the hub."""
@@ -128,6 +129,7 @@ class CentralUnit:
 
     async def init_hub(self) -> None:
         """Init the hub."""
+        self.hub = self.create_hub()
         if isinstance(self.hub, HmHub):
             await self.hub.fetch_data()
 
@@ -137,23 +139,23 @@ class CentralUnit:
             for address, paramsets in device_paramsets.items():
                 if ":" not in address:
                     continue
-                d_address = address.split(":")[0]
-                p_channel = int(address.split(":")[1])
+                d_address = get_device_address(address)
 
                 for paramset in paramsets.values():
                     for parameter in paramset:
                         if (d_address, parameter) not in self.address_parameter_cache:
                             self.address_parameter_cache[(d_address, parameter)] = []
                         self.address_parameter_cache[(d_address, parameter)].append(
-                            p_channel
+                            get_device_channel(address)
                         )
 
     def has_multiple_channels(self, address: str, parameter: str) -> bool:
         """Check if parameter is in multiple channels per device."""
         if ":" not in address:
             return False
-        d_address = address.split(":")[0]
-        if channels := self.address_parameter_cache.get((d_address, parameter)):
+        if channels := self.address_parameter_cache.get(
+            (get_device_address(address), parameter)
+        ):
             return len(set(channels)) > 1
         return False
 
@@ -384,8 +386,7 @@ class CentralUnit:
                 HM_VIRTUAL_REMOTE_HMIP.upper(), HM_VIRTUAL_REMOTE_HMIP
             )
 
-        device_address = address.split(":")[0]
-        if virtual_remote := self._get_virtual_remote(device_address):
+        if virtual_remote := self._get_virtual_remote(get_device_address(address)):
             if virtual_remote_channel := virtual_remote.action_events.get(
                 (address, parameter)
             ):
@@ -426,19 +427,14 @@ class CentralUnit:
     ) -> GenericEntity | None:
         """Get entity by address and parameter."""
         if ":" in address:
-            device_address = address.split(":")[0]
-            if device := self.hm_devices.get(device_address):
+            if device := self.hm_devices.get(get_device_address(address)):
                 if entity := device.entities.get((address, parameter)):
                     return entity
         return None
 
     def has_address(self, address: str) -> bool:
         """Check if address is handled by central_unit."""
-        device_address = address
-        if ":" in address:
-            device_address = device_address.split(":")[0]
-
-        return self.hm_devices.get(device_address) is not None
+        return self.hm_devices.get(get_device_address(address)) is not None
 
     def get_all_parameters(self) -> list[str]:
         """Return all parameters"""
@@ -724,7 +720,7 @@ def handle_device_descriptions(
         if ":" not in address and address not in central.devices[interface_id]:
             central.devices[interface_id][address] = {}
         if ":" in address:
-            main, _ = address.split(":")
+            main = get_device_address(address)
             if main not in central.devices[interface_id]:
                 central.devices[interface_id][main] = {}
             central.devices[interface_id][main][address] = {}

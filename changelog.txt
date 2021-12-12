@@ -1,4 +1,8 @@
-Version 0.0.18 (2021-12-12)
+Version 0.0.19 (2021-12-12)
+- Add helper for address
+- Fixes for Hub init
+
+Version 0.0.18 (2021-12-11)
 - Add type hints based on HA coding guidelines
 - Rename device_description to entity_definition
 - Send alarm event on value change

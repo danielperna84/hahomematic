@@ -37,16 +37,16 @@ from hahomematic.const import (
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
     OPERATION_READ,
-    TYPE_BOOL,
-    TYPE_FLOAT,
-    TYPE_INTEGER,
-    TYPE_STRING,
     HmEventType,
     HmPlatform,
 )
 import hahomematic.device as hm_device
 import hahomematic.devices.entity_definition as hm_entity_definition
-from hahomematic.helpers import get_custom_entity_name, get_entity_name
+from hahomematic.helpers import (
+    get_custom_entity_name,
+    get_device_address,
+    get_entity_name,
+)
 import hahomematic.proxy as hm_proxy
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,20 +258,6 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         """Return the homematic type."""
         return self._type
 
-    def _convert_value(self, value: Any | None) -> Any | None:
-        """Convert value to a given hm_type."""
-        if value is None:
-            return None
-        if self._type == TYPE_BOOL:
-            return bool(value)
-        if self._type == TYPE_FLOAT:
-            return float(value)
-        if self._type == TYPE_INTEGER:
-            return int(value)
-        if self._type == TYPE_STRING:
-            return str(value)
-        return value
-
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
         try:
@@ -315,8 +301,6 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         CallbackEntity.__init__(self)
 
         self._state: ParameterType | None = None
-        # if self._type == TYPE_ACTION:
-        #     self._state = False
 
         # Subscribe for all events of this device
         if (
@@ -674,7 +658,7 @@ class AlarmEvent(BaseEvent):
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
-        address = self.address.split(":")[0]
+        address = get_device_address(self.address)
         click_type = self.parameter.lower()
         return {
             ATTR_INTERFACE_ID: self._interface_id,
@@ -774,7 +758,7 @@ class SpecialEvent(BaseEvent):
         """Get the event_data."""
         return {
             ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.address,
+            ATTR_ADDRESS: get_device_address(self.address),
             ATTR_PARAMETER: self.parameter,
             ATTR_VALUE: value,
         }
@@ -795,7 +779,7 @@ class SpecialEvent(BaseEvent):
             return None
         if self.parameter == EVENT_UN_REACH:
             self._device.update_device(self.unique_id)
-            return None
+            # no return here. Event should also be fired for persistent notification.
 
         if callable(self._central.callback_ha_event):
             self._central.callback_ha_event(
