@@ -1,3 +1,6 @@
+Version 0.0.20 (2021-12-14)
+- Move caches to classes
+
 Version 0.0.19 (2021-12-12)
 - Add helper for address
 - Fixes for Hub init
