@@ -73,22 +73,15 @@ class CentralUnit:
         self.client_session: ClientSession | None = self.central_config.client_session
 
         # Caches for CCU data
-        # {interface_id, {address, paramsets}}
-        self.paramsets_cache: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
+        self.paramsets: ParamsetCache = ParamsetCache(central=self)
+        self.names: NamesCache = NamesCache(central=self)
+        self.raw_devices: RawDevicesCache = RawDevicesCache(central=self)
 
-        self.address_parameter_cache: dict[tuple[str, str], list[int]] = {}
-        # {interface_id,  {address, name}}
-        self.names_cache: dict[str, dict[str, str]] = {}
-        # {interface_id, {counter, device}}
-        self.devices_raw_cache: dict[str, list[dict[str, Any]]] = {}
         # {interface_id, client}
         self.clients: dict[str, hm_client.Client] = {}
         # {url, client}
         self.clients_by_init_url: dict[str, list[hm_client.Client]] = {}
-        # {interface_id, {address, channel_address}}
-        self.devices: dict[str, dict[str, Any]] = {}
-        # {interface_id, {address, dev_descriptions}
-        self.devices_raw_dict: dict[str, dict[str, Any]] = {}
+
         # {{channel_address, parameter}, event_handle}
         self.entity_event_subscriptions: dict[tuple[str, str], Any] = {}
         # {unique_id, entity}
@@ -111,7 +104,6 @@ class CentralUnit:
 
         INSTANCES[self.instance_name] = self
         self._load_caches()
-        self.init_address_parameter_list()
         self._connection_checker = ConnectionChecker(self)
         self.hub: HmHub | HmDummyHub | None = None
 
@@ -132,32 +124,6 @@ class CentralUnit:
         self.hub = self.create_hub()
         if isinstance(self.hub, HmHub):
             await self.hub.fetch_data()
-
-    def init_address_parameter_list(self) -> None:
-        """Initialize an address/parameter list to identify if a parameter name exists is in multiple channels."""
-        for device_paramsets in self.paramsets_cache.values():
-            for address, paramsets in device_paramsets.items():
-                if ":" not in address:
-                    continue
-                d_address = get_device_address(address)
-
-                for paramset in paramsets.values():
-                    for parameter in paramset:
-                        if (d_address, parameter) not in self.address_parameter_cache:
-                            self.address_parameter_cache[(d_address, parameter)] = []
-                        self.address_parameter_cache[(d_address, parameter)].append(
-                            get_device_channel(address)
-                        )
-
-    def has_multiple_channels(self, address: str, parameter: str) -> bool:
-        """Check if parameter is in multiple channels per device."""
-        if ":" not in address:
-            return False
-        if channels := self.address_parameter_cache.get(
-            (get_device_address(address), parameter)
-        ):
-            return len(set(channels)) > 1
-        return False
 
     @property
     def available(self) -> bool:
@@ -197,13 +163,10 @@ class CentralUnit:
 
     def _load_caches(self) -> None:
         try:
-            self.load_devices_raw()
-            self.load_paramsets()
-            self.load_names()
-            for interface_id, device_descriptions in self.devices_raw_cache.items():
-                if interface_id not in self.paramsets_cache:
-                    self.paramsets_cache[interface_id] = {}
-                handle_device_descriptions(self, interface_id, device_descriptions)
+            self.raw_devices.load()
+            self.paramsets.load()
+            self.names.load()
+
         except json.decoder.JSONDecodeError:
             _LOGGER.warning("Failed to load caches.")
             self.clear_all()
@@ -436,29 +399,6 @@ class CentralUnit:
         """Check if address is handled by central_unit."""
         return self.hm_devices.get(get_device_address(address)) is not None
 
-    def get_all_parameters(self) -> list[str]:
-        """Return all parameters"""
-        parameters: set[str] = set()
-        for interface_id in self.paramsets_cache:
-            for address in self.paramsets_cache[interface_id]:
-                for paramset in self.paramsets_cache[interface_id][address].values():
-                    parameters.update(paramset)
-
-        return sorted(parameters)
-
-    def get_parameters(self, address: str) -> list[str]:
-        """Return all parameters of a device"""
-        parameters: set[str] = set()
-        for interface_id in self.paramsets_cache:
-            for p_address in self.paramsets_cache[interface_id]:
-                if p_address.startswith(address):
-                    for paramset in self.paramsets_cache[interface_id][
-                        p_address
-                    ].values():
-                        parameters.update(paramset)
-
-        return sorted(parameters)
-
     def get_all_used_parameters(self) -> list[str]:
         """Return used parameters"""
         parameters: set[str] = set()
@@ -479,169 +419,13 @@ class CentralUnit:
 
         return sorted(parameters)
 
-    async def save_devices_raw(self) -> Awaitable[int]:
-        """
-        Save current device data in DEVICES_RAW to disk.
-        """
-
-        def _save_devices_raw() -> int:
-            if not check_cache_dir():
-                return DATA_NO_SAVE
-            with open(
-                file=os.path.join(
-                    config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"
-                ),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(self.devices_raw_cache, fptr)
-            return DATA_SAVE_SUCCESS
-
-        return await self.async_add_executor_job(_save_devices_raw)
-
-    def load_devices_raw(self) -> int:
-        """
-        Load device data from disk into devices_raw.
-        """
-        if not check_cache_dir():
-            return DATA_NO_LOAD
-        if not os.path.exists(
-            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")
-        ):
-            return DATA_NO_LOAD
-        with open(
-            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}"),
-            mode="r",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            self.devices_raw_cache = json.load(fptr)
-        return DATA_LOAD_SUCCESS
-
-    def clear_devices_raw(self) -> None:
-        """
-        Remove stored device data from disk and clear devices_raw.
-        """
-        check_cache_dir()
-        if os.path.exists(
-            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")
-        ):
-            os.unlink(
-                os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_DEVICES}")
-            )
-        self.devices_raw_cache.clear()
-
-    async def save_paramsets(self) -> Awaitable[int]:
-        """
-        Save current paramset data in PARAMSETS to disk.
-        """
-
-        def _save_paramsets() -> int:
-            if not check_cache_dir():
-                return DATA_NO_SAVE
-            with open(
-                file=os.path.join(
-                    config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"
-                ),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(self.paramsets_cache, fptr)
-            return DATA_SAVE_SUCCESS
-
-        self.init_address_parameter_list()
-        return await self.async_add_executor_job(_save_paramsets)
-
-    def load_paramsets(self) -> int:
-        """
-        Load paramset data from disk into PARAMSETS.
-        """
-        if not check_cache_dir():
-            return DATA_NO_LOAD
-        if not os.path.exists(
-            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")
-        ):
-            return DATA_NO_LOAD
-        with open(
-            file=os.path.join(
-                config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}"
-            ),
-            mode="r",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            self.paramsets_cache = json.load(fptr)
-        return DATA_LOAD_SUCCESS
-
-    def clear_paramsets(self) -> None:
-        """
-        Remove stored paramset data from disk.
-        """
-        check_cache_dir()
-        if os.path.exists(
-            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")
-        ):
-            os.unlink(
-                os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_PARAMSETS}")
-            )
-        self.paramsets_cache.clear()
-
-    async def save_names(self) -> Awaitable[int]:
-        """
-        Save current name data in NAMES to disk.
-        """
-
-        def _save_names() -> int:
-            if not check_cache_dir():
-                return DATA_NO_SAVE
-            with open(
-                file=os.path.join(
-                    config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"
-                ),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(self.names_cache, fptr)
-            return DATA_SAVE_SUCCESS
-
-        return await self.async_add_executor_job(_save_names)
-
-    def load_names(self) -> int:
-        """
-        Load name data from disk into NAMES.
-        """
-        if not check_cache_dir():
-            return DATA_NO_LOAD
-        if not os.path.exists(
-            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")
-        ):
-            return DATA_NO_LOAD
-        with open(
-            file=os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}"),
-            mode="r",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            self.names_cache = json.load(fptr)
-        return DATA_LOAD_SUCCESS
-
-    def clear_names(self) -> None:
-        """
-        Remove stored names data from disk.
-        """
-        check_cache_dir()
-        if os.path.exists(
-            os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")
-        ):
-            os.unlink(
-                os.path.join(config.CACHE_DIR, f"{self.instance_name}_{FILE_NAMES}")
-            )
-        self.names_cache.clear()
-
     def clear_all(self) -> None:
         """
         Clear all stored data.
         """
-        self.clear_devices_raw()
-        self.clear_paramsets()
-        self.clear_names()
+        self.raw_devices.clear()
+        self.paramsets.clear()
+        self.names.clear()
 
 
 class ConnectionChecker(threading.Thread):
@@ -704,28 +488,6 @@ def check_cache_dir() -> bool:
     return True
 
 
-def handle_device_descriptions(
-    central: CentralUnit, interface_id: str, dev_descriptions: list[dict[str, Any]]
-) -> None:
-    """
-    Handle provided list of device descriptions.
-    """
-    if interface_id not in central.devices:
-        central.devices[interface_id] = {}
-    if interface_id not in central.devices_raw_dict:
-        central.devices_raw_dict[interface_id] = {}
-    for desc in dev_descriptions:
-        address = desc[ATTR_HM_ADDRESS]
-        central.devices_raw_dict[interface_id][address] = desc
-        if ":" not in address and address not in central.devices[interface_id]:
-            central.devices[interface_id][address] = {}
-        if ":" in address:
-            main = get_device_address(address)
-            if main not in central.devices[interface_id]:
-                central.devices[interface_id][main] = {}
-            central.devices[interface_id][main][address] = {}
-
-
 class CentralConfig:
     """Config for a Client."""
 
@@ -768,6 +530,443 @@ class CentralConfig:
     def get_central(self) -> CentralUnit:
         """Identify the used client."""
         return CentralUnit(self)
+
+
+class RawDevicesCache:
+    """Cache for device/channel names."""
+
+    def __init__(self, central: CentralUnit):
+        # {interface_id,  {address, name}}
+        self._central = central
+        # {interface_id, [{address, device_descriptions}]}
+        self._devices_raw_cache: dict[str, list[dict[str, Any]]] = {}
+        # {interface_id, {address, [channel_address]}}
+        self._addresses: dict[str, dict[str, list[str]]] = {}
+        # {interface_id, {address, {parameter, device_descriptions}}}
+        self._dev_descriptions: dict[str, dict[str, dict[str, Any]]] = {}
+
+    def _add_device_descriptions(
+        self, interface_id: str, device_descriptions: list[dict[str, Any]]
+    ) -> None:
+        """Add device_descriptions to cache."""
+        if interface_id not in self._devices_raw_cache:
+            self._devices_raw_cache[interface_id] = []
+
+        if device_descriptions is self._devices_raw_cache[interface_id]:
+            self._devices_raw_cache[interface_id] = device_descriptions
+
+        self._handle_device_descriptions(
+            interface_id=interface_id, device_descriptions=device_descriptions
+        )
+
+    def add_device_description(
+        self, interface_id: str, device_description: dict[str, Any]
+    ) -> None:
+        """Add device_description to cache."""
+        if interface_id not in self._devices_raw_cache:
+            self._devices_raw_cache[interface_id] = []
+
+        if device_description not in self._devices_raw_cache[interface_id]:
+            self._devices_raw_cache[interface_id].append(device_description)
+
+        self._handle_device_description(
+            interface_id=interface_id, device_description=device_description
+        )
+
+    def get_device_descriptions(self, interface_id: str) -> list[dict[str, Any]]:
+        """Find raw device in cache."""
+        return self._devices_raw_cache.get(interface_id, [])
+
+    async def cleanup(self, interface_id: str, deleted_addresses: list[str]) -> None:
+        """Remove device from cache."""
+        self._add_device_descriptions(
+            interface_id=interface_id,
+            device_descriptions=[
+                device
+                for device in self.get_device_descriptions(interface_id)
+                if not device[ATTR_HM_ADDRESS] in deleted_addresses
+            ],
+        )
+
+        for address in deleted_addresses:
+            try:
+                if ":" not in address and self._addresses.get(interface_id, {}).get(
+                    address, []
+                ):
+                    del self._addresses[interface_id][address]
+                if self._dev_descriptions.get(interface_id, {}).get(address, {}):
+                    del self._dev_descriptions[interface_id][address]
+            except KeyError:
+                _LOGGER.exception("Failed to delete: %s", address)
+        await self.save()
+
+    def get_addresses(self, interface_id: str) -> dict[str, list[str]]:
+        """Return the XXX by interface"""
+        return self._addresses.get(interface_id, {})
+
+    def get_channels(self, interface_id: str, address: str) -> list[str]:
+        """Return the device channels by interface and address"""
+        return self._addresses.get(interface_id, {}).get(address, [])
+
+    def get_interface(self, interface_id: str) -> dict[str, dict[str, Any]]:
+        """Return the interface devices by interface"""
+        return self._dev_descriptions.get(interface_id, {})
+
+    def get_device(self, interface_id: str, address: str) -> dict[str, Any]:
+        """Return the device dict by interface"""
+        return self._dev_descriptions.get(interface_id, {}).get(address, {})
+
+    def get_device_parameter(
+        self, interface_id: str, address: str, parameter: str
+    ) -> Any | None:
+        """Return the device parameter by interface and address"""
+        return (
+            self._dev_descriptions.get(interface_id, {}).get(address, {}).get(parameter)
+        )
+
+    def _handle_device_descriptions(
+        self, interface_id: str, device_descriptions: list[dict[str, Any]]
+    ) -> None:
+        """
+        Handle provided list of device descriptions.
+        """
+        for device_description in device_descriptions:
+            self._handle_device_description(
+                interface_id=interface_id, device_description=device_description
+            )
+
+    def _handle_device_description(
+        self, interface_id: str, device_description: dict[str, Any]
+    ) -> None:
+        """
+        Handle provided list of device descriptions.
+        """
+        if interface_id not in self._addresses:
+            self._addresses[interface_id] = {}
+        if interface_id not in self._dev_descriptions:
+            self._dev_descriptions[interface_id] = {}
+
+        address = device_description[ATTR_HM_ADDRESS]
+        self._dev_descriptions[interface_id][address] = device_description
+        if ":" not in address and address not in self._addresses[interface_id]:
+            self._addresses[interface_id][address] = []
+        if ":" in address:
+            main = get_device_address(address)
+            self._addresses[interface_id][main].append(address)
+
+    async def save(self) -> Awaitable[int]:
+        """
+        Save current device data in DEVICES_RAW to disk.
+        """
+
+        def _save_devices_raw() -> int:
+            if not check_cache_dir():
+                return DATA_NO_SAVE
+            with open(
+                file=os.path.join(
+                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
+                ),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                json.dump(self._devices_raw_cache, fptr)
+            return DATA_SAVE_SUCCESS
+
+        return await self._central.async_add_executor_job(_save_devices_raw)
+
+    def load(self) -> int:
+        """
+        Load device data from disk into devices_raw.
+        """
+        if not check_cache_dir():
+            return DATA_NO_LOAD
+        if not os.path.exists(
+            os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
+            )
+        ):
+            return DATA_NO_LOAD
+        with open(
+            file=os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
+            ),
+            mode="r",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self._devices_raw_cache = json.load(fptr)
+
+        for interface_id, device_descriptions in self._devices_raw_cache.items():
+            self._handle_device_descriptions(interface_id, device_descriptions)
+        return DATA_LOAD_SUCCESS
+
+    def clear(self) -> None:
+        """
+        Remove stored device data from disk and clear devices_raw.
+        """
+        check_cache_dir()
+        if os.path.exists(
+            os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
+            )
+        ):
+            os.unlink(
+                os.path.join(
+                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
+                )
+            )
+        self._devices_raw_cache.clear()
+
+
+class NamesCache:
+    """Cache for device/channel names."""
+
+    def __init__(self, central: CentralUnit):
+        # {interface_id,  {address, name}}
+        self._central = central
+        self._names_cache: dict[str, dict[str, str]] = {}
+
+    def add(self, interface_id: str, address: str, name: str) -> None:
+        """Add name to cache."""
+        if interface_id not in self._names_cache:
+            self._names_cache[interface_id] = {}
+        if address not in self._names_cache[interface_id]:
+            self._names_cache[interface_id][address] = name
+
+    def get_name(self, interface_id: str, address: str) -> str | None:
+        """Get name from cache."""
+        return self._names_cache.get(interface_id, {}).get(address)
+
+    def remove(self, interface_id: str, address: str) -> None:
+        """Remove name from cache."""
+        if interface := self._names_cache.get(interface_id):
+            if address in interface:
+                del self._names_cache[interface_id][address]
+
+    async def save(self) -> Awaitable[int]:
+        """
+        Save current name data in NAMES to disk.
+        """
+
+        def _save_names() -> int:
+            if not check_cache_dir():
+                return DATA_NO_SAVE
+            with open(
+                file=os.path.join(
+                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
+                ),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                json.dump(self._names_cache, fptr)
+            return DATA_SAVE_SUCCESS
+
+        return await self._central.async_add_executor_job(_save_names)
+
+    def load(self) -> int:
+        """
+        Load name data from disk into NAMES.
+        """
+        if not check_cache_dir():
+            return DATA_NO_LOAD
+        if not os.path.exists(
+            os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
+            )
+        ):
+            return DATA_NO_LOAD
+        with open(
+            file=os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
+            ),
+            mode="r",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self._names_cache = json.load(fptr)
+        return DATA_LOAD_SUCCESS
+
+    def clear(self) -> None:
+        """
+        Remove stored names data from disk.
+        """
+        check_cache_dir()
+        if os.path.exists(
+            os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
+            )
+        ):
+            os.unlink(
+                os.path.join(
+                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
+                )
+            )
+        self._names_cache.clear()
+
+
+class ParamsetCache:
+    """Cache for paramsets."""
+
+    def __init__(self, central: CentralUnit):
+        # {interface_id,  {address, name}}
+        self._central = central
+        # {interface_id, {address, paramsets}}
+        self._paramsets_cache: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
+        self._address_parameter_cache: dict[tuple[str, str], list[int]] = {}
+
+    def add(
+        self,
+        interface_id: str,
+        address: str,
+        paramset: str,
+        paramset_description: dict[str, Any],
+    ) -> None:
+        """Add paramset description to cache."""
+        if interface_id not in self._paramsets_cache:
+            self._paramsets_cache[interface_id] = {}
+        if address not in self._paramsets_cache[interface_id]:
+            self._paramsets_cache[interface_id][address] = {}
+        if paramset not in self._paramsets_cache[interface_id][address]:
+            self._paramsets_cache[interface_id][address][paramset] = {}
+
+        self._paramsets_cache[interface_id][address][paramset] = paramset_description
+
+    def remove(self, interface_id: str, address: str) -> None:
+        """Remove paramset from cache."""
+        if interface := self._paramsets_cache.get(interface_id):
+            if address in interface:
+                del self._paramsets_cache[interface_id][address]
+
+    def get_by_interface(
+        self, interface_id: str
+    ) -> dict[str, dict[str, dict[str, Any]]]:
+        """Get paramset descriptions by interface from cache."""
+        return self._paramsets_cache.get(interface_id, {})
+
+    def get_by_interface_address(
+        self, interface_id: str, address: str
+    ) -> dict[str, dict[str, Any]]:
+        """Get paramset descriptions from cache by interface, address."""
+        return self._paramsets_cache.get(interface_id, {}).get(address, {})
+
+    def get_by_interface_address_paramset(
+        self, interface_id: str, address: str, paramset: str
+    ) -> dict[str, Any]:
+        """Get paramset description by interface, address, paramset in cache."""
+        return (
+            self._paramsets_cache.get(interface_id, {})
+            .get(address, {})
+            .get(paramset, {})
+        )
+
+    def has_multiple_channels(self, address: str, parameter: str) -> bool:
+        """Check if parameter is in multiple channels per device."""
+        if ":" not in address:
+            return False
+        if channels := self._address_parameter_cache.get(
+            (get_device_address(address), parameter)
+        ):
+            return len(set(channels)) > 1
+        return False
+
+    def get_all_parameters(self) -> list[str]:
+        """Return all parameters"""
+        parameters: set[str] = set()
+        for interface_id in self._paramsets_cache:
+            for address in self._paramsets_cache[interface_id]:
+                for paramset in self._paramsets_cache[interface_id][address].values():
+                    parameters.update(paramset)
+
+        return sorted(parameters)
+
+    def get_parameters(self, address: str) -> list[str]:
+        """Return all parameters of a device"""
+        parameters: set[str] = set()
+        for interface_id in self._paramsets_cache:
+            for p_address in self._paramsets_cache[interface_id]:
+                if p_address.startswith(address):
+                    for paramset in self._paramsets_cache[interface_id][
+                        p_address
+                    ].values():
+                        parameters.update(paramset)
+
+        return sorted(parameters)
+
+    def _init_address_parameter_list(self) -> None:
+        """Initialize an address/parameter list to identify if a parameter name exists is in multiple channels."""
+        for device_paramsets in self._paramsets_cache.values():
+            for address, paramsets in device_paramsets.items():
+                if ":" not in address:
+                    continue
+                d_address = get_device_address(address)
+
+                for paramset in paramsets.values():
+                    for parameter in paramset:
+                        if (d_address, parameter) not in self._address_parameter_cache:
+                            self._address_parameter_cache[(d_address, parameter)] = []
+                        self._address_parameter_cache[(d_address, parameter)].append(
+                            get_device_channel(address)
+                        )
+
+    async def save(self) -> Awaitable[int]:
+        """
+        Save current paramset data in PARAMSETS to disk.
+        """
+
+        def _save_paramsets() -> int:
+            if not check_cache_dir():
+                return DATA_NO_SAVE
+            with open(
+                file=os.path.join(
+                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
+                ),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                json.dump(self._paramsets_cache, fptr)
+            return DATA_SAVE_SUCCESS
+
+        self._init_address_parameter_list()
+        return await self._central.async_add_executor_job(_save_paramsets)
+
+    def load(self) -> int:
+        """
+        Load paramset data from disk into PARAMSETS.
+        """
+        if not check_cache_dir():
+            return DATA_NO_LOAD
+        if not os.path.exists(
+            os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
+            )
+        ):
+            return DATA_NO_LOAD
+        with open(
+            file=os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
+            ),
+            mode="r",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self._paramsets_cache = json.load(fptr)
+
+        self._init_address_parameter_list()
+        return DATA_LOAD_SUCCESS
+
+    def clear(self) -> None:
+        """
+        Remove stored paramset data from disk.
+        """
+        check_cache_dir()
+        if os.path.exists(
+            os.path.join(
+                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
+            )
+        ):
+            os.unlink(
+                os.path.join(
+                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
+                )
+            )
+        self._paramsets_cache.clear()
 
 
 def _remove_dummy_service_message(

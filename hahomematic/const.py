@@ -265,7 +265,6 @@ FLAG_SERVICE = 8
 # FLAG_STICKY = 10  # This might be wrong. Documentation says 0x10 # not used
 
 DEFAULT_PASSWORD = None
-DEFAULT_PATH = None
 DEFAULT_USERNAME = "Admin"
 DEFAULT_TIMEOUT = 30
 DEFAULT_INIT_TIMEOUT = 90
