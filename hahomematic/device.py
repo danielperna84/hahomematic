@@ -79,7 +79,9 @@ class HmDevice:
         self.interface_id = interface_id
         self.client = self.central.clients[self.interface_id]
         self.address = address
-        self.channels = self.central.devices[self.interface_id][self.address]
+        self.channels = self.central.raw_devices.get_channels(
+            self.interface_id, self.address
+        )
         _LOGGER.debug(
             "Device.__init__: Initializing device: %s, %s",
             self.interface_id,
@@ -93,22 +95,28 @@ class HmDevice:
         self._available: bool = True
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
-        self.device_type: str = self.central.devices_raw_dict[self.interface_id][
-            self.address
-        ][ATTR_HM_TYPE]
-        self.sub_type: str = self.central.devices_raw_dict[self.interface_id][
-            self.address
-        ].get(ATTR_HM_SUBTYPE)
+        self.device_type: str = str(
+            self.central.raw_devices.get_device_parameter(
+                self.interface_id, self.address, ATTR_HM_TYPE
+            )
+        )
+        self.sub_type: str = str(
+            self.central.raw_devices.get_device_parameter(
+                self.interface_id, self.address, ATTR_HM_SUBTYPE
+            )
+        )
         # marker if device will be created as custom entity
         self.is_custom_entity: bool = entity_definition_exists(
             self.device_type, self.sub_type
         )
-        self.firmware: str = self.central.devices_raw_dict[self.interface_id][
-            self.address
-        ][ATTR_HM_FIRMWARE]
-        self.name: str = ""
-        if self.address in self.central.names_cache.get(self.interface_id, {}):
-            self.name = self.central.names_cache[self.interface_id][self.address]
+        self.firmware: str = str(
+            self.central.raw_devices.get_device_parameter(
+                self.interface_id, self.address, ATTR_HM_FIRMWARE
+            )
+        )
+
+        if name := self.central.names.get_name(self.interface_id, self.address):
+            self.name = name
         else:
             _LOGGER.info(
                 "Device.__init__: Using auto-generated name for %s %s",
@@ -253,18 +261,25 @@ class HmDevice:
         """
         new_entities: list[BaseEntity] = []
         for channel in self.channels:
-            if channel not in self.central.paramsets_cache[self.interface_id]:
+            if not self.central.paramsets.get_by_interface_address(
+                self.interface_id, channel
+            ):
                 _LOGGER.debug(
                     "Device.create_entities: Skipping channel %s, missing paramsets.",
                     channel,
                 )
                 continue
-            for paramset in self.central.paramsets_cache[self.interface_id][channel]:
+            for paramset in self.central.paramsets.get_by_interface_address(
+                self.interface_id, channel
+            ):
                 if paramset != PARAMSET_VALUES:
                     continue
-                for parameter, parameter_data in self.central.paramsets_cache[
-                    self.interface_id
-                ][channel][paramset].items():
+                for (
+                    parameter,
+                    parameter_data,
+                ) in self.central.paramsets.get_by_interface_address_paramset(
+                    self.interface_id, channel, paramset
+                ).items():
                     entity: BaseParameterEntity | None
                     if (
                         not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
@@ -539,13 +554,13 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
-        if interface_id not in central.paramsets_cache:
+        if not central.paramsets.get_by_interface(interface_id):
             _LOGGER.warning(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,
             )
             continue
-        for device_address in central.devices[interface_id]:
+        for device_address in central.raw_devices.get_addresses(interface_id):
             # Do we check for duplicates here? For now, we do.
             device: HmDevice | None = None
             if device_address in central.hm_devices:

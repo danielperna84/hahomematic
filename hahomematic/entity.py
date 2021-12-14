@@ -131,9 +131,10 @@ class BaseEntity(ABC):
         self.create_in_ha: bool = not self._device.is_custom_entity
         self.client: hm_client.Client = self._central.clients[self._interface_id]
         self.proxy: hm_proxy.ThreadPoolServerProxy = self.client.proxy
-        self.name: str = self.client.central.names_cache.get(
-            self._interface_id, {}
-        ).get(self.address, self.unique_id)
+        self.name: str = (
+            self.client.central.names.get_name(self._interface_id, self.address)
+            or self.unique_id
+        )
 
     @property
     def available(self) -> bool:

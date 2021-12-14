@@ -98,9 +98,8 @@ class RPCFunctions:
         if (central := self._xml_rpc_server.get_central(interface_id)) is None:
             return []
         _LOGGER.debug("RPCFunctions.listDevices: interface_id = %s", interface_id)
-        if interface_id not in central.devices_raw_cache:
-            central.devices_raw_cache[interface_id] = []
-        return central.devices_raw_cache[interface_id]
+
+        return central.raw_devices.get_device_descriptions(interface_id=interface_id)
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
     def newDevices(
@@ -119,12 +118,6 @@ class RPCFunctions:
                 len(dev_descriptions),
             )
 
-            if interface_id not in central_unit.devices_raw_cache:
-                central_unit.devices_raw_cache[interface_id] = []
-            if interface_id not in central_unit.devices_raw_dict:
-                central_unit.devices_raw_dict[interface_id] = {}
-            if interface_id not in central_unit.names_cache:
-                central_unit.names_cache[interface_id] = {}
             if interface_id not in central_unit.clients:
                 _LOGGER.error(
                     "RPCFunctions.newDevices: Missing client for interface_id %s.",
@@ -135,24 +128,22 @@ class RPCFunctions:
             # We need this list to avoid adding duplicates.
             known_addresses = [
                 dd[ATTR_HM_ADDRESS]
-                for dd in central_unit.devices_raw_cache[interface_id]
+                for dd in central_unit.raw_devices.get_device_descriptions(interface_id)
             ]
             client = central_unit.clients[interface_id]
             for dd in dev_descriptions:
                 try:
                     if dd[ATTR_HM_ADDRESS] not in known_addresses:
-                        central_unit.devices_raw_cache[interface_id].append(dd)
+                        central_unit.raw_devices.add_device_description(
+                            interface_id, dd
+                        )
                         await client.fetch_paramsets(dd)
                 except Exception:
                     _LOGGER.exception("RPCFunctions.newDevices: Exception")
-            await central_unit.save_devices_raw()
-            await central_unit.save_paramsets()
-
-            hm_central.handle_device_descriptions(
-                central_unit, interface_id, dev_descriptions
-            )
+            await central_unit.raw_devices.save()
+            await central_unit.paramsets.save()
             await client.fetch_names()
-            await central_unit.save_names()
+            await central_unit.names.save()
             create_devices(central_unit)
 
         central: hm_central.CentralUnit | None
@@ -174,27 +165,21 @@ class RPCFunctions:
                 str(addresses),
             )
 
-            central_unit.devices_raw_cache[interface_id] = [
-                device
-                for device in central_unit.devices_raw_cache[interface_id]
-                if not device[ATTR_HM_ADDRESS] in addresses
-            ]
-            await central_unit.save_devices_raw()
+            await central_unit.raw_devices.cleanup(
+                interface_id=interface_id, deleted_addresses=addresses
+            )
 
             for address in addresses:
                 try:
-                    if ":" not in address:
-                        del central_unit.devices[interface_id][address]
-                    del central_unit.devices_raw_dict[interface_id][address]
-                    del central_unit.paramsets_cache[interface_id][address]
-                    del central_unit.names_cache[interface_id][address]
+                    central_unit.paramsets.remove(interface_id, address)
+                    central_unit.names.remove(interface_id, address)
                     if ha_device := central_unit.hm_devices.get(address):
                         ha_device.remove_event_subscriptions()
                         del central_unit.hm_devices[address]
                 except KeyError:
                     _LOGGER.exception("Failed to delete: %s", address)
-            await central_unit.save_paramsets()
-            await central_unit.save_names()
+            await central_unit.paramsets.save()
+            await central_unit.names.save()
 
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):

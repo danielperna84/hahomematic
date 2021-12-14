@@ -96,12 +96,14 @@ def get_entity_name(
     unique_id: str,
 ) -> str:
     """generate name for entity"""
-    name = central.names_cache.get(interface_id, {}).get(address, unique_id)
+    name = central.names.get_name(interface_id, address) or unique_id
     if name.count(":") == 1:
         d_name = name.split(":")[0]
         p_name = parameter.title().replace("_", " ")
         c_name = ""
-        if central.has_multiple_channels(address=address, parameter=parameter):
+        if central.paramsets.has_multiple_channels(
+            address=address, parameter=parameter
+        ):
             c_no = name.split(":")[1]
             c_name = "" if c_no == "0" else f" ch{c_no}"
         name = f"{d_name} {p_name}{c_name}"
@@ -123,7 +125,7 @@ def get_custom_entity_name(
     if channel_no and ":" not in address:
         address = f"{address}:{channel_no}"
 
-    return central.names_cache.get(interface_id, {}).get(address, unique_id)
+    return central.names.get_name(interface_id, address) or unique_id
 
 
 def get_tls_context(verify_tls: bool) -> ssl.SSLContext:

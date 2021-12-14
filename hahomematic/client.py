@@ -26,9 +26,7 @@ from hahomematic.const import (
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
-    DEFAULT_PATH,
     HM_VIRTUAL_REMOTES,
-    PORT_RFD,
     PROXY_DE_INIT_FAILED,
     PROXY_DE_INIT_SKIPPED,
     PROXY_DE_INIT_SUCCESS,
@@ -324,32 +322,25 @@ class Client(ABC):
         except ProxyException:
             _LOGGER.exception("put_paramset: ProxyException")
 
-    async def fetch_paramset(
-        self, address: str, paramset: str, update: bool = False
-    ) -> None:
+    async def fetch_paramset(self, address: str, paramset: str) -> None:
         """
         Fetch a specific paramset and add it to the known ones.
         """
-        if self.interface_id not in self.central.paramsets_cache:
-            self.central.paramsets_cache[self.interface_id] = {}
-        if address not in self.central.paramsets_cache[self.interface_id]:
-            self.central.paramsets_cache[self.interface_id][address] = {}
-        if (
-            paramset not in self.central.paramsets_cache[self.interface_id][address]
-            or update
-        ):
-            _LOGGER.debug("Fetching paramset %s for %s", paramset, address)
-            if not self.central.paramsets_cache[self.interface_id][address]:
-                self.central.paramsets_cache[self.interface_id][address] = {}
-            try:
-                self.central.paramsets_cache[self.interface_id][address][
-                    paramset
-                ] = await self.proxy.getParamsetDescription(address, paramset)
-            except ProxyException:
-                _LOGGER.exception(
-                    "Unable to get paramset %s for address %s.", paramset, address
-                )
-        await self.central.save_paramsets()
+        _LOGGER.debug("Fetching paramset %s for %s", paramset, address)
+
+        try:
+            parameter_data = await self.proxy.getParamsetDescription(address, paramset)
+            self.central.paramsets.add(
+                interface_id=self.interface_id,
+                address=address,
+                paramset=paramset,
+                paramset_description=parameter_data,
+            )
+        except ProxyException:
+            _LOGGER.exception(
+                "Unable to get paramset %s for address %s.", paramset, address
+            )
+        await self.central.paramsets.save()
 
     async def fetch_paramsets(
         self, device_description: dict[str, Any], update: bool = False
@@ -357,64 +348,65 @@ class Client(ABC):
         """
         Fetch paramsets for provided device description.
         """
-        if self.interface_id not in self.central.paramsets_cache:
-            self.central.paramsets_cache[self.interface_id] = {}
         address = device_description[ATTR_HM_ADDRESS]
-        if address not in self.central.paramsets_cache[self.interface_id] or update:
-            _LOGGER.debug("Fetching paramsets for %s", address)
-            self.central.paramsets_cache[self.interface_id][address] = {}
-            for paramset in RELEVANT_PARAMSETS:
-                if paramset not in device_description[ATTR_HM_PARAMSETS]:
-                    continue
-                try:
-                    self.central.paramsets_cache[self.interface_id][address][
-                        paramset
-                    ] = await self.proxy.getParamsetDescription(address, paramset)
-                except ProxyException:
-                    _LOGGER.exception(
-                        "Unable to get paramset %s for address %s.", paramset, address
-                    )
-                    self.central.paramsets_cache[self.interface_id][address][
-                        paramset
-                    ] = {}
+        _LOGGER.debug("Fetching paramsets for %s", address)
+        for paramset in RELEVANT_PARAMSETS:
+            if paramset not in device_description[ATTR_HM_PARAMSETS]:
+                continue
+            try:
+                paramset_description = await self.proxy.getParamsetDescription(
+                    address, paramset
+                )
+                self.central.paramsets.add(
+                    interface_id=self.interface_id,
+                    address=address,
+                    paramset=paramset,
+                    paramset_description=paramset_description,
+                )
+            except ProxyException:
+                _LOGGER.exception(
+                    "Unable to get paramset %s for address %s.", paramset, address
+                )
 
     async def fetch_all_paramsets(self, skip_existing: bool = False) -> None:
         """
         Fetch all paramsets for provided interface id.
         """
-        if self.interface_id not in self.central.devices_raw_dict:
-            self.central.devices_raw_dict[self.interface_id] = {}
-        if self.interface_id not in self.central.paramsets_cache:
-            self.central.paramsets_cache[self.interface_id] = {}
-        for address, dd in self.central.devices_raw_dict[self.interface_id].items():
-            if (
-                skip_existing
-                and address in self.central.paramsets_cache[self.interface_id]
+        for address, dd in self.central.raw_devices.get_interface(
+            interface_id=self.interface_id
+        ).items():
+            if skip_existing and address in self.central.paramsets.get_by_interface(
+                self.interface_id
             ):
                 continue
             await self.fetch_paramsets(dd)
-        await self.central.save_paramsets()
+        await self.central.paramsets.save()
 
     async def update_paramsets(self, address: str) -> None:
         """
         Update paramsets for provided address.
         """
-        if self.interface_id not in self.central.devices_raw_dict:
+        if not self.central.raw_devices.get_interface(interface_id=self.interface_id):
             _LOGGER.warning(
-                "Interface ID missing in central_unit.devices_raw_dict. Not updating paramsets for %s.",
+                "Interface ID missing in central_unit.raw_devices.devices_raw_dict. Not updating paramsets for %s.",
                 address,
             )
             return
-        if address not in self.central.devices_raw_dict[self.interface_id]:
+        if not self.central.raw_devices.get_device(
+            interface_id=self.interface_id, address=address
+        ):
             _LOGGER.warning(
-                "Channel missing in central_unit.devices_raw_dict[_interface_id]. Not updating paramsets for %s.",
+                "Channel missing in central_unit.raw_devices.devices_raw_dict[_interface_id]. Not updating paramsets for %s.",
                 address,
             )
             return
         await self.fetch_paramsets(
-            self.central.devices_raw_dict[self.interface_id][address], update=True
+            self.central.raw_devices.get_device(
+                interface_id=self.interface_id, address=address
+            ),
+            update=True,
         )
-        await self.central.save_paramsets()
+        await self.central.paramsets.save()
 
 
 class ClientCCU(Client):
@@ -464,13 +456,13 @@ class ClientCCU(Client):
                 for device in response[ATTR_RESULT]:
                     if device[ATTR_INTERFACE] != interface:
                         continue
-                    self.central.names_cache[self.interface_id][
-                        device[ATTR_ADDRESS]
-                    ] = device[ATTR_NAME]
+                    self.central.names.add(
+                        self.interface_id, device[ATTR_ADDRESS], device[ATTR_NAME]
+                    )
                     for channel in device.get(ATTR_CHANNELS, []):
-                        self.central.names_cache[self.interface_id][
-                            channel[ATTR_ADDRESS]
-                        ] = channel[ATTR_NAME]
+                        self.central.names.add(
+                            self.interface_id, channel[ATTR_ADDRESS], channel[ATTR_NAME]
+                        )
         except Exception:
             _LOGGER.exception("fetch_names_json: General exception")
 
@@ -622,11 +614,15 @@ class ClientHomegear(Client):
         Get all names from metadata (Homegear).
         """
         _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in self.central.devices_raw_dict[self.interface_id]:
+        for address in self.central.raw_devices.get_interface(
+            interface_id=self.interface_id
+        ):
             try:
-                self.central.names_cache[self.interface_id][
-                    address
-                ] = await self.proxy.getMetadata(address, ATTR_HM_NAME)
+                self.central.names.add(
+                    self.interface_id,
+                    address,
+                    await self.proxy.getMetadata(address, ATTR_HM_NAME),
+                )
             except ProxyException:
                 _LOGGER.exception("Failed to fetch name for device %s.", address)
 
@@ -687,8 +683,8 @@ class ClientConfig:
         self,
         central: hm_central.CentralUnit,
         name: str,
-        port: int = PORT_RFD,
-        path: str | None = DEFAULT_PATH,
+        port: int,
+        path: str | None = None,
         callback_host: str | None = None,
         callback_port: int | None = None,
     ):
