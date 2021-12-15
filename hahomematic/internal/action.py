@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hahomematic.const import DATA_LOAD_SUCCESS, HmPlatform
+from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity
 
@@ -33,16 +33,3 @@ class HmAction(GenericEntity[None]):
             parameter_data=parameter_data,
             platform=HmPlatform.ACTION,
         )
-
-    @property
-    def state(self) -> None:
-        """Return the state."""
-        return None
-
-    async def load_data(self) -> int:
-        """Load data is not necessary."""
-        return DATA_LOAD_SUCCESS
-
-    def add_to_collections(self) -> None:
-        """Add entity to central collections."""
-        self._device.add_hm_entity(self)

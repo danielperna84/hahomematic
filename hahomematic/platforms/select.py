@@ -45,8 +45,8 @@ class HmSelect(GenericEntity[Union[int, str]]):
         return None
 
     async def set_state(self, value: int | str) -> None:
-        # We allow setting the value via index as well, just in case.
         """Set the state of the entity."""
+        # We allow setting the value via index as well, just in case.
         if isinstance(value, int):
             await self.send_value(value)
         elif self._value_list:

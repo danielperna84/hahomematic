@@ -9,12 +9,12 @@ from typing import Any
 
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.entity import BaseParameterEntity
+from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmButton(BaseParameterEntity[None]):
+class HmButton(GenericEntity[None]):
     """
     Implementation of a button.
     This is a default platform that gets automatically generated.
