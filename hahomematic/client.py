@@ -18,9 +18,7 @@ from hahomematic.const import (
     ATTR_HM_ADDRESS,
     ATTR_HM_NAME,
     ATTR_HM_PARAMSETS,
-    ATTR_INTERFACE,
     ATTR_NAME,
-    ATTR_PORT,
     ATTR_RESULT,
     ATTR_VALUE,
     BACKEND_CCU,
@@ -429,39 +427,15 @@ class ClientCCU(Client):
         _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
             response = await self.json_rpc_session.post(
-                "Interface.listInterfaces",
-            )
-            interface: str | None = None
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                for i in response[ATTR_RESULT]:
-                    if i[ATTR_PORT] in tuple(
-                        [
-                            self.port,
-                            self.port + 30000,
-                            self.port + 40000,
-                        ]
-                    ):
-                        interface = i[ATTR_NAME]
-                        break
-            _LOGGER.debug("fetch_names_json: Got interface: %s", interface)
-            if not interface:
-                return
-
-            response = await self.json_rpc_session.post(
                 "Device.listAllDetail",
             )
-
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 _LOGGER.debug("fetch_names_json: Resolving devicenames")
                 for device in response[ATTR_RESULT]:
-                    if device[ATTR_INTERFACE] != interface:
-                        continue
-                    self.central.names.add(
-                        self.interface_id, device[ATTR_ADDRESS], device[ATTR_NAME]
-                    )
+                    self.central.names.add(device[ATTR_ADDRESS], device[ATTR_NAME])
                     for channel in device.get(ATTR_CHANNELS, []):
                         self.central.names.add(
-                            self.interface_id, channel[ATTR_ADDRESS], channel[ATTR_NAME]
+                            channel[ATTR_ADDRESS], channel[ATTR_NAME]
                         )
         except Exception:
             _LOGGER.exception("fetch_names_json: General exception")
@@ -619,7 +593,6 @@ class ClientHomegear(Client):
         ):
             try:
                 self.central.names.add(
-                    self.interface_id,
                     address,
                     await self.proxy.getMetadata(address, ATTR_HM_NAME),
                 )

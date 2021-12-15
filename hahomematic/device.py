@@ -115,7 +115,7 @@ class HmDevice:
             )
         )
 
-        if name := self.central.names.get_name(self.interface_id, self.address):
+        if name := self.central.names.get_name(self.address):
             self.name = name
         else:
             _LOGGER.info(

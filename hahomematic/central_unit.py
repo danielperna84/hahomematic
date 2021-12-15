@@ -721,26 +721,23 @@ class NamesCache:
     """Cache for device/channel names."""
 
     def __init__(self, central: CentralUnit):
-        # {interface_id,  {address, name}}
+        # {address, name}
         self._central = central
-        self._names_cache: dict[str, dict[str, str]] = {}
+        self._names_cache: dict[str, str] = {}
 
-    def add(self, interface_id: str, address: str, name: str) -> None:
+    def add(self, address: str, name: str) -> None:
         """Add name to cache."""
-        if interface_id not in self._names_cache:
-            self._names_cache[interface_id] = {}
-        if address not in self._names_cache[interface_id]:
-            self._names_cache[interface_id][address] = name
+        if address not in self._names_cache:
+            self._names_cache[address] = name
 
-    def get_name(self, interface_id: str, address: str) -> str | None:
+    def get_name(self, address: str) -> str | None:
         """Get name from cache."""
-        return self._names_cache.get(interface_id, {}).get(address)
+        return self._names_cache.get(address)
 
-    def remove(self, interface_id: str, address: str) -> None:
+    def remove(self, address: str) -> None:
         """Remove name from cache."""
-        if interface := self._names_cache.get(interface_id):
-            if address in interface:
-                del self._names_cache[interface_id][address]
+        if address in self._names_cache:
+            del self._names_cache[address]
 
     async def save(self) -> Awaitable[int]:
         """
