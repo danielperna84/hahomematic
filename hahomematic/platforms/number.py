@@ -40,7 +40,7 @@ class HmNumber(GenericEntity[float]):
     async def set_state(self, value: float) -> None:
         """Set the state of the entity."""
         # pylint: disable=no-else-return
-        if value and self._min <= value <= self._max:
+        if value is not None and self._min <= value <= self._max:
             await self.send_value(value)
             return
         elif self._special:

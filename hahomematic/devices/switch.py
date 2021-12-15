@@ -53,12 +53,12 @@ class HmSwitch(CustomEntity):
     @property
     def _state(self) -> bool | None:
         """Return the temperature of the device."""
-        return self._get_entity_value(FIELD_STATE)
+        return self._get_entity_state(FIELD_STATE)
 
     @property
     def _channel_state(self) -> bool | None:
         """Return the temperature of the device."""
-        return self._get_entity_value(FIELD_CHANNEL_STATE)
+        return self._get_entity_state(FIELD_CHANNEL_STATE)
 
     @property
     def state(self) -> bool | None:

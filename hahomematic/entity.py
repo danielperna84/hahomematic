@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, Union
 
 import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
@@ -50,7 +50,7 @@ from hahomematic.helpers import (
 import hahomematic.proxy as hm_proxy
 
 _LOGGER = logging.getLogger(__name__)
-ParameterType = TypeVar("ParameterType", bool, int, float, str, None)
+ParameterType = TypeVar("ParameterType", bool, int, float, str, Union[int, str], None)
 
 
 class CallbackEntity(ABC):
@@ -496,7 +496,11 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self.update_entity()
         return DATA_LOAD_SUCCESS
 
-    def _get_entity_value(
+    def _get_entity(self, field_name: str) -> GenericEntity | None:
+        """get entity"""
+        return self.data_entities.get(field_name)
+
+    def _get_entity_state(
         self, field_name: str, default: Any | None = None
     ) -> Any | None:
         """get entity value"""

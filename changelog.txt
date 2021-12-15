@@ -1,3 +1,8 @@
+Version 0.0.21 (2021-12-15)
+- Fix number set_state
+- Update ignore list
+- Fix select entity
+
 Version 0.0.20 (2021-12-14)
 - Move caches to classes
 

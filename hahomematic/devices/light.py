@@ -109,12 +109,12 @@ class HmDimmer(BaseHmLight):
     @property
     def _level(self) -> float | None:
         """Return the dim level of the device."""
-        return self._get_entity_value(FIELD_LEVEL)
+        return self._get_entity_state(FIELD_LEVEL)
 
     @property
     def _channel_level(self) -> float | None:
         """Return the channel level of the device."""
-        return self._get_entity_value(FIELD_CHANNEL_LEVEL)
+        return self._get_entity_state(FIELD_CHANNEL_LEVEL)
 
     @property
     def is_on(self) -> bool:
@@ -165,12 +165,12 @@ class HmLight(BaseHmLight):
     @property
     def _state(self) -> bool | None:
         """Return the state of the light."""
-        return self._get_entity_value(FIELD_STATE)
+        return self._get_entity_state(FIELD_STATE)
 
     @property
     def _channel_state(self) -> bool | None:
         """Return the channel state of the light."""
-        return self._get_entity_value(FIELD_CHANNEL_STATE)
+        return self._get_entity_state(FIELD_CHANNEL_STATE)
 
     @property
     def is_on(self) -> bool:
@@ -212,22 +212,22 @@ class IPLightBSL(BaseHmLight):
     @property
     def _color(self) -> str | None:
         """Return the color of the device."""
-        return self._get_entity_value(FIELD_COLOR)
+        return self._get_entity_state(FIELD_COLOR)
 
     @property
     def _channel_color(self) -> str | None:
         """Return the channel color of the device."""
-        return self._get_entity_value(FIELD_CHANNEL_COLOR)
+        return self._get_entity_state(FIELD_CHANNEL_COLOR)
 
     @property
     def _level(self) -> float | None:
         """Return the level of the device."""
-        return self._get_entity_value(FIELD_LEVEL)
+        return self._get_entity_state(FIELD_LEVEL)
 
     @property
     def _channel_level(self) -> float | None:
         """Return the channel level state of the device."""
-        return self._get_entity_value(FIELD_CHANNEL_LEVEL)
+        return self._get_entity_state(FIELD_CHANNEL_LEVEL)
 
     @property
     def is_on(self) -> bool:
@@ -281,7 +281,7 @@ class IPLightBSL(BaseHmLight):
             state_attr[ATTR_COLOR_NAME] = self._color
         if self._channel_level and self._channel_level != self._level:
             state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
-        if self._channel_color and self._channel_color != self._color:
+        if self._channel_color and self._channel_color:
             state_attr[ATTR_CHANNEL_COLOR] = self._channel_color
         return state_attr
 
