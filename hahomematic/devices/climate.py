@@ -81,17 +81,17 @@ class BaseClimateEntity(CustomEntity):
     @property
     def _humidity(self) -> int | None:
         """Return the humidity of the device."""
-        return self._get_entity_value(FIELD_HUMIDITY)
+        return self._get_entity_state(FIELD_HUMIDITY)
 
     @property
     def _temperature(self) -> float | None:
         """Return the temperature of the device."""
-        return self._get_entity_value(FIELD_TEMPERATURE)
+        return self._get_entity_state(FIELD_TEMPERATURE)
 
     @property
     def _setpoint(self) -> float | None:
         """Return the setpoint of the device."""
-        return self._get_entity_value(FIELD_SETPOINT)
+        return self._get_entity_state(FIELD_SETPOINT)
 
     @property
     def temperature_unit(self) -> str:
@@ -190,12 +190,12 @@ class RfThermostat(BaseClimateEntity):
     @property
     def _boost_mode(self) -> bool | None:
         """Return the boost_mode of the device."""
-        return self._get_entity_value(FIELD_BOOST_MODE)
+        return self._get_entity_state(FIELD_BOOST_MODE)
 
     @property
     def _control_mode(self) -> int | None:
         """Return the control_mode of the device."""
-        return self._get_entity_value(FIELD_CONTROL_MODE)
+        return self._get_entity_state(FIELD_CONTROL_MODE)
 
     @property
     def supported_features(self) -> int:
@@ -268,19 +268,19 @@ class IPThermostat(BaseClimateEntity):
 
     @property
     def _set_point_mode(self) -> int | None:
-        return self._get_entity_value(FIELD_SET_POINT_MODE)
+        return self._get_entity_state(FIELD_SET_POINT_MODE)
 
     @property
     def _control_mode(self) -> int | None:
-        return self._get_entity_value(FIELD_CONTROL_MODE)
+        return self._get_entity_state(FIELD_CONTROL_MODE)
 
     @property
     def _boost_mode(self) -> bool | None:
-        return self._get_entity_value(FIELD_BOOST_MODE)
+        return self._get_entity_state(FIELD_BOOST_MODE)
 
     @property
     def _party_mode(self) -> bool | None:
-        return self._get_entity_value(FIELD_PARTY_MODE)
+        return self._get_entity_state(FIELD_PARTY_MODE)
 
     @property
     def supported_features(self) -> int:

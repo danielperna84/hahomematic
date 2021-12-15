@@ -75,12 +75,12 @@ class HmCover(CustomEntity):
     @property
     def _level(self) -> float | None:
         """Return the level of the cover."""
-        return self._get_entity_value(FIELD_LEVEL)
+        return self._get_entity_state(FIELD_LEVEL)
 
     @property
     def _channel_level(self) -> float | None:
         """Return the channel level state of the cover."""
-        channel_level = self._get_entity_value(FIELD_CHANNEL_LEVEL)
+        channel_level = self._get_entity_state(FIELD_CHANNEL_LEVEL)
         if channel_level:
             return float(channel_level)
         return self._level
@@ -133,12 +133,12 @@ class HmBlind(HmCover):
     @property
     def _level_2(self) -> float | None:
         """Return the level of the tilt."""
-        return self._get_entity_value(FIELD_LEVEL_2)
+        return self._get_entity_state(FIELD_LEVEL_2)
 
     @property
     def _channel_level_2(self) -> float | None:
         """Return the channel level of the tilt."""
-        channel_level_2 = self._get_entity_value(FIELD_CHANNEL_LEVEL_2)
+        channel_level_2 = self._get_entity_state(FIELD_CHANNEL_LEVEL_2)
         if channel_level_2:
             return float(channel_level_2)
         return self._level_2
@@ -210,7 +210,7 @@ class HmGarage(CustomEntity):
     @property
     def _door_state(self) -> int | None:
         """Return the state of the garage door."""
-        return self._get_entity_value(FIELD_DOOR_STATE)
+        return self._get_entity_state(FIELD_DOOR_STATE)
 
     @property
     def current_cover_position(self) -> int | None:

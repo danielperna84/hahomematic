@@ -83,7 +83,7 @@ class IpLock(BaseLock):
     @property
     def _lock_state(self) -> float | None:
         """Return the level of the device."""
-        return self._get_entity_value(FIELD_LOCK_STATE)
+        return self._get_entity_state(FIELD_LOCK_STATE)
 
     @property
     def is_locked(self) -> bool:
@@ -109,7 +109,7 @@ class RfLock(BaseLock):
     @property
     def _state(self) -> bool | None:
         """Return the level of the device."""
-        return self._get_entity_value(FIELD_STATE)
+        return self._get_entity_state(FIELD_STATE)
 
     @property
     def is_locked(self) -> bool:
