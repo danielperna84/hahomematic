@@ -33,7 +33,6 @@ from hahomematic.const import (
     HM_VIRTUAL_REMOTE_HM,
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
-    PRIMARY_PORTS,
     HmPlatform,
 )
 from hahomematic.data import INSTANCES
@@ -286,7 +285,7 @@ class CentralUnit:
         """Get service messages from CCU / Homegear."""
         service_messages: list[list[tuple[str, str, Any]]] = []
         for client in self.clients.values():
-            if client.port in PRIMARY_PORTS:
+            if client.get_virtual_remote():
                 if client_messages := await client.get_service_messages():
                     service_messages.append(client_messages)
         return _remove_dummy_service_message(service_messages)
@@ -374,7 +373,7 @@ class CentralUnit:
             if interface_id:
                 return self.clients[interface_id]
             for client in self.clients.values():
-                if client.port in PRIMARY_PORTS:
+                if client.get_virtual_remote():
                     return client
 
         except IndexError as err:
