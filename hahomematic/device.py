@@ -44,7 +44,6 @@ from hahomematic.entity import (
     AlarmEvent,
     BaseEntity,
     BaseEvent,
-    BaseParameterEntity,
     CallbackEntity,
     ClickEvent,
     CustomEntity,
@@ -115,7 +114,7 @@ class HmDevice:
             )
         )
 
-        if name := self.central.names.get_name(self.interface_id, self.address):
+        if name := self.central.names.get_name(self.address):
             self.name = name
         else:
             _LOGGER.info(
@@ -138,16 +137,15 @@ class HmDevice:
         if isinstance(hm_entity, GenericEntity):
             hm_entity.register_update_callback(self.update_device)
             hm_entity.register_remove_callback(self.remove_device)
-
             self.entities[(hm_entity.address, hm_entity.parameter)] = hm_entity
-        elif isinstance(hm_entity, CustomEntity):
+        if isinstance(hm_entity, CustomEntity):
             self.custom_entities[hm_entity.unique_id] = hm_entity
 
     def remove_hm_entity(self, hm_entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
-        hm_entity.unregister_update_callback(self.update_device)
-        hm_entity.unregister_remove_callback(self.remove_device)
-        if isinstance(hm_entity, BaseParameterEntity):
+        if isinstance(hm_entity, GenericEntity):
+            hm_entity.unregister_update_callback(self.update_device)
+            hm_entity.unregister_remove_callback(self.remove_device)
             del self.entities[(hm_entity.address, hm_entity.parameter)]
         if isinstance(hm_entity, CustomEntity):
             del self.custom_entities[hm_entity.unique_id]
@@ -159,7 +157,8 @@ class HmDevice:
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions."""
         for entity in self.entities.values():
-            entity.remove_event_subscriptions()
+            if isinstance(entity, GenericEntity):
+                entity.remove_event_subscriptions()
         for action_event in self.action_events.values():
             action_event.remove_event_subscriptions()
 
@@ -280,7 +279,7 @@ class HmDevice:
                 ) in self.central.paramsets.get_by_interface_address_paramset(
                     self.interface_id, channel, paramset
                 ).items():
-                    entity: BaseParameterEntity | None
+                    entity: GenericEntity | None
                     if (
                         not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE

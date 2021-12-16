@@ -15,7 +15,7 @@ package_data = {
     },
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.0.21"
+VERSION = "0.0.22"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
@@ -34,14 +34,14 @@ setup(
     package_data={'hahomematic': ['py.typed']},
     zip_safe=False,
     platforms="any",
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=REQUIRES,
     keywords=["home", "assistant", "homematic"],
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Home Automation",
     ],
 )

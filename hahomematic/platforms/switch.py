@@ -51,10 +51,3 @@ class HmSwitch(GenericEntity[bool]):
     async def turn_off(self) -> None:
         """Turn the switch off."""
         await self.send_value(False)
-
-    async def set_state(self, value: bool) -> None:
-        """Set the state of the entity."""
-        if self._type == TYPE_ACTION:
-            await self.send_value(True)
-        else:
-            await self.send_value(value)

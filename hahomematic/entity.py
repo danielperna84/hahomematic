@@ -132,8 +132,7 @@ class BaseEntity(ABC):
         self.client: hm_client.Client = self._central.clients[self._interface_id]
         self.proxy: hm_proxy.ThreadPoolServerProxy = self.client.proxy
         self.name: str = (
-            self.client.central.names.get_name(self._interface_id, self.address)
-            or self.unique_id
+            self.client.central.names.get_name(self.address) or self.unique_id
         )
 
     @property

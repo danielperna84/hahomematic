@@ -172,7 +172,7 @@ class RPCFunctions:
             for address in addresses:
                 try:
                     central_unit.paramsets.remove(interface_id, address)
-                    central_unit.names.remove(interface_id, address)
+                    central_unit.names.remove(address)
                     if ha_device := central_unit.hm_devices.get(address):
                         ha_device.remove_event_subscriptions()
                         del central_unit.hm_devices[address]
