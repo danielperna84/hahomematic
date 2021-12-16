@@ -2,6 +2,7 @@ Version 0.0.22 (2021-12-16)
 - Resolve names without interface
 - Fix device.entities for virtual remotes
 - Remove unused const
+- Cache model and primary_client
 
 Version 0.0.21 (2021-12-15)
 - Fix number set_state

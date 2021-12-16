@@ -62,6 +62,8 @@ class CentralUnit:
         self._xml_rpc_server.register_central(self)
         self.enable_virtual_channels: bool = self.central_config.enable_virtual_channels
         self.host: str = self.central_config.host
+        self._model : str | None = None
+        self._primary_client: hm_client.Client | None = None
         self.json_port: int | None = self.central_config.json_port
         self.password: str | None = self.central_config.password
         self.username: str | None = None
@@ -132,9 +134,10 @@ class CentralUnit:
     @property
     def model(self) -> str | None:
         """Return the model of the backend."""
-        if client := self.get_primary_client():
-            return client.model
-        return None
+        if not self._model:
+            if client := self.get_primary_client():
+                self._model = client.model
+        return self._model
 
     @property
     def version(self) -> str | None:
@@ -369,20 +372,23 @@ class CentralUnit:
         self, interface_id: str | None = None
     ) -> hm_client.Client | None:
         """Return the client by interface_id or the first with a primary port."""
-        try:
+        if not self._primary_client:
             if interface_id:
-                return self.clients[interface_id]
-            for client in self.clients.values():
-                if client.get_virtual_remote():
-                    return client
+                try:
+                    self._primary_client = self.clients[interface_id]
+                except IndexError as err:
+                    message = (
+                        f"Can't resolve interface for {self.instance_name}: {interface_id}"
+                    )
+                    _LOGGER.warning(message)
+                    raise hm_client.ClientException(message) from err
+            else:
+                for client in self.clients.values():
+                    if client.get_virtual_remote():
+                        self._primary_client = client
+                        break
 
-        except IndexError as err:
-            message = (
-                f"Can't resolve interface for {self.instance_name}: {interface_id}"
-            )
-            _LOGGER.warning(message)
-            raise hm_client.ClientException(message) from err
-        return None
+        return self._primary_client
 
     def get_hm_entity_by_parameter(
         self, address: str, parameter: str
