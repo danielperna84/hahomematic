@@ -424,7 +424,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self._channel_no = channel_no
         self.name = get_custom_entity_name(
             central=self._central,
-            interface_id=self._interface_id,
             address=self.address,
             unique_id=self.unique_id,
             channel_no=channel_no,
