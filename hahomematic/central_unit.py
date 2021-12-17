@@ -539,7 +539,6 @@ class RawDevicesCache:
     """Cache for device/channel names."""
 
     def __init__(self, central: CentralUnit):
-        # {interface_id,  {address, name}}
         self._central = central
         # {interface_id, [{address, device_descriptions}]}
         self._devices_raw_cache: dict[str, list[dict[str, Any]]] = {}
@@ -604,7 +603,7 @@ class RawDevicesCache:
         await self.save()
 
     def get_addresses(self, interface_id: str) -> dict[str, list[str]]:
-        """Return the XXX by interface"""
+        """Return the addresses by interface"""
         return self._addresses.get(interface_id, {})
 
     def get_channels(self, interface_id: str, address: str) -> list[str]:
@@ -612,11 +611,11 @@ class RawDevicesCache:
         return self._addresses.get(interface_id, {}).get(address, [])
 
     def get_interface(self, interface_id: str) -> dict[str, dict[str, Any]]:
-        """Return the interface devices by interface"""
+        """Return the devices by interface"""
         return self._dev_descriptions.get(interface_id, {})
 
     def get_device(self, interface_id: str, address: str) -> dict[str, Any]:
-        """Return the device dict by interface"""
+        """Return the device dict by interface and address"""
         return self._dev_descriptions.get(interface_id, {}).get(address, {})
 
     def get_device_parameter(
@@ -724,8 +723,8 @@ class NamesCache:
     """Cache for device/channel names."""
 
     def __init__(self, central: CentralUnit):
-        # {address, name}
         self._central = central
+        # {address, name}
         self._names_cache: dict[str, str] = {}
 
     def add(self, address: str, name: str) -> None:
@@ -806,10 +805,10 @@ class ParamsetCache:
     """Cache for paramsets."""
 
     def __init__(self, central: CentralUnit):
-        # {interface_id,  {address, name}}
         self._central = central
         # {interface_id, {address, paramsets}}
         self._paramsets_cache: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
+        # {(device_address, parameter), [channel_no]}
         self._address_parameter_cache: dict[tuple[str, str], list[int]] = {}
 
     def add(
