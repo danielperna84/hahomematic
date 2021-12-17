@@ -62,7 +62,7 @@ class CentralUnit:
         self._xml_rpc_server.register_central(self)
         self.enable_virtual_channels: bool = self.central_config.enable_virtual_channels
         self.host: str = self.central_config.host
-        self._model : str | None = None
+        self._model: str | None = None
         self._primary_client: hm_client.Client | None = None
         self.json_port: int | None = self.central_config.json_port
         self.password: str | None = self.central_config.password
@@ -377,9 +377,7 @@ class CentralUnit:
                 try:
                     self._primary_client = self.clients[interface_id]
                 except IndexError as err:
-                    message = (
-                        f"Can't resolve interface for {self.instance_name}: {interface_id}"
-                    )
+                    message = f"Can't resolve interface for {self.instance_name}: {interface_id}"
                     _LOGGER.warning(message)
                     raise hm_client.ClientException(message) from err
             else:

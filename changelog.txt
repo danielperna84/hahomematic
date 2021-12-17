@@ -1,5 +1,6 @@
 Version 0.1.0  (2021-12-xx)
-- bump version to 0.1.0
+- Bump version to 0.1.0
+- Remove interface_id from get_entity_name
 
 Version 0.0.22 (2021-12-16)
 - Resolve names without interface
