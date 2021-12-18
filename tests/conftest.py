@@ -7,6 +7,7 @@ import pytest
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig
 from hahomematic.client import ClientConfig
+from hahomematic.helpers import get_device_address
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
@@ -87,3 +88,31 @@ def loop(request):
     event_loop = asyncio.get_event_loop_policy().new_event_loop()
     yield event_loop
     event_loop.close()
+
+
+async def get_value_from_central(central, address, parameter, do_load=False):
+    """Return the device value."""
+    hm_entity = get_hm_entity(central, address, parameter)
+    assert hm_entity
+    if do_load:
+        await hm_entity.load_data()
+        assert hm_entity.state
+    return hm_entity.state
+
+
+def get_hm_device(central, address):
+    """Return the hm_device."""
+    d_address = get_device_address(address)
+    return central.hm_devices.get(d_address)
+
+
+def get_hm_entity(central, address, parameter):
+    """Return the hm_entity."""
+    hm_device = get_hm_device(central, address)
+    assert hm_device
+    return hm_device.entities.get((address, parameter))
+
+
+def send_device_value_to_ccu(pydev_ccu, address, parameter, value):
+    """Send the device value to ccu."""
+    pydev_ccu.setValue(address, parameter, value, force=False)
