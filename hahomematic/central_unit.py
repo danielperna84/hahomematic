@@ -385,6 +385,8 @@ class CentralUnit:
                     if client.get_virtual_remote():
                         self._primary_client = client
                         break
+                else:
+                    self._primary_client = client
 
         return self._primary_client
 
