@@ -90,7 +90,6 @@ def parse_ccu_sys_var(data: dict[str, Any]) -> tuple[str, Any]:
 
 def get_entity_name(
     central: hm_central.CentralUnit,
-    interface_id: str,
     address: str,
     parameter: str,
     unique_id: str,
@@ -116,7 +115,6 @@ def get_entity_name(
 
 def get_custom_entity_name(
     central: hm_central.CentralUnit,
-    interface_id: str,
     address: str,
     unique_id: str,
     channel_no: int | None = None,

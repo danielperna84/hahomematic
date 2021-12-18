@@ -195,7 +195,6 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
 
         self.name = get_entity_name(
             central=self._central,
-            interface_id=self._interface_id,
             address=self.address,
             parameter=self.parameter,
             unique_id=self.unique_id,
@@ -425,7 +424,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self._channel_no = channel_no
         self.name = get_custom_entity_name(
             central=self._central,
-            interface_id=self._interface_id,
             address=self.address,
             unique_id=self.unique_id,
             channel_no=channel_no,
@@ -541,7 +539,6 @@ class BaseEvent(BaseParameterEntity[bool]):
 
         self.name: str = get_entity_name(
             central=self._central,
-            interface_id=self._interface_id,
             address=self.address,
             parameter=self.parameter,
             unique_id=self.unique_id,

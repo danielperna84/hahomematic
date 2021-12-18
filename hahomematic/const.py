@@ -17,7 +17,6 @@ IP_ANY_V6 = "::"
 PORT_ANY = 0
 
 PATH_JSON_RPC = "/api/homematic.cgi"
-PATH_TCL_REGA = "/tclrega.exe"
 
 FILE_DEVICES_RAW = None
 FILE_DEVICES = "homematic_devices.json"
