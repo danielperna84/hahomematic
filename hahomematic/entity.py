@@ -421,7 +421,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self._device_enum = device_enum
         self._device_desc = device_def
         self._entity_def = entity_def
-        self._channel_no = channel_no
+        self.channel_no = channel_no
         self.name = get_custom_entity_name(
             central=self._central,
             address=self.address,
@@ -437,7 +437,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         fields_rep = self._device_desc.get(hm_entity_definition.ED_FIELDS_REP, {})
         # Add repeating fields
         for (f_name, p_name) in fields_rep.items():
-            f_address = f"{self.address}:{self._channel_no}"
+            f_address = f"{self.address}:{self.channel_no}"
             entity = self._device.get_hm_entity(f_address, p_name)
             self._add_entity(f_name, entity)
         # Add device fields
