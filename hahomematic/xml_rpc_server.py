@@ -287,7 +287,7 @@ class XMLRPCServer(threading.Thread):
         )
         self.simple_xml_rpc_server.serve_forever()
 
-    async def stop(self) -> None:
+    def stop(self) -> None:
         """Stops the XMLRPCServer."""
         _LOGGER.info("XMLRPCServer.stop: Shutting down XMLRPCServer")
         self.simple_xml_rpc_server.shutdown()
@@ -341,12 +341,12 @@ def register_xml_rpc_server(
     return xml_rpc
 
 
-async def un_register_xml_rpc_server() -> bool:
+def un_register_xml_rpc_server() -> bool:
     """Unregister the xml rpc server."""
     xml_rpc = get_xml_rpc_server()
     _LOGGER.info("XMLRPCServer.stop: Shutting down server")
     if xml_rpc and xml_rpc.no_central_registered:
-        await xml_rpc.stop()
+        xml_rpc.stop()
         _set_xml_rpc_server(None)
         _LOGGER.info("XMLRPCServer.stop: Server stopped")
         return True
