@@ -180,7 +180,7 @@ class HmHub(BaseHubEntity):
         """Return device specific attributes."""
         return {
             "config_entry_id": self._central.entry_id,
-            "identifiers": {(HA_DOMAIN, self.unique_id)},
+            "identifiers": {(HA_DOMAIN, self._central.instance_name)},
             "name": self.name,
             "manufacturer": "eQ-3",
             "model": self._central.model,
@@ -278,7 +278,7 @@ class HmDummyHub(BaseHubEntity):
         """Return device specific attributes."""
         return {
             "config_entry_id": self._central.entry_id,
-            "identifiers": {(HA_DOMAIN, self.unique_id)},
+            "identifiers": {(HA_DOMAIN, self._central.instance_name)},
             "name": self.name,
             "manufacturer": "eQ-3",
             "model": self._central.model,

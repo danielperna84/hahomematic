@@ -15,7 +15,7 @@ IP_LOCALHOST_V6 = "::1"
 IP_ANY_V4 = "0.0.0.0"
 IP_ANY_V6 = "::"
 PORT_ANY = 0
-IDENTIFIERS_SEPARATOR = "%"
+IDENTIFIERS_SEPARATOR = "@"
 
 PATH_JSON_RPC = "/api/homematic.cgi"
 
