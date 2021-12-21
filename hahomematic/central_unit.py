@@ -189,7 +189,7 @@ class CentralUnit:
         To stop the central_unit we de-init from the CCU / Homegear,
         """
         _LOGGER.info("CentralUnit.stop: Stop connection checker.")
-        await self.stop_connection_checker()
+        self.stop_connection_checker()
         for name, client in self.clients.items():
             if await client.proxy_de_init():
                 _LOGGER.info("CentralUnit.stop: Proxy de-initialized: %s", name)
@@ -204,18 +204,10 @@ class CentralUnit:
         # un-register this instance from XMLRPCServer
         self._xml_rpc_server.un_register_central(self)
         # un-register and stop XMLRPCServer, if possible
-        await xml_rpc.un_register_xml_rpc_server()
+        xml_rpc.un_register_xml_rpc_server()
 
         _LOGGER.debug("CentralUnit.stop: Removing instance")
         del INSTANCES[self.instance_name]
-
-    def create_task(self, target: Awaitable) -> None:
-        """Add task to the executor pool."""
-        self.loop.call_soon_threadsafe(self.async_create_task, target)
-
-    def async_create_task(self, target: Awaitable) -> asyncio.Task:
-        """Create a task from within the event loop. This method must be run in the event loop."""
-        return self.loop.create_task(target)
 
     def run_coroutine(self, coro: Coroutine) -> Any:
         """call coroutine from sync"""
@@ -232,7 +224,7 @@ class CentralUnit:
         if self.model is not BACKEND_PYDEVCCU:
             self._connection_checker.start()
 
-    async def stop_connection_checker(self) -> None:
+    def stop_connection_checker(self) -> None:
         """Start the connection checker."""
         self._connection_checker.stop()
 

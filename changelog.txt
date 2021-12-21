@@ -1,4 +1,8 @@
-Version 0.1.0  (2021-12-xx)
+Version 0.1.x  (2021-12-xx)
+- Remove unnecessary async
+- Removed unused helper
+
+Version 0.1.0  (2021-12-20)
 - Bump version to 0.1.0
 - Remove interface_id from get_entity_name and get_custom_entity_name
 - Add initial test
