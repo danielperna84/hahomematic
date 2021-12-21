@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import hahomematic.central_unit as hm_central
-from hahomematic.const import BACKEND_CCU, HA_DOMAIN, INIT_DATETIME
+from hahomematic.const import BACKEND_CCU, INIT_DATETIME
 from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -177,16 +177,8 @@ class HmHub(BaseHubEntity):
 
     @property
     def device_info(self) -> dict[str, Any]:
-        """Return device specific attributes."""
-        return {
-            "config_entry_id": self._central.entry_id,
-            "identifiers": {(HA_DOMAIN, self._central.instance_name)},
-            "name": self.name,
-            "manufacturer": "eQ-3",
-            "model": self._central.model,
-            "sw_version": self._central.version,
-            "via_device": (HA_DOMAIN, self._central.instance_name),
-        }
+        """Return central specific attributes."""
+        return self._central.device_info
 
     @property
     def should_poll(self) -> bool:
@@ -275,16 +267,8 @@ class HmDummyHub(BaseHubEntity):
 
     @property
     def device_info(self) -> dict[str, Any]:
-        """Return device specific attributes."""
-        return {
-            "config_entry_id": self._central.entry_id,
-            "identifiers": {(HA_DOMAIN, self._central.instance_name)},
-            "name": self.name,
-            "manufacturer": "eQ-3",
-            "model": self._central.model,
-            "sw_version": self._central.version,
-            "via_device": (HA_DOMAIN, self._central.instance_name),
-        }
+        """Return central specific attributes."""
+        return self._central.device_info
 
     @property
     def should_poll(self) -> bool:

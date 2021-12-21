@@ -61,7 +61,6 @@ class Example:
     async def example_run(self):
         self.central = CentralConfig(
             name="ccu-dev",
-            entry_id="123",
             loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
             host=CCU_HOST,

@@ -67,7 +67,6 @@ async def central(
 
     central_unit = CentralConfig(
         name="ccu-dev",
-        entry_id="123",
         loop=loop,
         xml_rpc_server=register_xml_rpc_server(),
         host=CCU_HOST,

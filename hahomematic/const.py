@@ -8,6 +8,7 @@ from enum import Enum
 
 DEFAULT_ENCODING = "UTF-8"
 HA_DOMAIN = "hahm"
+MANUFACTURER = "eQ-3"
 INIT_DATETIME = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
 LOCALHOST = "localhost"
 IP_LOCALHOST_V4 = "127.0.0.1"

@@ -30,9 +30,11 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
+    HA_DOMAIN,
     HM_VIRTUAL_REMOTE_HM,
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
+    MANUFACTURER,
     HmPlatform,
 )
 from hahomematic.data import INSTANCES
@@ -55,7 +57,6 @@ class CentralUnit:
         self.central_config: CentralConfig = central_config
 
         self.instance_name: str = self.central_config.name
-        self.entry_id: str = self.central_config.entry_id
         self._available: bool = True
         self._loop: asyncio.AbstractEventLoop = self.central_config.loop
         self._xml_rpc_server: xml_rpc.XMLRPCServer = self.central_config.xml_rpc_server
@@ -147,6 +148,17 @@ class CentralUnit:
         return None
 
     @property
+    def device_info(self) -> dict[str, Any]:
+        """Return central specific attributes."""
+        return {
+            "identifiers": {(HA_DOMAIN, self.instance_name)},
+            "name": self.instance_name,
+            "manufacturer": MANUFACTURER,
+            "model": self.model,
+            "sw_version": self.version,
+        }
+
+    @property
     def local_ip(self) -> str:
         """Return the local ip of the xmlrpc_server."""
         return self._xml_rpc_server.local_ip
@@ -208,6 +220,14 @@ class CentralUnit:
 
         _LOGGER.debug("CentralUnit.stop: Removing instance")
         del INSTANCES[self.instance_name]
+
+    def create_task(self, target: Awaitable) -> None:
+        """Add task to the executor pool."""
+        self.loop.call_soon_threadsafe(self.async_create_task, target)
+
+    def async_create_task(self, target: Awaitable) -> asyncio.Task:
+        """Create a task from within the event loop. This method must be run in the event loop."""
+        return self.loop.create_task(target)
 
     def run_coroutine(self, coro: Coroutine) -> Any:
         """call coroutine from sync"""
@@ -373,6 +393,7 @@ class CentralUnit:
                     _LOGGER.warning(message)
                     raise hm_client.ClientException(message) from err
             else:
+                client: hm_client.Client | None = None
                 for client in self.clients.values():
                     if client.get_virtual_remote():
                         self._primary_client = client
@@ -490,7 +511,6 @@ class CentralConfig:
 
     def __init__(
         self,
-        entry_id: str,
         loop: asyncio.AbstractEventLoop,
         xml_rpc_server: xml_rpc.XMLRPCServer,
         name: str,
@@ -507,7 +527,6 @@ class CentralConfig:
         enable_virtual_channels: bool = False,
         enable_sensors_for_system_variables: bool = False,
     ):
-        self.entry_id = entry_id
         self.loop = loop
         self.xml_rpc_server = xml_rpc_server
         self.name = name
