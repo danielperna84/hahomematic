@@ -1,3 +1,6 @@
+Version 0.1.2  (2021-12-21)
+- Rotate device identifier
+
 Version 0.1.1  (2021-12-21)
 - Remove unnecessary async
 - Removed unused helper

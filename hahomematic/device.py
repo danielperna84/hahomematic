@@ -217,7 +217,7 @@ class HmDevice:
         """Return device specific attributes."""
         return {
             "config_entry_id": self.central.entry_id,
-            "identifiers": {(HA_DOMAIN, f"{self.interface_id}{IDENTIFIERS_SEPARATOR}{self.address}")},
+            "identifiers": {(HA_DOMAIN, f"{self.address}{IDENTIFIERS_SEPARATOR}{self.interface_id}")},
             "name": self.name,
             "manufacturer": "eQ-3",
             "model": self.device_type,
