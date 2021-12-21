@@ -1,6 +1,7 @@
-Version 0.1.x  (2021-12-xx)
+Version 0.1.1  (2021-12-21)
 - Remove unnecessary async
 - Removed unused helper
+- Add interface_id to identifiers in device_info
 
 Version 0.1.0  (2021-12-20)
 - Bump version to 0.1.0
