@@ -21,6 +21,7 @@ from hahomematic.const import (
     HA_DOMAIN,
     HH_EVENT_DEVICES_CREATED,
     HM_VIRTUAL_REMOTES,
+    IDENTIFIERS_SEPARATOR,
     IGNORED_PARAMETERS,
     IGNORED_PARAMETERS_WILDCARDS_END,
     IGNORED_PARAMETERS_WILDCARDS_START,
@@ -214,13 +215,9 @@ class HmDevice:
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
-        address = self.address
-        if self.address in HM_VIRTUAL_REMOTES:
-            address = f"{self.central.instance_name}_{self.address}"
-
         return {
             "config_entry_id": self.central.entry_id,
-            "identifiers": {(HA_DOMAIN, address)},
+            "identifiers": {(HA_DOMAIN, f"{self.interface_id}{IDENTIFIERS_SEPARATOR}{self.address}")},
             "name": self.name,
             "manufacturer": "eQ-3",
             "model": self.device_type,
