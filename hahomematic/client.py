@@ -253,14 +253,27 @@ class Client(ABC):
     #     except ProxyException:
     #         _LOGGER.exception("list_bidcos_interfaces: ProxyException")
 
+    async def set_value(self, address: str, value_key: str, value: Any, rx_mode: str | None = None) -> None:
+        """Set single value on paramset VALUES."""
+        try:
+            if rx_mode:
+                await self.proxy.setValue(address, value_key, value, rx_mode)
+            else:
+                await self.proxy.setValue(address, value_key, value)
+        except ProxyException:
+            _LOGGER.exception("set_value: ProxyException")
+
+
     async def put_paramset(
         self, address: str, paramset: str, value: Any, rx_mode: str | None = None
     ) -> None:
         """Set paramsets manually."""
         try:
-            if rx_mode is None:
+            if rx_mode:
+                await self.proxy.putParamset(address, paramset, value, rx_mode)
+            else:
                 await self.proxy.putParamset(address, paramset, value)
-            await self.proxy.putParamset(address, paramset, value, rx_mode)
+
         except ProxyException:
             _LOGGER.exception("put_paramset: ProxyException")
 

@@ -329,6 +329,21 @@ class CentralUnit:
             return int(await client.get_install_mode())
         return 0
 
+    async def set_value(
+        self,
+        interface_id: str,
+        address: str,
+        value_key: str,
+        value: Any,
+        rx_mode: str | None = None,
+    ) -> None:
+        """"Set single value on paramset VALUES."""
+
+        if client := self.get_primary_client(interface_id):
+            await client.set_value(
+                address=address, value_key=value_key, value=value, rx_mode=rx_mode
+            )
+
     async def put_paramset(
         self,
         interface_id: str,
