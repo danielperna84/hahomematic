@@ -66,7 +66,7 @@ class Example:
             host=CCU_HOST,
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
-            enable_virtual_channels=True,
+            option_enable_virtual_channels=True,
         ).get_central()
 
         # For testing we set a short INIT_TIMEOUT

@@ -47,7 +47,7 @@ from hahomematic.helpers import (
     get_device_address,
     get_entity_name,
 )
-import hahomematic.proxy as hm_proxy
+import hahomematic.xml_rpc_proxy as hm_proxy
 
 _LOGGER = logging.getLogger(__name__)
 ParameterType = TypeVar("ParameterType", bool, int, float, str, Union[int, str], None)
@@ -130,10 +130,8 @@ class BaseEntity(ABC):
         self.sub_type: str = self._device.sub_type
         self.create_in_ha: bool = not self._device.is_custom_entity
         self.client: hm_client.Client = self._central.clients[self._interface_id]
-        self.proxy: hm_proxy.ThreadPoolServerProxy = self.client.proxy
-        self.name: str = (
-            self.client.central.names.get_name(self.address) or self.unique_id
-        )
+        self.proxy: hm_proxy.XmlRpcProxy = self.client.proxy
+        self.name: str = self._central.names.get_name(self.address) or self.unique_id
 
     @property
     def available(self) -> bool:
@@ -776,7 +774,7 @@ class SpecialEvent(BaseEvent):
 
         if self.parameter == EVENT_CONFIG_PENDING:
             if value is False and old_value is True:
-                self.client.central.create_task(self._device.reload_paramsets())
+                self._central.create_task(self._device.reload_paramsets())
             return None
         if self.parameter == EVENT_UN_REACH:
             self._device.update_device(self.unique_id)

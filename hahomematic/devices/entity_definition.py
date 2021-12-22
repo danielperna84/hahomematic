@@ -398,7 +398,7 @@ def make_custom_entity(
         device_def = _get_device_group(device_enum, base_channel)
         channels = device_def[ED_PHY_CHANNEL]
         # check if virtual channels should be used
-        if device.central.enable_virtual_channels:
+        if device.central.option_enable_virtual_channels:
             channels.extend(device_def[ED_VIRT_CHANNEL])
         for channel_no in set(channels):
             entities.extend(

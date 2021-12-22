@@ -42,13 +42,13 @@ class JsonRpcAioHttpClient:
                 connector=conn, loop=self._central_config.loop
             )
         self._session_id: str | None = None
-        self._host: str = self._central_config.host
-        self._port: int | None = self._central_config.json_port
         self._username: str = self._central_config.username
         self._password: str | None = self._central_config.password
         self._json_tls: bool = self._central_config.json_tls
-        self._verify_tls: bool = self._central_config.verify_tls
-        self._tls_context: ssl.SSLContext = get_tls_context(self._verify_tls)
+        self._tls_context: ssl.SSLContext = get_tls_context(
+            self._central_config.verify_tls
+        )
+        self._url = f"{self._central_config.device_url}{PATH_JSON_RPC}"
 
     @property
     def is_activated(self) -> bool:
@@ -236,17 +236,6 @@ class JsonRpcAioHttpClient:
                 "json_rpc.logout: Exception while logging in via JSON-RPC"
             )
         return
-
-    @property
-    def _url(self) -> str:
-        """Return the required url."""
-        url = "http://"
-        if self._json_tls:
-            url = "https://"
-        url = f"{url}{self._host}"
-        if self._port:
-            url = f"{url}:{self._port}"
-        return f"{url}{PATH_JSON_RPC}"
 
 
 def _get_params(

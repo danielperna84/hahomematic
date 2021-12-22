@@ -2,10 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Callable
-from concurrent.futures import ThreadPoolExecutor
 import logging
-import socket
 import time
 from typing import Any
 
@@ -33,15 +30,11 @@ from hahomematic.const import (
     RELEVANT_PARAMSETS,
 )
 from hahomematic.device import HmDevice
-from hahomematic.helpers import build_api_url, parse_ccu_sys_var
+from hahomematic.helpers import build_api_url, get_local_ip, parse_ccu_sys_var
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
-from hahomematic.proxy import NoConnection, ProxyException, ThreadPoolServerProxy
+from hahomematic.xml_rpc_proxy import NoConnection, ProxyException, XmlRpcProxy
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class ClientException(Exception):
-    """hahomematic Client exception."""
 
 
 class Client(ABC):
@@ -55,53 +48,23 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self.client_config: ClientConfig = client_config
-        self.central: hm_central.CentralUnit = self.client_config.central
-        self._version: str | None = self.client_config.version
-        self.name: str = self.client_config.name
-        self.host: str = self.central.host
-        self.port: int = self.client_config.port
+        self._client_config: ClientConfig = client_config
+        self._central: hm_central.CentralUnit = self._client_config.central
+        self._version: str | None = self._client_config.version
+        self.name: str = self._client_config.name
         # This is the actual interface_id used for init
-        self.interface_id: str = f"{self.central.instance_name}-{self.name}"
-        self.path: str | None = self.client_config.path
-        self.local_ip: str = self._get_local_ip()
-        _LOGGER.debug("Got local ip: %s", self.local_ip)
-        # Get callback address
-        self.callback_host: str = (
-            client_config.callback_host
-            if client_config.callback_host
-            else self.local_ip
-        )
-        self.callback_port: int = (
-            self.client_config.callback_port
-            if self.client_config.callback_port
-            else self.central.local_port
-        )
-
-        self.init_url: str = f"http://{self.callback_host}:{self.callback_port}"
-        self.api_url: str = build_api_url(
-            host=self.host,
-            port=self.port,
-            path=self.path,
-            username=self.central.username,
-            password=self.central.password,
-            tls=self.central.tls,
-        )
+        self.interface_id: str = f"{self._central.instance_name}-{self.name}"
+        self._has_credentials = self._client_config.has_credentials
+        self._init_url: str = self._client_config.init_url
         # for all device related interaction
-        self._proxy_executor = ThreadPoolExecutor(max_workers=1)
-        self.proxy: ThreadPoolServerProxy = ThreadPoolServerProxy(
-            self.async_add_proxy_executor_job,
-            self.api_url,
-            tls=self.central.tls,
-            verify_tls=self.central.verify_tls,
-        )
+        self.proxy: XmlRpcProxy = self._client_config.xml_rpc_proxy
         self.time_initialized: int = 0
-        self.json_rpc_session: JsonRpcAioHttpClient = self.central.json_rpc_session
+        self._json_rpc_session: JsonRpcAioHttpClient = self._central.json_rpc_session
 
-        self.central.clients[self.interface_id] = self
-        if self.init_url not in self.central.clients_by_init_url:
-            self.central.clients_by_init_url[self.init_url] = []
-        self.central.clients_by_init_url[self.init_url].append(self)
+        self._central.clients[self.interface_id] = self
+        if self._init_url not in self._central.clients_by_init_url:
+            self._central.clients_by_init_url[self._init_url] = []
+        self._central.clients_by_init_url[self._init_url].append(self)
 
     @property
     def version(self) -> str | None:
@@ -113,20 +76,10 @@ class Client(ABC):
         """Return the model of the backend."""
         return ""
 
-    # pylint: disable=no-member
-    def _get_local_ip(self) -> str:
-        """Get local_ip from socket."""
-        try:
-            socket.gethostbyname(self.host)
-        except Exception as ex:
-            _LOGGER.warning("Can't resolve host for %s: %s", self.name, self.host)
-            raise ClientException(ex) from ex
-        tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        tmp_socket.settimeout(config.TIMEOUT)
-        tmp_socket.connect((self.host, self.port))
-        local_ip = str(tmp_socket.getsockname()[0])
-        tmp_socket.close()
-        return local_ip
+    @property
+    def central(self) -> hm_central.CentralUnit:
+        """Return the central of the backend."""
+        return self._central
 
     async def proxy_init(self) -> int:
         """
@@ -135,9 +88,9 @@ class Client(ABC):
         """
         try:
             _LOGGER.debug(
-                "proxy_init: init('%s', '%s')", self.init_url, self.interface_id
+                "proxy_init: init('%s', '%s')", self._init_url, self.interface_id
             )
-            await self.proxy.init(self.init_url, self.interface_id)
+            await self.proxy.init(self._init_url, self.interface_id)
             _LOGGER.info("proxy_init: Proxy for %s initialized", self.name)
         except ProxyException:
             _LOGGER.exception(
@@ -152,16 +105,16 @@ class Client(ABC):
         """
         De-init to stop CCU from sending events for this remote.
         """
-        if self.json_rpc_session.is_activated:
-            await self.json_rpc_session.logout()
+        if self._json_rpc_session.is_activated:
+            await self._json_rpc_session.logout()
         if not self.time_initialized:
             _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)", self.name
             )
             return PROXY_DE_INIT_SKIPPED
         try:
-            _LOGGER.debug("proxy_de_init: init('%s')", self.init_url)
-            await self.proxy.init(self.init_url)
+            _LOGGER.debug("proxy_de_init: init('%s')", self._init_url)
+            await self.proxy.init(self._init_url)
         except ProxyException:
             _LOGGER.exception(
                 "proxy_de_init: Failed to de-initialize proxy for %s", self.name
@@ -180,16 +133,7 @@ class Client(ABC):
 
     def stop(self) -> None:
         """Stop depending services."""
-        self._proxy_executor.shutdown()
-
-    async def async_add_proxy_executor_job(
-        self, func: Callable, *args: Any
-    ) -> Awaitable:
-        """Add an executor job from within the event loop for all device related interaction."""
-
-        return await self.central.loop.run_in_executor(
-            self._proxy_executor, func, *args
-        )
+        self.proxy.stop()
 
     @abstractmethod
     async def fetch_names(self) -> None:
@@ -328,7 +272,7 @@ class Client(ABC):
 
         try:
             parameter_data = await self.proxy.getParamsetDescription(address, paramset)
-            self.central.paramsets.add(
+            self._central.paramsets.add(
                 interface_id=self.interface_id,
                 address=address,
                 paramset=paramset,
@@ -338,7 +282,7 @@ class Client(ABC):
             _LOGGER.exception(
                 "Unable to get paramset %s for address %s.", paramset, address
             )
-        await self.central.paramsets.save()
+        await self._central.paramsets.save()
 
     async def fetch_paramsets(
         self, device_description: dict[str, Any], update: bool = False
@@ -355,7 +299,7 @@ class Client(ABC):
                 paramset_description = await self.proxy.getParamsetDescription(
                     address, paramset
                 )
-                self.central.paramsets.add(
+                self._central.paramsets.add(
                     interface_id=self.interface_id,
                     address=address,
                     paramset=paramset,
@@ -370,27 +314,27 @@ class Client(ABC):
         """
         Fetch all paramsets for provided interface id.
         """
-        for address, dd in self.central.raw_devices.get_interface(
+        for address, dd in self._central.raw_devices.get_interface(
             interface_id=self.interface_id
         ).items():
-            if skip_existing and address in self.central.paramsets.get_by_interface(
+            if skip_existing and address in self._central.paramsets.get_by_interface(
                 self.interface_id
             ):
                 continue
             await self.fetch_paramsets(dd)
-        await self.central.paramsets.save()
+        await self._central.paramsets.save()
 
     async def update_paramsets(self, address: str) -> None:
         """
         Update paramsets for provided address.
         """
-        if not self.central.raw_devices.get_interface(interface_id=self.interface_id):
+        if not self._central.raw_devices.get_interface(interface_id=self.interface_id):
             _LOGGER.warning(
                 "Interface ID missing in central_unit.raw_devices.devices_raw_dict. Not updating paramsets for %s.",
                 address,
             )
             return
-        if not self.central.raw_devices.get_device(
+        if not self._central.raw_devices.get_device(
             interface_id=self.interface_id, address=address
         ):
             _LOGGER.warning(
@@ -399,12 +343,12 @@ class Client(ABC):
             )
             return
         await self.fetch_paramsets(
-            self.central.raw_devices.get_device(
+            self._central.raw_devices.get_device(
                 interface_id=self.interface_id, address=address
             ),
             update=True,
         )
-        await self.central.paramsets.save()
+        await self._central.paramsets.save()
 
 
 class ClientCCU(Client):
@@ -419,22 +363,22 @@ class ClientCCU(Client):
         """
         Get all names via JSON-RPS and store in data.NAMES.
         """
-        if not self.central.username and self.central.password:
+        if not self._has_credentials:
             _LOGGER.warning(
                 "fetch_names_json: No username set. Not fetching names via JSON-RPC."
             )
             return
         _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
-            response = await self.json_rpc_session.post(
+            response = await self._json_rpc_session.post(
                 "Device.listAllDetail",
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 _LOGGER.debug("fetch_names_json: Resolving devicenames")
                 for device in response[ATTR_RESULT]:
-                    self.central.names.add(device[ATTR_ADDRESS], device[ATTR_NAME])
+                    self._central.names.add(device[ATTR_ADDRESS], device[ATTR_NAME])
                     for channel in device.get(ATTR_CHANNELS, []):
-                        self.central.names.add(
+                        self._central.names.add(
                             channel[ATTR_ADDRESS], channel[ATTR_NAME]
                         )
         except Exception:
@@ -456,7 +400,7 @@ class ClientCCU(Client):
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
-        if not self.central.username and self.central.password:
+        if not self._has_credentials:
             _LOGGER.warning(
                 "set_system_variable: You have to set username ans password to set a system variable via JSON-RPC"
             )
@@ -469,9 +413,9 @@ class ClientCCU(Client):
             }
             if value is True or value is False:
                 params[ATTR_VALUE] = int(value)
-                response = await self.json_rpc_session.post("SysVar.setBool", params)
+                response = await self._json_rpc_session.post("SysVar.setBool", params)
             else:
-                response = await self.json_rpc_session.post("SysVar.setFloat", params)
+                response = await self._json_rpc_session.post("SysVar.setFloat", params)
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 res = response[ATTR_RESULT]
                 _LOGGER.debug(
@@ -489,7 +433,7 @@ class ClientCCU(Client):
 
     async def delete_system_variable(self, name: str) -> None:
         """Delete a system variable from CCU / Homegear."""
-        if not self.central.username and self.central.password:
+        if not self._has_credentials:
             _LOGGER.warning(
                 "delete_system_variable: You have to set username ans password to delete a system variable via JSON-RPC"
             )
@@ -498,7 +442,7 @@ class ClientCCU(Client):
         _LOGGER.debug("delete_system_variable: Getting System variable via JSON-RPC")
         try:
             params = {ATTR_NAME: name}
-            response = await self.json_rpc_session.post(
+            response = await self._json_rpc_session.post(
                 "SysVar.deleteSysVarByName",
                 params,
             )
@@ -511,7 +455,7 @@ class ClientCCU(Client):
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         var = None
-        if not self.central.username and self.central.password:
+        if not self._has_credentials:
             _LOGGER.warning(
                 "get_system_variable: You have to set username ans password to get a system variable via JSON-RPC"
             )
@@ -520,7 +464,7 @@ class ClientCCU(Client):
         _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
         try:
             params = {ATTR_NAME: name}
-            response = await self.json_rpc_session.post(
+            response = await self._json_rpc_session.post(
                 "SysVar.getValueByName",
                 params,
             )
@@ -538,7 +482,7 @@ class ClientCCU(Client):
     async def get_all_system_variables(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
         variables: dict[str, Any] = {}
-        if not self.central.username and self.central.password:
+        if not self._has_credentials:
             _LOGGER.warning(
                 "get_all_system_variables: You have to set username ans password to get system variables via JSON-RPC"
             )
@@ -548,7 +492,7 @@ class ClientCCU(Client):
             "get_all_system_variables: Getting all System variables via JSON-RPC"
         )
         try:
-            response = await self.json_rpc_session.post(
+            response = await self._json_rpc_session.post(
                 "SysVar.getAll",
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
@@ -563,7 +507,7 @@ class ClientCCU(Client):
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for virtual_address in HM_VIRTUAL_REMOTES:
-            virtual_remote = self.central.hm_devices.get(virtual_address)
+            virtual_remote = self._central.hm_devices.get(virtual_address)
             if virtual_remote and virtual_remote.interface_id == self.interface_id:
                 return virtual_remote
         return None
@@ -588,11 +532,11 @@ class ClientHomegear(Client):
         Get all names from metadata (Homegear).
         """
         _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in self.central.raw_devices.get_interface(
+        for address in self._central.raw_devices.get_interface(
             interface_id=self.interface_id
         ):
             try:
-                self.central.names.add(
+                self._central.names.add(
                     address,
                     await self.proxy.getMetadata(address, ATTR_HM_NAME),
                 )
@@ -658,40 +602,48 @@ class ClientConfig:
         name: str,
         port: int,
         path: str | None = None,
-        callback_host: str | None = None,
-        callback_port: int | None = None,
     ):
         self.central = central
         self.name = name
-        self.port = port
-        self.path = path
-        self.callback_host = callback_host
-        self.callback_port = callback_port
+        self._central_config = self.central.central_config
+        self._callback_host: str = (
+            self._central_config.callback_host
+            if self._central_config.callback_host
+            else get_local_ip(host=self._central_config.host, port=port)
+        )
+        self._callback_port: int = (
+            self._central_config.callback_port
+            if self._central_config.callback_port
+            else self.central.local_port
+        )
+        self.init_url: str = f"http://{self._callback_host}:{self._callback_port}"
+        self.api_url = build_api_url(
+            host=self._central_config.host,
+            port=port,
+            path=path,
+            username=self._central_config.username,
+            password=self._central_config.password,
+            tls=self._central_config.tls,
+        )
+        self.has_credentials: bool = (
+            self._central_config.username is not None
+            and self._central_config.password is not None
+        )
         self.version: str | None = None
+        self.xml_rpc_proxy: XmlRpcProxy = XmlRpcProxy(
+            self.central.loop,
+            self.api_url,
+            tls=self._central_config.tls,
+            verify_tls=self._central_config.verify_tls,
+        )
 
     async def get_client(self) -> Client:
         """Identify the used client."""
-
-        api_url = build_api_url(
-            host=self.central.host,
-            port=self.port,
-            path=self.path,
-            username=self.central.username,
-            password=self.central.password,
-            tls=self.central.tls,
-        )
-
-        proxy = ThreadPoolServerProxy(
-            self.central.async_add_executor_job,
-            api_url,
-            tls=self.central.tls,
-            verify_tls=self.central.verify_tls,
-        )
         try:
-            self.version = await proxy.getVersion()
+            self.version = await self.xml_rpc_proxy.getVersion()
         except ProxyException as err:
             raise ProxyException(
-                f"Failed to get backend version. Not creating client: {api_url}"
+                f"Failed to get backend version. Not creating client: {self.api_url}"
             ) from err
         if self.version:
             if "Homegear" in self.version or "pydevccu" in self.version:

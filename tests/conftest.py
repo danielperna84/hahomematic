@@ -72,7 +72,7 @@ async def central(
         host=CCU_HOST,
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
-        enable_virtual_channels=True,
+        option_enable_virtual_channels=True,
     ).get_central()
     config.INIT_TIMEOUT = 10
     config.CACHE_DIR = "cache"
