@@ -4,9 +4,11 @@ Helper functions used within hahomematic
 from __future__ import annotations
 
 import logging
+import socket
 import ssl
 from typing import Any
 
+from hahomematic import config
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ATTR_HM_ALARM,
@@ -20,6 +22,10 @@ from hahomematic.const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ClientException(Exception):
+    """hahomematic Client exception."""
 
 
 def generate_unique_id(
@@ -149,3 +155,20 @@ def get_device_channel(address: str) -> int:
     if ":" not in address:
         raise Exception("Address has no channel part.")
     return int(address.split(":")[1])
+
+
+# pylint: disable=no-member
+def get_local_ip(host: str, port: int) -> str:
+    """Get local_ip from socket."""
+    try:
+        socket.gethostbyname(host)
+    except Exception as ex:
+        _LOGGER.warning("Can't resolve host for %s", host)
+        raise ClientException(ex) from ex
+    tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    tmp_socket.settimeout(config.TIMEOUT)
+    tmp_socket.connect((host, port))
+    local_ip = str(tmp_socket.getsockname()[0])
+    tmp_socket.close()
+    _LOGGER.debug("Got local ip: %s", local_ip)
+    return local_ip

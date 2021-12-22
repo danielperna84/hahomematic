@@ -30,18 +30,21 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
+    HA_DOMAIN,
     HM_VIRTUAL_REMOTE_HM,
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
+    MANUFACTURER,
     HmPlatform,
 )
 from hahomematic.data import INSTANCES
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
+import hahomematic.helpers
 from hahomematic.helpers import get_device_address, get_device_channel
 from hahomematic.hub import HmDummyHub, HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
-from hahomematic.proxy import NoConnection
+from hahomematic.xml_rpc_proxy import NoConnection
 import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,23 +58,15 @@ class CentralUnit:
         self.central_config: CentralConfig = central_config
 
         self.instance_name: str = self.central_config.name
-        self.entry_id: str = self.central_config.entry_id
         self._available: bool = True
         self._loop: asyncio.AbstractEventLoop = self.central_config.loop
-        self._xml_rpc_server: xml_rpc.XMLRPCServer = self.central_config.xml_rpc_server
+        self._xml_rpc_server: xml_rpc.XmlRpcServer = self.central_config.xml_rpc_server
         self._xml_rpc_server.register_central(self)
-        self.enable_virtual_channels: bool = self.central_config.enable_virtual_channels
-        self.host: str = self.central_config.host
+        self.option_enable_virtual_channels: bool = (
+            self.central_config.option_enable_virtual_channels
+        )
         self._model: str | None = None
         self._primary_client: hm_client.Client | None = None
-        self.json_port: int | None = self.central_config.json_port
-        self.password: str | None = self.central_config.password
-        self.username: str | None = None
-        if self.password is not None:
-            self.username = self.central_config.username
-        self.tls: bool = self.central_config.tls
-        self.verify_tls: bool = self.central_config.verify_tls
-        self.client_session: ClientSession | None = self.central_config.client_session
 
         # Caches for CCU data
         self.paramsets: ParamsetCache = ParamsetCache(central=self)
@@ -99,7 +94,7 @@ class CentralUnit:
         # Signature: (event_type, event_data)
         self.callback_ha_event: Callable | None = None
 
-        self.json_rpc_session: JsonRpcAioHttpClient = JsonRpcAioHttpClient(
+        self._json_rpc_session: JsonRpcAioHttpClient = JsonRpcAioHttpClient(
             central_config=self.central_config
         )
 
@@ -116,7 +111,7 @@ class CentralUnit:
         else:
             hub = HmHub(
                 self,
-                use_entities=self.central_config.enable_sensors_for_system_variables,
+                use_entities=self.central_config.option_enable_sensors_for_system_variables,
             )
         return hub
 
@@ -147,6 +142,23 @@ class CentralUnit:
         return None
 
     @property
+    def device_url(self) -> str:
+        """Return the device_url of the backend."""
+        return self.central_config.device_url
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return central specific attributes."""
+        return {
+            "identifiers": {(HA_DOMAIN, self.instance_name)},
+            "name": self.instance_name,
+            "manufacturer": MANUFACTURER,
+            "model": self.model,
+            "sw_version": self.version,
+            "device_url": self.device_url,
+        }
+
+    @property
     def local_ip(self) -> str:
         """Return the local ip of the xmlrpc_server."""
         return self._xml_rpc_server.local_ip
@@ -155,6 +167,11 @@ class CentralUnit:
     def local_port(self) -> int:
         """Return the local port of the xmlrpc_server."""
         return self._xml_rpc_server.local_port
+
+    @property
+    def json_rpc_session(self) -> JsonRpcAioHttpClient:
+        """Return the json_rpc_session."""
+        return self._json_rpc_session
 
     @property
     def loop(self) -> asyncio.AbstractEventLoop:
@@ -208,6 +225,14 @@ class CentralUnit:
 
         _LOGGER.debug("CentralUnit.stop: Removing instance")
         del INSTANCES[self.instance_name]
+
+    def create_task(self, target: Awaitable) -> None:
+        """Add task to the executor pool."""
+        self.loop.call_soon_threadsafe(self.async_create_task, target)
+
+    def async_create_task(self, target: Awaitable) -> asyncio.Task:
+        """Create a task from within the event loop. This method must be run in the event loop."""
+        return self.loop.create_task(target)
 
     def run_coroutine(self, coro: Coroutine) -> Any:
         """call coroutine from sync"""
@@ -304,6 +329,21 @@ class CentralUnit:
             return int(await client.get_install_mode())
         return 0
 
+    async def set_value(
+        self,
+        interface_id: str,
+        address: str,
+        value_key: str,
+        value: Any,
+        rx_mode: str | None = None,
+    ) -> None:
+        """"Set single value on paramset VALUES."""
+
+        if client := self.get_primary_client(interface_id):
+            await client.set_value(
+                address=address, value_key=value_key, value=value, rx_mode=rx_mode
+            )
+
     async def put_paramset(
         self,
         interface_id: str,
@@ -371,8 +411,9 @@ class CentralUnit:
                 except IndexError as err:
                     message = f"Can't resolve interface for {self.instance_name}: {interface_id}"
                     _LOGGER.warning(message)
-                    raise hm_client.ClientException(message) from err
+                    raise hahomematic.helpers.ClientException(message) from err
             else:
+                client: hm_client.Client | None = None
                 for client in self.clients.values():
                     if client.get_virtual_remote():
                         self._primary_client = client
@@ -490,9 +531,8 @@ class CentralConfig:
 
     def __init__(
         self,
-        entry_id: str,
         loop: asyncio.AbstractEventLoop,
-        xml_rpc_server: xml_rpc.XMLRPCServer,
+        xml_rpc_server: xml_rpc.XmlRpcServer,
         name: str,
         host: str = LOCALHOST,
         username: str = DEFAULT_USERNAME,
@@ -501,13 +541,12 @@ class CentralConfig:
         verify_tls: bool = DEFAULT_VERIFY_TLS,
         client_session: ClientSession | None = None,
         callback_host: str | None = None,
-        callback_port: str | None = None,
+        callback_port: int | None = None,
         json_port: int | None = None,
         json_tls: bool = DEFAULT_TLS,
-        enable_virtual_channels: bool = False,
-        enable_sensors_for_system_variables: bool = False,
+        option_enable_virtual_channels: bool = False,
+        option_enable_sensors_for_system_variables: bool = False,
     ):
-        self.entry_id = entry_id
         self.loop = loop
         self.xml_rpc_server = xml_rpc_server
         self.name = name
@@ -521,8 +560,21 @@ class CentralConfig:
         self.callback_port = callback_port
         self.json_port = json_port
         self.json_tls = json_tls
-        self.enable_virtual_channels = enable_virtual_channels
-        self.enable_sensors_for_system_variables = enable_sensors_for_system_variables
+        self.option_enable_virtual_channels = option_enable_virtual_channels
+        self.option_enable_sensors_for_system_variables = (
+            option_enable_sensors_for_system_variables
+        )
+
+    @property
+    def device_url(self) -> str:
+        """Return the required url."""
+        url = "http://"
+        if self.json_tls:
+            url = "https://"
+        url = f"{url}{self.host}"
+        if self.json_port:
+            url = f"{url}:{self.json_port}"
+        return f"{url}"
 
     def get_central(self) -> CentralUnit:
         """Identify the used client."""

@@ -61,13 +61,12 @@ class Example:
     async def example_run(self):
         self.central = CentralConfig(
             name="ccu-dev",
-            entry_id="123",
             loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
             host=CCU_HOST,
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
-            enable_virtual_channels=True,
+            option_enable_virtual_channels=True,
         ).get_central()
 
         # For testing we set a short INIT_TIMEOUT

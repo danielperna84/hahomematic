@@ -26,6 +26,7 @@ from hahomematic.const import (
     IGNORED_PARAMETERS_WILDCARDS_END,
     IGNORED_PARAMETERS_WILDCARDS_START,
     INIT_DATETIME,
+    MANUFACTURER,
     OPERATION_EVENT,
     OPERATION_WRITE,
     PARAM_UN_REACH,
@@ -216,10 +217,11 @@ class HmDevice:
     def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
-            "config_entry_id": self.central.entry_id,
-            "identifiers": {(HA_DOMAIN, f"{self.address}{IDENTIFIERS_SEPARATOR}{self.interface_id}")},
+            "identifiers": {
+                (HA_DOMAIN, f"{self.address}{IDENTIFIERS_SEPARATOR}{self.interface_id}")
+            },
             "name": self.name,
-            "manufacturer": "eQ-3",
+            "manufacturer": MANUFACTURER,
             "model": self.device_type,
             "sw_version": self.firmware,
             "via_device": (HA_DOMAIN, self.central.instance_name),

@@ -3,7 +3,9 @@ Implementation of a locking ServerProxy for XML-RPC communication.
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import Awaitable, Callable
+from concurrent.futures import ThreadPoolExecutor
 import logging
 from typing import Any
 import xmlrpc.client
@@ -26,16 +28,17 @@ class NoConnection(Exception):
 
 
 # noinspection PyProtectedMember,PyUnresolvedReferences
-class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
+class XmlRpcProxy(xmlrpc.client.ServerProxy):
     """
     ServerProxy implementation with ThreadPoolExecutor when request is executing.
     """
 
-    def __init__(self, executor_func: Callable, *args: Any, **kwargs: Any):
+    def __init__(self, loop: asyncio.AbstractEventLoop, *args: Any, **kwargs: Any):
         """
         Initialize new proxy for server and get local ip
         """
-        self._executor_func = executor_func
+        self._loop = loop
+        self._proxy_executor = ThreadPoolExecutor(max_workers=1)
         self._tls = kwargs.pop(ATTR_TLS, False)
         self._verify_tls = kwargs.pop(ATTR_VERIFY_TLS, True)
         if self._tls:
@@ -44,18 +47,23 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
             self, encoding=ATTR_ENCODING_ISO_8859_1, *args, **kwargs
         )
 
+    async def _async_add_proxy_executor_job(
+        self, func: Callable, *args: Any
+    ) -> Awaitable:
+        """Add an executor job from within the event loop for all device related interaction."""
+        return await self._loop.run_in_executor(self._proxy_executor, func, *args)
+
     async def __async_request(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         """
         Call method on server side
         """
         parent = xmlrpc.client.ServerProxy
         try:
-            return await self._executor_func(
+            return await self._async_add_proxy_executor_job(
                 # pylint: disable=protected-access
                 parent._ServerProxy__request,  # type: ignore[attr-defined]
                 self,
                 *args,
-                **kwargs,
             )
         except OSError as ose:
             _LOGGER.exception(ose.args)
@@ -68,3 +76,7 @@ class ThreadPoolServerProxy(xmlrpc.client.ServerProxy):
         Magic method dispatcher
         """
         return xmlrpc.client._Method(self.__async_request, *args, **kwargs)
+
+    def stop(self) -> None:
+        """Stop depending services."""
+        self._proxy_executor.shutdown(wait=False, cancel_futures=True)

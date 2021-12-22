@@ -67,13 +67,12 @@ async def central(
 
     central_unit = CentralConfig(
         name="ccu-dev",
-        entry_id="123",
         loop=loop,
         xml_rpc_server=register_xml_rpc_server(),
         host=CCU_HOST,
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
-        enable_virtual_channels=True,
+        option_enable_virtual_channels=True,
     ).get_central()
     config.INIT_TIMEOUT = 10
     config.CACHE_DIR = "cache"

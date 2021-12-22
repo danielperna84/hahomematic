@@ -29,7 +29,7 @@ from hahomematic.device import create_devices
 
 _LOGGER = logging.getLogger(__name__)
 
-_XML_RPC_SERVER: XMLRPCServer | None = None
+_XML_RPC_SERVER: XmlRpcServer | None = None
 
 
 # pylint: disable=invalid-name
@@ -39,9 +39,9 @@ class RPCFunctions:
     additionally there are some internal functions for hahomematic itself.
     """
 
-    def __init__(self, xml_rpc_server: XMLRPCServer):
+    def __init__(self, xml_rpc_server: XmlRpcServer):
         _LOGGER.debug("RPCFunctions.__init__")
-        self._xml_rpc_server: XMLRPCServer = xml_rpc_server
+        self._xml_rpc_server: XmlRpcServer = xml_rpc_server
 
     @callback_event
     def event(
@@ -242,7 +242,7 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
     )
 
 
-class XMLRPCServer(threading.Thread):
+class XmlRpcServer(threading.Thread):
     """
     XML-RPC server thread to handle messages from CCU / Homegear.
     """
@@ -256,23 +256,23 @@ class XMLRPCServer(threading.Thread):
         threading.Thread.__init__(self)
 
         self.local_ip: str = local_ip
-        self.local_port: int = int(local_port)
+        self.local_port: int = local_port
 
-        rpc_functions = RPCFunctions(self)
+        _rpc_functions = RPCFunctions(self)
         _LOGGER.debug("Server.__init__: Setting up server")
-        self.simple_xml_rpc_server = SimpleXMLRPCServer(
+        self._simple_xml_rpc_server = SimpleXMLRPCServer(
             (self.local_ip, self.local_port),
             requestHandler=RequestHandler,
             logRequests=False,
             allow_none=True,
         )
 
-        self.local_port = self.simple_xml_rpc_server.socket.getsockname()[1]
-        self.simple_xml_rpc_server.register_introspection_functions()
-        self.simple_xml_rpc_server.register_multicall_functions()
+        self.local_port = self._simple_xml_rpc_server.socket.getsockname()[1]
+        self._simple_xml_rpc_server.register_introspection_functions()
+        self._simple_xml_rpc_server.register_multicall_functions()
         _LOGGER.debug("Server.__init__: Registering RPC functions")
-        self.simple_xml_rpc_server.register_instance(
-            rpc_functions, allow_dotted_names=True
+        self._simple_xml_rpc_server.register_instance(
+            _rpc_functions, allow_dotted_names=True
         )
         self._centrals: dict[str, hm_central.CentralUnit] = {}
 
@@ -285,14 +285,14 @@ class XMLRPCServer(threading.Thread):
             self.local_ip,
             self.local_port,
         )
-        self.simple_xml_rpc_server.serve_forever()
+        self._simple_xml_rpc_server.serve_forever()
 
     def stop(self) -> None:
         """Stops the XMLRPCServer."""
         _LOGGER.info("XMLRPCServer.stop: Shutting down XMLRPCServer")
-        self.simple_xml_rpc_server.shutdown()
+        self._simple_xml_rpc_server.shutdown()
         _LOGGER.debug("XMLRPCServer.stop: Stopping XMLRPCServer")
-        self.simple_xml_rpc_server.server_close()
+        self._simple_xml_rpc_server.server_close()
         _LOGGER.info("XMLRPCServer.stop: Server XMLRPCServer")
 
     def register_central(self, central: hm_central.CentralUnit) -> None:
@@ -318,12 +318,12 @@ class XMLRPCServer(threading.Thread):
         return len(self._centrals) == 0
 
 
-def get_xml_rpc_server() -> XMLRPCServer | None:
+def get_xml_rpc_server() -> XmlRpcServer | None:
     """Return the XMLRPCServer."""
     return _XML_RPC_SERVER
 
 
-def _set_xml_rpc_server(xml_rpc_server: XMLRPCServer | None) -> None:
+def _set_xml_rpc_server(xml_rpc_server: XmlRpcServer | None) -> None:
     """Add a XMLRPCServer."""
     # pylint: disable=global-statement
     global _XML_RPC_SERVER
@@ -332,10 +332,10 @@ def _set_xml_rpc_server(xml_rpc_server: XMLRPCServer | None) -> None:
 
 def register_xml_rpc_server(
     local_ip: str = IP_ANY_V4, local_port: int = PORT_ANY
-) -> XMLRPCServer:
+) -> XmlRpcServer:
     """Register the xml rpc server."""
     if (xml_rpc := get_xml_rpc_server()) is None:
-        xml_rpc = XMLRPCServer(local_ip, local_port)
+        xml_rpc = XmlRpcServer(local_ip, local_port)
         xml_rpc.start()
         _set_xml_rpc_server(xml_rpc)
     return xml_rpc
