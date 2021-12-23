@@ -51,6 +51,7 @@ class BaseHubEntity(ABC):
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
         self.create_in_ha: bool = True
+        self.should_poll = False
 
     @property
     def available(self) -> bool:
@@ -141,11 +142,6 @@ class HmSystemVariable(BaseHubEntity):
             return self._hub.device_info
         return None
 
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
     async def set_state(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         old_state = self._state
@@ -174,16 +170,12 @@ class HmHub(BaseHubEntity):
         self.hub_entities: dict[str, HmSystemVariable] = {}
         self._variables: dict[str, Any] = {}
         self._use_entities = use_entities
+        self.should_poll = True
 
     @property
     def device_info(self) -> dict[str, Any]:
         """Return central specific attributes."""
         return self._central.device_info
-
-    @property
-    def should_poll(self) -> bool:
-        """polling needed."""
-        return True
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -269,11 +261,6 @@ class HmDummyHub(BaseHubEntity):
     def device_info(self) -> dict[str, Any]:
         """Return central specific attributes."""
         return self._central.device_info
-
-    @property
-    def should_poll(self) -> bool:
-        """polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

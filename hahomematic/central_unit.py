@@ -337,7 +337,7 @@ class CentralUnit:
         value: Any,
         rx_mode: str | None = None,
     ) -> None:
-        """"Set single value on paramset VALUES."""
+        """Set single value on paramset VALUES."""
 
         if client := self.get_primary_client(interface_id):
             await client.set_value(

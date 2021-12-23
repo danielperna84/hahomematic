@@ -1,3 +1,7 @@
+Version 0.3.0 (2021-12-23)
+- Cleanup API, device/entity
+- Add ACTIVE_PROFILE to IPThermostat
+
 Version 0.2.0  (2021-12-22)
 - Cleanup API, reduce visibility
 - Add setValue to client

@@ -76,17 +76,17 @@ class HmDevice:
         """
         Initialize the device object.
         """
-        self.central = central
-        self.interface_id = interface_id
-        self.client = self.central.clients[self.interface_id]
-        self.address = address
-        self.channels = self.central.raw_devices.get_channels(
-            self.interface_id, self.address
+        self._central = central
+        self._interface_id = interface_id
+        self._client = self._central.clients[self._interface_id]
+        self._address = address
+        self._channels = self._central.raw_devices.get_channels(
+            self._interface_id, self._address
         )
         _LOGGER.debug(
             "Device.__init__: Initializing device: %s, %s",
-            self.interface_id,
-            self.address,
+            self._interface_id,
+            self._address,
         )
 
         self.entities: dict[tuple[str, str], GenericEntity] = {}
@@ -97,13 +97,13 @@ class HmDevice:
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
         self.device_type: str = str(
-            self.central.raw_devices.get_device_parameter(
-                self.interface_id, self.address, ATTR_HM_TYPE
+            self._central.raw_devices.get_device_parameter(
+                self._interface_id, self._address, ATTR_HM_TYPE
             )
         )
         self.sub_type: str = str(
-            self.central.raw_devices.get_device_parameter(
-                self.interface_id, self.address, ATTR_HM_SUBTYPE
+            self._central.raw_devices.get_device_parameter(
+                self._interface_id, self._address, ATTR_HM_SUBTYPE
             )
         )
         # marker if device will be created as custom entity
@@ -111,28 +111,43 @@ class HmDevice:
             self.device_type, self.sub_type
         )
         self.firmware: str = str(
-            self.central.raw_devices.get_device_parameter(
-                self.interface_id, self.address, ATTR_HM_FIRMWARE
+            self._central.raw_devices.get_device_parameter(
+                self._interface_id, self._address, ATTR_HM_FIRMWARE
             )
         )
 
-        if name := self.central.names.get_name(self.address):
+        if name := self._central.names.get_name(self._address):
             self.name = name
         else:
             _LOGGER.info(
                 "Device.__init__: Using auto-generated name for %s %s",
                 self.device_type,
-                self.address,
+                self._address,
             )
-            self.name = f"{self.device_type}_{self.address}"
+            self.name = f"{self.device_type}_{self._address}"
 
         _LOGGER.debug(
             "Device.__init__: Initialized device: %s, %s, %s, %s",
-            self.interface_id,
-            self.address,
+            self._interface_id,
+            self._address,
             self.device_type,
             self.name,
         )
+
+    @property
+    def central(self) -> hm_central.CentralUnit:
+        """Return the central unit."""
+        return self._central
+
+    @property
+    def interface_id(self) -> str:
+        """Return the interface_id."""
+        return self._interface_id
+
+    @property
+    def address(self) -> str:
+        """Return the address."""
+        return self._address
 
     def add_hm_entity(self, hm_entity: BaseEntity) -> None:
         """Add a hm entity to a device."""
@@ -211,20 +226,23 @@ class HmDevice:
         """
         Provide some useful information.
         """
-        return f"address: {self.address}, type: {self.device_type}, name: {self.name}, entities: {self.entities}"
+        return f"address: {self._address}, type: {self.device_type}, name: {self.name}, entities: {self.entities}"
 
     @property
     def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         return {
             "identifiers": {
-                (HA_DOMAIN, f"{self.address}{IDENTIFIERS_SEPARATOR}{self.interface_id}")
+                (
+                    HA_DOMAIN,
+                    f"{self._address}{IDENTIFIERS_SEPARATOR}{self._interface_id}",
+                )
             },
             "name": self.name,
             "manufacturer": MANUFACTURER,
             "model": self.device_type,
             "sw_version": self.firmware,
-            "via_device": (HA_DOMAIN, self.central.instance_name),
+            "via_device": (HA_DOMAIN, self._central.instance_name),
         }
 
     @property
@@ -232,7 +250,7 @@ class HmDevice:
         """Return the availability of the device."""
         if self._available is False:
             return False
-        un_reach = self.action_events.get((f"{self.address}:0", PARAM_UN_REACH))
+        un_reach = self.action_events.get((f"{self._address}:0", PARAM_UN_REACH))
         if un_reach and un_reach.last_update:
             return not un_reach.value
         return True
@@ -248,7 +266,7 @@ class HmDevice:
         """Reload paramset for device."""
         for entity in self.entities.values():
             for paramset in RELEVANT_PARAMSETS:
-                await self.client.fetch_paramset(entity.address, paramset)
+                await self._client.fetch_paramset(entity.address, paramset)
                 entity.update_parameter_data()
         self.update_device()
 
@@ -258,25 +276,25 @@ class HmDevice:
         Create the entities associated to this device.
         """
         new_entities: list[BaseEntity] = []
-        for channel in self.channels:
-            if not self.central.paramsets.get_by_interface_address(
-                self.interface_id, channel
+        for channel in self._channels:
+            if not self._central.paramsets.get_by_interface_address(
+                self._interface_id, channel
             ):
                 _LOGGER.debug(
                     "Device.create_entities: Skipping channel %s, missing paramsets.",
                     channel,
                 )
                 continue
-            for paramset in self.central.paramsets.get_by_interface_address(
-                self.interface_id, channel
+            for paramset in self._central.paramsets.get_by_interface_address(
+                self._interface_id, channel
             ):
                 if paramset != PARAMSET_VALUES:
                     continue
                 for (
                     parameter,
                     parameter_data,
-                ) in self.central.paramsets.get_by_interface_address_paramset(
-                    self.interface_id, channel, paramset
+                ) in self._central.paramsets.get_by_interface_address_paramset(
+                    self._interface_id, channel, paramset
                 ).items():
                     entity: GenericEntity | None
                     if (
@@ -298,7 +316,7 @@ class HmDevice:
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
-                        if self.address.startswith(tuple(HM_VIRTUAL_REMOTES)):
+                        if self._address.startswith(tuple(HM_VIRTUAL_REMOTES)):
                             entity = self.create_button(
                                 address=channel,
                                 parameter=parameter,
@@ -318,8 +336,8 @@ class HmDevice:
         if self.is_custom_entity:
             _LOGGER.debug(
                 "Device.create_entities: Handling custom entity integration: %s, %s, %s",
-                self.interface_id,
-                self.address,
+                self._interface_id,
+                self._address,
                 self.device_type,
             )
             # Call the custom creation function.
@@ -328,7 +346,7 @@ class HmDevice:
                 self.device_type, self.sub_type
             ):
                 custom_entities: list[CustomEntity] = device_func(
-                    self, self.address, group_base_channels
+                    self, self._address, group_base_channels
                 )
                 new_entities.extend(custom_entities)
         return set(new_entities)
@@ -338,13 +356,13 @@ class HmDevice:
     ) -> HmButton | None:
         """Create the buttons associated to this device"""
         unique_id = generate_unique_id(
-            address, parameter, f"button_{self.central.instance_name}"
+            address, parameter, f"button_{self._central.instance_name}"
         )
         _LOGGER.debug(
             "create_event: Creating button for %s, %s, %s",
             address,
             parameter,
-            self.interface_id,
+            self._interface_id,
         )
 
         if button := HmButton(
@@ -362,18 +380,18 @@ class HmDevice:
         self, address: str, parameter: str, parameter_data: dict[str, Any]
     ) -> BaseEvent | None:
         """Create action event entity."""
-        if (address, parameter) not in self.central.entity_event_subscriptions:
-            self.central.entity_event_subscriptions[(address, parameter)] = []
+        if (address, parameter) not in self._central.entity_event_subscriptions:
+            self._central.entity_event_subscriptions[(address, parameter)] = []
 
         unique_id = generate_unique_id(
-            address, parameter, f"event_{self.central.instance_name}"
+            address, parameter, f"event_{self._central.instance_name}"
         )
 
         _LOGGER.debug(
             "create_event: Creating event for %s, %s, %s",
             address,
             parameter,
-            self.interface_id,
+            self._interface_id,
         )
         action_event: BaseEvent | None = None
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
@@ -421,18 +439,18 @@ class HmDevice:
                 "create_entity: Ignoring parameter: %s (%s)", parameter, address
             )
             return None
-        if (address, parameter) not in self.central.entity_event_subscriptions:
-            self.central.entity_event_subscriptions[(address, parameter)] = []
+        if (address, parameter) not in self._central.entity_event_subscriptions:
+            self._central.entity_event_subscriptions[(address, parameter)] = []
 
         unique_id = generate_unique_id(address, parameter)
-        if unique_id in self.central.hm_entities:
+        if unique_id in self._central.hm_entities:
             _LOGGER.debug("create_entity: Skipping %s (already exists)", unique_id)
             return None
         _LOGGER.debug(
             "create_entity: Creating entity for %s, %s, %s",
             address,
             parameter,
-            self.interface_id,
+            self._interface_id,
         )
         entity: GenericEntity | None = None
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
