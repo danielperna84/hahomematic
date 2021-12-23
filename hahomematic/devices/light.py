@@ -10,10 +10,8 @@ import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_COLOR,
     FIELD_CHANNEL_LEVEL,
-    FIELD_CHANNEL_STATE,
     FIELD_COLOR,
     FIELD_LEVEL,
-    FIELD_STATE,
     EntityDefinition,
     make_custom_entity,
 )

@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
 import logging
-import time
 from typing import Any
 
 from hahomematic import config
@@ -22,6 +22,7 @@ from hahomematic.const import (
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
     HM_VIRTUAL_REMOTES,
+    INIT_DATETIME,
     PROXY_DE_INIT_FAILED,
     PROXY_DE_INIT_SKIPPED,
     PROXY_DE_INIT_SUCCESS,
@@ -58,7 +59,7 @@ class Client(ABC):
         self._init_url: str = self._client_config.init_url
         # for all device related interaction
         self.proxy: XmlRpcProxy = self._client_config.xml_rpc_proxy
-        self.time_initialized: int = 0
+        self.last_updated: datetime = INIT_DATETIME
         self._json_rpc_session: JsonRpcAioHttpClient = self._central.json_rpc_session
 
         self._central.clients[self.interface_id] = self
@@ -96,9 +97,9 @@ class Client(ABC):
             _LOGGER.exception(
                 "proxy_init: Failed to initialize proxy for %s", self.name
             )
-            self.time_initialized = 0
+            self.last_updated = INIT_DATETIME
             return PROXY_INIT_FAILED
-        self.time_initialized = int(time.time())
+        self.last_updated = datetime.now()
         return PROXY_INIT_SUCCESS
 
     async def proxy_de_init(self) -> int:
@@ -107,7 +108,7 @@ class Client(ABC):
         """
         if self._json_rpc_session.is_activated:
             await self._json_rpc_session.logout()
-        if not self.time_initialized:
+        if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)", self.name
             )
@@ -121,7 +122,7 @@ class Client(ABC):
             )
             return PROXY_DE_INIT_FAILED
 
-        self.time_initialized = 0
+        self.last_updated = INIT_DATETIME
         return PROXY_DE_INIT_SUCCESS
 
     async def proxy_re_init(self) -> int:
@@ -149,8 +150,8 @@ class Client(ABC):
         if not is_connected:
             return False
 
-        diff = int(time.time()) - self.time_initialized
-        if diff < config.INIT_TIMEOUT:
+        diff: timedelta = datetime.now() - self.last_updated
+        if diff.total_seconds() < config.INIT_TIMEOUT:
             return True
         return False
 
@@ -403,13 +404,13 @@ class ClientCCU(Client):
         try:
             success = await self.proxy.ping(self.interface_id)
             if success:
-                self.time_initialized = int(time.time())
+                self.time_initialized = datetime.now()
                 return True
         except NoConnection:
             _LOGGER.exception("ping: NoConnection")
         except ProxyException:
             _LOGGER.exception("ping: ProxyException")
-        self.time_initialized = 0
+        self.time_initialized = INIT_DATETIME
         return False
 
     async def set_system_variable(self, name: str, value: Any) -> None:
@@ -561,7 +562,7 @@ class ClientHomegear(Client):
         """Check if proxy is still initialized."""
         try:
             if await self.proxy.clientServerInitialized(self.interface_id):
-                self.time_initialized = int(time.time())
+                self.time_initialized = datetime.now()
                 return True
         except NoConnection:
             _LOGGER.exception("ping: NoConnection")
@@ -570,7 +571,7 @@ class ClientHomegear(Client):
         _LOGGER.warning(
             "homegear_check_init: Setting initialized to 0 for %s", self.interface_id
         )
-        self.time_initialized = 0
+        self.time_initialized = INIT_DATETIME
         return False
 
     async def set_system_variable(self, name: str, value: Any) -> None:
