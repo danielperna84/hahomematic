@@ -1,5 +1,6 @@
 Version 0.4.0 (2021-12-24)
 - Use datetime for last_updated (time_initialized)
+- Fix example
 
 Version 0.3.1 (2021-12-23)
 - Make HmIP-BSM a switch (only dimable devices should be lights)
