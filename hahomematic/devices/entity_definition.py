@@ -77,7 +77,7 @@ class EntityDefinition(Enum):
     IP_COVER = "IPCover"
     IP_DIMMER = "IPDimmer"
     IP_GARAGE = "IPGarage"
-    IP_LIGHT_SWITCH = "IPLightSwitch"
+    IP_SWITCH = "IPSwitch"
     IP_LIGHT_BSL = "IPLightBSL"
     IP_LOCK = "IPLock"
     IP_THERMOSTAT = "IPThermostat"
@@ -199,7 +199,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 },
             },
         },
-        EntityDefinition.IP_LIGHT_SWITCH: {
+        EntityDefinition.IP_SWITCH: {
             ED_DEVICE_GROUP: {
                 ED_PHY_CHANNEL: [1],
                 ED_VIRT_CHANNEL: [2, 3],

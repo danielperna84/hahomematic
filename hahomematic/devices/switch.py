@@ -90,7 +90,7 @@ def make_ip_switch(
         device,
         address,
         HmSwitch,
-        EntityDefinition.IP_LIGHT_SWITCH,
+        EntityDefinition.IP_SWITCH,
         group_base_channels,
     )
 
@@ -98,6 +98,7 @@ def make_ip_switch(
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
+    "HmIP-BSM": (make_ip_switch, [3]),
     "HmIP-FSM*": (make_ip_switch, [1]),
     "HmIP-FSI*": (make_ip_switch, [2]),
     "HmIP-PS*": (make_ip_switch, [2]),

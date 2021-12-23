@@ -159,43 +159,6 @@ class HmDimmer(BaseHmLight):
         return state_attr
 
 
-class HmLight(BaseHmLight):
-    """Class for homematic light entities."""
-
-    @property
-    def _state(self) -> bool | None:
-        """Return the state of the light."""
-        return self._get_entity_state(FIELD_STATE)
-
-    @property
-    def _channel_state(self) -> bool | None:
-        """Return the channel state of the light."""
-        return self._get_entity_state(FIELD_CHANNEL_STATE)
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._state is True
-
-    async def turn_on(
-        self, hs_color: tuple[float, float] | None, brightness: int | None
-    ) -> None:
-        """Turn the light on."""
-        await self._send_value(FIELD_STATE, True)
-
-    async def turn_off(self) -> None:
-        """Turn the light off."""
-        await self._send_value(FIELD_STATE, False)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the light."""
-        state_attr = super().extra_state_attributes
-        if self._channel_state and self._channel_state != self._state:
-            state_attr[ATTR_CHANNEL_STATE] = self._channel_state
-        return state_attr
-
-
 class IPLightBSL(BaseHmLight):
     """Class for homematic HmIP-BSL light entities."""
 
@@ -334,15 +297,6 @@ def make_rf_dimmer(
     )
 
 
-def make_ip_light(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
-    """Creates homematic classic light entities."""
-    return make_custom_entity(
-        device, address, HmLight, EntityDefinition.IP_LIGHT_SWITCH, group_base_channels
-    )
-
-
 def make_ip_light_bsl(
     device: hm_device.HmDevice, address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
@@ -356,7 +310,6 @@ def make_ip_light_bsl(
 # device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-BSL": (make_ip_light_bsl, [7, 11]),
-    "HmIP-BSM": (make_ip_light, [3]),
     "HmIP-BDT": (make_ip_dimmer, [3]),
     "HmIP-FDT": (make_ip_dimmer, [1]),
     "HmIP-PDT*": (make_ip_dimmer, [2]),
