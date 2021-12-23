@@ -25,6 +25,7 @@ ED_PHY_CHANNEL = "phy_channel"
 ED_VIRT_CHANNEL = "virt_channel"
 DEFAULT_INCLUDE_DEFAULT_ENTITIES = True
 
+FIELD_ACTIVE_PROFILE = "active_profile"
 FIELD_AUTO_MODE = "auto_mode"
 FIELD_BOOST_MODE = "boost_mode"
 FIELD_CHANNEL_COLOR = "channel_color"
@@ -252,6 +253,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             },
             ED_ADDITIONAL_ENTITIES: {
                 1: {
+                    FIELD_ACTIVE_PROFILE: "ACTIVE_PROFILE",
                     FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_LEVEL: "LEVEL",
                 },
