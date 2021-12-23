@@ -616,7 +616,7 @@ class BaseEvent(BaseParameterEntity[bool]):
         self.last_update = datetime.now()
 
     @abstractmethod
-    def _get_event_data(self, value: Any = None) -> dict[str, Any]:
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
 
     @abstractmethod
@@ -655,7 +655,7 @@ class AlarmEvent(BaseEvent):
             event_type=HmEventType.ALARM,
         )
 
-    def _get_event_data(self, value: Any = None) -> dict[str, Any]:
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         address = get_device_address(self.address)
         click_type = self.parameter.lower()
@@ -678,7 +678,7 @@ class AlarmEvent(BaseEvent):
         if callable(self._central.callback_ha_event):
             self._central.callback_ha_event(
                 self.event_type,
-                self._get_event_data(value),
+                self.get_event_data(value),
             )
 
 
@@ -707,7 +707,7 @@ class ClickEvent(BaseEvent):
             event_type=HmEventType.KEYPRESS,
         )
 
-    def _get_event_data(self, value: Any = None) -> dict[str, Any]:
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         (address, channel_no) = self.address.split(":")
         click_type = f"channel_{channel_no}_{self.parameter}".lower()
@@ -724,7 +724,7 @@ class ClickEvent(BaseEvent):
         if callable(self._central.callback_ha_event):
             self._central.callback_ha_event(
                 self.event_type,
-                self._get_event_data(),
+                self.get_event_data(),
             )
 
 
@@ -753,7 +753,7 @@ class SpecialEvent(BaseEvent):
             event_type=HmEventType.SPECIAL,
         )
 
-    def _get_event_data(self, value: Any = None) -> dict[str, Any]:
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         return {
             ATTR_INTERFACE_ID: self._interface_id,
@@ -783,7 +783,7 @@ class SpecialEvent(BaseEvent):
         if callable(self._central.callback_ha_event):
             self._central.callback_ha_event(
                 self.event_type,
-                self._get_event_data(value),
+                self.get_event_data(value),
             )
 
 
