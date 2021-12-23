@@ -129,8 +129,8 @@ class BaseEntity(ABC):
         self.device_type: str = self._device.device_type
         self.sub_type: str = self._device.sub_type
         self.create_in_ha: bool = not self._device.is_custom_entity
-        self.client: hm_client.Client = self._central.clients[self._interface_id]
-        self.proxy: hm_proxy.XmlRpcProxy = self.client.proxy
+        self._client: hm_client.Client = self._central.clients[self._interface_id]
+        self._proxy: hm_proxy.XmlRpcProxy = self._client.proxy
         self.name: str = self._central.names.get_name(self.address) or self.unique_id
 
     @property
@@ -258,7 +258,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
         try:
-            await self.proxy.setValue(self.address, self.parameter, value)
+            await self._proxy.setValue(self.address, self.parameter, value)
         except Exception:
             _LOGGER.exception(
                 "generic_entity: Failed to set state for: %s, %s, %s, %s",
@@ -365,7 +365,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             return DATA_NO_LOAD
         try:
             if self._operations & OPERATION_READ:
-                self._state = await self.proxy.getValue(self.address, self.parameter)
+                self._state = await self._proxy.getValue(self.address, self.parameter)
                 self.update_entity()
 
             self.update_entity(self.unique_id)
@@ -599,7 +599,7 @@ class BaseEvent(BaseParameterEntity[bool]):
     async def send_value(self, value: Any) -> None:
         """Send value to ccu."""
         try:
-            await self.proxy.setValue(self.address, self.parameter, value)
+            await self._proxy.setValue(self.address, self.parameter, value)
         except Exception:
             _LOGGER.exception(
                 "action_event: Failed to set state for: %s, %s, %s",
