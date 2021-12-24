@@ -229,8 +229,8 @@ class RfThermostat(BaseClimateEntity):
             return PRESET_NONE
         if self._control_mode == HM_MODE_BOOST:
             return PRESET_BOOST
-        # elif control_mode == HM_MODE_AWAY:
-        #     return PRESET_AWAY
+        if self._control_mode == HM_MODE_AWAY:
+            return PRESET_AWAY
         # This mode (PRESET_AWY) generally is available, but we're hiding it because
         # we can't set it from the Home Assistant UI natively.
         # We could create 2 input_datetime entities and reference them
@@ -328,10 +328,8 @@ class IPThermostat(BaseClimateEntity):
         """Return the current preset mode."""
         if self._boost_mode:
             return PRESET_BOOST
-        # This mode (PRESET_AWAY) generally is available, but we're hiding it because
-        # we can't set it from the Home Assistant UI natively.
-        # if self.set_point_mode == HMIP_SET_POINT_MODE_AWAY:
-        #     return PRESET_AWAY
+        if self._set_point_mode == HMIP_SET_POINT_MODE_AWAY:
+            return PRESET_AWAY
         return self._current_profile_name if self._current_profile_name else PRESET_NONE
 
     @property
