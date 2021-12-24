@@ -337,6 +337,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             ED_ADDITIONAL_ENTITIES: {
                 1: {
                     FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                 }
             },
         },
@@ -376,6 +377,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             ED_ADDITIONAL_ENTITIES: {
                 1: {
                     FIELD_HUMIDITY: "HUMIDITY",
+                    FIELD_TEMPERATURE: "TEMPERATURE"
                 }
             },
         },

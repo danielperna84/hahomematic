@@ -3,7 +3,7 @@ Version 0.4.0 (2021-12-24)
 - Fix example
 - Add ACTUAL_TEMPERATURE as separate entity by @towo
 - Add HEATING_COOLING to IPThermostat and Group
-- Add HUMIDITY as separate entity for Bidcos thermostats
+- Add (*)HUMIDITY and (*)TEMPERATURE as separate entities for Bidcos thermostats
 - use ACTIVE_PROFILE in climate presets
 
 Version 0.3.1 (2021-12-23)
