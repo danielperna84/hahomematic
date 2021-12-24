@@ -42,6 +42,7 @@ FIELD_DUTY_CYCLE = "duty_cycle"
 FIELD_DUTYCYCLE = "dutycycle"
 FIELD_ENERGY_COUNTER = "energy_counter"
 FIELD_FREQUENCY = "frequency"
+FIELD_HEATING_COOLING = "heating_cooling"
 FIELD_HUMIDITY = "humidity"
 FIELD_LEVEL = "level"
 FIELD_LEVEL_2 = "level_2"
@@ -129,7 +130,6 @@ SCHEMA_DEVICE_DESCRIPTION = Schema(
 entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
     ED_DEFAULT_ENTITIES: {
         0: {
-            FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
             FIELD_DUTY_CYCLE: "DUTY_CYCLE",
             FIELD_DUTYCYCLE: "DUTYCYCLE",
             FIELD_LOW_BAT: "LOW_BAT",
@@ -138,6 +138,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             FIELD_RSSI_DEVICE: "RSSI_DEVICE",
             FIELD_RSSI_PEER: "RSSI_PEER",
             FIELD_SABOTAGE: "SABOTAGE",
+            FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
         }
     },
     ED_DEVICES: {
@@ -177,8 +178,8 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_PHY_CHANNEL: [1],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
-                    FIELD_DOOR_STATE: "DOOR_STATE",
                     FIELD_DOOR_COMMAND: "DOOR_COMMAND,",
+                    FIELD_DOOR_STATE: "DOOR_STATE",
                 },
                 ED_FIELDS: {},
             },
@@ -214,11 +215,11 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             },
             ED_ADDITIONAL_ENTITIES: {
                 4: {
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_CURRENT: "CURRENT",
                     FIELD_ENERGY_COUNTER: "ENERGY_COUNTER",
                     FIELD_FREQUENCY: "FREQUENCY",
                     FIELD_POWER: "POWER",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_VOLTAGE: "VOLTAGE",
                 },
             },
@@ -241,19 +242,20 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_PHY_CHANNEL: [1],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
+                    FIELD_ACTIVE_PROFILE: "ACTIVE_PROFILE",
+                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_BOOST_MODE: "BOOST_MODE",
+                    FIELD_CONTROL_MODE: "CONTROL_MODE",
+                    FIELD_HEATING_COOLING: "HEATING_COOLING",
                     FIELD_HUMIDITY: "HUMIDITY",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                    FIELD_PARTY_MODE: "PARTY_MODE",
                     FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
                     FIELD_SET_POINT_MODE: "SET_POINT_MODE",
-                    FIELD_CONTROL_MODE: "CONTROL_MODE",
-                    FIELD_BOOST_MODE: "BOOST_MODE",
-                    FIELD_PARTY_MODE: "PARTY_MODE",
-                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
                 1: {
-                    FIELD_ACTIVE_PROFILE: "ACTIVE_PROFILE",
                     FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_LEVEL: "LEVEL",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE"
@@ -268,14 +270,16 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_PHY_CHANNEL: [1],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
+                    FIELD_ACTIVE_PROFILE: "ACTIVE_PROFILE",
+                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_BOOST_MODE: "BOOST_MODE",
+                    FIELD_CONTROL_MODE: "CONTROL_MODE",
+                    FIELD_HEATING_COOLING: "HEATING_COOLING",
                     FIELD_HUMIDITY: "HUMIDITY",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                    FIELD_PARTY_MODE: "PARTY_MODE",
                     FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
                     FIELD_SET_POINT_MODE: "SET_POINT_MODE",
-                    FIELD_CONTROL_MODE: "CONTROL_MODE",
-                    FIELD_BOOST_MODE: "BOOST_MODE",
-                    FIELD_PARTY_MODE: "PARTY_MODE",
-                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                 },
             },
             ED_INCLUDE_DEFAULT_ENTITIES: False,
@@ -308,8 +312,8 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_FIELDS_REP: {},
                 ED_FIELDS: {
                     1: {
-                        FIELD_STATE: "STATE",
                         FIELD_OPEN: "OPEN",
+                        FIELD_STATE: "STATE",
                     }
                 },
             },
@@ -319,15 +323,15 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_PHY_CHANNEL: [1, 2, 3, 4],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
+                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_BOOST_MODE: "BOOST_MODE",
+                    FIELD_COMFORT_MODE: "COMFORT_MODE",
+                    FIELD_CONTROL_MODE: "CONTROL_MODE",
                     FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                    FIELD_LOWERING_MODE: "LOWERING_MODE",
+                    FIELD_MANU_MODE: "MANU_MODE",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
-                    FIELD_CONTROL_MODE: "CONTROL_MODE",
-                    FIELD_BOOST_MODE: "BOOST_MODE",
-                    FIELD_AUTO_MODE: "AUTO_MODE",
-                    FIELD_MANU_MODE: "MANU_MODE",
-                    FIELD_COMFORT_MODE: "COMFORT_MODE",
-                    FIELD_LOWERING_MODE: "LOWERING_MODE",
                 },
             },
         },
@@ -336,15 +340,15 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_PHY_CHANNEL: [1, 2, 3, 4],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
+                    FIELD_AUTO_MODE: "AUTO_MODE",
+                    FIELD_BOOST_MODE: "BOOST_MODE",
+                    FIELD_COMFORT_MODE: "COMFORT_MODE",
+                    FIELD_CONTROL_MODE: "CONTROL_MODE",
                     FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                    FIELD_LOWERING_MODE: "LOWERING_MODE",
+                    FIELD_MANU_MODE: "MANU_MODE",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
-                    FIELD_CONTROL_MODE: "CONTROL_MODE",
-                    FIELD_BOOST_MODE: "BOOST_MODE",
-                    FIELD_AUTO_MODE: "AUTO_MODE",
-                    FIELD_MANU_MODE: "MANU_MODE",
-                    FIELD_COMFORT_MODE: "COMFORT_MODE",
-                    FIELD_LOWERING_MODE: "LOWERING_MODE",
                 },
             },
             ED_INCLUDE_DEFAULT_ENTITIES: False,
