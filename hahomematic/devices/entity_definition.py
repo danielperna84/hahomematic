@@ -138,7 +138,6 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             FIELD_RSSI_DEVICE: "RSSI_DEVICE",
             FIELD_RSSI_PEER: "RSSI_PEER",
             FIELD_SABOTAGE: "SABOTAGE",
-            FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
         }
     },
     ED_DEVICES: {
