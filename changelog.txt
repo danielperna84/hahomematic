@@ -1,3 +1,7 @@
+Version 0.5.0 (2021-12-25)
+- Fix Select Entity
+- Support Cool Mode for IPThermostats
+
 Version 0.4.0 (2021-12-24)
 - Use datetime for last_updated (time_initialized)
 - Fix example

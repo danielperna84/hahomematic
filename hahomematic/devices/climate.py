@@ -40,6 +40,7 @@ ATTR_TEMPERATURE = "temperature"
 HVAC_MODE_OFF = "off"
 HVAC_MODE_HEAT = "heat"
 HVAC_MODE_AUTO = "auto"
+HVAC_MODE_COOL = "cool"
 PRESET_NONE = "none"
 PRESET_AWAY = "away"
 PRESET_BOOST = "boost"
@@ -308,7 +309,7 @@ class IPThermostat(BaseClimateEntity):
         if self._temperature and self._temperature <= self.min_temp:
             return HVAC_MODE_OFF
         if self._set_point_mode == HMIP_SET_POINT_MODE_MANU:
-            return HVAC_MODE_HEAT
+            return HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_COOL
         if self._set_point_mode == HMIP_SET_POINT_MODE_AUTO:
             return HVAC_MODE_AUTO
         return HVAC_MODE_AUTO
@@ -316,7 +317,11 @@ class IPThermostat(BaseClimateEntity):
     @property
     def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        return [
+            HVAC_MODE_AUTO,
+            HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_COOL,
+            HVAC_MODE_OFF,
+        ]
 
     @property
     def preset_mode(self) -> str:
@@ -341,7 +346,7 @@ class IPThermostat(BaseClimateEntity):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_AUTO)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL):
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
         elif hvac_mode == HVAC_MODE_OFF:
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
@@ -375,7 +380,11 @@ class IPThermostat(BaseClimateEntity):
         inv_profiles: dict[int, str] = {
             v: k for k, v in self._relevant_profiles.items()
         }
-        return inv_profiles[self._active_profile] if self._active_profile else None
+        return (
+            inv_profiles[self._active_profile]
+            if self._active_profile is not None
+            else None
+        )
 
     def _get_profile_idx_by_name(self, profile_name: str) -> int:
         """Return a profile index by name."""
