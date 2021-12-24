@@ -18,7 +18,7 @@ async def test_central(central, loop) -> None:
     assert central.clients["ccu-dev-hm"].model == "PyDevCCU"
     assert central.get_primary_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 294
-    assert len(central.hm_entities) == 2650
+    assert len(central.hm_entities) == 2655
 
 
 @pytest.mark.asyncio

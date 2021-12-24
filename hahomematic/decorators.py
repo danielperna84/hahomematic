@@ -4,9 +4,9 @@ Decorators used within hahomematic.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import datetime
 import functools
 import logging
-import time
 from typing import Any
 
 from hahomematic.data import get_client_by_interface_id
@@ -35,7 +35,7 @@ def callback_system_event(name: str) -> Callable:
                 _LOGGER.warning("Failed to reduce args for callback_system_event.")
                 raise Exception("args-exception callback_system_event") from err
             if client:
-                client.time_initialized = int(time.time())
+                client.last_updated = datetime.now()
                 if client.central.callback_system_event is not None:
                     client.central.callback_system_event(name, *args)
             return return_value
@@ -63,7 +63,7 @@ def callback_event(func: Callable) -> Callable:
             _LOGGER.warning("Failed to reduce args for callback_event.")
             raise Exception("args-exception callback_event") from err
         if client:
-            client.time_initialized = int(time.time())
+            client.last_updated = datetime.now()
             if client.central.callback_entity_event is not None:
                 client.central.callback_entity_event(*args)
         return return_value

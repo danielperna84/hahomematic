@@ -29,7 +29,8 @@ class Example:
     def systemcallback(self, src, *args):
         self.got_devices = True
         print("systemcallback: %s" % src)
-        if src == const.HH_EVENT_NEW_DEVICES:
+        if src == const.HH_EVENT_NEW_DEVICES and args and args[0] and len(args[0]) > 0:
+            self.got_devices = True
             print("Number of new device descriptions: %i" % len(args[0]))
             return
         elif src == const.HH_EVENT_DEVICES_CREATED:
