@@ -404,13 +404,13 @@ class ClientCCU(Client):
         try:
             success = await self.proxy.ping(self.interface_id)
             if success:
-                self.time_initialized = datetime.now()
+                self.last_updated = datetime.now()
                 return True
         except NoConnection:
             _LOGGER.exception("ping: NoConnection")
         except ProxyException:
             _LOGGER.exception("ping: ProxyException")
-        self.time_initialized = INIT_DATETIME
+        self.last_updated = INIT_DATETIME
         return False
 
     async def set_system_variable(self, name: str, value: Any) -> None:
@@ -562,7 +562,7 @@ class ClientHomegear(Client):
         """Check if proxy is still initialized."""
         try:
             if await self.proxy.clientServerInitialized(self.interface_id):
-                self.time_initialized = datetime.now()
+                self.last_updated = datetime.now()
                 return True
         except NoConnection:
             _LOGGER.exception("ping: NoConnection")
@@ -571,7 +571,7 @@ class ClientHomegear(Client):
         _LOGGER.warning(
             "homegear_check_init: Setting initialized to 0 for %s", self.interface_id
         )
-        self.time_initialized = INIT_DATETIME
+        self.last_updated = INIT_DATETIME
         return False
 
     async def set_system_variable(self, name: str, value: Any) -> None:

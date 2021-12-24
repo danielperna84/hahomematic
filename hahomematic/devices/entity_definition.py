@@ -258,7 +258,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 1: {
                     FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_LEVEL: "LEVEL",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE"
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                 },
                 9: {
                     FIELD_STATE: "STATE",
@@ -334,6 +334,11 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                     FIELD_SETPOINT: "SET_TEMPERATURE",
                 },
             },
+            ED_ADDITIONAL_ENTITIES: {
+                1: {
+                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                }
+            },
         },
         EntityDefinition.RF_THERMOSTAT_GROUP: {
             ED_DEVICE_GROUP: {
@@ -367,6 +372,11 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                         FIELD_SETPOINT: "SETPOINT",
                     },
                 },
+            },
+            ED_ADDITIONAL_ENTITIES: {
+                1: {
+                    FIELD_HUMIDITY: "HUMIDITY",
+                }
             },
         },
     },

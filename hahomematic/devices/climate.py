@@ -7,10 +7,12 @@ from typing import Any
 from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
+    FIELD_ACTIVE_PROFILE,
     FIELD_AUTO_MODE,
     FIELD_BOOST_MODE,
     FIELD_COMFORT_MODE,
     FIELD_CONTROL_MODE,
+    FIELD_HEATING_COOLING,
     FIELD_HUMIDITY,
     FIELD_LOWERING_MODE,
     FIELD_MANU_MODE,
@@ -46,6 +48,9 @@ PRESET_ECO = "eco"
 TEMP_CELSIUS = "°C"
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
+
+HEATING_PROFILES = {"Profile 1": 1, "Profile 2": 2, "Profile 3": 3}
+COOLING_PROFILES = {"Profile 4": 4, "Profile 5": 5, "Profile 6": 6}
 
 
 class BaseClimateEntity(CustomEntity):
@@ -84,14 +89,14 @@ class BaseClimateEntity(CustomEntity):
         return self._get_entity_state(FIELD_HUMIDITY)
 
     @property
-    def _temperature(self) -> float | None:
-        """Return the temperature of the device."""
-        return self._get_entity_state(FIELD_TEMPERATURE)
-
-    @property
     def _setpoint(self) -> float | None:
         """Return the setpoint of the device."""
         return self._get_entity_state(FIELD_SETPOINT)
+
+    @property
+    def _temperature(self) -> float | None:
+        """Return the temperature of the device."""
+        return self._get_entity_state(FIELD_TEMPERATURE)
 
     @property
     def temperature_unit(self) -> str:
@@ -267,20 +272,30 @@ class IPThermostat(BaseClimateEntity):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
     @property
-    def _set_point_mode(self) -> int | None:
-        return self._get_entity_state(FIELD_SET_POINT_MODE)
-
-    @property
-    def _control_mode(self) -> int | None:
-        return self._get_entity_state(FIELD_CONTROL_MODE)
+    def _active_profile(self) -> int | None:
+        return self._get_entity_state(FIELD_ACTIVE_PROFILE)
 
     @property
     def _boost_mode(self) -> bool | None:
         return self._get_entity_state(FIELD_BOOST_MODE)
 
     @property
+    def _control_mode(self) -> int | None:
+        return self._get_entity_state(FIELD_CONTROL_MODE)
+
+    @property
+    def _is_heating(self) -> bool | None:
+        if heating_cooling := self._get_entity_state(FIELD_HEATING_COOLING):
+            return str(heating_cooling) == "HEATING"
+        return True
+
+    @property
     def _party_mode(self) -> bool | None:
         return self._get_entity_state(FIELD_PARTY_MODE)
+
+    @property
+    def _set_point_mode(self) -> int | None:
+        return self._get_entity_state(FIELD_SET_POINT_MODE)
 
     @property
     def supported_features(self) -> int:
@@ -312,12 +327,15 @@ class IPThermostat(BaseClimateEntity):
         # we can't set it from the Home Assistant UI natively.
         # if self.set_point_mode == HMIP_SET_POINT_MODE_AWAY:
         #     return PRESET_AWAY
-        return PRESET_NONE
+        return self._current_profile_name if self._current_profile_name else PRESET_NONE
 
     @property
     def preset_modes(self) -> list[str]:
         """Return available preset modes."""
-        return [PRESET_BOOST, PRESET_NONE]
+        presets = [PRESET_BOOST, PRESET_NONE]
+        presets.extend(self._profile_names)
+
+        return presets
 
     async def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
@@ -338,6 +356,35 @@ class IPThermostat(BaseClimateEntity):
             await self._send_value(FIELD_BOOST_MODE, True)
         if preset_mode == PRESET_NONE:
             await self._send_value(FIELD_BOOST_MODE, False)
+
+        if preset_mode in self._profile_names:
+            if self.hvac_mode != HVAC_MODE_AUTO:
+                await self.set_hvac_mode(HVAC_MODE_AUTO)
+            profile_idx = self._get_profile_idx_by_name(preset_mode)
+            await self._send_value(FIELD_BOOST_MODE, False)
+            await self._send_value(FIELD_ACTIVE_PROFILE, profile_idx)
+
+    @property
+    def _profile_names(self) -> list[str]:
+        """Return a collection of profile names."""
+        return list(self._relevant_profiles.keys())
+
+    @property
+    def _current_profile_name(self) -> str | None:
+        """Return a profile index by name."""
+        inv_profiles: dict[int, str] = {
+            v: k for k, v in self._relevant_profiles.items()
+        }
+        return inv_profiles[self._active_profile] if self._active_profile else None
+
+    def _get_profile_idx_by_name(self, profile_name: str) -> int:
+        """Return a profile index by name."""
+        return self._relevant_profiles[profile_name]
+
+    @property
+    def _relevant_profiles(self) -> dict[str, int]:
+        """Return the relevant profile groups."""
+        return HEATING_PROFILES if self._is_heating else COOLING_PROFILES
 
 
 def make_simple_thermostat(
