@@ -24,14 +24,14 @@ class HmSelect(GenericEntity[Union[int, str]]):
         self,
         device: hm_device.HmDevice,
         unique_id: str,
-        address: str,
+        channel_address: str,
         parameter: str,
         parameter_data: dict[str, Any],
     ):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            address=address,
+            channel_address=channel_address,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=HmPlatform.SELECT,
@@ -40,9 +40,9 @@ class HmSelect(GenericEntity[Union[int, str]]):
     @property
     def state(self) -> str | None:
         """Get the state of the entity."""
-        if self._value_list and self._state:
+        if self._state is not None and self._value_list is not None:
             return self._value_list[int(self._state)]
-        return None
+        return str(self.default)
 
     async def set_state(self, value: int | str) -> None:
         """Set the state of the entity."""

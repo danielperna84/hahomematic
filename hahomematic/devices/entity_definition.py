@@ -138,7 +138,6 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             FIELD_RSSI_DEVICE: "RSSI_DEVICE",
             FIELD_RSSI_PEER: "RSSI_PEER",
             FIELD_SABOTAGE: "SABOTAGE",
-            FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
         }
     },
     ED_DEVICES: {
@@ -375,10 +374,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
-                1: {
-                    FIELD_HUMIDITY: "HUMIDITY",
-                    FIELD_TEMPERATURE: "TEMPERATURE"
-                }
+                1: {FIELD_HUMIDITY: "HUMIDITY", FIELD_TEMPERATURE: "TEMPERATURE"}
             },
         },
     },
@@ -398,7 +394,7 @@ def validate_entity_definition() -> Any:
 
 def make_custom_entity(
     device: hm_device.HmDevice,
-    address: str,
+    device_address: str,
     custom_entity_class: type,
     device_enum: EntityDefinition,
     group_base_channels: list[int],
@@ -423,7 +419,7 @@ def make_custom_entity(
             entities.extend(
                 _create_entities(
                     device=device,
-                    address=address,
+                    device_address=device_address,
                     custom_entity_class=custom_entity_class,
                     device_enum=device_enum,
                     device_def=device_def,
@@ -436,7 +432,7 @@ def make_custom_entity(
             entities.extend(
                 _create_entities(
                     device=device,
-                    address=address,
+                    device_address=device_address,
                     custom_entity_class=custom_entity_class,
                     device_enum=device_enum,
                     device_def=device_def,
@@ -449,7 +445,7 @@ def make_custom_entity(
 
 def _create_entities(
     device: hm_device.HmDevice,
-    address: str,
+    device_address: str,
     custom_entity_class: type,
     device_enum: EntityDefinition,
     device_def: dict[str, Any],
@@ -458,13 +454,13 @@ def _create_entities(
 ) -> list[hm_entity.BaseEntity]:
     """Create custom entities."""
     entities: list[hm_entity.BaseEntity] = []
-    unique_id = generate_unique_id(f"{address}:{channel_no}")
+    unique_id = generate_unique_id(f"{device_address}:{channel_no}")
     if unique_id in device.central.hm_entities:
         _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_id)
         return entities
     entity = custom_entity_class(
         device=device,
-        address=address,
+        device_address=device_address,
         unique_id=unique_id,
         device_enum=device_enum,
         device_def=device_def,

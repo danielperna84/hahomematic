@@ -96,18 +96,18 @@ def parse_ccu_sys_var(data: dict[str, Any]) -> tuple[str, Any]:
 
 def get_entity_name(
     central: hm_central.CentralUnit,
-    address: str,
+    channel_address: str,
     parameter: str,
     unique_id: str,
 ) -> str:
     """generate name for entity"""
-    name = central.names.get_name(address) or unique_id
+    name = central.names.get_name(channel_address) or unique_id
     if name.count(":") == 1:
         d_name = name.split(":")[0]
         p_name = parameter.title().replace("_", " ")
         c_name = ""
         if central.paramsets.has_multiple_channels(
-            address=address, parameter=parameter
+            channel_address=channel_address, parameter=parameter
         ):
             c_no = name.split(":")[1]
             c_name = "" if c_no == "0" else f" ch{c_no}"
@@ -121,15 +121,12 @@ def get_entity_name(
 
 def get_custom_entity_name(
     central: hm_central.CentralUnit,
-    address: str,
+    device_address: str,
     unique_id: str,
-    channel_no: int | None = None,
+    channel_no: int,
 ) -> str:
-    """generate name for entity"""
-    if channel_no and ":" not in address:
-        address = f"{address}:{channel_no}"
-
-    return central.names.get_name(address) or unique_id
+    """Rename name for custom entity"""
+    return central.names.get_name(f"{device_address}:{channel_no}") or unique_id
 
 
 def get_tls_context(verify_tls: bool) -> ssl.SSLContext:

@@ -26,7 +26,7 @@ class HmSwitch(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        address: str,
+        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -36,7 +36,7 @@ class HmSwitch(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            address=address,
+            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -46,7 +46,7 @@ class HmSwitch(CustomEntity):
         _LOGGER.debug(
             "BaseHmSwitch.__init__(%s, %s, %s)",
             self._device.interface_id,
-            address,
+            device_address,
             unique_id,
         )
 

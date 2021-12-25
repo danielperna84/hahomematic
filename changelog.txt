@@ -1,3 +1,10 @@
+Version 0.5.0 (2021-12-25)
+- Fix Select Entity
+- Remove internal device temperature (ACTUAL_TEMPERATURE CH0)
+- Support Cool Mode for IPThermostats
+- Display if AWAY_MODE is set on thermostat
+- Separate device_address and channel_address
+
 Version 0.4.0 (2021-12-24)
 - Use datetime for last_updated (time_initialized)
 - Fix example

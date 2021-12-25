@@ -1,6 +1,7 @@
 """Code to create the required entities for thermostat devices."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -40,6 +41,7 @@ ATTR_TEMPERATURE = "temperature"
 HVAC_MODE_OFF = "off"
 HVAC_MODE_HEAT = "heat"
 HVAC_MODE_AUTO = "auto"
+HVAC_MODE_COOL = "cool"
 PRESET_NONE = "none"
 PRESET_AWAY = "away"
 PRESET_BOOST = "boost"
@@ -59,7 +61,7 @@ class BaseClimateEntity(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        address: str,
+        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -69,7 +71,7 @@ class BaseClimateEntity(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            address=address,
+            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -79,7 +81,7 @@ class BaseClimateEntity(CustomEntity):
         _LOGGER.debug(
             "ClimateEntity.__init__(%s, %s, %s)",
             self._device.interface_id,
-            address,
+            device_address,
             unique_id,
         )
 
@@ -228,8 +230,8 @@ class RfThermostat(BaseClimateEntity):
             return PRESET_NONE
         if self._control_mode == HM_MODE_BOOST:
             return PRESET_BOOST
-        # elif control_mode == HM_MODE_AWAY:
-        #     return PRESET_AWAY
+        if self._control_mode == HM_MODE_AWAY:
+            return PRESET_AWAY
         # This mode (PRESET_AWY) generally is available, but we're hiding it because
         # we can't set it from the Home Assistant UI natively.
         # We could create 2 input_datetime entities and reference them
@@ -308,7 +310,7 @@ class IPThermostat(BaseClimateEntity):
         if self._temperature and self._temperature <= self.min_temp:
             return HVAC_MODE_OFF
         if self._set_point_mode == HMIP_SET_POINT_MODE_MANU:
-            return HVAC_MODE_HEAT
+            return HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_COOL
         if self._set_point_mode == HMIP_SET_POINT_MODE_AUTO:
             return HVAC_MODE_AUTO
         return HVAC_MODE_AUTO
@@ -316,17 +318,19 @@ class IPThermostat(BaseClimateEntity):
     @property
     def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        return [
+            HVAC_MODE_AUTO,
+            HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_COOL,
+            HVAC_MODE_OFF,
+        ]
 
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode."""
         if self._boost_mode:
             return PRESET_BOOST
-        # This mode (PRESET_AWAY) generally is available, but we're hiding it because
-        # we can't set it from the Home Assistant UI natively.
-        # if self.set_point_mode == HMIP_SET_POINT_MODE_AWAY:
-        #     return PRESET_AWAY
+        if self._set_point_mode == HMIP_SET_POINT_MODE_AWAY:
+            return PRESET_AWAY
         return self._current_profile_name if self._current_profile_name else PRESET_NONE
 
     @property
@@ -341,7 +345,7 @@ class IPThermostat(BaseClimateEntity):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_AUTO)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL):
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
         elif hvac_mode == HVAC_MODE_OFF:
             await self._send_value(FIELD_CONTROL_MODE, HMIP_SET_POINT_MODE_MANU)
@@ -364,6 +368,19 @@ class IPThermostat(BaseClimateEntity):
             await self._send_value(FIELD_BOOST_MODE, False)
             await self._send_value(FIELD_ACTIVE_PROFILE, profile_idx)
 
+    async def set_away_mode(
+        self, start: datetime, end: datetime, away_temperature: float
+    ) -> None:
+        """Set the away mode on thermostat."""
+        date_format = "%Y_%m_%d %H:%M"
+        value = {
+            "PARTY_MODE": True,
+            "PARTY_TIME_START": start.strftime(date_format),
+            "PARTY_TIME_END": end.strftime(date_format),
+            "PARTY_SET_POINT_TEMPERATURE": away_temperature,
+        }
+        await self.put_paramset(paramset="VALUES", value=value)
+
     @property
     def _profile_names(self) -> list[str]:
         """Return a collection of profile names."""
@@ -375,7 +392,11 @@ class IPThermostat(BaseClimateEntity):
         inv_profiles: dict[int, str] = {
             v: k for k, v in self._relevant_profiles.items()
         }
-        return inv_profiles[self._active_profile] if self._active_profile else None
+        return (
+            inv_profiles[self._active_profile]
+            if self._active_profile is not None
+            else None
+        )
 
     def _get_profile_idx_by_name(self, profile_name: str) -> int:
         """Return a profile index by name."""

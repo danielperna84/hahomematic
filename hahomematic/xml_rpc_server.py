@@ -45,34 +45,34 @@ class RPCFunctions:
 
     @callback_event
     def event(
-        self, interface_id: str, address: str, value_key: str, value: Any
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
         """
         If a device emits some sort event, we will handle it here.
         """
         _LOGGER.debug(
-            "RPCFunctions.event: interface_id = %s, address = %s, value_key = %s, value = %s",
+            "RPCFunctions.event: interface_id = %s, channel_address = %s, parameter = %s, value = %s",
             interface_id,
-            address,
-            value_key,
+            channel_address,
+            parameter,
             str(value),
         )
         central: hm_central.CentralUnit | None
         if (central := self._xml_rpc_server.get_central(interface_id)) is None:
             return
         central.last_events[interface_id] = int(time.time())
-        if (address, value_key) in central.entity_event_subscriptions:
+        if (channel_address, parameter) in central.entity_event_subscriptions:
             try:
                 for callback in central.entity_event_subscriptions[
-                    (address, value_key)
+                    (channel_address, parameter)
                 ]:
-                    callback(interface_id, address, value_key, value)
+                    callback(interface_id, channel_address, parameter, value)
             except Exception:
                 _LOGGER.exception(
                     "RPCFunctions.event: Failed to call callback for: %s, %s, %s",
                     interface_id,
-                    address,
-                    value_key,
+                    channel_address,
+                    parameter,
                 )
 
     @callback_system_event(HH_EVENT_ERROR)
@@ -171,8 +171,11 @@ class RPCFunctions:
 
             for address in addresses:
                 try:
-                    central_unit.paramsets.remove(interface_id, address)
-                    central_unit.names.remove(address)
+                    if ":" in address:
+                        central_unit.paramsets.remove(
+                            interface_id=interface_id, channel_address=address
+                        )
+                    central_unit.names.remove(address=address)
                     if ha_device := central_unit.hm_devices.get(address):
                         ha_device.remove_event_subscriptions()
                         del central_unit.hm_devices[address]
