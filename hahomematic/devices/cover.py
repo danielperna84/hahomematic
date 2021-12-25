@@ -48,7 +48,7 @@ class HmCover(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        address: str,
+        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -58,7 +58,7 @@ class HmCover(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            address=address,
+            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -68,7 +68,7 @@ class HmCover(CustomEntity):
         _LOGGER.debug(
             "HmCover.__init__(%s, %s, %s)",
             self._device.interface_id,
-            address,
+            device_address,
             unique_id,
         )
 
@@ -183,7 +183,7 @@ class HmGarage(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        address: str,
+        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -193,7 +193,7 @@ class HmGarage(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            address=address,
+            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -203,7 +203,7 @@ class HmGarage(CustomEntity):
         _LOGGER.debug(
             "HmGarage.__init__(%s, %s, %s)",
             self._device.interface_id,
-            address,
+            device_address,
             unique_id,
         )
 

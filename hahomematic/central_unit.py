@@ -89,7 +89,7 @@ class CentralUnit:
 
         # Signature: (name, *args)
         self.callback_system_event: Callable | None = None
-        # Signature: (interface_id, address, value_key, value)
+        # Signature: (interface_id, channel_address, value_key, value)
         self.callback_entity_event: Callable | None = None
         # Signature: (event_type, event_data)
         self.callback_ha_event: Callable | None = None
@@ -107,10 +107,10 @@ class CentralUnit:
         """Create the hub."""
         hub: HmHub | HmDummyHub
         if self.model is BACKEND_PYDEVCCU:
-            hub = HmDummyHub(self)
+            hub = HmDummyHub(central=self)
         else:
             hub = HmHub(
-                self,
+                central=self,
                 use_entities=self.central_config.option_enable_sensors_for_system_variables,
             )
         return hub
@@ -219,7 +219,7 @@ class CentralUnit:
         self.clients_by_init_url.clear()
 
         # un-register this instance from XMLRPCServer
-        self._xml_rpc_server.un_register_central(self)
+        self._xml_rpc_server.un_register_central(central=self)
         # un-register and stop XMLRPCServer, if possible
         xml_rpc.un_register_xml_rpc_server()
 
@@ -261,11 +261,11 @@ class CentralUnit:
                     "CentralUnit.is_connected: No connection to %s.", client.name
                 )
                 if self._available:
-                    self.mark_all_devices_availability(False)
+                    self.mark_all_devices_availability(available=False)
                     self._available = False
                 return False
         if not self._available:
-            self.mark_all_devices_availability(True)
+            self.mark_all_devices_availability(available=True)
             self._available = True
         return True
 
@@ -282,7 +282,7 @@ class CentralUnit:
     def mark_all_devices_availability(self, available: bool) -> None:
         """Mark all device's availability state."""
         for hm_device in self.hm_devices.values():
-            hm_device.set_availability(available)
+            hm_device.set_availability(value=available)
 
     async def get_all_system_variables(self) -> dict[str, Any] | None:
         """Get all system variables from CCU / Homegear."""
@@ -299,7 +299,7 @@ class CentralUnit:
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
         if client := self.get_primary_client():
-            await client.set_system_variable(name, value)
+            await client.set_system_variable(name=name, value=value)
 
     async def get_service_messages(self) -> list[list[tuple[str, str, Any]]]:
         """Get service messages from CCU / Homegear."""
@@ -317,15 +317,17 @@ class CentralUnit:
         on: bool = True,
         t: int = 60,
         mode: int = 1,
-        address: str | None = None,
+        device_address: str | None = None,
     ) -> None:
         """Activate or deactivate install-mode on CCU / Homegear."""
-        if client := self.get_primary_client(interface_id):
-            await client.set_install_mode(on=on, t=t, mode=mode, address=address)
+        if client := self.get_primary_client(interface_id=interface_id):
+            await client.set_install_mode(
+                on=on, t=t, mode=mode, device_address=device_address
+            )
 
     async def get_install_mode(self, interface_id: str) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
-        if client := self.get_primary_client(interface_id):
+        if client := self.get_primary_client(interface_id=interface_id):
             return int(await client.get_install_mode())
         return 0
 
@@ -339,7 +341,7 @@ class CentralUnit:
     ) -> None:
         """Set single value on paramset VALUES."""
 
-        if client := self.get_primary_client(interface_id):
+        if client := self.get_primary_client(interface_id=interface_id):
             await client.set_value(
                 channel_address=channel_address,
                 parameter=parameter,
@@ -357,7 +359,7 @@ class CentralUnit:
     ) -> None:
         """Set paramsets manually."""
 
-        if client := self.get_primary_client(interface_id):
+        if client := self.get_primary_client(interface_id=interface_id):
             await client.put_paramset(
                 channel_address=channel_address,
                 paramset=paramset,
@@ -365,33 +367,37 @@ class CentralUnit:
                 rx_mode=rx_mode,
             )
 
-    def _get_virtual_remote(self, address: str) -> HmDevice | None:
+    def _get_virtual_remote(self, device_address: str) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for client in self.clients.values():
             virtual_remote = client.get_virtual_remote()
-            if virtual_remote and virtual_remote.address == address:
+            if virtual_remote and virtual_remote.device_address == device_address:
                 return virtual_remote
         return None
 
-    async def press_virtual_remote_key(self, address: str, parameter: str) -> None:
+    async def press_virtual_remote_key(
+        self, channel_address: str, parameter: str
+    ) -> None:
         """Simulate a key press on the virtual remote."""
-        if ":" not in address:
+        if ":" not in channel_address:
             _LOGGER.warning(
-                "CentralUnit.press_virtual_remote_key: address is missing channel information."
+                "CentralUnit.press_virtual_remote_key: channel_address is missing channel information."
             )
 
-        if address.startswith(HM_VIRTUAL_REMOTE_HM.upper()):
-            address = address.replace(
+        if channel_address.startswith(HM_VIRTUAL_REMOTE_HM.upper()):
+            channel_address = channel_address.replace(
                 HM_VIRTUAL_REMOTE_HM.upper(), HM_VIRTUAL_REMOTE_HM
             )
-        if address.startswith(HM_VIRTUAL_REMOTE_HMIP.upper()):
-            address = address.replace(
+        if channel_address.startswith(HM_VIRTUAL_REMOTE_HMIP.upper()):
+            channel_address = channel_address.replace(
                 HM_VIRTUAL_REMOTE_HMIP.upper(), HM_VIRTUAL_REMOTE_HMIP
             )
 
-        if virtual_remote := self._get_virtual_remote(get_device_address(address)):
+        if virtual_remote := self._get_virtual_remote(
+            get_device_address(channel_address)
+        ):
             if virtual_remote_channel := virtual_remote.action_events.get(
-                (address, parameter)
+                (channel_address, parameter)
             ):
                 await virtual_remote_channel.send_value(True)
 
@@ -430,12 +436,12 @@ class CentralUnit:
         return self._primary_client
 
     def get_hm_entity_by_parameter(
-        self, address: str, parameter: str
+        self, channel_address: str, parameter: str
     ) -> GenericEntity | None:
-        """Get entity by address and parameter."""
-        if ":" in address:
-            if device := self.hm_devices.get(get_device_address(address)):
-                if entity := device.entities.get((address, parameter)):
+        """Get entity by channel_address and parameter."""
+        if ":" in channel_address:
+            if device := self.hm_devices.get(get_device_address(channel_address)):
+                if entity := device.entities.get((channel_address, parameter)):
                     return entity
         return None
 
@@ -453,10 +459,10 @@ class CentralUnit:
 
         return sorted(parameters)
 
-    def get_used_parameters(self, address: str) -> list[str]:
+    def get_used_parameters(self, device_address: str) -> list[str]:
         """Return used parameters"""
         parameters: set[str] = set()
-        if device := self.hm_devices.get(address):
+        if device := self.hm_devices.get(device_address):
             for entity in device.entities.values():
                 if getattr(entity, "parameter", None):
                     parameters.add(entity.parameter)
@@ -592,11 +598,11 @@ class RawDevicesCache:
 
     def __init__(self, central: CentralUnit):
         self._central = central
-        # {interface_id, [{address, device_descriptions}]}
+        # {interface_id, [device_descriptions]}
         self._devices_raw_cache: dict[str, list[dict[str, Any]]] = {}
-        # {interface_id, {address, [channel_address]}}
+        # {interface_id, {device_address, [channel_address]}}
         self._addresses: dict[str, dict[str, list[str]]] = {}
-        # {interface_id, {address, {parameter, device_descriptions}}}
+        # {interface_id, {address, device_descriptions}}
         self._dev_descriptions: dict[str, dict[str, dict[str, Any]]] = {}
 
     def _add_device_descriptions(
@@ -658,24 +664,26 @@ class RawDevicesCache:
         """Return the addresses by interface"""
         return self._addresses.get(interface_id, {})
 
-    def get_channels(self, interface_id: str, address: str) -> list[str]:
-        """Return the device channels by interface and address"""
-        return self._addresses.get(interface_id, {}).get(address, [])
+    def get_channels(self, interface_id: str, device_address: str) -> list[str]:
+        """Return the device channels by interface and device_address"""
+        return self._addresses.get(interface_id, {}).get(device_address, [])
 
     def get_interface(self, interface_id: str) -> dict[str, dict[str, Any]]:
         """Return the devices by interface"""
         return self._dev_descriptions.get(interface_id, {})
 
-    def get_device(self, interface_id: str, address: str) -> dict[str, Any]:
-        """Return the device dict by interface and address"""
-        return self._dev_descriptions.get(interface_id, {}).get(address, {})
+    def get_device(self, interface_id: str, device_address: str) -> dict[str, Any]:
+        """Return the device dict by interface and device_address"""
+        return self._dev_descriptions.get(interface_id, {}).get(device_address, {})
 
     def get_device_parameter(
-        self, interface_id: str, address: str, parameter: str
+        self, interface_id: str, device_address: str, parameter: str
     ) -> Any | None:
-        """Return the device parameter by interface and address"""
+        """Return the device parameter by interface and device_address"""
         return (
-            self._dev_descriptions.get(interface_id, {}).get(address, {}).get(parameter)
+            self._dev_descriptions.get(interface_id, {})
+            .get(device_address, {})
+            .get(parameter)
         )
 
     def _handle_device_descriptions(
@@ -705,8 +713,8 @@ class RawDevicesCache:
         if ":" not in address and address not in self._addresses[interface_id]:
             self._addresses[interface_id][address] = []
         if ":" in address:
-            main = get_device_address(address)
-            self._addresses[interface_id][main].append(address)
+            device_address = get_device_address(address)
+            self._addresses[interface_id][device_address].append(address)
 
     async def save(self) -> Awaitable[int]:
         """
@@ -858,7 +866,7 @@ class ParamsetCache:
 
     def __init__(self, central: CentralUnit):
         self._central = central
-        # {interface_id, {address, paramsets}}
+        # {interface_id, {channel_address, paramsets}}
         self._paramsets_cache: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
         # {(device_address, parameter), [channel_no]}
         self._address_parameter_cache: dict[tuple[str, str], list[int]] = {}
@@ -866,25 +874,27 @@ class ParamsetCache:
     def add(
         self,
         interface_id: str,
-        address: str,
+        channel_address: str,
         paramset: str,
         paramset_description: dict[str, Any],
     ) -> None:
         """Add paramset description to cache."""
         if interface_id not in self._paramsets_cache:
             self._paramsets_cache[interface_id] = {}
-        if address not in self._paramsets_cache[interface_id]:
-            self._paramsets_cache[interface_id][address] = {}
-        if paramset not in self._paramsets_cache[interface_id][address]:
-            self._paramsets_cache[interface_id][address][paramset] = {}
+        if channel_address not in self._paramsets_cache[interface_id]:
+            self._paramsets_cache[interface_id][channel_address] = {}
+        if paramset not in self._paramsets_cache[interface_id][channel_address]:
+            self._paramsets_cache[interface_id][channel_address][paramset] = {}
 
-        self._paramsets_cache[interface_id][address][paramset] = paramset_description
+        self._paramsets_cache[interface_id][channel_address][
+            paramset
+        ] = paramset_description
 
-    def remove(self, interface_id: str, address: str) -> None:
+    def remove(self, interface_id: str, channel_address: str) -> None:
         """Remove paramset from cache."""
         if interface := self._paramsets_cache.get(interface_id):
-            if address in interface:
-                del self._paramsets_cache[interface_id][address]
+            if channel_address in interface:
+                del self._paramsets_cache[interface_id][channel_address]
 
     def get_by_interface(
         self, interface_id: str
@@ -892,28 +902,28 @@ class ParamsetCache:
         """Get paramset descriptions by interface from cache."""
         return self._paramsets_cache.get(interface_id, {})
 
-    def get_by_interface_address(
-        self, interface_id: str, address: str
+    def get_by_interface_channel_address(
+        self, interface_id: str, channel_address: str
     ) -> dict[str, dict[str, Any]]:
-        """Get paramset descriptions from cache by interface, address."""
-        return self._paramsets_cache.get(interface_id, {}).get(address, {})
+        """Get paramset descriptions from cache by interface, channel_address."""
+        return self._paramsets_cache.get(interface_id, {}).get(channel_address, {})
 
-    def get_by_interface_address_paramset(
-        self, interface_id: str, address: str, paramset: str
+    def get_by_interface_channel_address_paramset(
+        self, interface_id: str, channel_address: str, paramset: str
     ) -> dict[str, Any]:
-        """Get paramset description by interface, address, paramset in cache."""
+        """Get paramset description by interface, channel_address, paramset in cache."""
         return (
             self._paramsets_cache.get(interface_id, {})
-            .get(address, {})
+            .get(channel_address, {})
             .get(paramset, {})
         )
 
-    def has_multiple_channels(self, address: str, parameter: str) -> bool:
+    def has_multiple_channels(self, channel_address: str, parameter: str) -> bool:
         """Check if parameter is in multiple channels per device."""
-        if ":" not in address:
+        if ":" not in channel_address:
             return False
         if channels := self._address_parameter_cache.get(
-            (get_device_address(address), parameter)
+            (get_device_address(channel_address), parameter)
         ):
             return len(set(channels)) > 1
         return False
@@ -922,40 +932,47 @@ class ParamsetCache:
         """Return all parameters"""
         parameters: set[str] = set()
         for interface_id in self._paramsets_cache:
-            for address in self._paramsets_cache[interface_id]:
-                for paramset in self._paramsets_cache[interface_id][address].values():
+            for channel_address in self._paramsets_cache[interface_id]:
+                for paramset in self._paramsets_cache[interface_id][
+                    channel_address
+                ].values():
                     parameters.update(paramset)
 
         return sorted(parameters)
 
-    def get_parameters(self, address: str) -> list[str]:
+    def get_parameters(self, device_address: str) -> list[str]:
         """Return all parameters of a device"""
         parameters: set[str] = set()
         for interface_id in self._paramsets_cache:
-            for p_address in self._paramsets_cache[interface_id]:
-                if p_address.startswith(address):
+            for channel_address in self._paramsets_cache[interface_id]:
+                if channel_address.startswith(device_address):
                     for paramset in self._paramsets_cache[interface_id][
-                        p_address
+                        channel_address
                     ].values():
                         parameters.update(paramset)
 
         return sorted(parameters)
 
     def _init_address_parameter_list(self) -> None:
-        """Initialize an address/parameter list to identify if a parameter name exists is in multiple channels."""
-        for device_paramsets in self._paramsets_cache.values():
-            for address, paramsets in device_paramsets.items():
-                if ":" not in address:
+        """Initialize an device_address/parameter list to identify if a parameter name exists is in multiple channels."""
+        for channel_paramsets in self._paramsets_cache.values():
+            for channel_address, paramsets in channel_paramsets.items():
+                if ":" not in channel_address:
                     continue
-                d_address = get_device_address(address)
+                device_address = get_device_address(channel_address)
 
                 for paramset in paramsets.values():
                     for parameter in paramset:
-                        if (d_address, parameter) not in self._address_parameter_cache:
-                            self._address_parameter_cache[(d_address, parameter)] = []
-                        self._address_parameter_cache[(d_address, parameter)].append(
-                            get_device_channel(address)
-                        )
+                        if (
+                            device_address,
+                            parameter,
+                        ) not in self._address_parameter_cache:
+                            self._address_parameter_cache[
+                                (device_address, parameter)
+                            ] = []
+                        self._address_parameter_cache[
+                            (device_address, parameter)
+                        ].append(get_device_channel(channel_address))
 
     async def save(self) -> Awaitable[int]:
         """

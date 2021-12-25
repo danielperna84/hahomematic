@@ -68,6 +68,8 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         except OSError as ose:
             _LOGGER.exception(ose.args)
             raise NoConnection(ose) from ose
+        except xmlrpc.client.Fault as fex:
+            raise ProxyException(fex) from fex
         except Exception as ex:
             raise ProxyException(ex) from ex
 

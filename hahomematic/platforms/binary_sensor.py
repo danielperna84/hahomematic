@@ -24,14 +24,14 @@ class HmBinarySensor(GenericEntity[bool]):
         self,
         device: hm_device.HmDevice,
         unique_id: str,
-        address: str,
+        channel_address: str,
         parameter: str,
         parameter_data: dict[str, Any],
     ):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            address=address,
+            channel_address=channel_address,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=HmPlatform.BINARY_SENSOR,
