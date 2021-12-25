@@ -58,7 +58,7 @@ class Client(ABC):
         self._has_credentials = self._client_config.has_credentials
         self._init_url: str = self._client_config.init_url
         # for all device related interaction
-        self.proxy: XmlRpcProxy = self._client_config.xml_rpc_proxy
+        self._proxy: XmlRpcProxy = self._client_config.xml_rpc_proxy
         self.last_updated: datetime = INIT_DATETIME
         self._json_rpc_session: JsonRpcAioHttpClient = self._central.json_rpc_session
 
@@ -91,7 +91,7 @@ class Client(ABC):
             _LOGGER.debug(
                 "proxy_init: init('%s', '%s')", self._init_url, self.interface_id
             )
-            await self.proxy.init(self._init_url, self.interface_id)
+            await self._proxy.init(self._init_url, self.interface_id)
             _LOGGER.info("proxy_init: Proxy for %s initialized", self.name)
         except ProxyException:
             _LOGGER.exception(
@@ -115,7 +115,7 @@ class Client(ABC):
             return PROXY_DE_INIT_SKIPPED
         try:
             _LOGGER.debug("proxy_de_init: init('%s')", self._init_url)
-            await self.proxy.init(self._init_url)
+            await self._proxy.init(self._init_url)
         except ProxyException:
             _LOGGER.exception(
                 "proxy_de_init: Failed to de-initialize proxy for %s", self.name
@@ -134,7 +134,7 @@ class Client(ABC):
 
     def stop(self) -> None:
         """Stop depending services."""
-        self.proxy.stop()
+        self._proxy.stop()
 
     @abstractmethod
     async def fetch_names(self) -> None:
@@ -188,7 +188,7 @@ class Client(ABC):
     async def get_service_messages(self) -> Any:
         """Get service messages from CCU / Homegear."""
         try:
-            return await self.proxy.getServiceMessages()
+            return await self._proxy.getServiceMessages()
         except ProxyException:
             _LOGGER.exception("get_service_messages: ProxyException")
         return None
@@ -207,14 +207,14 @@ class Client(ABC):
                 else:
                     args.append(mode)
 
-            await self.proxy.setInstallMode(*args)
+            await self._proxy.setInstallMode(*args)
         except ProxyException:
             _LOGGER.exception("set_install_mode: ProxyException")
 
     async def get_install_mode(self) -> Any:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
-            return await self.proxy.getInstallMode()
+            return await self._proxy.getInstallMode()
         except ProxyException:
             _LOGGER.exception("get_install_mode: ProxyException")
         return 0
@@ -254,27 +254,42 @@ class Client(ABC):
     #     except ProxyException:
     #         _LOGGER.exception("list_bidcos_interfaces: ProxyException")
 
+    async def get_value(self, channel_address: str, parameter: str) -> Any:
+        """Return a value from CCU."""
+        try:
+            return await self._proxy.getValue(channel_address, parameter)
+        except ProxyException:
+            _LOGGER.exception("get_value: ProxyException")
+
     async def set_value(
-        self, address: str, value_key: str, value: Any, rx_mode: str | None = None
+        self,
+        channel_address: str,
+        parameter: str,
+        value: Any,
+        rx_mode: str | None = None,
     ) -> None:
         """Set single value on paramset VALUES."""
         try:
             if rx_mode:
-                await self.proxy.setValue(address, value_key, value, rx_mode)
+                await self._proxy.setValue(channel_address, parameter, value, rx_mode)
             else:
-                await self.proxy.setValue(address, value_key, value)
+                await self._proxy.setValue(channel_address, parameter, value)
         except ProxyException:
             _LOGGER.exception("set_value: ProxyException")
 
     async def put_paramset(
-        self, address: str, paramset: str, value: Any, rx_mode: str | None = None
+        self,
+        channel_address: str,
+        paramset: str,
+        value: Any,
+        rx_mode: str | None = None,
     ) -> None:
         """Set paramsets manually."""
         try:
             if rx_mode:
-                await self.proxy.putParamset(address, paramset, value, rx_mode)
+                await self._proxy.putParamset(channel_address, paramset, value, rx_mode)
             else:
-                await self.proxy.putParamset(address, paramset, value)
+                await self._proxy.putParamset(channel_address, paramset, value)
 
         except ProxyException:
             _LOGGER.exception("put_paramset: ProxyException")
@@ -286,7 +301,7 @@ class Client(ABC):
         _LOGGER.debug("Fetching paramset %s for %s", paramset, address)
 
         try:
-            parameter_data = await self.proxy.getParamsetDescription(address, paramset)
+            parameter_data = await self._proxy.getParamsetDescription(address, paramset)
             self._central.paramsets.add(
                 interface_id=self.interface_id,
                 address=address,
@@ -311,7 +326,7 @@ class Client(ABC):
             if paramset not in device_description[ATTR_HM_PARAMSETS]:
                 continue
             try:
-                paramset_description = await self.proxy.getParamsetDescription(
+                paramset_description = await self._proxy.getParamsetDescription(
                     address, paramset
                 )
                 self._central.paramsets.add(
@@ -402,7 +417,7 @@ class ClientCCU(Client):
     async def _check_connection(self) -> bool:
         """Check if _proxy is still initialized."""
         try:
-            success = await self.proxy.ping(self.interface_id)
+            success = await self._proxy.ping(self.interface_id)
             if success:
                 self.last_updated = datetime.now()
                 return True
@@ -553,7 +568,7 @@ class ClientHomegear(Client):
             try:
                 self._central.names.add(
                     address,
-                    await self.proxy.getMetadata(address, ATTR_HM_NAME),
+                    await self._proxy.getMetadata(address, ATTR_HM_NAME),
                 )
             except ProxyException:
                 _LOGGER.exception("Failed to fetch name for device %s.", address)
@@ -561,7 +576,7 @@ class ClientHomegear(Client):
     async def _check_connection(self) -> bool:
         """Check if proxy is still initialized."""
         try:
-            if await self.proxy.clientServerInitialized(self.interface_id):
+            if await self._proxy.clientServerInitialized(self.interface_id):
                 self.last_updated = datetime.now()
                 return True
         except NoConnection:
@@ -577,28 +592,28 @@ class ClientHomegear(Client):
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
         try:
-            await self.proxy.setSystemVariable(name, value)
+            await self._proxy.setSystemVariable(name, value)
         except ProxyException:
             _LOGGER.exception("set_system_variable: ProxyException")
 
     async def delete_system_variable(self, name: str) -> None:
         """Delete a system variable from CCU / Homegear."""
         try:
-            await self.proxy.deleteSystemVariable(name)
+            await self._proxy.deleteSystemVariable(name)
         except ProxyException:
             _LOGGER.exception("delete_system_variable: ProxyException")
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         try:
-            return await self.proxy.getSystemVariable(name)
+            return await self._proxy.getSystemVariable(name)
         except ProxyException:
             _LOGGER.exception("get_system_variable: ProxyException")
 
     async def get_all_system_variables(self) -> Any:
         """Get all system variables from CCU / Homegear."""
         try:
-            return await self.proxy.getAllSystemVariables()
+            return await self._proxy.getAllSystemVariables()
         except ProxyException:
             _LOGGER.exception("get_all_system_variables: ProxyException")
         return None

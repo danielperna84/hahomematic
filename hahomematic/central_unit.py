@@ -332,8 +332,8 @@ class CentralUnit:
     async def set_value(
         self,
         interface_id: str,
-        address: str,
-        value_key: str,
+        channel_address: str,
+        parameter: str,
         value: Any,
         rx_mode: str | None = None,
     ) -> None:
@@ -341,13 +341,16 @@ class CentralUnit:
 
         if client := self.get_primary_client(interface_id):
             await client.set_value(
-                address=address, value_key=value_key, value=value, rx_mode=rx_mode
+                channel_address=channel_address,
+                parameter=parameter,
+                value=value,
+                rx_mode=rx_mode,
             )
 
     async def put_paramset(
         self,
         interface_id: str,
-        address: str,
+        channel_address: str,
         paramset: str,
         value: Any,
         rx_mode: str | None = None,
@@ -356,7 +359,10 @@ class CentralUnit:
 
         if client := self.get_primary_client(interface_id):
             await client.put_paramset(
-                address=address, paramset=paramset, value=value, rx_mode=rx_mode
+                channel_address=channel_address,
+                paramset=paramset,
+                value=value,
+                rx_mode=rx_mode,
             )
 
     def _get_virtual_remote(self, address: str) -> HmDevice | None:

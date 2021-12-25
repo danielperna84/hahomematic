@@ -47,7 +47,6 @@ from hahomematic.helpers import (
     get_device_address,
     get_entity_name,
 )
-import hahomematic.xml_rpc_proxy as hm_proxy
 
 _LOGGER = logging.getLogger(__name__)
 ParameterType = TypeVar("ParameterType", bool, int, float, str, Union[int, str], None)
@@ -130,7 +129,6 @@ class BaseEntity(ABC):
         self.sub_type: str = self._device.sub_type
         self.create_in_ha: bool = not self._device.is_custom_entity
         self._client: hm_client.Client = self._central.clients[self._interface_id]
-        self._proxy: hm_proxy.XmlRpcProxy = self._client.proxy
         self.name: str = self._central.names.get_name(self.address) or self.unique_id
 
     @property
@@ -258,7 +256,9 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
         try:
-            await self._proxy.setValue(self.address, self.parameter, value)
+            await self._client.set_value(
+                channel_address=self.address, parameter=self.parameter, value=value
+            )
         except Exception:
             _LOGGER.exception(
                 "generic_entity: Failed to set state for: %s, %s, %s, %s",
@@ -365,7 +365,9 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             return DATA_NO_LOAD
         try:
             if self._operations & OPERATION_READ:
-                self._state = await self._proxy.getValue(self.address, self.parameter)
+                self._state = await self._client.get_value(
+                    channel_address=self.address, parameter=self.parameter
+                )
                 self.update_entity()
 
             self.update_entity(self.unique_id)
@@ -428,6 +430,18 @@ class CustomEntity(BaseEntity, CallbackEntity):
         )
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
+
+    async def put_paramset(
+        self, paramset: str, value: Any, rx_mode: str | None = None
+    ) -> None:
+        """Set paramsets manually."""
+        channel_address = f"{self.address}:{self.channel_no}"
+        await self._client.put_paramset(
+            channel_address=channel_address,
+            paramset=paramset,
+            value=value,
+            rx_mode=rx_mode,
+        )
 
     def _init_entities(self) -> None:
         """init entity collection"""
@@ -599,7 +613,9 @@ class BaseEvent(BaseParameterEntity[bool]):
     async def send_value(self, value: Any) -> None:
         """Send value to ccu."""
         try:
-            await self._proxy.setValue(self.address, self.parameter, value)
+            await self._client.set_value(
+                channel_address=self.address, parameter=self.parameter, value=value
+            )
         except Exception:
             _LOGGER.exception(
                 "action_event: Failed to set state for: %s, %s, %s",

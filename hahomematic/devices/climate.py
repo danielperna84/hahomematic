@@ -1,6 +1,7 @@
 """Code to create the required entities for thermostat devices."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -366,6 +367,19 @@ class IPThermostat(BaseClimateEntity):
             profile_idx = self._get_profile_idx_by_name(preset_mode)
             await self._send_value(FIELD_BOOST_MODE, False)
             await self._send_value(FIELD_ACTIVE_PROFILE, profile_idx)
+
+    async def set_away_mode(
+        self, start: datetime, end: datetime, away_temperature: float
+    ) -> None:
+        """Set the away mode on thermostat."""
+        date_format = "%Y_%m_%d %H:%M"
+        value = {
+            "PARTY_MODE": True,
+            "PARTY_TIME_START": start.strftime(date_format),
+            "PARTY_TIME_END": end.strftime(date_format),
+            "PARTY_SET_POINT_TEMPERATURE": away_temperature,
+        }
+        await self.put_paramset(paramset="VALUES", value=value)
 
     @property
     def _profile_names(self) -> list[str]:
