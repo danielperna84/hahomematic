@@ -28,6 +28,7 @@ COLOR_MODE_BRIGHTNESS = "brightness"  # Must be the only supported mode
 COLOR_MODE_HS = "hs"
 SUPPORT_BRIGHTNESS = 1
 SUPPORT_COLOR = 16
+HM_DIMMER_OFF: float = 0.0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,10 +96,9 @@ class BaseHmLight(CustomEntity):
         """Turn the light on."""
         ...
 
-    @abstractmethod
     async def turn_off(self) -> None:
         """Turn the light off."""
-        ...
+        await self._send_value(FIELD_LEVEL, HM_DIMMER_OFF)
 
 
 class HmDimmer(BaseHmLight):
@@ -143,10 +143,6 @@ class HmDimmer(BaseHmLight):
             brightness = max(10, brightness)
             dim_level = brightness / 255.0
             await self._send_value(FIELD_LEVEL, dim_level)
-
-    async def turn_off(self) -> None:
-        """Turn the light off."""
-        await self._send_value(FIELD_LEVEL, 0)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -229,10 +225,6 @@ class IPLightBSL(BaseHmLight):
             brightness = max(10, brightness)
             dim_level = brightness / 255.0
             await self._send_value(FIELD_LEVEL, dim_level)
-
-    async def turn_off(self) -> None:
-        """Turn the light off."""
-        await self._send_value(FIELD_LEVEL, 0)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
