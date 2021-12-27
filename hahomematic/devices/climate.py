@@ -56,7 +56,8 @@ SUPPORT_PRESET_MODE = 16
 
 HEATING_PROFILES = {"Profile 1": 1, "Profile 2": 2, "Profile 3": 3}
 COOLING_PROFILES = {"Profile 4": 4, "Profile 5": 5, "Profile 6": 6}
-
+HM_MIN_VALUE = 4.5
+HM_MAX_VALUE = 30.5
 
 class BaseClimateEntity(CustomEntity):
     """Base HomeMatic climate entity."""
@@ -111,12 +112,12 @@ class BaseClimateEntity(CustomEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower(), 4.5)
+        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower(), HM_MIN_VALUE)
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower(), 30.5)
+        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower(), HM_MAX_VALUE)
 
     @property
     def target_temperature_step(self) -> float:
@@ -215,7 +216,7 @@ class RfThermostat(BaseClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation mode."""
-        if self._temperature and self._temperature <= self.min_temp:
+        if self.target_temperature and self.target_temperature <= self.min_temp:
             return HVAC_MODE_OFF
         if self._control_mode == HM_MODE_MANU:
             return HVAC_MODE_HEAT
@@ -310,7 +311,7 @@ class IPThermostat(BaseClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation mode."""
-        if self._temperature and self._temperature <= self.min_temp:
+        if self.target_temperature and self.target_temperature <= self.min_temp:
             return HVAC_MODE_OFF
         if self._set_point_mode == HMIP_SET_POINT_MODE_MANU:
             return HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_COOL
@@ -395,16 +396,19 @@ class IPThermostat(BaseClimateEntity):
             paramset="VALUES",
             value={
                 "CONTROL_MODE": HMIP_SET_POINT_MODE_AWAY,
-                "SET_POINT_TEMPERATURE": away_temperature,
                 "PARTY_TIME_END": end.strftime(PARTY_DATE_FORMAT),
                 "PARTY_TIME_START": start.strftime(PARTY_DATE_FORMAT),
                 "DURATION_VALUE": 0,
             },
         )
+        await self.put_paramset(
+            paramset="VALUES",
+            value={
+                "SET_POINT_TEMPERATURE": away_temperature,
+            },
+        )
 
-    async def disable_away_mode(
-        self, start: datetime, end: datetime, away_temperature: float
-    ) -> None:
+    async def disable_away_mode(self) -> None:
         """Set the away mode on thermostat."""
         await self.put_paramset(
             paramset="VALUES",
