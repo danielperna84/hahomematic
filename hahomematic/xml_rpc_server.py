@@ -176,8 +176,9 @@ class RPCFunctions:
                             interface_id=interface_id, channel_address=address
                         )
                     central_unit.names.remove(address=address)
-                    if ha_device := central_unit.hm_devices.get(address):
-                        ha_device.remove_event_subscriptions()
+                    if hm_device := central_unit.hm_devices.get(address):
+                        hm_device.remove_event_subscriptions()
+                        hm_device.remove_from_collections()
                         del central_unit.hm_devices[address]
                 except KeyError:
                     _LOGGER.exception("Failed to delete: %s", address)

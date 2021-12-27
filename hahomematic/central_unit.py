@@ -611,9 +611,7 @@ class RawDevicesCache:
         """Add device_descriptions to cache."""
         if interface_id not in self._devices_raw_cache:
             self._devices_raw_cache[interface_id] = []
-
-        if device_descriptions is self._devices_raw_cache[interface_id]:
-            self._devices_raw_cache[interface_id] = device_descriptions
+        self._devices_raw_cache[interface_id] = device_descriptions
 
         self._handle_device_descriptions(
             interface_id=interface_id, device_descriptions=device_descriptions
@@ -644,7 +642,7 @@ class RawDevicesCache:
             device_descriptions=[
                 device
                 for device in self.get_device_descriptions(interface_id)
-                if not device[ATTR_HM_ADDRESS] in deleted_addresses
+                if device[ATTR_HM_ADDRESS] not in deleted_addresses
             ],
         )
 
