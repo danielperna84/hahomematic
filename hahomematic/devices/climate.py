@@ -37,11 +37,14 @@ HMIP_SET_POINT_MODE_AUTO = 0
 HMIP_SET_POINT_MODE_MANU = 1
 HMIP_SET_POINT_MODE_AWAY = 2
 
+AWAY_DURATION_UNIT_HOURS = 2
 ATTR_TEMPERATURE = "temperature"
 HVAC_MODE_OFF = "off"
 HVAC_MODE_HEAT = "heat"
 HVAC_MODE_AUTO = "auto"
 HVAC_MODE_COOL = "cool"
+PARTY_INIT_DATE = "2000_01_01 00:00"
+PARTY_DATE_FORMAT= "%Y_%m_%d %H:%M"
 PRESET_NONE = "none"
 PRESET_AWAY = "away"
 PRESET_BOOST = "boost"
@@ -368,18 +371,50 @@ class IPThermostat(BaseClimateEntity):
             await self._send_value(FIELD_BOOST_MODE, False)
             await self._send_value(FIELD_ACTIVE_PROFILE, profile_idx)
 
-    async def set_away_mode(
+    async def enable_away_mode_by_duration(
+        self, hours: int, away_temperature: float
+    ) -> None:
+        """Set the away mode by duration on thermostat."""
+        await self.put_paramset(
+            paramset="VALUES",
+            value={
+                "CONTROL_MODE": HMIP_SET_POINT_MODE_AWAY,
+                "SET_POINT_TEMPERATURE": away_temperature,
+                "DURATION_UNIT": AWAY_DURATION_UNIT_HOURS,
+                "DURATION_VALUE": hours,
+                "PARTY_TIME_START": PARTY_INIT_DATE,
+                "PARTY_TIME_END": PARTY_INIT_DATE,
+            },
+        )
+
+    async def enable_away_mode_by_calendar(
+        self, start: datetime, end: datetime, away_temperature: float
+    ) -> None:
+        """Set the away mode by calendar on thermostat."""
+        await self.put_paramset(
+            paramset="VALUES",
+            value={
+                "CONTROL_MODE": HMIP_SET_POINT_MODE_AWAY,
+                "SET_POINT_TEMPERATURE": away_temperature,
+                "PARTY_TIME_END": end.strftime(PARTY_DATE_FORMAT),
+                "PARTY_TIME_START": start.strftime(PARTY_DATE_FORMAT),
+                "DURATION_VALUE": 0,
+            },
+        )
+
+    async def disable_away_mode(
         self, start: datetime, end: datetime, away_temperature: float
     ) -> None:
         """Set the away mode on thermostat."""
-        date_format = "%Y_%m_%d %H:%M"
-        value = {
-            "PARTY_MODE": True,
-            "PARTY_TIME_START": start.strftime(date_format),
-            "PARTY_TIME_END": end.strftime(date_format),
-            "PARTY_SET_POINT_TEMPERATURE": away_temperature,
-        }
-        await self.put_paramset(paramset="VALUES", value=value)
+        await self.put_paramset(
+            paramset="VALUES",
+            value={
+                "CONTROL_MODE": HMIP_SET_POINT_MODE_AUTO,
+                "PARTY_TIME_START": PARTY_INIT_DATE,
+                "PARTY_TIME_END": PARTY_INIT_DATE,
+                "DURATION_VALUE": 0,
+            },
+        )
 
     @property
     def _profile_names(self) -> list[str]:

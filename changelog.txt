@@ -1,3 +1,6 @@
+Version 0.6.0 (2021-12-27)
+- Add climate methods for away mode
+
 Version 0.5.1 (2021-12-26)
 - Fix hm_light turn_off
 
