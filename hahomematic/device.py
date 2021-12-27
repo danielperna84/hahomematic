@@ -185,6 +185,25 @@ class HmDevice:
         for action_event in self.action_events.values():
             action_event.remove_event_subscriptions()
 
+    def remove_from_collections(self) -> None:
+        """Remove entities from collections and central."""
+
+        entities = list(self.entities.values())
+        for entity in entities:
+            if entity.unique_id in self._central.hm_entities:
+                del self._central.hm_entities[entity.unique_id]
+            self.remove_hm_entity(entity)
+        self.entities.clear()
+
+        custom_entities = list(self.custom_entities.values())
+        for custom_entity in custom_entities:
+            if custom_entity.unique_id in self._central.hm_entities:
+                del self._central.hm_entities[custom_entity.unique_id]
+            self.remove_hm_entity(custom_entity)
+        self.custom_entities.clear()
+
+        self.action_events.clear()
+
     def register_update_callback(self, update_callback: Callable) -> None:
         """Register update callback."""
         if callable(update_callback):

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import datetime
 import json
 import logging
 import os
@@ -85,7 +86,7 @@ class CentralUnit:
         # {device_address, device}
         self.hm_devices: dict[str, HmDevice] = {}
 
-        self.last_events: dict[str, int] = {}
+        self.last_events: dict[str, datetime] = {}
 
         # Signature: (name, *args)
         self.callback_system_event: Callable | None = None
@@ -611,9 +612,7 @@ class RawDevicesCache:
         """Add device_descriptions to cache."""
         if interface_id not in self._devices_raw_cache:
             self._devices_raw_cache[interface_id] = []
-
-        if device_descriptions is self._devices_raw_cache[interface_id]:
-            self._devices_raw_cache[interface_id] = device_descriptions
+        self._devices_raw_cache[interface_id] = device_descriptions
 
         self._handle_device_descriptions(
             interface_id=interface_id, device_descriptions=device_descriptions
@@ -644,7 +643,7 @@ class RawDevicesCache:
             device_descriptions=[
                 device
                 for device in self.get_device_descriptions(interface_id)
-                if not device[ATTR_HM_ADDRESS] in deleted_addresses
+                if device[ATTR_HM_ADDRESS] not in deleted_addresses
             ],
         )
 

@@ -1,3 +1,7 @@
+Version 0.6.2 (2021-12-28)
+- Remove deleted entities from device and central collections
+- use datetime for last_events
+
 Version 0.6.1 (2021-12-27)
 - Display profiles only when hvac_mode auto is enabled
 - Fix binary sensor state update for hmip 2-state sensors
