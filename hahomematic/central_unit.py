@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import datetime
 import json
 import logging
 import os
@@ -85,7 +86,7 @@ class CentralUnit:
         # {device_address, device}
         self.hm_devices: dict[str, HmDevice] = {}
 
-        self.last_events: dict[str, int] = {}
+        self.last_events: dict[str, datetime] = {}
 
         # Signature: (name, *args)
         self.callback_system_event: Callable | None = None

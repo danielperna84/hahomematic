@@ -188,14 +188,14 @@ class HmDevice:
     def remove_from_collections(self) -> None:
         """Remove entities from collections and central."""
 
-        entities = [entity for entity in self.entities.values()]
+        entities = list(self.entities.values())
         for entity in entities:
             if entity.unique_id in self._central.hm_entities:
                 del self._central.hm_entities[entity.unique_id]
             self.remove_hm_entity(entity)
         self.entities.clear()
 
-        custom_entities = [entity for entity in self.custom_entities.values()]
+        custom_entities = list(self.custom_entities.values())
         for custom_entity in custom_entities:
             if custom_entity.unique_id in self._central.hm_entities:
                 del self._central.hm_entities[custom_entity.unique_id]

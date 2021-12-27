@@ -5,9 +5,9 @@ with the CCU or Homegear
 """
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 import threading
-import time
 from typing import Any
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
@@ -60,7 +60,7 @@ class RPCFunctions:
         central: hm_central.CentralUnit | None
         if (central := self._xml_rpc_server.get_central(interface_id)) is None:
             return
-        central.last_events[interface_id] = int(time.time())
+        central.last_events[interface_id] = datetime.now()
         if (channel_address, parameter) in central.entity_event_subscriptions:
             try:
                 for callback in central.entity_event_subscriptions[
