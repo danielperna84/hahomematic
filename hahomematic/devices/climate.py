@@ -335,14 +335,16 @@ class IPThermostat(BaseClimateEntity):
             return PRESET_BOOST
         if self._set_point_mode == HMIP_SET_POINT_MODE_AWAY:
             return PRESET_AWAY
-        return self._current_profile_name if self._current_profile_name else PRESET_NONE
+        if self.hvac_mode == HVAC_MODE_AUTO:
+            return self._current_profile_name if self._current_profile_name else PRESET_NONE
+        return None
 
     @property
     def preset_modes(self) -> list[str]:
         """Return available preset modes."""
         presets = [PRESET_BOOST, PRESET_NONE]
-        presets.extend(self._profile_names)
-
+        if self.hvac_mode == HVAC_MODE_AUTO:
+            presets.extend(self._profile_names)
         return presets
 
     async def set_hvac_mode(self, hvac_mode: str) -> None:
