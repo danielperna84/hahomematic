@@ -44,7 +44,7 @@ HVAC_MODE_HEAT = "heat"
 HVAC_MODE_AUTO = "auto"
 HVAC_MODE_COOL = "cool"
 PARTY_INIT_DATE = "2000_01_01 00:00"
-PARTY_DATE_FORMAT= "%Y_%m_%d %H:%M"
+PARTY_DATE_FORMAT = "%Y_%m_%d %H:%M"
 PRESET_NONE = "none"
 PRESET_AWAY = "away"
 PRESET_BOOST = "boost"
@@ -58,6 +58,7 @@ HEATING_PROFILES = {"Profile 1": 1, "Profile 2": 2, "Profile 3": 3}
 COOLING_PROFILES = {"Profile 4": 4, "Profile 5": 5, "Profile 6": 6}
 HM_MIN_VALUE = 4.5
 HM_MAX_VALUE = 30.5
+
 
 class BaseClimateEntity(CustomEntity):
     """Base HomeMatic climate entity."""
@@ -112,12 +113,16 @@ class BaseClimateEntity(CustomEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MIN.lower(), HM_MIN_VALUE)
+        return self._get_entity_attribute(
+            FIELD_SETPOINT, ATTR_HM_MIN.lower(), HM_MIN_VALUE
+        )
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._get_entity_attribute(FIELD_SETPOINT, ATTR_HM_MAX.lower(), HM_MAX_VALUE)
+        return self._get_entity_attribute(
+            FIELD_SETPOINT, ATTR_HM_MAX.lower(), HM_MAX_VALUE
+        )
 
     @property
     def target_temperature_step(self) -> float:
@@ -336,8 +341,12 @@ class IPThermostat(BaseClimateEntity):
         if self._set_point_mode == HMIP_SET_POINT_MODE_AWAY:
             return PRESET_AWAY
         if self.hvac_mode == HVAC_MODE_AUTO:
-            return self._current_profile_name if self._current_profile_name else PRESET_NONE
-        return None
+            return (
+                self._current_profile_name
+                if self._current_profile_name
+                else PRESET_NONE
+            )
+        return PRESET_NONE
 
     @property
     def preset_modes(self) -> list[str]:
