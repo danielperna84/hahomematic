@@ -1,7 +1,7 @@
 """Code to create the required entities for thermostat devices."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -37,7 +37,6 @@ HMIP_SET_POINT_MODE_AUTO = 0
 HMIP_SET_POINT_MODE_MANU = 1
 HMIP_SET_POINT_MODE_AWAY = 2
 
-AWAY_DURATION_UNIT_HOURS = 2
 ATTR_TEMPERATURE = "temperature"
 HVAC_MODE_OFF = "off"
 HVAC_MODE_HEAT = "heat"
@@ -184,6 +183,22 @@ class BaseClimateEntity(CustomEntity):
     # pylint: disable=no-self-use
     async def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
+        return None
+
+    async def enable_away_mode_by_calendar(
+        self, start: datetime, end: datetime, away_temperature: float
+    ) -> None:
+        """Enable the away mode by calendar on thermostat."""
+        return None
+
+    async def enable_away_mode_by_duration(
+        self, hours: int, away_temperature: float
+    ) -> None:
+        """Enable the away mode by duration on thermostat."""
+        return None
+
+    async def disable_away_mode(self) -> None:
+        """Disable the away mode on thermostat."""
         return None
 
     def _get_entity_attribute(
@@ -383,33 +398,16 @@ class IPThermostat(BaseClimateEntity):
             await self._send_value(FIELD_BOOST_MODE, False)
             await self._send_value(FIELD_ACTIVE_PROFILE, profile_idx)
 
-    async def enable_away_mode_by_duration(
-        self, hours: int, away_temperature: float
-    ) -> None:
-        """Set the away mode by duration on thermostat."""
-        await self.put_paramset(
-            paramset="VALUES",
-            value={
-                "CONTROL_MODE": HMIP_SET_POINT_MODE_AWAY,
-                "SET_POINT_TEMPERATURE": away_temperature,
-                "DURATION_UNIT": AWAY_DURATION_UNIT_HOURS,
-                "DURATION_VALUE": hours,
-                "PARTY_TIME_START": PARTY_INIT_DATE,
-                "PARTY_TIME_END": PARTY_INIT_DATE,
-            },
-        )
-
     async def enable_away_mode_by_calendar(
         self, start: datetime, end: datetime, away_temperature: float
     ) -> None:
-        """Set the away mode by calendar on thermostat."""
+        """Enable the away mode by calendar on thermostat."""
         await self.put_paramset(
             paramset="VALUES",
             value={
                 "CONTROL_MODE": HMIP_SET_POINT_MODE_AWAY,
                 "PARTY_TIME_END": end.strftime(PARTY_DATE_FORMAT),
                 "PARTY_TIME_START": start.strftime(PARTY_DATE_FORMAT),
-                "DURATION_VALUE": 0,
             },
         )
         await self.put_paramset(
@@ -419,15 +417,23 @@ class IPThermostat(BaseClimateEntity):
             },
         )
 
+    async def enable_away_mode_by_duration(
+        self, hours: int, away_temperature: float
+    ) -> None:
+        """Enable the away mode by duration on thermostat."""
+        start = datetime.now() - timedelta(minutes=10)
+        end = datetime.now() + timedelta(hours=hours)
+        await self.enable_away_mode_by_calendar(start=start, end=end, away_temperature=away_temperature)
+
+
     async def disable_away_mode(self) -> None:
-        """Set the away mode on thermostat."""
+        """Disable the away mode on thermostat."""
         await self.put_paramset(
             paramset="VALUES",
             value={
                 "CONTROL_MODE": HMIP_SET_POINT_MODE_AUTO,
                 "PARTY_TIME_START": PARTY_INIT_DATE,
                 "PARTY_TIME_END": PARTY_INIT_DATE,
-                "DURATION_VALUE": 0,
             },
         )
 
