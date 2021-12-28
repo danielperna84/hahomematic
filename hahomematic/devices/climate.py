@@ -423,8 +423,9 @@ class IPThermostat(BaseClimateEntity):
         """Enable the away mode by duration on thermostat."""
         start = datetime.now() - timedelta(minutes=10)
         end = datetime.now() + timedelta(hours=hours)
-        await self.enable_away_mode_by_calendar(start=start, end=end, away_temperature=away_temperature)
-
+        await self.enable_away_mode_by_calendar(
+            start=start, end=end, away_temperature=away_temperature
+        )
 
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
