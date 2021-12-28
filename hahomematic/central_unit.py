@@ -3,6 +3,7 @@ CentralUnit module.
 """
 from __future__ import annotations
 
+from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
@@ -42,7 +43,11 @@ from hahomematic.data import INSTANCES
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
 import hahomematic.helpers
-from hahomematic.helpers import get_device_address, get_device_channel
+from hahomematic.helpers import (
+    check_or_create_directory,
+    get_device_address,
+    get_device_channel,
+)
 from hahomematic.hub import HmDummyHub, HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.xml_rpc_proxy import NoConnection
@@ -530,15 +535,6 @@ class ConnectionChecker(threading.Thread):
                 _LOGGER.exception("check_connection: Exception")
 
 
-def check_cache_dir() -> bool:
-    """Check presence of cache directory."""
-    if not config.CACHE_DIR:
-        return False
-    if not os.path.exists(config.CACHE_DIR):
-        os.makedirs(config.CACHE_DIR)
-    return True
-
-
 class CentralConfig:
     """Config for a Client."""
 
@@ -594,13 +590,77 @@ class CentralConfig:
         return CentralUnit(self)
 
 
-class RawDevicesCache:
+class BaseCache(ABC):
+    """Cache for files."""
+
+    def __init__(
+        self,
+        central: CentralUnit,
+        filename: str,
+        cache_dict: dict[str, Any],
+    ):
+        self._central = central
+        self._cache_dir = config.CACHE_DIR
+        self._filename = f"{self._central.instance_name}_{filename}"
+        self._cache_dict = cache_dict
+
+    async def save(self) -> Awaitable[int]:
+        """
+        Save current name data in NAMES to disk.
+        """
+
+        def _save() -> int:
+            if not check_or_create_directory(self._cache_dir):
+                return DATA_NO_SAVE
+            with open(
+                file=os.path.join(self._cache_dir, self._filename),
+                mode="w",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                json.dump(self._cache_dict, fptr)
+            return DATA_SAVE_SUCCESS
+
+        return await self._central.async_add_executor_job(_save)
+
+    def load(self) -> int:
+        """
+        Load file from disk into dict.
+        """
+        if not check_or_create_directory(self._cache_dir):
+            return DATA_NO_LOAD
+        if not os.path.exists(os.path.join(self._cache_dir, self._filename)):
+            return DATA_NO_LOAD
+        with open(
+            file=os.path.join(self._cache_dir, self._filename),
+            mode="r",
+            encoding=DEFAULT_ENCODING,
+        ) as fptr:
+            self._cache_dict.clear()
+            self._cache_dict.update(json.load(fptr))
+        return DATA_LOAD_SUCCESS
+
+    def clear(self) -> None:
+        """
+        Remove stored file from disk.
+        """
+        check_or_create_directory(self._cache_dir)
+        if os.path.exists(os.path.join(self._cache_dir, self._filename)):
+            os.unlink(os.path.join(self._cache_dir, self._filename))
+        self._cache_dict.clear()
+
+
+class RawDevicesCache(BaseCache):
     """Cache for device/channel names."""
 
     def __init__(self, central: CentralUnit):
-        self._central = central
         # {interface_id, [device_descriptions]}
         self._devices_raw_cache: dict[str, list[dict[str, Any]]] = {}
+        super().__init__(
+            central=central,
+            filename=FILE_DEVICES,
+            cache_dict=self._devices_raw_cache,
+        )
+
         # {interface_id, {device_address, [channel_address]}}
         self._addresses: dict[str, dict[str, list[str]]] = {}
         # {interface_id, {address, device_descriptions}}
@@ -715,76 +775,27 @@ class RawDevicesCache:
             device_address = get_device_address(address)
             self._addresses[interface_id][device_address].append(address)
 
-    async def save(self) -> Awaitable[int]:
-        """
-        Save current device data in DEVICES_RAW to disk.
-        """
-
-        def _save_devices_raw() -> int:
-            if not check_cache_dir():
-                return DATA_NO_SAVE
-            with open(
-                file=os.path.join(
-                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
-                ),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(self._devices_raw_cache, fptr)
-            return DATA_SAVE_SUCCESS
-
-        return await self._central.async_add_executor_job(_save_devices_raw)
-
     def load(self) -> int:
         """
         Load device data from disk into devices_raw.
         """
-        if not check_cache_dir():
-            return DATA_NO_LOAD
-        if not os.path.exists(
-            os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
-            )
-        ):
-            return DATA_NO_LOAD
-        with open(
-            file=os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
-            ),
-            mode="r",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            self._devices_raw_cache = json.load(fptr)
-
+        result = super().load()
         for interface_id, device_descriptions in self._devices_raw_cache.items():
             self._handle_device_descriptions(interface_id, device_descriptions)
-        return DATA_LOAD_SUCCESS
-
-    def clear(self) -> None:
-        """
-        Remove stored device data from disk and clear devices_raw.
-        """
-        check_cache_dir()
-        if os.path.exists(
-            os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
-            )
-        ):
-            os.unlink(
-                os.path.join(
-                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_DEVICES}"
-                )
-            )
-        self._devices_raw_cache.clear()
+        return result
 
 
-class NamesCache:
+class NamesCache(BaseCache):
     """Cache for device/channel names."""
 
     def __init__(self, central: CentralUnit):
-        self._central = central
         # {address, name}
         self._names_cache: dict[str, str] = {}
+        super().__init__(
+            central=central,
+            filename=FILE_NAMES,
+            cache_dict=self._names_cache,
+        )
 
     def add(self, address: str, name: str) -> None:
         """Add name to cache."""
@@ -800,73 +811,19 @@ class NamesCache:
         if address in self._names_cache:
             del self._names_cache[address]
 
-    async def save(self) -> Awaitable[int]:
-        """
-        Save current name data in NAMES to disk.
-        """
 
-        def _save_names() -> int:
-            if not check_cache_dir():
-                return DATA_NO_SAVE
-            with open(
-                file=os.path.join(
-                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
-                ),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(self._names_cache, fptr)
-            return DATA_SAVE_SUCCESS
-
-        return await self._central.async_add_executor_job(_save_names)
-
-    def load(self) -> int:
-        """
-        Load name data from disk into NAMES.
-        """
-        if not check_cache_dir():
-            return DATA_NO_LOAD
-        if not os.path.exists(
-            os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
-            )
-        ):
-            return DATA_NO_LOAD
-        with open(
-            file=os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
-            ),
-            mode="r",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            self._names_cache = json.load(fptr)
-        return DATA_LOAD_SUCCESS
-
-    def clear(self) -> None:
-        """
-        Remove stored names data from disk.
-        """
-        check_cache_dir()
-        if os.path.exists(
-            os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
-            )
-        ):
-            os.unlink(
-                os.path.join(
-                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_NAMES}"
-                )
-            )
-        self._names_cache.clear()
-
-
-class ParamsetCache:
+class ParamsetCache(BaseCache):
     """Cache for paramsets."""
 
     def __init__(self, central: CentralUnit):
-        self._central = central
         # {interface_id, {channel_address, paramsets}}
         self._paramsets_cache: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
+        super().__init__(
+            central=central,
+            filename=FILE_PARAMSETS,
+            cache_dict=self._paramsets_cache,
+        )
+
         # {(device_address, parameter), [channel_no]}
         self._address_parameter_cache: dict[tuple[str, str], list[int]] = {}
 
@@ -977,63 +934,9 @@ class ParamsetCache:
         """
         Save current paramset data in PARAMSETS to disk.
         """
-
-        def _save_paramsets() -> int:
-            if not check_cache_dir():
-                return DATA_NO_SAVE
-            with open(
-                file=os.path.join(
-                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
-                ),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(self._paramsets_cache, fptr)
-            return DATA_SAVE_SUCCESS
-
+        result = await super().save()
         self._init_address_parameter_list()
-        return await self._central.async_add_executor_job(_save_paramsets)
-
-    def load(self) -> int:
-        """
-        Load paramset data from disk into PARAMSETS.
-        """
-        if not check_cache_dir():
-            return DATA_NO_LOAD
-        if not os.path.exists(
-            os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
-            )
-        ):
-            return DATA_NO_LOAD
-        with open(
-            file=os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
-            ),
-            mode="r",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            self._paramsets_cache = json.load(fptr)
-
-        self._init_address_parameter_list()
-        return DATA_LOAD_SUCCESS
-
-    def clear(self) -> None:
-        """
-        Remove stored paramset data from disk.
-        """
-        check_cache_dir()
-        if os.path.exists(
-            os.path.join(
-                config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
-            )
-        ):
-            os.unlink(
-                os.path.join(
-                    config.CACHE_DIR, f"{self._central.instance_name}_{FILE_PARAMSETS}"
-                )
-            )
-        self._paramsets_cache.clear()
+        return result
 
 
 def _remove_dummy_service_message(
