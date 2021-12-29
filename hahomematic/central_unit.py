@@ -72,7 +72,6 @@ class CentralUnit:
             self.central_config.option_enable_virtual_channels
         )
         self._model: str | None = None
-        self._primary_client: hm_client.Client | None = None
 
         # Caches for CCU data
         self.paramsets: ParamsetCache = ParamsetCache(central=self)
@@ -136,14 +135,14 @@ class CentralUnit:
     def model(self) -> str | None:
         """Return the model of the backend."""
         if not self._model:
-            if client := self.get_primary_client():
+            if client := self.get_client():
                 self._model = client.model
         return self._model
 
     @property
     def version(self) -> str | None:
         """Return the version of the backend."""
-        if client := self.get_primary_client():
+        if client := self.get_client():
             return client.version
         return None
 
@@ -292,19 +291,19 @@ class CentralUnit:
 
     async def get_all_system_variables(self) -> dict[str, Any] | None:
         """Get all system variables from CCU / Homegear."""
-        if client := self.get_primary_client():
+        if client := self.get_client():
             return await client.get_all_system_variables()
         return None
 
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""
-        if client := self.get_primary_client():
+        if client := self.get_client():
             return await client.get_system_variable(name)
         return None
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
-        if client := self.get_primary_client():
+        if client := self.get_client():
             await client.set_system_variable(name=name, value=value)
 
     async def get_service_messages(self) -> list[list[tuple[str, str, Any]]]:
@@ -326,14 +325,14 @@ class CentralUnit:
         device_address: str | None = None,
     ) -> None:
         """Activate or deactivate install-mode on CCU / Homegear."""
-        if client := self.get_primary_client(interface_id=interface_id):
+        if client := self.get_client(interface_id=interface_id):
             await client.set_install_mode(
                 on=on, t=t, mode=mode, device_address=device_address
             )
 
     async def get_install_mode(self, interface_id: str) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
-        if client := self.get_primary_client(interface_id=interface_id):
+        if client := self.get_client(interface_id=interface_id):
             return int(await client.get_install_mode())
         return 0
 
@@ -347,7 +346,7 @@ class CentralUnit:
     ) -> None:
         """Set single value on paramset VALUES."""
 
-        if client := self.get_primary_client(interface_id=interface_id):
+        if client := self.get_client(interface_id=interface_id):
             await client.set_value(
                 channel_address=channel_address,
                 parameter=parameter,
@@ -365,7 +364,7 @@ class CentralUnit:
     ) -> None:
         """Set paramsets manually."""
 
-        if client := self.get_primary_client(interface_id=interface_id):
+        if client := self.get_client(interface_id=interface_id):
             await client.put_paramset(
                 channel_address=channel_address,
                 paramset=paramset,
@@ -418,28 +417,22 @@ class CentralUnit:
 
         return hm_entities
 
-    def get_primary_client(
-        self, interface_id: str | None = None
-    ) -> hm_client.Client | None:
-        """Return the client by interface_id or the first with a primary port."""
-        if not self._primary_client:
-            if interface_id:
-                try:
-                    self._primary_client = self.clients[interface_id]
-                except IndexError as err:
-                    message = f"Can't resolve interface for {self.instance_name}: {interface_id}"
-                    _LOGGER.warning(message)
-                    raise hahomematic.helpers.ClientException(message) from err
-            else:
-                client: hm_client.Client | None = None
-                for client in self.clients.values():
-                    if client.get_virtual_remote():
-                        self._primary_client = client
-                        break
-                else:
-                    self._primary_client = client
-
-        return self._primary_client
+    def get_client(self, interface_id: str | None = None) -> hm_client.Client | None:
+        """Return the client by interface_id or the first with a virtual remote."""
+        if interface_id:
+            try:
+                return self.clients[interface_id]
+            except IndexError as err:
+                message = (
+                    f"Can't resolve interface for {self.instance_name}: {interface_id}"
+                )
+                _LOGGER.warning(message)
+                raise hahomematic.helpers.ClientException(message) from err
+        else:
+            for client in self.clients.values():
+                if client.get_virtual_remote():
+                    return client
+        return None
 
     def get_hm_entity_by_parameter(
         self, channel_address: str, parameter: str
