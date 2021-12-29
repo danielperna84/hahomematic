@@ -1,4 +1,9 @@
-Version 0.6.2 (2021-12-28)
+Version 0.8.0 (2021-12-29)
+- Use base class for file cache
+- Rename primary_client to client
+- Add export for device definition
+
+Version 0.7.0 (2021-12-28)
 - Remove deleted entities from device and central collections
 - use datetime for last_events
 - Climate IP: use calendar for duration away

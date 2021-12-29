@@ -4,6 +4,7 @@ Helper functions used within hahomematic
 from __future__ import annotations
 
 import logging
+import os
 import socket
 import ssl
 from typing import Any
@@ -78,6 +79,15 @@ def build_api_url(
     if tls:
         scheme += "s"
     return f"{scheme}://{credentials}{host}:{port}{path}"
+
+
+def check_or_create_directory(directory: str) -> bool:
+    """Check / create directory."""
+    if not directory:
+        return False
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    return True
 
 
 def parse_ccu_sys_var(data: dict[str, Any]) -> tuple[str, Any]:
