@@ -61,6 +61,7 @@ from hahomematic.platforms.number import HmNumber
 from hahomematic.platforms.select import HmSelect
 from hahomematic.platforms.sensor import HmSensor
 from hahomematic.platforms.switch import HmSwitch
+import hahomematic.support as hm_support
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -239,6 +240,14 @@ class HmDevice:
         self._set_last_update()
         for _callback in self._remove_callbacks:
             _callback(*args)
+
+    async def export_device_definition(self) -> None:
+        """Export the device definition for current device."""
+        await hm_support.save_device_definition(
+            client=self._client,
+            interface_id=self._interface_id,
+            device_address=self._device_address,
+        )
 
     def _set_last_update(self) -> None:
         self.last_update = datetime.now()

@@ -294,25 +294,52 @@ class Client(ABC):
         """
         Fetch paramsets for provided device description.
         """
-        address = device_description[ATTR_HM_ADDRESS]
-        _LOGGER.debug("Fetching paramsets for %s", address)
-        for paramset in RELEVANT_PARAMSETS:
-            if paramset not in device_description[ATTR_HM_PARAMSETS]:
-                continue
-            try:
-                paramset_description = await self._proxy.getParamsetDescription(
-                    address, paramset
-                )
+        data = await self.get_paramsets(
+            device_description=device_description, relevant_paramsets=RELEVANT_PARAMSETS
+        )
+        for address, paramsets in data.items():
+            _LOGGER.debug("Fetching paramsets for %s", address)
+            for paramset, paramset_description in paramsets.items():
                 self._central.paramsets.add(
                     interface_id=self.interface_id,
                     channel_address=address,
                     paramset=paramset,
                     paramset_description=paramset_description,
                 )
+
+    async def get_paramsets(
+        self,
+        device_description: dict[str, Any],
+        relevant_paramsets: list[str] | None = None,
+    ) -> dict[str, dict[str, Any]]:
+        """Get paramsets for provided device description."""
+        paramsets: dict[str, dict[str, Any]] = {}
+        address = device_description[ATTR_HM_ADDRESS]
+        paramsets[address] = {}
+        _LOGGER.debug("Fetching paramsets for %s", address)
+        for paramset in device_description.get(ATTR_HM_PARAMSETS, []):
+            if relevant_paramsets and paramset not in relevant_paramsets:
+                continue
+            try:
+                paramsets[address][paramset] = await self._proxy.getParamsetDescription(
+                    address, paramset
+                )
             except ProxyException:
                 _LOGGER.exception(
                     "Unable to get paramset %s for address %s.", paramset, address
                 )
+        return paramsets
+
+    async def get_all_paramsets(
+        self, device_descriptions: list[dict[str, Any]]
+    ) -> dict[str, dict[str, Any]]:
+        """Get all paramsets for provided device descriptions."""
+        all_paramsets: dict[str, dict[str, Any]] = {}
+        for device_description in device_descriptions:
+            all_paramsets.update(
+                await self.get_paramsets(device_description=device_description)
+            )
+        return all_paramsets
 
     async def update_paramsets(self, device_address: str) -> None:
         """

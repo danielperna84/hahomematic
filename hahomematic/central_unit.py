@@ -728,6 +728,22 @@ class RawDevicesCache(BaseCache):
         """Return the device dict by interface and device_address"""
         return self._dev_descriptions.get(interface_id, {}).get(device_address, {})
 
+    def get_device_with_channels(
+        self, interface_id: str, device_address: str
+    ) -> dict[str, Any]:
+        """Return the device dict by interface and device_address"""
+        data: dict[str, Any] = {
+            device_address: self._dev_descriptions.get(interface_id, {}).get(
+                device_address, {}
+            )
+        }
+        children = data[device_address]["CHILDREN"]
+        for channel_address in children:
+            data[channel_address] = self._dev_descriptions.get(interface_id, {}).get(
+                channel_address, {}
+            )
+        return data
+
     def get_device_parameter(
         self, interface_id: str, device_address: str, parameter: str
     ) -> Any | None:
