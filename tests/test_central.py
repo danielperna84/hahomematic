@@ -52,4 +52,3 @@ async def test_all_parameters(central, pydev_ccu, loop) -> None:
     assert pydev_ccu
     parameters = central.paramsets.get_all_parameters()
     assert parameters
-    
