@@ -896,11 +896,9 @@ class ParamsetCache(BaseCache):
     def get_all_parameters(self) -> list[str]:
         """Return all parameters"""
         parameters: set[str] = set()
-        for interface_id in self._paramsets_cache:
-            for channel_address in self._paramsets_cache[interface_id]:
-                for paramset in self._paramsets_cache[interface_id][
-                    channel_address
-                ].values():
+        for channel in self._paramsets_cache.values():
+            for channel_address in channel:
+                for paramset in channel[channel_address].values():
                     parameters.update(paramset)
 
         return sorted(parameters)
@@ -908,12 +906,10 @@ class ParamsetCache(BaseCache):
     def get_parameters(self, device_address: str) -> list[str]:
         """Return all parameters of a device"""
         parameters: set[str] = set()
-        for interface_id in self._paramsets_cache:
-            for channel_address in self._paramsets_cache[interface_id]:
+        for channel in self._paramsets_cache.values():
+            for channel_address in channel:
                 if channel_address.startswith(device_address):
-                    for paramset in self._paramsets_cache[interface_id][
-                        channel_address
-                    ].values():
+                    for paramset in channel[channel_address].values():
                         parameters.update(paramset)
 
         return sorted(parameters)
