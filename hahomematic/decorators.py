@@ -9,7 +9,7 @@ import functools
 import logging
 from typing import Any
 
-from hahomematic.data import get_client_by_interface_id
+import hahomematic.data as hm_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def callback_system_event(name: str) -> Callable:
                 # We don't want to pass the function itself
                 args = args[1:]
                 interface_id = args[0]
-                client = get_client_by_interface_id(interface_id)
+                client = hm_data.get_client_by_interface_id(interface_id)
             except Exception as err:
                 _LOGGER.warning("Failed to reduce args for callback_system_event.")
                 raise Exception("args-exception callback_system_event") from err
@@ -58,7 +58,7 @@ def callback_event(func: Callable) -> Callable:
             # We don't want to pass the function itself
             args = args[1:]
             interface_id = args[0]
-            client = get_client_by_interface_id(interface_id)
+            client = hm_data.get_client_by_interface_id(interface_id)
         except Exception as err:
             _LOGGER.warning("Failed to reduce args for callback_event.")
             raise Exception("args-exception callback_event") from err

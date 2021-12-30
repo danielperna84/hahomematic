@@ -65,7 +65,7 @@ async def central(
             global GOT_DEVICES
             GOT_DEVICES = True
 
-    central_unit = CentralConfig(
+    central_unit = await CentralConfig(
         name="ccu-dev",
         loop=loop,
         xml_rpc_server=register_xml_rpc_server(),
