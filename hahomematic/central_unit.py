@@ -39,7 +39,7 @@ from hahomematic.const import (
     MANUFACTURER,
     HmPlatform,
 )
-from hahomematic.data import INSTANCES
+import hahomematic.data as hm_data
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
 import hahomematic.helpers
@@ -103,7 +103,7 @@ class CentralUnit:
             central_config=self.central_config
         )
 
-        INSTANCES[self.instance_name] = self
+        hm_data.INSTANCES[self.instance_name] = self
         self._connection_checker = ConnectionChecker(self)
         self.hub: HmHub | HmDummyHub | None = None
 
@@ -945,9 +945,17 @@ class ParamsetCache(BaseCache):
                             (device_address, parameter)
                         ].append(get_device_channel(channel_address))
 
+    async def load(self) -> Awaitable[int]:
+        """
+        Load paramset data from disk into paramsets.
+        """
+        result = await super().load()
+        self._init_address_parameter_list()
+        return result
+
     async def save(self) -> Awaitable[int]:
         """
-        Save current paramset data in PARAMSETS to disk.
+        Save current paramset data to disk.
         """
         result = await super().save()
         self._init_address_parameter_list()

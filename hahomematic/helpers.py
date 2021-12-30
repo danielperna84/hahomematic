@@ -109,24 +109,31 @@ def get_entity_name(
     channel_address: str,
     parameter: str,
     unique_id: str,
+    device_type: str,
 ) -> str:
     """generate name for entity"""
-    name = central.names.get_name(channel_address) or unique_id
-    if name.count(":") == 1:
-        d_name = name.split(":")[0]
+    entity_name = _get_base_name_from_channel_or_device(
+        central=central,
+        channel_address=channel_address,
+        unique_id=unique_id,
+        device_type=device_type,
+    )
+
+    if entity_name.count(":") == 1:
+        d_name = entity_name.split(":")[0]
         p_name = parameter.title().replace("_", " ")
         c_name = ""
         if central.paramsets.has_multiple_channels(
             channel_address=channel_address, parameter=parameter
         ):
-            c_no = name.split(":")[1]
+            c_no = entity_name.split(":")[1]
             c_name = "" if c_no == "0" else f" ch{c_no}"
-        name = f"{d_name} {p_name}{c_name}"
+        entity_name = f"{d_name} {p_name}{c_name}"
     else:
-        d_name = name
+        d_name = entity_name
         p_name = parameter.title().replace("_", " ")
-        name = f"{d_name} {p_name}"
-    return name
+        entity_name = f"{d_name} {p_name}"
+    return entity_name
 
 
 def get_event_name(
@@ -134,20 +141,26 @@ def get_event_name(
     channel_address: str,
     parameter: str,
     unique_id: str,
+    device_type: str,
 ) -> str:
     """generate name for event"""
-    name = central.names.get_name(channel_address) or unique_id
-    if name.count(":") == 1:
-        d_name = name.split(":")[0]
+    event_name = _get_base_name_from_channel_or_device(
+        central=central,
+        channel_address=channel_address,
+        unique_id=unique_id,
+        device_type=device_type,
+    )
+    if event_name.count(":") == 1:
+        d_name = event_name.split(":")[0]
         p_name = parameter.title().replace("_", " ")
-        c_no = name.split(":")[1]
+        c_no = event_name.split(":")[1]
         c_name = "" if c_no == "0" else f" Channel {c_no}"
-        name = f"{d_name}{c_name} {p_name}"
+        event_name = f"{d_name}{c_name} {p_name}"
     else:
-        d_name = name
+        d_name = event_name
         p_name = parameter.title().replace("_", " ")
-        name = f"{d_name} {p_name}"
-    return name
+        event_name = f"{d_name} {p_name}"
+    return event_name
 
 
 def get_custom_entity_name(
@@ -155,9 +168,34 @@ def get_custom_entity_name(
     device_address: str,
     unique_id: str,
     channel_no: int,
+    device_type: str,
 ) -> str:
     """Rename name for custom entity"""
-    return central.names.get_name(f"{device_address}:{channel_no}") or unique_id
+    custom_entity_name = _get_base_name_from_channel_or_device(
+        central=central,
+        channel_address=f"{device_address}:{channel_no}",
+        unique_id=unique_id,
+        device_type=device_type,
+    )
+    return custom_entity_name.replace(":", " ")
+
+
+def _get_base_name_from_channel_or_device(
+    central: hm_central.CentralUnit,
+    channel_address: str,
+    unique_id: str,
+    device_type: str,
+) -> str:
+    """Get the name from channel if it's not default, otherwise from device."""
+    default_channel_name = f"{device_type} {channel_address}"
+    name = central.names.get_name(channel_address)
+    if name is None or name == default_channel_name:
+        channel_no = get_device_channel(channel_address)
+        name = f"{central.names.get_name(get_device_address(channel_address))}:{channel_no}"
+    if name is None:
+        name = unique_id
+
+    return name
 
 
 def get_tls_context(verify_tls: bool) -> ssl.SSLContext:

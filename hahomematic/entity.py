@@ -220,6 +220,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
             channel_address=self.channel_address,
             parameter=self.parameter,
             unique_id=self.unique_id,
+            device_type=self.device_type,
         )
 
     def _assign_parameter_data(self) -> None:
@@ -457,6 +458,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             device_address=self.device_address,
             unique_id=self.unique_id,
             channel_no=channel_no,
+            device_type=self.device_type,
         )
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
@@ -588,6 +590,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             channel_address=self.channel_address,
             parameter=self.parameter,
             unique_id=self.unique_id,
+            device_type=self.device_type,
         )
         self.event_type: HmEventType = event_type
         self.last_update: datetime = INIT_DATETIME

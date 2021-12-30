@@ -1,5 +1,6 @@
-Version 0.10.0 (2021-12-31)
+Version 0.9.1 (2021-12-30)
 - Load and clear caches async
+- Extend naming strategy to use device name if channel name is not customized
 
 Version 0.9.0 (2021-12-30)
 - Add new helper for event_name
