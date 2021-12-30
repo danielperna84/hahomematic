@@ -23,8 +23,8 @@ from hahomematic.const import (
     ATTR_HM_UNIT,
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
-    ATTR_NAME,
     ATTR_PARAMETER,
+    ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
     DATA_LOAD_FAIL,
@@ -765,11 +765,11 @@ class ClickEvent(BaseEvent):
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
-        click_type = f"channel_{self.channel_no}_{self.parameter}".lower()
         return {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.device_address,
-            ATTR_TYPE: click_type,
+            ATTR_TYPE: self.parameter.lower(),
+            ATTR_SUBTYPE: self.channel_no,
         }
 
     def fire_event(self, value: Any) -> None:
