@@ -114,7 +114,7 @@ class RfLock(BaseLock):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return not self._state is True
+        return self._state is not True
 
     async def lock(self) -> None:
         """Lock the lock."""

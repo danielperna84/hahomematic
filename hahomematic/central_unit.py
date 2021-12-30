@@ -104,7 +104,6 @@ class CentralUnit:
         )
 
         INSTANCES[self.instance_name] = self
-        self._load_caches()
         self._connection_checker = ConnectionChecker(self)
         self.hub: HmHub | HmDummyHub | None = None
 
@@ -185,15 +184,15 @@ class CentralUnit:
             self._loop = asyncio.get_running_loop()
         return self._loop
 
-    def _load_caches(self) -> None:
+    async def load_caches(self) -> None:
+        """Load files to caches."""
         try:
-            self.raw_devices.load()
-            self.paramsets.load()
-            self.names.load()
-
+            await self.raw_devices.load()
+            await self.paramsets.load()
+            await self.names.load()
         except json.decoder.JSONDecodeError:
             _LOGGER.warning("Failed to load caches.")
-            self.clear_all()
+            await self.clear_all()
 
     def create_devices(self) -> None:
         """Create the devices."""
@@ -429,10 +428,11 @@ class CentralUnit:
                 _LOGGER.warning(message)
                 raise hahomematic.helpers.ClientException(message) from err
         else:
+            client: hm_client.Client | None = None
             for client in self.clients.values():
                 if client.get_virtual_remote():
                     return client
-        return None
+            return client
 
     def get_hm_entity_by_parameter(
         self, channel_address: str, parameter: str
@@ -468,13 +468,13 @@ class CentralUnit:
 
         return sorted(parameters)
 
-    def clear_all(self) -> None:
+    async def clear_all(self) -> None:
         """
         Clear all stored data.
         """
-        self.raw_devices.clear()
-        self.paramsets.clear()
-        self.names.clear()
+        await self.raw_devices.clear()
+        await self.paramsets.clear()
+        await self.names.clear()
 
 
 class ConnectionChecker(threading.Thread):
@@ -578,9 +578,11 @@ class CentralConfig:
             url = f"{url}:{self.json_port}"
         return f"{url}"
 
-    def get_central(self) -> CentralUnit:
+    async def get_central(self) -> CentralUnit:
         """Identify the used client."""
-        return CentralUnit(self)
+        central = CentralUnit(self)
+        await central.load_caches()
+        return central
 
 
 class BaseCache(ABC):
@@ -615,31 +617,39 @@ class BaseCache(ABC):
 
         return await self._central.async_add_executor_job(_save)
 
-    def load(self) -> int:
+    async def load(self) -> Awaitable[int]:
         """
         Load file from disk into dict.
         """
-        if not check_or_create_directory(self._cache_dir):
-            return DATA_NO_LOAD
-        if not os.path.exists(os.path.join(self._cache_dir, self._filename)):
-            return DATA_NO_LOAD
-        with open(
-            file=os.path.join(self._cache_dir, self._filename),
-            mode="r",
-            encoding=DEFAULT_ENCODING,
-        ) as fptr:
-            self._cache_dict.clear()
-            self._cache_dict.update(json.load(fptr))
-        return DATA_LOAD_SUCCESS
 
-    def clear(self) -> None:
+        def _load() -> int:
+            if not check_or_create_directory(self._cache_dir):
+                return DATA_NO_LOAD
+            if not os.path.exists(os.path.join(self._cache_dir, self._filename)):
+                return DATA_NO_LOAD
+            with open(
+                file=os.path.join(self._cache_dir, self._filename),
+                mode="r",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                self._cache_dict.clear()
+                self._cache_dict.update(json.load(fptr))
+            return DATA_LOAD_SUCCESS
+
+        return await self._central.async_add_executor_job(_load)
+
+    async def clear(self) -> None:
         """
         Remove stored file from disk.
         """
-        check_or_create_directory(self._cache_dir)
-        if os.path.exists(os.path.join(self._cache_dir, self._filename)):
-            os.unlink(os.path.join(self._cache_dir, self._filename))
-        self._cache_dict.clear()
+
+        def _clear() -> None:
+            check_or_create_directory(self._cache_dir)
+            if os.path.exists(os.path.join(self._cache_dir, self._filename)):
+                os.unlink(os.path.join(self._cache_dir, self._filename))
+            self._cache_dict.clear()
+
+        await self._central.async_add_executor_job(_clear)
 
 
 class RawDevicesCache(BaseCache):
@@ -784,11 +794,11 @@ class RawDevicesCache(BaseCache):
             device_address = get_device_address(address)
             self._addresses[interface_id][device_address].append(address)
 
-    def load(self) -> int:
+    async def load(self) -> Awaitable[int]:
         """
         Load device data from disk into devices_raw.
         """
-        result = super().load()
+        result = await super().load()
         for interface_id, device_descriptions in self._devices_raw_cache.items():
             self._handle_device_descriptions(interface_id, device_descriptions)
         return result

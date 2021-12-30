@@ -9,9 +9,6 @@ import logging
 import signal
 import sys
 
-from hahomematic import config
-from hahomematic.central_unit import CentralUnit
-from hahomematic.client import Client
 from hahomematic.data import INSTANCES
 
 if sys.stdout.isatty():

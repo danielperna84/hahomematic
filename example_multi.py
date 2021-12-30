@@ -81,7 +81,7 @@ class Example:
         )
 
     async def example_run(self):
-        self.central_1 = CentralConfig(
+        self.central_1 = await CentralConfig(
             name="ccu-dev",
             loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
@@ -90,7 +90,7 @@ class Example:
             password=CCU_PASSWORD,
             option_enable_virtual_channels=True,
         ).get_central()
-        self.central_2 = CentralConfig(
+        self.central_2 = await CentralConfig(
             name="ccu-2-dev",
             loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
