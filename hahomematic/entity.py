@@ -23,6 +23,7 @@ from hahomematic.const import (
     ATTR_HM_UNIT,
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
+    ATTR_NAME,
     ATTR_PARAMETER,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -47,6 +48,7 @@ from hahomematic.helpers import (
     get_device_address,
     get_device_channel,
     get_entity_name,
+    get_event_name,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -581,7 +583,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             platform=HmPlatform.EVENT,
         )
 
-        self.name: str = get_entity_name(
+        self.name: str = get_event_name(
             central=self._central,
             channel_address=self.channel_address,
             parameter=self.parameter,
@@ -713,11 +715,10 @@ class AlarmEvent(BaseEvent):
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
-        click_type = self.parameter.lower()
         return {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.device_address,
-            ATTR_TYPE: click_type,
+            ATTR_TYPE: self.parameter.lower(),
             ATTR_VALUE: value,
         }
 
