@@ -129,6 +129,27 @@ def get_entity_name(
     return name
 
 
+def get_event_name(
+    central: hm_central.CentralUnit,
+    channel_address: str,
+    parameter: str,
+    unique_id: str,
+) -> str:
+    """generate name for event"""
+    name = central.names.get_name(channel_address) or unique_id
+    if name.count(":") == 1:
+        d_name = name.split(":")[0]
+        p_name = parameter.title().replace("_", " ")
+        c_no = name.split(":")[1]
+        c_name = "" if c_no == "0" else f" Channel {c_no}"
+        name = f"{d_name}{c_name} {p_name}"
+    else:
+        d_name = name
+        p_name = parameter.title().replace("_", " ")
+        name = f"{d_name} {p_name}"
+    return name
+
+
 def get_custom_entity_name(
     central: hm_central.CentralUnit,
     device_address: str,
