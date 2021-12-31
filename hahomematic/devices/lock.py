@@ -139,11 +139,15 @@ def make_ip_lock(
 
 
 def make_rf_lock(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic rf lock entities."""
     return make_custom_entity(
-        device, address, RfLock, EntityDefinition.RF_LOCK, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=RfLock,
+        device_enum=EntityDefinition.RF_LOCK,
+        group_base_channels=group_base_channels,
     )
 
 

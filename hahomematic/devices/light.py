@@ -270,29 +270,41 @@ def _convert_color(color: tuple[float, float] | None) -> str:
 
 
 def make_ip_dimmer(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip dimmer entities."""
     return make_custom_entity(
-        device, address, HmDimmer, EntityDefinition.IP_DIMMER, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=HmDimmer,
+        device_enum=EntityDefinition.IP_DIMMER,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_rf_dimmer(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic dimmer entities."""
     return make_custom_entity(
-        device, address, HmDimmer, EntityDefinition.RF_DIMMER, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=HmDimmer,
+        device_enum=EntityDefinition.RF_DIMMER,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_ip_light_bsl(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates HmIP-BSL entities."""
     return make_custom_entity(
-        device, address, IPLightBSL, EntityDefinition.IP_LIGHT_BSL, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=IPLightBSL,
+        device_enum=EntityDefinition.IP_LIGHT_BSL,
+        group_base_channels=group_base_channels,
     )
 
 

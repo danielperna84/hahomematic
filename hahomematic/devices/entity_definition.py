@@ -437,6 +437,7 @@ def make_custom_entity(
                     device_enum=device_enum,
                     device_def=device_def,
                     entity_def=entity_def,
+                    channel_no=0,
                 )
             )
 

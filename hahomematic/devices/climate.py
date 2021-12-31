@@ -466,67 +466,67 @@ class IPThermostat(BaseClimateEntity):
 
 
 def make_simple_thermostat(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates SimpleRfThermostat entities."""
     return make_custom_entity(
-        device,
-        address,
-        SimpleRfThermostat,
-        EntityDefinition.SIMPLE_RF_THERMOSTAT,
-        group_base_channels,
+        device=device,
+        device_address=device_address,
+        custom_entity_class=SimpleRfThermostat,
+        device_enum=EntityDefinition.SIMPLE_RF_THERMOSTAT,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_thermostat(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates RfThermostat entities."""
     return make_custom_entity(
-        device,
-        address,
-        RfThermostat,
-        EntityDefinition.RF_THERMOSTAT,
-        group_base_channels,
+        device=device,
+        device_address=device_address,
+        custom_entity_class=RfThermostat,
+        device_enum=EntityDefinition.RF_THERMOSTAT,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_thermostat_group(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates RfThermostat group entities."""
     return make_custom_entity(
-        device,
-        address,
-        RfThermostat,
-        EntityDefinition.RF_THERMOSTAT_GROUP,
-        group_base_channels,
+        device=device,
+        device_address=device_address,
+        custom_entity_class=RfThermostat,
+        device_enum=EntityDefinition.RF_THERMOSTAT_GROUP,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_ip_thermostat(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates IPThermostat entities."""
     return make_custom_entity(
-        device,
-        address,
-        IPThermostat,
-        EntityDefinition.IP_THERMOSTAT,
-        group_base_channels,
+        device=device,
+        device_address=device_address,
+        custom_entity_class=IPThermostat,
+        device_enum=EntityDefinition.IP_THERMOSTAT,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_ip_thermostat_group(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates IPThermostat group entities."""
     return make_custom_entity(
-        device,
-        address,
-        IPThermostat,
-        EntityDefinition.IP_THERMOSTAT_GROUP,
-        group_base_channels,
+        device=device,
+        device_address=device_address,
+        custom_entity_class=IPThermostat,
+        device_enum=EntityDefinition.IP_THERMOSTAT_GROUP,
+        group_base_channels=group_base_channels,
     )
 
 
