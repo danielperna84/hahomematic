@@ -275,29 +275,41 @@ def make_rf_cover(
 
 
 def make_ip_blind(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip cover entities."""
     return make_custom_entity(
-        device, address, HmBlind, EntityDefinition.IP_COVER, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=HmBlind,
+        device_enum=EntityDefinition.IP_COVER,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_ip_garage(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip garage entities."""
     return make_custom_entity(
-        device, address, HmGarage, EntityDefinition.IP_GARAGE, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=HmGarage,
+        device_enum=EntityDefinition.IP_GARAGE,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_rf_blind(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic cover entities."""
     return make_custom_entity(
-        device, address, HmBlind, EntityDefinition.RF_COVER, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=HmBlind,
+        device_enum=EntityDefinition.RF_COVER,
+        group_base_channels=group_base_channels,
     )
 
 

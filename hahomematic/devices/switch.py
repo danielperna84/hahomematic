@@ -83,15 +83,15 @@ class HmSwitch(CustomEntity):
 
 
 def make_ip_switch(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip switch entities."""
     return make_custom_entity(
-        device,
-        address,
-        HmSwitch,
-        EntityDefinition.IP_SWITCH,
-        group_base_channels,
+        device=device,
+        device_address=device_address,
+        custom_entity_class=HmSwitch,
+        device_enum=EntityDefinition.IP_SWITCH,
+        group_base_channels=group_base_channels,
     )
 
 
