@@ -191,7 +191,8 @@ def _get_base_name_from_channel_or_device(
     name = central.names.get_name(channel_address)
     if name is None or name == default_channel_name:
         channel_no = get_device_channel(channel_address)
-        name = f"{central.names.get_name(get_device_address(channel_address))}:{channel_no}"
+        if device_name := central.names.get_name(get_device_address(channel_address)):
+            name = f"{device_name}:{channel_no}"
     if name is None:
         name = unique_id
 

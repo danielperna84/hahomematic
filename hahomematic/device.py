@@ -16,6 +16,7 @@ from hahomematic.const import (
     ATTR_HM_OPERATIONS,
     ATTR_HM_SUBTYPE,
     ATTR_HM_TYPE,
+    BUTTON_ACTIONS,
     CLICK_EVENTS,
     FLAG_INTERAL,
     HA_DOMAIN,
@@ -503,13 +504,22 @@ class HmDevice:
                         channel_address,
                         parameter,
                     )
-                    entity = HmAction(
-                        device=self,
-                        unique_id=unique_id,
-                        channel_address=channel_address,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
+                    if parameter in BUTTON_ACTIONS:
+                        entity = HmButton(
+                            device=self,
+                            unique_id=unique_id,
+                            channel_address=channel_address,
+                            parameter=parameter,
+                            parameter_data=parameter_data,
+                        )
+                    else:
+                        entity = HmAction(
+                            device=self,
+                            unique_id=unique_id,
+                            channel_address=channel_address,
+                            parameter=parameter,
+                            parameter_data=parameter_data,
+                        )
                 else:
                     _LOGGER.debug(
                         "create_entity: switch (action): %s %s",
