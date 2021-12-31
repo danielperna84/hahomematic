@@ -228,7 +228,7 @@ class CentralUnit:
         xml_rpc.un_register_xml_rpc_server()
 
         _LOGGER.debug("CentralUnit.stop: Removing instance")
-        del INSTANCES[self.instance_name]
+        del hm_data.INSTANCES[self.instance_name]
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""

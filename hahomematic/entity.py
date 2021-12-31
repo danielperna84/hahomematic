@@ -276,9 +276,14 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return self._value_list
 
     @property
-    def hmtype(self) -> str | None:
+    def hmtype(self) -> str:
         """Return the homematic type."""
         return self._type
+
+    @property
+    def visible(self) -> bool:
+        """Return the if entity is visible in ccu."""
+        return self._visible
 
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
