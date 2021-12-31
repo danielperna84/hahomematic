@@ -8,7 +8,7 @@ from enum import Enum
 import logging
 from typing import Any
 
-from voluptuous import Invalid, Optional, Required, Schema
+from voluptuous import All, Invalid, Length, Optional, Required, Schema
 
 import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
@@ -101,7 +101,7 @@ SCHEMA_ED_FIELD = Schema({Optional(int): SCHEMA_ED_FIELD_DETAILS})
 
 SCHEMA_ED_DEVICE_GROUP = Schema(
     {
-        Required(ED_PHY_CHANNEL): [int],
+        Required(ED_PHY_CHANNEL): All([int], Length(min=1)),
         Required(ED_VIRT_CHANNEL): [int],
         Required(ED_FIELDS_REP, default={}): SCHEMA_ED_FIELD_DETAILS,
         Optional(ED_FIELDS): SCHEMA_ED_FIELD,
@@ -180,7 +180,6 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                     FIELD_DOOR_COMMAND: "DOOR_COMMAND,",
                     FIELD_DOOR_STATE: "DOOR_STATE",
                 },
-                ED_FIELDS: {},
             },
         },
         EntityDefinition.IP_LIGHT_BSL: {
@@ -225,7 +224,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_LOCK: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [],
+                ED_PHY_CHANNEL: [1],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {},
                 ED_FIELDS: {
@@ -301,12 +300,11 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
                 },
-                ED_FIELDS: {},
             },
         },
         EntityDefinition.RF_LOCK: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [],
+                ED_PHY_CHANNEL: [1],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {},
                 ED_FIELDS: {
@@ -360,7 +358,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.SIMPLE_RF_THERMOSTAT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [],
+                ED_PHY_CHANNEL: [1],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {},
                 ED_FIELDS: {
@@ -425,19 +423,6 @@ def make_custom_entity(
                     device_def=device_def,
                     entity_def=entity_def,
                     channel_no=channel_no,
-                )
-            )
-        # ED_PHY_CHANNEL is empty -> try to create entities based on ED_FIELDS
-        if not channels:
-            entities.extend(
-                _create_entities(
-                    device=device,
-                    device_address=device_address,
-                    custom_entity_class=custom_entity_class,
-                    device_enum=device_enum,
-                    device_def=device_def,
-                    entity_def=entity_def,
-                    channel_no=0,
                 )
             )
 
