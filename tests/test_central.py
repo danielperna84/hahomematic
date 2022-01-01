@@ -18,7 +18,20 @@ async def test_central(central, loop) -> None:
     assert central.clients["ccu-dev-hm"].model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 294
-    assert len(central.hm_entities) == 2655
+
+    data = {}
+    for device in central.hm_devices.values():
+        if device.device_type not in data:
+            data[device.device_type] = {}
+        for entity in device.entities.values():
+            if entity.parameter not in data[device.device_type]:
+                data[device.device_type][entity.parameter] = f"{entity.hmtype}"
+    assert len(data) == 294
+    custom_entities = []
+    for device in central.hm_devices.values():
+        custom_entities.extend(device.custom_entities.values())
+    assert len(custom_entities) == 114
+    assert len(central.hm_entities) == 2148
 
 
 @pytest.mark.asyncio

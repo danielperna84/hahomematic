@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import hahomematic.central_unit as hm_central
-from hahomematic.const import BACKEND_CCU, INIT_DATETIME
+from hahomematic.const import BACKEND_CCU, INIT_DATETIME, HmPlatform
 from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +52,7 @@ class BaseHubEntity(ABC):
         self._remove_callbacks: list[Callable] = []
         self.create_in_ha: bool = True
         self.should_poll = False
+        self.platform = HmPlatform.HUB
 
     @property
     def available(self) -> bool:
