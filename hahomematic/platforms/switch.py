@@ -38,11 +38,11 @@ class HmSwitch(GenericEntity[bool]):
         )
 
     @property
-    def state(self) -> bool | None:
-        """Get the state of the entity."""
+    def value(self) -> bool | None:
+        """Get the value of the entity."""
         if self._type == TYPE_ACTION:
             return False
-        return self._state
+        return self._value
 
     async def turn_on(self) -> None:
         """Turn the switch on."""

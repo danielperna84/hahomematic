@@ -1,8 +1,12 @@
-Version 0.11.0 (2022-01-0x)
+Version 0.11.0 (2022-01-02)
 - Add positional arguments
 - Add missing channel no
 - Set ED_PHY_CHANNEL min_length to 1
 - Add platform zu hub entities
+- Use entities in properties
+- Add transition to dimmer
+- Rename entity.state to entity.value
+- Remove channel no, if channel is the only_primary_channel
 
 Version 0.10.0 (2021-12-31)
 - Make reset_motion, reset_presence a button

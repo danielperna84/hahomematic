@@ -14,13 +14,14 @@ from hahomematic.devices.entity_definition import (
 )
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
+from hahomematic.platforms.switch import HmSwitch
 
 ATTR_CHANNEL_STATE = "channel_state"
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmSwitch(CustomEntity):
+class CeSwitch(CustomEntity):
     """Class for homematic switch entities."""
 
     def __init__(
@@ -51,33 +52,33 @@ class HmSwitch(CustomEntity):
         )
 
     @property
-    def _state(self) -> bool | None:
-        """Return the temperature of the device."""
-        return self._get_entity_state(FIELD_STATE)
+    def _e_state(self) -> HmSwitch:
+        """Return the state entity of the device."""
+        return self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
 
     @property
     def _channel_state(self) -> bool | None:
         """Return the temperature of the device."""
-        return self._get_entity_state(FIELD_CHANNEL_STATE)
+        return self._get_entity_value(field_name=FIELD_CHANNEL_STATE)
 
     @property
-    def state(self) -> bool | None:
-        """Return the current state of the switch."""
-        return self._state
+    def value(self) -> bool | None:
+        """Return the current value of the switch."""
+        return self._e_state.value
 
     async def turn_on(self) -> None:
         """Turn the switch on."""
-        await self._send_value(FIELD_STATE, True)
+        await self._e_state.turn_on()
 
     async def turn_off(self) -> None:
         """Turn the switch off."""
-        await self._send_value(FIELD_STATE, False)
+        await self._e_state.turn_off()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the switch."""
         state_attr = super().extra_state_attributes
-        if self._channel_state and self._channel_state != self._state:
+        if self._channel_state and self._channel_state != self._e_state.value:
             state_attr[ATTR_CHANNEL_STATE] = self._channel_state
         return state_attr
 
@@ -89,7 +90,7 @@ def make_ip_switch(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=HmSwitch,
+        custom_entity_class=CeSwitch,
         device_enum=EntityDefinition.IP_SWITCH,
         group_base_channels=group_base_channels,
     )

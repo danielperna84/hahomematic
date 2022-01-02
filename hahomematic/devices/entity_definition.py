@@ -56,6 +56,9 @@ FIELD_OPERATING_VOLTAGE = "operating_voltage"
 FIELD_OPEN = "open"
 FIELD_PARTY_MODE = "party_mode"
 FIELD_POWER = "power"
+FIELD_RAMP_TIME = "ramp_time"
+FIELD_RAMP_TIME_UNIT = "ramp_time_unit"
+FIELD_RAMP_TIME_VALUE = "ramp_time_value"
 FIELD_RSSI_DEVICE = "rssi_device"
 FIELD_RSSI_PEER = "rssi_peer"
 FIELD_SABOTAGE = "sabotage"
@@ -164,6 +167,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_VIRT_CHANNEL: [2, 3],
                 ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_RAMP_TIME: "RAMP_TIME",
                 },
                 ED_FIELDS: {
                     0: {
@@ -189,6 +193,8 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_FIELDS_REP: {
                     FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
+                    FIELD_RAMP_TIME_VALUE: "RAMP_TIME_VALUE",
                 },
                 ED_FIELDS: {
                     0: {
@@ -299,6 +305,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_RAMP_TIME: "RAMP_TIME",
                 },
             },
         },

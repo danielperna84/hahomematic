@@ -106,8 +106,8 @@ async def get_value_from_generic_entity(
     assert hm_entity
     if do_load:
         await hm_entity.load_data()
-        assert hm_entity.state
-    return hm_entity.state
+        assert hm_entity.value
+    return hm_entity.value
 
 
 def get_hm_device(central_unit: CentralUnit, address: str) -> HmDevice | None:

@@ -37,15 +37,15 @@ class HmNumber(GenericEntity[float]):
             platform=HmPlatform.NUMBER,
         )
 
-    async def set_state(self, value: float) -> None:
-        """Set the state of the entity."""
+    async def send_value(self, value: float) -> None:
+        """Set the value of the entity."""
         # pylint: disable=no-else-return
         if value is not None and self._min <= value <= self._max:
-            await self.send_value(value)
+            await super().send_value(value)
             return
         elif self._special:
             if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
-                await self.send_value(value)
+                await super().send_value(value)
                 return
         _LOGGER.error(
             "number: Invalid value: %s (min: %s, max: %s, special: %s)",

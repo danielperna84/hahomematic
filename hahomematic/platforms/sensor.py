@@ -38,8 +38,8 @@ class HmSensor(GenericEntity[Any]):
         )
 
     @property
-    def state(self) -> Any | None:
-        """Return the state."""
-        if self._state is not None and self._value_list is not None:
-            return self._value_list[self._state]
-        return self._state
+    def value(self) -> Any | None:
+        """Return the value."""
+        if self._value is not None and self._value_list is not None:
+            return self._value_list[self._value]
+        return self._value

@@ -12,11 +12,17 @@ from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_LEVEL,
     FIELD_COLOR,
     FIELD_LEVEL,
+    FIELD_RAMP_TIME,
+    FIELD_RAMP_TIME_UNIT,
+    FIELD_RAMP_TIME_VALUE,
     EntityDefinition,
     make_custom_entity,
 )
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
+from hahomematic.internal.action import HmAction
+from hahomematic.platforms.number import HmNumber
+from hahomematic.platforms.select import HmSelect
 
 ATTR_BRIGHTNESS = "brightness"
 ATTR_COLOR_NAME = "color_name"
@@ -28,6 +34,7 @@ COLOR_MODE_BRIGHTNESS = "brightness"  # Must be the only supported mode
 COLOR_MODE_HS = "hs"
 SUPPORT_BRIGHTNESS = 1
 SUPPORT_COLOR = 16
+SUPPORT_TRANSITION = 32
 HM_DIMMER_OFF: float = 0.0
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,6 +71,11 @@ class BaseHmLight(CustomEntity):
         )
 
     @property
+    def _e_level(self) -> HmNumber:
+        """Return the level entity of the device."""
+        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmNumber)
+
+    @property
     @abstractmethod
     def is_on(self) -> bool | None:
         """Return true if light is on."""
@@ -85,44 +97,52 @@ class BaseHmLight(CustomEntity):
         return {COLOR_MODE_ONOFF}
 
     @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return 0
+
+    @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         return 0.0, 0.0
 
     @abstractmethod
     async def turn_on(
-        self, hs_color: tuple[float, float] | None, brightness: int | None
+        self,
+        hs_color: tuple[float, float] | None,
+        brightness: int | None,
+        ramp_time: float | None,
     ) -> None:
         """Turn the light on."""
         ...
 
     async def turn_off(self) -> None:
         """Turn the light off."""
-        await self._send_value(FIELD_LEVEL, HM_DIMMER_OFF)
+        await self._e_level.send_value(HM_DIMMER_OFF)
 
 
-class HmDimmer(BaseHmLight):
+class CeDimmer(BaseHmLight):
     """Class for homematic dimmer entities."""
 
     @property
-    def _level(self) -> float | None:
-        """Return the dim level of the device."""
-        return self._get_entity_state(FIELD_LEVEL)
+    def _e_ramp_time(self) -> HmAction:
+        """Return the ramp time entity device."""
+        return self._get_entity(field_name=FIELD_RAMP_TIME, entity_type=HmAction)
 
     @property
     def _channel_level(self) -> float | None:
-        """Return the channel level of the device."""
-        return self._get_entity_state(FIELD_CHANNEL_LEVEL)
+        """Return the channel level entity of the device."""
+        return self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL)
 
     @property
     def is_on(self) -> bool:
         """Return true if dimmer is on."""
-        return self._level is not None and self._level > 0.0
+        return self._e_level.value is not None and self._e_level.value > 0.0
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return int((self._level or 0.0) * 255)
+        return int((self._e_level.value or 0.0) * 255)
 
     @property
     def color_mode(self) -> str:
@@ -134,26 +154,41 @@ class HmDimmer(BaseHmLight):
         """Return the supported color modes."""
         return {COLOR_MODE_BRIGHTNESS}
 
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_TRANSITION
+
     async def turn_on(
-        self, hs_color: tuple[float, float] | None, brightness: int | None
+        self,
+        hs_color: tuple[float, float] | None,
+        brightness: int | None,
+        ramp_time: float | None,
     ) -> None:
         """Turn the light on."""
+        if ramp_time:
+            await self._e_ramp_time.send_value(ramp_time)
+
         # Minimum brightness is 10, otherwise the LED is disabled
         if brightness:
             brightness = max(10, brightness)
             dim_level = brightness / 255.0
-            await self._send_value(FIELD_LEVEL, dim_level)
+            await self._e_level.send_value(dim_level)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the light."""
         state_attr = super().extra_state_attributes
-        if self._channel_level and self._channel_level != self._level:
+        if (
+            self._channel_level
+            and self._e_level.value
+            and self._channel_level != self._e_level.value
+        ):
             state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
         return state_attr
 
 
-class IPLightBSL(BaseHmLight):
+class CeIpLightBSL(BaseHmLight):
     """Class for homematic HmIP-BSL light entities."""
 
     _color_switcher: dict[str, tuple[float, float]] = {
@@ -167,34 +202,44 @@ class IPLightBSL(BaseHmLight):
     }
 
     @property
-    def _color(self) -> str | None:
-        """Return the color of the device."""
-        return self._get_entity_state(FIELD_COLOR)
+    def _e_color(self) -> HmSelect:
+        """Return the color entity of the device."""
+        return self._get_entity(field_name=FIELD_COLOR, entity_type=HmSelect)
 
     @property
     def _channel_color(self) -> str | None:
         """Return the channel color of the device."""
-        return self._get_entity_state(FIELD_CHANNEL_COLOR)
+        return self._get_entity_value(field_name=FIELD_CHANNEL_COLOR)
 
     @property
-    def _level(self) -> float | None:
-        """Return the level of the device."""
-        return self._get_entity_state(FIELD_LEVEL)
+    def _e_level(self) -> HmNumber:
+        """Return the level entity of the device."""
+        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmNumber)
 
     @property
     def _channel_level(self) -> float | None:
-        """Return the channel level state of the device."""
-        return self._get_entity_state(FIELD_CHANNEL_LEVEL)
+        """Return the channel level of the device."""
+        return self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL)
+
+    @property
+    def _e_ramp_time_unit(self) -> HmAction:
+        """Return the ramp time unit entity of the device."""
+        return self._get_entity(field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction)
+
+    @property
+    def _e_ramp_time_value(self) -> HmAction:
+        """Return the ramp time value entity of the device."""
+        return self._get_entity(field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction)
 
     @property
     def is_on(self) -> bool:
         """Return true if dimmer is on."""
-        return self._level is not None and self._level > 0.0
+        return self._e_level.value is not None and self._e_level.value > 0.0
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return int((self._level or 0.0) * 255)
+        return int((self._e_level.value or 0.0) * 255)
 
     @property
     def color_mode(self) -> str:
@@ -204,8 +249,8 @@ class IPLightBSL(BaseHmLight):
     @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
-        if self._color:
-            return self._color_switcher.get(self._color, (0.0, 0.0))
+        if self._e_color.value:
+            return self._color_switcher.get(self._e_color.value, (0.0, 0.0))
         return 0.0, 0.0
 
     @property
@@ -214,25 +259,32 @@ class IPLightBSL(BaseHmLight):
         return {COLOR_MODE_HS}
 
     async def turn_on(
-        self, hs_color: tuple[float, float] | None, brightness: int | None
+        self,
+        hs_color: tuple[float, float] | None,
+        brightness: int | None,
+        ramp_time: float | None,
     ) -> None:
         """Turn the light on."""
         if hs_color:
             simple_rgb_color = _convert_color(hs_color)
-            await self._send_value(FIELD_COLOR, simple_rgb_color)
-        # Minimum brightness is 10, otherwise the LED is disabled
+            await self._e_color.send_value(simple_rgb_color)
+        if ramp_time:
+            # ramp_time_unit is 0 == seconds
+            await self._e_ramp_time_unit.send_value(0)
+            await self._e_ramp_time_value.send_value(ramp_time)
         if brightness:
+            # Minimum brightness is 10, otherwise the LED is disabled
             brightness = max(10, brightness)
             dim_level = brightness / 255.0
-            await self._send_value(FIELD_LEVEL, dim_level)
+            await self._e_level.send_value(dim_level)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the notification light sensor."""
         state_attr = super().extra_state_attributes
         if self.is_on:
-            state_attr[ATTR_COLOR_NAME] = self._color
-        if self._channel_level and self._channel_level != self._level:
+            state_attr[ATTR_COLOR_NAME] = self._e_color.value
+        if self._channel_level and self._channel_level != self._e_level.value:
             state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
         if self._channel_color and self._channel_color:
             state_attr[ATTR_CHANNEL_COLOR] = self._channel_color
@@ -276,7 +328,7 @@ def make_ip_dimmer(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=HmDimmer,
+        custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.IP_DIMMER,
         group_base_channels=group_base_channels,
     )
@@ -289,7 +341,7 @@ def make_rf_dimmer(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=HmDimmer,
+        custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.RF_DIMMER,
         group_base_channels=group_base_channels,
     )
@@ -302,7 +354,7 @@ def make_ip_light_bsl(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=IPLightBSL,
+        custom_entity_class=CeIpLightBSL,
         device_enum=EntityDefinition.IP_LIGHT_BSL,
         group_base_channels=group_base_channels,
     )

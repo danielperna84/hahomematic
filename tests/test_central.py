@@ -31,7 +31,7 @@ async def test_central(central, loop) -> None:
     for device in central.hm_devices.values():
         custom_entities.extend(device.custom_entities.values())
     assert len(custom_entities) == 114
-    assert len(central.hm_entities) == 2148
+    assert len(central.hm_entities) == 2237
 
 
 @pytest.mark.asyncio
