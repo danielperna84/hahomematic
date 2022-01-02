@@ -34,6 +34,7 @@ COLOR_MODE_BRIGHTNESS = "brightness"  # Must be the only supported mode
 COLOR_MODE_HS = "hs"
 SUPPORT_BRIGHTNESS = 1
 SUPPORT_COLOR = 16
+SUPPORT_TRANSITION = 32
 HM_DIMMER_OFF: float = 0.0
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,6 +97,11 @@ class BaseHmLight(CustomEntity):
         return {COLOR_MODE_ONOFF}
 
     @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return 0
+
+    @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         return 0.0, 0.0
@@ -147,6 +153,11 @@ class CeDimmer(BaseHmLight):
     def supported_color_modes(self) -> set[str]:
         """Return the supported color modes."""
         return {COLOR_MODE_BRIGHTNESS}
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_TRANSITION
 
     async def turn_on(
         self,
