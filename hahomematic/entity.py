@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeVar, Union, cast
 
 import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
@@ -43,6 +43,7 @@ from hahomematic.const import (
 )
 import hahomematic.device as hm_device
 import hahomematic.devices.entity_definition as hm_entity_definition
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.helpers import (
     get_custom_entity_name,
     get_device_address,
@@ -424,6 +425,9 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         ]
 
 
+_EntityType = TypeVar("_EntityType", bound=GenericEntity)
+
+
 class CustomEntity(BaseEntity, CallbackEntity):
     """
     Base class for custom entities.
@@ -546,9 +550,14 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self.update_entity()
         return DATA_LOAD_SUCCESS
 
-    def _get_entity(self, field_name: str) -> GenericEntity | None:
+    def _get_entity(
+        self, field_name: str, entity_type: type[_EntityType]
+    ) -> _EntityType:
         """get entity"""
-        return self.data_entities.get(field_name)
+        if entity := self.data_entities.get(field_name):
+            return cast(entity_type, entity)
+
+        return cast(entity_type,  NoneTypeEntity())
 
     def _get_entity_state(
         self, field_name: str, default: Any | None = None
@@ -558,12 +567,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
         if entity:
             return entity.state
         return default
-
-    async def _send_value(self, field_name: str, value: Any) -> None:
-        """send value to ccu"""
-        entity = self.data_entities.get(field_name)
-        if entity:
-            await entity.send_value(value)
 
 
 class BaseEvent(BaseParameterEntity[bool]):
@@ -858,3 +861,14 @@ def fix_unit(unit: str | None) -> str | None:
         if check in unit:
             return fix
     return unit
+
+
+class NoneTypeEntity:
+    """Entity to return an empty value."""
+
+    state: Any = None
+
+    def send_value(self, value) -> None:
+        """Dummy method."""
+
+

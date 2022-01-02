@@ -20,6 +20,8 @@ from hahomematic.devices.entity_definition import (
 )
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
+from hahomematic.internal.action import HmAction
+from hahomematic.platforms.number import HmNumber
 
 ATTR_CHANNEL_COVER_LEVEL = "channel_cover_level"
 ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
@@ -42,7 +44,7 @@ GARAGE_DOOR_STATE_POSITION_UNKNOWN = 3
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmCover(CustomEntity):
+class CeCover(CustomEntity):
     """Class for homematic cover entities."""
 
     def __init__(
@@ -73,17 +75,22 @@ class HmCover(CustomEntity):
         )
 
     @property
-    def _level(self) -> float | None:
-        """Return the level of the cover."""
-        return self._get_entity_state(FIELD_LEVEL)
+    def _e_level(self) -> HmNumber:
+        """Return the level entity of the cover."""
+        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmNumber)
+
+    @property
+    def _e_stop(self) -> HmAction:
+        """Return the stop entity of the cover."""
+        return self._get_entity(field_name=FIELD_STOP, entity_type=HmAction)
 
     @property
     def _channel_level(self) -> float | None:
         """Return the channel level state of the cover."""
-        channel_level = self._get_entity_state(FIELD_CHANNEL_LEVEL)
+        channel_level = self._get_entity_state(field_name=FIELD_CHANNEL_LEVEL)
         if channel_level:
             return float(channel_level)
-        return self._level
+        return self._e_level.state
 
     @property
     def current_cover_position(self) -> int | None:
@@ -97,7 +104,7 @@ class HmCover(CustomEntity):
         # Hm cover is closed:1 -> open:0
         position = min(100.0, max(0.0, position))
         level = position / 100.0
-        await self._send_value(FIELD_LEVEL, level)
+        await self._e_level.send_value(level)
 
     @property
     def is_closed(self) -> bool | None:
@@ -108,40 +115,40 @@ class HmCover(CustomEntity):
 
     async def open_cover(self) -> None:
         """Open the cover."""
-        await self._send_value(FIELD_LEVEL, HM_OPEN)
+        await self._e_level.send_value(HM_OPEN)
 
     async def close_cover(self) -> None:
         """Close the cover."""
-        await self._send_value(FIELD_LEVEL, HM_CLOSED)
+        await self._e_level.send_value(HM_CLOSED)
 
     async def stop_cover(self) -> None:
         """Stop the device if in motion."""
-        await self._send_value(FIELD_STOP, True)
+        await self._e_stop.send_value(True)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the cover."""
         state_attr = super().extra_state_attributes
-        if self._channel_level and self._channel_level != self._level:
+        if self._channel_level and self._channel_level != self._e_level.state:
             state_attr[ATTR_CHANNEL_COVER_LEVEL] = self._channel_level * 100
         return state_attr
 
 
-class HmBlind(HmCover):
+class CeBlind(CeCover):
     """Class for homematic blind entities."""
 
     @property
-    def _level_2(self) -> float | None:
-        """Return the level of the tilt."""
-        return self._get_entity_state(FIELD_LEVEL_2)
+    def _e_level_2(self) -> HmNumber:
+        """Return the level entity of the tilt."""
+        return self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmNumber)
 
     @property
     def _channel_level_2(self) -> float | None:
         """Return the channel level of the tilt."""
-        channel_level_2 = self._get_entity_state(FIELD_CHANNEL_LEVEL_2)
+        channel_level_2 = self._get_entity_state(field_name=FIELD_CHANNEL_LEVEL_2)
         if channel_level_2:
             return float(channel_level_2)
-        return self._level_2
+        return self._e_level_2.state
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -154,30 +161,30 @@ class HmBlind(HmCover):
         """Move the cover to a specific tilt position."""
         position = min(100.0, max(0.0, position))
         level = position / 100.0
-        await self._send_value(FIELD_LEVEL_2, level)
+        await self._e_level_2.send_value(level)
 
     async def open_cover_tilt(self) -> None:
         """Open the tilt."""
-        await self._send_value(FIELD_LEVEL_2, HM_OPEN)
+        await self._e_level_2.send_value(HM_OPEN)
 
     async def close_cover_tilt(self) -> None:
         """Close the tilt."""
-        await self._send_value(FIELD_LEVEL_2, HM_CLOSED)
+        await self._e_level_2.send_value(HM_CLOSED)
 
     async def stop_cover_tilt(self) -> None:
         """Stop the device if in motion."""
-        await self._send_value(FIELD_STOP, True)
+        await self._e_stop.send_value(True)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the cover."""
         state_attr = super().extra_state_attributes
-        if self._channel_level_2 and self._channel_level_2 != self._level_2:
+        if self._channel_level_2 and self._channel_level_2 != self._e_level_2.state:
             state_attr[ATTR_CHANNEL_TILT_LEVEL] = self._channel_level_2 * 100
         return state_attr
 
 
-class HmGarage(CustomEntity):
+class CeGarage(CustomEntity):
     """Class for homematic garage entities."""
 
     def __init__(
@@ -209,8 +216,13 @@ class HmGarage(CustomEntity):
 
     @property
     def _door_state(self) -> int | None:
-        """Return the state of the garage door."""
-        return self._get_entity_state(FIELD_DOOR_STATE)
+        """Return the door_state entity of the garage door."""
+        return self._get_entity_state(field_name=FIELD_DOOR_STATE)
+
+    @property
+    def _e_door_command(self) -> HmAction:
+        """Return the door_command entityof the cover."""
+        return self._get_entity(field_name=FIELD_DOOR_COMMAND, entity_type=HmAction)
 
     @property
     def current_cover_position(self) -> int | None:
@@ -241,36 +253,44 @@ class HmGarage(CustomEntity):
 
     async def open_cover(self) -> None:
         """Open the garage door."""
-        await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_OPEN)
+        await self._e_door_command.send_value(GARAGE_DOOR_COMMAND_OPEN)
 
     async def close_cover(self) -> None:
         """Close the garage door."""
-        await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_CLOSE)
+        await self._e_door_command.send_value(GARAGE_DOOR_COMMAND_CLOSE)
 
     async def stop_cover(self) -> None:
         """Stop the device if in motion."""
-        await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_STOP)
+        await self._e_door_command.send_value(GARAGE_DOOR_COMMAND_STOP)
 
     async def vent_cover(self) -> None:
         """Move the garage door to vent position."""
-        await self._send_value(FIELD_DOOR_COMMAND, GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
+        await self._e_door_command.send_value(GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
 
 
 def make_ip_cover(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip cover entities."""
     return make_custom_entity(
-        device, address, HmCover, EntityDefinition.IP_COVER, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=CeCover,
+        device_enum=EntityDefinition.IP_COVER,
+        group_base_channels=group_base_channels,
     )
 
 
 def make_rf_cover(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic cover entities."""
     return make_custom_entity(
-        device, address, HmCover, EntityDefinition.RF_COVER, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=CeCover,
+        device_enum=EntityDefinition.RF_COVER,
+        group_base_channels=group_base_channels,
     )
 
 
@@ -281,7 +301,7 @@ def make_ip_blind(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=HmBlind,
+        custom_entity_class=CeBlind,
         device_enum=EntityDefinition.IP_COVER,
         group_base_channels=group_base_channels,
     )
@@ -294,7 +314,7 @@ def make_ip_garage(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=HmGarage,
+        custom_entity_class=CeGarage,
         device_enum=EntityDefinition.IP_GARAGE,
         group_base_channels=group_base_channels,
     )
@@ -307,7 +327,7 @@ def make_rf_blind(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=HmBlind,
+        custom_entity_class=CeBlind,
         device_enum=EntityDefinition.RF_COVER,
         group_base_channels=group_base_channels,
     )

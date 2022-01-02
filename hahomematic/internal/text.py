@@ -39,6 +39,6 @@ class HmText(GenericEntity[str]):
         """Get the state of the entity."""
         return self._state
 
-    async def set_state(self, value: str | None) -> None:
+    async def send_value(self, value: str | None) -> None:
         """Set the state of the entity."""
-        await self.send_value(value)
+        await super().send_value(value)

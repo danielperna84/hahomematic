@@ -18,6 +18,8 @@ from hahomematic.devices.entity_definition import (
 )
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
+from hahomematic.internal.action import HmAction
+from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,13 +79,20 @@ class BaseLock(CustomEntity):
         ...
 
 
-class IpLock(BaseLock):
+class CeIpLock(BaseLock):
     """Class for homematic ip lock entities."""
 
     @property
     def _lock_state(self) -> float | None:
-        """Return the level of the device."""
-        return self._get_entity_state(FIELD_LOCK_STATE)
+        """Return the lock_state of the device."""
+        return self._get_entity_state(field_name=FIELD_LOCK_STATE)
+
+    @property
+    def _e_lock_target_level(self) -> HmAction:
+        """Return the lock target level entity of the device."""
+        return self._get_entity(
+            field_name=FIELD_LOCK_TARGET_LEVEL, entity_type=HmAction
+        )
 
     @property
     def is_locked(self) -> bool:
@@ -92,49 +101,58 @@ class IpLock(BaseLock):
 
     async def lock(self) -> None:
         """Lock the lock."""
-        await self._send_value(FIELD_LOCK_TARGET_LEVEL, HM_LOCKED)
+        await self._e_lock_target_level.send_value(HM_LOCKED)
 
     async def unlock(self) -> None:
         """Unlock the lock."""
-        await self._send_value(FIELD_LOCK_TARGET_LEVEL, HM_UNLOCKED)
+        await self._e_lock_target_level.send_value(HM_UNLOCKED)
 
     async def open(self) -> None:
         """Open the lock."""
-        await self._send_value(FIELD_LOCK_TARGET_LEVEL, HM_OPEN)
+        await self._e_lock_target_level.send_value(HM_OPEN)
 
 
-class RfLock(BaseLock):
+class CeRfLock(BaseLock):
     """Class for classic homematic lock entities."""
 
     @property
-    def _state(self) -> bool | None:
-        """Return the level of the device."""
-        return self._get_entity_state(FIELD_STATE)
+    def _e_state(self) -> HmSwitch:
+        """Return the state entity of the device."""
+        return self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
+
+    @property
+    def _e_open(self) -> HmAction:
+        """Return the open entity of the device."""
+        return self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
 
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._state is not True
+        return self._e_state.state is not True
 
     async def lock(self) -> None:
         """Lock the lock."""
-        await self._send_value(FIELD_STATE, True)
+        await self._e_state.send_value(True)
 
     async def unlock(self) -> None:
         """Unlock the lock."""
-        await self._send_value(FIELD_STATE, False)
+        await self._e_state.send_value(False)
 
     async def open(self) -> None:
         """Open the lock."""
-        await self._send_value(FIELD_OPEN, True)
+        await self._e_open.send_value(True)
 
 
 def make_ip_lock(
-    device: hm_device.HmDevice, address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip lock entities."""
     return make_custom_entity(
-        device, address, IpLock, EntityDefinition.IP_LOCK, group_base_channels
+        device=device,
+        device_address=device_address,
+        custom_entity_class=CeIpLock,
+        device_enum=EntityDefinition.IP_LOCK,
+        group_base_channels=group_base_channels,
     )
 
 
@@ -145,7 +163,7 @@ def make_rf_lock(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=RfLock,
+        custom_entity_class=CeRfLock,
         device_enum=EntityDefinition.RF_LOCK,
         group_base_channels=group_base_channels,
     )
