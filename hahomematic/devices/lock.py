@@ -84,8 +84,8 @@ class CeIpLock(BaseLock):
 
     @property
     def _lock_state(self) -> float | None:
-        """Return the lock_state of the device."""
-        return self._get_entity_state(field_name=FIELD_LOCK_STATE)
+        """Return the lock state of the device."""
+        return self._get_entity_value(field_name=FIELD_LOCK_STATE)
 
     @property
     def _e_lock_target_level(self) -> HmAction:
@@ -128,7 +128,7 @@ class CeRfLock(BaseLock):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._e_state.state is not True
+        return self._e_state.value is not True
 
     async def lock(self) -> None:
         """Lock the lock."""

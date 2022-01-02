@@ -96,7 +96,7 @@ class BaseClimateEntity(CustomEntity):
     @property
     def _humidity(self) -> int | None:
         """Return the humidity of the device."""
-        return self._get_entity_state(field_name=FIELD_HUMIDITY)
+        return self._get_entity_value(field_name=FIELD_HUMIDITY)
 
     @property
     def _e_setpoint(self) -> HmNumber:
@@ -106,7 +106,7 @@ class BaseClimateEntity(CustomEntity):
     @property
     def _temperature(self) -> float | None:
         """Return the temperature of the device."""
-        return self._get_entity_state(field_name=FIELD_TEMPERATURE)
+        return self._get_entity_value(field_name=FIELD_TEMPERATURE)
 
     @property
     def temperature_unit(self) -> str:
@@ -149,7 +149,7 @@ class BaseClimateEntity(CustomEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return target temperature."""
-        return self._e_setpoint.state
+        return self._e_setpoint.value
 
     @property
     def preset_mode(self) -> str:
@@ -254,7 +254,7 @@ class CeRfThermostat(BaseClimateEntity):
     @property
     def _control_mode(self) -> int | None:
         """Return the control_mode of the device."""
-        return self._get_entity_state(field_name=FIELD_CONTROL_MODE)
+        return self._get_entity_value(field_name=FIELD_CONTROL_MODE)
 
     @property
     def supported_features(self) -> int:
@@ -307,7 +307,7 @@ class CeRfThermostat(BaseClimateEntity):
         elif hvac_mode == HVAC_MODE_OFF:
             await self.set_temperature(temperature=self.min_temp)
         # if switching hvac_mode then disable boost_mode
-        if self._e_boost_mode.state:
+        if self._e_boost_mode.value:
             await self.set_preset_mode(PRESET_NONE)
 
     async def set_preset_mode(self, preset_mode: str) -> None:
@@ -345,14 +345,14 @@ class CeIpThermostat(BaseClimateEntity):
         if heating_cooling := self._get_entity(
             field_name=FIELD_HEATING_COOLING, entity_type=HmSelect
         ):
-            if heating_cooling.state:
-                return str(heating_cooling.state) == "HEATING"
+            if heating_cooling.value:
+                return str(heating_cooling.value) == "HEATING"
         return True
 
     @property
     def _party_mode(self) -> bool | None:
         """Return the party_mode of the device."""
-        return self._get_entity_state(field_name=FIELD_PARTY_MODE)
+        return self._get_entity_value(field_name=FIELD_PARTY_MODE)
 
     @property
     def _e_set_point_mode(self) -> HmNumber:
@@ -369,9 +369,9 @@ class CeIpThermostat(BaseClimateEntity):
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= self.min_temp:
             return HVAC_MODE_OFF
-        if self._e_set_point_mode.state == HMIP_SET_POINT_MODE_MANU:
+        if self._e_set_point_mode.value == HMIP_SET_POINT_MODE_MANU:
             return HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_COOL
-        if self._e_set_point_mode.state == HMIP_SET_POINT_MODE_AUTO:
+        if self._e_set_point_mode.value == HMIP_SET_POINT_MODE_AUTO:
             return HVAC_MODE_AUTO
         return HVAC_MODE_AUTO
 
@@ -387,9 +387,9 @@ class CeIpThermostat(BaseClimateEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset mode."""
-        if self._e_boost_mode.state:
+        if self._e_boost_mode.value:
             return PRESET_BOOST
-        if self._e_set_point_mode.state == HMIP_SET_POINT_MODE_AWAY:
+        if self._e_set_point_mode.value == HMIP_SET_POINT_MODE_AWAY:
             return PRESET_AWAY
         if self.hvac_mode == HVAC_MODE_AUTO:
             return (
@@ -417,7 +417,7 @@ class CeIpThermostat(BaseClimateEntity):
             await self._e_control_mode.send_value(HMIP_SET_POINT_MODE_MANU)
             await self.set_temperature(temperature=self.min_temp)
         # if switching hvac_mode then disable boost_mode
-        if self._e_boost_mode.state:
+        if self._e_boost_mode.value:
             await self.set_preset_mode(PRESET_NONE)
 
     async def set_preset_mode(self, preset_mode: str) -> None:
@@ -486,8 +486,8 @@ class CeIpThermostat(BaseClimateEntity):
             v: k for k, v in self._relevant_profiles.items()
         }
         return (
-            inv_profiles[int(self._e_active_profile.state)]
-            if self._e_active_profile.state is not None
+            inv_profiles[int(self._e_active_profile.value)]
+            if self._e_active_profile.value is not None
             else None
         )
 

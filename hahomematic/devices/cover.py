@@ -86,11 +86,11 @@ class CeCover(CustomEntity):
 
     @property
     def _channel_level(self) -> float | None:
-        """Return the channel level state of the cover."""
-        channel_level = self._get_entity_state(field_name=FIELD_CHANNEL_LEVEL)
+        """Return the channel level of the cover."""
+        channel_level = self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL)
         if channel_level:
             return float(channel_level)
-        return self._e_level.state
+        return self._e_level.value
 
     @property
     def current_cover_position(self) -> int | None:
@@ -129,7 +129,7 @@ class CeCover(CustomEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the cover."""
         state_attr = super().extra_state_attributes
-        if self._channel_level and self._channel_level != self._e_level.state:
+        if self._channel_level and self._channel_level != self._e_level.value:
             state_attr[ATTR_CHANNEL_COVER_LEVEL] = self._channel_level * 100
         return state_attr
 
@@ -145,10 +145,10 @@ class CeBlind(CeCover):
     @property
     def _channel_level_2(self) -> float | None:
         """Return the channel level of the tilt."""
-        channel_level_2 = self._get_entity_state(field_name=FIELD_CHANNEL_LEVEL_2)
+        channel_level_2 = self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL_2)
         if channel_level_2:
             return float(channel_level_2)
-        return self._e_level_2.state
+        return self._e_level_2.value
 
     @property
     def current_cover_tilt_position(self) -> int | None:
@@ -179,7 +179,7 @@ class CeBlind(CeCover):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the cover."""
         state_attr = super().extra_state_attributes
-        if self._channel_level_2 and self._channel_level_2 != self._e_level_2.state:
+        if self._channel_level_2 and self._channel_level_2 != self._e_level_2.value:
             state_attr[ATTR_CHANNEL_TILT_LEVEL] = self._channel_level_2 * 100
         return state_attr
 
@@ -216,12 +216,12 @@ class CeGarage(CustomEntity):
 
     @property
     def _door_state(self) -> int | None:
-        """Return the door_state entity of the garage door."""
-        return self._get_entity_state(field_name=FIELD_DOOR_STATE)
+        """Return the door state entity of the garage door."""
+        return self._get_entity_value(field_name=FIELD_DOOR_STATE)
 
     @property
     def _e_door_command(self) -> HmAction:
-        """Return the door_command entityof the cover."""
+        """Return the door_command entity of the cover."""
         return self._get_entity(field_name=FIELD_DOOR_COMMAND, entity_type=HmAction)
 
     @property

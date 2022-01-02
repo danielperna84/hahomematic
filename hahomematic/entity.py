@@ -43,7 +43,6 @@ from hahomematic.const import (
 )
 import hahomematic.device as hm_device
 import hahomematic.devices.entity_definition as hm_entity_definition
-from hahomematic.exceptions import HaHomematicException
 from hahomematic.helpers import (
     get_custom_entity_name,
     get_device_address,
@@ -76,7 +75,7 @@ class CallbackEntity(ABC):
 
     def update_entity(self, *args: Any) -> None:
         """
-        Do what is needed when the state of the entity has been updated.
+        Do what is needed when the value of the entity has been updated.
         """
         self._set_last_update()
         for _callback in self._update_callbacks:
@@ -332,7 +331,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         )
         CallbackEntity.__init__(self)
 
-        self._state: ParameterType | None = None
+        self._value: ParameterType | None = None
 
         # Subscribe for all events of this device
         if (
@@ -352,7 +351,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         """
         Handle event for which this entity has subscribed.
         """
-        if self._state is value:
+        if self._value is value:
             return
 
         _LOGGER.debug(
@@ -361,7 +360,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             channel_address,
             parameter,
             value,
-            self._state,
+            self._value,
         )
         if interface_id != self._interface_id:
             _LOGGER.warning(
@@ -385,14 +384,14 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             )
             return
 
-        if self._state is not value:
-            self._state = value
+        if self._value is not value:
+            self._value = value
             self.update_entity(self.unique_id)
 
     @property
-    def state(self) -> ParameterType | None:
-        """Return the state of the entity."""
-        return self._state
+    def value(self) -> ParameterType | None:
+        """Return the value of the entity."""
+        return self._value
 
     async def load_data(self) -> int:
         """Load data"""
@@ -400,7 +399,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             return DATA_NO_LOAD
         try:
             if self._operations & OPERATION_READ:
-                self._state = await self._client.get_value(
+                self._value = await self._client.get_value(
                     channel_address=self.channel_address, parameter=self.parameter
                 )
                 self.update_entity()
@@ -409,7 +408,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             return DATA_LOAD_SUCCESS
         except Exception as err:
             _LOGGER.debug(
-                " %s: Failed to get state for %s, %s, %s: %s",
+                " %s: Failed to get value for %s, %s, %s: %s",
                 self.platform,
                 self._device.device_type,
                 self.channel_address,
@@ -559,13 +558,13 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
         return cast(entity_type,  NoneTypeEntity())
 
-    def _get_entity_state(
+    def _get_entity_value(
         self, field_name: str, default: Any | None = None
     ) -> Any | None:
         """get entity value"""
         entity = self.data_entities.get(field_name)
         if entity:
-            return entity.state
+            return entity.value
         return default
 
 
@@ -669,7 +668,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             )
         except Exception:
             _LOGGER.exception(
-                "action_event: Failed to set state for: %s, %s, %s",
+                "action_event: Failed to send value for: %s, %s, %s",
                 self.channel_address,
                 self.parameter,
                 value,
@@ -866,7 +865,7 @@ def fix_unit(unit: str | None) -> str | None:
 class NoneTypeEntity:
     """Entity to return an empty value."""
 
-    state: Any = None
+    value: Any = None
 
     def send_value(self, value) -> None:
         """Dummy method."""

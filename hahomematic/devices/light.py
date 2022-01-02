@@ -132,17 +132,17 @@ class CeDimmer(BaseHmLight):
     @property
     def _channel_level(self) -> float | None:
         """Return the channel level entity of the device."""
-        return self._get_entity_state(field_name=FIELD_CHANNEL_LEVEL)
+        return self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL)
 
     @property
     def is_on(self) -> bool:
         """Return true if dimmer is on."""
-        return self._e_level.state is not None and self._e_level.state > 0.0
+        return self._e_level.value is not None and self._e_level.value > 0.0
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return int((self._e_level.state or 0.0) * 255)
+        return int((self._e_level.value or 0.0) * 255)
 
     @property
     def color_mode(self) -> str:
@@ -181,8 +181,8 @@ class CeDimmer(BaseHmLight):
         state_attr = super().extra_state_attributes
         if (
             self._channel_level
-            and self._e_level.state
-            and self._channel_level != self._e_level.state
+            and self._e_level.value
+            and self._channel_level != self._e_level.value
         ):
             state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
         return state_attr
@@ -209,7 +209,7 @@ class CeIpLightBSL(BaseHmLight):
     @property
     def _channel_color(self) -> str | None:
         """Return the channel color of the device."""
-        return self._get_entity_state(field_name=FIELD_CHANNEL_COLOR)
+        return self._get_entity_value(field_name=FIELD_CHANNEL_COLOR)
 
     @property
     def _e_level(self) -> HmNumber:
@@ -218,8 +218,8 @@ class CeIpLightBSL(BaseHmLight):
 
     @property
     def _channel_level(self) -> float | None:
-        """Return the channel level state of the device."""
-        return self._get_entity_state(field_name=FIELD_CHANNEL_LEVEL)
+        """Return the channel level of the device."""
+        return self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL)
 
     @property
     def _e_ramp_time_unit(self) -> HmAction:
@@ -234,12 +234,12 @@ class CeIpLightBSL(BaseHmLight):
     @property
     def is_on(self) -> bool:
         """Return true if dimmer is on."""
-        return self._e_level.state is not None and self._e_level.state > 0.0
+        return self._e_level.value is not None and self._e_level.value > 0.0
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return int((self._e_level.state or 0.0) * 255)
+        return int((self._e_level.value or 0.0) * 255)
 
     @property
     def color_mode(self) -> str:
@@ -249,8 +249,8 @@ class CeIpLightBSL(BaseHmLight):
     @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
-        if self._e_color.state:
-            return self._color_switcher.get(self._e_color.state, (0.0, 0.0))
+        if self._e_color.value:
+            return self._color_switcher.get(self._e_color.value, (0.0, 0.0))
         return 0.0, 0.0
 
     @property
@@ -283,8 +283,8 @@ class CeIpLightBSL(BaseHmLight):
         """Return the state attributes of the notification light sensor."""
         state_attr = super().extra_state_attributes
         if self.is_on:
-            state_attr[ATTR_COLOR_NAME] = self._e_color.state
-        if self._channel_level and self._channel_level != self._e_level.state:
+            state_attr[ATTR_COLOR_NAME] = self._e_color.value
+        if self._channel_level and self._channel_level != self._e_level.value:
             state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
         if self._channel_color and self._channel_color:
             state_attr[ATTR_CHANNEL_COLOR] = self._channel_color

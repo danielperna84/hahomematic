@@ -59,12 +59,12 @@ class CeSwitch(CustomEntity):
     @property
     def _channel_state(self) -> bool | None:
         """Return the temperature of the device."""
-        return self._get_entity_state(field_name=FIELD_CHANNEL_STATE)
+        return self._get_entity_value(field_name=FIELD_CHANNEL_STATE)
 
     @property
-    def state(self) -> bool | None:
-        """Return the current state of the switch."""
-        return self._e_state.state
+    def value(self) -> bool | None:
+        """Return the current value of the switch."""
+        return self._e_state.value
 
     async def turn_on(self) -> None:
         """Turn the switch on."""
@@ -78,7 +78,7 @@ class CeSwitch(CustomEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the switch."""
         state_attr = super().extra_state_attributes
-        if self._channel_state and self._channel_state != self._e_state.state:
+        if self._channel_state and self._channel_state != self._e_state.value:
             state_attr[ATTR_CHANNEL_STATE] = self._channel_state
         return state_attr
 

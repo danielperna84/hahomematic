@@ -5,6 +5,7 @@ Version 0.11.0 (2022-01-0x)
 - Add platform zu hub entities
 - Use entities in properties
 - Add transition to dimmer
+- Rename entity.state to entity.value
 
 Version 0.10.0 (2021-12-31)
 - Make reset_motion, reset_presence a button
