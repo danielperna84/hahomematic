@@ -44,6 +44,7 @@ from hahomematic.const import (
 import hahomematic.device as hm_device
 import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.helpers import (
+    check_is_only_primary_channel,
     get_custom_entity_name,
     get_device_address,
     get_device_channel,
@@ -467,6 +468,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
             unique_id=self.unique_id,
             channel_no=channel_no,
             device_type=self.device_type,
+            is_only_primary_channel=check_is_only_primary_channel(
+                current_channel=channel_no, device_def=device_def
+            ),
         )
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
@@ -556,7 +560,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         if entity := self.data_entities.get(field_name):
             return cast(entity_type, entity)
 
-        return cast(entity_type,  NoneTypeEntity())
+        return cast(entity_type, NoneTypeEntity())
 
     def _get_entity_value(
         self, field_name: str, default: Any | None = None
@@ -869,5 +873,3 @@ class NoneTypeEntity:
 
     def send_value(self, value) -> None:
         """Dummy method."""
-
-

@@ -21,6 +21,7 @@ from hahomematic.const import (
     ATTR_VALUE,
     HA_DOMAIN,
 )
+import hahomematic.devices.entity_definition as hm_entity_definition
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,6 +170,7 @@ def get_custom_entity_name(
     unique_id: str,
     channel_no: int,
     device_type: str,
+    is_only_primary_channel: bool,
 ) -> str:
     """Rename name for custom entity"""
     custom_entity_name = _get_base_name_from_channel_or_device(
@@ -177,7 +179,21 @@ def get_custom_entity_name(
         unique_id=unique_id,
         device_type=device_type,
     )
-    return custom_entity_name.replace(":", " ")
+    if is_only_primary_channel and ":" in custom_entity_name:
+        return custom_entity_name.split(":")[0]
+
+    return custom_entity_name.replace(":", " ch")
+
+
+def check_is_only_primary_channel(
+    current_channel: int, device_def: dict[str, Any]
+) -> bool:
+    """Check if this channel is the only primary channel."""
+    phy_channels: list[int] = device_def[hm_entity_definition.ED_PHY_CHANNEL]
+    if len(phy_channels) == 1:
+        if phy_channels[0] == current_channel:
+            return True
+    return False
 
 
 def _get_base_name_from_channel_or_device(
