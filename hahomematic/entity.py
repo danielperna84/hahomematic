@@ -42,9 +42,10 @@ from hahomematic.const import (
     HmPlatform,
 )
 import hahomematic.device as hm_device
+import hahomematic.devices as hm_custom_entity
 import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.helpers import (
-    check_is_only_primary_channel,
+    check_channel_is_only_primary_channel,
     get_custom_entity_name,
     get_device_address,
     get_device_channel,
@@ -462,14 +463,19 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self._device_enum = device_enum
         self._device_desc = device_def
         self._entity_def = entity_def
+        device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
+            device_type=self._device.device_type, sub_type=self._device.sub_type
+        )
         self.name = get_custom_entity_name(
             central=self._central,
             device_address=self.device_address,
             unique_id=self.unique_id,
             channel_no=channel_no,
             device_type=self.device_type,
-            is_only_primary_channel=check_is_only_primary_channel(
-                current_channel=channel_no, device_def=device_def
+            is_only_primary_channel=check_channel_is_only_primary_channel(
+                current_channel=channel_no,
+                device_def=device_def,
+                device_has_multiple_channels=device_has_multiple_channels,
             ),
         )
         self.data_entities: dict[str, GenericEntity] = {}

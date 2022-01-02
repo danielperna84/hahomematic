@@ -1,3 +1,6 @@
+Version 0.11.1 (2022-01-02)
+- Improve detection of multi channel devices
+
 Version 0.11.0 (2022-01-02)
 - Add positional arguments
 - Add missing channel no
