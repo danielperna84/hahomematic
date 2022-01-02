@@ -30,6 +30,14 @@ async def test_central(central, loop) -> None:
     custom_entities = []
     for device in central.hm_devices.values():
         custom_entities.extend(device.custom_entities.values())
+
+    ce_channels = {}
+    for custom_entitiy in custom_entities:
+        if custom_entitiy.device_type not in ce_channels:
+            ce_channels[custom_entitiy.device_type] = []
+        ce_channels[custom_entitiy.device_type].append(custom_entitiy.channel_no)
+
+    assert len(ce_channels) == 67
     assert len(custom_entities) == 114
     assert len(central.hm_entities) == 2237
 

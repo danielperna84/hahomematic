@@ -178,7 +178,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_GARAGE: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
                     FIELD_DOOR_COMMAND: "DOOR_COMMAND,",
@@ -230,20 +230,17 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_LOCK: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {},
-                ED_FIELDS: {
-                    1: {
-                        FIELD_LOCK_STATE: "LOCK_STATE",
-                        FIELD_LOCK_TARGET_LEVEL: "LOCK_TARGET_LEVEL",
-                    }
-                },
+                ED_FIELDS_REP: {
+                    FIELD_LOCK_STATE: "LOCK_STATE",
+                    FIELD_LOCK_TARGET_LEVEL: "LOCK_TARGET_LEVEL",
+                }
             },
         },
         EntityDefinition.IP_THERMOSTAT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
                     FIELD_ACTIVE_PROFILE: "ACTIVE_PROFILE",
@@ -259,19 +256,19 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
-                1: {
+                0: {
                     FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_LEVEL: "LEVEL",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                 },
-                9: {
+                8: {
                     FIELD_STATE: "STATE",
                 },
             },
         },
         EntityDefinition.IP_THERMOSTAT_GROUP: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
                     FIELD_ACTIVE_PROFILE: "ACTIVE_PROFILE",
@@ -290,7 +287,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_COVER: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1, 2, 3, 4],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
@@ -301,7 +298,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_DIMMER: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1, 2, 3, 4],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
                     FIELD_LEVEL: "LEVEL",
@@ -311,20 +308,17 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_LOCK: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {},
-                ED_FIELDS: {
-                    1: {
-                        FIELD_OPEN: "OPEN",
-                        FIELD_STATE: "STATE",
-                    }
+                ED_FIELDS_REP: {
+                    FIELD_OPEN: "OPEN",
+                    FIELD_STATE: "STATE",
                 },
             },
         },
         EntityDefinition.RF_THERMOSTAT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1, 2, 3, 4],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
                     FIELD_AUTO_MODE: "AUTO_MODE",
@@ -347,7 +341,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_THERMOSTAT_GROUP: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1, 2, 3, 4],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {
                     FIELD_AUTO_MODE: "AUTO_MODE",
@@ -365,15 +359,15 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
         },
         EntityDefinition.SIMPLE_RF_THERMOSTAT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
+                ED_PHY_CHANNEL: [0],
                 ED_VIRT_CHANNEL: [],
                 ED_FIELDS_REP: {},
                 ED_FIELDS: {
-                    1: {
+                    0: {
                         FIELD_HUMIDITY: "HUMIDITY",
                         FIELD_TEMPERATURE: "TEMPERATURE",
                     },
-                    2: {
+                    1: {
                         FIELD_SETPOINT: "SETPOINT",
                     },
                 },
