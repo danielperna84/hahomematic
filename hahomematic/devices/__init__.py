@@ -17,7 +17,7 @@ _ALL_DEVICES = [
 def get_device_funcs(
     device_type: str, sub_type: str
 ) -> list[tuple[Callable, list[int]]]:
-    """Return the function to"""
+    """Return the function to create custom entities"""
 
     funcs = []
     for platform_devices in _ALL_DEVICES:
@@ -37,6 +37,16 @@ def get_device_funcs(
                 funcs.append(func)
                 continue
     return funcs
+
+
+def is_multi_channel_device(device_type: str, sub_type: str) -> bool:
+    """Return true, if device has multiple channels"""
+    channels = []
+    funcs = get_device_funcs(device_type=device_type, sub_type=sub_type)
+    for func in funcs:
+        channels.extend(func[1])
+
+    return len(channels) > 1
 
 
 def entity_definition_exists(device_type: str, sub_type: str) -> bool:
