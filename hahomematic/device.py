@@ -19,7 +19,6 @@ from hahomematic.const import (
     BUTTON_ACTIONS,
     CLICK_EVENTS,
     FLAG_INTERAL,
-    HA_DOMAIN,
     HH_EVENT_DEVICES_CREATED,
     HM_VIRTUAL_REMOTES,
     IDENTIFIERS_SEPARATOR,
@@ -271,7 +270,7 @@ class HmDevice:
         return {
             "identifiers": {
                 (
-                    HA_DOMAIN,
+                    self._central.domain,
                     f"{self._device_address}{IDENTIFIERS_SEPARATOR}{self._interface_id}",
                 )
             },
@@ -279,7 +278,7 @@ class HmDevice:
             "manufacturer": MANUFACTURER,
             "model": self.device_type,
             "sw_version": self.firmware,
-            "via_device": (HA_DOMAIN, self._central.instance_name),
+            "via_device": (self._central.domain, self._central.instance_name),
         }
 
     @property
@@ -397,6 +396,7 @@ class HmDevice:
     ) -> HmButton | None:
         """Create the buttons associated to this device"""
         unique_id = generate_unique_id(
+            domain=self._central.domain,
             address=channel_address,
             parameter=parameter,
             prefix=f"button_{self._central.instance_name}",
@@ -427,7 +427,10 @@ class HmDevice:
             self._central.entity_event_subscriptions[(channel_address, parameter)] = []
 
         unique_id = generate_unique_id(
-            channel_address, parameter, f"event_{self._central.instance_name}"
+            domain=self._central.domain,
+            address=channel_address,
+            parameter=parameter,
+            prefix=f"event_{self._central.instance_name}",
         )
 
         _LOGGER.debug(
@@ -485,7 +488,9 @@ class HmDevice:
         if (channel_address, parameter) not in self._central.entity_event_subscriptions:
             self._central.entity_event_subscriptions[(channel_address, parameter)] = []
 
-        unique_id = generate_unique_id(channel_address, parameter)
+        unique_id = generate_unique_id(
+            domain=self._central.domain, address=channel_address, parameter=parameter
+        )
         if unique_id in self._central.hm_entities:
             _LOGGER.debug("create_entity: Skipping %s (already exists)", unique_id)
             return None

@@ -32,7 +32,6 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
-    HA_DOMAIN,
     HM_VIRTUAL_REMOTE_HM,
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
@@ -62,6 +61,7 @@ class CentralUnit:
     def __init__(self, central_config: CentralConfig):
         _LOGGER.debug("CentralUnit.__init__")
         self.central_config: CentralConfig = central_config
+        self._domain = self.central_config.domain
 
         self.instance_name: str = self.central_config.name
         self._available: bool = True
@@ -106,6 +106,11 @@ class CentralUnit:
         hm_data.INSTANCES[self.instance_name] = self
         self._connection_checker = ConnectionChecker(self)
         self.hub: HmHub | HmDummyHub | None = None
+
+    @property
+    def domain(self) -> str:
+        """Return the domain."""
+        return self._domain
 
     def create_hub(self) -> HmHub | HmDummyHub:
         """Create the hub."""
@@ -154,7 +159,7 @@ class CentralUnit:
     def device_info(self) -> dict[str, Any]:
         """Return central specific attributes."""
         return {
-            "identifiers": {(HA_DOMAIN, self.instance_name)},
+            "identifiers": {(self._domain, self.instance_name)},
             "name": self.instance_name,
             "manufacturer": MANUFACTURER,
             "model": self.model,
@@ -535,6 +540,7 @@ class CentralConfig:
         self,
         loop: asyncio.AbstractEventLoop,
         xml_rpc_server: xml_rpc.XmlRpcServer,
+        domain: str,
         name: str,
         host: str = LOCALHOST,
         username: str = DEFAULT_USERNAME,
@@ -551,6 +557,7 @@ class CentralConfig:
     ):
         self.loop = loop
         self.xml_rpc_server = xml_rpc_server
+        self.domain = domain
         self.name = name
         self.host = host
         self.username = username

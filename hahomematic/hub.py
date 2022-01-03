@@ -133,7 +133,12 @@ class HmSystemVariable(BaseHubEntity):
 
     def __init__(self, central: hm_central.CentralUnit, name: str, value: Any):
         self._hub: HmHub | HmDummyHub | None = central.hub
-        unique_id = generate_unique_id(central.instance_name, name, prefix="hub")
+        unique_id = generate_unique_id(
+            domain=central.domain,
+            address=central.instance_name,
+            parameter=name,
+            prefix="hub",
+        )
         super().__init__(central=central, unique_id=unique_id, name=name, value=value)
 
     @property
@@ -165,7 +170,9 @@ class HmHub(BaseHubEntity):
 
     def __init__(self, central: hm_central.CentralUnit, use_entities: bool = False):
         """Initialize HomeMatic hub."""
-        unique_id: str = generate_unique_id(central.instance_name, prefix="hub")
+        unique_id: str = generate_unique_id(
+            domain=central.domain, address=central.instance_name, prefix="hub"
+        )
         name: str = central.instance_name
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, HmSystemVariable] = {}
@@ -252,7 +259,9 @@ class HmDummyHub(BaseHubEntity):
 
     def __init__(self, central: hm_central.CentralUnit, use_entities: bool = False):
         """Initialize HomeMatic hub."""
-        unique_id: str = generate_unique_id(central.instance_name, prefix="hub")
+        unique_id: str = generate_unique_id(
+            domain=central.domain, address=central.instance_name, prefix="hub"
+        )
         name: str = central.instance_name
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, BaseHubEntity] = {}
