@@ -9,12 +9,12 @@ from typing import Any
 
 from hahomematic.const import ATTR_HM_VALUE, HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.entity import GenericEntity
+from hahomematic.entity import GenericEntity, ParameterType
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmNumber(GenericEntity[float]):
+class BaseNumber(GenericEntity[ParameterType]):
     """
     Implementation of a number.
     This is a default platform that gets automatically generated.
@@ -37,20 +37,62 @@ class HmNumber(GenericEntity[float]):
             platform=HmPlatform.NUMBER,
         )
 
+
+class HmFloat(BaseNumber[float]):
+    """
+    Implementation of a Float.
+    This is a default platform that gets automatically generated.
+    """
+
+    @property
+    def value(self) -> float | None:
+        """Return the value of the entity."""
+        if self._value:
+            return float(self._value)
+        return None
+
     async def send_value(self, value: float) -> None:
         """Set the value of the entity."""
-        # pylint: disable=no-else-return
-        if value is not None and self._min <= value <= self._max:
+        if value is not None and float(self._min) <= float(value) <= float(self._max):
             await super().send_value(value)
-            return
         elif self._special:
             if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
                 await super().send_value(value)
-                return
-        _LOGGER.error(
-            "number: Invalid value: %s (min: %s, max: %s, special: %s)",
-            value,
-            self._min,
-            self._max,
-            self._special,
-        )
+        else:
+            _LOGGER.error(
+                "number.float: Invalid value: %s (min: %s, max: %s, special: %s)",
+                value,
+                self._min,
+                self._max,
+                self._special,
+            )
+
+
+class HmInteger(BaseNumber[int]):
+    """
+    Implementation of an Integer.
+    This is a default platform that gets automatically generated.
+    """
+
+    @property
+    def value(self) -> int | None:
+        """Return the value of the entity."""
+        if self._value:
+            return int(self._value)
+        return None
+
+    async def send_value(self, value: int) -> None:
+        """Set the value of the entity."""
+        if value is not None and int(self._min) <= int(value) <= int(self._max):
+            await super().send_value(value)
+        elif self._special:
+            if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
+                await super().send_value(value)
+        else:
+            _LOGGER.error(
+                "number.int: Invalid value: %s (min: %s, max: %s, special: %s)",
+                value,
+                self._min,
+                self._max,
+                self._special,
+            )

@@ -21,7 +21,7 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
-from hahomematic.platforms.number import HmNumber
+from hahomematic.platforms.number import HmFloat
 from hahomematic.platforms.select import HmSelect
 
 ATTR_BRIGHTNESS = "brightness"
@@ -71,9 +71,9 @@ class BaseHmLight(CustomEntity):
         )
 
     @property
-    def _e_level(self) -> HmNumber:
+    def _e_level(self) -> HmFloat:
         """Return the level entity of the device."""
-        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmNumber)
+        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
 
     @property
     @abstractmethod
@@ -212,9 +212,9 @@ class CeIpLightBSL(BaseHmLight):
         return self._get_entity_value(field_name=FIELD_CHANNEL_COLOR)
 
     @property
-    def _e_level(self) -> HmNumber:
+    def _e_level(self) -> HmFloat:
         """Return the level entity of the device."""
-        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmNumber)
+        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
 
     @property
     def _channel_level(self) -> float | None:

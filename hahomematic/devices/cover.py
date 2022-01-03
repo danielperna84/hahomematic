@@ -21,7 +21,7 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
-from hahomematic.platforms.number import HmNumber
+from hahomematic.platforms.number import HmFloat
 
 ATTR_CHANNEL_COVER_LEVEL = "channel_cover_level"
 ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
@@ -75,9 +75,9 @@ class CeCover(CustomEntity):
         )
 
     @property
-    def _e_level(self) -> HmNumber:
+    def _e_level(self) -> HmFloat:
         """Return the level entity of the cover."""
-        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmNumber)
+        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
 
     @property
     def _e_stop(self) -> HmAction:
@@ -138,9 +138,9 @@ class CeBlind(CeCover):
     """Class for homematic blind entities."""
 
     @property
-    def _e_level_2(self) -> HmNumber:
+    def _e_level_2(self) -> HmFloat:
         """Return the level entity of the tilt."""
-        return self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmNumber)
+        return self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmFloat)
 
     @property
     def _channel_level_2(self) -> float | None:
