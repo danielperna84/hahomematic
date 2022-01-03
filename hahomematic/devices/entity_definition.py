@@ -442,7 +442,9 @@ def _create_entities(
     """Create custom entities."""
     entities: list[hm_entity.BaseEntity] = []
     unique_id = generate_unique_id(
-        domain=device.central.domain, address=f"{device_address}:{channel_no}"
+        domain=device.central.domain,
+        instance_name=device.central.instance_name,
+        address=f"{device_address}:{channel_no}",
     )
     if unique_id in device.central.hm_entities:
         _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_id)

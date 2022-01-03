@@ -30,7 +30,11 @@ class ClientException(Exception):
 
 
 def generate_unique_id(
-    domain: str, address: str, parameter: str | None = None, prefix: str | None = None
+    domain: str,
+    instance_name: str,
+    address: str,
+    parameter: str | None = None,
+    prefix: str | None = None,
 ) -> str:
     """
     Build unique id from address and parameter.
@@ -41,7 +45,8 @@ def generate_unique_id(
 
     if prefix:
         unique_id = f"{prefix}_{unique_id}"
-
+    if address.startswith("INT000"):
+        return f"{domain}_{instance_name}_{unique_id}".lower()
     return f"{domain}_{unique_id}".lower()
 
 
@@ -239,6 +244,7 @@ def get_device_channel(address: str) -> int:
     return int(address.split(":")[1])
 
 
+# pylint: disable=no-member
 def get_local_ip(host: str, port: int) -> str:
     """Get local_ip from socket."""
     try:
