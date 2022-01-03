@@ -602,7 +602,7 @@ class BaseCache(ABC):
         cache_dict: dict[str, Any],
     ):
         self._central = central
-        self._cache_dir = config.CACHE_DIR
+        self._cache_dir = f"{self._central.domain}/cache"
         self._filename = f"{self._central.instance_name}_{filename}"
         self._cache_dict = cache_dict
 
