@@ -58,7 +58,7 @@ from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
 from hahomematic.platforms.binary_sensor import HmBinarySensor
 from hahomematic.platforms.button import HmButton
-from hahomematic.platforms.number import HmNumber
+from hahomematic.platforms.number import HmFloat, HmInteger
 from hahomematic.platforms.select import HmSelect
 from hahomematic.platforms.sensor import HmSensor
 from hahomematic.platforms.switch import HmSwitch
@@ -569,11 +569,24 @@ class HmDevice:
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
-                elif parameter_data[ATTR_HM_TYPE] in [TYPE_FLOAT, TYPE_INTEGER]:
+                elif parameter_data[ATTR_HM_TYPE] == TYPE_FLOAT:
                     _LOGGER.debug(
-                        "create_entity: number: %s %s", channel_address, parameter
+                        "create_entity: number.integer: %s %s",
+                        channel_address,
+                        parameter,
                     )
-                    entity = HmNumber(
+                    entity = HmFloat(
+                        device=self,
+                        unique_id=unique_id,
+                        channel_address=channel_address,
+                        parameter=parameter,
+                        parameter_data=parameter_data,
+                    )
+                elif parameter_data[ATTR_HM_TYPE] == TYPE_INTEGER:
+                    _LOGGER.debug(
+                        "create_entity: number.float: %s %s", channel_address, parameter
+                    )
+                    entity = HmInteger(
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,

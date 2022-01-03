@@ -1,3 +1,6 @@
+Version 0.12.0 (2022-01-03)
+- Split number to integer and float
+
 Version 0.11.2 (2022-01-02)
 - Precise entity definitions
 

@@ -235,7 +235,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 ED_FIELDS_REP: {
                     FIELD_LOCK_STATE: "LOCK_STATE",
                     FIELD_LOCK_TARGET_LEVEL: "LOCK_TARGET_LEVEL",
-                }
+                },
             },
         },
         EntityDefinition.IP_THERMOSTAT: {

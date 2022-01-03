@@ -1,7 +1,7 @@
 """Test the HaHomematic central."""
 from typing import Any
 from unittest.mock import patch
-
+from hahomematic.const import HmPlatform
 from conftest import get_value_from_generic_entity, send_device_value_to_ccu, get_hm_device
 import pytest
 
@@ -18,6 +18,7 @@ async def test_central(central, loop) -> None:
     assert central.clients["ccu-dev-hm"].model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 294
+    assert len(central.hm_entities) == 2237
 
     data = {}
     for device in central.hm_devices.values():
@@ -30,17 +31,22 @@ async def test_central(central, loop) -> None:
     custom_entities = []
     for device in central.hm_devices.values():
         custom_entities.extend(device.custom_entities.values())
+    assert len(custom_entities) == 114
 
     ce_channels = {}
-    for custom_entitiy in custom_entities:
-        if custom_entitiy.device_type not in ce_channels:
-            ce_channels[custom_entitiy.device_type] = []
-        ce_channels[custom_entitiy.device_type].append(custom_entitiy.channel_no)
-
+    for custom_entity in custom_entities:
+        if custom_entity.device_type not in ce_channels:
+            ce_channels[custom_entity.device_type] = []
+        ce_channels[custom_entity.device_type].append(custom_entity.channel_no)
     assert len(ce_channels) == 67
-    assert len(custom_entities) == 114
-    assert len(central.hm_entities) == 2237
 
+    entity_types = {}
+    for entity in central.hm_entities.values():
+        if entity.platform == HmPlatform.NUMBER:
+            if entity.hmtype not in entity_types:
+                entity_types[entity.hmtype] = []
+            entity_types[entity.hmtype].append(entity.name)
+    assert len(entity_types) == 2
 
 @pytest.mark.asyncio
 async def test_device_set_data(central, pydev_ccu, loop) -> None:

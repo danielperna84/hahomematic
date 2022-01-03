@@ -27,7 +27,7 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
-from hahomematic.platforms.number import HmNumber
+from hahomematic.platforms.number import HmFloat, HmInteger
 from hahomematic.platforms.select import HmSelect
 from hahomematic.platforms.switch import HmSwitch
 
@@ -99,9 +99,9 @@ class BaseClimateEntity(CustomEntity):
         return self._get_entity_value(field_name=FIELD_HUMIDITY)
 
     @property
-    def _e_setpoint(self) -> HmNumber:
+    def _e_setpoint(self) -> HmFloat:
         """Return the setpoint entity of the device."""
-        return self._get_entity(field_name=FIELD_SETPOINT, entity_type=HmNumber)
+        return self._get_entity(field_name=FIELD_SETPOINT, entity_type=HmFloat)
 
     @property
     def _temperature(self) -> float | None:
@@ -326,9 +326,9 @@ class CeIpThermostat(BaseClimateEntity):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
     @property
-    def _e_active_profile(self) -> HmNumber:
+    def _e_active_profile(self) -> HmInteger:
         """Return the active_profile entity of the device."""
-        return self._get_entity(field_name=FIELD_ACTIVE_PROFILE, entity_type=HmNumber)
+        return self._get_entity(field_name=FIELD_ACTIVE_PROFILE, entity_type=HmInteger)
 
     @property
     def _e_boost_mode(self) -> HmSwitch:
@@ -355,9 +355,9 @@ class CeIpThermostat(BaseClimateEntity):
         return self._get_entity_value(field_name=FIELD_PARTY_MODE)
 
     @property
-    def _e_set_point_mode(self) -> HmNumber:
+    def _e_set_point_mode(self) -> HmInteger:
         """Return the set_point_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_SET_POINT_MODE, entity_type=HmNumber)
+        return self._get_entity(field_name=FIELD_SET_POINT_MODE, entity_type=HmInteger)
 
     @property
     def supported_features(self) -> int:
