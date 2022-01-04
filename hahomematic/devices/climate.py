@@ -490,7 +490,7 @@ class CeIpThermostat(BaseClimateEntity):
     def _profiles(self) -> dict[str, int]:
         """Return the profile groups."""
         profiles: dict[str, int] = {}
-        for i in range(self._e_active_profile.min, self._e_active_profile.max+1):
+        for i in range(self._e_active_profile.min, self._e_active_profile.max + 1):
             profiles[f"Profile {i}"] = i
 
         return profiles

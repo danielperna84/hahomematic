@@ -110,7 +110,11 @@ class RPCFunctions:
 
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.run_coroutine(central.add_new_devices(interface_id=interface_id, dev_descriptions=dev_descriptions))
+            central.run_coroutine(
+                central.add_new_devices(
+                    interface_id=interface_id, dev_descriptions=dev_descriptions
+                )
+            )
 
     @callback_system_event(HH_EVENT_DELETE_DEVICES)
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
@@ -121,7 +125,9 @@ class RPCFunctions:
 
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.run_coroutine(central.delete_devices(interface_id=interface_id, addresses=addresses))
+            central.run_coroutine(
+                central.delete_devices(interface_id=interface_id, addresses=addresses)
+            )
 
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
     # pylint: disable=no-self-use

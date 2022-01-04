@@ -32,6 +32,7 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
+    HH_EVENT_DELETE_DEVICES,
     HM_VIRTUAL_REMOTE_HM,
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
@@ -209,10 +210,27 @@ class CentralUnit:
             _LOGGER.exception("CentralUnit.init: Failed to create entities")
             raise Exception("entity-creation-error") from err
 
+    async def delete_device(self, interface_id: str, device_address: str) -> None:
+        """Delete devices from central_unit."""
+        _LOGGER.debug(
+            "CentralUnit.delete_device: interface_id = %s, device_address = %s",
+            interface_id,
+            device_address,
+        )
+        addresses: list[str] = []
+        if hm_device := self.hm_devices.get(device_address):
+            addresses.append(device_address)
+            addresses.extend(hm_device.channels)
+
+        await self.delete_devices(interface_id=interface_id, addresses=addresses)
+        args: list[Any] = [HH_EVENT_DELETE_DEVICES, addresses]
+        if self.callback_system_event is not None and callable(self.callback_system_event):
+            self.callback_system_event(HH_EVENT_DELETE_DEVICES, *args) # pylint: disable=not-callable
+
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
-            "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
+            "CentralUnit.delete_devices: interface_id = %s, addresses = %s",
             interface_id,
             str(addresses),
         )
@@ -237,10 +255,12 @@ class CentralUnit:
         await self.paramsets.save()
         await self.names.save()
 
-    async def add_new_devices(self, interface_id: str, dev_descriptions: list[dict[str, Any]]) -> None:
+    async def add_new_devices(
+        self, interface_id: str, dev_descriptions: list[dict[str, Any]]
+    ) -> None:
         """Async implementation"""
         _LOGGER.debug(
-            "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
+            "CentralUnit.add_new_devices: interface_id = %s, dev_descriptions = %s",
             interface_id,
             len(dev_descriptions),
         )
@@ -261,9 +281,7 @@ class CentralUnit:
         for dev_desc in dev_descriptions:
             try:
                 if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
-                    self.raw_devices.add_device_description(
-                        interface_id, dev_desc
-                    )
+                    self.raw_devices.add_device_description(interface_id, dev_desc)
                     await client.fetch_paramsets(dev_desc)
             except Exception:
                 _LOGGER.exception("RPCFunctions.newDevices: Exception")

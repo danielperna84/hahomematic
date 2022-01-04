@@ -156,6 +156,11 @@ class HmDevice:
         """Return the address."""
         return self._device_address
 
+    @property
+    def channels(self) -> list[str]:
+        """Return the channels."""
+        return self._channels
+
     def add_hm_entity(self, hm_entity: BaseEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
