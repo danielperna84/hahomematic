@@ -875,7 +875,14 @@ def fix_unit(unit: str | None) -> str | None:
 class NoneTypeEntity:
     """Entity to return an empty value."""
 
+    default: Any = None
+    hmtype: Any = None
+    max: Any = None
+    min: Any = None
+    unit: Any = None
     value: Any = None
+    value_list: list[Any] = []
+    visible: Any = None
 
     def send_value(self, value: Any) -> None:
         """Dummy method."""

@@ -57,8 +57,6 @@ TEMP_CELSIUS = "°C"
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
 
-HEATING_PROFILES = {"Profile 1": 1, "Profile 2": 2, "Profile 3": 3}
-COOLING_PROFILES = {"Profile 4": 4, "Profile 5": 5, "Profile 6": 6}
 HM_MIN_VALUE = 4.5
 HM_MAX_VALUE = 30.5
 
@@ -430,9 +428,10 @@ class CeIpThermostat(BaseClimateEntity):
         if preset_mode in self._profile_names:
             if self.hvac_mode != HVAC_MODE_AUTO:
                 await self.set_hvac_mode(HVAC_MODE_AUTO)
-            profile_idx = self._get_profile_idx_by_name(preset_mode)
+            profile_idx = self._profiles.get(preset_mode)
             await self._e_boost_mode.send_value(False)
-            await self._e_active_profile.send_value(profile_idx)
+            if profile_idx:
+                await self._e_active_profile.send_value(profile_idx)
 
     async def enable_away_mode_by_calendar(
         self, start: datetime, end: datetime, away_temperature: float
@@ -477,28 +476,24 @@ class CeIpThermostat(BaseClimateEntity):
     @property
     def _profile_names(self) -> list[str]:
         """Return a collection of profile names."""
-        return list(self._relevant_profiles.keys())
+        return list(self._profiles.keys())
 
     @property
     def _current_profile_name(self) -> str | None:
         """Return a profile index by name."""
-        inv_profiles: dict[int, str] = {
-            v: k for k, v in self._relevant_profiles.items()
-        }
-        return (
-            inv_profiles[int(self._e_active_profile.value)]
-            if self._e_active_profile.value is not None
-            else None
-        )
-
-    def _get_profile_idx_by_name(self, profile_name: str) -> int:
-        """Return a profile index by name."""
-        return self._relevant_profiles[profile_name]
+        inv_profiles: dict[int, str] = {v: k for k, v in self._profiles.items()}
+        if self._e_active_profile.value:
+            return inv_profiles.get(int(self._e_active_profile.value))
+        return None
 
     @property
-    def _relevant_profiles(self) -> dict[str, int]:
-        """Return the relevant profile groups."""
-        return HEATING_PROFILES if self._is_heating else COOLING_PROFILES
+    def _profiles(self) -> dict[str, int]:
+        """Return the profile groups."""
+        profiles: dict[str, int] = {}
+        for i in range(self._e_active_profile.min, self._e_active_profile.max+1):
+            profiles[f"Profile {i}"] = i
+
+        return profiles
 
 
 def make_simple_thermostat(
