@@ -551,7 +551,6 @@ class CentralConfig:
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
-        json_tls: bool = DEFAULT_TLS,
         option_enable_virtual_channels: bool = False,
         option_enable_sensors_for_system_variables: bool = False,
     ):
@@ -568,7 +567,6 @@ class CentralConfig:
         self.callback_host = callback_host
         self.callback_port = callback_port
         self.json_port = json_port
-        self.json_tls = json_tls
         self.option_enable_virtual_channels = option_enable_virtual_channels
         self.option_enable_sensors_for_system_variables = (
             option_enable_sensors_for_system_variables
@@ -578,7 +576,7 @@ class CentralConfig:
     def device_url(self) -> str:
         """Return the required url."""
         url = "http://"
-        if self.json_tls:
+        if self.tls:
             url = "https://"
         url = f"{url}{self.host}"
         if self.json_port:
