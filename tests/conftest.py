@@ -66,6 +66,7 @@ async def central(
             GOT_DEVICES = True
 
     central_unit = await CentralConfig(
+        domain="hahm",
         name="ccu-dev",
         loop=loop,
         xml_rpc_server=register_xml_rpc_server(),

@@ -877,5 +877,5 @@ class NoneTypeEntity:
 
     value: Any = None
 
-    def send_value(self, value) -> None:
+    def send_value(self, value: Any) -> None:
         """Dummy method."""

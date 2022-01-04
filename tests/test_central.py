@@ -42,15 +42,23 @@ async def test_central(central, loop) -> None:
 
     entity_types = {}
     for entity in central.hm_entities.values():
-        if entity.platform == HmPlatform.NUMBER:
+        if hasattr(entity, "hmtype"):
             if entity.hmtype not in entity_types:
-                entity_types[entity.hmtype] = []
-            entity_types[entity.hmtype].append(entity.name)
-    assert len(entity_types) == 2
+                entity_types[entity.hmtype] = {}
+            if type(entity).__name__ not in entity_types[entity.hmtype]:
+                entity_types[entity.hmtype][type(entity).__name__] = []
+
+            entity_types[entity.hmtype][type(entity).__name__].append(entity)
+    assert len(entity_types) == 6
+
 
 @pytest.mark.asyncio
 async def test_device_set_data(central, pydev_ccu, loop) -> None:
     """Test callback."""
+    for pydev in pydev_ccu._rpcfunctions.devices:
+        if address := pydev.get('ADDRESS'):
+            if "VCU2721398" in address:
+                pass
     assert central
     assert pydev_ccu
     old_value = await get_value_from_generic_entity(

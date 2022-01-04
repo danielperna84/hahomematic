@@ -7,7 +7,6 @@ from datetime import datetime
 from enum import Enum
 
 DEFAULT_ENCODING = "UTF-8"
-HA_DOMAIN = "hahm"
 MANUFACTURER = "eQ-3"
 INIT_DATETIME = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
 LOCALHOST = "localhost"
@@ -295,7 +294,7 @@ class HmPlatform(Enum):
 
 
 class HmEventType(Enum):
-    """Enum with hahm event types."""
+    """Enum with hahomematic event types."""
 
     ALARM = "homematic.alarm"
     KEYPRESS = "homematic.keypress"

@@ -19,7 +19,6 @@ from hahomematic.const import (
     ATTR_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
-    HA_DOMAIN,
 )
 import hahomematic.devices.entity_definition as hm_entity_definition
 
@@ -31,7 +30,11 @@ class ClientException(Exception):
 
 
 def generate_unique_id(
-    address: str, parameter: str | None = None, prefix: str | None = None
+    domain: str,
+    instance_name: str,
+    address: str,
+    parameter: str | None = None,
+    prefix: str | None = None,
 ) -> str:
     """
     Build unique id from address and parameter.
@@ -42,8 +45,9 @@ def generate_unique_id(
 
     if prefix:
         unique_id = f"{prefix}_{unique_id}"
-
-    return f"{HA_DOMAIN}_{unique_id}".lower()
+    if address.startswith("INT000"):
+        return f"{domain}_{instance_name}_{unique_id}".lower()
+    return f"{domain}_{unique_id}".lower()
 
 
 def make_http_credentials(

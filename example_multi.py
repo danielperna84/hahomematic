@@ -82,6 +82,7 @@ class Example:
 
     async def example_run(self):
         self.central_1 = await CentralConfig(
+            domain="hahm",
             name="ccu-dev",
             loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
@@ -91,6 +92,7 @@ class Example:
             option_enable_virtual_channels=True,
         ).get_central()
         self.central_2 = await CentralConfig(
+            domain="hahm",
             name="ccu-2-dev",
             loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),

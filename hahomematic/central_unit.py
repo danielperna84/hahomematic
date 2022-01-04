@@ -32,7 +32,6 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
-    HA_DOMAIN,
     HM_VIRTUAL_REMOTE_HM,
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
@@ -62,6 +61,7 @@ class CentralUnit:
     def __init__(self, central_config: CentralConfig):
         _LOGGER.debug("CentralUnit.__init__")
         self.central_config: CentralConfig = central_config
+        self._domain = self.central_config.domain
 
         self.instance_name: str = self.central_config.name
         self._available: bool = True
@@ -106,6 +106,11 @@ class CentralUnit:
         hm_data.INSTANCES[self.instance_name] = self
         self._connection_checker = ConnectionChecker(self)
         self.hub: HmHub | HmDummyHub | None = None
+
+    @property
+    def domain(self) -> str:
+        """Return the domain."""
+        return self._domain
 
     def create_hub(self) -> HmHub | HmDummyHub:
         """Create the hub."""
@@ -154,7 +159,7 @@ class CentralUnit:
     def device_info(self) -> dict[str, Any]:
         """Return central specific attributes."""
         return {
-            "identifiers": {(HA_DOMAIN, self.instance_name)},
+            "identifiers": {(self._domain, self.instance_name)},
             "name": self.instance_name,
             "manufacturer": MANUFACTURER,
             "model": self.model,
@@ -535,6 +540,7 @@ class CentralConfig:
         self,
         loop: asyncio.AbstractEventLoop,
         xml_rpc_server: xml_rpc.XmlRpcServer,
+        domain: str,
         name: str,
         host: str = LOCALHOST,
         username: str = DEFAULT_USERNAME,
@@ -545,12 +551,12 @@ class CentralConfig:
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
-        json_tls: bool = DEFAULT_TLS,
         option_enable_virtual_channels: bool = False,
         option_enable_sensors_for_system_variables: bool = False,
     ):
         self.loop = loop
         self.xml_rpc_server = xml_rpc_server
+        self.domain = domain
         self.name = name
         self.host = host
         self.username = username
@@ -561,7 +567,6 @@ class CentralConfig:
         self.callback_host = callback_host
         self.callback_port = callback_port
         self.json_port = json_port
-        self.json_tls = json_tls
         self.option_enable_virtual_channels = option_enable_virtual_channels
         self.option_enable_sensors_for_system_variables = (
             option_enable_sensors_for_system_variables
@@ -571,7 +576,7 @@ class CentralConfig:
     def device_url(self) -> str:
         """Return the required url."""
         url = "http://"
-        if self.json_tls:
+        if self.tls:
             url = "https://"
         url = f"{url}{self.host}"
         if self.json_port:
@@ -595,7 +600,7 @@ class BaseCache(ABC):
         cache_dict: dict[str, Any],
     ):
         self._central = central
-        self._cache_dir = config.CACHE_DIR
+        self._cache_dir = f"{self._central.domain}/cache"
         self._filename = f"{self._central.instance_name}_{filename}"
         self._cache_dict = cache_dict
 

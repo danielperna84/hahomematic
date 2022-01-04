@@ -44,7 +44,7 @@ class JsonRpcAioHttpClient:
         self._session_id: str | None = None
         self._username: str = self._central_config.username
         self._password: str | None = self._central_config.password
-        self._json_tls: bool = self._central_config.json_tls
+        self._tls: bool = self._central_config.tls
         self._tls_context: ssl.SSLContext = get_tls_context(
             self._central_config.verify_tls
         )
@@ -175,7 +175,7 @@ class JsonRpcAioHttpClient:
             }
 
             _LOGGER.debug("json_rpc_client._post: API-Endpoint: %s", self._url)
-            if self._json_tls:
+            if self._tls:
                 resp = await self._client_session.post(
                     self._url,
                     data=payload,
