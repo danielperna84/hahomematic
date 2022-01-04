@@ -1,5 +1,8 @@
 Version 0.13.2 (2022-01-04)
 - Fix cover state
+- Move delete_devices from RPCFunctions to central
+- Move new_devices from RPCFunctions to central
+- Add method to delete a single device to central
 
 Version 0.13.1 (2022-01-04)
 - Use generic climate profiles list
