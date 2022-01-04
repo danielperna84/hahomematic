@@ -110,7 +110,7 @@ class CeCover(CustomEntity):
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._channel_level is not None:
-            return self._channel_level == HM_OPEN
+            return self._channel_level == HM_CLOSED
         return None
 
     async def open_cover(self) -> None:
