@@ -88,7 +88,7 @@ class CeCover(CustomEntity):
     def _channel_level(self) -> float | None:
         """Return the channel level of the cover."""
         channel_level = self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL)
-        if channel_level:
+        if channel_level is not None:
             return float(channel_level)
         return self._e_level.value
 
@@ -146,7 +146,7 @@ class CeBlind(CeCover):
     def _channel_level_2(self) -> float | None:
         """Return the channel level of the tilt."""
         channel_level_2 = self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL_2)
-        if channel_level_2:
+        if channel_level_2 is not None:
             return float(channel_level_2)
         return self._e_level_2.value
 
