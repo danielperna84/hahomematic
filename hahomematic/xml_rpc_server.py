@@ -13,7 +13,6 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
-    ATTR_HM_ADDRESS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_ERROR,
     HH_EVENT_LIST_DEVICES,
@@ -25,7 +24,6 @@ from hahomematic.const import (
     PORT_ANY,
 )
 from hahomematic.decorators import callback_event, callback_system_event
-from hahomematic.device import create_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,45 +108,9 @@ class RPCFunctions:
         We react on that and add those devices as well.
         """
 
-        async def _async_new_devices(central_unit: hm_central.CentralUnit) -> None:
-            """Async implementation"""
-            _LOGGER.debug(
-                "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
-                interface_id,
-                len(dev_descriptions),
-            )
-
-            if interface_id not in central_unit.clients:
-                _LOGGER.error(
-                    "RPCFunctions.newDevices: Missing client for interface_id %s.",
-                    interface_id,
-                )
-                return None
-
-            # We need this list to avoid adding duplicates.
-            known_addresses = [
-                dd[ATTR_HM_ADDRESS]
-                for dd in central_unit.raw_devices.get_device_descriptions(interface_id)
-            ]
-            client = central_unit.clients[interface_id]
-            for dd in dev_descriptions:
-                try:
-                    if dd[ATTR_HM_ADDRESS] not in known_addresses:
-                        central_unit.raw_devices.add_device_description(
-                            interface_id, dd
-                        )
-                        await client.fetch_paramsets(dd)
-                except Exception:
-                    _LOGGER.exception("RPCFunctions.newDevices: Exception")
-            await central_unit.raw_devices.save()
-            await central_unit.paramsets.save()
-            await client.fetch_names()
-            await central_unit.names.save()
-            create_devices(central_unit)
-
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.run_coroutine(_async_new_devices(central))
+            central.run_coroutine(central.add_new_devices(interface_id=interface_id, dev_descriptions=dev_descriptions))
 
     @callback_system_event(HH_EVENT_DELETE_DEVICES)
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
@@ -157,37 +119,9 @@ class RPCFunctions:
         We react on that and remove those devices as well.
         """
 
-        async def _async_delete_devices(central_unit: hm_central.CentralUnit) -> None:
-            """async implementation."""
-            _LOGGER.debug(
-                "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
-                interface_id,
-                str(addresses),
-            )
-
-            await central_unit.raw_devices.cleanup(
-                interface_id=interface_id, deleted_addresses=addresses
-            )
-
-            for address in addresses:
-                try:
-                    if ":" in address:
-                        central_unit.paramsets.remove(
-                            interface_id=interface_id, channel_address=address
-                        )
-                    central_unit.names.remove(address=address)
-                    if hm_device := central_unit.hm_devices.get(address):
-                        hm_device.remove_event_subscriptions()
-                        hm_device.remove_from_collections()
-                        del central_unit.hm_devices[address]
-                except KeyError:
-                    _LOGGER.exception("Failed to delete: %s", address)
-            await central_unit.paramsets.save()
-            await central_unit.names.save()
-
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.run_coroutine(_async_delete_devices(central))
+            central.run_coroutine(central.delete_devices(interface_id=interface_id, addresses=addresses))
 
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
     # pylint: disable=no-self-use

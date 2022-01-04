@@ -209,6 +209,70 @@ class CentralUnit:
             _LOGGER.exception("CentralUnit.init: Failed to create entities")
             raise Exception("entity-creation-error") from err
 
+    async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
+        """Delete devices from central_unit."""
+        _LOGGER.debug(
+            "RPCFunctions.deleteDevices: interface_id = %s, addresses = %s",
+            interface_id,
+            str(addresses),
+        )
+
+        await self.raw_devices.cleanup(
+            interface_id=interface_id, deleted_addresses=addresses
+        )
+
+        for address in addresses:
+            try:
+                if ":" in address:
+                    self.paramsets.remove(
+                        interface_id=interface_id, channel_address=address
+                    )
+                self.names.remove(address=address)
+                if hm_device := self.hm_devices.get(address):
+                    hm_device.remove_event_subscriptions()
+                    hm_device.remove_from_collections()
+                    del self.hm_devices[address]
+            except KeyError:
+                _LOGGER.exception("Failed to delete: %s", address)
+        await self.paramsets.save()
+        await self.names.save()
+
+    async def add_new_devices(self, interface_id: str, dev_descriptions: list[dict[str, Any]]) -> None:
+        """Async implementation"""
+        _LOGGER.debug(
+            "RPCFunctions.newDevices: interface_id = %s, dev_descriptions = %s",
+            interface_id,
+            len(dev_descriptions),
+        )
+
+        if interface_id not in self.clients:
+            _LOGGER.error(
+                "RPCFunctions.newDevices: Missing client for interface_id %s.",
+                interface_id,
+            )
+            return None
+
+        # We need this list to avoid adding duplicates.
+        known_addresses = [
+            dev_desc[ATTR_HM_ADDRESS]
+            for dev_desc in self.raw_devices.get_device_descriptions(interface_id)
+        ]
+        client = self.clients[interface_id]
+        for dev_desc in dev_descriptions:
+            try:
+                if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
+                    self.raw_devices.add_device_description(
+                        interface_id, dev_desc
+                    )
+                    await client.fetch_paramsets(dev_desc)
+            except Exception:
+                _LOGGER.exception("RPCFunctions.newDevices: Exception")
+        await self.raw_devices.save()
+        await self.paramsets.save()
+        await client.fetch_names()
+        await self.names.save()
+        create_devices(self)
+
     async def stop(self) -> None:
         """
         then shut down our XML-RPC server.
