@@ -301,7 +301,7 @@ class CeRfThermostat(BaseClimateEntity):
         if hvac_mode == HVAC_MODE_AUTO:
             await self._e_auto_mode.send_value(True)
         elif hvac_mode == HVAC_MODE_HEAT:
-            await self._e_manu_mode.send_value(self.max_temp)
+            await self._e_manu_mode.send_value(self.current_temperature)
         elif hvac_mode == HVAC_MODE_OFF:
             await self.set_temperature(temperature=self.min_temp)
         # if switching hvac_mode then disable boost_mode

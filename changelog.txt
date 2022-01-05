@@ -1,6 +1,7 @@
 Version 0.13.3 (2022-01-05)
 - HM cover fix: check level for None
 - Only device_address is required for HA callback
+- Fix max_temp issue for hm thermostats
 
 Version 0.13.2 (2022-01-04)
 - Fix cover state
