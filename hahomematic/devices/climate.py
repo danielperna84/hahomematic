@@ -250,7 +250,7 @@ class CeRfThermostat(BaseClimateEntity):
         return self._get_entity(field_name=FIELD_LOWERING_MODE, entity_type=HmAction)
 
     @property
-    def _control_mode(self) -> int | None:
+    def _control_mode(self) -> str | None:
         """Return the control_mode of the device."""
         return self._get_entity_value(field_name=FIELD_CONTROL_MODE)
 

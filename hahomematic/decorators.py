@@ -3,6 +3,7 @@ Decorators used within hahomematic.
 """
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime
 import functools
@@ -23,9 +24,21 @@ def callback_system_event(name: str) -> Callable:
         """Decorator for callback system event."""
 
         @functools.wraps(func)
+        async def async_wrapper_callback_system_event(*args: Any) -> Any:
+            """Wrapper for callback system event."""
+            return_value = await func(*args)
+            exec_callback_system_event(*args)
+            return return_value
+
+        @functools.wraps(func)
         def wrapper_callback_system_event(*args: Any) -> Any:
             """Wrapper for callback system event."""
             return_value = func(*args)
+            exec_callback_system_event(*args)
+            return return_value
+
+        def exec_callback_system_event(*args: Any) -> None:
+            """Execute the callback for a system event."""
             try:
                 # We don't want to pass the function itself
                 args = args[1:]
@@ -38,8 +51,9 @@ def callback_system_event(name: str) -> Callable:
                 client.last_updated = datetime.now()
                 if client.central.callback_system_event is not None:
                     client.central.callback_system_event(name, *args)
-            return return_value
 
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper_callback_system_event
         return wrapper_callback_system_event
 
     return decorator_callback_system_event
@@ -51,9 +65,21 @@ def callback_event(func: Callable) -> Callable:
     """
 
     @functools.wraps(func)
+    async def async_wrapper_callback_event(*args: Any) -> Any:
+        """Wrapper for callback event."""
+        return_value = await func(*args)
+        exec_callback_entity_event(*args)
+        return return_value
+
+    @functools.wraps(func)
     def wrapper_callback_event(*args: Any) -> Any:
         """Wrapper for callback event."""
         return_value = func(*args)
+        exec_callback_entity_event(*args)
+        return return_value
+
+    def exec_callback_entity_event(*args: Any) -> None:
+        """Execute the callback for an entity event."""
         try:
             # We don't want to pass the function itself
             args = args[1:]
@@ -66,6 +92,7 @@ def callback_event(func: Callable) -> Callable:
             client.last_updated = datetime.now()
             if client.central.callback_entity_event is not None:
                 client.central.callback_entity_event(*args)
-        return return_value
 
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper_callback_event
     return wrapper_callback_event

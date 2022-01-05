@@ -13,10 +13,8 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
-    HH_EVENT_DELETE_DEVICES,
     HH_EVENT_ERROR,
     HH_EVENT_LIST_DEVICES,
-    HH_EVENT_NEW_DEVICES,
     HH_EVENT_RE_ADDED_DEVICE,
     HH_EVENT_REPLACE_DEVICE,
     HH_EVENT_UPDATE_DEVICE,
@@ -99,7 +97,6 @@ class RPCFunctions:
 
         return central.raw_devices.get_device_descriptions(interface_id=interface_id)
 
-    @callback_system_event(HH_EVENT_NEW_DEVICES)
     def newDevices(
         self, interface_id: str, dev_descriptions: list[dict[str, Any]]
     ) -> None:
@@ -111,12 +108,9 @@ class RPCFunctions:
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.run_coroutine(
-                central.add_new_devices(
-                    interface_id=interface_id, dev_descriptions=dev_descriptions
-                )
+                central.add_new_devices(interface_id, dev_descriptions)
             )
 
-    @callback_system_event(HH_EVENT_DELETE_DEVICES)
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
         """
         The CCU / Homegear informs us about removed devices.
@@ -125,9 +119,7 @@ class RPCFunctions:
 
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.run_coroutine(
-                central.delete_devices(interface_id=interface_id, addresses=addresses)
-            )
+            central.run_coroutine(central.delete_devices(interface_id, addresses))
 
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
     # pylint: disable=no-self-use
