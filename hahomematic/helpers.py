@@ -244,7 +244,6 @@ def get_device_channel(address: str) -> int:
     return int(address.split(":")[1])
 
 
-# pylint: disable=no-member
 def get_local_ip(host: str, port: int) -> str:
     """Get local_ip from socket."""
     try:

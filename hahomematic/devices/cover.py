@@ -90,7 +90,7 @@ class CeCover(CustomEntity):
         channel_level = self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL)
         if channel_level is not None:
             return float(channel_level)
-        return self._e_level.value
+        return self._e_level.value if self._e_level.value is not None else HM_CLOSED
 
     @property
     def current_cover_position(self) -> int | None:
@@ -148,7 +148,7 @@ class CeBlind(CeCover):
         channel_level_2 = self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL_2)
         if channel_level_2 is not None:
             return float(channel_level_2)
-        return self._e_level_2.value
+        return self._e_level_2.value if self._e_level_2.value is not None else HM_CLOSED
 
     @property
     def current_cover_tilt_position(self) -> int | None:
