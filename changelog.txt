@@ -1,3 +1,6 @@
+Version 0.13.3 (2022-01-05)
+- HM cover fix: check level for None
+
 Version 0.13.2 (2022-01-04)
 - Fix cover state
 - Move delete_devices from RPCFunctions to central

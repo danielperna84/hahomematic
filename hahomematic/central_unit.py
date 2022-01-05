@@ -224,8 +224,11 @@ class CentralUnit:
 
         await self.delete_devices(interface_id=interface_id, addresses=addresses)
         args: list[Any] = [HH_EVENT_DELETE_DEVICES, addresses]
-        if self.callback_system_event is not None and callable(self.callback_system_event):
-            self.callback_system_event(HH_EVENT_DELETE_DEVICES, *args) # pylint: disable=not-callable
+        if self.callback_system_event is not None and callable(
+            self.callback_system_event
+        ):
+            # pylint: disable=not-callable
+            self.callback_system_event(HH_EVENT_DELETE_DEVICES, *args)
 
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
