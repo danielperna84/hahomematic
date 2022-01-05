@@ -217,13 +217,22 @@ class CentralUnit:
             interface_id,
             device_address,
         )
-        addresses: list[str] = []
-        if hm_device := self.hm_devices.get(device_address):
-            addresses.append(device_address)
-            addresses.extend(hm_device.channels)
+
+        if (hm_device := self.hm_devices.get(device_address)) is None:
+            return
+        addresses: list[str] = hm_device.channels
+        addresses.append(device_address)
+        if len(addresses) == 0:
+            _LOGGER.debug(
+                "CentralUnit.delete_device: Nothing to delete: interface_id = %s, device_address = %s",
+                interface_id,
+                device_address,
+            )
+            return
 
         await self.delete_devices(interface_id=interface_id, addresses=addresses)
-        args: list[Any] = [HH_EVENT_DELETE_DEVICES, addresses]
+        # only device_address is required for HA callback
+        args: list[Any] = [HH_EVENT_DELETE_DEVICES, [device_address]]
         if self.callback_system_event is not None and callable(
             self.callback_system_event
         ):
