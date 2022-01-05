@@ -33,10 +33,10 @@ from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
-HM_MODE_AUTO = 0
-HM_MODE_MANU = 1
-HM_MODE_AWAY = 2
-HM_MODE_BOOST = 3
+HM_MODE_AUTO = 'AUTO-MODE'
+HM_MODE_MANU = "MANU-MODE"
+HM_MODE_AWAY = 'PARTY-MODE'
+HM_MODE_BOOST = 'BOOST-MODE'
 HMIP_SET_POINT_MODE_AUTO = 0
 HMIP_SET_POINT_MODE_MANU = 1
 HMIP_SET_POINT_MODE_AWAY = 2
@@ -282,7 +282,7 @@ class CeRfThermostat(BaseClimateEntity):
             return PRESET_BOOST
         if self._control_mode == HM_MODE_AWAY:
             return PRESET_AWAY
-        # This mode (PRESET_AWY) generally is available, but we're hiding it because
+        # This mode (PRESET_AWY) generally is available, but
         # we can't set it from the Home Assistant UI natively.
         # We could create 2 input_datetime entities and reference them
         # and number.xxx_4_party_temperature when setting the preset.
