@@ -33,6 +33,7 @@ from hahomematic.const import (
     FILE_NAMES,
     FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
+    HH_EVENT_NEW_DEVICES,
     HM_VIRTUAL_REMOTE_HM,
     HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
@@ -40,6 +41,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 import hahomematic.data as hm_data
+from hahomematic.decorators import callback_system_event
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
 import hahomematic.helpers
@@ -230,15 +232,9 @@ class CentralUnit:
             )
             return
 
-        await self.delete_devices(interface_id=interface_id, addresses=addresses)
-        # only device_address is required for HA callback
-        args: list[Any] = [HH_EVENT_DELETE_DEVICES, [device_address]]
-        if self.callback_system_event is not None and callable(
-            self.callback_system_event
-        ):
-            # pylint: disable=not-callable
-            self.callback_system_event(HH_EVENT_DELETE_DEVICES, *args)
+        await self.delete_devices(interface_id, addresses)
 
+    @callback_system_event(HH_EVENT_DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
@@ -267,6 +263,7 @@ class CentralUnit:
         await self.paramsets.save()
         await self.names.save()
 
+    @callback_system_event(HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
         self, interface_id: str, dev_descriptions: list[dict[str, Any]]
     ) -> None:
