@@ -14,9 +14,7 @@ from hahomematic.helpers import generate_unique_id
 _LOGGER = logging.getLogger(__name__)
 
 EXCLUDED_FROM_SENSOR = [
-    "Connection",
     "pcCCUID",
-    "RF-Gateway-Alarm",
 ]
 
 EXCLUDED = [
