@@ -4,6 +4,7 @@ Version 0.14.0 (2022-01-06)
 - Make decorators async aware
 - Don't exclude DutyCycle, needed for old rf-modules
 - Don't exclude Watchdog from SV sensor
+- Ignore mypy error
 
 Version 0.13.3 (2022-01-05)
 - HM cover fix: check level for None
