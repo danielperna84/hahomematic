@@ -22,7 +22,6 @@ EXCLUDED_FROM_SENSOR = [
 
 EXCLUDED = [
     "CarrierSense",
-    "DutyCycle",
     "OldVal",
     "Servicemeldungen",
 ]
