@@ -564,9 +564,8 @@ class CustomEntity(BaseEntity, CallbackEntity):
     ) -> _EntityType:
         """get entity"""
         if entity := self.data_entities.get(field_name):
-            return cast(entity_type, entity)
-
-        return cast(entity_type, NoneTypeEntity())
+            return cast(entity_type, entity)  # type: ignore
+        return cast(entity_type, NoneTypeEntity())  # type: ignore
 
     def _get_entity_value(
         self, field_name: str, default: Any | None = None

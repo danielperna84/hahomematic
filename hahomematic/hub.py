@@ -17,12 +17,10 @@ EXCLUDED_FROM_SENSOR = [
     "Connection",
     "pcCCUID",
     "RF-Gateway-Alarm",
-    "WatchDog",
 ]
 
 EXCLUDED = [
     "CarrierSense",
-    "DutyCycle",
     "OldVal",
     "Servicemeldungen",
 ]
