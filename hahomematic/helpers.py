@@ -38,6 +38,8 @@ def generate_unique_id(
 ) -> str:
     """
     Build unique id from address and parameter.
+    Instance_name is addionally used for heating groups.
+    Prefix is used for events and buttons.
     """
     unique_id = address.replace(":", "_").replace("-", "_")
     if parameter:

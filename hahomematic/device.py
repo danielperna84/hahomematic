@@ -362,7 +362,7 @@ class HmDevice:
                             parameter_data=parameter_data,
                         )
                         if self._device_address.startswith(tuple(HM_VIRTUAL_REMOTES)):
-                            entity = self.create_button(
+                            entity = self.create_action(
                                 channel_address=channel_address,
                                 parameter=parameter,
                                 parameter_data=parameter_data,
@@ -396,10 +396,10 @@ class HmDevice:
                 new_entities.extend(custom_entities)
         return set(new_entities)
 
-    def create_button(
+    def create_action(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
-    ) -> HmButton | None:
-        """Create the buttons associated to this device"""
+    ) -> HmAction | None:
+        """Create the actions associated to this device"""
         unique_id = generate_unique_id(
             domain=self._central.domain,
             instance_name=self._central.instance_name,
@@ -408,21 +408,21 @@ class HmDevice:
             prefix=f"button_{self._central.instance_name}",
         )
         _LOGGER.debug(
-            "create_event: Creating button for %s, %s, %s",
+            "create_event: Creating action for %s, %s, %s",
             channel_address,
             parameter,
             self._interface_id,
         )
 
-        if button := HmButton(
+        if action := HmAction(
             device=self,
             unique_id=unique_id,
             channel_address=channel_address,
             parameter=parameter,
             parameter_data=parameter_data,
         ):
-            button.add_to_collections()
-            return button
+            action.add_to_collections()
+            return action
         return None
 
     def create_event(
