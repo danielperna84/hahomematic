@@ -523,10 +523,13 @@ class ClientCCU(Client):
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
-        for virtual_address in HM_VIRTUAL_REMOTES:
-            virtual_remote = self._central.hm_devices.get(virtual_address)
-            if virtual_remote and virtual_remote.interface_id == self.interface_id:
-                return virtual_remote
+        for device_type in HM_VIRTUAL_REMOTES:
+            for hm_device in self._central.hm_devices.values():
+                if (
+                    hm_device.interface_id == self.interface_id
+                    and hm_device.device_type == device_type
+                ):
+                    return hm_device
         return None
 
 

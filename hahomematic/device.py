@@ -361,7 +361,7 @@ class HmDevice:
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
-                        if self._device_address.startswith(tuple(HM_VIRTUAL_REMOTES)):
+                        if self.device_type in HM_VIRTUAL_REMOTES:
                             entity = self.create_action(
                                 channel_address=channel_address,
                                 parameter=parameter,

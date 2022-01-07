@@ -112,7 +112,7 @@ class Example:
             await asyncio.sleep(1)
         await asyncio.sleep(5)
 
-        for i in range(1600):
+        for i in range(16):
             _LOGGER.debug("Sleeping (%i)", i)
             await asyncio.sleep(2)
         # Stop the central_1 thread so Python can exit properly.
