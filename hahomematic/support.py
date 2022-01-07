@@ -55,6 +55,8 @@ class DeviceExporter:
         # anonymize device_descriptions
         anonymize_device_descriptions: list[Any] = []
         for device_description in device_descriptions.values():
+            if device_description == {}:
+                continue
             new_device_description = copy(device_description)
             new_device_description[ATTR_HM_ADDRESS] = self._anonymize_address(
                 address=new_device_description[ATTR_HM_ADDRESS]
@@ -107,7 +109,7 @@ class DeviceExporter:
                 mode="w",
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
-                json.dump(data, fptr)
+                json.dump(data, fptr, indent=2)
             return DATA_SAVE_SUCCESS
 
         return await self._central.async_add_executor_job(_save)

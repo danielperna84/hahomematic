@@ -313,6 +313,8 @@ class Client(ABC):
         relevant_paramsets: list[str] | None = None,
     ) -> dict[str, dict[str, Any]]:
         """Get paramsets for provided device description."""
+        if not device_description:
+            return {}
         paramsets: dict[str, dict[str, Any]] = {}
         address = device_description[ATTR_HM_ADDRESS]
         paramsets[address] = {}
