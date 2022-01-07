@@ -18,7 +18,7 @@ async def test_central(central, loop) -> None:
     assert central.clients["ccu-dev-hm"].model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 294
-    assert len(central.hm_entities) == 2237
+    assert len(central.hm_entities) == 2537
 
     data = {}
     for device in central.hm_devices.values():
