@@ -1,7 +1,8 @@
-Version 0.16.0 (2022-01-08)
+Version 0.15.2 (2022-01-07)
 - Add devices to CustomEntity
     - HmIP-WGC
     - HmIP-WHS
+- Update to pydevccu 0.1.0
 
 Version 0.15.1 (2022-01-07)
 - Identify virtual remote by device type

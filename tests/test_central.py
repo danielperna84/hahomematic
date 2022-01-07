@@ -17,8 +17,8 @@ async def test_central(central, loop) -> None:
     assert central.version == "pydevccu 0.0.9"
     assert central.clients["ccu-dev-hm"].model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
-    assert len(central.hm_devices) == 294
-    assert len(central.hm_entities) == 2537
+    assert len(central.hm_devices) == 338
+    assert len(central.hm_entities) == 3267
 
     data = {}
     for device in central.hm_devices.values():
@@ -27,18 +27,18 @@ async def test_central(central, loop) -> None:
         for entity in device.entities.values():
             if entity.parameter not in data[device.device_type]:
                 data[device.device_type][entity.parameter] = f"{entity.hmtype}"
-    assert len(data) == 294
+    assert len(data) == 338
     custom_entities = []
     for device in central.hm_devices.values():
         custom_entities.extend(device.custom_entities.values())
-    assert len(custom_entities) == 114
+    assert len(custom_entities) == 189
 
     ce_channels = {}
     for custom_entity in custom_entities:
         if custom_entity.device_type not in ce_channels:
             ce_channels[custom_entity.device_type] = []
         ce_channels[custom_entity.device_type].append(custom_entity.channel_no)
-    assert len(ce_channels) == 67
+    assert len(ce_channels) == 81
 
     entity_types = {}
     for entity in central.hm_entities.values():
@@ -55,10 +55,6 @@ async def test_central(central, loop) -> None:
 @pytest.mark.asyncio
 async def test_device_set_data(central, pydev_ccu, loop) -> None:
     """Test callback."""
-    for pydev in pydev_ccu._rpcfunctions.devices:
-        if address := pydev.get('ADDRESS'):
-            if "VCU2721398" in address:
-                pass
     assert central
     assert pydev_ccu
     old_value = await get_value_from_generic_entity(
