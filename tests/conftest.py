@@ -75,8 +75,6 @@ async def central(
         password=CCU_PASSWORD,
         option_enable_virtual_channels=True,
     ).get_central()
-    config.INIT_TIMEOUT = 10
-    config.CACHE_DIR = "cache"
     central_unit.callback_system_event = systemcallback
     client1 = await ClientConfig(
         central=central_unit,
