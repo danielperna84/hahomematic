@@ -1,3 +1,8 @@
+Version 0.16.0 (2022-01-08)
+- Add devices to CustomEntity
+    - HmIP-WGC
+    - HmIP-WHS
+
 Version 0.15.1 (2022-01-07)
 - Identify virtual remote by device type
 - Fix Device Exporter / format output
