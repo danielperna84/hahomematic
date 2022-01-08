@@ -1,5 +1,8 @@
-Version 0.16.0 (2022-01-08)
-- Return unique_id if name is not in cache
+Version 0.16.1 (2022-01-08)
+- Use helper for device_name
+- Add logging to show usage of unique_id in name
+
+Return unique_id if name is not in cache
 - Remove no longer needed press_virtual_remote_key
 
 Version 0.15.2 (2022-01-07)

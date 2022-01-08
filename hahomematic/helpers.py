@@ -140,6 +140,12 @@ def get_entity_name(
             entity_name = f"{d_name} {p_name}"
         return entity_name
 
+    _LOGGER.info(
+        "Helper.get_entity_name: Using unique_id for %s %s %s",
+        device_type,
+        channel_address,
+        parameter,
+    )
     return unique_id
 
 
@@ -168,6 +174,12 @@ def get_event_name(
             event_name = f"{d_name} {p_name}"
         return event_name
 
+    _LOGGER.info(
+        "Helper.get_event_name: Using unique_id for %s %s %s",
+        device_type,
+        channel_address,
+        parameter,
+    )
     return unique_id
 
 
@@ -189,7 +201,35 @@ def get_custom_entity_name(
             return custom_entity_name.split(":")[0]
         return custom_entity_name.replace(":", " ch")
 
+    _LOGGER.info(
+        "Helper.get_custom_entity_name: Using unique_id for %s %s %s",
+        device_type,
+        device_address,
+        channel_no,
+    )
     return unique_id
+
+
+def get_device_name(
+    central: hm_central.CentralUnit, device_address: str, device_type: str
+) -> str:
+    """Return the cached name for a device, or an auto-generated."""
+    if name := central.names.get_name(address=device_address):
+        return name
+
+    _LOGGER.info(
+        "Helper.get_device_name: Using auto-generated name for %s %s",
+        device_type,
+        device_address,
+    )
+    return get_generated_device_name(
+        device_address=device_address, device_type=device_type
+    )
+
+
+def get_generated_device_name(device_address: str, device_type: str) -> str:
+    """Return auto-generated device name."""
+    return f"{device_type}_{device_address}"
 
 
 def check_channel_is_only_primary_channel(
