@@ -119,28 +119,28 @@ def get_entity_name(
     device_type: str,
 ) -> str:
     """generate name for entity"""
-    entity_name = _get_base_name_from_channel_or_device(
+    if entity_name := _get_base_name_from_channel_or_device(
         central=central,
         channel_address=channel_address,
-        unique_id=unique_id,
         device_type=device_type,
-    )
+    ):
+        if entity_name.count(":") == 1:
+            d_name = entity_name.split(":")[0]
+            p_name = parameter.title().replace("_", " ")
+            c_name = ""
+            if central.paramsets.has_multiple_channels(
+                channel_address=channel_address, parameter=parameter
+            ):
+                c_no = entity_name.split(":")[1]
+                c_name = "" if c_no == "0" else f" ch{c_no}"
+            entity_name = f"{d_name} {p_name}{c_name}"
+        else:
+            d_name = entity_name
+            p_name = parameter.title().replace("_", " ")
+            entity_name = f"{d_name} {p_name}"
+        return entity_name
 
-    if entity_name.count(":") == 1:
-        d_name = entity_name.split(":")[0]
-        p_name = parameter.title().replace("_", " ")
-        c_name = ""
-        if central.paramsets.has_multiple_channels(
-            channel_address=channel_address, parameter=parameter
-        ):
-            c_no = entity_name.split(":")[1]
-            c_name = "" if c_no == "0" else f" ch{c_no}"
-        entity_name = f"{d_name} {p_name}{c_name}"
-    else:
-        d_name = entity_name
-        p_name = parameter.title().replace("_", " ")
-        entity_name = f"{d_name} {p_name}"
-    return entity_name
+    return unique_id
 
 
 def get_event_name(
@@ -151,23 +151,24 @@ def get_event_name(
     device_type: str,
 ) -> str:
     """generate name for event"""
-    event_name = _get_base_name_from_channel_or_device(
+    if event_name := _get_base_name_from_channel_or_device(
         central=central,
         channel_address=channel_address,
-        unique_id=unique_id,
         device_type=device_type,
-    )
-    if event_name.count(":") == 1:
-        d_name = event_name.split(":")[0]
-        p_name = parameter.title().replace("_", " ")
-        c_no = event_name.split(":")[1]
-        c_name = "" if c_no == "0" else f" Channel {c_no}"
-        event_name = f"{d_name}{c_name} {p_name}"
-    else:
-        d_name = event_name
-        p_name = parameter.title().replace("_", " ")
-        event_name = f"{d_name} {p_name}"
-    return event_name
+    ):
+        if event_name.count(":") == 1:
+            d_name = event_name.split(":")[0]
+            p_name = parameter.title().replace("_", " ")
+            c_no = event_name.split(":")[1]
+            c_name = "" if c_no == "0" else f" Channel {c_no}"
+            event_name = f"{d_name}{c_name} {p_name}"
+        else:
+            d_name = event_name
+            p_name = parameter.title().replace("_", " ")
+            event_name = f"{d_name} {p_name}"
+        return event_name
+
+    return unique_id
 
 
 def get_custom_entity_name(
@@ -179,16 +180,16 @@ def get_custom_entity_name(
     is_only_primary_channel: bool,
 ) -> str:
     """Rename name for custom entity"""
-    custom_entity_name = _get_base_name_from_channel_or_device(
+    if custom_entity_name := _get_base_name_from_channel_or_device(
         central=central,
         channel_address=f"{device_address}:{channel_no}",
-        unique_id=unique_id,
         device_type=device_type,
-    )
-    if is_only_primary_channel and ":" in custom_entity_name:
-        return custom_entity_name.split(":")[0]
+    ):
+        if is_only_primary_channel and ":" in custom_entity_name:
+            return custom_entity_name.split(":")[0]
+        return custom_entity_name.replace(":", " ch")
 
-    return custom_entity_name.replace(":", " ch")
+    return unique_id
 
 
 def check_channel_is_only_primary_channel(
@@ -205,9 +206,8 @@ def check_channel_is_only_primary_channel(
 def _get_base_name_from_channel_or_device(
     central: hm_central.CentralUnit,
     channel_address: str,
-    unique_id: str,
     device_type: str,
-) -> str:
+) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""
     default_channel_name = f"{device_type} {channel_address}"
     name = central.names.get_name(channel_address)
@@ -215,9 +215,6 @@ def _get_base_name_from_channel_or_device(
         channel_no = get_device_channel(channel_address)
         if device_name := central.names.get_name(get_device_address(channel_address)):
             name = f"{device_name}:{channel_no}"
-    if name is None:
-        name = unique_id
-
     return name
 
 
