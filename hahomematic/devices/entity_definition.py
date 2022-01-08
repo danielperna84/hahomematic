@@ -84,7 +84,7 @@ class EntityDefinition(Enum):
     IP_GARAGE = "IPGarage"
     IP_SWITCH = "IPSwitch"
     IP_FIXED_COLOR_LIGHT = "IPFixedColorLight"
-    IP_SIMPLE_FIXED_COLOR_LIGHT = "IPFixedColorLight"
+    IP_SIMPLE_FIXED_COLOR_LIGHT = "IPSimpleFixedColorLight"
     IP_LOCK = "IPLock"
     IP_THERMOSTAT = "IPThermostat"
     IP_THERMOSTAT_GROUP = "IPThermostatGroup"

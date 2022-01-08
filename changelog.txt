@@ -1,3 +1,6 @@
+Version 0.16.2 (2022-01-08)
+- Fix enum str in entity definition
+
 Version 0.16.1 (2022-01-08)
 - Use helper for device_name
 - Add logging to show usage of unique_id in name
@@ -6,7 +9,6 @@ Version 0.16.1 (2022-01-08)
 - Refactor entity definition
     - Remove unnecessary field names from additional entity definitions
     - Add additional entity definitions by device type
-
 
 Version 0.16.0 (2022-01-08)
 - Return unique_id if name is not in cache
