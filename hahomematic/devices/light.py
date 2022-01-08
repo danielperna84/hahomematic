@@ -188,8 +188,8 @@ class CeDimmer(BaseHmLight):
         return state_attr
 
 
-class CeIpLightBSL(BaseHmLight):
-    """Class for homematic HmIP-BSL light entities."""
+class CeIpFixedColorLight(BaseHmLight):
+    """Class for homematic HmIP-BSL, HmIPW-WRC6 light entities."""
 
     _color_switcher: dict[str, tuple[float, float]] = {
         "WHITE": (0.0, 0.0),
@@ -347,15 +347,28 @@ def make_rf_dimmer(
     )
 
 
-def make_ip_light_bsl(
+def make_ip_fixed_color_light(
     device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates HmIP-BSL entities."""
+    """Creates fixed color light entities like HmIP-BSL."""
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=CeIpLightBSL,
-        device_enum=EntityDefinition.IP_LIGHT_BSL,
+        custom_entity_class=CeIpFixedColorLight,
+        device_enum=EntityDefinition.IP_FIXED_COLOR_LIGHT,
+        group_base_channels=group_base_channels,
+    )
+
+
+def make_ip_simple_fixed_color_light(
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+) -> list[hm_entity.BaseEntity]:
+    """Creates simple fixed color light entities like HmIPW-WRC6."""
+    return make_custom_entity(
+        device=device,
+        device_address=device_address,
+        custom_entity_class=CeIpFixedColorLight,
+        device_enum=EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT,
         group_base_channels=group_base_channels,
     )
 
@@ -363,7 +376,8 @@ def make_ip_light_bsl(
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
-    "HmIP-BSL": (make_ip_light_bsl, [7, 11]),
+    "HmIP-BSL": (make_ip_fixed_color_light, [7, 11]),
+    "HmIPW-WRC6": (make_ip_simple_fixed_color_light, [7, 8, 9, 10, 11, 12]),
     "HmIP-BDT": (make_ip_dimmer, [3]),
     "HmIP-FDT": (make_ip_dimmer, [1]),
     "HmIP-PDT*": (make_ip_dimmer, [2]),

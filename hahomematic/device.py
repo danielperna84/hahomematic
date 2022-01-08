@@ -52,7 +52,7 @@ from hahomematic.entity import (
     GenericEntity,
     SpecialEvent,
 )
-from hahomematic.helpers import generate_unique_id
+from hahomematic.helpers import generate_unique_id, get_device_name
 from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
 from hahomematic.platforms.binary_sensor import HmBinarySensor
@@ -123,16 +123,11 @@ class HmDevice:
             )
         )
 
-        if name := self._central.names.get_name(address=self._device_address):
-            self.name = name
-        else:
-            _LOGGER.info(
-                "Device.__init__: Using auto-generated name for %s %s",
-                self.device_type,
-                self._device_address,
-            )
-            self.name = f"{self.device_type}_{self._device_address}"
-
+        self.name = get_device_name(
+            central=self._central,
+            device_address=device_address,
+            device_type=self.device_type,
+        )
         _LOGGER.debug(
             "Device.__init__: Initialized device: %s, %s, %s, %s",
             self._interface_id,

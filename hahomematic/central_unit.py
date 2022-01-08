@@ -34,8 +34,6 @@ from hahomematic.const import (
     FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_NEW_DEVICES,
-    HM_VIRTUAL_REMOTE_HM,
-    HM_VIRTUAL_REMOTE_HMIP,
     LOCALHOST,
     MANUFACTURER,
     HmPlatform,
