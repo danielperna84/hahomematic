@@ -18,7 +18,7 @@ async def test_central(central, loop) -> None:
     assert central.clients["ccu-dev-hm"].model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 338
-    assert len(central.hm_entities) == 3269
+    assert len(central.hm_entities) == 3275
 
     data = {}
     for device in central.hm_devices.values():
@@ -27,18 +27,16 @@ async def test_central(central, loop) -> None:
         for entity in device.entities.values():
             if entity.parameter not in data[device.device_type]:
                 data[device.device_type][entity.parameter] = f"{entity.hmtype}"
-    assert len(data) == 338
+
     custom_entities = []
     for device in central.hm_devices.values():
         custom_entities.extend(device.custom_entities.values())
-    assert len(custom_entities) == 191
 
     ce_channels = {}
     for custom_entity in custom_entities:
         if custom_entity.device_type not in ce_channels:
             ce_channels[custom_entity.device_type] = []
         ce_channels[custom_entity.device_type].append(custom_entity.channel_no)
-    assert len(ce_channels) == 82
 
     entity_types = {}
     for entity in central.hm_entities.values():
@@ -49,6 +47,10 @@ async def test_central(central, loop) -> None:
                 entity_types[entity.hmtype][type(entity).__name__] = []
 
             entity_types[entity.hmtype][type(entity).__name__].append(entity)
+
+    assert len(data) == 338
+    assert len(custom_entities) == 197
+    assert len(ce_channels) == 83
     assert len(entity_types) == 6
 
 

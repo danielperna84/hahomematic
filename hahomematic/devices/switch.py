@@ -31,7 +31,7 @@ class CeSwitch(CustomEntity):
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
-        entity_def: dict[str, Any],
+        entity_def: dict[int, set[str]],
         channel_no: int,
     ):
         super().__init__(
@@ -111,6 +111,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-PCBS": (make_ip_switch, [2]),
     "HmIP-PCBS2": (make_ip_switch, [3, 7]),
     "HmIP-PCBS-BAT": (make_ip_switch, [2]),
+    "HmIP-SCTH230": (make_ip_switch, [7]),
     "HmIP-USBSM": (make_ip_switch, [2]),
     "HmIP-WGC": (make_ip_switch, [2]),
     "HmIP-WHS": (make_ip_switch, [1, 5]),
