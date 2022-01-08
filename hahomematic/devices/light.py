@@ -50,7 +50,7 @@ class BaseHmLight(CustomEntity):
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
-        entity_def: dict[str, Any],
+        entity_def: dict[int, set[str]],
         channel_no: int,
     ):
         super().__init__(
@@ -389,6 +389,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "263 134": (make_rf_dimmer, [1]),
     "HmIPW-DRD3": (make_ip_dimmer, [1, 5, 9, 13]),
     "HmIP-DRDI3": (make_ip_dimmer, [5, 9, 13]),
+    "HmIP-SCTH230": (make_ip_dimmer, [11]),
     "HM-LC-Dim1L-CV-2": (make_rf_dimmer, [1, 2, 3]),
     "HM-LC-Dim1L-CV": (make_rf_dimmer, [1]),
     "HM-LC-Dim1L-Pl-2": (make_rf_dimmer, [1]),

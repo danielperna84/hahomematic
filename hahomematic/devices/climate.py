@@ -71,7 +71,7 @@ class BaseClimateEntity(CustomEntity):
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
-        entity_def: dict[str, Any],
+        entity_def: dict[int, set[str]],
         channel_no: int,
     ):
         super().__init__(

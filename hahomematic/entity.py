@@ -441,7 +441,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         device_address: str,
         device_enum: hm_entity_definition.EntityDefinition,
         device_def: dict[str, Any],
-        entity_def: dict[str, Any],
+        entity_def: dict[int, set[str]],
         platform: HmPlatform,
         channel_no: int,
     ):
@@ -517,15 +517,22 @@ class CustomEntity(BaseEntity, CallbackEntity):
         if hm_entity_definition.get_include_default_entities(
             device_enum=self._device_enum
         ):
-            self._mark_entity(hm_entity_definition.get_default_entities())
+            self._mark_entity(field_desc=hm_entity_definition.get_default_entities())
 
-    def _mark_entity(self, field_desc: dict[str, Any]) -> None:
+        # add extra entities for the device type
+        self._mark_entity(
+            field_desc=hm_entity_definition.get_additional_entities_by_device_type(
+                self.device_type
+            )
+        )
+
+    def _mark_entity(self, field_desc: dict[int, set[str]]) -> None:
         """Mark entities to be created in HA."""
         if not field_desc:
             return None
-        for channel_no, field in field_desc.items():
+        for channel_no, parameters in field_desc.items():
             channel_address = f"{self.device_address}:{channel_no}"
-            for parameter in field.values():
+            for parameter in parameters:
                 entity = self._device.get_hm_entity(
                     channel_address=channel_address, parameter=parameter
                 )

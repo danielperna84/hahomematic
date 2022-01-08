@@ -17,7 +17,8 @@ from hahomematic.helpers import generate_unique_id
 ED_DEFAULT_ENTITIES = "default_entities"
 ED_INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
 ED_DEVICE_GROUP = "device_group"
-ED_DEVICES = "devices"
+ED_DEVICE_DEFINITIONS = "device_definitions"
+ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE = "additional_entities_by_device_type"
 ED_ADDITIONAL_ENTITIES = "additional_entities"
 ED_FIELDS = "fields"
 ED_FIELDS_REP = "fields_rep"
@@ -99,6 +100,8 @@ class EntityDefinition(Enum):
         return str(self.value)
 
 
+SCHEMA_ED_ADDITIONAL_ENTITIES = Schema({Optional(int): Schema({Optional(str)})})
+
 SCHEMA_ED_FIELD_DETAILS = Schema({Optional(str): str, Optional(str): str})
 
 SCHEMA_ED_FIELD = Schema({Optional(int): SCHEMA_ED_FIELD_DETAILS})
@@ -115,36 +118,41 @@ SCHEMA_ED_DEVICE_GROUP = Schema(
 SCHEMA_ED_DEVICE_GROUPS = Schema(
     {
         Required(ED_DEVICE_GROUP): SCHEMA_ED_DEVICE_GROUP,
-        Optional(ED_ADDITIONAL_ENTITIES): SCHEMA_ED_FIELD,
+        Optional(ED_ADDITIONAL_ENTITIES): SCHEMA_ED_ADDITIONAL_ENTITIES,
         Optional(ED_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES): bool,
     }
 )
 
 SCHEMA_DEVICE_DESCRIPTION = Schema(
     {
-        Required(ED_DEFAULT_ENTITIES): SCHEMA_ED_FIELD,
-        Required(ED_DEVICES): Schema(
+        Required(ED_DEFAULT_ENTITIES): SCHEMA_ED_ADDITIONAL_ENTITIES,
+        Required(ED_DEVICE_DEFINITIONS): Schema(
             {
                 Required(EntityDefinition): SCHEMA_ED_DEVICE_GROUPS,
+            }
+        ),
+        Required(ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE): Schema(
+            {
+                Required(str): SCHEMA_ED_ADDITIONAL_ENTITIES,
             }
         ),
     }
 )
 
-entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
+entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
     ED_DEFAULT_ENTITIES: {
         0: {
-            FIELD_DUTY_CYCLE: "DUTY_CYCLE",
-            FIELD_DUTYCYCLE: "DUTYCYCLE",
-            FIELD_LOW_BAT: "LOW_BAT",
-            FIELD_LOWBAT: "LOWBAT",
-            FIELD_OPERATING_VOLTAGE: "OPERATING_VOLTAGE",
-            FIELD_RSSI_DEVICE: "RSSI_DEVICE",
-            FIELD_RSSI_PEER: "RSSI_PEER",
-            FIELD_SABOTAGE: "SABOTAGE",
+            "DUTY_CYCLE",
+            "DUTYCYCLE",
+            "LOW_BAT",
+            "LOWBAT",
+            "OPERATING_VOLTAGE",
+            "RSSI_DEVICE",
+            "RSSI_PEER",
+            "SABOTAGE",
         }
     },
-    ED_DEVICES: {
+    ED_DEVICE_DEFINITIONS: {
         EntityDefinition.IP_COVER: {
             ED_DEVICE_GROUP: {
                 ED_PHY_CHANNEL: [1],
@@ -232,12 +240,12 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             },
             ED_ADDITIONAL_ENTITIES: {
                 4: {
-                    FIELD_CURRENT: "CURRENT",
-                    FIELD_ENERGY_COUNTER: "ENERGY_COUNTER",
-                    FIELD_FREQUENCY: "FREQUENCY",
-                    FIELD_POWER: "POWER",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
-                    FIELD_VOLTAGE: "VOLTAGE",
+                    "CURRENT",
+                    "ENERGY_COUNTER",
+                    "FREQUENCY",
+                    "POWER",
+                    "ACTUAL_TEMPERATURE",
+                    "VOLTAGE",
                 },
             },
         },
@@ -270,12 +278,12 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             },
             ED_ADDITIONAL_ENTITIES: {
                 0: {
-                    FIELD_HUMIDITY: "HUMIDITY",
-                    FIELD_LEVEL: "LEVEL",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                    "HUMIDITY",
+                    "LEVEL",
+                    "ACTUAL_TEMPERATURE",
                 },
                 8: {
-                    FIELD_STATE: "STATE",
+                    "STATE",
                 },
             },
         },
@@ -347,8 +355,8 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
             },
             ED_ADDITIONAL_ENTITIES: {
                 1: {
-                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                    "ACTUAL_HUMIDITY",
+                    "ACTUAL_TEMPERATURE",
                 }
             },
         },
@@ -385,8 +393,17 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                     },
                 },
             },
-            ED_ADDITIONAL_ENTITIES: {
-                1: {FIELD_HUMIDITY: "HUMIDITY", FIELD_TEMPERATURE: "TEMPERATURE"}
+            ED_ADDITIONAL_ENTITIES: {1: {"HUMIDITY", "TEMPERATURE"}},
+        },
+    },
+    ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE: {
+        "HmIP-SCTH230": {
+            1: {
+                "CONCENTRATION",
+            },
+            4: {
+                "HUMIDITY",
+                "ACTUAL_TEMPERATURE",
             },
         },
     },
@@ -449,7 +466,7 @@ def _create_entities(
     custom_entity_class: type,
     device_enum: EntityDefinition,
     device_def: dict[str, Any],
-    entity_def: dict[str, Any],
+    entity_def: dict[int, set[str]],
     channel_no: int | None = None,
 ) -> list[hm_entity.BaseEntity]:
     """Create custom entities."""
@@ -477,9 +494,14 @@ def _create_entities(
     return entities
 
 
-def get_default_entities() -> dict[str, Any]:
+def get_default_entities() -> dict[int, set[str]]:
     """Return the default entities."""
     return deepcopy(entity_definition[ED_DEFAULT_ENTITIES])  # type: ignore[arg-type]
+
+
+def get_additional_entities_by_device_type(device_type: str) -> dict[int, set[str]]:
+    """Return the additional entities."""
+    return deepcopy(entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].get(device_type, {}))
 
 
 def get_include_default_entities(device_enum: EntityDefinition) -> bool:
@@ -492,7 +514,7 @@ def get_include_default_entities(device_enum: EntityDefinition) -> bool:
 
 def _get_device(device_enum: EntityDefinition) -> dict[str, Any] | None:
     """Return device from entity definitions."""
-    device = entity_definition[ED_DEVICES].get(device_enum)
+    device = entity_definition[ED_DEVICE_DEFINITIONS].get(device_enum)
     if device:
         return deepcopy(device)  # type: ignore[no-any-return]
     return None
@@ -529,14 +551,14 @@ def _get_device_group(
 
 def _get_device_entities(
     device_enum: EntityDefinition, base_channel_no: int
-) -> dict[str, Any]:
+) -> dict[int, set[str]]:
     """Return the device entities."""
     additional_entities = (
-        entity_definition[ED_DEVICES]
+        entity_definition[ED_DEVICE_DEFINITIONS]
         .get(device_enum, {})
         .get(ED_ADDITIONAL_ENTITIES, {})
     )
-    new_entities: dict[str, Any] = {}
+    new_entities: dict[int, set[str]] = {}
     if additional_entities:
         for channel_no, field in deepcopy(additional_entities).items():
             new_entities[channel_no + base_channel_no] = field
