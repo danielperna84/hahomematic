@@ -82,7 +82,8 @@ class EntityDefinition(Enum):
     IP_DIMMER = "IPDimmer"
     IP_GARAGE = "IPGarage"
     IP_SWITCH = "IPSwitch"
-    IP_LIGHT_BSL = "IPLightBSL"
+    IP_FIXED_COLOR_LIGHT = "IPFixedColorLight"
+    IP_SIMPLE_FIXED_COLOR_LIGHT = "IPFixedColorLight"
     IP_LOCK = "IPLock"
     IP_THERMOSTAT = "IPThermostat"
     IP_THERMOSTAT_GROUP = "IPThermostatGroup"
@@ -186,7 +187,7 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 },
             },
         },
-        EntityDefinition.IP_LIGHT_BSL: {
+        EntityDefinition.IP_FIXED_COLOR_LIGHT: {
             ED_DEVICE_GROUP: {
                 ED_PHY_CHANNEL: [1],
                 ED_VIRT_CHANNEL: [2, 3],
@@ -201,6 +202,18 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                         FIELD_CHANNEL_COLOR: "COLOR",
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                     },
+                },
+            },
+        },
+        EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT: {
+            ED_DEVICE_GROUP: {
+                ED_PHY_CHANNEL: [0],
+                ED_VIRT_CHANNEL: [],
+                ED_FIELDS_REP: {
+                    FIELD_COLOR: "COLOR",
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
+                    FIELD_RAMP_TIME_VALUE: "RAMP_TIME_VALUE",
                 },
             },
         },
