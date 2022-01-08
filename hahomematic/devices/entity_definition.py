@@ -336,7 +336,6 @@ entity_definition: dict[str, dict[int | EntityDefinition, Any]] = {
                 1: {
                     FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
-                    FIELD_LEVEL: "VALVE_STATE",
                 }
             },
         },
