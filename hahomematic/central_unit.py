@@ -267,7 +267,7 @@ class CentralUnit:
     async def add_new_devices(
         self, interface_id: str, dev_descriptions: list[dict[str, Any]]
     ) -> None:
-        """Async implementation"""
+        """Add new devices to central unit."""
         _LOGGER.debug(
             "CentralUnit.add_new_devices: interface_id = %s, dev_descriptions = %s",
             interface_id,
@@ -276,7 +276,7 @@ class CentralUnit:
 
         if interface_id not in self.clients:
             _LOGGER.error(
-                "RPCFunctions.newDevices: Missing client for interface_id %s.",
+                "CentralUnit.add_new_devices: Missing client for interface_id %s.",
                 interface_id,
             )
             return None
@@ -293,7 +293,7 @@ class CentralUnit:
                     self.raw_devices.add_device_description(interface_id, dev_desc)
                     await client.fetch_paramsets(dev_desc)
             except Exception:
-                _LOGGER.exception("RPCFunctions.newDevices: Exception")
+                _LOGGER.exception("CentralUnit.add_new_devices: Exception")
         await self.raw_devices.save()
         await self.paramsets.save()
         await client.fetch_names()
@@ -474,32 +474,6 @@ class CentralUnit:
             if virtual_remote and virtual_remote.device_address == device_address:
                 return virtual_remote
         return None
-
-    async def press_virtual_remote_key(
-        self, channel_address: str, parameter: str
-    ) -> None:
-        """Simulate a key press on the virtual remote."""
-        if ":" not in channel_address:
-            _LOGGER.warning(
-                "CentralUnit.press_virtual_remote_key: channel_address is missing channel information."
-            )
-
-        if channel_address.startswith(HM_VIRTUAL_REMOTE_HM.upper()):
-            channel_address = channel_address.replace(
-                HM_VIRTUAL_REMOTE_HM.upper(), HM_VIRTUAL_REMOTE_HM
-            )
-        if channel_address.startswith(HM_VIRTUAL_REMOTE_HMIP.upper()):
-            channel_address = channel_address.replace(
-                HM_VIRTUAL_REMOTE_HMIP.upper(), HM_VIRTUAL_REMOTE_HMIP
-            )
-
-        if virtual_remote := self._get_virtual_remote(
-            get_device_address(channel_address)
-        ):
-            if virtual_remote_channel := virtual_remote.action_events.get(
-                (channel_address, parameter)
-            ):
-                await virtual_remote_channel.send_value(True)
 
     def get_hm_entities_by_hmplatform(self, platform: HmPlatform) -> list[BaseEntity]:
         """
