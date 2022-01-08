@@ -276,7 +276,7 @@ class CentralUnit:
 
         if interface_id not in self.clients:
             _LOGGER.error(
-                "RPCFunctions.newDevices: Missing client for interface_id %s.",
+                "CentralUnit.add_new_devices: Missing client for interface_id %s.",
                 interface_id,
             )
             return None
@@ -293,7 +293,7 @@ class CentralUnit:
                     self.raw_devices.add_device_description(interface_id, dev_desc)
                     await client.fetch_paramsets(dev_desc)
             except Exception:
-                _LOGGER.exception("RPCFunctions.newDevices: Exception")
+                _LOGGER.exception("CentralUnit.add_new_devices: Exception")
         await self.raw_devices.save()
         await self.paramsets.save()
         await client.fetch_names()
