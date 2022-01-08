@@ -267,7 +267,7 @@ class CentralUnit:
     async def add_new_devices(
         self, interface_id: str, dev_descriptions: list[dict[str, Any]]
     ) -> None:
-        """Async implementation"""
+        """Add new devices to central unit."""
         _LOGGER.debug(
             "CentralUnit.add_new_devices: interface_id = %s, dev_descriptions = %s",
             interface_id,
