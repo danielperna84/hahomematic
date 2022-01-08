@@ -475,32 +475,6 @@ class CentralUnit:
                 return virtual_remote
         return None
 
-    async def press_virtual_remote_key(
-        self, channel_address: str, parameter: str
-    ) -> None:
-        """Simulate a key press on the virtual remote."""
-        if ":" not in channel_address:
-            _LOGGER.warning(
-                "CentralUnit.press_virtual_remote_key: channel_address is missing channel information."
-            )
-
-        if channel_address.startswith(HM_VIRTUAL_REMOTE_HM.upper()):
-            channel_address = channel_address.replace(
-                HM_VIRTUAL_REMOTE_HM.upper(), HM_VIRTUAL_REMOTE_HM
-            )
-        if channel_address.startswith(HM_VIRTUAL_REMOTE_HMIP.upper()):
-            channel_address = channel_address.replace(
-                HM_VIRTUAL_REMOTE_HMIP.upper(), HM_VIRTUAL_REMOTE_HMIP
-            )
-
-        if virtual_remote := self._get_virtual_remote(
-            get_device_address(channel_address)
-        ):
-            if virtual_remote_channel := virtual_remote.action_events.get(
-                (channel_address, parameter)
-            ):
-                await virtual_remote_channel.send_value(True)
-
     def get_hm_entities_by_hmplatform(self, platform: HmPlatform) -> list[BaseEntity]:
         """
         Return all hm-entities by platform
