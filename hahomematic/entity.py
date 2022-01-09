@@ -38,6 +38,7 @@ from hahomematic.const import (
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
     OPERATION_READ,
+    HmEntityUsage,
     HmEventType,
     HmPlatform,
 )
@@ -134,7 +135,11 @@ class BaseEntity(ABC):
         self._interface_id: str = self._device.interface_id
         self.device_type: str = self._device.device_type
         self.sub_type: str = self._device.sub_type
-        self.create_in_ha: bool = not self._device.is_custom_entity
+        self.usage: HmEntityUsage = (
+            HmEntityUsage.ENTITY_NO_CREATE
+            if self._device.is_custom_entity
+            else HmEntityUsage.ENTITY
+        )
         self._client: hm_client.Client = self._central.clients[self._interface_id]
         self.name: str = (
             self._central.names.get_name(self.channel_address) or self.unique_id
@@ -213,7 +218,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         self.parameter: str = parameter
         # Do not create some Entities in HA
         if self.parameter in HIDDEN_PARAMETERS:
-            self.create_in_ha = False
+            self.usage = HmEntityUsage.ENTITY_NO_CREATE
         self._parameter_data = parameter_data
         self._assign_parameter_data()
 
@@ -332,7 +337,6 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             platform=platform,
         )
         CallbackEntity.__init__(self)
-
         self._value: ParameterType | None = None
 
         # Subscribe for all events of this device
@@ -459,7 +463,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
         CallbackEntity.__init__(self)
 
-        self.create_in_ha = True
         self._device_enum = device_enum
         self._device_desc = device_def
         self._entity_def = entity_def
@@ -478,8 +481,18 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 device_has_multiple_channels=device_has_multiple_channels,
             ),
         )
+        self.usage = self._custom_entity_usage()
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
+
+    def _custom_entity_usage(self) -> HmEntityUsage:
+        """Return the custom entity usage."""
+        if secondary_channels := self._device_desc.get(
+            hm_entity_definition.ED_SECONDARY_CHANNELS
+        ):
+            if self.channel_no in secondary_channels:
+                return HmEntityUsage.CE_SECONDARY
+        return HmEntityUsage.CE_PRIMARY
 
     async def put_paramset(
         self, paramset: str, value: Any, rx_mode: str | None = None
@@ -495,22 +508,26 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
 
-        fields_rep = self._device_desc.get(hm_entity_definition.ED_FIELDS_REP, {})
+        fields_rep = self._device_desc.get(
+            hm_entity_definition.ED_REPEATABLE_FIELDS, {}
+        )
         # Add repeating fields
         for (field_name, parameter) in fields_rep.items():
             entity = self._device.get_hm_entity(
                 channel_address=self.channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity)
+
+        # Add sensor entities
+        self._add_entities(
+            field_dict_name=hm_entity_definition.ED_SENSOR_CHANNELS,
+            is_sensor=True,
+        )
         # Add device fields
-        fields = self._device_desc.get(hm_entity_definition.ED_FIELDS, {})
-        for channel_no, channel in fields.items():
-            for (field_name, parameter) in channel.items():
-                channel_address = f"{self.device_address}:{channel_no}"
-                entity = self._device.get_hm_entity(
-                    channel_address=channel_address, parameter=parameter
-                )
-                self._add_entity(field_name=field_name, entity=entity)
+        self._add_entities(
+            field_dict_name=hm_entity_definition.ED_FIELDS,
+        )
+
         # add device entities
         self._mark_entity(field_desc=self._entity_def)
         # add default entities
@@ -526,6 +543,19 @@ class CustomEntity(BaseEntity, CallbackEntity):
             )
         )
 
+    def _add_entities(self, field_dict_name: str, is_sensor: bool = False) -> None:
+        """Add entities to custom entity."""
+        fields = self._device_desc.get(field_dict_name, {})
+        for channel_no, channel in fields.items():
+            for (field_name, parameter) in channel.items():
+                channel_address = f"{self.device_address}:{channel_no}"
+                if entity := self._device.get_hm_entity(
+                    channel_address=channel_address, parameter=parameter
+                ):
+                    if is_sensor:
+                        entity.usage = HmEntityUsage.CE_SENSOR
+                    self._add_entity(field_name=field_name, entity=entity)
+
     def _mark_entity(self, field_desc: dict[int, set[str]]) -> None:
         """Mark entities to be created in HA."""
         if not field_desc:
@@ -537,7 +567,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                     channel_address=channel_address, parameter=parameter
                 )
                 if entity:
-                    entity.create_in_ha = True
+                    entity.usage = HmEntityUsage.ENTITY
 
     def _add_entity(self, field_name: str, entity: GenericEntity | None) -> None:
         """Add entity to collection and register callback"""
@@ -616,6 +646,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             device_type=self.device_type,
         )
         self.event_type: HmEventType = event_type
+        self.usage = HmEntityUsage.EVENT
         self.last_update: datetime = INIT_DATETIME
         self._value: Any | None = None
 

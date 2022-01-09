@@ -276,6 +276,17 @@ HM_VIRTUAL_REMOTES = [
 ]
 
 
+class HmEntityUsage(Enum):
+    """Enum with information about usage in Home Assistant."""
+
+    CE_PRIMARY = "ce_primary"
+    CE_SECONDARY = "ce_secondary"
+    CE_SENSOR = "ce_sensor"
+    ENTITY_NO_CREATE = "entity_no_create"
+    ENTITY = "ENTITY"
+    EVENT = "event"
+
+
 class HmPlatform(Enum):
     """Enum with platforms relevant for Home Assistant."""
 

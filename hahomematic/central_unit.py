@@ -36,7 +36,6 @@ from hahomematic.const import (
     HH_EVENT_NEW_DEVICES,
     LOCALHOST,
     MANUFACTURER,
-    HmPlatform,
 )
 import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
@@ -69,9 +68,6 @@ class CentralUnit:
         self._loop: asyncio.AbstractEventLoop = self.central_config.loop
         self._xml_rpc_server: xml_rpc.XmlRpcServer = self.central_config.xml_rpc_server
         self._xml_rpc_server.register_central(self)
-        self.option_enable_virtual_channels: bool = (
-            self.central_config.option_enable_virtual_channels
-        )
         self._model: str | None = None
 
         # Caches for CCU data
@@ -473,17 +469,6 @@ class CentralUnit:
                 return virtual_remote
         return None
 
-    def get_hm_entities_by_hmplatform(self, platform: HmPlatform) -> list[BaseEntity]:
-        """
-        Return all hm-entities by platform
-        """
-        hm_entities = []
-        for entity in self.hm_entities.values():
-            if entity and entity.platform == platform and entity.create_in_ha:
-                hm_entities.append(entity)
-
-        return hm_entities
-
     def get_client(self, interface_id: str | None = None) -> hm_client.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
         if interface_id:
@@ -614,7 +599,6 @@ class CentralConfig:
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
-        option_enable_virtual_channels: bool = False,
         option_enable_sensors_for_system_variables: bool = False,
     ):
         self.loop = loop
@@ -630,7 +614,6 @@ class CentralConfig:
         self.callback_host = callback_host
         self.callback_port = callback_port
         self.json_port = json_port
-        self.option_enable_virtual_channels = option_enable_virtual_channels
         self.option_enable_sensors_for_system_variables = (
             option_enable_sensors_for_system_variables
         )

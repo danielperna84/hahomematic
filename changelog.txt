@@ -1,3 +1,10 @@
+Version 0.17.0 (2022-01-09)
+- Refactor entity definition
+    - improve naming
+    - classify entities (primary, secondary, sensor, Generic, Event)
+- remove option_enable_virtual_channels from central
+- remove entity.create_in_ha. Replaced by HmEntityUsage
+
 Version 0.16.2 (2022-01-08)
 - Fix enum str in entity definition
 
