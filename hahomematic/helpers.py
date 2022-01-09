@@ -189,7 +189,7 @@ def get_custom_entity_name(
     unique_id: str,
     channel_no: int,
     device_type: str,
-    is_only_primary_channel: bool,
+    is_primary_channel: bool,
 ) -> str:
     """Rename name for custom entity"""
     if custom_entity_name := _get_base_name_from_channel_or_device(
@@ -197,7 +197,7 @@ def get_custom_entity_name(
         channel_address=f"{device_address}:{channel_no}",
         device_type=device_type,
     ):
-        if is_only_primary_channel and ":" in custom_entity_name:
+        if is_primary_channel and ":" in custom_entity_name:
             return custom_entity_name.split(":")[0]
         return custom_entity_name.replace(":", " ch")
 
@@ -237,7 +237,7 @@ def check_channel_is_only_primary_channel(
 ) -> bool:
     """Check if this channel is the only primary channel."""
     primary_channel: int = device_def[hm_entity_definition.ED_PRIMARY_CHANNEL]
-    if primary_channel == current_channel:
+    if primary_channel == current_channel and device_has_multiple_channels is False:
         return True
     return False
 

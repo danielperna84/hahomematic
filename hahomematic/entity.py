@@ -475,7 +475,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             unique_id=self.unique_id,
             channel_no=channel_no,
             device_type=self.device_type,
-            is_only_primary_channel=check_channel_is_only_primary_channel(
+            is_primary_channel=check_channel_is_only_primary_channel(
                 current_channel=channel_no,
                 device_def=device_def,
                 device_has_multiple_channels=device_has_multiple_channels,
