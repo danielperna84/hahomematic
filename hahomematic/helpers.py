@@ -236,10 +236,9 @@ def check_channel_is_only_primary_channel(
     current_channel: int, device_def: dict[str, Any], device_has_multiple_channels: bool
 ) -> bool:
     """Check if this channel is the only primary channel."""
-    phy_channels: list[int] = device_def[hm_entity_definition.ED_PHY_CHANNEL]
-    if len(phy_channels) == 1 and not device_has_multiple_channels:
-        if phy_channels[0] == current_channel:
-            return True
+    primary_channel: int = device_def[hm_entity_definition.ED_PRIMARY_CHANNEL]
+    if primary_channel == current_channel:
+        return True
     return False
 
 

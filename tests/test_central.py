@@ -18,7 +18,7 @@ async def test_central(central, loop) -> None:
     assert central.clients["ccu-dev-hm"].model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 338
-    assert len(central.hm_entities) == 3275
+    assert len(central.hm_entities) == 3279
 
     data = {}
     for device in central.hm_devices.values():
@@ -49,7 +49,7 @@ async def test_central(central, loop) -> None:
             entity_types[entity.hmtype][type(entity).__name__].append(entity)
 
     assert len(data) == 338
-    assert len(custom_entities) == 197
+    assert len(custom_entities) == 201
     assert len(ce_channels) == 83
     assert len(entity_types) == 6
 

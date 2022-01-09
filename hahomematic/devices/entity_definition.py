@@ -8,7 +8,7 @@ from enum import Enum
 import logging
 from typing import Any
 
-from voluptuous import All, Invalid, Length, Optional, Required, Schema
+from voluptuous import Invalid, Optional, Required, Schema
 
 import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
@@ -21,9 +21,10 @@ ED_DEVICE_DEFINITIONS = "device_definitions"
 ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE = "additional_entities_by_device_type"
 ED_ADDITIONAL_ENTITIES = "additional_entities"
 ED_FIELDS = "fields"
-ED_FIELDS_REP = "fields_rep"
-ED_PHY_CHANNEL = "phy_channel"
-ED_VIRT_CHANNEL = "virt_channel"
+ED_REPEATABLE_FIELDS = "fields_repeatable"
+ED_PRIMARY_CHANNEL = "primary_channel"
+ED_SECONDARY_CHANNELS = "secondary_channels"
+ED_SENSOR_CHANNELS = "sensor_channels"
 DEFAULT_INCLUDE_DEFAULT_ENTITIES = True
 
 FIELD_ACTIVE_PROFILE = "active_profile"
@@ -108,9 +109,10 @@ SCHEMA_ED_FIELD = Schema({Optional(int): SCHEMA_ED_FIELD_DETAILS})
 
 SCHEMA_ED_DEVICE_GROUP = Schema(
     {
-        Required(ED_PHY_CHANNEL): All([int], Length(min=1)),
-        Required(ED_VIRT_CHANNEL): [int],
-        Required(ED_FIELDS_REP, default={}): SCHEMA_ED_FIELD_DETAILS,
+        Required(ED_PRIMARY_CHANNEL): int,
+        Optional(ED_SECONDARY_CHANNELS): [int],
+        Optional(ED_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
+        Optional(ED_SENSOR_CHANNELS): SCHEMA_ED_FIELD,
         Optional(ED_FIELDS): SCHEMA_ED_FIELD,
     }
 )
@@ -155,9 +157,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
     ED_DEVICE_DEFINITIONS: {
         EntityDefinition.IP_COVER: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 1,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_LEVEL_2: "LEVEL_2",
                     FIELD_STOP: "STOP",
@@ -172,13 +173,13 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_DIMMER: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
-                ED_VIRT_CHANNEL: [2, 3],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 1,
+                ED_SECONDARY_CHANNELS: [2, 3],
+                ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_RAMP_TIME: "RAMP_TIME",
                 },
-                ED_FIELDS: {
+                ED_SENSOR_CHANNELS: {
                     0: {
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                     },
@@ -187,9 +188,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_GARAGE: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_DOOR_COMMAND: "DOOR_COMMAND,",
                     FIELD_DOOR_STATE: "DOOR_STATE",
                 },
@@ -197,15 +197,15 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_FIXED_COLOR_LIGHT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
-                ED_VIRT_CHANNEL: [2, 3],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 1,
+                ED_SECONDARY_CHANNELS: [2, 3],
+                ED_REPEATABLE_FIELDS: {
                     FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
                     FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME_VALUE",
                 },
-                ED_FIELDS: {
+                ED_SENSOR_CHANNELS: {
                     0: {
                         FIELD_CHANNEL_COLOR: "COLOR",
                         FIELD_CHANNEL_LEVEL: "LEVEL",
@@ -215,9 +215,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
                     FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
@@ -227,12 +226,12 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_SWITCH: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [1],
-                ED_VIRT_CHANNEL: [2, 3],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 1,
+                ED_SECONDARY_CHANNELS: [2, 3],
+                ED_REPEATABLE_FIELDS: {
                     FIELD_STATE: "STATE",
                 },
-                ED_FIELDS: {
+                ED_SENSOR_CHANNELS: {
                     0: {
                         FIELD_CHANNEL_STATE: "STATE",
                     },
@@ -251,9 +250,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_LOCK: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_LOCK_STATE: "LOCK_STATE",
                     FIELD_LOCK_TARGET_LEVEL: "LOCK_TARGET_LEVEL",
                 },
@@ -261,11 +259,9 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_THERMOSTAT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_ACTIVE_PROFILE: "ACTIVE_PROFILE",
-                    FIELD_AUTO_MODE: "AUTO_MODE",
                     FIELD_BOOST_MODE: "BOOST_MODE",
                     FIELD_CONTROL_MODE: "CONTROL_MODE",
                     FIELD_HEATING_COOLING: "HEATING_COOLING",
@@ -289,11 +285,9 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_THERMOSTAT_GROUP: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_ACTIVE_PROFILE: "ACTIVE_PROFILE",
-                    FIELD_AUTO_MODE: "AUTO_MODE",
                     FIELD_BOOST_MODE: "BOOST_MODE",
                     FIELD_CONTROL_MODE: "CONTROL_MODE",
                     FIELD_HEATING_COOLING: "HEATING_COOLING",
@@ -308,9 +302,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_COVER: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_LEVEL_2: "LEVEL_2",
                     FIELD_STOP: "STOP",
@@ -319,9 +312,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_DIMMER: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_RAMP_TIME: "RAMP_TIME",
                 },
@@ -329,9 +321,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_LOCK: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_OPEN: "OPEN",
                     FIELD_STATE: "STATE",
                 },
@@ -339,9 +330,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_THERMOSTAT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_AUTO_MODE: "AUTO_MODE",
                     FIELD_BOOST_MODE: "BOOST_MODE",
                     FIELD_COMFORT_MODE: "COMFORT_MODE",
@@ -354,7 +344,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
-                1: {
+                0: {
                     "ACTUAL_HUMIDITY",
                     "ACTUAL_TEMPERATURE",
                 }
@@ -362,9 +352,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.RF_THERMOSTAT_GROUP: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
                     FIELD_AUTO_MODE: "AUTO_MODE",
                     FIELD_BOOST_MODE: "BOOST_MODE",
                     FIELD_COMFORT_MODE: "COMFORT_MODE",
@@ -380,9 +369,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.SIMPLE_RF_THERMOSTAT: {
             ED_DEVICE_GROUP: {
-                ED_PHY_CHANNEL: [0],
-                ED_VIRT_CHANNEL: [],
-                ED_FIELDS_REP: {},
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {},
                 ED_FIELDS: {
                     0: {
                         FIELD_HUMIDITY: "HUMIDITY",
@@ -393,7 +381,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     },
                 },
             },
-            ED_ADDITIONAL_ENTITIES: {1: {"HUMIDITY", "TEMPERATURE"}},
+            ED_ADDITIONAL_ENTITIES: {0: {"HUMIDITY", "TEMPERATURE"}},
         },
     },
     ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE: {
@@ -440,10 +428,9 @@ def make_custom_entity(
 
     for base_channel in group_base_channels:
         device_def = _get_device_group(device_enum, base_channel)
-        channels = device_def[ED_PHY_CHANNEL]
-        # check if virtual channels should be used
-        if device.central.option_enable_virtual_channels:
-            channels.extend(device_def[ED_VIRT_CHANNEL])
+        channels = [device_def[ED_PRIMARY_CHANNEL]]
+        if secondary_channels := device_def.get(ED_SECONDARY_CHANNELS):
+            channels.extend(secondary_channels)
         for channel_no in set(channels):
             entities.extend(
                 _create_entities(
@@ -501,7 +488,9 @@ def get_default_entities() -> dict[int, set[str]]:
 
 def get_additional_entities_by_device_type(device_type: str) -> dict[int, set[str]]:
     """Return the additional entities."""
-    return deepcopy(entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].get(device_type, {}))
+    return deepcopy(
+        entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].get(device_type, {})
+    )
 
 
 def get_include_default_entities(device_enum: EntityDefinition) -> bool:
@@ -533,20 +522,32 @@ def _get_device_group(
         if not group:
             return {}
 
-    p_channel = group[ED_PHY_CHANNEL]
-    group[ED_PHY_CHANNEL] = [x + base_channel_no for x in p_channel]
+    # Add base_channel_no to the primary_channel to get the real primary_channel number
+    primary_channel = group[ED_PRIMARY_CHANNEL]
+    group[ED_PRIMARY_CHANNEL] = primary_channel + base_channel_no
 
-    v_channel = group[ED_VIRT_CHANNEL]
-    if v_channel:
-        group[ED_VIRT_CHANNEL] = [x + base_channel_no for x in v_channel]
+    # Add base_channel_no to the secondary_channels to get the real secondary_channel numbers
+    if secondary_channel := group.get(ED_SECONDARY_CHANNELS):
+        group[ED_SECONDARY_CHANNELS] = [x + base_channel_no for x in secondary_channel]
 
-    fields = group.get(ED_FIELDS)
-    if fields:
-        new_fields = {}
+    group[ED_SENSOR_CHANNELS] = _rebase_entity_dict(
+        entity_dict=ED_SENSOR_CHANNELS, group=group, base_channel_no=base_channel_no
+    )
+    group[ED_FIELDS] = _rebase_entity_dict(
+        entity_dict=ED_FIELDS, group=group, base_channel_no=base_channel_no
+    )
+    return group
+
+
+def _rebase_entity_dict(
+    entity_dict: str, group: dict[str, Any], base_channel_no: int
+) -> dict[int, Any]:
+    """Rebase entity_dict with base_channel_no."""
+    new_fields = {}
+    if fields := group.get(entity_dict):
         for channel_no, field in fields.items():
             new_fields[channel_no + base_channel_no] = field
-        group[ED_FIELDS] = new_fields
-    return group
+    return new_fields
 
 
 def _get_device_entities(

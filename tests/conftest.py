@@ -73,7 +73,6 @@ async def central(
         host=CCU_HOST,
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
-        option_enable_virtual_channels=True,
     ).get_central()
     central_unit.callback_system_event = systemcallback
     client1 = await ClientConfig(
