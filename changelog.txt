@@ -1,6 +1,8 @@
 Version 0.17.1 (2022-01-09)
 - Add config option to specify storage directory
 - Move Exceptions to own module
+- Add binary_sensor platform for SVs
+- Add config check
 
 Version 0.17.1 (2022-01-09)
 - Fix naming for multi channel custom entities

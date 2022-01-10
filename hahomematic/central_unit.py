@@ -631,6 +631,14 @@ class CentralConfig:
             url = f"{url}:{self.json_port}"
         return f"{url}"
 
+    def check_config(self) -> bool:
+        """Check config."""
+        try:
+            check_or_create_directory(self.storage_folder)
+        except HaHomematicException:
+            return False
+        return True
+
     async def get_central(self) -> CentralUnit:
         """Identify the used client."""
         central = CentralUnit(self)
