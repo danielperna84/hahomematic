@@ -196,6 +196,17 @@ class HmHub(BaseHubEntity):
         """Return the state attributes."""
         return self._variables.copy()
 
+    @property
+    def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
+        """Return the system variables by platform"""
+        sysvars: dict[HmPlatform, list[HmSystemVariable]] = {}
+        for entity in self.hub_entities.values():
+            if entity.platform not in sysvars:
+                sysvars[entity.platform] = []
+            sysvars[entity.platform].append(entity)
+
+        return sysvars
+
     async def fetch_data(self) -> None:
         """fetch data for the hub."""
         await self._update_hub_state()
