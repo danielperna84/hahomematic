@@ -259,8 +259,11 @@ class HmHub(BaseHubEntity):
 
     def _create_system_variable(self, name: str, value: Any) -> None:
         """Create system variable as entity."""
-        variable = HmSystemVariable(central=self._central, name=name, value=value)
-        self.hub_entities[name] = variable
+        self.hub_entities[name] = HmSystemVariable(
+            central=self._central,
+            name=f"{self._central.instance_name} {name}",
+            value=value,
+        )
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
@@ -294,6 +297,11 @@ class HmDummyHub(BaseHubEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
+        return {}
+
+    @property
+    def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
+        """Return the system variables by platform"""
         return {}
 
     async def fetch_data(self) -> None:
