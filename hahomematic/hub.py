@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import hahomematic.central_unit as hm_central
-from hahomematic.const import BACKEND_CCU, INIT_DATETIME, HmPlatform
+from hahomematic.const import BACKEND_CCU, INIT_DATETIME, HmEntityUsage, HmPlatform
 from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,6 @@ class BaseHubEntity(ABC):
         self._remove_callbacks: list[Callable] = []
         self.create_in_ha: bool = True
         self.should_poll = False
-        self.platform = HmPlatform.HUB
 
     @property
     def available(self) -> bool:
@@ -136,6 +135,7 @@ class HmSystemVariable(BaseHubEntity):
             parameter=name,
             prefix="hub",
         )
+        self.usage = HmEntityUsage.ENTITY
         super().__init__(central=central, unique_id=unique_id, name=name, value=value)
 
     @property
@@ -144,6 +144,13 @@ class HmSystemVariable(BaseHubEntity):
         if self._hub:
             return self._hub.device_info
         return None
+
+    @property
+    def platform(self) -> HmPlatform:
+        """Return the platform."""
+        if isinstance(self.value, bool):
+            return HmPlatform.HUB_BINARY_SENSOR
+        return HmPlatform.HUB_SENSOR
 
     async def set_value(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
@@ -165,7 +172,7 @@ class HmSystemVariable(BaseHubEntity):
 class HmHub(BaseHubEntity):
     """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(self, central: hm_central.CentralUnit, use_entities: bool = False):
+    def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
         unique_id: str = generate_unique_id(
             domain=central.domain,
@@ -177,7 +184,6 @@ class HmHub(BaseHubEntity):
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, HmSystemVariable] = {}
         self._variables: dict[str, Any] = {}
-        self._use_entities = use_entities
         self.should_poll = True
 
     @property
@@ -189,6 +195,17 @@ class HmHub(BaseHubEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._variables.copy()
+
+    @property
+    def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
+        """Return the system variables by platform"""
+        sysvars: dict[HmPlatform, list[HmSystemVariable]] = {}
+        for entity in self.hub_entities.values():
+            if entity.platform not in sysvars:
+                sysvars[entity.platform] = []
+            sysvars[entity.platform].append(entity)
+
+        return sysvars
 
     async def fetch_data(self) -> None:
         """fetch data for the hub."""
@@ -219,7 +236,7 @@ class HmHub(BaseHubEntity):
             variables = _clean_variables(variables)
 
         for name, value in variables.items():
-            if not self._use_entities or _is_excluded(name, EXCLUDED_FROM_SENSOR):
+            if _is_excluded(name, EXCLUDED_FROM_SENSOR):
                 self._variables[name] = value
                 continue
 
@@ -242,8 +259,11 @@ class HmHub(BaseHubEntity):
 
     def _create_system_variable(self, name: str, value: Any) -> None:
         """Create system variable as entity."""
-        variable = HmSystemVariable(central=self._central, name=name, value=value)
-        self.hub_entities[name] = variable
+        self.hub_entities[name] = HmSystemVariable(
+            central=self._central,
+            name=f"{self._central.instance_name} {name}",
+            value=value,
+        )
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
@@ -257,7 +277,7 @@ class HmHub(BaseHubEntity):
 class HmDummyHub(BaseHubEntity):
     """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(self, central: hm_central.CentralUnit, use_entities: bool = False):
+    def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
         unique_id: str = generate_unique_id(
             domain=central.domain,
@@ -268,7 +288,6 @@ class HmDummyHub(BaseHubEntity):
         name: str = central.instance_name
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, BaseHubEntity] = {}
-        self._use_entities = use_entities
 
     @property
     def device_info(self) -> dict[str, Any]:
@@ -278,6 +297,11 @@ class HmDummyHub(BaseHubEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
+        return {}
+
+    @property
+    def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
+        """Return the system variables by platform"""
         return {}
 
     async def fetch_data(self) -> None:

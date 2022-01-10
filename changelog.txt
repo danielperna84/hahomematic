@@ -1,5 +1,10 @@
-Version 0.17.1 (2022-01-09)
+Version 0.18.0 (2022-01-09)
 - Add config option to specify storage directory
+- Move Exceptions to own module
+- Add binary_sensor platform for SVs
+- Add config check
+- Add hub_entities_by_platform
+- Remove option_enable_sensors_for_system_variables
 
 Version 0.17.1 (2022-01-09)
 - Fix naming for multi channel custom entities

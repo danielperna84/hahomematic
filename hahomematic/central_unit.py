@@ -41,6 +41,7 @@ import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
+from hahomematic.exceptions import HaHomematicException, NoConnection
 import hahomematic.helpers
 from hahomematic.helpers import (
     check_or_create_directory,
@@ -49,7 +50,6 @@ from hahomematic.helpers import (
 )
 from hahomematic.hub import HmDummyHub, HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
-from hahomematic.xml_rpc_proxy import NoConnection
 import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,10 +115,7 @@ class CentralUnit:
         if self.model is BACKEND_PYDEVCCU:
             hub = HmDummyHub(central=self)
         else:
-            hub = HmHub(
-                central=self,
-                use_entities=self.central_config.option_enable_sensors_for_system_variables,
-            )
+            hub = HmHub(central=self)
         return hub
 
     async def init_hub(self) -> None:
@@ -600,7 +597,6 @@ class CentralConfig:
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
-        option_enable_sensors_for_system_variables: bool = False,
     ):
         self.loop = loop
         self.xml_rpc_server = xml_rpc_server
@@ -616,9 +612,6 @@ class CentralConfig:
         self.callback_host = callback_host
         self.callback_port = callback_port
         self.json_port = json_port
-        self.option_enable_sensors_for_system_variables = (
-            option_enable_sensors_for_system_variables
-        )
 
     @property
     def device_url(self) -> str:
@@ -630,6 +623,14 @@ class CentralConfig:
         if self.json_port:
             url = f"{url}:{self.json_port}"
         return f"{url}"
+
+    def check_config(self) -> bool:
+        """Check config."""
+        try:
+            check_or_create_directory(self.storage_folder)
+        except HaHomematicException:
+            return False
+        return True
 
     async def get_central(self) -> CentralUnit:
         """Identify the used client."""

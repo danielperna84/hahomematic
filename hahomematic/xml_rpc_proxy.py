@@ -11,20 +11,13 @@ from typing import Any
 import xmlrpc.client
 
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
+from hahomematic.exceptions import NoConnection, ProxyException
 from hahomematic.helpers import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CONTEXT = "context"
 ATTR_ENCODING_ISO_8859_1 = "ISO-8859-1"
-
-
-class ProxyException(Exception):
-    """hahomematic Proxy exception."""
-
-
-class NoConnection(Exception):
-    """hahomematic NoConnection exception."""
 
 
 # noinspection PyProtectedMember,PyUnresolvedReferences
