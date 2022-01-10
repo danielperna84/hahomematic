@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import hahomematic.central_unit as hm_central
-from hahomematic.const import BACKEND_CCU, INIT_DATETIME, HmPlatform
+from hahomematic.const import BACKEND_CCU, INIT_DATETIME, HmEntityUsage, HmPlatform
 from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,6 +135,7 @@ class HmSystemVariable(BaseHubEntity):
             parameter=name,
             prefix="hub",
         )
+        self.usage = HmEntityUsage.ENTITY
         super().__init__(central=central, unique_id=unique_id, name=name, value=value)
 
     @property
@@ -171,7 +172,7 @@ class HmSystemVariable(BaseHubEntity):
 class HmHub(BaseHubEntity):
     """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(self, central: hm_central.CentralUnit, use_entities: bool = False):
+    def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
         unique_id: str = generate_unique_id(
             domain=central.domain,
@@ -183,7 +184,6 @@ class HmHub(BaseHubEntity):
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, HmSystemVariable] = {}
         self._variables: dict[str, Any] = {}
-        self._use_entities = use_entities
         self.should_poll = True
 
     @property
@@ -236,7 +236,7 @@ class HmHub(BaseHubEntity):
             variables = _clean_variables(variables)
 
         for name, value in variables.items():
-            if not self._use_entities or _is_excluded(name, EXCLUDED_FROM_SENSOR):
+            if _is_excluded(name, EXCLUDED_FROM_SENSOR):
                 self._variables[name] = value
                 continue
 
@@ -274,7 +274,7 @@ class HmHub(BaseHubEntity):
 class HmDummyHub(BaseHubEntity):
     """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(self, central: hm_central.CentralUnit, use_entities: bool = False):
+    def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
         unique_id: str = generate_unique_id(
             domain=central.domain,
@@ -285,7 +285,6 @@ class HmDummyHub(BaseHubEntity):
         name: str = central.instance_name
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, BaseHubEntity] = {}
-        self._use_entities = use_entities
 
     @property
     def device_info(self) -> dict[str, Any]:
