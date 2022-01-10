@@ -41,6 +41,7 @@ import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
+from hahomematic.exceptions import HaHomematicException, NoConnection
 import hahomematic.helpers
 from hahomematic.helpers import (
     check_or_create_directory,
@@ -49,7 +50,6 @@ from hahomematic.helpers import (
 )
 from hahomematic.hub import HmDummyHub, HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
-from hahomematic.xml_rpc_proxy import NoConnection
 import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)

@@ -31,9 +31,10 @@ from hahomematic.const import (
     RELEVANT_PARAMSETS,
 )
 from hahomematic.device import HmDevice
+from hahomematic.exceptions import NoConnection, ProxyException
 from hahomematic.helpers import build_api_url, get_local_ip, parse_ccu_sys_var
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
-from hahomematic.xml_rpc_proxy import NoConnection, ProxyException, XmlRpcProxy
+from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
 _LOGGER = logging.getLogger(__name__)
 
