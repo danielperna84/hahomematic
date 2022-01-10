@@ -589,6 +589,7 @@ class CentralConfig:
         loop: asyncio.AbstractEventLoop,
         xml_rpc_server: xml_rpc.XmlRpcServer,
         domain: str,
+        storage_folder: str,
         name: str,
         host: str = LOCALHOST,
         username: str = DEFAULT_USERNAME,
@@ -604,6 +605,7 @@ class CentralConfig:
         self.loop = loop
         self.xml_rpc_server = xml_rpc_server
         self.domain = domain
+        self.storage_folder = storage_folder
         self.name = name
         self.host = host
         self.username = username
@@ -646,7 +648,7 @@ class BaseCache(ABC):
         cache_dict: dict[str, Any],
     ):
         self._central = central
-        self._cache_dir = f"{self._central.domain}/cache"
+        self._cache_dir = f"{self._central.central_config.storage_folder}/cache"
         self._filename = f"{self._central.instance_name}_{filename}"
         self._cache_dict = cache_dict
 

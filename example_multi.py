@@ -89,6 +89,7 @@ class Example:
             host=CCU_HOST,
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
+            storage_folder="hahm",
         ).get_central()
         self.central_2 = await CentralConfig(
             domain="hahm",
@@ -98,6 +99,7 @@ class Example:
             host=CCU_HOST,
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
+            storage_folder="hahm",
         ).get_central()
 
         # For testing we set a short INIT_TIMEOUT
