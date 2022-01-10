@@ -48,7 +48,6 @@ class BaseHubEntity(ABC):
         self._remove_callbacks: list[Callable] = []
         self.create_in_ha: bool = True
         self.should_poll = False
-        self.platform = HmPlatform.HUB
 
     @property
     def available(self) -> bool:
@@ -144,6 +143,13 @@ class HmSystemVariable(BaseHubEntity):
         if self._hub:
             return self._hub.device_info
         return None
+
+    @property
+    def platform(self) -> HmPlatform:
+        """Return the platform."""
+        if isinstance(self.value, bool):
+            return HmPlatform.HUB_BINARY_SENSOR
+        return HmPlatform.HUB_SENSOR
 
     async def set_value(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
