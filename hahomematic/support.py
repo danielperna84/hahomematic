@@ -34,7 +34,7 @@ class DeviceExporter:
     ):
         self._client = client
         self._central = client.central
-        self._domain = self._central.domain
+        self._storage_folder = self._central.central_config.storage_folder
         self._interface_id = interface_id
         self._device_address = device_address
         self._random_id = "VCU%i" % random.randint(1000000, 9999999)
@@ -81,14 +81,14 @@ class DeviceExporter:
 
         # Save device_descriptions for device to file.
         await self._save(
-            file_dir=f"{self._domain}/{DEVICE_DESCRIPTIONS_DIR}",
+            file_dir=f"{self._storage_folder}/{DEVICE_DESCRIPTIONS_DIR}",
             filename=filename,
             data=anonymize_device_descriptions,
         )
 
         # Save device_descriptions for device to file.
         await self._save(
-            file_dir=f"{self._domain}/{PARAMSET_DESCRIPTIONS_DIR}",
+            file_dir=f"{self._storage_folder}/{PARAMSET_DESCRIPTIONS_DIR}",
             filename=filename,
             data=anonymize_paramset_descriptions,
         )

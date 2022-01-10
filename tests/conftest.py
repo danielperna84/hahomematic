@@ -17,8 +17,8 @@ from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
 CCU_HOST = "127.0.0.1"
-CCU_USERNAME = None
-CCU_PASSWORD = None
+CCU_USERNAME = "user"
+CCU_PASSWORD = "pass"
 GOT_DEVICES = False
 
 # content of conftest.py
@@ -73,6 +73,7 @@ async def central(
         host=CCU_HOST,
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
+        storage_folder="hahm",
     ).get_central()
     central_unit.callback_system_event = systemcallback
     client1 = await ClientConfig(

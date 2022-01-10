@@ -93,7 +93,16 @@ def check_or_create_directory(directory: str) -> bool:
     if not directory:
         return False
     if not os.path.exists(directory):
-        os.makedirs(directory)
+        try:
+            os.makedirs(directory)
+        except OSError as ose:
+            _LOGGER.exception(
+                "Helpers.check_or_create_directory: Unable to create directory %s ('%s')",
+                directory,
+                ose.strerror,
+            )
+            return False
+
     return True
 
 
