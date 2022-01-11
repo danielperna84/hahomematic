@@ -19,6 +19,7 @@ from hahomematic.const import (
     ATTR_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
+    HmEntityUsage,
 )
 import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import HaHomematicException
@@ -199,7 +200,8 @@ def get_custom_entity_name(
     unique_id: str,
     channel_no: int,
     device_type: str,
-    is_primary_channel: bool,
+    is_only_primary_channel: bool,
+    usage: HmEntityUsage,
 ) -> str:
     """Rename name for custom entity"""
     if custom_entity_name := _get_base_name_from_channel_or_device(
@@ -207,9 +209,10 @@ def get_custom_entity_name(
         channel_address=f"{device_address}:{channel_no}",
         device_type=device_type,
     ):
-        if is_primary_channel and ":" in custom_entity_name:
+        if is_only_primary_channel and ":" in custom_entity_name:
             return custom_entity_name.split(":")[0]
-        return custom_entity_name.replace(":", " ch")
+        marker = " ch" if usage == HmEntityUsage.CE_PRIMARY else " vch"
+        return custom_entity_name.replace(":", marker)
 
     _LOGGER.info(
         "Helper.get_custom_entity_name: Using unique_id for %s %s %s",
