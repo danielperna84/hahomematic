@@ -470,19 +470,20 @@ class CustomEntity(BaseEntity, CallbackEntity):
         device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
             device_type=self._device.device_type, sub_type=self._device.sub_type
         )
+        self.usage = self._custom_entity_usage()
         self.name = get_custom_entity_name(
             central=self._central,
             device_address=self.device_address,
             unique_id=self.unique_id,
             channel_no=channel_no,
             device_type=self.device_type,
-            is_primary_channel=check_channel_is_only_primary_channel(
+            is_only_primary_channel=check_channel_is_only_primary_channel(
                 current_channel=channel_no,
                 device_def=device_def,
                 device_has_multiple_channels=device_has_multiple_channels,
             ),
+            usage=self.usage,
         )
-        self.usage = self._custom_entity_usage()
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
 

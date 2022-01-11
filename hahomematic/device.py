@@ -643,12 +643,12 @@ def create_devices(central: hm_central.CentralUnit) -> None:
     new_entities: list[BaseEntity] = []
     for interface_id, client in central.clients.items():
         if not client:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
         if not central.paramsets.get_by_interface(interface_id=interface_id):
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,
             )
