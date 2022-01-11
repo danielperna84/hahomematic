@@ -31,6 +31,7 @@ from hahomematic.const import (
     DATA_LOAD_SUCCESS,
     DATA_NO_LOAD,
     EVENT_CONFIG_PENDING,
+    EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
     FLAG_SERVICE,
     FLAG_VISIBLE,
@@ -888,7 +889,8 @@ class SpecialEvent(BaseEvent):
             if value is False and old_value is True:
                 self._central.create_task(self._device.reload_paramsets())
             return None
-        if self.parameter == EVENT_UN_REACH:
+
+        if self.parameter in (EVENT_UN_REACH, EVENT_STICKY_UN_REACH):
             self._device.update_device(self.unique_id)
             # no return here. Event should also be fired for persistent notification.
 

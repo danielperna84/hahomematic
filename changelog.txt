@@ -1,3 +1,7 @@
+Version 0.18.1 (2022-01-10)
+- Reduce some log_level
+- Fix callback to notify un_reach
+
 Version 0.18.0 (2022-01-09)
 - Add config option to specify storage directory
 - Move Exceptions to own module

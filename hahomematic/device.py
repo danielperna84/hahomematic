@@ -18,6 +18,8 @@ from hahomematic.const import (
     ATTR_HM_TYPE,
     BUTTON_ACTIONS,
     CLICK_EVENTS,
+    EVENT_STICKY_UN_REACH,
+    EVENT_UN_REACH,
     FLAG_INTERAL,
     HH_EVENT_DEVICES_CREATED,
     HM_VIRTUAL_REMOTES,
@@ -29,7 +31,6 @@ from hahomematic.const import (
     MANUFACTURER,
     OPERATION_EVENT,
     OPERATION_WRITE,
-    PARAM_UN_REACH,
     PARAMSET_VALUES,
     RELEVANT_PARAMSETS,
     SPECIAL_EVENTS,
@@ -96,7 +97,6 @@ class HmDevice:
         self.last_update: datetime = INIT_DATETIME
         self._available: bool = True
         self._update_callbacks: list[Callable] = []
-        self._remove_callbacks: list[Callable] = []
         self.device_type: str = str(
             self._central.raw_devices.get_device_parameter(
                 interface_id=self._interface_id,
@@ -159,18 +159,16 @@ class HmDevice:
     def add_hm_entity(self, hm_entity: BaseEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
-            hm_entity.register_update_callback(self.update_device)
-            hm_entity.register_remove_callback(self.remove_device)
             self.entities[(hm_entity.channel_address, hm_entity.parameter)] = hm_entity
+            self.register_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, CustomEntity):
             self.custom_entities[hm_entity.unique_id] = hm_entity
 
     def remove_hm_entity(self, hm_entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
-            hm_entity.unregister_update_callback(self.update_device)
-            hm_entity.unregister_remove_callback(self.remove_device)
             del self.entities[(hm_entity.channel_address, hm_entity.parameter)]
+            self.unregister_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, CustomEntity):
             del self.custom_entities[hm_entity.unique_id]
 
@@ -223,24 +221,6 @@ class HmDevice:
         for _callback in self._update_callbacks:
             _callback(*args)
 
-    def register_remove_callback(self, remove_callback: Callable) -> None:
-        """Register the remove callback."""
-        if callable(remove_callback):
-            self._remove_callbacks.append(remove_callback)
-
-    def unregister_remove_callback(self, remove_callback: Callable) -> None:
-        """Remove the remove callback."""
-        if remove_callback in self._remove_callbacks:
-            self._remove_callbacks.remove(remove_callback)
-
-    def remove_device(self, *args: Any) -> None:
-        """
-        Do what is needed when the entity has been removed.
-        """
-        self._set_last_update()
-        for _callback in self._remove_callbacks:
-            _callback(*args)
-
     async def export_device_definition(self) -> None:
         """Export the device definition for current device."""
         await hm_support.save_device_definition(
@@ -286,8 +266,12 @@ class HmDevice:
         """Return the availability of the device."""
         if self._available is False:
             return False
-        un_reach = self.action_events.get((f"{self._device_address}:0", PARAM_UN_REACH))
-        if un_reach and un_reach.last_update:
+        un_reach = self.action_events.get((f"{self._device_address}:0", EVENT_UN_REACH))
+        if un_reach is None:
+            un_reach = self.action_events.get(
+                (f"{self._device_address}:0", EVENT_STICKY_UN_REACH)
+            )
+        if un_reach is not None and un_reach.value is not None:
             return not un_reach.value
         return True
 

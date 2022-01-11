@@ -93,10 +93,10 @@ class Client(ABC):
                 "proxy_init: init('%s', '%s')", self._init_url, self.interface_id
             )
             await self._proxy.init(self._init_url, self.interface_id)
-            _LOGGER.info("proxy_init: Proxy for %s initialized", self.name)
+            _LOGGER.info("proxy_init: Proxy for %s initialized", self.interface_id)
         except ProxyException:
             _LOGGER.exception(
-                "proxy_init: Failed to initialize proxy for %s", self.name
+                "proxy_init: Failed to initialize proxy for %s", self.interface_id
             )
             self.last_updated = INIT_DATETIME
             return PROXY_INIT_FAILED
