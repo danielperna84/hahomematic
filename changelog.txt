@@ -1,3 +1,6 @@
+Version 0.20.1 (2022-01-13)
+- Remove typecast for text, binary_sensor
+
 Version 0.20.0 (2022-01-12)
 - Add converter to BaseParameterEntity/GenericEntity
 - Fix number entities returning None when 0

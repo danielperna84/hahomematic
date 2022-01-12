@@ -36,8 +36,3 @@ class HmBinarySensor(GenericEntity[bool]):
             parameter_data=parameter_data,
             platform=HmPlatform.BINARY_SENSOR,
         )
-
-    @property
-    def value(self) -> bool:
-        """Return the value."""
-        return bool(self._value)

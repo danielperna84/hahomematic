@@ -34,11 +34,6 @@ class HmText(GenericEntity[str]):
             platform=HmPlatform.TEXT,
         )
 
-    @property
-    def value(self) -> str | None:
-        """Get the value of the entity."""
-        return self._value
-
     async def send_value(self, value: str | None) -> None:
         """Set the value of the entity."""
         await super().send_value(value)
