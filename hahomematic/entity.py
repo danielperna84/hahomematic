@@ -39,6 +39,10 @@ from hahomematic.const import (
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
     OPERATION_READ,
+    TYPE_BOOL,
+    TYPE_FLOAT,
+    TYPE_INTEGER,
+    TYPE_STRING,
     HmEntityUsage,
     HmEventType,
     HmPlatform,
@@ -234,18 +238,24 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     def _assign_parameter_data(self) -> None:
         """Assign parameter data to instance variables."""
         self._type: str = self._parameter_data[ATTR_HM_TYPE]
-        self._default: ParameterType = self._parameter_data[ATTR_HM_DEFAULT]
-        flags: int = self._parameter_data[ATTR_HM_FLAGS]
-        self._visible: bool = flags & FLAG_VISIBLE == FLAG_VISIBLE
-        self._service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
-        self._max: ParameterType = self._parameter_data[ATTR_HM_MAX]
-        self._min: ParameterType = self._parameter_data[ATTR_HM_MIN]
-        self._operations: int = self._parameter_data[ATTR_HM_OPERATIONS]
-        self._special: dict[str, Any] | None = self._parameter_data.get(ATTR_HM_SPECIAL)
-        self._unit: str | None = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
         self._value_list: list[str] | None = self._parameter_data.get(
             ATTR_HM_VALUE_LIST
         )
+        self._default: ParameterType = self._convert_value(
+            self._parameter_data[ATTR_HM_DEFAULT]
+        )
+        self._max: ParameterType = self._convert_value(
+            self._parameter_data[ATTR_HM_MAX]
+        )
+        self._min: ParameterType = self._convert_value(
+            self._parameter_data[ATTR_HM_MIN]
+        )
+        flags: int = self._parameter_data[ATTR_HM_FLAGS]
+        self._visible: bool = flags & FLAG_VISIBLE == FLAG_VISIBLE
+        self._service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
+        self._operations: int = self._parameter_data[ATTR_HM_OPERATIONS]
+        self._special: dict[str, Any] | None = self._parameter_data.get(ATTR_HM_SPECIAL)
+        self._unit: str | None = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
 
     def update_parameter_data(self) -> None:
         """Update parameter data"""
@@ -293,13 +303,27 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         """Return the if entity is visible in ccu."""
         return self._visible
 
+    def _convert_value(self, value: ParameterType) -> ParameterType:
+        """Convert to value to ParameterType"""
+        if value is None:
+            return None
+        if self._type == TYPE_BOOL:
+            return bool(value)  # type: ignore[return-value]
+        if self._type == TYPE_FLOAT:
+            return float(value)  # type: ignore[return-value]
+        if self._type == TYPE_INTEGER:
+            return int(float(value))  # type: ignore[return-value]
+        if self._type == TYPE_STRING:
+            return str(value)  # type: ignore[return-value]
+        return value
+
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
         try:
             await self._client.set_value(
                 channel_address=self.channel_address,
                 parameter=self.parameter,
-                value=value,
+                value=self._convert_value(value),
             )
         except Exception:
             _LOGGER.exception(
@@ -353,11 +377,12 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         ].append(self.event)
 
     def event(
-        self, interface_id: str, channel_address: str, parameter: str, value: Any
+        self, interface_id: str, channel_address: str, parameter: str, raw_value: Any
     ) -> None:
         """
         Handle event for which this entity has subscribed.
         """
+        value = self._convert_value(raw_value)
         if self._value is value:
             return
 
@@ -406,8 +431,10 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             return DATA_NO_LOAD
         try:
             if self._operations & OPERATION_READ:
-                self._value = await self._client.get_value(
-                    channel_address=self.channel_address, parameter=self.parameter
+                self._value = self._convert_value(
+                    await self._client.get_value(
+                        channel_address=self.channel_address, parameter=self.parameter
+                    )
                 )
                 self.update_entity()
 
