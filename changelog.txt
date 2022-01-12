@@ -1,4 +1,8 @@
-Version 0.19.0 (2022-01-10)
+Version 0.20.0 (2022-01-12)
+- Add converter to BaseParameterEntity/GenericEntity
+- Fix number entities returning None when 0
+
+Version 0.19.0 (2022-01-11)
 - Mark secondary channels name with a V --> Vch
 
 Version 0.18.1 (2022-01-10)
