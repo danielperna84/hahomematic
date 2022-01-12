@@ -47,7 +47,7 @@ class HmFloat(BaseNumber[float]):
     @property
     def value(self) -> float | None:
         """Return the value of the entity."""
-        if self._value:
+        if self._value is not None:
             return float(self._value)
         return None
 
@@ -77,7 +77,7 @@ class HmInteger(BaseNumber[int]):
     @property
     def value(self) -> int | None:
         """Return the value of the entity."""
-        if self._value:
+        if self._value is not None:
             return int(self._value)
         return None
 
