@@ -3,6 +3,7 @@ Version 0.20.1 (2022-01-13)
 - Don't exclude Servicemeldungen from sysvars
 - Use Servicemeldungen sysvar for hub state
 - Add test for HM-CC-VG-1 (HM-Heatinggroup)
+- Remove additional typecasts for number
 
 Version 0.20.0 (2022-01-12)
 - Add converter to BaseParameterEntity/GenericEntity
