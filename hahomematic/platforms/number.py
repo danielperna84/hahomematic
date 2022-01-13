@@ -46,7 +46,7 @@ class HmFloat(BaseNumber[float]):
 
     async def send_value(self, value: float) -> None:
         """Set the value of the entity."""
-        if value is not None and float(self._min) <= float(value) <= float(self._max):
+        if value is not None and self._min <= float(value) <= self._max:
             await super().send_value(value)
         elif self._special:
             if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
@@ -69,7 +69,7 @@ class HmInteger(BaseNumber[int]):
 
     async def send_value(self, value: int) -> None:
         """Set the value of the entity."""
-        if value is not None and int(self._min) <= int(value) <= int(self._max):
+        if value is not None and self._min <= int(value) <= self._max:
             await super().send_value(value)
         elif self._special:
             if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
