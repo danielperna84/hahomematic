@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from hahomematic.const import ATTR_HM_MAX, ATTR_HM_MIN, HmPlatform
+from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_ACTIVE_PROFILE,
@@ -114,20 +114,12 @@ class BaseClimateEntity(CustomEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self._get_entity_attribute(
-            field_name=FIELD_SETPOINT,
-            attr_name=ATTR_HM_MIN.lower(),
-            default=HM_MIN_VALUE,
-        )
+        return self._e_setpoint.min
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self._get_entity_attribute(
-            field_name=FIELD_SETPOINT,
-            attr_name=ATTR_HM_MAX.lower(),
-            default=HM_MAX_VALUE,
-        )
+        return self._e_setpoint.max
 
     @property
     def target_temperature_step(self) -> float:
@@ -206,15 +198,6 @@ class BaseClimateEntity(CustomEntity):
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
         return None
-
-    def _get_entity_attribute(
-        self, field_name: str, attr_name: str, default: float
-    ) -> float:
-        """get entity attribute value"""
-        entity = self.data_entities.get(field_name)
-        if entity and hasattr(entity, attr_name):
-            return float(getattr(entity, attr_name))
-        return default
 
 
 class CeSimpleRfThermostat(BaseClimateEntity):

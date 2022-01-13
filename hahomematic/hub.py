@@ -24,6 +24,7 @@ EXCLUDED = [
 
 SERVICE_MESSAGES = "Servicemeldungen"
 
+
 class BaseHubEntity(ABC):
     """
     Base class for hub entities.
