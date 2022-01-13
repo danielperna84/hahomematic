@@ -774,56 +774,6 @@ class BaseEvent(BaseParameterEntity[bool]):
         ]
 
 
-class AlarmEvent(BaseEvent):
-    """
-    class for handling alarm events.
-    """
-
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_id: str,
-        channel_address: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        """
-        Initialize the event handler.
-        """
-        super().__init__(
-            device=device,
-            unique_id=unique_id,
-            channel_address=channel_address,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            event_type=HmEventType.ALARM,
-        )
-
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        return {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.device_address,
-            ATTR_TYPE: self.parameter.lower(),
-            ATTR_VALUE: value,
-        }
-
-    def fire_event(self, value: Any) -> None:
-        """
-        Do what is needed to fire an event.
-        """
-        if self._value == value:
-            return
-        self._set_last_update()
-        self._value = value
-
-        if callable(self._central.callback_ha_event):
-            self._central.callback_ha_event(
-                self.event_type,
-                self.get_event_data(value),
-            )
-
-
 class ClickEvent(BaseEvent):
     """
     class for handling click events.
