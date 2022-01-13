@@ -10,7 +10,6 @@ from typing import Any
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
-    ALARM_EVENTS,
     ATTR_HM_FIRMWARE,
     ATTR_HM_FLAGS,
     ATTR_HM_OPERATIONS,
@@ -44,7 +43,6 @@ from hahomematic.const import (
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
-    AlarmEvent,
     BaseEntity,
     BaseEvent,
     CallbackEntity,
@@ -323,9 +321,7 @@ class HmDevice:
                     entity: GenericEntity | None
 
                     if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT and (
-                        parameter in ALARM_EVENTS
-                        or parameter in CLICK_EVENTS
-                        or parameter in SPECIAL_EVENTS
+                        parameter in CLICK_EVENTS or parameter in SPECIAL_EVENTS
                     ):
                         self.create_event(
                             channel_address=channel_address,
@@ -438,14 +434,6 @@ class HmDevice:
                 )
             elif parameter in SPECIAL_EVENTS:
                 action_event = SpecialEvent(
-                    device=self,
-                    unique_id=unique_id,
-                    channel_address=channel_address,
-                    parameter=parameter,
-                    parameter_data=parameter_data,
-                )
-            elif parameter in ALARM_EVENTS:
-                action_event = AlarmEvent(
                     device=self,
                     unique_id=unique_id,
                     channel_address=channel_address,
