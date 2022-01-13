@@ -1,11 +1,14 @@
 """Test the HaHomematic central."""
-from typing import Any
-from unittest.mock import patch
-from hahomematic.const import HmPlatform
-from conftest import get_value_from_generic_entity, send_device_value_to_ccu, get_hm_device
+from conftest import (
+    get_hm_custom_entity,
+    get_hm_device,
+    get_hm_genertic_entity,
+    get_value_from_generic_entity,
+    send_device_value_to_ccu,
+)
 import pytest
 
-from hahomematic.helpers import get_device_address
+from hahomematic.devices.climate import ATTR_TEMPERATURE, CeRfThermostat
 
 
 @pytest.mark.asyncio
@@ -69,6 +72,7 @@ async def test_device_set_data(central, pydev_ccu, loop) -> None:
     )
     assert new_value == 19.0
 
+
 @pytest.mark.asyncio
 async def test_device_export(central, pydev_ccu, loop) -> None:
     """Test device export."""
@@ -78,6 +82,7 @@ async def test_device_export(central, pydev_ccu, loop) -> None:
     assert hm_device
     await hm_device.export_device_definition()
 
+
 @pytest.mark.asyncio
 async def test_all_parameters(central, pydev_ccu, loop) -> None:
     """Test device export."""
@@ -85,3 +90,26 @@ async def test_all_parameters(central, pydev_ccu, loop) -> None:
     assert pydev_ccu
     parameters = central.paramsets.get_all_parameters()
     assert parameters
+
+
+@pytest.mark.asyncio
+async def test_device_hm_heatgroup(central, pydev_ccu, loop) -> None:
+    """Test callback."""
+    assert central
+    assert pydev_ccu
+    entity = await get_hm_genertic_entity(central, "INT0000001:1", "SET_TEMPERATURE")
+    old_value = entity.value
+    assert old_value is None
+
+    custom_entity: CeRfThermostat = await get_hm_custom_entity(central, "INT0000001", 1)
+    assert custom_entity.current_temperature is None
+    kwargs = {ATTR_TEMPERATURE: 19.0}
+    await custom_entity.set_temperature(**kwargs)
+
+    new_value = await get_value_from_generic_entity(
+        central, "INT0000001:1", "SET_TEMPERATURE"
+    )
+    assert new_value == 19.0
+    assert custom_entity._e_setpoint.value == 19.0
+    assert custom_entity.target_temperature == 19.0
+

@@ -133,7 +133,7 @@ async def get_hm_custom_entity(
     """Return the hm custom_entity."""
     hm_device = get_hm_device(central_unit, address)
     assert hm_device
-    for custom_entity in hm_device.custom_entities:
+    for custom_entity in hm_device.custom_entities.values():
         if custom_entity.channel_no == channel_no:
             if do_load:
                 await custom_entity.load_data()
