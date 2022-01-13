@@ -22,6 +22,7 @@ EXCLUDED = [
     "OldVal",
 ]
 
+SERVICE_MESSAGES = "Servicemeldungen"
 
 class BaseHubEntity(ABC):
     """
@@ -208,13 +209,13 @@ class HmHub(BaseHubEntity):
 
     async def fetch_data(self) -> None:
         """fetch data for the hub."""
-        await self._update_hub_state()
         await self._update_entities()
+        await self._update_hub_state()
 
     async def _update_hub_state(self) -> None:
         """Retrieve latest service_messages."""
-        service_messages = await self._central.get_service_messages()
-        value = 0 if service_messages is None else len(service_messages)
+        service_messages = await self._central.get_system_variable(SERVICE_MESSAGES)
+        value = 0 if service_messages is None else int(service_messages)
 
         if self._value != value:
             self._value = value
