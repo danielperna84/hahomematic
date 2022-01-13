@@ -291,7 +291,6 @@ class HmPlatform(Enum):
 class HmEventType(Enum):
     """Enum with hahomematic event types."""
 
-    ALARM = "homematic.alarm"
     KEYPRESS = "homematic.keypress"
     SPECIAL = "homematic.special"
 
