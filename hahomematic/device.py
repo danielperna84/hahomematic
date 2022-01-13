@@ -321,16 +321,8 @@ class HmDevice:
                     paramset=paramset,
                 ).items():
                     entity: GenericEntity | None
-                    if (
-                        not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
-                        and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
-                    ) or parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL:
-                        _LOGGER.debug(
-                            "Device.create_entities: Skipping %s (no event or internal)",
-                            parameter,
-                        )
-                        continue
-                    if (
+
+                    if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT and (
                         parameter in ALARM_EVENTS
                         or parameter in CLICK_EVENTS
                         or parameter in SPECIAL_EVENTS
@@ -348,6 +340,15 @@ class HmDevice:
                             )
                             if entity is not None:
                                 new_entities.append(entity)
+                    if (
+                        not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
+                        and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
+                    ) or parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL:
+                        _LOGGER.debug(
+                            "Device.create_entities: Skipping %s (no event or internal)",
+                            parameter,
+                        )
+                        continue
                     if not (parameter in CLICK_EVENTS or parameter in SPECIAL_EVENTS):
                         entity = self.create_entity(
                             channel_address=channel_address,

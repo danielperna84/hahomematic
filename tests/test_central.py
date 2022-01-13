@@ -51,10 +51,19 @@ async def test_central(central, loop) -> None:
 
             entity_types[entity.hmtype][type(entity).__name__].append(entity)
 
+    parameters = []
+    for entity in central.hm_entities.values():
+        if hasattr(entity, "parameter"):
+            if entity.parameter not in parameters:
+                parameters.append(entity.parameter)
+
+
     assert len(data) == 338
     assert len(custom_entities) == 201
     assert len(ce_channels) == 83
     assert len(entity_types) == 6
+
+    assert len(parameters) == 166
 
 
 @pytest.mark.asyncio
