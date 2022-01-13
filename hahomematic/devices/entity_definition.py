@@ -394,6 +394,11 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 "ACTUAL_TEMPERATURE",
             },
         },
+        "HmIP-DLD": {
+            0: {
+                "ERROR_JAMMED",
+            },
+        },
     },
 }
 
