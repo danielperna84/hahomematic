@@ -44,13 +44,6 @@ class HmFloat(BaseNumber[float]):
     This is a default platform that gets automatically generated.
     """
 
-    @property
-    def value(self) -> float | None:
-        """Return the value of the entity."""
-        if self._value is not None:
-            return float(self._value)
-        return None
-
     async def send_value(self, value: float) -> None:
         """Set the value of the entity."""
         if value is not None and float(self._min) <= float(value) <= float(self._max):
@@ -73,13 +66,6 @@ class HmInteger(BaseNumber[int]):
     Implementation of an Integer.
     This is a default platform that gets automatically generated.
     """
-
-    @property
-    def value(self) -> int | None:
-        """Return the value of the entity."""
-        if self._value is not None:
-            return int(self._value)
-        return None
 
     async def send_value(self, value: int) -> None:
         """Set the value of the entity."""
