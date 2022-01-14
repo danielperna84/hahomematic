@@ -183,7 +183,7 @@ class Client(ABC):
 
     @abstractmethod
     async def get_all_rooms(self) -> dict[str, str]:
-        """Get all rooms from CCU / Homegear."""
+        """Get all rooms, if available."""
         ...
 
     @abstractmethod
@@ -530,7 +530,7 @@ class ClientCCU(Client):
         return variables
 
     async def get_all_rooms(self) -> dict[str, str]:
-        """Get all rooms from CCU / Homegear."""
+        """Get all rooms from CCU."""
         rooms: dict[str, str] = {}
         device_channel_ids = await self._get_device_channel_ids()
         channel_ids_room = await self._get_all_channel_ids_room()

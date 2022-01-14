@@ -714,7 +714,7 @@ class RoomCache:
         self._rooms.clear()
 
     async def _get_all_rooms(self) -> dict[str, str]:
-        """Get all rooms from CCU / Homegear."""
+        """Get all rooms, if available."""
         if client := self._central.get_client():
             return await client.get_all_rooms()
         return {}
