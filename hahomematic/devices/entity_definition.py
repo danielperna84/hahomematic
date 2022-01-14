@@ -347,6 +347,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 0: {
                     "ACTUAL_HUMIDITY",
                     "ACTUAL_TEMPERATURE",
+                    "VALVE_STATE",
                 }
             },
         },
