@@ -13,6 +13,6 @@ INSTANCES: dict[str, hm_central.CentralUnit] = {}
 def get_client_by_interface_id(interface_id: str) -> hm_client.Client | None:
     """Return client by interface_id"""
     for central in INSTANCES.values():
-        if client := central.clients.get(interface_id):
+        if client := central.get_client_by_interface_id(interface_id=interface_id):
             return client
     return None

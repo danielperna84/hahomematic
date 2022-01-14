@@ -76,16 +76,16 @@ async def central(
         storage_folder="hahm",
     ).get_central()
     central_unit.callback_system_event = systemcallback
-    client1 = await ClientConfig(
+    await central_unit.create_clients(client_configs=[ClientConfig(
         central=central_unit,
         name="hm",
         port=2001,
-    ).get_client()
+    )])
 
     # Clients have to exist prior to creating the devices
     central_unit.create_devices()
     # Once the central_1 is running we subscribe to receive messages.
-    await client1.proxy_init()
+    await central_unit.init_clients()
     await central_unit.init_hub()
     while not GOT_DEVICES and sleep_counter < 300:
         print("Waiting for devices")

@@ -88,7 +88,6 @@ class HmDevice:
             self._interface_id,
             self._device_address,
         )
-
         self.entities: dict[tuple[str, str], GenericEntity] = {}
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}

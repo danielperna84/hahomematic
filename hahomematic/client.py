@@ -63,11 +63,6 @@ class Client(ABC):
         self.last_updated: datetime = INIT_DATETIME
         self._json_rpc_session: JsonRpcAioHttpClient = self._central.json_rpc_session
 
-        self._central.clients[self.interface_id] = self
-        if self._init_url not in self._central.clients_by_init_url:
-            self._central.clients_by_init_url[self._init_url] = []
-        self._central.clients_by_init_url[self._init_url].append(self)
-
     @property
     def version(self) -> str | None:
         """Return the version of the backend."""
@@ -82,6 +77,11 @@ class Client(ABC):
     def central(self) -> hm_central.CentralUnit:
         """Return the central of the backend."""
         return self._central
+
+    @property
+    def init_url(self) -> str:
+        """Return the init_url of the client."""
+        return self._init_url
 
     async def proxy_init(self) -> int:
         """
@@ -509,7 +509,7 @@ class ClientCCU(Client):
             return variables
 
         _LOGGER.debug(
-            "get_all_system_variables: Getting all System variables via JSON-RPC"
+            "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
         try:
             response = await self._json_rpc_session.post(
