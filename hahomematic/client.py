@@ -63,11 +63,6 @@ class Client(ABC):
         self.last_updated: datetime = INIT_DATETIME
         self._json_rpc_session: JsonRpcAioHttpClient = self._central.json_rpc_session
 
-        self._central.clients[self.interface_id] = self
-        if self._init_url not in self._central.clients_by_init_url:
-            self._central.clients_by_init_url[self._init_url] = []
-        self._central.clients_by_init_url[self._init_url].append(self)
-
     @property
     def version(self) -> str | None:
         """Return the version of the backend."""
@@ -82,6 +77,11 @@ class Client(ABC):
     def central(self) -> hm_central.CentralUnit:
         """Return the central of the backend."""
         return self._central
+
+    @property
+    def init_url(self) -> str:
+        """Return the init_url of the client."""
+        return self._init_url
 
     async def proxy_init(self) -> int:
         """
@@ -179,6 +179,11 @@ class Client(ABC):
     @abstractmethod
     async def get_all_system_variables(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
+        ...
+
+    @abstractmethod
+    async def get_all_rooms(self) -> dict[str, str]:
+        """Get all rooms from CCU / Homegear."""
         ...
 
     @abstractmethod
@@ -509,7 +514,7 @@ class ClientCCU(Client):
             return variables
 
         _LOGGER.debug(
-            "get_all_system_variables: Getting all System variables via JSON-RPC"
+            "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
         try:
             response = await self._json_rpc_session.post(
@@ -523,6 +528,66 @@ class ClientCCU(Client):
             _LOGGER.exception("get_all_system_variables: Exception")
 
         return variables
+
+    async def get_all_rooms(self) -> dict[str, str]:
+        """Get all rooms from CCU / Homegear."""
+        rooms: dict[str, str] = {}
+        device_channel_ids = await self._get_device_channel_ids()
+        channel_ids_room = await self._get_all_channel_ids_room()
+        for address, channel_id in device_channel_ids.items():
+            if name := channel_ids_room.get(channel_id):
+                rooms[address] = name
+        return rooms
+
+    async def _get_all_channel_ids_room(self) -> dict[str, str]:
+        """Get all channel_ids per room from CCU / Homegear."""
+        channel_ids_room: dict[str, str] = {}
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "_get_all_channel_ids_per_room: You have to set username ans password to get rooms via JSON-RPC"
+            )
+            return channel_ids_room
+
+        _LOGGER.debug("_get_all_channel_ids_per_room: Getting all rooms via JSON-RPC")
+        try:
+            response = await self._json_rpc_session.post(
+                "Room.getAll",
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                for room in response[ATTR_RESULT]:
+                    channel_ids_room[room["id"]] = room["name"]
+                    for channel_id in room["channelIds"]:
+                        channel_ids_room[channel_id] = room["name"]
+        except Exception:
+            _LOGGER.exception("_get_all_channel_ids_per_room: Exception")
+
+        return channel_ids_room
+
+    async def _get_device_channel_ids(self) -> dict[str, str]:
+        """Get all device_channel_ids from CCU / Homegear."""
+        device_channel_ids: dict[str, str] = {}
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "_get_device_channel_ids: You have to set username ans password to get device channel_ids via JSON-RPC"
+            )
+            return device_channel_ids
+
+        _LOGGER.debug(
+            "_get_all_device_details: Getting all device channel_ids via JSON-RPC"
+        )
+        try:
+            response = await self._json_rpc_session.post(
+                "Device.listAllDetail",
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                for device in response[ATTR_RESULT]:
+                    device_channel_ids[device["address"]] = device["id"]
+                    for channel in device["channels"]:
+                        device_channel_ids[channel["address"]] = channel["id"]
+        except Exception:
+            _LOGGER.exception("_get_device_channel_ids: Exception")
+
+        return device_channel_ids
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
@@ -610,6 +675,10 @@ class ClientHomegear(Client):
         except ProxyException:
             _LOGGER.exception("get_all_system_variables: ProxyException")
         return None
+
+    async def get_all_rooms(self) -> dict[str, str]:
+        """Get all rooms from Homegear."""
+        return {}
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""

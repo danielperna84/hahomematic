@@ -81,30 +81,29 @@ class Example:
         self.central.callback_entity_event = self.eventcallback
         self.central.callback_ha_event = self.hacallback
 
-        # Create clients
-        client1 = await ClientConfig(
-            central=self.central,
-            name="hmip",
-            port=2010,
-        ).get_client()
-        client2 = await ClientConfig(
-            central=self.central,
-            name="rf",
-            port=2001,
-        ).get_client()
-        client3 = await ClientConfig(
-            central=self.central,
-            name="groups",
-            port=9292,
-            path="/groups",
-        ).get_client()
-
+        client_configs = [
+            ClientConfig(
+                central=self.central,
+                name="hmip",
+                port=2010,
+            ),
+            ClientConfig(
+                central=self.central,
+                name="rf",
+                port=2001,
+            ),
+            ClientConfig(
+                central=self.central,
+                name="groups",
+                port=9292,
+                path="/groups",
+            ),
+        ]
+        await self.central.create_clients(client_configs)
         # Clients have to exist prior to creating the devices
         self.central.create_devices()
         # Once the central_1 is running we subscribe to receive messages.
-        await client1.proxy_init()
-        await client2.proxy_init()
-        await client3.proxy_init()
+        await self.central.init_clients()
 
         while not self.got_devices and self.SLEEPCOUNTER < 20:
             print("Waiting for devices")

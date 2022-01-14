@@ -244,7 +244,7 @@ class XmlRpcServer(threading.Thread):
     def get_central(self, interface_id: str) -> hm_central.CentralUnit | None:
         """Return a central by interface_id"""
         for central in self._centrals.values():
-            if central.clients.get(interface_id):
+            if central.has_client(interface_id=interface_id):
                 return central
         return None
 

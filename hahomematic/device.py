@@ -88,7 +88,6 @@ class HmDevice:
             self._interface_id,
             self._device_address,
         )
-
         self.entities: dict[tuple[str, str], GenericEntity] = {}
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
@@ -153,6 +152,11 @@ class HmDevice:
     def channels(self) -> list[str]:
         """Return the channels."""
         return self._channels
+
+    @property
+    def room(self) -> str | None:
+        """Return the room."""
+        return self._central.rooms.get_room(self._device_address)
 
     def add_hm_entity(self, hm_entity: BaseEntity) -> None:
         """Add a hm entity to a device."""
@@ -256,6 +260,7 @@ class HmDevice:
             "manufacturer": MANUFACTURER,
             "model": self.device_type,
             "sw_version": self.firmware,
+            "suggested_area": self.room,
             "via_device": (self._central.domain, self._central.instance_name),
         }
 

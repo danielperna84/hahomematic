@@ -18,7 +18,7 @@ async def test_central(central, loop) -> None:
     assert central.instance_name == "ccu-dev"
     assert central.model == "PyDevCCU"
     assert central.version == "pydevccu 0.0.9"
-    assert central.clients["ccu-dev-hm"].model == "PyDevCCU"
+    assert central.get_client_by_interface_id("ccu-dev-hm").model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 338
     assert len(central.hm_entities) == 3280
