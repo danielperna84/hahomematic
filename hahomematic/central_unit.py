@@ -73,6 +73,7 @@ class CentralUnit:
         self.paramsets: ParamsetCache = ParamsetCache(central=self)
         self.names: NamesCache = NamesCache(central=self)
         self.raw_devices: RawDevicesCache = RawDevicesCache(central=self)
+        self.rooms: RoomCache = RoomCache(central=self)
 
         # {interface_id, client}
         self._clients: dict[str, hm_client.Client] = {}
@@ -356,6 +357,7 @@ class CentralUnit:
                     if client.init_url not in self._clients_by_init_url:
                         self._clients_by_init_url[client.init_url] = []
                     self._clients_by_init_url[client.init_url].append(client)
+                await self.rooms.load()
             except HaHomematicException as ex:
                 _LOGGER.debug(
                     "CentralUnit.create_clients: Failed to create interface %s to central. (%s)",
@@ -558,6 +560,7 @@ class CentralUnit:
         await self.raw_devices.clear()
         await self.paramsets.clear()
         await self.names.clear()
+        await self.rooms.clear()
 
 
 class ConnectionChecker(threading.Thread):
@@ -670,6 +673,52 @@ class CentralConfig:
         central = CentralUnit(self)
         await central.load_caches()
         return central
+
+
+class RoomCache:
+    """Cache for rooms."""
+
+    def __init__(
+        self,
+        central: CentralUnit,
+    ):
+        self._central = central
+        self._rooms: dict[str, str] = {}
+        self._device_rooms: dict[str, list[str]] = {}
+
+    async def load(self) -> None:
+        """Init room cache."""
+        self._rooms = await self._get_all_rooms()
+        self.identify_device_rooms()
+
+    def identify_device_rooms(self) -> None:
+        """
+        Identify a possible room of a device.
+        A room is relevant for a device, if there is only one room assigned to the channels.
+        """
+        device_rooms: dict[str, list[str]] = {}
+        for address, room in self._rooms.items():
+            device_address = get_device_address(address=address)
+            if device_address not in device_rooms:
+                device_rooms[device_address] = []
+            device_rooms[device_address].append(room)
+        for device_address, rooms in device_rooms.items():
+            if rooms and len(set(rooms)) == 1:
+                self._rooms[device_address] = list(set(rooms))[0]
+
+    async def clear(self) -> None:
+        """Clear the cache."""
+        self._rooms.clear()
+
+    async def _get_all_rooms(self) -> dict[str, str]:
+        """Get all rooms from CCU / Homegear."""
+        if client := self._central.get_client():
+            return await client.get_all_rooms()
+        return {}
+
+    def get_room(self, address: str) -> str | None:
+        """Return room by address"""
+        return self._rooms.get(address)
 
 
 class BaseCache(ABC):

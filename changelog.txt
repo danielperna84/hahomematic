@@ -1,5 +1,6 @@
 Version 0.22.0 (2022-01-14)
 - Move client management to central
+- Add rooms
 
 Version 0.21.2 (2022-01-13)
 - Add ERROR_LOCK form HmIP-DLD

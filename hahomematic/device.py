@@ -153,6 +153,11 @@ class HmDevice:
         """Return the channels."""
         return self._channels
 
+    @property
+    def room(self) -> str | None:
+        """Return the room."""
+        return self._central.rooms.get_room(self._device_address)
+
     def add_hm_entity(self, hm_entity: BaseEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
@@ -255,6 +260,7 @@ class HmDevice:
             "manufacturer": MANUFACTURER,
             "model": self.device_type,
             "sw_version": self.firmware,
+            "suggested_area": self.room,
             "via_device": (self._central.domain, self._central.instance_name),
         }
 
