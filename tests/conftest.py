@@ -81,9 +81,6 @@ async def central(
         name="hm",
         port=2001,
     )])
-
-    # Clients have to exist prior to creating the devices
-    central_unit.create_devices()
     # Once the central_1 is running we subscribe to receive messages.
     await central_unit.init_clients()
     await central_unit.init_hub()

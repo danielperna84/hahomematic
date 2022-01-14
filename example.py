@@ -100,8 +100,6 @@ class Example:
             ),
         ]
         await self.central.create_clients(client_configs)
-        # Clients have to exist prior to creating the devices
-        self.central.create_devices()
         # Once the central_1 is running we subscribe to receive messages.
         await self.central.init_clients()
 

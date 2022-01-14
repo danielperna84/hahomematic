@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from copy import copy
 from datetime import datetime
 import logging
 from typing import Any, Generic, TypeVar, Union, cast
