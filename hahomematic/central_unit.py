@@ -218,7 +218,7 @@ class CentralUnit:
             _LOGGER.warning("Failed to load caches.")
             await self.clear_all()
 
-    def create_devices(self) -> None:
+    def _create_devices(self) -> None:
         """Create the devices."""
         if not self._clients:
             raise Exception("No clients initialized. Not starting central_unit.")
@@ -343,7 +343,7 @@ class CentralUnit:
         del hm_data.INSTANCES[self.instance_name]
 
     async def create_clients(self, client_configs: set[hm_client.ClientConfig]) -> None:
-        """Create clients for the central unit."""
+        """Create clients for the central unit. Start connection checker afterwards"""
 
         for client_config in client_configs:
             try:
@@ -358,6 +358,7 @@ class CentralUnit:
                         self._clients_by_init_url[client.init_url] = []
                     self._clients_by_init_url[client.init_url].append(client)
                 await self.rooms.load()
+                self._create_devices()
             except HaHomematicException as ex:
                 _LOGGER.debug(
                     "CentralUnit.create_clients: Failed to create interface %s to central. (%s)",
@@ -366,9 +367,11 @@ class CentralUnit:
                 )
 
     async def init_clients(self) -> None:
-        """Init clients of control unit."""
+        """Init clients of control unit, and start connection checker."""
         for client in self._clients.values():
             await client.proxy_init()
+
+        self._start_connection_checker()
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
@@ -388,7 +391,7 @@ class CentralUnit:
         """Add an executor job from within the event loop."""
         return await self.loop.run_in_executor(None, executor_func, *args)
 
-    def start_connection_checker(self) -> None:
+    def _start_connection_checker(self) -> None:
         """Start the connection checker."""
         if self.model is not BACKEND_PYDEVCCU:
             self._connection_checker.start()
