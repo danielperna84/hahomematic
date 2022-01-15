@@ -431,7 +431,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
         state_attr = super().attributes
-        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC
+        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
         return state_attr
 
     async def load_data(self) -> int:
@@ -527,7 +527,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the custom entity."""
         state_attr = super().attributes
-        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.CUSTOM
+        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.CUSTOM.value
         return state_attr
 
     def _custom_entity_usage(self) -> HmEntityUsage:
