@@ -10,6 +10,7 @@ from typing import Any
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
+    ACCEPT_PARAMETER_ONLY_ON_CHANNEL,
     ATTR_HM_FIRMWARE,
     ATTR_HM_FLAGS,
     ATTR_HM_OPERATIONS,
@@ -51,7 +52,7 @@ from hahomematic.entity import (
     GenericEntity,
     SpecialEvent,
 )
-from hahomematic.helpers import generate_unique_id, get_device_name
+from hahomematic.helpers import generate_unique_id, get_device_channel, get_device_name
 from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
 from hahomematic.platforms.binary_sensor import HmBinarySensor
@@ -456,11 +457,9 @@ class HmDevice:
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
         """
-        if (
-            parameter in IGNORED_PARAMETERS
-            or parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS_END))
-            or parameter.startswith(tuple(IGNORED_PARAMETERS_WILDCARDS_START))
-        ) and parameter not in WHITELIST_PARAMETERS:
+        if _ignore_parameter(
+            parameter=parameter, channel_no=get_device_channel(channel_address)
+        ):
             _LOGGER.debug(
                 "create_entity: Ignoring parameter: %s (%s)", parameter, channel_address
             )
@@ -695,4 +694,21 @@ def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     value_list = parameter_data.get("VALUE_LIST")
     if value_list == ["CLOSED", "OPEN"]:
         return True
+    return False
+
+
+def _ignore_parameter(parameter: str, channel_no: int) -> bool:
+    """Check if parameter can be ignored."""
+    if parameter in WHITELIST_PARAMETERS:
+        return False
+    if parameter in IGNORED_PARAMETERS:
+        return True
+    if parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS_END)):
+        return True
+    if parameter.startswith(tuple(IGNORED_PARAMETERS_WILDCARDS_START)):
+        return True
+    if (accept_channel := ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)) is not None:
+        if accept_channel != channel_no:
+            return True
+
     return False

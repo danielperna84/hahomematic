@@ -1,6 +1,7 @@
 Version 0.22.1 (2022-01-15)
 - Add VALVE_STATE for hm climate
 - Add entity_type to attributes
+- Accept LOWBAT only on channel 0
 
 Version 0.22.0 (2022-01-14)
 - Move client management to central
