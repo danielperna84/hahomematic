@@ -126,9 +126,9 @@ class CeCover(CustomEntity):
         await self._e_stop.send_value(True)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the cover."""
-        state_attr = super().extra_state_attributes
+        state_attr = super().attributes
         if self._channel_level and self._channel_level != self._e_level.value:
             state_attr[ATTR_CHANNEL_COVER_LEVEL] = self._channel_level * 100
         return state_attr
@@ -176,9 +176,9 @@ class CeBlind(CeCover):
         await self._e_stop.send_value(True)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the cover."""
-        state_attr = super().extra_state_attributes
+        state_attr = super().attributes
         if self._channel_level_2 and self._channel_level_2 != self._e_level_2.value:
             state_attr[ATTR_CHANNEL_TILT_LEVEL] = self._channel_level_2 * 100
         return state_attr

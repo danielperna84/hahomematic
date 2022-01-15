@@ -172,6 +172,7 @@ ATTR_ADDRESS = "address"
 ATTR_CALLBACK_HOST = "callback_host"
 ATTR_CALLBACK_PORT = "callback_port"
 ATTR_CHANNELS = "channels"
+ATTR_ENTITY_TYPE = "entity_type"
 ATTR_ERROR = "error"
 ATTR_HOST = "host"
 ATTR_INTERFACE = "interface"
@@ -282,6 +283,17 @@ class HmPlatform(Enum):
     SENSOR = "sensor"
     SWITCH = "switch"
     TEXT = "text"
+
+    def __str__(self) -> str:
+        """Return self.value."""
+        return str(self.value)
+
+
+class HmEntityType(Enum):
+    """Enum with hahomematic entity types."""
+
+    GENERIC = "generic"
+    CUSTOM = "custom"
 
     def __str__(self) -> str:
         """Return self.value."""

@@ -176,9 +176,9 @@ class CeDimmer(BaseHmLight):
             await self._e_level.send_value(dim_level)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the light."""
-        state_attr = super().extra_state_attributes
+        state_attr = super().attributes
         if (
             self._channel_level
             and self._e_level.value
@@ -279,9 +279,9 @@ class CeIpFixedColorLight(BaseHmLight):
             await self._e_level.send_value(dim_level)
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the notification light sensor."""
-        state_attr = super().extra_state_attributes
+        state_attr = super().attributes
         if self.is_on:
             state_attr[ATTR_COLOR_NAME] = self._e_color.value
         if self._channel_level and self._channel_level != self._e_level.value:

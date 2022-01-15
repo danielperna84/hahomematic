@@ -75,9 +75,9 @@ class CeSwitch(CustomEntity):
         await self._e_state.turn_off()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the switch."""
-        state_attr = super().extra_state_attributes
+        state_attr = super().attributes
         if self._channel_state and self._channel_state != self._e_state.value:
             state_attr[ATTR_CHANNEL_STATE] = self._channel_state
         return state_attr

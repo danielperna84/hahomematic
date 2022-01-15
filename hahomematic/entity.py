@@ -13,6 +13,7 @@ import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_ADDRESS,
+    ATTR_ENTITY_TYPE,
     ATTR_HM_DEFAULT,
     ATTR_HM_FLAGS,
     ATTR_HM_MAX,
@@ -43,6 +44,7 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
+    HmEntityType,
     HmEntityUsage,
     HmEventType,
     HmPlatform,
@@ -176,7 +178,7 @@ class BaseEntity(ABC):
         return self._device.device_info
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
         return {
             ATTR_INTERFACE_ID: self._interface_id,
@@ -262,9 +264,9 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         self._assign_parameter_data()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
-        state_attr = super().extra_state_attributes
+        state_attr = super().attributes
         state_attr[ATTR_PARAMETER] = self.parameter
         return state_attr
 
@@ -425,6 +427,13 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         """Return the value of the entity."""
         return self._value
 
+    @property
+    def attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the generic entity."""
+        state_attr = super().attributes
+        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC
+        return state_attr
+
     async def load_data(self) -> int:
         """Load data"""
         if self._updated_within_minutes():
@@ -513,6 +522,13 @@ class CustomEntity(BaseEntity, CallbackEntity):
         )
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
+
+    @property
+    def attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the custom entity."""
+        state_attr = super().attributes
+        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.CUSTOM
+        return state_attr
 
     def _custom_entity_usage(self) -> HmEntityUsage:
         """Return the custom entity usage."""
