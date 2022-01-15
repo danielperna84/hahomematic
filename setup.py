@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 
 
 def readme():
-    with open("READMEmd") as fptr:
+    with open("README.md") as fptr:
         return fptr.read()
 
 
@@ -15,7 +15,7 @@ package_data = {
     },
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.22.1"
+VERSION = "0.22.2"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
