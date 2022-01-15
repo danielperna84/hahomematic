@@ -56,7 +56,7 @@ class BaseHubEntity(ABC):
         return self._central.available
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
         return {}
 
@@ -193,7 +193,7 @@ class HmHub(BaseHubEntity):
         return self._central.device_info
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._variables.copy()
 
@@ -294,7 +294,7 @@ class HmDummyHub(BaseHubEntity):
         return self._central.device_info
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {}
 
