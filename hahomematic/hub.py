@@ -230,9 +230,7 @@ class HmHub(BaseHubEntity):
             return
 
         # remove some variables in case of CCU Backend
-        # - DutyCycle/CarrierSense are covered by real sensors
         # - OldValue(s) are for internal calculations
-        # - Servicemeldungen are wrong in case of hmip (contains a dummy)
         if self._central.model is BACKEND_CCU:
             variables = _clean_variables(variables)
 

@@ -17,11 +17,10 @@ async def test_central(central, loop) -> None:
     assert central
     assert central.instance_name == "ccu-dev"
     assert central.model == "PyDevCCU"
-    assert central.version == "pydevccu 0.0.9"
     assert central.get_client_by_interface_id("ccu-dev-hm").model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 338
-    assert len(central.hm_entities) == 3280
+    assert len(central.hm_entities) == 3242
 
     data = {}
     for device in central.hm_devices.values():
@@ -56,7 +55,6 @@ async def test_central(central, loop) -> None:
         if hasattr(entity, "parameter"):
             if entity.parameter not in parameters:
                 parameters.append(entity.parameter)
-
 
     assert len(data) == 338
     assert len(custom_entities) == 201
