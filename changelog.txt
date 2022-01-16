@@ -1,3 +1,6 @@
+Version 0.23.2 (2022-01-16)
+- Update fix_rssi according to doc
+
 Version 0.23.1 (2022-01-16)
 - Add more logging to reconnect
 - Add doc link for RSSI fix

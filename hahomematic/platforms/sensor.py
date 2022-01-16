@@ -70,13 +70,13 @@ def _fix_rssi(value: Any) -> int | None:
     """
     if value is None or not isinstance(value, int):
         return None
-    if -120 <= value <= 0:
+    if -127 < value < 0:
         return value
-    if 0 < value <= 120:
+    if 0 < value < 127:
         return value * -1
-    if -256 <= value <= -146:
+    if -256 < value < -129:
         return (value * -1) - 256
-    if 146 <= value <= 256:
+    if 129 < value < 256:
         return value - 256
     return None
 
