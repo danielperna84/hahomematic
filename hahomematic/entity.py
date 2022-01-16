@@ -328,7 +328,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 value=self._convert_value(value),
             )
         except Exception:
-            _LOGGER.exception(
+            _LOGGER.error(
                 "generic_entity: Failed to set state for: %s, %s, %s, %s",
                 self._device.device_type,
                 self.channel_address,
@@ -759,7 +759,7 @@ class BaseEvent(BaseParameterEntity[bool]):
                 value=value,
             )
         except Exception:
-            _LOGGER.exception(
+            _LOGGER.error(
                 "action_event: Failed to send value for: %s, %s, %s",
                 self.channel_address,
                 self.parameter,

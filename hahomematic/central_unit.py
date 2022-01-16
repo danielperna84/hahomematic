@@ -225,7 +225,7 @@ class CentralUnit:
         try:
             create_devices(self)
         except Exception as err:
-            _LOGGER.exception("CentralUnit.init: Failed to create entities")
+            _LOGGER.error("CentralUnit.init: Failed to create entities")
             raise Exception("entity-creation-error") from err
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
@@ -275,7 +275,7 @@ class CentralUnit:
                     hm_device.remove_from_collections()
                     del self.hm_devices[address]
             except KeyError:
-                _LOGGER.exception("Failed to delete: %s", address)
+                _LOGGER.error("Failed to delete: %s", address)
         await self.paramsets.save()
         await self.names.save()
 
@@ -309,7 +309,7 @@ class CentralUnit:
                     self.raw_devices.add_device_description(interface_id, dev_desc)
                     await client.fetch_paramsets(dev_desc)
             except Exception:
-                _LOGGER.exception("CentralUnit.add_new_devices: Exception")
+                _LOGGER.error("CentralUnit.add_new_devices: Exception")
         await self.raw_devices.save()
         await self.paramsets.save()
         await client.fetch_names()
@@ -322,7 +322,7 @@ class CentralUnit:
         To stop the central_unit we de-init from the CCU / Homegear,
         """
         _LOGGER.info("CentralUnit.stop: Stop connection checker.")
-        self.stop_connection_checker()
+        self._stop_connection_checker()
         for name, client in self._clients.items():
             if await client.proxy_de_init():
                 _LOGGER.info("CentralUnit.stop: Proxy de-initialized: %s", name)
@@ -396,7 +396,7 @@ class CentralUnit:
         if self.model is not BACKEND_PYDEVCCU:
             self._connection_checker.start()
 
-    def stop_connection_checker(self) -> None:
+    def _stop_connection_checker(self) -> None:
         """Start the connection checker."""
         self._connection_checker.stop()
 
@@ -405,7 +405,7 @@ class CentralUnit:
         for client in self._clients.values():
             if not await client.is_connected():
                 _LOGGER.warning(
-                    "CentralUnit.is_connected: No connection to %s.", client.name
+                    "CentralUnit.is_connected: No connection to %s.", client.interface_id
                 )
                 if self._available:
                     self.mark_all_devices_availability(available=False)
@@ -419,21 +419,22 @@ class CentralUnit:
     async def reconnect(self, force_immediate: bool = False) -> None:
         """re-init all RPC clients."""
         if await self.is_connected():
-            _LOGGER.warning(
+            _LOGGER.info(
                 "CentralUnit.reconnect: re-connect to central_unit %s",
                 self.instance_name,
             )
             if not force_immediate:
                 _LOGGER.info(
-                    "CentralUnit.reconnect: waiting to re-connect to central_unit %s for %i s",
-                    self.instance_name, int(config.RECONNECT_WAIT)
+                    "CentralUnit.reconnect: waiting to re-connect to central_unit %s for %is",
+                    self.instance_name,
+                    int(config.RECONNECT_WAIT),
                 )
                 await asyncio.sleep(config.RECONNECT_WAIT)
             for client in self._clients.values():
                 await client.proxy_re_init()
                 _LOGGER.info(
                     "CentralUnit.reconnect: re-connected to central_unit %s",
-                    self.instance_name
+                    self.instance_name,
                 )
 
     def mark_all_devices_availability(self, available: bool) -> None:
@@ -620,11 +621,11 @@ class ConnectionChecker(threading.Thread):
                     await self._central.reconnect()
                 await asyncio.sleep(connection_checker_interval)
             except NoConnection as nex:
-                _LOGGER.exception("check_connection: no connection: %s", nex.args)
+                _LOGGER.error("check_connection: no connection: %s", nex.args)
                 await asyncio.sleep(connection_checker_interval)
                 continue
             except Exception:
-                _LOGGER.exception("check_connection: Exception")
+                _LOGGER.error("check_connection: Exception")
 
 
 class CentralConfig:
@@ -868,7 +869,7 @@ class RawDevicesCache(BaseCache):
                 if self._dev_descriptions.get(interface_id, {}).get(address, {}):
                     del self._dev_descriptions[interface_id][address]
             except KeyError:
-                _LOGGER.exception("Failed to delete: %s", address)
+                _LOGGER.error("Failed to delete: %s", address)
         await self.save()
 
     def get_addresses(self, interface_id: str) -> dict[str, list[str]]:

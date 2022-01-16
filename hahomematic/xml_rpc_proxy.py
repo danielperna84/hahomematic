@@ -59,7 +59,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                 *args,
             )
         except OSError as ose:
-            _LOGGER.exception(ose.args)
+            _LOGGER.error(ose.args)
             raise NoConnection(ose) from ose
         except xmlrpc.client.Fault as fex:
             raise ProxyException(fex) from fex
@@ -74,4 +74,4 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
 
     def stop(self) -> None:
         """Stop depending services."""
-        self._proxy_executor.shutdown(wait=False, cancel_futures=True)
+        self._proxy_executor.shutdown()

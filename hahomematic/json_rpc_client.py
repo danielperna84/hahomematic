@@ -76,9 +76,7 @@ class JsonRpcAioHttpClient:
                 return str(response[ATTR_RESULT])
             return await self._login()
         except ClientError:
-            _LOGGER.exception(
-                "json_rpc.renew: Exception while renewing JSON-RPC session."
-            )
+            _LOGGER.error("json_rpc.renew: Exception while renewing JSON-RPC session.")
             return None
 
     async def _login(self) -> str | None:
@@ -112,7 +110,7 @@ class JsonRpcAioHttpClient:
                 return None
             return session_id
         except Exception:
-            _LOGGER.exception("json_rpc.login: Exception while logging in via JSON-RPC")
+            _LOGGER.error("json_rpc.login: Exception while logging in via JSON-RPC")
             return None
 
     async def post(
@@ -130,7 +128,7 @@ class JsonRpcAioHttpClient:
             session_id = await self._login()
 
         if not session_id:
-            _LOGGER.exception("json_rpc.post: Exception while logging in via JSON-RPC.")
+            _LOGGER.error("json_rpc.post: Exception while logging in via JSON-RPC.")
             return {"error": "Unable to open session.", "result": {}}
 
         result = await self._post(
@@ -191,7 +189,7 @@ class JsonRpcAioHttpClient:
                 try:
                     return await resp.json(encoding="utf-8")
                 except ValueError:
-                    _LOGGER.exception(
+                    _LOGGER.error(
                         "json_rpc_client._post: Failed to parse JSON. Trying workaround."
                     )
                     # Workaround for bug in CCU
@@ -202,14 +200,17 @@ class JsonRpcAioHttpClient:
                 _LOGGER.error("json_rpc_client._post: Status: %i", resp.status)
                 return {"error": resp.status, "result": {}}
         except ClientConnectorError as err:
-            _LOGGER.exception("json_rpc_client._post: ClientConnectorError")
+            _LOGGER.error("json_rpc_client._post: ClientConnectorError")
             return {"error": str(err), "result": {}}
         except ClientError as cce:
-            _LOGGER.exception("json_rpc_client._post: ClientError")
+            _LOGGER.error("json_rpc_client._post: ClientError")
             return {"error": str(cce), "result": {}}
         except TypeError as ter:
-            _LOGGER.exception("json_rpc_client._post: TypeError")
+            _LOGGER.error("json_rpc_client._post: TypeError")
             return {"error": str(ter), "result": {}}
+        except OSError as oer:
+            _LOGGER.error("json_rpc_client._post: OSError")
+            return {"error": str(oer), "result": {}}
 
     async def logout(self) -> None:
         """Logout of CCU."""
@@ -232,9 +233,7 @@ class JsonRpcAioHttpClient:
                     "json_rpc.logout: Logout error: %s", response[ATTR_RESULT]
                 )
         except ClientError:
-            _LOGGER.exception(
-                "json_rpc.logout: Exception while logging in via JSON-RPC"
-            )
+            _LOGGER.error("json_rpc.logout: Exception while logging in via JSON-RPC")
         return
 
 

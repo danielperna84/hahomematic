@@ -31,7 +31,7 @@ from hahomematic.const import (
     RELEVANT_PARAMSETS,
 )
 from hahomematic.device import HmDevice
-from hahomematic.exceptions import NoConnection, ProxyException
+from hahomematic.exceptions import HaHomematicException, ProxyException
 from hahomematic.helpers import build_api_url, get_local_ip, parse_ccu_sys_var
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
@@ -94,8 +94,8 @@ class Client(ABC):
             )
             await self._proxy.init(self._init_url, self.interface_id)
             _LOGGER.info("proxy_init: Proxy for %s initialized", self.interface_id)
-        except ProxyException:
-            _LOGGER.exception(
+        except HaHomematicException:
+            _LOGGER.error(
                 "proxy_init: Failed to initialize proxy for %s", self.interface_id
             )
             self.last_updated = INIT_DATETIME
@@ -117,9 +117,11 @@ class Client(ABC):
         try:
             _LOGGER.debug("proxy_de_init: init('%s')", self._init_url)
             await self._proxy.init(self._init_url)
-        except ProxyException:
-            _LOGGER.exception(
-                "proxy_de_init: Failed to de-initialize proxy for %s", self.name
+        except HaHomematicException as hhe:
+            _LOGGER.error(
+                "proxy_de_init: Failed to de-initialize proxy for %s (%s)",
+                self.name,
+                hhe.name,
             )
             return PROXY_DE_INIT_FAILED
 
@@ -195,8 +197,8 @@ class Client(ABC):
         """Get service messages from CCU / Homegear."""
         try:
             return await self._proxy.getServiceMessages()
-        except ProxyException:
-            _LOGGER.exception("get_service_messages: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("get_service_messages: %s", hhe.name)
         return None
 
     # pylint: disable=invalid-name
@@ -218,24 +220,24 @@ class Client(ABC):
                     args.append(mode)
 
             await self._proxy.setInstallMode(*args)
-        except ProxyException:
-            _LOGGER.exception("set_install_mode: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("set_install_mode: %s", hhe.name)
 
     async def get_install_mode(self) -> Any:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
             return await self._proxy.getInstallMode()
-        except ProxyException:
-            _LOGGER.exception("get_install_mode: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("get_install_mode: %s", hhe.name)
         return 0
 
     async def get_value(self, channel_address: str, parameter: str) -> Any:
         """Return a value from CCU."""
         try:
             return await self._proxy.getValue(channel_address, parameter)
-        except ProxyException as pex:
-            # _LOGGER.debug("get_value: ProxyException")
-            raise ProxyException from pex
+        except HaHomematicException as hhe:
+            _LOGGER.debug("get_value: %s", hhe.name)
+            raise ProxyException from hhe
 
     async def set_value(
         self,
@@ -250,8 +252,8 @@ class Client(ABC):
                 await self._proxy.setValue(channel_address, parameter, value, rx_mode)
             else:
                 await self._proxy.setValue(channel_address, parameter, value)
-        except ProxyException:
-            _LOGGER.exception("set_value: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("set_value: %s", hhe.name)
 
     async def put_paramset(
         self,
@@ -267,8 +269,8 @@ class Client(ABC):
             else:
                 await self._proxy.putParamset(channel_address, paramset, value)
 
-        except ProxyException:
-            _LOGGER.exception("put_paramset: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("put_paramset: %s", hhe.name)
 
     async def fetch_paramset(self, channel_address: str, paramset: str) -> None:
         """
@@ -286,11 +288,12 @@ class Client(ABC):
                 paramset=paramset,
                 paramset_description=parameter_data,
             )
-        except ProxyException:
-            _LOGGER.exception(
-                "Unable to get paramset %s for channel_address %s.",
+        except HaHomematicException as hhe:
+            _LOGGER.error(
+                "Unable to get paramset %s for channel_address %s (%s).",
                 paramset,
                 channel_address,
+                hhe.name,
             )
         await self._central.paramsets.save()
 
@@ -332,9 +335,12 @@ class Client(ABC):
                 paramsets[address][paramset] = await self._proxy.getParamsetDescription(
                     address, paramset
                 )
-            except ProxyException:
-                _LOGGER.exception(
-                    "Unable to get paramset %s for address %s.", paramset, address
+            except HaHomematicException as hhe:
+                _LOGGER.error(
+                    "Unable to get paramset %s for address %s (%s).",
+                    paramset,
+                    address,
+                    hhe.name,
                 )
         return paramsets
 
@@ -407,7 +413,7 @@ class ClientCCU(Client):
                             channel[ATTR_ADDRESS], channel[ATTR_NAME]
                         )
         except Exception:
-            _LOGGER.exception("fetch_names_json: General exception")
+            _LOGGER.error("fetch_names_json: General exception")
 
     async def _check_connection(self) -> bool:
         """Check if _proxy is still initialized."""
@@ -416,10 +422,8 @@ class ClientCCU(Client):
             if success:
                 self.last_updated = datetime.now()
                 return True
-        except NoConnection:
-            _LOGGER.exception("ping: NoConnection")
-        except ProxyException:
-            _LOGGER.exception("ping: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("ping: %s", hhe.name)
         self.last_updated = INIT_DATETIME
         return False
 
@@ -454,7 +458,7 @@ class ClientCCU(Client):
                         str(response[ATTR_ERROR]),
                     )
         except Exception:
-            _LOGGER.exception("set_system_variable: Exception")
+            _LOGGER.error("set_system_variable: Exception")
 
     async def delete_system_variable(self, name: str) -> None:
         """Delete a system variable from CCU / Homegear."""
@@ -475,7 +479,7 @@ class ClientCCU(Client):
                 deleted = response[ATTR_RESULT]
                 _LOGGER.info("delete_system_variable: Deleted: %s", str(deleted))
         except Exception:
-            _LOGGER.exception("delete_system_variable: Exception")
+            _LOGGER.error("delete_system_variable: Exception")
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
@@ -500,7 +504,7 @@ class ClientCCU(Client):
                 except Exception:
                     var = response[ATTR_RESULT] == "true"
         except Exception:
-            _LOGGER.exception("get_system_variable: Exception")
+            _LOGGER.error("get_system_variable: Exception")
 
         return var
 
@@ -525,7 +529,7 @@ class ClientCCU(Client):
                     key, value = parse_ccu_sys_var(var)
                     variables[key] = value
         except Exception:
-            _LOGGER.exception("get_all_system_variables: Exception")
+            _LOGGER.error("get_all_system_variables: Exception")
 
         return variables
 
@@ -559,7 +563,7 @@ class ClientCCU(Client):
                     for channel_id in room["channelIds"]:
                         channel_ids_room[channel_id] = room["name"]
         except Exception:
-            _LOGGER.exception("_get_all_channel_ids_per_room: Exception")
+            _LOGGER.error("_get_all_channel_ids_per_room: Exception")
 
         return channel_ids_room
 
@@ -585,7 +589,7 @@ class ClientCCU(Client):
                     for channel in device["channels"]:
                         device_channel_ids[channel["address"]] = channel["id"]
         except Exception:
-            _LOGGER.exception("_get_device_channel_ids: Exception")
+            _LOGGER.error("_get_device_channel_ids: Exception")
 
         return device_channel_ids
 
@@ -628,8 +632,10 @@ class ClientHomegear(Client):
                     address,
                     await self._proxy.getMetadata(address, ATTR_HM_NAME),
                 )
-            except ProxyException:
-                _LOGGER.exception("Failed to fetch name for device %s.", address)
+            except HaHomematicException as hhe:
+                _LOGGER.error(
+                    "Failed to fetch name for device %s (%s).", address, hhe.name
+                )
 
     async def _check_connection(self) -> bool:
         """Check if proxy is still initialized."""
@@ -637,10 +643,8 @@ class ClientHomegear(Client):
             if await self._proxy.clientServerInitialized(self.interface_id):
                 self.last_updated = datetime.now()
                 return True
-        except NoConnection:
-            _LOGGER.exception("ping: NoConnection")
-        except ProxyException:
-            _LOGGER.exception("homegear_check_init: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("ping: %s", hhe.name)
         _LOGGER.warning(
             "homegear_check_init: Setting initialized to 0 for %s", self.interface_id
         )
@@ -651,29 +655,29 @@ class ClientHomegear(Client):
         """Set a system variable on CCU / Homegear."""
         try:
             await self._proxy.setSystemVariable(name, value)
-        except ProxyException:
-            _LOGGER.exception("set_system_variable: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("set_system_variable: %s", hhe.name)
 
     async def delete_system_variable(self, name: str) -> None:
         """Delete a system variable from CCU / Homegear."""
         try:
             await self._proxy.deleteSystemVariable(name)
-        except ProxyException:
-            _LOGGER.exception("delete_system_variable: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("delete_system_variable: %s", hhe.name)
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         try:
             return await self._proxy.getSystemVariable(name)
-        except ProxyException:
-            _LOGGER.exception("get_system_variable: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("get_system_variable: %s", hhe.name)
 
     async def get_all_system_variables(self) -> Any:
         """Get all system variables from CCU / Homegear."""
         try:
             return await self._proxy.getAllSystemVariables()
-        except ProxyException:
-            _LOGGER.exception("get_all_system_variables: ProxyException")
+        except HaHomematicException as hhe:
+            _LOGGER.error("get_all_system_variables: %s", hhe.name)
         return None
 
     async def get_all_rooms(self) -> dict[str, str]:
@@ -733,10 +737,10 @@ class ClientConfig:
         """Identify the used client."""
         try:
             self.version = await self.xml_rpc_proxy.getVersion()
-        except ProxyException as err:
+        except HaHomematicException as hhe:
             raise ProxyException(
                 f"Failed to get backend version. Not creating client: {self.api_url}"
-            ) from err
+            ) from hhe
         if self.version:
             if "Homegear" in self.version or "pydevccu" in self.version:
                 return ClientHomegear(self)
