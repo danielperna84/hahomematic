@@ -1,4 +1,8 @@
 Version 0.23.0 (2022-01-16)
+- Add more logging to reconnect
+- Add doc link for RSSI fix
+
+Version 0.23.0 (2022-01-16)
 - Make ["DRY", "RAIN"] sensor a binary_sensor
 - Add converter to sensor value
     - HmIP-SCTH230 CONCENTRATION to int

@@ -64,7 +64,10 @@ def _convert_float_to_int(value: Any) -> int | None:
 
 
 def _fix_rssi(value: Any) -> int | None:
-    """Fix rssi value."""
+    """
+    Fix rssi value.
+    See https://github.com/danielperna84/hahomematic/blob/devel/docs/rssi_fix.md
+    """
     if value is None or not isinstance(value, int):
         return None
     if -120 <= value <= 0:
