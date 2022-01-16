@@ -424,9 +424,17 @@ class CentralUnit:
                 self.instance_name,
             )
             if not force_immediate:
+                _LOGGER.info(
+                    "CentralUnit.reconnect: waiting to re-connect to central_unit %s for %i s",
+                    self.instance_name, int(config.RECONNECT_WAIT)
+                )
                 await asyncio.sleep(config.RECONNECT_WAIT)
             for client in self._clients.values():
                 await client.proxy_re_init()
+                _LOGGER.info(
+                    "CentralUnit.reconnect: re-connected to central_unit %s",
+                    self.instance_name
+                )
 
     def mark_all_devices_availability(self, available: bool) -> None:
         """Mark all device's availability state."""
