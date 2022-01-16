@@ -1,4 +1,4 @@
-Version 0.23.2 (2022-01-16)
+Version 0.23.3 (2022-01-16)
 - Update fix_rssi according to doc
 
 Version 0.23.1 (2022-01-16)

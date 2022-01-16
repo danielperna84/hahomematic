@@ -72,7 +72,7 @@ def _fix_rssi(value: Any) -> int | None:
         return None
     if -127 < value < 0:
         return value
-    if 0 < value < 127:
+    if 1 < value < 127:
         return value * -1
     if -256 < value < -129:
         return (value * -1) - 256
