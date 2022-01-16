@@ -416,13 +416,15 @@ class CentralUnit:
             self._available = True
         return True
 
-    async def reconnect(self) -> None:
+    async def reconnect(self, force_immediate: bool = False) -> None:
         """re-init all RPC clients."""
         if await self.is_connected():
             _LOGGER.warning(
                 "CentralUnit.reconnect: re-connect to central_unit %s",
                 self.instance_name,
             )
+            if not force_immediate:
+                await asyncio.sleep(config.RECONNECT_WAIT)
             for client in self._clients.values():
                 await client.proxy_re_init()
 
@@ -594,7 +596,7 @@ class ConnectionChecker(threading.Thread):
         self._active = False
 
     async def _check_connection(self) -> None:
-        sleep_time = config.CONNECTION_CHECKER_INTERVAL
+        connection_checker_interval = config.CONNECTION_CHECKER_INTERVAL
         while self._active:
             _LOGGER.debug(
                 "ConnectionCecker.check_connection: Checking connection to server %s",
@@ -606,12 +608,12 @@ class ConnectionChecker(threading.Thread):
                         "ConnectionCecker.check_connection: No connection to server %s",
                         self._central.instance_name,
                     )
-                    await asyncio.sleep(sleep_time)
+                    await asyncio.sleep(connection_checker_interval)
                     await self._central.reconnect()
-                await asyncio.sleep(sleep_time)
+                await asyncio.sleep(connection_checker_interval)
             except NoConnection as nex:
                 _LOGGER.exception("check_connection: no connection: %s", nex.args)
-                await asyncio.sleep(sleep_time)
+                await asyncio.sleep(connection_checker_interval)
                 continue
             except Exception:
                 _LOGGER.exception("check_connection: Exception")
