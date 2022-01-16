@@ -1,5 +1,8 @@
 Version 0.22.3 (2022-01-16)
 - Make ["DRY", "RAIN"] sensor a binary_sensor
+- Add converter to sensor value
+    - HmIP-SCTH230 CONCENTRATION to int
+    - Fix RSSI
 
 Version 0.22.2 (2022-01-15)
 - Rename hub extra_state_attributes to attributes
