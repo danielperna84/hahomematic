@@ -694,6 +694,8 @@ def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     value_list = parameter_data.get("VALUE_LIST")
     if value_list == ["CLOSED", "OPEN"]:
         return True
+    if value_list == ["DRY", "RAIN"]:
+        return True
     return False
 
 
