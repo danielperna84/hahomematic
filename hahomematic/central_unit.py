@@ -425,8 +425,8 @@ class CentralUnit:
             )
             if not force_immediate:
                 _LOGGER.info(
-                    "CentralUnit.reconnect: waiting to re-connect to central_unit %s for %s s",
-                    self.instance_name, config.RECONNECT_WAIT
+                    "CentralUnit.reconnect: waiting to re-connect to central_unit %s for %i s",
+                    self.instance_name, int(config.RECONNECT_WAIT)
                 )
                 await asyncio.sleep(config.RECONNECT_WAIT)
             for client in self._clients.values():
