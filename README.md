@@ -6,7 +6,7 @@
 
 This is intended to become the successor of [pyhomematic](https://github.com/danielperna84/pyhomematic).
 
-It can be installed by usinf the [custom_component](https://github.com/danielperna84/custom_homematic).
+It can be installed by using the [custom_component](https://github.com/danielperna84/custom_homematic).
 Necessary installation instructions can be found [here](https://github.com/danielperna84/custom_homematic/wiki/Installation).
 
 ## Project goal and features
