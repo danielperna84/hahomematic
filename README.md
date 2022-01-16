@@ -6,6 +6,9 @@
 
 This is intended to become the successor of [pyhomematic](https://github.com/danielperna84/pyhomematic).
 
+It can be installed by usinf the [custom_component](https://github.com/danielperna84/custom_homematic).
+Necessary installation instructions can be found [here](https://github.com/danielperna84/custom_homematic/wiki/Installation).
+
 ## Project goal and features
 
 [pyhomematic](https://github.com/danielperna84/pyhomematic) has the requirement to manually add support for devices to make them usable in [Home Assistant](https://www.home-assistant.io/). `hahomematic` automatically create entities for each parameter on each channel on every device (if it not black listed). To achieve this, all paramsets (`VALUES`) are fetched (and cached for quick successive startups).
