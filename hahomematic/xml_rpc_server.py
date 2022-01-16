@@ -64,7 +64,7 @@ class RPCFunctions:
                 ]:
                     callback(interface_id, channel_address, parameter, value)
             except Exception:
-                _LOGGER.exception(
+                _LOGGER.error(
                     "RPCFunctions.event: Failed to call callback for: %s, %s, %s",
                     interface_id,
                     channel_address,

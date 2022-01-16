@@ -98,7 +98,7 @@ def check_or_create_directory(directory: str) -> bool:
         try:
             os.makedirs(directory)
         except OSError as ose:
-            _LOGGER.exception(
+            _LOGGER.error(
                 "Helpers.check_or_create_directory: Unable to create directory %s ('%s')",
                 directory,
                 ose.strerror,
