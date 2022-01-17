@@ -390,7 +390,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             return
 
         _LOGGER.debug(
-            "Entity.event: %s, %s, %s, new: %s, old: %s",
+            "event: %s, %s, %s, new: %s, old: %s",
             interface_id,
             channel_address,
             parameter,
@@ -399,21 +399,21 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         )
         if interface_id != self._interface_id:
             _LOGGER.warning(
-                "Entity.event: Incorrect interface_id: %s - should be: %s",
+                "event: Incorrect interface_id: %s - should be: %s",
                 interface_id,
                 self._interface_id,
             )
             return
         if channel_address != self.channel_address:
             _LOGGER.warning(
-                "Entity.event: Incorrect address: %s - should be: %s",
+                "event: Incorrect address: %s - should be: %s",
                 channel_address,
                 self.channel_address,
             )
             return
         if parameter != self.parameter:
             _LOGGER.warning(
-                "Entity.event: Incorrect parameter: %s - should be: %s",
+                "event: Incorrect parameter: %s - should be: %s",
                 parameter,
                 self.parameter,
             )
@@ -715,7 +715,7 @@ class BaseEvent(BaseParameterEntity[bool]):
         Handle event for which this handler has subscribed.
         """
         _LOGGER.debug(
-            "Entity.event: %s, %s, %s, %s",
+            "event: %s, %s, %s, %s",
             interface_id,
             channel_address,
             parameter,
@@ -723,21 +723,21 @@ class BaseEvent(BaseParameterEntity[bool]):
         )
         if interface_id != self._interface_id:
             _LOGGER.warning(
-                "Entity.event: Incorrect interface_id: %s - should be: %s",
+                "event: Incorrect interface_id: %s - should be: %s",
                 interface_id,
                 self._interface_id,
             )
             return
         if channel_address != self.channel_address:
             _LOGGER.warning(
-                "Entity.event: Incorrect address: %s - should be: %s",
+                "event: Incorrect address: %s - should be: %s",
                 channel_address,
                 self.channel_address,
             )
             return
         if parameter != self.parameter:
             _LOGGER.warning(
-                "Entity.event: Incorrect parameter: %s - should be: %s",
+                "event: Incorrect parameter: %s - should be: %s",
                 parameter,
                 self.parameter,
             )

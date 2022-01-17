@@ -63,7 +63,7 @@ class CentralUnit:
     """Central unit that collects everything required to handle communication from/to CCU/Homegear."""
 
     def __init__(self, central_config: CentralConfig):
-        _LOGGER.debug("CentralUnit.__init__")
+        _LOGGER.debug("__init__")
         self.central_config: CentralConfig = central_config
         self._domain = self.central_config.domain
 
@@ -220,23 +220,23 @@ class CentralUnit:
             await self.paramsets.load()
             await self.names.load()
         except json.decoder.JSONDecodeError:
-            _LOGGER.warning("Failed to load caches.")
+            _LOGGER.warning("load_caches: Failed to load caches.")
             await self.clear_all()
 
     def _create_devices(self) -> None:
         """Create the devices."""
         if not self._clients:
-            raise Exception("No clients initialized. Not starting central_unit.")
+            raise Exception("_create_devices: No clients initialized. Not starting central_unit.")
         try:
             create_devices(self)
         except Exception as err:
-            _LOGGER.error("CentralUnit.init: Failed to create entities")
+            _LOGGER.error("_create_devices: Failed to create entities")
             raise HaHomematicException("entity-creation-error") from err
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
-            "CentralUnit.delete_device: interface_id = %s, device_address = %s",
+            "delete_device: interface_id = %s, device_address = %s",
             interface_id,
             device_address,
         )
@@ -247,7 +247,7 @@ class CentralUnit:
         addresses.append(device_address)
         if len(addresses) == 0:
             _LOGGER.debug(
-                "CentralUnit.delete_device: Nothing to delete: interface_id = %s, device_address = %s",
+                "delete_device: Nothing to delete: interface_id = %s, device_address = %s",
                 interface_id,
                 device_address,
             )
@@ -259,7 +259,7 @@ class CentralUnit:
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
-            "CentralUnit.delete_devices: interface_id = %s, addresses = %s",
+            "delete_devices: interface_id = %s, addresses = %s",
             interface_id,
             str(addresses),
         )
@@ -280,9 +280,7 @@ class CentralUnit:
                     hm_device.remove_from_collections()
                     del self.hm_devices[address]
             except KeyError:
-                _LOGGER.error(
-                    "CentralUnit.delete_devices: Failed to delete: %s", address
-                )
+                _LOGGER.error("delete_devices: Failed to delete: %s", address)
         await self.paramsets.save()
         await self.names.save()
 
@@ -292,14 +290,14 @@ class CentralUnit:
     ) -> None:
         """Add new devices to central unit."""
         _LOGGER.debug(
-            "CentralUnit.add_new_devices: interface_id = %s, dev_descriptions = %s",
+            "add_new_devices: interface_id = %s, dev_descriptions = %s",
             interface_id,
             len(dev_descriptions),
         )
 
         if interface_id not in self._clients:
             _LOGGER.error(
-                "CentralUnit.add_new_devices: Missing client for interface_id %s.",
+                "add_new_devices: Missing client for interface_id %s.",
                 interface_id,
             )
             return None
@@ -316,7 +314,7 @@ class CentralUnit:
                     self.raw_devices.add_device_description(interface_id, dev_desc)
                     await client.fetch_paramsets(dev_desc)
             except Exception:
-                _LOGGER.error("CentralUnit.add_new_devices: Exception")
+                _LOGGER.error("add_new_devices: Exception")
         await self.raw_devices.save()
         await self.paramsets.save()
         await client.fetch_names()
@@ -328,16 +326,14 @@ class CentralUnit:
         then shut down our XML-RPC server.
         To stop the central_unit we de-init from the CCU / Homegear,
         """
-        _LOGGER.info("CentralUnit.stop: Stop connection checker.")
+        _LOGGER.info("stop: Stop connection checker.")
         self._stop_connection_checker()
         for name, client in self._clients.items():
             if await client.proxy_de_init():
-                _LOGGER.info("CentralUnit.stop: Proxy de-initialized: %s", name)
+                _LOGGER.info("stop: Proxy de-initialized: %s", name)
             client.stop()
 
-        _LOGGER.info(
-            "CentralUnit.stop: Clearing existing clients. Please recreate them!"
-        )
+        _LOGGER.info("stop: Clearing existing clients. Please recreate them!")
         self._clients.clear()
         self._clients_by_init_url.clear()
 
@@ -346,7 +342,7 @@ class CentralUnit:
         # un-register and stop XMLRPCServer, if possible
         xml_rpc.un_register_xml_rpc_server()
 
-        _LOGGER.debug("CentralUnit.stop: Removing instance")
+        _LOGGER.debug("stop: Removing instance")
         del hm_data.INSTANCES[self.instance_name]
 
     async def create_clients(self, client_configs: set[hm_client.ClientConfig]) -> None:
@@ -356,7 +352,7 @@ class CentralUnit:
             try:
                 if client := await client_config.get_client():
                     _LOGGER.debug(
-                        "CentralUnit.create_clients: Adding client %s to central.",
+                        "create_clients: Adding client %s to central.",
                         client.interface_id,
                     )
                     self._clients[client.interface_id] = client
@@ -368,7 +364,7 @@ class CentralUnit:
                 self._create_devices()
             except BaseHomematicException as ex:
                 _LOGGER.debug(
-                    "CentralUnit.create_clients: Failed to create interface %s to central. (%s)",
+                    "create_clients: Failed to create interface %s to central. (%s)",
                     client_config.name,
                     ex.args,
                 )
@@ -386,7 +382,7 @@ class CentralUnit:
             self.loop.call_soon_threadsafe(self._async_create_task, target)
         except CancelledError:
             _LOGGER.debug(
-                "CentralUnit.create_task: task cancelled for %s.",
+                "create_task: task cancelled for %s.",
                 self.instance_name,
             )
             return None
@@ -401,7 +397,7 @@ class CentralUnit:
             return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
         except CancelledError:
             _LOGGER.debug(
-                "CentralUnit.run_coroutine: coroutine interrupted for %s.",
+                "run_coroutine: coroutine interrupted for %s.",
                 self.instance_name,
             )
             return None
@@ -414,7 +410,7 @@ class CentralUnit:
             return await self.loop.run_in_executor(None, executor_func, *args)
         except CancelledError as cer:
             _LOGGER.debug(
-                "CentralUnit.async_add_executor_job: task cancelled for %s.",
+                "async_add_executor_job: task cancelled for %s.",
                 self.instance_name,
             )
             raise HaHomematicException from cer
@@ -433,7 +429,7 @@ class CentralUnit:
         for client in self._clients.values():
             if not await client.is_connected():
                 _LOGGER.warning(
-                    "CentralUnit.is_connected: No connection to %s.",
+                    "is_connected: No connection to %s.",
                     client.interface_id,
                 )
                 if self._available:
@@ -449,12 +445,12 @@ class CentralUnit:
         """re-init all RPC clients."""
         if await self.is_connected():
             _LOGGER.info(
-                "CentralUnit.reconnect: re-connect to central_unit %s",
+                "reconnect: re-connect to central_unit %s",
                 self.instance_name,
             )
             if not force_immediate:
                 _LOGGER.info(
-                    "CentralUnit.reconnect: waiting to re-connect to central_unit %s for %is",
+                    "reconnect: waiting to re-connect to central_unit %s for %is",
                     self.instance_name,
                     int(config.RECONNECT_WAIT),
                 )
@@ -462,7 +458,7 @@ class CentralUnit:
             for client in self._clients.values():
                 await client.proxy_re_init()
                 _LOGGER.info(
-                    "CentralUnit.reconnect: re-connected to central_unit %s",
+                    "reconnect: re-connected to central_unit %s",
                     self.instance_name,
                 )
 
@@ -621,7 +617,7 @@ class ConnectionChecker(threading.Thread):
         Run the central thread.
         """
         _LOGGER.info(
-            "ConnectionCecker.run: Init connection checker to server %s",
+            "run: Init connection checker to server %s",
             self._central.instance_name,
         )
 
@@ -637,13 +633,13 @@ class ConnectionChecker(threading.Thread):
         connection_checker_interval = config.CONNECTION_CHECKER_INTERVAL
         while self._active:
             _LOGGER.debug(
-                "ConnectionCecker.check_connection: Checking connection to server %s",
+                "check_connection: Checking connection to server %s",
                 self._central.instance_name,
             )
             try:
                 if not await self._central.is_connected():
                     _LOGGER.warning(
-                        "ConnectionCecker.check_connection: No connection to server %s",
+                        "check_connection: No connection to server %s",
                         self._central.instance_name,
                     )
                     await asyncio.sleep(connection_checker_interval)
@@ -898,7 +894,7 @@ class RawDevicesCache(BaseCache):
                 if self._dev_descriptions.get(interface_id, {}).get(address, {}):
                     del self._dev_descriptions[interface_id][address]
             except KeyError:
-                _LOGGER.error("Failed to delete: %s", address)
+                _LOGGER.error("cleanup: Failed to delete: %s", address)
         await self.save()
 
     def get_addresses(self, interface_id: str) -> dict[str, list[str]]:

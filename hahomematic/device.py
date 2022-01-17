@@ -85,7 +85,7 @@ class HmDevice:
             self._interface_id, self._device_address
         )
         _LOGGER.debug(
-            "Device.__init__: Initializing device: %s, %s",
+            "__init__: Initializing device: %s, %s",
             self._interface_id,
             self._device_address,
         )
@@ -127,7 +127,7 @@ class HmDevice:
             device_type=self.device_type,
         )
         _LOGGER.debug(
-            "Device.__init__: Initialized device: %s, %s, %s, %s",
+            "__init__: Initialized device: %s, %s, %s, %s",
             self._interface_id,
             self._device_address,
             self.device_type,
@@ -307,7 +307,7 @@ class HmDevice:
                 interface_id=self._interface_id, channel_address=channel_address
             ):
                 _LOGGER.debug(
-                    "Device.create_entities: Skipping channel %s, missing paramsets.",
+                    "create_entities: Skipping channel %s, missing paramsets.",
                     channel_address,
                 )
                 continue
@@ -347,7 +347,7 @@ class HmDevice:
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
                     ) or parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL:
                         _LOGGER.debug(
-                            "Device.create_entities: Skipping %s (no event or internal)",
+                            "create_entities: Skipping %s (no event or internal)",
                             parameter,
                         )
                         continue
@@ -362,7 +362,7 @@ class HmDevice:
         # create custom entities
         if self.is_custom_entity:
             _LOGGER.debug(
-                "Device.create_entities: Handling custom entity integration: %s, %s, %s",
+                "create_entities: Handling custom entity integration: %s, %s, %s",
                 self._interface_id,
                 self._device_address,
                 self.device_type,

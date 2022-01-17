@@ -99,7 +99,7 @@ def check_or_create_directory(directory: str) -> bool:
             os.makedirs(directory)
         except OSError as ose:
             _LOGGER.error(
-                "Helpers.check_or_create_directory: Unable to create directory %s ('%s')",
+                "check_or_create_directory: Unable to create directory %s ('%s')",
                 directory,
                 ose.strerror,
             )
@@ -152,7 +152,7 @@ def get_entity_name(
         return entity_name
 
     _LOGGER.info(
-        "Helper.get_entity_name: Using unique_id for %s %s %s",
+        "get_entity_name: Using unique_id for %s %s %s",
         device_type,
         channel_address,
         parameter,
