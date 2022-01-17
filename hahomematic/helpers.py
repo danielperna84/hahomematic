@@ -151,7 +151,7 @@ def get_entity_name(
             entity_name = f"{d_name} {p_name}"
         return entity_name
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "get_entity_name: Using unique_id for %s %s %s",
         device_type,
         channel_address,
@@ -185,7 +185,7 @@ def get_event_name(
             event_name = f"{d_name} {p_name}"
         return event_name
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Helper.get_event_name: Using unique_id for %s %s %s",
         device_type,
         channel_address,
@@ -214,7 +214,7 @@ def get_custom_entity_name(
         marker = " ch" if usage == HmEntityUsage.CE_PRIMARY else " vch"
         return custom_entity_name.replace(":", marker)
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Helper.get_custom_entity_name: Using unique_id for %s %s %s",
         device_type,
         device_address,
@@ -230,7 +230,7 @@ def get_device_name(
     if name := central.names.get_name(address=device_address):
         return name
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "Helper.get_device_name: Using auto-generated name for %s %s",
         device_type,
         device_address,

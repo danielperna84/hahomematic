@@ -1,3 +1,6 @@
+Version 0.24.2 (2022-01-17)
+- Improve exception handling
+
 Version 0.24.1 (2022-01-17)
 - Improve exception handling
 
