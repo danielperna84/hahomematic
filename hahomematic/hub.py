@@ -18,7 +18,6 @@ EXCLUDED_FROM_SENSOR = [
 ]
 
 EXCLUDED = [
-    "CarrierSense",
     "OldVal",
 ]
 

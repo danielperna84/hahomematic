@@ -11,6 +11,7 @@ import logging
 from typing import Any
 
 import hahomematic.data as hm_data
+from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +47,9 @@ def callback_system_event(name: str) -> Callable:
                 client = hm_data.get_client_by_interface_id(interface_id=interface_id)
             except Exception as err:
                 _LOGGER.warning("Failed to reduce args for callback_system_event.")
-                raise Exception("args-exception callback_system_event") from err
+                raise HaHomematicException(
+                    "args-exception callback_system_event"
+                ) from err
             if client:
                 client.last_updated = datetime.now()
                 if client.central.callback_system_event is not None:
@@ -87,7 +90,7 @@ def callback_event(func: Callable) -> Callable:
             client = hm_data.get_client_by_interface_id(interface_id=interface_id)
         except Exception as err:
             _LOGGER.warning("Failed to reduce args for callback_event.")
-            raise Exception("args-exception callback_event") from err
+            raise HaHomematicException("args-exception callback_event") from err
         if client:
             client.last_updated = datetime.now()
             if client.central.callback_entity_event is not None:

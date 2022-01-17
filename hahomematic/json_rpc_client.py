@@ -20,6 +20,7 @@ from hahomematic.const import (
     ATTR_USERNAME,
     PATH_JSON_RPC,
 )
+from hahomematic.exceptions import HaHomematicException, BaseHomematicException
 from hahomematic.helpers import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +110,7 @@ class JsonRpcAioHttpClient:
                 )
                 return None
             return session_id
-        except Exception:
+        except BaseHomematicException:
             _LOGGER.error("json_rpc.login: Exception while logging in via JSON-RPC")
             return None
 
@@ -211,6 +212,8 @@ class JsonRpcAioHttpClient:
         except OSError as oer:
             _LOGGER.error("json_rpc_client._post: OSError")
             return {"error": str(oer), "result": {}}
+        except Exception as ex:
+            raise HaHomematicException from ex
 
     async def logout(self) -> None:
         """Logout of CCU."""
