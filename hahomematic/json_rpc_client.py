@@ -20,7 +20,7 @@ from hahomematic.const import (
     ATTR_USERNAME,
     PATH_JSON_RPC,
 )
-from hahomematic.exceptions import HaHomematicException, BaseHomematicException
+from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
