@@ -420,7 +420,7 @@ class ClientCCU(Client):
         _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
             response = await self._json_rpc_session.post(
-                "listAllDetail",
+                "Device.listAllDetail",
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 _LOGGER.debug("fetch_names_json: Resolving devicenames")
@@ -599,7 +599,7 @@ class ClientCCU(Client):
         )
         try:
             response = await self._json_rpc_session.post(
-                "listAllDetail",
+                "Device.listAllDetail",
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 for device in response[ATTR_RESULT]:
