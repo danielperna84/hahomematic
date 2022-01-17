@@ -239,7 +239,7 @@ class Client(ABC):
             _LOGGER.debug("get_value: %s, %s", channel_address, parameter)
             return await self._proxy.getValue(channel_address, parameter)
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "get_value: %s: %s, %s", hhe.name, channel_address, parameter
             )
             raise HaHomematicException from hhe
@@ -420,7 +420,7 @@ class ClientCCU(Client):
         _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
             response = await self._json_rpc_session.post(
-                "listAllDetail",
+                "Device.listAllDetail",
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 _LOGGER.debug("fetch_names_json: Resolving devicenames")
@@ -599,7 +599,7 @@ class ClientCCU(Client):
         )
         try:
             response = await self._json_rpc_session.post(
-                "listAllDetail",
+                "Device.listAllDetail",
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 for device in response[ATTR_RESULT]:
