@@ -6,6 +6,7 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
+from concurrent.futures._base import CancelledError
 from datetime import datetime
 import json
 import logging
@@ -381,21 +382,42 @@ class CentralUnit:
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
-        self.loop.call_soon_threadsafe(self.async_create_task, target)
+        try:
+            self.loop.call_soon_threadsafe(self._async_create_task, target)
+        except CancelledError:
+            _LOGGER.debug(
+                "CentralUnit.create_task: task cancelled for %s.",
+                self.instance_name,
+            )
+            return None
 
-    def async_create_task(self, target: Awaitable) -> asyncio.Task:
+    def _async_create_task(self, target: Awaitable) -> asyncio.Task:
         """Create a task from within the event loop. This method must be run in the event loop."""
         return self.loop.create_task(target)
 
     def run_coroutine(self, coro: Coroutine) -> Any:
         """call coroutine from sync"""
-        return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+        try:
+            return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+        except CancelledError:
+            _LOGGER.debug(
+                "CentralUnit.run_coroutine: coroutine interrupted for %s.",
+                self.instance_name,
+            )
+            return None
 
     async def async_add_executor_job(
         self, executor_func: Callable, *args: Any
     ) -> Awaitable:
         """Add an executor job from within the event loop."""
-        return await self.loop.run_in_executor(None, executor_func, *args)
+        try:
+            return await self.loop.run_in_executor(None, executor_func, *args)
+        except CancelledError as cer:
+            _LOGGER.debug(
+                "CentralUnit.async_add_executor_job: task cancelled for %s.",
+                self.instance_name,
+            )
+            raise HaHomematicException from cer
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
