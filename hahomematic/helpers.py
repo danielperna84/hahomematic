@@ -22,7 +22,7 @@ from hahomematic.const import (
     HmEntityUsage,
 )
 import hahomematic.devices.entity_definition as hm_entity_definition
-from hahomematic.exceptions import HaHomematicException
+from hahomematic.exceptions import BaseHomematicException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ def check_or_create_directory(directory: str) -> bool:
                 directory,
                 ose.strerror,
             )
-            raise HaHomematicException from ose
+            raise BaseHomematicException from ose
 
     return True
 

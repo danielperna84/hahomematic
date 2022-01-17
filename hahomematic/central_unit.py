@@ -41,7 +41,11 @@ import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
 from hahomematic.device import HmDevice, create_devices
 from hahomematic.entity import BaseEntity, GenericEntity
-from hahomematic.exceptions import HaHomematicException, NoConnection
+from hahomematic.exceptions import (
+    BaseHomematicException,
+    HaHomematicException,
+    NoConnection,
+)
 from hahomematic.helpers import (
     check_or_create_directory,
     get_device_address,
@@ -226,7 +230,7 @@ class CentralUnit:
             create_devices(self)
         except Exception as err:
             _LOGGER.error("CentralUnit.init: Failed to create entities")
-            raise Exception("entity-creation-error") from err
+            raise HaHomematicException("entity-creation-error") from err
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
         """Delete devices from central_unit."""
@@ -275,7 +279,9 @@ class CentralUnit:
                     hm_device.remove_from_collections()
                     del self.hm_devices[address]
             except KeyError:
-                _LOGGER.error("Failed to delete: %s", address)
+                _LOGGER.error(
+                    "CentralUnit.delete_devices: Failed to delete: %s", address
+                )
         await self.paramsets.save()
         await self.names.save()
 
@@ -359,7 +365,7 @@ class CentralUnit:
                     self._clients_by_init_url[client.init_url].append(client)
                 await self.rooms.load()
                 self._create_devices()
-            except HaHomematicException as ex:
+            except BaseHomematicException as ex:
                 _LOGGER.debug(
                     "CentralUnit.create_clients: Failed to create interface %s to central. (%s)",
                     client_config.name,
@@ -405,7 +411,8 @@ class CentralUnit:
         for client in self._clients.values():
             if not await client.is_connected():
                 _LOGGER.warning(
-                    "CentralUnit.is_connected: No connection to %s.", client.interface_id
+                    "CentralUnit.is_connected: No connection to %s.",
+                    client.interface_id,
                 )
                 if self._available:
                     self.mark_all_devices_availability(available=False)
@@ -678,7 +685,7 @@ class CentralConfig:
         """Check config."""
         try:
             check_or_create_directory(self.storage_folder)
-        except HaHomematicException:
+        except BaseHomematicException:
             return False
         return True
 

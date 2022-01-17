@@ -52,6 +52,7 @@ from hahomematic.const import (
 import hahomematic.device as hm_device
 import hahomematic.devices as hm_custom_entity
 import hahomematic.devices.entity_definition as hm_entity_definition
+from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
     check_channel_is_only_primary_channel,
     get_custom_entity_name,
@@ -327,7 +328,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 parameter=self.parameter,
                 value=self._convert_value(value),
             )
-        except Exception:
+        except BaseHomematicException:
             _LOGGER.error(
                 "generic_entity: Failed to set state for: %s, %s, %s, %s",
                 self._device.device_type,
@@ -449,14 +450,14 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
 
             self.update_entity(self.unique_id)
             return DATA_LOAD_SUCCESS
-        except Exception as err:
+        except BaseHomematicException as bhe:
             _LOGGER.debug(
                 " %s: Failed to get value for %s, %s, %s: %s",
                 self.platform,
                 self._device.device_type,
                 self.channel_address,
                 self.parameter,
-                err,
+                bhe,
             )
             return DATA_LOAD_FAIL
 
@@ -758,7 +759,7 @@ class BaseEvent(BaseParameterEntity[bool]):
                 parameter=self.parameter,
                 value=value,
             )
-        except Exception:
+        except BaseHomematicException:
             _LOGGER.error(
                 "action_event: Failed to send value for: %s, %s, %s",
                 self.channel_address,
