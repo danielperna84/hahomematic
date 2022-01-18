@@ -135,7 +135,7 @@ def get_entity_name(
         channel_address=channel_address,
         device_type=device_type,
     ):
-        if entity_name.count(":") == 1:
+        if _check_channel_name_with_channel_no(name=entity_name):
             d_name = entity_name.split(":")[0]
             p_name = parameter.title().replace("_", " ")
             c_name = ""
@@ -173,7 +173,7 @@ def get_event_name(
         channel_address=channel_address,
         device_type=device_type,
     ):
-        if event_name.count(":") == 1:
+        if _check_channel_name_with_channel_no(name=event_name):
             d_name = event_name.split(":")[0]
             p_name = parameter.title().replace("_", " ")
             c_no = event_name.split(":")[1]
@@ -209,10 +209,14 @@ def get_custom_entity_name(
         channel_address=f"{device_address}:{channel_no}",
         device_type=device_type,
     ):
-        if is_only_primary_channel and ":" in custom_entity_name:
+        if is_only_primary_channel and _check_channel_name_with_channel_no(
+            name=custom_entity_name
+        ):
             return custom_entity_name.split(":")[0]
-        marker = " ch" if usage == HmEntityUsage.CE_PRIMARY else " vch"
-        return custom_entity_name.replace(":", marker)
+        if _check_channel_name_with_channel_no(name=custom_entity_name):
+            marker = " ch" if usage == HmEntityUsage.CE_PRIMARY else " vch"
+            return custom_entity_name.replace(":", marker)
+        return custom_entity_name
 
     _LOGGER.debug(
         "Helper.get_custom_entity_name: Using unique_id for %s %s %s",
@@ -221,6 +225,18 @@ def get_custom_entity_name(
         channel_no,
     )
     return unique_id
+
+
+def _check_channel_name_with_channel_no(name: str) -> bool:
+    """check if name contains channel and this is an int."""
+    if name.count(":") == 1:
+        channel_part = name.split(":")[1]
+        try:
+            int(channel_part)
+            return True
+        except ValueError:
+            return False
+    return False
 
 
 def get_device_name(

@@ -1,5 +1,6 @@
 Version 0.24.4 (2022-01-18)
 - Improve logging
+- Generic schema for entities is name(str):channel(int), everthing else is custom.
 
 - Fix sysvar unique_id
 - Slugify sysvar name
