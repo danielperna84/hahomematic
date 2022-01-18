@@ -310,14 +310,17 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         """Convert to value to ParameterType"""
         if value is None:
             return None
-        if self._type == TYPE_BOOL:
-            return bool(value)  # type: ignore[return-value]
-        if self._type == TYPE_FLOAT:
-            return float(value)  # type: ignore[return-value]
-        if self._type == TYPE_INTEGER:
-            return int(float(value))  # type: ignore[return-value]
-        if self._type == TYPE_STRING:
-            return str(value)  # type: ignore[return-value]
+        try:
+            if self._type == TYPE_BOOL:
+                return bool(value)  # type: ignore[return-value]
+            if self._type == TYPE_FLOAT:
+                return float(value)  # type: ignore[return-value]
+            if self._type == TYPE_INTEGER:
+                return int(float(value))  # type: ignore[return-value]
+            if self._type == TYPE_STRING:
+                return str(value)  # type: ignore[return-value]
+        except ValueError:
+            return None  # type: ignore[return-value]
         return value
 
     async def send_value(self, value: Any) -> None:
