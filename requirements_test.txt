@@ -10,3 +10,4 @@ pytest==6.2.5
 pytest-cov==2.12.1
 pytest-aiohttp==0.3.0
 pytest-rerunfailures==9.1.1
+types-python-slugify==5.0.3

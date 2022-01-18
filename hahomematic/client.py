@@ -239,9 +239,7 @@ class Client(ABC):
             _LOGGER.debug("get_value: %s, %s", channel_address, parameter)
             return await self._proxy.getValue(channel_address, parameter)
         except BaseHomematicException as hhe:
-            _LOGGER.debug(
-                "get_value: %s: %s, %s", hhe.name, channel_address, parameter
-            )
+            _LOGGER.debug("get_value: %s: %s, %s", hhe.name, channel_address, parameter)
             raise HaHomematicException from hhe
 
     async def set_value(
