@@ -226,7 +226,9 @@ class CentralUnit:
     def _create_devices(self) -> None:
         """Create the devices."""
         if not self._clients:
-            raise Exception("_create_devices: No clients initialized. Not starting central_unit.")
+            raise Exception(
+                "_create_devices: No clients initialized. Not starting central_unit."
+            )
         try:
             create_devices(self)
         except Exception as err:

@@ -7,6 +7,8 @@ from datetime import datetime
 import logging
 from typing import Any
 
+from slugify import slugify
+
 import hahomematic.central_unit as hm_central
 from hahomematic.const import BACKEND_CCU, INIT_DATETIME, HmEntityUsage, HmPlatform
 from hahomematic.helpers import generate_unique_id
@@ -22,6 +24,8 @@ EXCLUDED = [
 ]
 
 SERVICE_MESSAGES = "Servicemeldungen"
+SYSVAR_ADDRESS = "sysvar"
+HUB_ADDRESS = "hub"
 
 
 class BaseHubEntity(ABC):
@@ -131,12 +135,17 @@ class HmSystemVariable(BaseHubEntity):
         unique_id = generate_unique_id(
             domain=central.domain,
             instance_name=central.instance_name,
-            address=central.instance_name,
-            parameter=name,
-            prefix="hub",
+            address=SYSVAR_ADDRESS,
+            parameter=slugify(name),
+            prefix=central.instance_name,
         )
         self.usage = HmEntityUsage.ENTITY
-        super().__init__(central=central, unique_id=unique_id, name=name, value=value)
+        super().__init__(
+            central=central,
+            unique_id=unique_id,
+            name=f"{central.instance_name}_SV_{name}",
+            value=value,
+        )
 
     @property
     def device_info(self) -> dict[str, str] | None:
@@ -177,8 +186,7 @@ class HmHub(BaseHubEntity):
         unique_id: str = generate_unique_id(
             domain=central.domain,
             instance_name=central.instance_name,
-            address=central.instance_name,
-            prefix="hub",
+            address=HUB_ADDRESS,
         )
         name: str = central.instance_name
         super().__init__(central, unique_id, name)
@@ -259,7 +267,7 @@ class HmHub(BaseHubEntity):
         """Create system variable as entity."""
         self.hub_entities[name] = HmSystemVariable(
             central=self._central,
-            name=f"{self._central.instance_name} {name}",
+            name=name,
             value=value,
         )
 

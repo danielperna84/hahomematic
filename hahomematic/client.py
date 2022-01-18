@@ -240,7 +240,11 @@ class Client(ABC):
             return await self._proxy.getValue(channel_address, parameter)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
-                "get_value: %s: %s, %s", hhe.name, channel_address, parameter
+                "get_value failed with %s (%s): %s, %s",
+                hhe.name,
+                hhe.args,
+                channel_address,
+                parameter,
             )
             raise HaHomematicException from hhe
 
@@ -259,9 +263,10 @@ class Client(ABC):
                 await self._proxy.setValue(channel_address, parameter, value)
             _LOGGER.debug("set_value: %s, %s, %s", channel_address, parameter, value)
         except BaseHomematicException as hhe:
-            _LOGGER.error(
-                "set_value failed: %s: %s, %s, %s",
+            _LOGGER.warning(
+                "set_value failed with %s (%s): %s, %s, %s",
                 hhe.name,
+                hhe.args,
                 channel_address,
                 parameter,
                 value,
@@ -354,11 +359,13 @@ class Client(ABC):
                     address, paramset
                 )
             except BaseHomematicException as hhe:
-                _LOGGER.error(
-                    "get_paramsets failed for %s address %s (%s).",
+                _LOGGER.warning(
+                    "get_paramsets failed with %s (%s) for %s address %s.",
+                    hhe.name,
+                    hhe.args,
                     paramset,
                     address,
-                    hhe.name,
+
                 )
         return paramsets
 
@@ -430,8 +437,8 @@ class ClientCCU(Client):
                         self._central.names.add(
                             channel[ATTR_ADDRESS], channel[ATTR_NAME]
                         )
-        except BaseHomematicException:
-            _LOGGER.error("fetch_names_json: General exception")
+        except BaseHomematicException as hhe:
+            _LOGGER.error("fetch_names_json: %s, %s", hhe.name, hhe.args)
 
     async def _check_connection(self) -> bool:
         """Check if _proxy is still initialized."""

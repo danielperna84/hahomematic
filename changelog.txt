@@ -1,3 +1,10 @@
+Version 0.24.3 (2022-01-18)
+- Fix sysvar unique_id
+- Slugify sysvar name
+- Kill executor on shutdown
+- Catch ValueError on conversion
+- Add more data to logging
+
 Version 0.24.0-0.24.2 (2022-01-17)
 - Improve exception handling
 
