@@ -94,9 +94,11 @@ class Client(ABC):
             )
             await self._proxy.init(self._init_url, self.interface_id)
             _LOGGER.info("proxy_init: Proxy for %s initialized", self.interface_id)
-        except BaseHomematicException:
+        except BaseHomematicException as hhe:
             _LOGGER.error(
-                "proxy_init: Failed to initialize proxy for %s",
+                "proxy_init: %s (%s) Failed to initialize proxy for %s",
+                hhe.name,
+                hhe.args,
                 self.interface_id,
             )
             self.last_updated = INIT_DATETIME
@@ -121,9 +123,10 @@ class Client(ABC):
             await self._proxy.init(self._init_url)
         except BaseHomematicException as hhe:
             _LOGGER.error(
-                "proxy_de_init: Failed to de-initialize proxy for %s (%s)",
-                self.name,
+                "proxy_de_init: %s (%s) Failed to de-initialize proxy for %s",
                 hhe.name,
+                hhe.args,
+                self.name,
             )
             return PROXY_DE_INIT_FAILED
 
@@ -200,7 +203,7 @@ class Client(ABC):
         try:
             return await self._proxy.getServiceMessages()
         except BaseHomematicException as hhe:
-            _LOGGER.error("get_service_messages: %s", hhe.name)
+            _LOGGER.warning("get_service_messages: %s (%s)", hhe.name, hhe.args)
         return None
 
     # pylint: disable=invalid-name
@@ -223,14 +226,14 @@ class Client(ABC):
 
             await self._proxy.setInstallMode(*args)
         except BaseHomematicException as hhe:
-            _LOGGER.error("set_install_mode: %s", hhe.name)
+            _LOGGER.warning("set_install_mode: %s (%s)", hhe.name, hhe.args)
 
     async def get_install_mode(self) -> Any:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
             return await self._proxy.getInstallMode()
         except BaseHomematicException as hhe:
-            _LOGGER.error("get_install_mode: %s", hhe.name)
+            _LOGGER.warning("get_install_mode: %s (%s)", hhe.name, hhe.args)
         return 0
 
     async def get_value(self, channel_address: str, parameter: str) -> Any:
@@ -287,9 +290,10 @@ class Client(ABC):
                 await self._proxy.putParamset(channel_address, paramset, value)
             _LOGGER.debug("put_paramset: %s, %s, %s", channel_address, paramset, value)
         except BaseHomematicException as hhe:
-            _LOGGER.error(
-                "put_paramset failed: %s: %s, %s, %s",
+            _LOGGER.warning(
+                "put_paramset failed: %s (%s) %s, %s, %s",
                 hhe.name,
+                hhe.args,
                 channel_address,
                 paramset,
                 value,
@@ -312,11 +316,12 @@ class Client(ABC):
                 paramset_description=parameter_data,
             )
         except BaseHomematicException as hhe:
-            _LOGGER.error(
-                "fetch_paramset: Unable to get paramset %s for channel_address %s (%s).",
+            _LOGGER.warning(
+                "fetch_paramset: %s (%s) Unable to get paramset %s for channel_address %s",
+                hhe.name,
+                hhe.args,
                 paramset,
                 channel_address,
-                hhe.name,
             )
         await self._central.paramsets.save()
 
@@ -365,7 +370,6 @@ class Client(ABC):
                     hhe.args,
                     paramset,
                     address,
-
                 )
         return paramsets
 
@@ -430,7 +434,7 @@ class ClientCCU(Client):
                 "Device.listAllDetail",
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                _LOGGER.debug("fetch_names_json: Resolving devicenames")
+                _LOGGER.debug("fetch_names_json: Resolving device names")
                 for device in response[ATTR_RESULT]:
                     self._central.names.add(device[ATTR_ADDRESS], device[ATTR_NAME])
                     for channel in device.get(ATTR_CHANNELS, []):
@@ -438,7 +442,7 @@ class ClientCCU(Client):
                             channel[ATTR_ADDRESS], channel[ATTR_NAME]
                         )
         except BaseHomematicException as hhe:
-            _LOGGER.error("fetch_names_json: %s, %s", hhe.name, hhe.args)
+            _LOGGER.warning("fetch_names_json: %s, %s", hhe.name, hhe.args)
 
     async def _check_connection(self) -> bool:
         """Check if _proxy is still initialized."""
@@ -448,7 +452,7 @@ class ClientCCU(Client):
                 self.last_updated = datetime.now()
                 return True
         except BaseHomematicException as hhe:
-            _LOGGER.error("ping: failed for %s", hhe.name)
+            _LOGGER.error("ping: failed for %s (%s)", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
@@ -482,8 +486,8 @@ class ClientCCU(Client):
                         "set_system_variable: Error while setting variable: %s",
                         str(response[ATTR_ERROR]),
                     )
-        except BaseHomematicException:
-            _LOGGER.error("set_system_variable: Exception")
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("set_system_variable: %s (%s)", hhe.name, hhe.args)
 
     async def delete_system_variable(self, name: str) -> None:
         """Delete a system variable from CCU / Homegear."""
@@ -503,8 +507,8 @@ class ClientCCU(Client):
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 deleted = response[ATTR_RESULT]
                 _LOGGER.info("delete_system_variable: Deleted: %s", str(deleted))
-        except BaseHomematicException:
-            _LOGGER.error("delete_system_variable: Exception")
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("delete_system_variable: %s (%s)", hhe.name, hhe.args)
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
@@ -528,8 +532,8 @@ class ClientCCU(Client):
                     var = float(response[ATTR_RESULT])
                 except Exception:
                     var = response[ATTR_RESULT] == "true"
-        except BaseHomematicException:
-            _LOGGER.error("get_system_variable: Exception")
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_system_variable: %s (%s)", hhe.name, hhe.args)
 
         return var
 
@@ -553,8 +557,8 @@ class ClientCCU(Client):
                 for var in response[ATTR_RESULT]:
                     key, value = parse_ccu_sys_var(var)
                     variables[key] = value
-        except BaseHomematicException:
-            _LOGGER.error("get_all_system_variables: Exception")
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_all_system_variables: %s (%s)", hhe.name, hhe.args)
 
         return variables
 
@@ -587,8 +591,10 @@ class ClientCCU(Client):
                     channel_ids_room[room["id"]] = room["name"]
                     for channel_id in room["channelIds"]:
                         channel_ids_room[channel_id] = room["name"]
-        except BaseHomematicException:
-            _LOGGER.error("_get_all_channel_ids_per_room: Exception")
+        except BaseHomematicException as hhe:
+            _LOGGER.warning(
+                "_get_all_channel_ids_per_room: %s (%s)", hhe.name, hhe.args
+            )
 
         return channel_ids_room
 
@@ -613,8 +619,8 @@ class ClientCCU(Client):
                     device_channel_ids[device["address"]] = device["id"]
                     for channel in device["channels"]:
                         device_channel_ids[channel["address"]] = channel["id"]
-        except BaseHomematicException:
-            _LOGGER.error("_get_device_channel_ids: Exception")
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("_get_device_channel_ids: %s (%s)", hhe.name, hhe.args)
 
         return device_channel_ids
 
@@ -658,10 +664,11 @@ class ClientHomegear(Client):
                     await self._proxy.getMetadata(address, ATTR_HM_NAME),
                 )
             except BaseHomematicException as hhe:
-                _LOGGER.error(
-                    "Failed to fetch name for device %s (%s).",
-                    address,
+                _LOGGER.warning(
+                    "%s (%s) Failed to fetch name for device %s",
                     hhe.name,
+                    hhe.args,
+                    address,
                 )
 
     async def _check_connection(self) -> bool:
@@ -671,8 +678,8 @@ class ClientHomegear(Client):
                 self.last_updated = datetime.now()
                 return True
         except BaseHomematicException as hhe:
-            _LOGGER.error("ping: %s", hhe.name)
-        _LOGGER.warning(
+            _LOGGER.error("ping: %s (%s)", hhe.name, hhe.args)
+        _LOGGER.debug(
             "_check_connection: Setting initialized to 0 for %s",
             self.interface_id,
         )
@@ -684,28 +691,28 @@ class ClientHomegear(Client):
         try:
             await self._proxy.setSystemVariable(name, value)
         except BaseHomematicException as hhe:
-            _LOGGER.error("set_system_variable: %s", hhe.name)
+            _LOGGER.warning("set_system_variable: %s (%s)", hhe.name, hhe.args)
 
     async def delete_system_variable(self, name: str) -> None:
         """Delete a system variable from CCU / Homegear."""
         try:
             await self._proxy.deleteSystemVariable(name)
         except BaseHomematicException as hhe:
-            _LOGGER.error("delete_system_variable: %s", hhe.name)
+            _LOGGER.warning("delete_system_variable: %s (%s)", hhe.name, hhe.args)
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         try:
             return await self._proxy.getSystemVariable(name)
         except BaseHomematicException as hhe:
-            _LOGGER.error("get_system_variable: %s", hhe.name)
+            _LOGGER.warning("get_system_variable: %s (%s)", hhe.name, hhe.args)
 
     async def get_all_system_variables(self) -> Any:
         """Get all system variables from CCU / Homegear."""
         try:
             return await self._proxy.getAllSystemVariables()
         except BaseHomematicException as hhe:
-            _LOGGER.error("get_all_system_variables: %s", hhe.name)
+            _LOGGER.warning("get_all_system_variables: %s (%s)", hhe.name, hhe.args)
         return None
 
     async def get_all_rooms(self) -> dict[str, str]:

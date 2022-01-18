@@ -274,7 +274,7 @@ class HmHub(BaseHubEntity):
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         if name not in self.hub_entities:
-            _LOGGER.error("Variable %s not found on %s", name, self.name)
+            _LOGGER.warning("Variable %s not found on %s", name, self.name)
             return
 
         await self._central.set_system_variable(name, value)

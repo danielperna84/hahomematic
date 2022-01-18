@@ -76,8 +76,10 @@ class JsonRpcAioHttpClient:
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 return str(response[ATTR_RESULT])
             return await self._login()
-        except ClientError:
-            _LOGGER.error("renew: Exception while renewing JSON-RPC session.")
+        except ClientError as cer:
+            _LOGGER.error(
+                "renew: ClientError (%s) while renewing JSON-RPC session", cer.args
+            )
             return None
 
     async def _login(self) -> str | None:
@@ -110,8 +112,10 @@ class JsonRpcAioHttpClient:
                 )
                 return None
             return session_id
-        except BaseHomematicException:
-            _LOGGER.error("login: Exception while logging in via JSON-RPC")
+        except BaseHomematicException as hhe:
+            _LOGGER.error(
+                "login: %s (%s) while logging in via JSON-RPC", hhe.name, hhe.args
+            )
             return None
 
     async def post(
@@ -129,7 +133,7 @@ class JsonRpcAioHttpClient:
             session_id = await self._login()
 
         if not session_id:
-            _LOGGER.error("post: Exception while logging in via JSON-RPC.")
+            _LOGGER.warning("post: Error while logging in via JSON-RPC.")
             return {"error": "Unable to open session.", "result": {}}
 
         result = await self._post(
@@ -189,14 +193,17 @@ class JsonRpcAioHttpClient:
             if resp.status == 200:
                 try:
                     return await resp.json(encoding="utf-8")
-                except ValueError:
-                    _LOGGER.error("_post: Failed to parse JSON. Trying workaround.")
+                except ValueError as ver:
+                    _LOGGER.error(
+                        "_post: ValueError (%s) Failed to parse JSON. Trying workaround",
+                        ver.args,
+                    )
                     # Workaround for bug in CCU
                     return json.loads(
                         (await resp.json(encoding="utf-8")).replace("\\", "")
                     )
             else:
-                _LOGGER.error("_post: Status: %i", resp.status)
+                _LOGGER.warning("_post: Status: %i", resp.status)
                 return {"error": resp.status, "result": {}}
         except ClientConnectorError as err:
             _LOGGER.error("_post: ClientConnectorError")
@@ -231,8 +238,10 @@ class JsonRpcAioHttpClient:
             )
             if response[ATTR_ERROR]:
                 _LOGGER.warning("logout: Logout error: %s", response[ATTR_RESULT])
-        except ClientError:
-            _LOGGER.error("logout: Exception while logging in via JSON-RPC")
+        except ClientError as cer:
+            _LOGGER.error(
+                "logout: ClientError (%s) while logging in via JSON-RPC", cer.args
+            )
         return
 
 

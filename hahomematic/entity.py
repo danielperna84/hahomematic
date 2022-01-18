@@ -338,9 +338,11 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 parameter=self.parameter,
                 value=self._convert_value(value),
             )
-        except BaseHomematicException:
-            _LOGGER.error(
-                "generic_entity: Failed to set state for: %s, %s, %s, %s",
+        except BaseHomematicException as hhe:
+            _LOGGER.warning(
+                "generic_entity: %s (%s) Failed to set state for: %s, %s, %s, %s",
+                hhe.name,
+                hhe.args,
                 self._device.device_type,
                 self.channel_address,
                 self.parameter,
@@ -769,9 +771,11 @@ class BaseEvent(BaseParameterEntity[bool]):
                 parameter=self.parameter,
                 value=value,
             )
-        except BaseHomematicException:
-            _LOGGER.error(
-                "action_event: Failed to send value for: %s, %s, %s",
+        except BaseHomematicException as hhe:
+            _LOGGER.warning(
+                "action_event: %s (%s) Failed to send value for: %s, %s, %s",
+                hhe.name,
+                hhe.args,
                 self.channel_address,
                 self.parameter,
                 value,

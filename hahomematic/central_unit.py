@@ -232,7 +232,9 @@ class CentralUnit:
         try:
             create_devices(self)
         except Exception as err:
-            _LOGGER.error("_create_devices: Failed to create entities")
+            _LOGGER.error(
+                "_create_devices: Exception (%s) Failed to create entities", err.args
+            )
             raise HaHomematicException("entity-creation-error") from err
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
@@ -282,7 +284,7 @@ class CentralUnit:
                     hm_device.remove_from_collections()
                     del self.hm_devices[address]
             except KeyError:
-                _LOGGER.error("delete_devices: Failed to delete: %s", address)
+                _LOGGER.warning("delete_devices: Failed to delete: %s", address)
         await self.paramsets.save()
         await self.names.save()
 
@@ -298,7 +300,7 @@ class CentralUnit:
         )
 
         if interface_id not in self._clients:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "add_new_devices: Missing client for interface_id %s.",
                 interface_id,
             )
@@ -315,8 +317,8 @@ class CentralUnit:
                 if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
                     self.raw_devices.add_device_description(interface_id, dev_desc)
                     await client.fetch_paramsets(dev_desc)
-            except Exception:
-                _LOGGER.error("add_new_devices: Exception")
+            except Exception as err:
+                _LOGGER.error("add_new_devices: Exception (%s)", err.args)
         await self.raw_devices.save()
         await self.paramsets.save()
         await client.fetch_names()
@@ -344,7 +346,7 @@ class CentralUnit:
         # un-register and stop XMLRPCServer, if possible
         xml_rpc.un_register_xml_rpc_server()
 
-        _LOGGER.debug("stop: Removing instance")
+        _LOGGER.info("stop: Removing instance")
         del hm_data.INSTANCES[self.instance_name]
 
     async def create_clients(self, client_configs: set[hm_client.ClientConfig]) -> None:
@@ -430,7 +432,7 @@ class CentralUnit:
         """Check connection to ccu."""
         for client in self._clients.values():
             if not await client.is_connected():
-                _LOGGER.warning(
+                _LOGGER.error(
                     "is_connected: No connection to %s.",
                     client.interface_id,
                 )
@@ -640,7 +642,7 @@ class ConnectionChecker(threading.Thread):
             )
             try:
                 if not await self._central.is_connected():
-                    _LOGGER.warning(
+                    _LOGGER.error(
                         "check_connection: No connection to server %s",
                         self._central.instance_name,
                     )
@@ -651,8 +653,8 @@ class ConnectionChecker(threading.Thread):
                 _LOGGER.error("check_connection: no connection: %s", nex.args)
                 await asyncio.sleep(connection_checker_interval)
                 continue
-            except Exception:
-                _LOGGER.error("check_connection: Exception")
+            except Exception as err:
+                _LOGGER.error("check_connection: Exception (%s)", err.args)
 
 
 class CentralConfig:
@@ -896,7 +898,7 @@ class RawDevicesCache(BaseCache):
                 if self._dev_descriptions.get(interface_id, {}).get(address, {}):
                     del self._dev_descriptions[interface_id][address]
             except KeyError:
-                _LOGGER.error("cleanup: Failed to delete: %s", address)
+                _LOGGER.warning("cleanup: Failed to delete: %s", address)
         await self.save()
 
     def get_addresses(self, interface_id: str) -> dict[str, list[str]]:

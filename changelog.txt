@@ -1,4 +1,6 @@
-Version 0.24.3 (2022-01-18)
+Version 0.24.4 (2022-01-18)
+- Improve logging
+
 - Fix sysvar unique_id
 - Slugify sysvar name
 - Kill executor on shutdown
