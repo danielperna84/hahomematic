@@ -52,7 +52,7 @@ class HmFloat(BaseNumber[float]):
             if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
                 await super().send_value(value)
         else:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "number.float: Invalid value: %s (min: %s, max: %s, special: %s)",
                 value,
                 self._min,
@@ -75,7 +75,7 @@ class HmInteger(BaseNumber[int]):
             if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
                 await super().send_value(value)
         else:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "number.int: Invalid value: %s (min: %s, max: %s, special: %s)",
                 value,
                 self._min,

@@ -86,7 +86,7 @@ class RPCFunctions:
         """
         When some error occurs the CCU / Homegear will send its error message here.
         """
-        _LOGGER.error(
+        _LOGGER.warning(
             "error: interface_id = %s, error_code = %i, message = %s",
             interface_id,
             int(error_code),

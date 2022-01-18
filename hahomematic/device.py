@@ -666,18 +666,20 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                 )
                 new_devices.add(device_address)
                 central.hm_devices[device_address] = device
-            except Exception:
+            except Exception as err:
                 _LOGGER.error(
-                    "create_devices: Failed to create device: %s, %s",
+                    "create_devices: Exception (%s) Failed to create device: %s, %s",
+                    err.args,
                     interface_id,
                     device_address,
                 )
             try:
                 if device:
                     new_entities.extend(device.create_entities())
-            except Exception:
+            except Exception as err:
                 _LOGGER.error(
-                    "create_devices: Failed to create entities: %s, %s",
+                    "create_devices: Exception (%s) Failed to create entities: %s, %s",
+                    err.args,
                     interface_id,
                     device_address,
                 )
