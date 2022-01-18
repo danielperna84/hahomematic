@@ -63,12 +63,21 @@ class RPCFunctions:
                     (channel_address, parameter)
                 ]:
                     callback(interface_id, channel_address, parameter, value)
-            except Exception:
-                _LOGGER.error(
-                    "event: Failed to call callback for: %s, %s, %s",
+            except RuntimeError as rte:
+                _LOGGER.debug(
+                    "event: RuntimeError (%s). Failed to call callback for: %s, %s, %s",
+                    rte.args,
                     interface_id,
                     channel_address,
                     parameter,
+                )
+            except Exception as ex:
+                _LOGGER.warning(
+                    "event: Failed to call callback for: %s, %s, %s, %s",
+                    interface_id,
+                    channel_address,
+                    parameter,
+                    ex.args,
                 )
 
     @callback_system_event(HH_EVENT_ERROR)

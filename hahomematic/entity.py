@@ -320,6 +320,13 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
             if self._type == TYPE_STRING:
                 return str(value)  # type: ignore[return-value]
         except ValueError:
+            _LOGGER.debug(
+                "_convert_value: conversion failed for %s, %s, %s, value: (%s)",
+                self._device.interface_id,
+                self.channel_address,
+                self.parameter,
+                value,
+            )
             return None  # type: ignore[return-value]
         return value
 
