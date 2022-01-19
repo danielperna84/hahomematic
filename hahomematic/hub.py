@@ -217,8 +217,9 @@ class HmHub(BaseHubEntity):
 
     async def fetch_data(self) -> None:
         """fetch data for the hub."""
-        await self._update_entities()
-        await self._update_hub_state()
+        if self._central.available:
+            await self._update_entities()
+            await self._update_hub_state()
 
     async def _update_hub_state(self) -> None:
         """Retrieve latest service_messages."""

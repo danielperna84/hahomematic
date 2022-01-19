@@ -67,14 +67,14 @@ CLICK_EVENTS = [
     EVENT_PRESS_LONG_START,
 ]
 
-BUTTON_ACTIONS = ["RESET_MOTION", "RESET_PRESENCE"]
-
-SPECIAL_EVENTS = [
+HIDDEN_PARAMETERS = [
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
 ]
+
+BUTTON_ACTIONS = ["RESET_MOTION", "RESET_PRESENCE"]
 
 # Parameters within the paramsets for which we create entities.
 WHITELIST_PARAMETERS = ["ERROR_JAMMED", "SMOKE_DETECTOR_ALARM_STATUS"]
@@ -150,8 +150,6 @@ IGNORED_PARAMETERS_WILDCARDS_START = [
 ]
 
 ACCEPT_PARAMETER_ONLY_ON_CHANNEL = {"LOWBAT": 0}
-
-HIDDEN_PARAMETERS = [EVENT_UN_REACH, EVENT_STICKY_UN_REACH, EVENT_CONFIG_PENDING]
 
 BACKEND_CCU = "CCU"
 BACKEND_HOMEGEAR = "Homegear"
@@ -306,7 +304,7 @@ class HmEventType(Enum):
     """Enum with hahomematic event types."""
 
     KEYPRESS = "homematic.keypress"
-    SPECIAL = "homematic.special"
+    DEVICE = "homematic.device"
 
     def __str__(self) -> str:
         """Return self.value."""

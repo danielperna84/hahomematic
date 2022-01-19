@@ -113,7 +113,7 @@ class CallbackEntity(ABC):
     def _set_last_update(self) -> None:
         self.last_update = datetime.now()
 
-    def _updated_within_minutes(self, minutes: int = 10) -> bool:
+    def _updated_within_minutes(self, minutes: int = 5) -> bool:
         delta = datetime.now() - self.last_update
         if delta.seconds < minutes * 60:
             return True
@@ -400,6 +400,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         value = self._convert_value(raw_value)
         if self._value is value:
             return
+        old_value = self._value
 
         _LOGGER.debug(
             "event: %s, %s, %s, new: %s, old: %s",
@@ -431,9 +432,41 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             )
             return
 
-        if self._value is not value:
-            self._value = value
-            self.update_entity(self.unique_id)
+        if self._value == value:
+            # stop here, if value has not changed
+            return
+
+        self._value = value
+        self.update_entity(self.unique_id)
+
+        # send device events, if value has changed
+        if self.parameter in (
+            EVENT_CONFIG_PENDING,
+            EVENT_UN_REACH,
+            EVENT_STICKY_UN_REACH,
+        ):
+            if self.parameter in (EVENT_UN_REACH, EVENT_STICKY_UN_REACH):
+                self._device.update_device(self.unique_id)
+
+            if self.parameter == EVENT_CONFIG_PENDING:
+                if value is False and old_value is True:
+                    self._central.create_task(self._device.reload_paramsets())
+                return None
+
+            if callable(self._central.callback_ha_event):
+                self._central.callback_ha_event(
+                    HmEventType.DEVICE,
+                    self._get_event_data(value),
+                )
+
+    def _get_event_data(self, value: Any = None) -> dict[str, Any]:
+        """Get the event_data."""
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: self.device_address,
+            ATTR_PARAMETER: self.parameter,
+            ATTR_VALUE: value,
+        }
 
     @property
     def value(self) -> ParameterType | None:
@@ -447,10 +480,18 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
         return state_attr
 
+    async def init_entity_data(self) -> int:
+        """initial data load"""
+        await self._device.init_device_entities()
+        if not self.available:
+            return DATA_NO_LOAD
+        return await self.load_data()
+
     async def load_data(self) -> int:
         """Load data"""
         if self._updated_within_minutes():
             return DATA_NO_LOAD
+
         try:
             if self._operations & OPERATION_READ:
                 self._value = self._convert_value(
@@ -460,7 +501,6 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
                 )
                 self.update_entity()
 
-            self.update_entity(self.unique_id)
             return DATA_LOAD_SUCCESS
         except BaseHomematicException as bhe:
             _LOGGER.debug(
@@ -642,9 +682,12 @@ class CustomEntity(BaseEntity, CallbackEntity):
         entity.unregister_update_callback(self.update_entity)
         del self.data_entities[field_name]
 
-    async def load_data(self) -> int:
-        """Load data"""
+    async def init_entity_data(self) -> int:
+        """Init entity data"""
+        await self._device.init_device_entities()
         if self._updated_within_minutes():
+            return DATA_NO_LOAD
+        if not self.available:
             return DATA_NO_LOAD
 
         for entity in self.data_entities.values():
@@ -847,66 +890,6 @@ class ClickEvent(BaseEvent):
             self._central.callback_ha_event(
                 self.event_type,
                 self.get_event_data(),
-            )
-
-
-class SpecialEvent(BaseEvent):
-    """
-    class for handling special events.
-    """
-
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_id: str,
-        channel_address: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        """
-        Initialize the event handler.
-        """
-        super().__init__(
-            device=device,
-            unique_id=unique_id,
-            channel_address=channel_address,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            event_type=HmEventType.SPECIAL,
-        )
-
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        return {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.device_address,
-            ATTR_PARAMETER: self.parameter,
-            ATTR_VALUE: value,
-        }
-
-    def fire_event(self, value: bool | None) -> None:
-        """
-        Do what is needed to fire an event.
-        """
-        if self._value == value:
-            return None
-        old_value = self._value
-        self._set_last_update()
-        self._value = value
-
-        if self.parameter == EVENT_CONFIG_PENDING:
-            if value is False and old_value is True:
-                self._central.create_task(self._device.reload_paramsets())
-            return None
-
-        if self.parameter in (EVENT_UN_REACH, EVENT_STICKY_UN_REACH):
-            self._device.update_device(self.unique_id)
-            # no return here. Event should also be fired for persistent notification.
-
-        if callable(self._central.callback_ha_event):
-            self._central.callback_ha_event(
-                self.event_type,
-                self.get_event_data(value),
             )
 
 
