@@ -18,6 +18,8 @@ from hahomematic.const import (
     ATTR_HM_TYPE,
     BUTTON_ACTIONS,
     CLICK_EVENTS,
+    DATA_LOAD_SUCCESS,
+    EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
     FLAG_INTERAL,
@@ -33,7 +35,6 @@ from hahomematic.const import (
     OPERATION_WRITE,
     PARAMSET_VALUES,
     RELEVANT_PARAMSETS,
-    SPECIAL_EVENTS,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_ENUM,
@@ -50,7 +51,6 @@ from hahomematic.entity import (
     ClickEvent,
     CustomEntity,
     GenericEntity,
-    SpecialEvent,
 )
 from hahomematic.helpers import generate_unique_id, get_device_channel, get_device_name
 from hahomematic.internal.action import HmAction
@@ -158,6 +158,36 @@ class HmDevice:
     def room(self) -> str | None:
         """Return the room."""
         return self._central.rooms.get_room(self._device_address)
+
+    @property
+    def _e_unreach(self) -> GenericEntity | None:
+        """Return th UNREACH entity"""
+        return self.entities.get((f"{self._device_address}:0", EVENT_UN_REACH))
+
+    @property
+    def _e_sticky_un_reach(self) -> GenericEntity | None:
+        """Return th STICKY_UN_REACH entity"""
+        return self.entities.get((f"{self._device_address}:0", EVENT_STICKY_UN_REACH))
+
+    @property
+    def _e_config_pending(self) -> GenericEntity | None:
+        """Return th CONFIG_PENDING entity"""
+        return self.entities.get((f"{self._device_address}:0", EVENT_CONFIG_PENDING))
+
+    async def init_device_entities(self) -> None:
+        """initialize the device relevant entities."""
+        data_load: bool = False
+        if self._e_unreach is not None:
+            if DATA_LOAD_SUCCESS == await self._e_unreach.load_data():
+                data_load = True
+        if self._e_sticky_un_reach is not None:
+            if DATA_LOAD_SUCCESS == await self._e_sticky_un_reach.load_data():
+                data_load = True
+        if self._e_config_pending is not None:
+            if DATA_LOAD_SUCCESS == await self._e_config_pending.load_data():
+                data_load = True
+        if data_load:
+            self._set_last_update()
 
     def add_hm_entity(self, hm_entity: BaseEntity) -> None:
         """Add a hm entity to a device."""
@@ -270,14 +300,22 @@ class HmDevice:
         """Return the availability of the device."""
         if self._available is False:
             return False
-        un_reach = self.action_events.get((f"{self._device_address}:0", EVENT_UN_REACH))
+        un_reach = self._e_unreach
         if un_reach is None:
-            un_reach = self.action_events.get(
-                (f"{self._device_address}:0", EVENT_STICKY_UN_REACH)
-            )
+            un_reach = self._e_sticky_un_reach
         if un_reach is not None and un_reach.value is not None:
             return not un_reach.value
         return True
+
+    @property
+    def config_pending(self) -> bool:
+        """Return if a config change of the device is pending."""
+        if (
+            self._e_config_pending is not None
+            and self._e_config_pending.value is not None
+        ):
+            return self._e_config_pending.value is True
+        return False
 
     def set_availability(self, value: bool) -> None:
         """Set the availability of the device."""
@@ -326,8 +364,9 @@ class HmDevice:
                 ).items():
                     entity: GenericEntity | None
 
-                    if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT and (
-                        parameter in CLICK_EVENTS or parameter in SPECIAL_EVENTS
+                    if (
+                        parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
+                        and parameter in CLICK_EVENTS
                     ):
                         self.create_event(
                             channel_address=channel_address,
@@ -351,7 +390,7 @@ class HmDevice:
                             parameter,
                         )
                         continue
-                    if not (parameter in CLICK_EVENTS or parameter in SPECIAL_EVENTS):
+                    if parameter not in CLICK_EVENTS:
                         entity = self.create_entity(
                             channel_address=channel_address,
                             parameter=parameter,
@@ -432,14 +471,6 @@ class HmDevice:
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
             if parameter in CLICK_EVENTS:
                 action_event = ClickEvent(
-                    device=self,
-                    unique_id=unique_id,
-                    channel_address=channel_address,
-                    parameter=parameter,
-                    parameter_data=parameter_data,
-                )
-            elif parameter in SPECIAL_EVENTS:
-                action_event = SpecialEvent(
                     device=self,
                     unique_id=unique_id,
                     channel_address=channel_address,
