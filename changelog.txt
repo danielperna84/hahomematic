@@ -1,6 +1,7 @@
 Version 0.26.0 (2022-01-22)
 - Make whitelist for parameter depend on the device_type/sub_type
-- Add additional params for HM-SEC-WIN
+- Add additional params for HM-SEC-Win (DIRECTION, ERROR, WORKING, STATUS)
+- Add additional params for HM-SEC-Key (DIRECTION, ERROR)
 
 Version 0.25.0 (2022-01-19)
 - Remove SpecialEvents

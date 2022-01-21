@@ -766,12 +766,15 @@ def _parameter_is_whitelisted(
     device_type: str, sub_type: str | None, parameter: str
 ) -> bool:
     """Return if parameter is white listed"""
-    if device_type in WHITELIST_PARAMETERS_BY_DEVICE:
-        whitelist_parameters = WHITELIST_PARAMETERS_BY_DEVICE[device_type]
-        if parameter in whitelist_parameters:
-            return True
     if sub_type and sub_type in WHITELIST_PARAMETERS_BY_DEVICE:
         whitelist_parameters = WHITELIST_PARAMETERS_BY_DEVICE[sub_type]
         if parameter in whitelist_parameters:
             return True
+
+    if device_type.startswith(tuple(WHITELIST_PARAMETERS_BY_DEVICE)):
+        for device, whitelist_parameters in WHITELIST_PARAMETERS_BY_DEVICE.items():
+            if device_type.startswith(device):
+                if parameter in whitelist_parameters:
+                    return True
+
     return False

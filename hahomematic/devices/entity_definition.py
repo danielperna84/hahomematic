@@ -400,7 +400,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 "ERROR_JAMMED",
             },
         },
-        "HM-Sec-Winw": {
+        # HM-Sec-Win*
+        "HM-Sec-Win": {
             1: {
                 "DIRECTION",
                 "WORKING",
@@ -409,6 +410,13 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             2: {
                 "LEVEL",
                 "STATUS",
+            },
+        },
+        # HM-Sec-Key*
+        "HM-Sec-Key": {
+            1: {
+                "DIRECTION",
+                "ERROR",
             },
         },
     },
@@ -505,9 +513,10 @@ def get_default_entities() -> dict[int, set[str]]:
 
 def get_additional_entities_by_device_type(device_type: str) -> dict[int, set[str]]:
     """Return the additional entities."""
-    return deepcopy(
-        entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].get(device_type, {})
-    )
+    for device, additional_entities in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].items():
+        if device_type.startswith(device):
+            return deepcopy(additional_entities)
+    return {}
 
 
 def get_include_default_entities(device_enum: EntityDefinition) -> bool:
