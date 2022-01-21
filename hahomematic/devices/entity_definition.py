@@ -400,6 +400,17 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 "ERROR_JAMMED",
             },
         },
+        "HM-Sec-Winw": {
+            1: {
+                "DIRECTION",
+                "WORKING",
+                "ERROR",
+            },
+            2: {
+                "LEVEL",
+                "STATUS",
+            },
+        },
     },
 }
 
