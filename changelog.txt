@@ -1,3 +1,6 @@
+Version 0.26.0 (2022-01-22)
+- Make whitelist for parameter depend on the device_type/sub_type
+
 Version 0.25.0 (2022-01-19)
 - Remove SpecialEvents
 - Make UNREACH, STICKY_UNREACH, CONFIG_PENDING generic entities
