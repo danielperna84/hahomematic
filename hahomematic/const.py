@@ -80,6 +80,7 @@ BUTTON_ACTIONS = ["RESET_MOTION", "RESET_PRESENCE"]
 WHITELIST_PARAMETERS_BY_DEVICE = {
     "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
     "SD": ["SMOKE_DETECTOR_ALARM_STATUS"],  # HmIP-SWSD
+    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],
 }
 
 # Parameters within the paramsets for which we don't create entities.
