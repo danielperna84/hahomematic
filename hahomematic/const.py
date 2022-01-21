@@ -77,7 +77,10 @@ HIDDEN_PARAMETERS = [
 BUTTON_ACTIONS = ["RESET_MOTION", "RESET_PRESENCE"]
 
 # Parameters within the paramsets for which we create entities.
-WHITELIST_PARAMETERS = ["ERROR_JAMMED", "SMOKE_DETECTOR_ALARM_STATUS"]
+WHITELIST_PARAMETERS_BY_DEVICE = {
+    "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
+    "SD": ["SMOKE_DETECTOR_ALARM_STATUS"],  # HmIP-SWSD
+}
 
 # Parameters within the paramsets for which we don't create entities.
 IGNORED_PARAMETERS = [

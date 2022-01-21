@@ -41,7 +41,7 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
-    WHITELIST_PARAMETERS,
+    WHITELIST_PARAMETERS_BY_DEVICE,
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
@@ -384,7 +384,14 @@ class HmDevice:
                     if (
                         not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
-                    ) or parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL:
+                    ) or (
+                        parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL
+                        and not _parameter_is_whitelisted(
+                            device_type=self.device_type,
+                            sub_type=self.sub_type,
+                            parameter=parameter,
+                        )
+                    ):
                         _LOGGER.debug(
                             "create_entities: Skipping %s (no event or internal)",
                             parameter,
@@ -489,7 +496,10 @@ class HmDevice:
         platform should be used, and creates the required entities.
         """
         if _ignore_parameter(
-            parameter=parameter, channel_no=get_device_channel(channel_address)
+            device_type=self.device_type,
+            sub_type=self.sub_type,
+            parameter=parameter,
+            channel_no=get_device_channel(channel_address),
         ):
             _LOGGER.debug(
                 "create_entity: Ignoring parameter: %s (%s)", parameter, channel_address
@@ -732,9 +742,13 @@ def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     return False
 
 
-def _ignore_parameter(parameter: str, channel_no: int) -> bool:
+def _ignore_parameter(
+    device_type: str, sub_type: str | None, parameter: str, channel_no: int
+) -> bool:
     """Check if parameter can be ignored."""
-    if parameter in WHITELIST_PARAMETERS:
+    if _parameter_is_whitelisted(
+        device_type=device_type, sub_type=sub_type, parameter=parameter
+    ):
         return False
     if parameter in IGNORED_PARAMETERS:
         return True
@@ -745,5 +759,19 @@ def _ignore_parameter(parameter: str, channel_no: int) -> bool:
     if (accept_channel := ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)) is not None:
         if accept_channel != channel_no:
             return True
+    return False
 
+
+def _parameter_is_whitelisted(
+    device_type: str, sub_type: str | None, parameter: str
+) -> bool:
+    """Return if parameter is white listed"""
+    if device_type in WHITELIST_PARAMETERS_BY_DEVICE:
+        whitelist_parameters = WHITELIST_PARAMETERS_BY_DEVICE[device_type]
+        if parameter in whitelist_parameters:
+            return True
+    if sub_type and sub_type in WHITELIST_PARAMETERS_BY_DEVICE:
+        whitelist_parameters = WHITELIST_PARAMETERS_BY_DEVICE[sub_type]
+        if parameter in whitelist_parameters:
+            return True
     return False
