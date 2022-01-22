@@ -91,6 +91,7 @@ class EntityDefinition(Enum):
     IP_THERMOSTAT_GROUP = "IPThermostatGroup"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
+    RF_DIMMER_WITH_VIRT_CHANNEL = "RfDimmerWithVirtChannel"
     RF_LOCK = "RfLock"
     RF_THERMOSTAT = "RfThermostat"
     RF_THERMOSTAT_GROUP = "RfThermostatGroup"
@@ -319,6 +320,16 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 },
             },
         },
+        EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL: {
+            ED_DEVICE_GROUP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_SECONDARY_CHANNELS: [1, 2],
+                ED_REPEATABLE_FIELDS: {
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_RAMP_TIME: "RAMP_TIME",
+                },
+            },
+        },
         EntityDefinition.RF_LOCK: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
@@ -513,7 +524,9 @@ def get_default_entities() -> dict[int, set[str]]:
 
 def get_additional_entities_by_device_type(device_type: str) -> dict[int, set[str]]:
     """Return the additional entities."""
-    for device, additional_entities in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].items():
+    for data in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].items():
+        device: str = str(data[0])
+        additional_entities: dict[int, set[str]] = data[1]
         if device_type.startswith(device):
             return deepcopy(additional_entities)
     return {}

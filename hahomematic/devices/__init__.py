@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any
 
 from hahomematic.devices import climate, cover, light, lock, switch
 
@@ -21,22 +22,27 @@ def get_device_funcs(
 
     funcs = []
     for platform_devices in _ALL_DEVICES:
-        for name, func in platform_devices.items():
-            if "*" in name:
-                name = name.replace("*", "").lower()
-                if device_type.lower().startswith(name):
-                    funcs.append(func)
-                    continue
-                if sub_type and sub_type.lower().startswith(name):
-                    funcs.append(func)
-                    continue
-            if name.lower() == device_type.lower():
-                funcs.append(func)
-                continue
-            if sub_type and sub_type.lower() == name.lower():
-                funcs.append(func)
-                continue
+        if func := _get_device_func_by_platform(
+            platform_devices=platform_devices,
+            device_type=device_type,
+            sub_type=sub_type,
+        ):
+            funcs.append(func)
     return funcs
+
+
+def _get_device_func_by_platform(
+    platform_devices: dict[str, tuple[Any, list[int]]], device_type: str, sub_type: str
+) -> tuple[Callable, list[int]] | None:
+    """Return the function to create custom entities"""
+    for name, func in platform_devices.items():
+        if name.lower() == device_type.lower():
+            return func
+        if sub_type and sub_type.lower() == name.lower():
+            return func
+        if device_type.lower().startswith(name.lower()):
+            return func
+    return None
 
 
 def is_multi_channel_device(device_type: str, sub_type: str) -> bool:

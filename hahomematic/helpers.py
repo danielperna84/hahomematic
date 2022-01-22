@@ -311,6 +311,8 @@ def get_device_channel(address: str) -> int:
     return int(address.split(":")[1])
 
 
+# Do not add: pylint disable=no-member
+# This is only an issue on MacOS
 def get_local_ip(host: str, port: int) -> str:
     """Get local_ip from socket."""
     try:
