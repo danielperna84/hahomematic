@@ -91,6 +91,7 @@ class EntityDefinition(Enum):
     IP_THERMOSTAT_GROUP = "IPThermostatGroup"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
+    RF_DIMMER_WITH_VIRT_CHANNEL = "RfDimmerWithVirtChannel"
     RF_LOCK = "RfLock"
     RF_THERMOSTAT = "RfThermostat"
     RF_THERMOSTAT_GROUP = "RfThermostatGroup"
@@ -313,6 +314,16 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         EntityDefinition.RF_DIMMER: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_RAMP_TIME: "RAMP_TIME",
+                },
+            },
+        },
+        EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL: {
+            ED_DEVICE_GROUP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_SECONDARY_CHANNELS: [1, 2],
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_RAMP_TIME: "RAMP_TIME",

@@ -347,6 +347,19 @@ def make_rf_dimmer(
     )
 
 
+def make_rf_dimmer_with_virt_channel(
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+) -> list[hm_entity.BaseEntity]:
+    """Creates homematic classic dimmer entities."""
+    return make_custom_entity(
+        device=device,
+        device_address=device_address,
+        custom_entity_class=CeDimmer,
+        device_enum=EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL,
+        group_base_channels=group_base_channels,
+    )
+
+
 def make_ip_fixed_color_light(
     device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
@@ -385,32 +398,33 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HM-DW-WM": (make_rf_dimmer, [1, 2, 3, 4]),
     "HSS-DX": (make_rf_dimmer, [1]),
     "263 132": (make_rf_dimmer, [1]),
-    "263 133": (make_rf_dimmer, [1, 2, 3]),
+    "263 133": (make_rf_dimmer_with_virt_channel, [1]),
     "263 134": (make_rf_dimmer, [1]),
     "HmIPW-DRD3": (make_ip_dimmer, [1, 5, 9, 13]),
     "HmIP-DRDI3": (make_ip_dimmer, [5, 9, 13]),
     "HmIP-SCTH230": (make_ip_dimmer, [11]),
-    "HM-LC-Dim1L-CV-2": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1L-CV": (make_rf_dimmer, [1]),
+    "HM-LC-Dim1L-CV-2": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1L-CV": (make_rf_dimmer_with_virt_channel, [1]),
     "HM-LC-Dim1L-Pl-2": (make_rf_dimmer, [1]),
-    "HM-LC-Dim1L-Pl-3": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1L-Pl": (make_rf_dimmer, [1]),
-    "HM-LC-Dim1PWM-CV-2": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1PWM-CV": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1T-CV-2": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1T-CV": (make_rf_dimmer, [1]),
+    "HM-LC-Dim1L-Pl-3": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1L-Pl": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1PWM-CV-2": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1PWM-CV": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1T-CV-2": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1T-CV": (make_rf_dimmer_with_virt_channel, [1]),
     "HM-LC-Dim1T-DR": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1T-FM-2": (make_rf_dimmer, [1, 2, 3]),
+    "HM-LC-Dim1T-FM-2": (make_rf_dimmer_with_virt_channel, [1]),
     "HM-LC-Dim1T-FM-LF": (make_rf_dimmer, [1]),
-    "HM-LC-Dim1T-FM": (make_rf_dimmer, [1]),
+    "HM-LC-Dim1T-FM": (make_rf_dimmer_with_virt_channel, [1]),
     "HM-LC-Dim1T-Pl-2": (make_rf_dimmer, [1]),
-    "HM-LC-Dim1T-Pl-3": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1T-Pl": (make_rf_dimmer, [1]),
-    "HM-LC-Dim1TPBU-FM-2": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1TPBU-FM": (make_rf_dimmer, [1, 2, 3]),
+    "HM-LC-Dim1T-Pl-3": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1T-Pl": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1TPBU-FM-2": (make_rf_dimmer_with_virt_channel, [1]),
+    "HM-LC-Dim1TPBU-FM": (make_rf_dimmer_with_virt_channel, [1]),
     "HM-LC-Dim2L-CV": (make_rf_dimmer, [1, 2]),
-    "HM-LC-Dim2L-SM-2": (make_rf_dimmer, [1, 2, 3, 4]),
-    "HM-LC-Dim2L-SM": (make_rf_dimmer, [1, 2]),
-    "HM-LC-Dim2T-SM-2": (make_rf_dimmer, [1, 2, 3, 4]),
-    "HM-LC-Dim2T-SM": (make_rf_dimmer, [1, 2]),
+    "HM-LC-Dim2L-SM-2": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
+    "HM-LC-Dim2L-SM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
+    "HM-LC-Dim2T-SM-2": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
+    "HM-LC-Dim2T-SM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
+    "OLIGO.smart.iq.HM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
 }
