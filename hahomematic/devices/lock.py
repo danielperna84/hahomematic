@@ -173,5 +173,5 @@ def make_rf_lock(
 # device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-DLD": (make_ip_lock, [1]),
-    "HM-Sec-Key*": (make_rf_lock, [1]),
+    "HM-Sec-Key": (make_rf_lock, [1]),
 }

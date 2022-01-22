@@ -357,5 +357,5 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "263 147": (make_rf_blind, [1]),
     "HM-LC-BlX": (make_rf_blind, [1]),
     "HM-Sec-Win": (make_rf_blind, [1]),
-    "HMW-LC-Bl1*": (make_rf_blind, [3]),
+    "HMW-LC-Bl1": (make_rf_blind, [3]),
 }

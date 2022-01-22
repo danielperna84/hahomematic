@@ -393,7 +393,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIPW-WRC6": (make_ip_simple_fixed_color_light, [7, 8, 9, 10, 11, 12]),
     "HmIP-BDT": (make_ip_dimmer, [3]),
     "HmIP-FDT": (make_ip_dimmer, [1]),
-    "HmIP-PDT*": (make_ip_dimmer, [2]),
+    "HmIP-PDT": (make_ip_dimmer, [2]),
     "HMW-LC-Dim1L-DR": (make_rf_dimmer, [3]),
     "HM-DW-WM": (make_rf_dimmer, [1, 2, 3, 4]),
     "HSS-DX": (make_rf_dimmer, [1]),

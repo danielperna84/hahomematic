@@ -57,8 +57,8 @@ async def test_central(central, loop) -> None:
                 parameters.append(entity.parameter)
 
     assert len(data) == 342
-    assert len(custom_entities) == 211
-    assert len(ce_channels) == 85
+    assert len(custom_entities) == 218
+    assert len(ce_channels) == 87
     assert len(entity_types) == 6
 
     assert len(parameters) == 174
