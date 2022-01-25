@@ -450,7 +450,9 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
 
             if self.parameter == EVENT_CONFIG_PENDING:
                 if value is False and old_value is True:
-                    self._central.create_task(self._device.reload_paramsets())
+                    self._central.create_task(
+                        self._device.reload_paramset_descriptions()
+                    )
                 return None
 
             if callable(self._central.callback_ha_event):

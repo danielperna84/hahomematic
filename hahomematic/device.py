@@ -324,7 +324,7 @@ class HmDevice:
             for entity in self.entities.values():
                 entity.update_entity()
 
-    async def reload_paramsets(self) -> None:
+    async def reload_paramset_descriptions(self) -> None:
         """Reload paramset for device."""
         for entity in self.entities.values():
             for paramset in RELEVANT_PARAMSETS:
@@ -349,7 +349,9 @@ class HmDevice:
                     channel_address,
                 )
                 continue
-            for paramset in self._central.paramset_descriptions.get_by_interface_channel_address(
+            for (
+                paramset
+            ) in self._central.paramset_descriptions.get_by_interface_channel_address(
                 interface_id=self._interface_id, channel_address=channel_address
             ):
                 if paramset != PARAMSET_VALUES:
@@ -681,7 +683,9 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
-        if not central.paramset_descriptions.get_by_interface(interface_id=interface_id):
+        if not central.paramset_descriptions.get_by_interface(
+            interface_id=interface_id
+        ):
             _LOGGER.debug(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,
