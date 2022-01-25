@@ -37,6 +37,11 @@ setup(
     python_requires=">=3.9",
     install_requires=REQUIRES,
     keywords=["home", "assistant", "homematic"],
+    entry_points={
+        'console_scripts': [
+            'hahomematic = hahomematic.hmcli:main'
+        ]
+    },
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
