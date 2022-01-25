@@ -1,3 +1,6 @@
+Version 0.27.2 (2022-01-25)
+- Optimize data_load
+
 Version 0.27.1 (2022-01-25)
 - Fix naming paramset -> paramset_description pt2
 - Optimize data_load by using get_paramset

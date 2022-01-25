@@ -180,13 +180,13 @@ class HmDevice:
         """initialize the device relevant entities."""
         data_load: bool = False
         if self._e_unreach is not None:
-            if DATA_LOAD_SUCCESS == await self._e_unreach.load_data():
+            if DATA_LOAD_SUCCESS == await self._e_unreach.load_entity_data():
                 data_load = True
         if self._e_sticky_un_reach is not None:
-            if DATA_LOAD_SUCCESS == await self._e_sticky_un_reach.load_data():
+            if DATA_LOAD_SUCCESS == await self._e_sticky_un_reach.load_entity_data():
                 data_load = True
         if self._e_config_pending is not None:
-            if DATA_LOAD_SUCCESS == await self._e_config_pending.load_data():
+            if DATA_LOAD_SUCCESS == await self._e_config_pending.load_entity_data():
                 data_load = True
         if data_load:
             self._set_last_update()
@@ -336,7 +336,7 @@ class HmDevice:
                 entity.update_parameter_data()
         self.update_device()
 
-    async def load_data(self, channel_address: str) -> int:
+    async def load_channel_data(self, channel_address: str) -> int:
         """Load data"""
         try:
             paramset = await self._client.get_paramset(
