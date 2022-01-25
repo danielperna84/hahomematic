@@ -88,7 +88,6 @@ class CallbackEntity(ABC):
         """
         Do what is needed when the value of the entity has been updated.
         """
-        self._set_last_update()
         for _callback in self._update_callbacks:
             _callback(*args)
 
@@ -397,10 +396,11 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         """
         Handle event for which this entity has subscribed.
         """
-        value = self._convert_value(raw_value)
-        if self._value is value:
-            return
         old_value = self._value
+
+        value = self._convert_value(raw_value)
+        if self._value == value:
+            return
 
         _LOGGER.debug(
             "event: %s, %s, %s, new: %s, old: %s",
@@ -430,10 +430,6 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
                 parameter,
                 self.parameter,
             )
-            return
-
-        if self._value == value:
-            # stop here, if value has not changed
             return
 
         self.set_value(value=value)
@@ -476,9 +472,11 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
 
     def set_value(self, value: ParameterType) -> None:
         """Set value to the entity."""
-        if self._value != value:
-            self._value = self._convert_value(value)
+        converted_value = self._convert_value(value)
+        if self._value != converted_value:
+            self._value = converted_value
             self.update_entity()
+        self._set_last_update()
 
     @property
     def attributes(self) -> dict[str, Any]:
