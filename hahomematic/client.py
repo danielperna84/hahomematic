@@ -300,10 +300,14 @@ class Client(ABC):
         """Set paramsets manually."""
         try:
             if rx_mode:
-                await self._proxy.putParamset(channel_address, paramset_key, value, rx_mode)
+                await self._proxy.putParamset(
+                    channel_address, paramset_key, value, rx_mode
+                )
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, value)
-            _LOGGER.debug("put_paramset: %s, %s, %s", channel_address, paramset_key, value)
+            _LOGGER.debug(
+                "put_paramset: %s, %s, %s", channel_address, paramset_key, value
+            )
         except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "put_paramset failed: %s (%s) %s, %s, %s",
@@ -314,7 +318,9 @@ class Client(ABC):
                 value,
             )
 
-    async def fetch_paramset_description(self, channel_address: str, paramset: str) -> None:
+    async def fetch_paramset_description(
+        self, channel_address: str, paramset: str
+    ) -> None:
         """
         Fetch a specific paramset and add it to the known ones.
         """
@@ -395,7 +401,9 @@ class Client(ABC):
         all_paramsets: dict[str, dict[str, Any]] = {}
         for device_description in device_descriptions:
             all_paramsets.update(
-                await self.get_paramset_descriptions(device_description=device_description)
+                await self.get_paramset_descriptions(
+                    device_description=device_description
+                )
             )
         return all_paramsets
 
