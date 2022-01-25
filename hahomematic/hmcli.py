@@ -5,12 +5,13 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from typing import Any
 from xmlrpc.client import ServerProxy
 
 from hahomematic.helpers import build_api_url, get_tls_context
 
 
-def main():
+def main() -> None:
     """Main function."""
     parser = argparse.ArgumentParser(
         description="Commandline tool to query HomeMatic hubs via XML-RPC."
@@ -87,6 +88,7 @@ def main():
                 print(res)
             sys.exit(0)
         elif args.paramset == "VALUES" and args.value:
+            value: Any
             if args.type == "int":
                 value = int(args.value)
             elif args.type == "float":
@@ -98,11 +100,13 @@ def main():
             proxy.setValue(args.address, args.parameter, value)
             sys.exit(0)
         elif args.paramset == "MASTER" and args.value is None:
-            res = proxy.getParamset(args.address, args.paramset).get(args.parameter)
-            if args.json:
-                print(json.dumps({args.parameter: res}))
-            else:
-                print(res)
+            paramset: dict[str, Any] | None
+            if paramset := proxy.getParamset(args.address, args.paramset):  # type: ignore
+                if param_value := paramset.get(args.parameter):
+                    if args.json:
+                        print(json.dumps({args.parameter: param_value}))
+                    else:
+                        print(param_value)
             sys.exit(0)
         elif args.paramset == "MASTER" and args.value:
             if args.type == "int":

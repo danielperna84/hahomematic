@@ -519,10 +519,7 @@ class CentralUnit:
         return 0
 
     async def get_value(
-        self,
-        interface_id: str,
-        channel_address: str,
-        parameter: str
+        self, interface_id: str, channel_address: str, parameter: str
     ) -> Any | None:
         """Get a single value on paramset VALUES."""
 
