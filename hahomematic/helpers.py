@@ -139,7 +139,7 @@ def get_entity_name(
             d_name = entity_name.split(":")[0]
             p_name = parameter.title().replace("_", " ")
             c_name = ""
-            if central.paramsets.has_multiple_channels(
+            if central.paramset_descriptions.has_multiple_channels(
                 channel_address=channel_address, parameter=parameter
             ):
                 c_no = entity_name.split(":")[1]

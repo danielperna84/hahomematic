@@ -341,7 +341,7 @@ class HmDevice:
         """
         new_entities: list[BaseEntity] = []
         for channel_address in self._channels:
-            if not self._central.paramsets.get_by_interface_channel_address(
+            if not self._central.paramset_descriptions.get_by_interface_channel_address(
                 interface_id=self._interface_id, channel_address=channel_address
             ):
                 _LOGGER.debug(
@@ -349,7 +349,7 @@ class HmDevice:
                     channel_address,
                 )
                 continue
-            for paramset in self._central.paramsets.get_by_interface_channel_address(
+            for paramset in self._central.paramset_descriptions.get_by_interface_channel_address(
                 interface_id=self._interface_id, channel_address=channel_address
             ):
                 if paramset != PARAMSET_VALUES:
@@ -357,7 +357,7 @@ class HmDevice:
                 for (
                     parameter,
                     parameter_data,
-                ) in self._central.paramsets.get_by_interface_channel_address_paramset(
+                ) in self._central.paramset_descriptions.get_by_interface_channel_address_paramset_key(
                     interface_id=self._interface_id,
                     channel_address=channel_address,
                     paramset=paramset,
@@ -681,7 +681,7 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
-        if not central.paramsets.get_by_interface(interface_id=interface_id):
+        if not central.paramset_descriptions.get_by_interface(interface_id=interface_id):
             _LOGGER.debug(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,
