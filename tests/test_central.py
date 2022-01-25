@@ -95,7 +95,7 @@ async def test_all_parameters(central, pydev_ccu, loop) -> None:
     """Test device export."""
     assert central
     assert pydev_ccu
-    parameters = central.paramsets.get_all_parameters()
+    parameters = central.paramset_descriptions.get_all_parameters()
     assert parameters
 
 

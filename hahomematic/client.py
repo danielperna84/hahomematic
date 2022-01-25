@@ -330,7 +330,7 @@ class Client(ABC):
             parameter_data = await self._proxy.getParamsetDescription(
                 channel_address, paramset
             )
-            self._central.paramsets.add(
+            self._central.paramset_descriptions.add(
                 interface_id=self.interface_id,
                 channel_address=channel_address,
                 paramset=paramset,
@@ -344,7 +344,7 @@ class Client(ABC):
                 paramset,
                 channel_address,
             )
-        await self._central.paramsets.save()
+        await self._central.paramset_descriptions.save()
 
     async def fetch_paramset_descriptions(
         self, device_description: dict[str, Any], update: bool = False
@@ -358,7 +358,7 @@ class Client(ABC):
         for address, paramsets in data.items():
             _LOGGER.debug("fetch_paramsets for %s", address)
             for paramset, paramset_description in paramsets.items():
-                self._central.paramsets.add(
+                self._central.paramset_descriptions.add(
                     interface_id=self.interface_id,
                     channel_address=address,
                     paramset=paramset,
@@ -431,7 +431,7 @@ class Client(ABC):
             ),
             update=True,
         )
-        await self._central.paramsets.save()
+        await self._central.paramset_descriptions.save()
 
 
 class ClientCCU(Client):

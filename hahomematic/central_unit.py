@@ -75,7 +75,7 @@ class CentralUnit:
         self._model: str | None = None
 
         # Caches for CCU data
-        self.paramsets: ParamsetCache = ParamsetCache(central=self)
+        self.paramset_descriptions: ParamsetDescriptionCache = ParamsetDescriptionCache(central=self)
         self.names: NamesCache = NamesCache(central=self)
         self.raw_devices: RawDevicesCache = RawDevicesCache(central=self)
         self.rooms: RoomCache = RoomCache(central=self)
@@ -217,7 +217,7 @@ class CentralUnit:
         """Load files to caches."""
         try:
             await self.raw_devices.load()
-            await self.paramsets.load()
+            await self.paramset_descriptions.load()
             await self.names.load()
         except json.decoder.JSONDecodeError:
             _LOGGER.warning("load_caches: Failed to load caches.")
@@ -275,7 +275,7 @@ class CentralUnit:
         for address in addresses:
             try:
                 if ":" in address:
-                    self.paramsets.remove(
+                    self.paramset_descriptions.remove(
                         interface_id=interface_id, channel_address=address
                     )
                 self.names.remove(address=address)
@@ -285,7 +285,7 @@ class CentralUnit:
                     del self.hm_devices[address]
             except KeyError:
                 _LOGGER.warning("delete_devices: Failed to delete: %s", address)
-        await self.paramsets.save()
+        await self.paramset_descriptions.save()
         await self.names.save()
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
@@ -320,7 +320,7 @@ class CentralUnit:
             except Exception as err:
                 _LOGGER.error("add_new_devices: Exception (%s)", err.args)
         await self.raw_devices.save()
-        await self.paramsets.save()
+        await self.paramset_descriptions.save()
         await client.fetch_names()
         await self.names.save()
         create_devices(self)
@@ -630,7 +630,7 @@ class CentralUnit:
         Clear all stored data.
         """
         await self.raw_devices.clear()
-        await self.paramsets.clear()
+        await self.paramset_descriptions.clear()
         await self.names.clear()
         await self.rooms.clear()
 
@@ -1039,16 +1039,16 @@ class NamesCache(BaseCache):
             del self._names_cache[address]
 
 
-class ParamsetCache(BaseCache):
-    """Cache for paramsets."""
+class ParamsetDescriptionCache(BaseCache):
+    """Cache for paramset descriptions."""
 
     def __init__(self, central: CentralUnit):
         # {interface_id, {channel_address, paramsets}}
-        self._paramsets_cache: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
+        self._paramset_descriptions_cache: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
         super().__init__(
             central=central,
             filename=FILE_PARAMSETS,
-            cache_dict=self._paramsets_cache,
+            cache_dict=self._paramset_descriptions_cache,
         )
 
         # {(device_address, parameter), [channel_no]}
@@ -1062,41 +1062,41 @@ class ParamsetCache(BaseCache):
         paramset_description: dict[str, Any],
     ) -> None:
         """Add paramset description to cache."""
-        if interface_id not in self._paramsets_cache:
-            self._paramsets_cache[interface_id] = {}
-        if channel_address not in self._paramsets_cache[interface_id]:
-            self._paramsets_cache[interface_id][channel_address] = {}
-        if paramset not in self._paramsets_cache[interface_id][channel_address]:
-            self._paramsets_cache[interface_id][channel_address][paramset] = {}
+        if interface_id not in self._paramset_descriptions_cache:
+            self._paramset_descriptions_cache[interface_id] = {}
+        if channel_address not in self._paramset_descriptions_cache[interface_id]:
+            self._paramset_descriptions_cache[interface_id][channel_address] = {}
+        if paramset not in self._paramset_descriptions_cache[interface_id][channel_address]:
+            self._paramset_descriptions_cache[interface_id][channel_address][paramset] = {}
 
-        self._paramsets_cache[interface_id][channel_address][
+        self._paramset_descriptions_cache[interface_id][channel_address][
             paramset
         ] = paramset_description
 
     def remove(self, interface_id: str, channel_address: str) -> None:
-        """Remove paramset from cache."""
-        if interface := self._paramsets_cache.get(interface_id):
+        """Remove paramset descriptions from cache."""
+        if interface := self._paramset_descriptions_cache.get(interface_id):
             if channel_address in interface:
-                del self._paramsets_cache[interface_id][channel_address]
+                del self._paramset_descriptions_cache[interface_id][channel_address]
 
     def get_by_interface(
         self, interface_id: str
     ) -> dict[str, dict[str, dict[str, Any]]]:
         """Get paramset descriptions by interface from cache."""
-        return self._paramsets_cache.get(interface_id, {})
+        return self._paramset_descriptions_cache.get(interface_id, {})
 
     def get_by_interface_channel_address(
         self, interface_id: str, channel_address: str
     ) -> dict[str, dict[str, Any]]:
         """Get paramset descriptions from cache by interface, channel_address."""
-        return self._paramsets_cache.get(interface_id, {}).get(channel_address, {})
+        return self._paramset_descriptions_cache.get(interface_id, {}).get(channel_address, {})
 
-    def get_by_interface_channel_address_paramset(
+    def get_by_interface_channel_address_paramset_key(
         self, interface_id: str, channel_address: str, paramset: str
     ) -> dict[str, Any]:
-        """Get paramset description by interface, channel_address, paramset in cache."""
+        """Get paramset descriptions by interface, channel_address, paramset_key in cache."""
         return (
-            self._paramsets_cache.get(interface_id, {})
+            self._paramset_descriptions_cache.get(interface_id, {})
             .get(channel_address, {})
             .get(paramset, {})
         )
@@ -1114,7 +1114,7 @@ class ParamsetCache(BaseCache):
     def get_all_parameters(self) -> list[str]:
         """Return all parameters"""
         parameters: set[str] = set()
-        for channel in self._paramsets_cache.values():
+        for channel in self._paramset_descriptions_cache.values():
             for channel_address in channel:
                 for paramset in channel[channel_address].values():
                     parameters.update(paramset)
@@ -1124,7 +1124,7 @@ class ParamsetCache(BaseCache):
     def get_parameters(self, device_address: str) -> list[str]:
         """Return all parameters of a device"""
         parameters: set[str] = set()
-        for channel in self._paramsets_cache.values():
+        for channel in self._paramset_descriptions_cache.values():
             for channel_address in channel:
                 if channel_address.startswith(device_address):
                     for paramset in channel[channel_address].values():
@@ -1134,7 +1134,7 @@ class ParamsetCache(BaseCache):
 
     def _init_address_parameter_list(self) -> None:
         """Initialize an device_address/parameter list to identify if a parameter name exists is in multiple channels."""
-        for channel_paramsets in self._paramsets_cache.values():
+        for channel_paramsets in self._paramset_descriptions_cache.values():
             for channel_address, paramsets in channel_paramsets.items():
                 if ":" not in channel_address:
                     continue
@@ -1155,7 +1155,7 @@ class ParamsetCache(BaseCache):
 
     async def load(self) -> Awaitable[int]:
         """
-        Load paramset data from disk into paramsets.
+        Load paramset descriptions from disk into paramset cache.
         """
         result = await super().load()
         self._init_address_parameter_list()
@@ -1163,7 +1163,7 @@ class ParamsetCache(BaseCache):
 
     async def save(self) -> Awaitable[int]:
         """
-        Save current paramset data to disk.
+        Save current paramset descriptions to disk.
         """
         result = await super().save()
         self._init_address_parameter_list()
