@@ -316,7 +316,7 @@ class CentralUnit:
             try:
                 if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
                     self.raw_devices.add_device_description(interface_id, dev_desc)
-                    await client.fetch_paramsets(dev_desc)
+                    await client.fetch_paramset_descriptions(dev_desc)
             except Exception as err:
                 _LOGGER.error("add_new_devices: Exception (%s)", err.args)
         await self.raw_devices.save()
@@ -518,6 +518,21 @@ class CentralUnit:
             return int(await client.get_install_mode())
         return 0
 
+    async def get_value(
+        self,
+        interface_id: str,
+        channel_address: str,
+        parameter: str
+    ) -> Any | None:
+        """Get a single value on paramset VALUES."""
+
+        if client := self.get_client_by_interface_id(interface_id=interface_id):
+            return await client.get_value(
+                channel_address=channel_address,
+                parameter=parameter,
+            )
+        return None
+
     async def set_value(
         self,
         interface_id: str,
@@ -526,7 +541,7 @@ class CentralUnit:
         value: Any,
         rx_mode: str | None = None,
     ) -> None:
-        """Set single value on paramset VALUES."""
+        """Set a single value on paramset VALUES."""
 
         if client := self.get_client_by_interface_id(interface_id=interface_id):
             await client.set_value(
@@ -536,11 +551,28 @@ class CentralUnit:
                 rx_mode=rx_mode,
             )
 
+    async def get_paramset(
+        self,
+        interface_id: str,
+        channel_address: str,
+        paramset_key: str,
+        value: Any,
+        rx_mode: str | None = None,
+    ) -> Any:
+        """Set paramsets manually."""
+
+        if client := self.get_client_by_interface_id(interface_id=interface_id):
+            return await client.get_paramset(
+                channel_address=channel_address,
+                paramset_key=paramset_key,
+            )
+        return None
+
     async def put_paramset(
         self,
         interface_id: str,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         value: Any,
         rx_mode: str | None = None,
     ) -> None:
@@ -549,7 +581,7 @@ class CentralUnit:
         if client := self.get_client_by_interface_id(interface_id=interface_id):
             await client.put_paramset(
                 channel_address=channel_address,
-                paramset=paramset,
+                paramset_key=paramset_key,
                 value=value,
                 rx_mode=rx_mode,
             )
