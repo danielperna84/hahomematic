@@ -490,16 +490,16 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         await self._device.init_device_entities()
         if not self.available:
             return DATA_NO_LOAD
-        return await self.load_data()
+        return await self.load_entity_data()
 
-    async def load_data(self) -> int:
+    async def load_entity_data(self) -> int:
         """Load data"""
         if self._updated_within_minutes():
             return DATA_NO_LOAD
 
         try:
             if self._operations & OPERATION_READ:
-                return await self._device.load_data(
+                return await self._device.load_channel_data(
                     channel_address=self.channel_address
                 )
             return DATA_NO_LOAD
@@ -693,7 +693,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
         for entity in self.data_entities.values():
             if entity:
-                await entity.load_data()
+                await entity.load_entity_data()
 
         self.update_entity()
         return DATA_LOAD_SUCCESS

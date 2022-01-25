@@ -101,7 +101,7 @@ async def get_value_from_generic_entity(
     hm_entity = await get_hm_genertic_entity(central_unit, address, parameter)
     assert hm_entity
     if do_load:
-        await hm_entity.load_data()
+        await hm_entity.load_entity_data()
         assert hm_entity.value
     return hm_entity.value
 
@@ -120,7 +120,7 @@ async def get_hm_genertic_entity(
     assert hm_device
     hm_entity = hm_device.entities.get((address, parameter))
     if hm_entity and do_load:
-        await hm_entity.load_data()
+        await hm_entity.load_entity_data()
     return hm_entity
 
 
