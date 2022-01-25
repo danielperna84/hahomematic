@@ -1,6 +1,7 @@
 Version 0.27.0 (2022-01-25)
 - Fix naming paramset -> paramset_description
 - Add get_value and get_paramset to central
+- Add hmcli.py as command line script
 
 Version 0.26.0 (2022-01-22)
 - Make whitelist for parameter depend on the device_type/sub_type
