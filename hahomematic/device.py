@@ -328,7 +328,7 @@ class HmDevice:
         """Reload paramset for device."""
         for entity in self.entities.values():
             for paramset in RELEVANT_PARAMSETS:
-                await self._client.fetch_paramset(
+                await self._client.fetch_paramset_description(
                     channel_address=entity.channel_address, paramset=paramset
                 )
                 entity.update_parameter_data()

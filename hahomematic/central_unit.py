@@ -316,7 +316,7 @@ class CentralUnit:
             try:
                 if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
                     self.raw_devices.add_device_description(interface_id, dev_desc)
-                    await client.fetch_paramsets(dev_desc)
+                    await client.fetch_paramset_descriptions(dev_desc)
             except Exception as err:
                 _LOGGER.error("add_new_devices: Exception (%s)", err.args)
         await self.raw_devices.save()
@@ -549,7 +549,7 @@ class CentralUnit:
         if client := self.get_client_by_interface_id(interface_id=interface_id):
             await client.put_paramset(
                 channel_address=channel_address,
-                paramset=paramset,
+                paramset_key=paramset,
                 value=value,
                 rx_mode=rx_mode,
             )

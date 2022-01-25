@@ -278,28 +278,28 @@ class Client(ABC):
     async def put_paramset(
         self,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         value: Any,
         rx_mode: str | None = None,
     ) -> None:
         """Set paramsets manually."""
         try:
             if rx_mode:
-                await self._proxy.putParamset(channel_address, paramset, value, rx_mode)
+                await self._proxy.putParamset(channel_address, paramset_key, value, rx_mode)
             else:
-                await self._proxy.putParamset(channel_address, paramset, value)
-            _LOGGER.debug("put_paramset: %s, %s, %s", channel_address, paramset, value)
+                await self._proxy.putParamset(channel_address, paramset_key, value)
+            _LOGGER.debug("put_paramset: %s, %s, %s", channel_address, paramset_key, value)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "put_paramset failed: %s (%s) %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 channel_address,
-                paramset,
+                paramset_key,
                 value,
             )
 
-    async def fetch_paramset(self, channel_address: str, paramset: str) -> None:
+    async def fetch_paramset_description(self, channel_address: str, paramset: str) -> None:
         """
         Fetch a specific paramset and add it to the known ones.
         """
@@ -325,13 +325,13 @@ class Client(ABC):
             )
         await self._central.paramsets.save()
 
-    async def fetch_paramsets(
+    async def fetch_paramset_descriptions(
         self, device_description: dict[str, Any], update: bool = False
     ) -> None:
         """
         Fetch paramsets for provided device description.
         """
-        data = await self.get_paramsets(
+        data = await self.get_paramset_descriptions(
             device_description=device_description, relevant_paramsets=RELEVANT_PARAMSETS
         )
         for address, paramsets in data.items():
@@ -344,7 +344,7 @@ class Client(ABC):
                     paramset_description=paramset_description,
                 )
 
-    async def get_paramsets(
+    async def get_paramset_descriptions(
         self,
         device_description: dict[str, Any],
         relevant_paramsets: list[str] | None = None,
@@ -380,11 +380,11 @@ class Client(ABC):
         all_paramsets: dict[str, dict[str, Any]] = {}
         for device_description in device_descriptions:
             all_paramsets.update(
-                await self.get_paramsets(device_description=device_description)
+                await self.get_paramset_descriptions(device_description=device_description)
             )
         return all_paramsets
 
-    async def update_paramsets(self, device_address: str) -> None:
+    async def update_paramset_descriptions(self, device_address: str) -> None:
         """
         Update paramsets for provided device_address.
         """
@@ -402,7 +402,7 @@ class Client(ABC):
                 device_address,
             )
             return
-        await self.fetch_paramsets(
+        await self.fetch_paramset_descriptions(
             self._central.raw_devices.get_device(
                 interface_id=self.interface_id, device_address=device_address
             ),
