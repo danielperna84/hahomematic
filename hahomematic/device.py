@@ -18,6 +18,7 @@ from hahomematic.const import (
     ATTR_HM_TYPE,
     BUTTON_ACTIONS,
     CLICK_EVENTS,
+    DATA_LOAD_FAIL,
     DATA_LOAD_SUCCESS,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
@@ -52,6 +53,7 @@ from hahomematic.entity import (
     CustomEntity,
     GenericEntity,
 )
+from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import generate_unique_id, get_device_channel, get_device_name
 from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
@@ -324,7 +326,7 @@ class HmDevice:
             for entity in self.entities.values():
                 entity.update_entity()
 
-    async def reload_paramsets(self) -> None:
+    async def reload_paramset_descriptions(self) -> None:
         """Reload paramset for device."""
         for entity in self.entities.values():
             for paramset in RELEVANT_PARAMSETS:
@@ -333,6 +335,26 @@ class HmDevice:
                 )
                 entity.update_parameter_data()
         self.update_device()
+
+    async def load_data(self, channel_address: str) -> int:
+        """Load data"""
+        try:
+            paramset = await self._client.get_paramset(
+                channel_address=channel_address, paramset_key=PARAMSET_VALUES
+            )
+            for parameter, value in paramset.items():
+                if entity := self.entities.get((channel_address, parameter)):
+                    entity.set_value(value=value)
+
+            return DATA_LOAD_SUCCESS
+        except BaseHomematicException as bhe:
+            _LOGGER.debug(
+                " %s: Failed to get paramset for %s, %s: %s",
+                self.device_type,
+                channel_address,
+                bhe,
+            )
+            return DATA_LOAD_FAIL
 
     # pylint: disable=too-many-nested-blocks
     def create_entities(self) -> set[BaseEntity]:
@@ -349,7 +371,9 @@ class HmDevice:
                     channel_address,
                 )
                 continue
-            for paramset in self._central.paramset_descriptions.get_by_interface_channel_address(
+            for (
+                paramset
+            ) in self._central.paramset_descriptions.get_by_interface_channel_address(
                 interface_id=self._interface_id, channel_address=channel_address
             ):
                 if paramset != PARAMSET_VALUES:
@@ -681,7 +705,9 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                 "create_devices: Skipping interface %s, missing client.", interface_id
             )
             continue
-        if not central.paramset_descriptions.get_by_interface(interface_id=interface_id):
+        if not central.paramset_descriptions.get_by_interface(
+            interface_id=interface_id
+        ):
             _LOGGER.debug(
                 "create_devices: Skipping interface %s, missing paramsets.",
                 interface_id,

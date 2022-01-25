@@ -75,7 +75,9 @@ class CentralUnit:
         self._model: str | None = None
 
         # Caches for CCU data
-        self.paramset_descriptions: ParamsetDescriptionCache = ParamsetDescriptionCache(central=self)
+        self.paramset_descriptions: ParamsetDescriptionCache = ParamsetDescriptionCache(
+            central=self
+        )
         self.names: NamesCache = NamesCache(central=self)
         self.raw_devices: RawDevicesCache = RawDevicesCache(central=self)
         self.rooms: RoomCache = RoomCache(central=self)
@@ -1044,7 +1046,9 @@ class ParamsetDescriptionCache(BaseCache):
 
     def __init__(self, central: CentralUnit):
         # {interface_id, {channel_address, paramsets}}
-        self._paramset_descriptions_cache: dict[str, dict[str, dict[str, dict[str, Any]]]] = {}
+        self._paramset_descriptions_cache: dict[
+            str, dict[str, dict[str, dict[str, Any]]]
+        ] = {}
         super().__init__(
             central=central,
             filename=FILE_PARAMSETS,
@@ -1066,8 +1070,13 @@ class ParamsetDescriptionCache(BaseCache):
             self._paramset_descriptions_cache[interface_id] = {}
         if channel_address not in self._paramset_descriptions_cache[interface_id]:
             self._paramset_descriptions_cache[interface_id][channel_address] = {}
-        if paramset not in self._paramset_descriptions_cache[interface_id][channel_address]:
-            self._paramset_descriptions_cache[interface_id][channel_address][paramset] = {}
+        if (
+            paramset
+            not in self._paramset_descriptions_cache[interface_id][channel_address]
+        ):
+            self._paramset_descriptions_cache[interface_id][channel_address][
+                paramset
+            ] = {}
 
         self._paramset_descriptions_cache[interface_id][channel_address][
             paramset
@@ -1089,7 +1098,9 @@ class ParamsetDescriptionCache(BaseCache):
         self, interface_id: str, channel_address: str
     ) -> dict[str, dict[str, Any]]:
         """Get paramset descriptions from cache by interface, channel_address."""
-        return self._paramset_descriptions_cache.get(interface_id, {}).get(channel_address, {})
+        return self._paramset_descriptions_cache.get(interface_id, {}).get(
+            channel_address, {}
+        )
 
     def get_by_interface_channel_address_paramset_key(
         self, interface_id: str, channel_address: str, paramset: str

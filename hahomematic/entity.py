@@ -436,8 +436,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             # stop here, if value has not changed
             return
 
-        self._value = value
-        self.update_entity(self.unique_id)
+        self.set_value(value=value)
 
         # send device events, if value has changed
         if self.parameter in (
@@ -450,7 +449,9 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
 
             if self.parameter == EVENT_CONFIG_PENDING:
                 if value is False and old_value is True:
-                    self._central.create_task(self._device.reload_paramsets())
+                    self._central.create_task(
+                        self._device.reload_paramset_descriptions()
+                    )
                 return None
 
             if callable(self._central.callback_ha_event):
@@ -473,6 +474,12 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         """Return the value of the entity."""
         return self._value
 
+    def set_value(self, value: ParameterType) -> None:
+        """Set value to the entity."""
+        if self._value != value:
+            self._value = self._convert_value(value)
+            self.update_entity()
+
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the generic entity."""
@@ -494,14 +501,10 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
 
         try:
             if self._operations & OPERATION_READ:
-                self._value = self._convert_value(
-                    await self._client.get_value(
-                        channel_address=self.channel_address, parameter=self.parameter
-                    )
+                return await self._device.load_data(
+                    channel_address=self.channel_address
                 )
-                self.update_entity()
-
-            return DATA_LOAD_SUCCESS
+            return DATA_NO_LOAD
         except BaseHomematicException as bhe:
             _LOGGER.debug(
                 " %s: Failed to get value for %s, %s, %s: %s",
