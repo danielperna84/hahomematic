@@ -275,6 +275,21 @@ class Client(ABC):
                 value,
             )
 
+    async def get_paramset(self, channel_address: str, paramset_key: str) -> Any:
+        """Return a paramset from CCU."""
+        try:
+            _LOGGER.debug("get_paramset: %s, %s", channel_address, paramset_key)
+            return await self._proxy.getParamset(channel_address, paramset_key)
+        except BaseHomematicException as hhe:
+            _LOGGER.debug(
+                "get_paramset failed with %s (%s): %s, %s",
+                hhe.name,
+                hhe.args,
+                channel_address,
+                paramset_key,
+            )
+            raise HaHomematicException from hhe
+
     async def put_paramset(
         self,
         channel_address: str,
