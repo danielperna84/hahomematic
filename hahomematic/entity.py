@@ -113,8 +113,11 @@ class CallbackEntity(ABC):
         self.last_update = datetime.now()
 
     def _updated_within_minutes(self, minutes: int = 5) -> bool:
+        """Entity has been updated within X minutes."""
+        if self.last_update == INIT_DATETIME:
+            return False
         delta = datetime.now() - self.last_update
-        if delta.seconds < minutes * 60:
+        if delta.seconds < (minutes * 60):
             return True
         return False
 

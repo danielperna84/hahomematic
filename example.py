@@ -102,7 +102,7 @@ class Example:
         await self.central.create_clients(client_configs)
         # Once the central_1 is running we subscribe to receive messages.
         await self.central.init_clients()
-
+        self.central.start_connection_checker()
         while not self.got_devices and self.SLEEPCOUNTER < 20:
             print("Waiting for devices")
             self.SLEEPCOUNTER += 1

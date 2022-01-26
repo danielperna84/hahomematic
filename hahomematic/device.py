@@ -349,7 +349,7 @@ class HmDevice:
             return DATA_LOAD_SUCCESS
         except BaseHomematicException as bhe:
             _LOGGER.debug(
-                " %s: Failed to get paramset for %s, %s: %s",
+                "load_channel_data: Failed to get paramset for %s, %s: %s",
                 self.device_type,
                 channel_address,
                 bhe,
