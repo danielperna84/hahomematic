@@ -46,7 +46,7 @@ class DeviceExporter:
         ] = self._central.raw_devices.get_device_with_channels(
             interface_id=self._interface_id, device_address=self._device_address
         )
-        paramset_descriptions: dict[str, Any] = await self._client.get_all_paramsets(
+        paramset_descriptions: dict[str, Any] = await self._client.get_all_paramset_descriptions(
             list(device_descriptions.values())
         )
         device_type = device_descriptions[self._device_address][ATTR_HM_TYPE]
