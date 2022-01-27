@@ -52,6 +52,7 @@ class BaseHubEntity(ABC):
         self._remove_callbacks: list[Callable] = []
         self.create_in_ha: bool = True
         self.should_poll = False
+        self.usage = HmEntityUsage.ENTITY
 
     @property
     def available(self) -> bool:
@@ -59,9 +60,19 @@ class BaseHubEntity(ABC):
         return self._central.available
 
     @property
+    def device_info(self) -> dict[str, Any]:
+        """Return central specific attributes."""
+        return self._central.device_info
+
+    @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
         return {}
+
+    @property
+    def platform(self) -> HmPlatform:
+        """Return the platform."""
+        return HmPlatform.HUB_SENSOR
 
     @property
     def value(self) -> Any:
@@ -139,7 +150,6 @@ class HmSystemVariable(BaseHubEntity):
             parameter=slugify(name),
             prefix=central.instance_name,
         )
-        self.usage = HmEntityUsage.ENTITY
         super().__init__(
             central=central,
             unique_id=unique_id,
@@ -148,7 +158,7 @@ class HmSystemVariable(BaseHubEntity):
         )
 
     @property
-    def device_info(self) -> dict[str, str] | None:
+    def device_info(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
         if self._hub:
             return self._hub.device_info
@@ -193,11 +203,6 @@ class HmHub(BaseHubEntity):
         self.hub_entities: dict[str, HmSystemVariable] = {}
         self._variables: dict[str, Any] = {}
         self.should_poll = True
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return central specific attributes."""
-        return self._central.device_info
 
     @property
     def attributes(self) -> dict[str, Any]:

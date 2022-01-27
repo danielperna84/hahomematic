@@ -1,3 +1,6 @@
+Version 0.28.1 (2022-01-27)
+- Update hub.py to match GenericEntity
+
 Version 0.28.0 (2022-01-27)
 - Try create client after init failure
 - Reduce CCU calls
