@@ -9,6 +9,7 @@ import logging
 from typing import Any
 
 import hahomematic.central_unit as hm_central
+import hahomematic.client as hm_client
 from hahomematic.const import (
     ACCEPT_PARAMETER_ONLY_ON_CHANNEL,
     ATTR_HM_FIRMWARE,
@@ -33,6 +34,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     MANUFACTURER,
     OPERATION_EVENT,
+    OPERATION_READ,
     OPERATION_WRITE,
     PARAMSET_VALUES,
     RELEVANT_PARAMSETS,
@@ -128,6 +130,8 @@ class HmDevice:
             device_address=device_address,
             device_type=self.device_type,
         )
+        self._paramset_cache = ParamsetCache(device=self)
+
         _LOGGER.debug(
             "__init__: Initialized device: %s, %s, %s, %s",
             self._interface_id,
@@ -140,6 +144,11 @@ class HmDevice:
     def central(self) -> hm_central.CentralUnit:
         """Return the central unit."""
         return self._central
+
+    @property
+    def client(self) -> hm_client.Client:
+        """Return the client."""
+        return self._client
 
     @property
     def interface_id(self) -> str:
@@ -162,6 +171,11 @@ class HmDevice:
         return self._central.rooms.get_room(self._device_address)
 
     @property
+    def paramset_cache(self) -> ParamsetCache:
+        """Return the paramset cache."""
+        return self._paramset_cache
+
+    @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity"""
         return self.entities.get((f"{self._device_address}:0", EVENT_UN_REACH))
@@ -175,21 +189,6 @@ class HmDevice:
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity"""
         return self.entities.get((f"{self._device_address}:0", EVENT_CONFIG_PENDING))
-
-    async def init_device_entities(self) -> None:
-        """initialize the device relevant entities."""
-        data_load: bool = False
-        if self._e_unreach is not None:
-            if DATA_LOAD_SUCCESS == await self._e_unreach.load_entity_data():
-                data_load = True
-        if self._e_sticky_un_reach is not None:
-            if DATA_LOAD_SUCCESS == await self._e_sticky_un_reach.load_entity_data():
-                data_load = True
-        if self._e_config_pending is not None:
-            if DATA_LOAD_SUCCESS == await self._e_config_pending.load_entity_data():
-                data_load = True
-        if data_load:
-            self._set_last_update()
 
     def add_hm_entity(self, hm_entity: BaseEntity) -> None:
         """Add a hm entity to a device."""
@@ -336,32 +335,19 @@ class HmDevice:
                 entity.update_parameter_data()
         self.update_device()
 
-    async def load_channel_data(self, channel_address: str) -> int:
-        """Load data"""
-        try:
-            paramset = await self._client.get_paramset(
-                channel_address=channel_address, paramset_key=PARAMSET_VALUES
-            )
-            for parameter, value in paramset.items():
-                if entity := self.entities.get((channel_address, parameter)):
-                    entity.set_value(value=value)
+    async def load_paramset_cache(self) -> None:
+        """Init the parameter cache."""
+        if len(self.entities) > 0:
+            await self._paramset_cache.init()
+        _LOGGER.debug(
+            "init_data: Skipping load_data, missing entities for %s.",
+            self.device_address,
+        )
 
-            return DATA_LOAD_SUCCESS
-        except BaseHomematicException as bhe:
-            _LOGGER.debug(
-                " %s: Failed to get paramset for %s, %s: %s",
-                self.device_type,
-                channel_address,
-                bhe,
-            )
-            return DATA_LOAD_FAIL
-
-    # pylint: disable=too-many-nested-blocks
-    def create_entities(self) -> set[BaseEntity]:
+    def create_entities_and_append_to_device(self) -> None:
         """
         Create the entities associated to this device.
         """
-        new_entities: list[BaseEntity] = []
         for channel_address in self._channels:
             if not self._central.paramset_descriptions.get_by_interface_channel_address(
                 interface_id=self._interface_id, channel_address=channel_address
@@ -386,25 +372,22 @@ class HmDevice:
                     channel_address=channel_address,
                     paramset=paramset,
                 ).items():
-                    entity: GenericEntity | None
-
                     if (
                         parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
                         and parameter in CLICK_EVENTS
                     ):
-                        self.create_event(
+                        self._create_event_and_append_to_device(
                             channel_address=channel_address,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
                         if self.device_type in HM_VIRTUAL_REMOTES:
-                            entity = self.create_action(
+                            self._create_action_and_append_to_device(
                                 channel_address=channel_address,
                                 parameter=parameter,
                                 parameter_data=parameter_data,
                             )
-                            if entity is not None:
-                                new_entities.append(entity)
+
                     if (
                         not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
@@ -422,13 +405,12 @@ class HmDevice:
                         )
                         continue
                     if parameter not in CLICK_EVENTS:
-                        entity = self.create_entity(
+                        self._create_entity_and_append_to_device(
                             channel_address=channel_address,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
-                        if entity is not None:
-                            new_entities.append(entity)
+
         # create custom entities
         if self.is_custom_entity:
             _LOGGER.debug(
@@ -437,20 +419,16 @@ class HmDevice:
                 self._device_address,
                 self.device_type,
             )
-            # Call the custom creation function.
 
+            # Call the custom creation function.
             for (device_func, group_base_channels) in get_device_funcs(
                 self.device_type, self.sub_type
             ):
-                custom_entities: list[CustomEntity] = device_func(
-                    self, self._device_address, group_base_channels
-                )
-                new_entities.extend(custom_entities)
-        return set(new_entities)
+                device_func(self, self._device_address, group_base_channels)
 
-    def create_action(
+    def _create_action_and_append_to_device(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
-    ) -> HmAction | None:
+    ) -> None:
         """Create the actions associated to this device"""
         unique_id = generate_unique_id(
             domain=self._central.domain,
@@ -460,7 +438,7 @@ class HmDevice:
             prefix=f"button_{self._central.instance_name}",
         )
         _LOGGER.debug(
-            "create_event: Creating action for %s, %s, %s",
+            "create_action_and_append_to_device: Creating action for %s, %s, %s",
             channel_address,
             parameter,
             self._interface_id,
@@ -474,12 +452,10 @@ class HmDevice:
             parameter_data=parameter_data,
         ):
             action.add_to_collections()
-            return action
-        return None
 
-    def create_event(
+    def _create_event_and_append_to_device(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
-    ) -> BaseEvent | None:
+    ) -> None:
         """Create action event entity."""
         if (channel_address, parameter) not in self._central.entity_event_subscriptions:
             self._central.entity_event_subscriptions[(channel_address, parameter)] = []
@@ -493,7 +469,7 @@ class HmDevice:
         )
 
         _LOGGER.debug(
-            "create_event: Creating event for %s, %s, %s",
+            "create_event_and_append_to_device: Creating event for %s, %s, %s",
             channel_address,
             parameter,
             self._interface_id,
@@ -510,11 +486,10 @@ class HmDevice:
                 )
         if action_event:
             action_event.add_to_collections()
-        return action_event
 
-    def create_entity(
+    def _create_entity_and_append_to_device(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
-    ) -> GenericEntity | None:
+    ) -> None:
         """
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
@@ -526,7 +501,9 @@ class HmDevice:
             channel_no=get_device_channel(channel_address),
         ):
             _LOGGER.debug(
-                "create_entity: Ignoring parameter: %s (%s)", parameter, channel_address
+                "create_entity_and_append_to_device: Ignoring parameter: %s (%s)",
+                parameter,
+                channel_address,
             )
             return None
         if (channel_address, parameter) not in self._central.entity_event_subscriptions:
@@ -539,10 +516,13 @@ class HmDevice:
             parameter=parameter,
         )
         if unique_id in self._central.hm_entities:
-            _LOGGER.debug("create_entity: Skipping %s (already exists)", unique_id)
+            _LOGGER.debug(
+                "create_entity_and_append_to_device: Skipping %s (already exists)",
+                unique_id,
+            )
             return None
         _LOGGER.debug(
-            "create_entity: Creating entity for %s, %s, %s",
+            "create_entity_and_append_to_device: Creating entity for %s, %s, %s",
             channel_address,
             parameter,
             self._interface_id,
@@ -552,7 +532,7 @@ class HmDevice:
             if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
                 if parameter_data[ATTR_HM_OPERATIONS] == OPERATION_WRITE:
                     _LOGGER.debug(
-                        "create_entity: action (action): %s %s",
+                        "create_entity_and_append_to_device: action (action): %s %s",
                         channel_address,
                         parameter,
                     )
@@ -574,7 +554,7 @@ class HmDevice:
                         )
                 else:
                     _LOGGER.debug(
-                        "create_entity: switch (action): %s %s",
+                        "create_entity_and_append_to_device: switch (action): %s %s",
                         channel_address,
                         parameter,
                     )
@@ -588,7 +568,7 @@ class HmDevice:
             else:
                 if parameter_data[ATTR_HM_OPERATIONS] == OPERATION_WRITE:
                     _LOGGER.debug(
-                        "create_entity: action (action): %s %s",
+                        "create_entity_and_append_to_device: action (action): %s %s",
                         channel_address,
                         parameter,
                     )
@@ -601,7 +581,9 @@ class HmDevice:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
                     _LOGGER.debug(
-                        "create_entity: switch: %s %s", channel_address, parameter
+                        "create_entity_and_append_to_device: switch: %s %s",
+                        channel_address,
+                        parameter,
                     )
                     entity = HmSwitch(
                         device=self,
@@ -612,7 +594,9 @@ class HmDevice:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
                     _LOGGER.debug(
-                        "create_entity: select: %s %s", channel_address, parameter
+                        "create_entity_and_append_to_device: select: %s %s",
+                        channel_address,
+                        parameter,
                     )
                     entity = HmSelect(
                         device=self,
@@ -623,7 +607,7 @@ class HmDevice:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_FLOAT:
                     _LOGGER.debug(
-                        "create_entity: number.integer: %s %s",
+                        "create_entity_and_append_to_device: number.integer: %s %s",
                         channel_address,
                         parameter,
                     )
@@ -636,7 +620,9 @@ class HmDevice:
                     )
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_INTEGER:
                     _LOGGER.debug(
-                        "create_entity: number.float: %s %s", channel_address, parameter
+                        "create_entity_and_append_to_device: number.float: %s %s",
+                        channel_address,
+                        parameter,
                     )
                     entity = HmInteger(
                         device=self,
@@ -648,7 +634,9 @@ class HmDevice:
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
                     # There is currently no entity platform in HA for this.
                     _LOGGER.debug(
-                        "create_entity: text: %s %s", channel_address, parameter
+                        "create_entity_and_append_to_device: text: %s %s",
+                        channel_address,
+                        parameter,
                     )
                     entity = HmText(
                         device=self,
@@ -659,7 +647,7 @@ class HmDevice:
                     )
                 else:
                     _LOGGER.warning(
-                        "unsupported actor: %s %s %s",
+                        "create_entity_and_append_to_device: unsupported actor: %s %s %s",
                         channel_address,
                         parameter,
                         parameter_data[ATTR_HM_TYPE],
@@ -668,7 +656,9 @@ class HmDevice:
             # Also check, if sensor could be a binary_sensor due to value_list.
             if _is_binary_sensor(parameter_data):
                 _LOGGER.debug(
-                    "create_entity: binary_sensor: %s %s", channel_address, parameter
+                    "create_entity_and_append_to_device: binary_sensor: %s %s",
+                    channel_address,
+                    parameter,
                 )
                 entity = HmBinarySensor(
                     device=self,
@@ -679,7 +669,9 @@ class HmDevice:
                 )
             else:
                 _LOGGER.debug(
-                    "create_entity: sensor: %s %s", channel_address, parameter
+                    "create_entity_and_append_to_device: sensor: %s %s",
+                    channel_address,
+                    parameter,
                 )
                 entity = HmSensor(
                     device=self,
@@ -690,15 +682,13 @@ class HmDevice:
                 )
         if entity:
             entity.add_to_collections()
-        return entity
 
 
-def create_devices(central: hm_central.CentralUnit) -> None:
+async def create_devices(central: hm_central.CentralUnit) -> None:
     """
     Trigger creation of the objects that expose the functionality.
     """
-    new_devices = set[str]()
-    new_entities: list[BaseEntity] = []
+    new_devices = set[HmDevice]()
     for interface_id, client in central.clients.items():
         if not client:
             _LOGGER.debug(
@@ -731,8 +721,7 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                     interface_id=interface_id,
                     device_address=device_address,
                 )
-                new_devices.add(device_address)
-                central.hm_devices[device_address] = device
+
             except Exception as err:
                 _LOGGER.error(
                     "create_devices: Exception (%s) Failed to create device: %s, %s",
@@ -742,7 +731,16 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                 )
             try:
                 if device:
-                    new_entities.extend(device.create_entities())
+                    device.create_entities_and_append_to_device()
+                    if DATA_LOAD_FAIL == await device.load_paramset_cache():
+                        _LOGGER.debug(
+                            "create_devices: Data load failed for %s, %s",
+                            interface_id,
+                            device_address,
+                        )
+                    device.paramset_cache.init_device_entities()
+                    new_devices.add(device)
+                    central.hm_devices[device_address] = device
             except Exception as err:
                 _LOGGER.error(
                     "create_devices: Exception (%s) Failed to create entities: %s, %s",
@@ -751,9 +749,98 @@ def create_devices(central: hm_central.CentralUnit) -> None:
                     device_address,
                 )
     if callable(central.callback_system_event):
-        central.callback_system_event(
-            HH_EVENT_DEVICES_CREATED, new_devices, set(new_entities)
-        )
+        central.callback_system_event(HH_EVENT_DEVICES_CREATED, new_devices)
+
+
+class ParamsetCache:
+    """A Cache to temporaily stoere paramsets"""
+
+    def __init__(self, device: HmDevice):
+        self._device = device
+        self._client = device.client
+        self._cache: dict[str, dict[str, Any]] = {}
+        self._last_update = INIT_DATETIME
+
+    def get_value(self, channel_address: str, parameter: str) -> Any | None:
+        """Get Value from paramset cache."""
+        if not self.is_initialized:
+            return None
+        if paramset := self._cache.get(channel_address):
+            return paramset.get(parameter)
+        return None
+
+    @property
+    def is_initialized(self) -> bool:
+        """Return im cache is initialized"""
+        if not _updated_within_minutes(last_update=self._last_update):
+            #self._cache.clear()
+            self._last_update = INIT_DATETIME
+            return False
+
+        return True
+
+    def paramset_has_no_entry_for_parameter(
+        self, channel_address: str, parameter: str
+    ) -> bool | None:
+        """Check if paramset has no entry for parameter."""
+        if paramset := self._cache.get(channel_address):
+            return paramset.get(parameter) is None
+        return None
+
+    async def init(self) -> None:
+        """Load data"""
+        try:
+            for channel_address in self._get_channel_addresses():
+                await self._load_channel_data(channel_address=channel_address)
+            self._last_update = datetime.now()
+        except BaseHomematicException as bhe:
+            _LOGGER.debug(
+                " load_data: Failed to init cache for %s, %s (%s)",
+                self._device.device_type,
+                self._device.device_address,
+                bhe,
+            )
+
+    def init_device_entities(self) -> None:
+        """Init the device entities with cached data."""
+        for entity in self._device.entities.values():
+            entity.init_entity_value()
+
+    def _get_channel_addresses(self) -> set[str]:
+        """Get entities by channel address."""
+        channel_addresses: list[str] = []
+        for entity in self._device.entities.values():
+            if entity.operations & OPERATION_READ:
+                channel_addresses.append(entity.channel_address)
+        return set(channel_addresses)
+
+    async def _load_channel_data(self, channel_address: str) -> int:
+        """Load data"""
+        try:
+            paramset = await self._client.get_paramset(
+                channel_address=channel_address, paramset_key=PARAMSET_VALUES
+            )
+            if len(paramset) > 0:
+                self._cache[channel_address] = paramset
+            return DATA_LOAD_SUCCESS
+        except BaseHomematicException as bhe:
+            _LOGGER.debug(
+                "_load_channel_data: Failed to get paramset for %s, %s: %s",
+                self._device.device_type,
+                channel_address,
+                bhe,
+            )
+            return DATA_LOAD_FAIL
+
+
+def _updated_within_minutes(last_update: datetime, minutes: int = 5) -> bool:
+    """Entity has been updated within X minutes."""
+    if last_update == INIT_DATETIME:
+        return False
+    delta = datetime.now() - last_update
+    if delta.seconds < (minutes * 60):
+        return True
+    return False
 
 
 def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:

@@ -28,9 +28,6 @@ from hahomematic.const import (
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
-    DATA_LOAD_FAIL,
-    DATA_LOAD_SUCCESS,
-    DATA_NO_LOAD,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
@@ -113,8 +110,11 @@ class CallbackEntity(ABC):
         self.last_update = datetime.now()
 
     def _updated_within_minutes(self, minutes: int = 5) -> bool:
+        """Entity has been updated within X minutes."""
+        if self.last_update == INIT_DATETIME:
+            return False
         delta = datetime.now() - self.last_update
-        if delta.seconds < minutes * 60:
+        if delta.seconds < (minutes * 60):
             return True
         return False
 
@@ -301,6 +301,11 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return self._type
 
     @property
+    def operations(self) -> int:
+        """Return the operations mode of the entity."""
+        return self._operations
+
+    @property
     def visible(self) -> bool:
         """Return the if entity is visible in ccu."""
         return self._visible
@@ -390,6 +395,26 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             (self.channel_address, self.parameter)
         ].append(self.event)
 
+    def init_entity_value(self) -> None:
+        """Init the entity data."""
+        if self._updated_within_minutes():
+            return None
+
+        self.set_value(
+            value=self._device.paramset_cache.get_value(
+                channel_address=self.channel_address, parameter=self.parameter
+            )
+        )
+
+        if (
+            self.usage != HmEntityUsage.ENTITY_NO_CREATE
+            and self.operations & OPERATION_READ
+            and self._device.paramset_cache.paramset_has_no_entry_for_parameter(
+                channel_address=self.channel_address, parameter=self.parameter
+            )
+        ):
+            self.usage = HmEntityUsage.ENTITY_NO_PARAMSET_DATA
+
     def event(
         self, interface_id: str, channel_address: str, parameter: str, raw_value: Any
     ) -> None:
@@ -470,7 +495,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         """Return the value of the entity."""
         return self._value
 
-    def set_value(self, value: ParameterType) -> None:
+    def set_value(self, value: Any) -> None:
         """Set value to the entity."""
         converted_value = self._convert_value(value)
         if self._value != converted_value:
@@ -484,35 +509,6 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         state_attr = super().attributes
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
         return state_attr
-
-    async def init_entity_data(self) -> int:
-        """initial data load"""
-        await self._device.init_device_entities()
-        if not self.available:
-            return DATA_NO_LOAD
-        return await self.load_entity_data()
-
-    async def load_entity_data(self) -> int:
-        """Load data"""
-        if self._updated_within_minutes():
-            return DATA_NO_LOAD
-
-        try:
-            if self._operations & OPERATION_READ:
-                return await self._device.load_channel_data(
-                    channel_address=self.channel_address
-                )
-            return DATA_NO_LOAD
-        except BaseHomematicException as bhe:
-            _LOGGER.debug(
-                " %s: Failed to get value for %s, %s, %s: %s",
-                self.platform,
-                self._device.device_type,
-                self.channel_address,
-                self.parameter,
-                bhe,
-            )
-            return DATA_LOAD_FAIL
 
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
@@ -604,6 +600,13 @@ class CustomEntity(BaseEntity, CallbackEntity):
             rx_mode=rx_mode,
         )
 
+    def init_entity_value(self) -> None:
+        """Init the entity values."""
+        for entity in self.data_entities.values():
+            if entity:
+                entity.init_entity_value()
+        self.update_entity()
+
     def _init_entities(self) -> None:
         """init entity collection"""
 
@@ -682,21 +685,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
             return None
         entity.unregister_update_callback(self.update_entity)
         del self.data_entities[field_name]
-
-    async def init_entity_data(self) -> int:
-        """Init entity data"""
-        await self._device.init_device_entities()
-        if self._updated_within_minutes():
-            return DATA_NO_LOAD
-        if not self.available:
-            return DATA_NO_LOAD
-
-        for entity in self.data_entities.values():
-            if entity:
-                await entity.load_entity_data()
-
-        self.update_entity()
-        return DATA_LOAD_SUCCESS
 
     def _get_entity(
         self, field_name: str, entity_type: type[_EntityType]

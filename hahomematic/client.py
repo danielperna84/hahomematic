@@ -324,7 +324,7 @@ class Client(ABC):
         """
         Fetch a specific paramset and add it to the known ones.
         """
-        _LOGGER.debug("fetch_paramset: %s for %s", paramset, channel_address)
+        _LOGGER.debug("fetch_paramset_description: %s for %s", paramset, channel_address)
 
         try:
             parameter_data = await self._proxy.getParamsetDescription(
@@ -338,7 +338,7 @@ class Client(ABC):
             )
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "fetch_paramset: %s (%s) Unable to get paramset %s for channel_address %s",
+                "fetch_paramset_description: %s (%s) Unable to get paramset %s for channel_address %s",
                 hhe.name,
                 hhe.args,
                 paramset,
@@ -356,7 +356,7 @@ class Client(ABC):
             device_description=device_description, relevant_paramsets=RELEVANT_PARAMSETS
         )
         for address, paramsets in data.items():
-            _LOGGER.debug("fetch_paramsets for %s", address)
+            _LOGGER.debug("fetch_paramset_descriptions for %s", address)
             for paramset, paramset_description in paramsets.items():
                 self._central.paramset_descriptions.add(
                     interface_id=self.interface_id,
@@ -376,7 +376,7 @@ class Client(ABC):
         paramsets: dict[str, dict[str, Any]] = {}
         address = device_description[ATTR_HM_ADDRESS]
         paramsets[address] = {}
-        _LOGGER.debug("get_paramsets for %s", address)
+        _LOGGER.debug("get_paramset_descriptions for %s", address)
         for paramset in device_description.get(ATTR_HM_PARAMSETS, []):
             if relevant_paramsets and paramset not in relevant_paramsets:
                 continue
@@ -394,10 +394,10 @@ class Client(ABC):
                 )
         return paramsets
 
-    async def get_all_paramsets(
+    async def get_all_paramset_descriptions(
         self, device_descriptions: list[dict[str, Any]]
     ) -> dict[str, dict[str, Any]]:
-        """Get all paramsets for provided device descriptions."""
+        """Get all paramset descriptions for provided device descriptions."""
         all_paramsets: dict[str, dict[str, Any]] = {}
         for device_description in device_descriptions:
             all_paramsets.update(
@@ -409,11 +409,11 @@ class Client(ABC):
 
     async def update_paramset_descriptions(self, device_address: str) -> None:
         """
-        Update paramsets for provided device_address.
+        Update paramsets descriptionsfor provided device_address.
         """
         if not self._central.raw_devices.get_interface(interface_id=self.interface_id):
             _LOGGER.warning(
-                "update_paramsets: Interface ID missing in central_unit.raw_devices.devices_raw_dict. Not updating paramsets for %s.",
+                "update_paramset_descriptions: Interface ID missing in central_unit.raw_devices.devices_raw_dict. Not updating paramsets for %s.",
                 device_address,
             )
             return
@@ -421,7 +421,7 @@ class Client(ABC):
             interface_id=self.interface_id, device_address=device_address
         ):
             _LOGGER.warning(
-                "update_paramsets: Channel missing in central_unit.raw_devices.devices_raw_dict[_interface_id]. Not updating paramsets for %s.",
+                "update_paramset_descriptions: Channel missing in central_unit.raw_devices.devices_raw_dict[_interface_id]. Not updating paramsets for %s.",
                 device_address,
             )
             return

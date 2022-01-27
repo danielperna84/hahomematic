@@ -110,6 +110,7 @@ class CentralUnit:
         hm_data.INSTANCES[self.instance_name] = self
         self._connection_checker = ConnectionChecker(self)
         self.hub: HmHub | HmDummyHub | None = None
+        self._saved_client_configs: set[hm_client.ClientConfig] | None = None
 
     @property
     def domain(self) -> str:
@@ -225,14 +226,14 @@ class CentralUnit:
             _LOGGER.warning("load_caches: Failed to load caches.")
             await self.clear_all()
 
-    def _create_devices(self) -> None:
+    async def _create_devices(self) -> None:
         """Create the devices."""
         if not self._clients:
             raise Exception(
                 "_create_devices: No clients initialized. Not starting central_unit."
             )
         try:
-            create_devices(self)
+            await create_devices(self)
         except Exception as err:
             _LOGGER.error(
                 "_create_devices: Exception (%s) Failed to create entities", err.args
@@ -325,7 +326,7 @@ class CentralUnit:
         await self.paramset_descriptions.save()
         await client.fetch_names()
         await self.names.save()
-        create_devices(self)
+        await create_devices(self)
 
     async def stop(self) -> None:
         """
@@ -334,14 +335,8 @@ class CentralUnit:
         """
         _LOGGER.info("stop: Stop connection checker.")
         self._stop_connection_checker()
-        for name, client in self._clients.items():
-            if await client.proxy_de_init():
-                _LOGGER.info("stop: Proxy de-initialized: %s", name)
-            client.stop()
 
-        _LOGGER.info("stop: Clearing existing clients. Please recreate them!")
-        self._clients.clear()
-        self._clients_by_init_url.clear()
+        await self._de_init_client()
 
         # un-register this instance from XMLRPCServer
         self._xml_rpc_server.un_register_central(central=self)
@@ -351,11 +346,37 @@ class CentralUnit:
         _LOGGER.info("stop: Removing instance")
         del hm_data.INSTANCES[self.instance_name]
 
-    async def create_clients(self, client_configs: set[hm_client.ClientConfig]) -> None:
-        """Create clients for the central unit. Start connection checker afterwards"""
+    async def _de_init_client(self) -> None:
+        """De-init clients"""
+        for name, client in self._clients.items():
+            if await client.proxy_de_init():
+                _LOGGER.info("stop: Proxy de-initialized: %s", name)
+            client.stop()
 
-        for client_config in client_configs:
-            try:
+        _LOGGER.info("stop: Clearing existing clients.")
+        self._clients.clear()
+        self._clients_by_init_url.clear()
+
+    async def create_clients(
+        self, client_configs: set[hm_client.ClientConfig] | None = None
+    ) -> bool:
+        """Create clients for the central unit. Start connection checker afterwards"""
+        if client_configs is None:
+            client_configs = self._saved_client_configs
+            _LOGGER.warning(
+                "create_clients: Trying to create interfaces to central %s. Using saved client configs)",
+                self.instance_name,
+            )
+
+        if client_configs is None:
+            _LOGGER.warning(
+                "create_clients: Failed to create interfaces to central %s. Missing client configs)",
+                self.instance_name,
+            )
+            return False
+
+        try:
+            for client_config in client_configs:
                 if client := await client_config.get_client():
                     _LOGGER.debug(
                         "create_clients: Adding client %s to central.",
@@ -366,21 +387,24 @@ class CentralUnit:
                     if client.init_url not in self._clients_by_init_url:
                         self._clients_by_init_url[client.init_url] = []
                     self._clients_by_init_url[client.init_url].append(client)
-                await self.rooms.load()
-                self._create_devices()
-            except BaseHomematicException as ex:
-                _LOGGER.debug(
-                    "create_clients: Failed to create interface %s to central. (%s)",
-                    client_config.name,
-                    ex.args,
-                )
+            await self.rooms.load()
+            await self._create_devices()
+            return True
+        except BaseHomematicException as ex:
+            await self._de_init_client()
+            _LOGGER.warning(
+                "create_clients: Failed to create interfaces for central %s. (%s)",
+                self.clients,
+                ex.args,
+            )
+        # Save client config for later use
+        self._saved_client_configs = client_configs
+        return False
 
     async def init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
         for client in self._clients.values():
             await client.proxy_init()
-
-        self._start_connection_checker()
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
@@ -421,7 +445,7 @@ class CentralUnit:
             )
             raise HaHomematicException from cer
 
-    def _start_connection_checker(self) -> None:
+    def start_connection_checker(self) -> None:
         """Start the connection checker."""
         if self.model is not BACKEND_PYDEVCCU:
             self._connection_checker.start()
@@ -555,8 +579,6 @@ class CentralUnit:
         interface_id: str,
         channel_address: str,
         paramset_key: str,
-        value: Any,
-        rx_mode: str | None = None,
     ) -> Any:
         """Set paramsets manually."""
 
@@ -679,6 +701,13 @@ class ConnectionChecker(threading.Thread):
                     )
                     await asyncio.sleep(connection_checker_interval)
                     await self._central.reconnect()
+                elif len(self._central.clients) == 0:
+                    _LOGGER.error(
+                        "check_connection: No clients exist. Trying to create clients for server %s",
+                        self._central.instance_name,
+                    )
+                    await self._central.create_clients()
+                    await self._central.init_clients()
                 await asyncio.sleep(connection_checker_interval)
             except NoConnection as nex:
                 _LOGGER.error("check_connection: no connection: %s", nex.args)

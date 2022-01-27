@@ -33,13 +33,10 @@ class Example:
             self.got_devices = True
             print("Number of new device descriptions: %i" % len(args[0]))
             return
-        elif src == const.HH_EVENT_DEVICES_CREATED:
-            if len(self.central.hm_devices) > 1:
-                self.got_devices = True
-                print("New devices:")
-                print(len(args[0]))
-                print("New entities:")
-                print(len(args[1]))
+        elif src == const.HH_EVENT_DEVICES_CREATED and args and args[0] and len(args[0]) > 0:
+            self.got_devices = True
+            print("New devices:")
+            print(len(args[0]))
             return
         for arg in args:
             print("argument: %s" % arg)
@@ -102,7 +99,7 @@ class Example:
         await self.central.create_clients(client_configs)
         # Once the central_1 is running we subscribe to receive messages.
         await self.central.init_clients()
-
+        self.central.start_connection_checker()
         while not self.got_devices and self.SLEEPCOUNTER < 20:
             print("Waiting for devices")
             self.SLEEPCOUNTER += 1
