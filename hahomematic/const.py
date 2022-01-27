@@ -45,6 +45,7 @@ HH_EVENT_UPDATE_DEVICE = "updateDevice"
 # However, usually multiple of these events are fired, so we should only
 # act on the last one. This also only seems to fire on channel 0.
 EVENT_CONFIG_PENDING = "CONFIG_PENDING"
+EVENT_UPDATE_PENDING = "UPDATE_PENDING"
 EVENT_ERROR = "ERROR"
 
 # Only available on CCU
@@ -72,6 +73,7 @@ HIDDEN_PARAMETERS = [
     EVENT_ERROR,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
+    EVENT_UPDATE_PENDING,
 ]
 
 BUTTON_ACTIONS = ["RESET_MOTION", "RESET_PRESENCE"]
@@ -125,7 +127,6 @@ IGNORED_PARAMETERS = [
     "TEMPERATURE_LIMITER",
     "TEMPERATURE_OUT_OF_RANGE",
     "TIME_OF_OPERATION",
-    "UPDATE_PENDING",
     "WOCHENPROGRAMM",
 ]
 
@@ -266,6 +267,7 @@ class HmEntityUsage(Enum):
     CE_SECONDARY = "ce_secondary"
     CE_SENSOR = "ce_sensor"
     ENTITY_NO_CREATE = "entity_no_create"
+    ENTITY_NO_PARAMSET_DATA = "entity_no_paramset_data"
     ENTITY = "ENTITY"
     EVENT = "event"
 

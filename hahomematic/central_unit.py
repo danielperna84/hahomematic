@@ -226,14 +226,14 @@ class CentralUnit:
             _LOGGER.warning("load_caches: Failed to load caches.")
             await self.clear_all()
 
-    def _create_devices(self) -> None:
+    async def _create_devices(self) -> None:
         """Create the devices."""
         if not self._clients:
             raise Exception(
                 "_create_devices: No clients initialized. Not starting central_unit."
             )
         try:
-            create_devices(self)
+            await create_devices(self)
         except Exception as err:
             _LOGGER.error(
                 "_create_devices: Exception (%s) Failed to create entities", err.args
@@ -326,7 +326,7 @@ class CentralUnit:
         await self.paramset_descriptions.save()
         await client.fetch_names()
         await self.names.save()
-        create_devices(self)
+        await create_devices(self)
 
     async def stop(self) -> None:
         """
@@ -388,7 +388,7 @@ class CentralUnit:
                         self._clients_by_init_url[client.init_url] = []
                     self._clients_by_init_url[client.init_url].append(client)
             await self.rooms.load()
-            self._create_devices()
+            await self._create_devices()
             return True
         except BaseHomematicException as ex:
             await self._de_init_client()
@@ -579,8 +579,6 @@ class CentralUnit:
         interface_id: str,
         channel_address: str,
         paramset_key: str,
-        value: Any,
-        rx_mode: str | None = None,
     ) -> Any:
         """Set paramsets manually."""
 
