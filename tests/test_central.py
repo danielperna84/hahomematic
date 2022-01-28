@@ -72,7 +72,7 @@ async def test_device_set_data(central, pydev_ccu, loop) -> None:
     old_value = await get_value_from_generic_entity(
         central, "VCU6354483:1", "SET_POINT_TEMPERATURE"
     )
-    assert old_value is None
+    assert old_value == 4.5
     send_device_value_to_ccu(pydev_ccu, "VCU6354483:1", "SET_POINT_TEMPERATURE", 19.0)
     new_value = await get_value_from_generic_entity(
         central, "VCU6354483:1", "SET_POINT_TEMPERATURE"

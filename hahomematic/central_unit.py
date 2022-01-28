@@ -26,17 +26,15 @@ from hahomematic.const import (
     DATA_NO_SAVE,
     DATA_SAVE_SUCCESS,
     DEFAULT_ENCODING,
-    DEFAULT_PASSWORD,
     DEFAULT_TLS,
-    DEFAULT_USERNAME,
     DEFAULT_VERIFY_TLS,
     FILE_DEVICES,
     FILE_NAMES,
     FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_NEW_DEVICES,
-    LOCALHOST,
     MANUFACTURER,
+    PROXY_INIT_SUCCESS,
 )
 import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
@@ -72,6 +70,7 @@ class CentralUnit:
         self._loop: asyncio.AbstractEventLoop = self.central_config.loop
         self._xml_rpc_server: xml_rpc.XmlRpcServer = self.central_config.xml_rpc_server
         self._xml_rpc_server.register_central(self)
+        self._interface_configs = self.central_config.interface_configs
         self._model: str | None = None
 
         # Caches for CCU data
@@ -110,32 +109,55 @@ class CentralUnit:
         hm_data.INSTANCES[self.instance_name] = self
         self._connection_checker = ConnectionChecker(self)
         self.hub: HmHub | HmDummyHub | None = None
-        self._saved_client_configs: set[hm_client.ClientConfig] | None = None
+
+    @property
+    def available(self) -> bool:
+        """Return the availability of the central_unit."""
+        return self._available
+
+    @property
+    def clients(self) -> dict[str, hm_client.Client]:
+        """Return the clients list."""
+        return self._clients
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Return central specific attributes."""
+        return {
+            "identifiers": {(self._domain, self.instance_name)},
+            "name": self.instance_name,
+            "manufacturer": MANUFACTURER,
+            "model": self.model,
+            "sw_version": self.version,
+            "device_url": self.device_url,
+        }
+
+    @property
+    def device_url(self) -> str:
+        """Return the device_url of the backend."""
+        return self.central_config.device_url
 
     @property
     def domain(self) -> str:
         """Return the domain."""
         return self._domain
 
-    def create_hub(self) -> HmHub | HmDummyHub:
-        """Create the hub."""
-        hub: HmHub | HmDummyHub
-        if self.model is BACKEND_PYDEVCCU:
-            hub = HmDummyHub(central=self)
-        else:
-            hub = HmHub(central=self)
-        return hub
-
-    async def init_hub(self) -> None:
-        """Init the hub."""
-        self.hub = self.create_hub()
-        if isinstance(self.hub, HmHub):
-            await self.hub.fetch_data()
+    @property
+    def json_rpc_session(self) -> JsonRpcAioHttpClient:
+        """Return the json_rpc_session."""
+        return self._json_rpc_session
 
     @property
-    def available(self) -> bool:
-        """Return the availability of the central_unit."""
-        return self._available
+    def loop(self) -> asyncio.AbstractEventLoop:
+        """Return the loop for async operations."""
+        if not self._loop:
+            self._loop = asyncio.get_running_loop()
+        return self._loop
+
+    @property
+    def local_port(self) -> int:
+        """Return the local port of the xmlrpc_server."""
+        return self._xml_rpc_server.local_port
 
     @property
     def model(self) -> str | None:
@@ -152,49 +174,178 @@ class CentralUnit:
             return client.version
         return None
 
-    @property
-    def device_url(self) -> str:
-        """Return the device_url of the backend."""
-        return self.central_config.device_url
+    async def start(self, check_only: bool = False) -> None:
+        """Start processing of the central unit."""
+        if check_only:
+            await self._create_clients()
+            return None
+        await self._load_caches()
+        await self._start_clients()
+        self._start_connection_checker()
+        await self._init_hub()
 
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return central specific attributes."""
-        return {
-            "identifiers": {(self._domain, self.instance_name)},
-            "name": self.instance_name,
-            "manufacturer": MANUFACTURER,
-            "model": self.model,
-            "sw_version": self.version,
-            "device_url": self.device_url,
-        }
+    async def _start_clients(self) -> None:
+        """Start clients ."""
+        if await self._create_clients():
+            await self.rooms.load()
+            await self._create_devices()
+            await self._init_clients()
 
-    @property
-    def local_ip(self) -> str:
-        """Return the local ip of the xmlrpc_server."""
-        return self._xml_rpc_server.local_ip
+    async def stop(self) -> None:
+        """Stop processing of the central unit."""
+        self._stop_connection_checker()
+        await self._stop_clients()
 
-    @property
-    def local_port(self) -> int:
-        """Return the local port of the xmlrpc_server."""
-        return self._xml_rpc_server.local_port
+        # un-register this instance from XmlRPC-Server
+        self._xml_rpc_server.un_register_central(central=self)
+        # un-register and stop XmlRPC-Server, if possible
+        xml_rpc.un_register_xml_rpc_server()
 
-    @property
-    def json_rpc_session(self) -> JsonRpcAioHttpClient:
-        """Return the json_rpc_session."""
-        return self._json_rpc_session
+        _LOGGER.info("stop: Removing instance")
+        del hm_data.INSTANCES[self.instance_name]
 
-    @property
-    def loop(self) -> asyncio.AbstractEventLoop:
-        """Return the loop for async operations."""
-        if not self._loop:
-            self._loop = asyncio.get_running_loop()
-        return self._loop
+    async def _stop_clients(self) -> None:
+        """Stop clients."""
+        await self._de_init_client()
+        for client in self._clients.values():
+            _LOGGER.info("stop_client: Stopping %s.", client.interface_id)
+            client.stop()
+        _LOGGER.info("stop_clients: Clearing existing clients.")
+        self._clients.clear()
+        self._clients_by_init_url.clear()
 
-    @property
-    def clients(self) -> dict[str, hm_client.Client]:
-        """Return the clients list."""
-        return self._clients
+    async def restart_clients(self) -> None:
+        """Restart clients"""
+        await self._stop_clients()
+        await self._start_clients()
+
+    async def _create_clients(self) -> bool:
+        """Create clients for the central unit. Start connection checker afterwards"""
+
+        if len(self._clients) > 0:
+            _LOGGER.info(
+                "create_clients: Clients for %s are already created.",
+                self.instance_name,
+            )
+            return False
+        try:
+            for interface_config in self._interface_configs:
+                if client := await hm_client.create_client(
+                    central=self, interface_config=interface_config
+                ):
+                    _LOGGER.debug(
+                        "create_clients: Adding client %s to %s.",
+                        client.interface_id,
+                        self.instance_name,
+                    )
+                    self._clients[client.interface_id] = client
+
+                    if client.init_url not in self._clients_by_init_url:
+                        self._clients_by_init_url[client.init_url] = []
+                    self._clients_by_init_url[client.init_url].append(client)
+            return True
+        except BaseHomematicException as ex:
+            _LOGGER.warning(
+                "create_clients: Failed to create clients for central %s. (%s)",
+                self.clients,
+                ex.args,
+            )
+        return False
+
+    async def _init_clients(self) -> None:
+        """Init clients of control unit, and start connection checker."""
+        for client in self._clients.values():
+            if PROXY_INIT_SUCCESS == await client.proxy_init():
+                _LOGGER.info(
+                    "init_clients: client for %s initialized", client.interface_id
+                )
+
+    async def _de_init_client(self) -> None:
+        """De-init clients"""
+        for name, client in self._clients.items():
+            if await client.proxy_de_init():
+                _LOGGER.info("stop: Proxy de-initialized: %s", name)
+
+    def _create_hub(self) -> HmHub | HmDummyHub:
+        """Create the hub."""
+        hub: HmHub | HmDummyHub
+        if self.model is BACKEND_PYDEVCCU:
+            hub = HmDummyHub(central=self)
+        else:
+            hub = HmHub(central=self)
+        return hub
+
+    async def _init_hub(self) -> None:
+        """Init the hub."""
+        self.hub = self._create_hub()
+        _LOGGER.info(
+            "init_hub: Starting hub for %s",
+            self.instance_name,
+        )
+        if isinstance(self.hub, HmHub):
+            await self.hub.fetch_data()
+
+    def _start_connection_checker(self) -> None:
+        """Start the connection checker."""
+        if self.model is not BACKEND_PYDEVCCU:
+            _LOGGER.info(
+                "start_connection_checker: Starting connection_checker for %s",
+                self.instance_name,
+            )
+            self._connection_checker.start()
+
+    def _stop_connection_checker(self) -> None:
+        """Start the connection checker."""
+        self._connection_checker.stop()
+        _LOGGER.info(
+            "stop_connection_checker: Stopped connection_checker for %s",
+            self.instance_name,
+        )
+
+    async def is_connected(self) -> bool:
+        """Check connection to ccu."""
+        for client in self._clients.values():
+            if not await client.is_connected():
+                _LOGGER.warning(
+                    "is_connected: No connection to %s.",
+                    client.interface_id,
+                )
+                if self._available:
+                    self._mark_all_devices_availability(available=False)
+                    _LOGGER.info(
+                        "is_connected: marked all devices unavailable for %s",
+                        self.instance_name,
+                    )
+                    self._available = False
+                return False
+        if not self._available:
+            self._mark_all_devices_availability(available=True)
+            _LOGGER.info(
+                "is_connected: marked all devices available for %s", self.instance_name
+            )
+            self._available = True
+        return True
+
+    async def reconnect(self, force_immediate: bool = False) -> None:
+        """re-init all RPC clients."""
+        if await self.is_connected():
+            _LOGGER.info(
+                "reconnect: re-connect to central_unit %s",
+                self.instance_name,
+            )
+            if not force_immediate:
+                _LOGGER.info(
+                    "reconnect: waiting to re-connect to central_unit %s for %is",
+                    self.instance_name,
+                    int(config.RECONNECT_WAIT),
+                )
+                await asyncio.sleep(config.RECONNECT_WAIT)
+            for client in self._clients.values():
+                await client.proxy_re_init()
+                _LOGGER.info(
+                    "reconnect: re-connected to central_unit %s",
+                    self.instance_name,
+                )
 
     def get_client_by_interface_id(self, interface_id: str) -> hm_client.Client | None:
         """Return a client by interface_id."""
@@ -216,27 +367,36 @@ class CentralUnit:
         """Check if client exists in central."""
         return self._clients.get(interface_id) is not None
 
-    async def load_caches(self) -> None:
+    async def _load_caches(self) -> None:
         """Load files to caches."""
         try:
             await self.raw_devices.load()
             await self.paramset_descriptions.load()
             await self.names.load()
         except json.decoder.JSONDecodeError:
-            _LOGGER.warning("load_caches: Failed to load caches.")
+            _LOGGER.warning(
+                "load_caches: Failed to load caches for %s.", self.instance_name
+            )
             await self.clear_all()
 
     async def _create_devices(self) -> None:
         """Create the devices."""
         if not self._clients:
             raise Exception(
-                "_create_devices: No clients initialized. Not starting central_unit."
+                f"create_devices: No clients initialized. Not starting central {self.instance_name}."
             )
         try:
+            _LOGGER.debug(
+                "create_devices: Starting to create devices for %s.",
+                self.instance_name,
+            )
             await create_devices(self)
+            _LOGGER.debug(
+                "create_devices: Finished creating devices for %s.", self.instance_name
+            )
         except Exception as err:
             _LOGGER.error(
-                "_create_devices: Exception (%s) Failed to create entities", err.args
+                "create_devices: Exception (%s) Failed to create entities", err.args
             )
             raise HaHomematicException("entity-creation-error") from err
 
@@ -328,84 +488,6 @@ class CentralUnit:
         await self.names.save()
         await create_devices(self)
 
-    async def stop(self) -> None:
-        """
-        then shut down our XML-RPC server.
-        To stop the central_unit we de-init from the CCU / Homegear,
-        """
-        _LOGGER.info("stop: Stop connection checker.")
-        self._stop_connection_checker()
-
-        await self._de_init_client()
-
-        # un-register this instance from XMLRPCServer
-        self._xml_rpc_server.un_register_central(central=self)
-        # un-register and stop XMLRPCServer, if possible
-        xml_rpc.un_register_xml_rpc_server()
-
-        _LOGGER.info("stop: Removing instance")
-        del hm_data.INSTANCES[self.instance_name]
-
-    async def _de_init_client(self) -> None:
-        """De-init clients"""
-        for name, client in self._clients.items():
-            if await client.proxy_de_init():
-                _LOGGER.info("stop: Proxy de-initialized: %s", name)
-            client.stop()
-
-        _LOGGER.info("stop: Clearing existing clients.")
-        self._clients.clear()
-        self._clients_by_init_url.clear()
-
-    async def create_clients(
-        self, client_configs: set[hm_client.ClientConfig] | None = None
-    ) -> bool:
-        """Create clients for the central unit. Start connection checker afterwards"""
-        if client_configs is None:
-            client_configs = self._saved_client_configs
-            _LOGGER.warning(
-                "create_clients: Trying to create interfaces to central %s. Using saved client configs)",
-                self.instance_name,
-            )
-
-        if client_configs is None:
-            _LOGGER.warning(
-                "create_clients: Failed to create interfaces to central %s. Missing client configs)",
-                self.instance_name,
-            )
-            return False
-
-        try:
-            for client_config in client_configs:
-                if client := await client_config.get_client():
-                    _LOGGER.debug(
-                        "create_clients: Adding client %s to central.",
-                        client.interface_id,
-                    )
-                    self._clients[client.interface_id] = client
-
-                    if client.init_url not in self._clients_by_init_url:
-                        self._clients_by_init_url[client.init_url] = []
-                    self._clients_by_init_url[client.init_url].append(client)
-            await self.rooms.load()
-            await self._create_devices()
-            return True
-        except BaseHomematicException as ex:
-            await self._de_init_client()
-            _LOGGER.warning(
-                "create_clients: Failed to create interfaces for central %s. (%s)",
-                self.clients,
-                ex.args,
-            )
-        # Save client config for later use
-        self._saved_client_configs = client_configs
-        return False
-
-    async def init_clients(self) -> None:
-        """Init clients of control unit, and start connection checker."""
-        for client in self._clients.values():
-            await client.proxy_init()
-
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
         try:
@@ -445,54 +527,7 @@ class CentralUnit:
             )
             raise HaHomematicException from cer
 
-    def start_connection_checker(self) -> None:
-        """Start the connection checker."""
-        if self.model is not BACKEND_PYDEVCCU:
-            self._connection_checker.start()
-
-    def _stop_connection_checker(self) -> None:
-        """Start the connection checker."""
-        self._connection_checker.stop()
-
-    async def is_connected(self) -> bool:
-        """Check connection to ccu."""
-        for client in self._clients.values():
-            if not await client.is_connected():
-                _LOGGER.error(
-                    "is_connected: No connection to %s.",
-                    client.interface_id,
-                )
-                if self._available:
-                    self.mark_all_devices_availability(available=False)
-                    self._available = False
-                return False
-        if not self._available:
-            self.mark_all_devices_availability(available=True)
-            self._available = True
-        return True
-
-    async def reconnect(self, force_immediate: bool = False) -> None:
-        """re-init all RPC clients."""
-        if await self.is_connected():
-            _LOGGER.info(
-                "reconnect: re-connect to central_unit %s",
-                self.instance_name,
-            )
-            if not force_immediate:
-                _LOGGER.info(
-                    "reconnect: waiting to re-connect to central_unit %s for %is",
-                    self.instance_name,
-                    int(config.RECONNECT_WAIT),
-                )
-                await asyncio.sleep(config.RECONNECT_WAIT)
-            for client in self._clients.values():
-                await client.proxy_re_init()
-                _LOGGER.info(
-                    "reconnect: re-connected to central_unit %s",
-                    self.instance_name,
-                )
-
-    def mark_all_devices_availability(self, available: bool) -> None:
+    def _mark_all_devices_availability(self, available: bool) -> None:
         """Mark all device's availability state."""
         for hm_device in self.hm_devices.values():
             hm_device.set_availability(value=available)
@@ -695,19 +730,18 @@ class ConnectionChecker(threading.Thread):
             )
             try:
                 if not await self._central.is_connected():
-                    _LOGGER.error(
+                    _LOGGER.warning(
                         "check_connection: No connection to server %s",
                         self._central.instance_name,
                     )
                     await asyncio.sleep(connection_checker_interval)
                     await self._central.reconnect()
                 elif len(self._central.clients) == 0:
-                    _LOGGER.error(
+                    _LOGGER.warning(
                         "check_connection: No clients exist. Trying to create clients for server %s",
                         self._central.instance_name,
                     )
-                    await self._central.create_clients()
-                    await self._central.init_clients()
+                    await self._central.restart_clients()
                 await asyncio.sleep(connection_checker_interval)
             except NoConnection as nex:
                 _LOGGER.error("check_connection: no connection: %s", nex.args)
@@ -727,9 +761,10 @@ class CentralConfig:
         domain: str,
         storage_folder: str,
         name: str,
-        host: str = LOCALHOST,
-        username: str = DEFAULT_USERNAME,
-        password: str | None = DEFAULT_PASSWORD,
+        host: str,
+        username: str,
+        password: str,
+        interface_configs: set[hm_client.InterfaceConfig],
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
         client_session: ClientSession | None = None,
@@ -745,6 +780,7 @@ class CentralConfig:
         self.host = host
         self.username = username
         self.password = password
+        self.interface_configs = interface_configs
         self.tls = tls
         self.verify_tls = verify_tls
         self.client_session = client_session
@@ -772,10 +808,8 @@ class CentralConfig:
         return True
 
     async def get_central(self) -> CentralUnit:
-        """Identify the used client."""
-        central = CentralUnit(self)
-        await central.load_caches()
-        return central
+        """Return the central."""
+        return CentralUnit(self)
 
 
 class RoomCache:
@@ -791,10 +825,11 @@ class RoomCache:
 
     async def load(self) -> None:
         """Init room cache."""
+        _LOGGER.info("load: Loading rooms for %s", self._central.instance_name)
         self._rooms = await self._get_all_rooms()
-        self.identify_device_rooms()
+        self._identify_device_rooms()
 
-    def identify_device_rooms(self) -> None:
+    def _identify_device_rooms(self) -> None:
         """
         Identify a possible room of a device.
         A room is relevant for a device, if there is only one room assigned to the channels.

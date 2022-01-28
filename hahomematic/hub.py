@@ -158,11 +158,11 @@ class HmSystemVariable(BaseHubEntity):
         )
 
     @property
-    def device_info(self) -> dict[str, Any] | None:
+    def device_info(self) -> dict[str, Any]:
         """Return device specific attributes."""
         if self._hub:
             return self._hub.device_info
-        return None
+        return {}
 
     @property
     def platform(self) -> HmPlatform:

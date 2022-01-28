@@ -26,12 +26,18 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
     ServerProxy implementation with ThreadPoolExecutor when request is executing.
     """
 
-    def __init__(self, loop: asyncio.AbstractEventLoop, *args: Any, **kwargs: Any):
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        max_workers,
+        *args: Any,
+        **kwargs: Any,
+    ):
         """
         Initialize new proxy for server and get local ip
         """
         self._loop = loop
-        self._proxy_executor = ThreadPoolExecutor(max_workers=1)
+        self._proxy_executor = ThreadPoolExecutor(max_workers=max_workers)
         self._tls = kwargs.pop(ATTR_TLS, False)
         self._verify_tls = kwargs.pop(ATTR_VERIFY_TLS, True)
         if self._tls:
