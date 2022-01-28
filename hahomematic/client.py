@@ -60,6 +60,7 @@ class Client(ABC):
         self._init_url: str = self._client_config.init_url
         # for all device related interaction
         self._proxy: XmlRpcProxy = self._client_config.xml_rpc_proxy
+        self._proxy_read: XmlRpcProxy = self._client_config.xml_rpc_proxy_read
         self.last_updated: datetime = INIT_DATETIME
         self._json_rpc_session: JsonRpcAioHttpClient = self._central.json_rpc_session
 
@@ -239,7 +240,7 @@ class Client(ABC):
         """Return a value from CCU."""
         try:
             _LOGGER.debug("get_value: %s, %s", channel_address, parameter)
-            return await self._proxy.getValue(channel_address, parameter)
+            return await self._proxy_read.getValue(channel_address, parameter)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
                 "get_value failed with %s (%s): %s, %s",
@@ -278,7 +279,7 @@ class Client(ABC):
         """Return a paramset from CCU."""
         try:
             _LOGGER.debug("get_paramset: %s, %s", channel_address, paramset_key)
-            return await self._proxy.getParamset(channel_address, paramset_key)
+            return await self._proxy_read.getParamset(channel_address, paramset_key)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
                 "get_paramset failed with %s (%s): %s, %s",
@@ -328,7 +329,7 @@ class Client(ABC):
         )
 
         try:
-            parameter_data = await self._proxy.getParamsetDescription(
+            parameter_data = await self._proxy_read.getParamsetDescription(
                 channel_address, paramset
             )
             self._central.paramset_descriptions.add(
@@ -382,9 +383,9 @@ class Client(ABC):
             if relevant_paramsets and paramset not in relevant_paramsets:
                 continue
             try:
-                paramsets[address][paramset] = await self._proxy.getParamsetDescription(
-                    address, paramset
-                )
+                paramsets[address][
+                    paramset
+                ] = await self._proxy_read.getParamsetDescription(address, paramset)
             except BaseHomematicException as hhe:
                 _LOGGER.warning(
                     "get_paramsets failed with %s (%s) for %s address %s.",
@@ -685,7 +686,7 @@ class ClientHomegear(Client):
             try:
                 self._central.names.add(
                     address,
-                    await self._proxy.getMetadata(address, ATTR_HM_NAME),
+                    await self._proxy_read.getMetadata(address, ATTR_HM_NAME),
                 )
             except BaseHomematicException as hhe:
                 _LOGGER.warning(
@@ -785,7 +786,15 @@ class _ClientConfig:
         self.version: str | None = None
         self.xml_rpc_proxy: XmlRpcProxy = XmlRpcProxy(
             self.central.loop,
-            self.api_url,
+            max_workers=1,
+            uri=self.api_url,
+            tls=self._central_config.tls,
+            verify_tls=self._central_config.verify_tls,
+        )
+        self.xml_rpc_proxy_read: XmlRpcProxy = XmlRpcProxy(
+            self.central.loop,
+            max_workers=3,
+            uri=self.api_url,
             tls=self._central_config.tls,
             verify_tls=self._central_config.verify_tls,
         )

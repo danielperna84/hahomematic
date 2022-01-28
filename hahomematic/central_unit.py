@@ -203,7 +203,6 @@ class CentralUnit:
 
         _LOGGER.info("stop: Removing instance")
         del hm_data.INSTANCES[self.instance_name]
-        await self.clear_all()
 
     async def _stop_clients(self) -> None:
         """Stop clients."""
@@ -809,9 +808,8 @@ class CentralConfig:
         return True
 
     async def get_central(self) -> CentralUnit:
-        """Identify the used client."""
-        central = CentralUnit(self)
-        return central
+        """Return the central."""
+        return CentralUnit(self)
 
 
 class RoomCache:
