@@ -386,12 +386,12 @@ class CentralUnit:
                 f"create_devices: No clients initialized. Not starting central {self.instance_name}."
             )
         try:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "create_devices: Starting to create devices for %s.",
                 self.instance_name,
             )
             await create_devices(self)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "create_devices: Finished creating devices for %s.", self.instance_name
             )
         except Exception as err:

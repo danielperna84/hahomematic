@@ -1,6 +1,7 @@
 Version 0.28.1 (2022-01-27)
 - Update hub.py to match GenericEntity
 - Cleanup central API
+- Use dedicated proxy for mass read operations, to avoid blocking of connection checker
 
 Version 0.28.0 (2022-01-27)
 - Try create client after init failure
