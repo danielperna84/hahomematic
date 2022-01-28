@@ -773,7 +773,7 @@ class ParamsetCache:
     def is_initialized(self) -> bool:
         """Return im cache is initialized"""
         if not _updated_within_minutes(last_update=self._last_update):
-            #self._cache.clear()
+            self._cache.clear()
             self._last_update = INIT_DATETIME
             return False
 

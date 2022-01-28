@@ -9,7 +9,7 @@ import pytest
 
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig, CentralUnit
-from hahomematic.client import ClientConfig
+from hahomematic.client import InterfaceConfig
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity
 from hahomematic.helpers import get_device_address
@@ -65,6 +65,11 @@ async def central(
             global GOT_DEVICES
             GOT_DEVICES = True
 
+    interface_configs = {InterfaceConfig(
+        name="hm",
+        port=2001,
+    )}
+
     central_unit = await CentralConfig(
         domain="hahm",
         name="ccu-dev",
@@ -74,16 +79,10 @@ async def central(
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
         storage_folder="hahm",
+        interface_configs= interface_configs,
     ).get_central()
     central_unit.callback_system_event = systemcallback
-    await central_unit.create_clients(client_configs=[ClientConfig(
-        central=central_unit,
-        name="hm",
-        port=2001,
-    )])
-    # Once the central_1 is running we subscribe to receive messages.
-    await central_unit.init_clients()
-    await central_unit.init_hub()
+    await central_unit.start()
     while not GOT_DEVICES and sleep_counter < 300:
         print("Waiting for devices")
         sleep_counter += 1
@@ -142,4 +141,4 @@ def send_device_value_to_ccu(
     pydev_ccu: pydevccu.Server, address: str, parameter: str, value: Any
 ) -> None:
     """Send the device value to ccu."""
-    pydev_ccu.setValue(address, parameter, value, force=False)
+    pydev_ccu.setValue(address, parameter, value)

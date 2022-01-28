@@ -46,11 +46,11 @@ class Client(ABC):
     or JSON-RPC.
     """
 
-    def __init__(self, client_config: ClientConfig):
+    def __init__(self, client_config: _ClientConfig):
         """
         Initialize the Client.
         """
-        self._client_config: ClientConfig = client_config
+        self._client_config: _ClientConfig = client_config
         self._central: hm_central.CentralUnit = self._client_config.central
         self._version: str | None = self._client_config.version
         self.name: str = self._client_config.name
@@ -93,7 +93,7 @@ class Client(ABC):
                 "proxy_init: init('%s', '%s')", self._init_url, self.interface_id
             )
             await self._proxy.init(self._init_url, self.interface_id)
-            _LOGGER.info("proxy_init: Proxy for %s initialized", self.interface_id)
+            _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
         except BaseHomematicException as hhe:
             _LOGGER.error(
                 "proxy_init: %s (%s) Failed to initialize proxy for %s",
@@ -135,8 +135,7 @@ class Client(ABC):
 
     async def proxy_re_init(self) -> int:
         """Reinit Proxy"""
-        de_init_status = await self.proxy_de_init()
-        if de_init_status is not PROXY_DE_INIT_FAILED:
+        if PROXY_DE_INIT_FAILED != await self.proxy_de_init():
             return await self.proxy_init()
         return PROXY_DE_INIT_FAILED
 
@@ -324,7 +323,9 @@ class Client(ABC):
         """
         Fetch a specific paramset and add it to the known ones.
         """
-        _LOGGER.debug("fetch_paramset_description: %s for %s", paramset, channel_address)
+        _LOGGER.debug(
+            "fetch_paramset_description: %s for %s", paramset, channel_address
+        )
 
         try:
             parameter_data = await self._proxy.getParamsetDescription(
@@ -529,7 +530,7 @@ class ClientCCU(Client):
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 deleted = response[ATTR_RESULT]
-                _LOGGER.info("delete_system_variable: Deleted: %s", str(deleted))
+                _LOGGER.debug("delete_system_variable: Deleted: %s", str(deleted))
         except BaseHomematicException as hhe:
             _LOGGER.warning("delete_system_variable: %s (%s)", hhe.name, hhe.args)
 
@@ -747,23 +748,21 @@ class ClientHomegear(Client):
         return None
 
 
-class ClientConfig:
+class _ClientConfig:
     """Config for a Client."""
 
     def __init__(
-        self,
-        central: hm_central.CentralUnit,
-        name: str,
-        port: int,
-        path: str | None = None,
+        self, central: hm_central.CentralUnit, interface_config: InterfaceConfig
     ):
         self.central = central
-        self.name = name
+        self.name: str = interface_config.name
         self._central_config = self.central.central_config
         self._callback_host: str = (
             self._central_config.callback_host
             if self._central_config.callback_host
-            else get_local_ip(host=self._central_config.host, port=port)
+            else get_local_ip(
+                host=self._central_config.host, port=interface_config.port
+            )
         )
         self._callback_port: int = (
             self._central_config.callback_port
@@ -773,8 +772,8 @@ class ClientConfig:
         self.init_url: str = f"http://{self._callback_host}:{self._callback_port}"
         self.api_url = build_api_url(
             host=self._central_config.host,
-            port=port,
-            path=path,
+            port=interface_config.port,
+            path=interface_config.path,
             username=self._central_config.username,
             password=self._central_config.password,
             tls=self._central_config.tls,
@@ -803,3 +802,26 @@ class ClientConfig:
             if "Homegear" in self.version or "pydevccu" in self.version:
                 return ClientHomegear(self)
         return ClientCCU(self)
+
+
+class InterfaceConfig:
+    """interface config for a Client."""
+
+    def __init__(
+        self,
+        name: str,
+        port: int,
+        path: str | None = None,
+    ):
+        self.name = name
+        self.port = port
+        self.path = path
+
+
+async def create_client(
+    central: hm_central.CentralUnit, interface_config: InterfaceConfig
+) -> Client:
+    """Return a new client for with a given interface_config."""
+    return await _ClientConfig(
+        central=central, interface_config=interface_config
+    ).get_client()

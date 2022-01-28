@@ -9,7 +9,6 @@ from enum import Enum
 DEFAULT_ENCODING = "UTF-8"
 MANUFACTURER = "eQ-3"
 INIT_DATETIME = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
-LOCALHOST = "localhost"
 IP_LOCALHOST_V4 = "127.0.0.1"
 IP_LOCALHOST_V6 = "::1"
 IP_ANY_V4 = "0.0.0.0"
@@ -240,8 +239,6 @@ FLAG_INTERAL = 2
 FLAG_SERVICE = 8
 # FLAG_STICKY = 10  # This might be wrong. Documentation says 0x10 # not used
 
-DEFAULT_PASSWORD = None
-DEFAULT_USERNAME = "Admin"
 DEFAULT_TIMEOUT = 30
 DEFAULT_INIT_TIMEOUT = 90
 DEFAULT_TLS = False

@@ -6,7 +6,7 @@ import time
 
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig
-from hahomematic.client import ClientConfig
+from hahomematic.client import InterfaceConfig
 from hahomematic.devices.entity_definition import validate_entity_definition
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
@@ -57,6 +57,21 @@ class Example:
         )
 
     async def example_run(self):
+        interface_configs = {
+            InterfaceConfig(
+                name="hmip",
+                port=2010,
+            ),
+            InterfaceConfig(
+                name="rf",
+                port=2001,
+            ),
+            InterfaceConfig(
+                name="groups",
+                port=9292,
+                path="/groups",
+            ),
+        }
         self.central = await CentralConfig(
             domain="hahm",
             name="ccu-dev",
@@ -66,6 +81,7 @@ class Example:
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
             storage_folder="hahm",
+            interface_configs=interface_configs,
         ).get_central()
 
         # For testing we set a short INIT_TIMEOUT
@@ -78,28 +94,7 @@ class Example:
         self.central.callback_entity_event = self.eventcallback
         self.central.callback_ha_event = self.hacallback
 
-        client_configs = [
-            ClientConfig(
-                central=self.central,
-                name="hmip",
-                port=2010,
-            ),
-            ClientConfig(
-                central=self.central,
-                name="rf",
-                port=2001,
-            ),
-            ClientConfig(
-                central=self.central,
-                name="groups",
-                port=9292,
-                path="/groups",
-            ),
-        ]
-        await self.central.create_clients(client_configs)
-        # Once the central_1 is running we subscribe to receive messages.
-        await self.central.init_clients()
-        self.central.start_connection_checker()
+        await self.central.start()
         while not self.got_devices and self.SLEEPCOUNTER < 20:
             print("Waiting for devices")
             self.SLEEPCOUNTER += 1

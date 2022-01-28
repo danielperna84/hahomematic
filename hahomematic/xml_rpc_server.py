@@ -223,30 +223,30 @@ class XmlRpcServer(threading.Thread):
 
     def run(self) -> None:
         """
-        Run the XMLRPCServer thread.
+        Run the XmlRPC-Server thread.
         """
         _LOGGER.info(
-            "run: Starting XMLRPCServer at http://%s:%i",
+            "run: Starting XmlRPC-Server at http://%s:%i",
             self.local_ip,
             self.local_port,
         )
         self._simple_xml_rpc_server.serve_forever()
 
     def stop(self) -> None:
-        """Stops the XMLRPCServer."""
-        _LOGGER.info("stop: Shutting down XMLRPCServer")
+        """Stops the XmlRPC-Server."""
+        _LOGGER.info("stop: Shutting down XmlRPC-Server")
         self._simple_xml_rpc_server.shutdown()
-        _LOGGER.debug("stop: Stopping XMLRPCServer")
+        _LOGGER.debug("stop: Stopping XmlRPC-Server")
         self._simple_xml_rpc_server.server_close()
-        _LOGGER.info("stop: Server XMLRPCServer")
+        _LOGGER.info("stop: Server XmlRPC-Server")
 
     def register_central(self, central: hm_central.CentralUnit) -> None:
-        """Register a central in the xml_rpc_server"""
+        """Register a central in the XmlRPC-Server"""
         if not self._centrals.get(central.instance_name):
             self._centrals[central.instance_name] = central
 
     def un_register_central(self, central: hm_central.CentralUnit) -> None:
-        """Unregister a central from xml_rpc_server"""
+        """Unregister a central from XmlRPC-Server"""
         if self._centrals.get(central.instance_name):
             del self._centrals[central.instance_name]
 
@@ -264,12 +264,12 @@ class XmlRpcServer(threading.Thread):
 
 
 def get_xml_rpc_server() -> XmlRpcServer | None:
-    """Return the XMLRPCServer."""
+    """Return the XmlRPC-Server."""
     return _XML_RPC_SERVER
 
 
 def _set_xml_rpc_server(xml_rpc_server: XmlRpcServer | None) -> None:
-    """Add a XMLRPCServer."""
+    """Add a XmlRPC-Server."""
     # pylint: disable=global-statement
     global _XML_RPC_SERVER
     _XML_RPC_SERVER = xml_rpc_server
@@ -282,6 +282,7 @@ def register_xml_rpc_server(
     if (xml_rpc := get_xml_rpc_server()) is None:
         xml_rpc = XmlRpcServer(local_ip, local_port)
         xml_rpc.start()
+        _LOGGER.info("register_xml_rpc_server: Registering XmlRPC-Server.")
         _set_xml_rpc_server(xml_rpc)
     return xml_rpc
 
@@ -289,14 +290,14 @@ def register_xml_rpc_server(
 def un_register_xml_rpc_server() -> bool:
     """Unregister the xml rpc server."""
     xml_rpc = get_xml_rpc_server()
-    _LOGGER.info("stop: Shutting down server")
+    _LOGGER.info("stop: Trying to shut down XmlRPC-Server")
     if xml_rpc and xml_rpc.no_central_registered:
         xml_rpc.stop()
         _set_xml_rpc_server(None)
-        _LOGGER.info("stop: Server stopped")
+        _LOGGER.info("stop: XmlRPC-Server stopped")
         return True
 
     _LOGGER.info(
-        "stop: Server NOT stopped. There is still a server instance registered."
+        "stop: shared XmlRPC-Server NOT stopped. There is still another central instance registered."
     )
     return False
