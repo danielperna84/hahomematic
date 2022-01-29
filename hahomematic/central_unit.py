@@ -29,7 +29,6 @@ from hahomematic.const import (
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
     FILE_DEVICES,
-    FILE_NAMES,
     FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_NEW_DEVICES,
@@ -179,7 +178,6 @@ class CentralUnit:
         if check_only:
             await self._create_clients()
             return None
-        await self._load_caches()
         await self._start_clients()
         self._start_connection_checker()
         await self._init_hub()
@@ -187,7 +185,7 @@ class CentralUnit:
     async def _start_clients(self) -> None:
         """Start clients ."""
         if await self._create_clients():
-            await self.rooms.load()
+            await self._load_caches()
             await self._create_devices()
             await self._init_clients()
 
@@ -373,6 +371,7 @@ class CentralUnit:
             await self.raw_devices.load()
             await self.paramset_descriptions.load()
             await self.names.load()
+            await self.rooms.load()
         except json.decoder.JSONDecodeError:
             _LOGGER.warning(
                 "load_caches: Failed to load caches for %s.", self.instance_name
@@ -449,7 +448,6 @@ class CentralUnit:
             except KeyError:
                 _LOGGER.warning("delete_devices: Failed to delete: %s", address)
         await self.paramset_descriptions.save()
-        await self.names.save()
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
@@ -484,8 +482,7 @@ class CentralUnit:
                 _LOGGER.error("add_new_devices: Exception (%s)", err.args)
         await self.raw_devices.save()
         await self.paramset_descriptions.save()
-        await client.fetch_names()
-        await self.names.save()
+        await self.names.load()
         await create_devices(self)
 
     def create_task(self, target: Awaitable) -> None:
@@ -859,7 +856,38 @@ class RoomCache:
         return self._rooms.get(address)
 
 
-class BaseCache(ABC):
+class NamesCache:
+    """Cache for device/channel names."""
+
+    def __init__(self, central: CentralUnit):
+        # {address, name}
+        self._names_cache: dict[str, str] = {}
+        self._central = central
+
+    async def load(self) -> None:
+        """Fetch names from backend."""
+        await self._central.get_client().fetch_names()
+
+    def add(self, address: str, name: str) -> None:
+        """Add name to cache."""
+        if address not in self._names_cache:
+            self._names_cache[address] = name
+
+    def get_name(self, address: str) -> str | None:
+        """Get name from cache."""
+        return self._names_cache.get(address)
+
+    def remove(self, address: str) -> None:
+        """Remove name from cache."""
+        if address in self._names_cache:
+            del self._names_cache[address]
+
+    async def clear(self) -> None:
+        """Clear the cache."""
+        self._names_cache.clear()
+
+
+class BasePersitentCache(ABC):
     """Cache for files."""
 
     def __init__(
@@ -926,7 +954,7 @@ class BaseCache(ABC):
         await self._central.async_add_executor_job(_clear)
 
 
-class RawDevicesCache(BaseCache):
+class RawDevicesCache(BasePersitentCache):
     """Cache for device/channel names."""
 
     def __init__(self, central: CentralUnit):
@@ -1078,34 +1106,7 @@ class RawDevicesCache(BaseCache):
         return result
 
 
-class NamesCache(BaseCache):
-    """Cache for device/channel names."""
-
-    def __init__(self, central: CentralUnit):
-        # {address, name}
-        self._names_cache: dict[str, str] = {}
-        super().__init__(
-            central=central,
-            filename=FILE_NAMES,
-            cache_dict=self._names_cache,
-        )
-
-    def add(self, address: str, name: str) -> None:
-        """Add name to cache."""
-        if address not in self._names_cache:
-            self._names_cache[address] = name
-
-    def get_name(self, address: str) -> str | None:
-        """Get name from cache."""
-        return self._names_cache.get(address)
-
-    def remove(self, address: str) -> None:
-        """Remove name from cache."""
-        if address in self._names_cache:
-            del self._names_cache[address]
-
-
-class ParamsetDescriptionCache(BaseCache):
+class ParamsetDescriptionCache(BasePersitentCache):
     """Cache for paramset descriptions."""
 
     def __init__(self, central: CentralUnit):
