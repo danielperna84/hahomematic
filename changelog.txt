@@ -1,3 +1,7 @@
+Version 0.28.2 (2022-01-27)
+- Make names cache non persistent
+- Bump pydevccu to 0.1.2
+
 Version 0.28.1 (2022-01-27)
 - Update hub.py to match GenericEntity
 - Cleanup central API
