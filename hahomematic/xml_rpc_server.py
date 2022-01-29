@@ -104,7 +104,7 @@ class RPCFunctions:
             return []
         _LOGGER.debug("listDevices: interface_id = %s", interface_id)
 
-        return central.raw_devices.get_device_descriptions(interface_id=interface_id)
+        return central.device_descriptions.get_device_descriptions(interface_id=interface_id)
 
     def newDevices(
         self, interface_id: str, dev_descriptions: list[dict[str, Any]]

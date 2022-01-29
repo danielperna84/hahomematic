@@ -43,7 +43,7 @@ class DeviceExporter:
         """Export data."""
         device_descriptions: dict[
             str, Any
-        ] = self._central.raw_devices.get_device_with_channels(
+        ] = self._central.device_descriptions.get_device_with_channels(
             interface_id=self._interface_id, device_address=self._device_address
         )
         paramset_descriptions: dict[

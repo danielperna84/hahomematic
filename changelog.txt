@@ -1,8 +1,11 @@
-Version 0.28.2 (2022-01-27)
+Version 0.28.3 (2022-01-29)
+- Rename RawDevicesCache to DeviceDescriptionCache
+
+Version 0.28.2 (2022-01-29)
 - Make names cache non persistent
 - Bump pydevccu to 0.1.2
 
-Version 0.28.1 (2022-01-27)
+Version 0.28.1 (2022-01-28)
 - Update hub.py to match GenericEntity
 - Cleanup central API
 - Use dedicated proxy for mass read operations, to avoid blocking of connection checker

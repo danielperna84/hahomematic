@@ -85,7 +85,7 @@ class HmDevice:
         self._interface_id = interface_id
         self._client = self._central.clients[self._interface_id]
         self._device_address = device_address
-        self._channels = self._central.raw_devices.get_channels(
+        self._channels = self._central.device_descriptions.get_channels(
             self._interface_id, self._device_address
         )
         _LOGGER.debug(
@@ -100,14 +100,14 @@ class HmDevice:
         self._available: bool = True
         self._update_callbacks: list[Callable] = []
         self.device_type: str = str(
-            self._central.raw_devices.get_device_parameter(
+            self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
                 parameter=ATTR_HM_TYPE,
             )
         )
         self.sub_type: str = str(
-            self._central.raw_devices.get_device_parameter(
+            self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
                 parameter=ATTR_HM_SUBTYPE,
@@ -118,7 +118,7 @@ class HmDevice:
             self.device_type, self.sub_type
         )
         self.firmware: str = str(
-            self._central.raw_devices.get_device_parameter(
+            self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
                 parameter=ATTR_HM_FIRMWARE,
@@ -703,7 +703,7 @@ async def create_devices(central: hm_central.CentralUnit) -> None:
                 interface_id,
             )
             continue
-        for device_address in central.raw_devices.get_addresses(
+        for device_address in central.device_descriptions.get_addresses(
             interface_id=interface_id
         ):
             # Do we check for duplicates here? For now, we do.
