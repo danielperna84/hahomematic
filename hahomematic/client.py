@@ -413,13 +413,13 @@ class Client(ABC):
         """
         Update paramsets descriptionsfor provided device_address.
         """
-        if not self._central.raw_devices.get_interface(interface_id=self.interface_id):
+        if not self._central.device_descriptions.get_interface(interface_id=self.interface_id):
             _LOGGER.warning(
                 "update_paramset_descriptions: Interface ID missing in central_unit.raw_devices.devices_raw_dict. Not updating paramsets for %s.",
                 device_address,
             )
             return
-        if not self._central.raw_devices.get_device(
+        if not self._central.device_descriptions.get_device(
             interface_id=self.interface_id, device_address=device_address
         ):
             _LOGGER.warning(
@@ -428,7 +428,7 @@ class Client(ABC):
             )
             return
         await self.fetch_paramset_descriptions(
-            self._central.raw_devices.get_device(
+            self._central.device_descriptions.get_device(
                 interface_id=self.interface_id, device_address=device_address
             ),
             update=True,
@@ -680,7 +680,7 @@ class ClientHomegear(Client):
         Get all names from metadata (Homegear).
         """
         _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in self._central.raw_devices.get_interface(
+        for address in self._central.device_descriptions.get_interface(
             interface_id=self.interface_id
         ):
             try:

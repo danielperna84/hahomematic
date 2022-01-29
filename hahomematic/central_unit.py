@@ -77,7 +77,7 @@ class CentralUnit:
             central=self
         )
         self.names: NamesCache = NamesCache(central=self)
-        self.raw_devices: RawDevicesCache = RawDevicesCache(central=self)
+        self.device_descriptions: DeviceDescriptionCache = DeviceDescriptionCache(central=self)
         self.rooms: RoomCache = RoomCache(central=self)
 
         # {interface_id, client}
@@ -368,7 +368,7 @@ class CentralUnit:
     async def _load_caches(self) -> None:
         """Load files to caches."""
         try:
-            await self.raw_devices.load()
+            await self.device_descriptions.load()
             await self.paramset_descriptions.load()
             await self.names.load()
             await self.rooms.load()
@@ -430,7 +430,7 @@ class CentralUnit:
             str(addresses),
         )
 
-        await self.raw_devices.cleanup(
+        await self.device_descriptions.cleanup(
             interface_id=interface_id, deleted_addresses=addresses
         )
 
@@ -470,17 +470,17 @@ class CentralUnit:
         # We need this list to avoid adding duplicates.
         known_addresses = [
             dev_desc[ATTR_HM_ADDRESS]
-            for dev_desc in self.raw_devices.get_device_descriptions(interface_id)
+            for dev_desc in self.device_descriptions.get_device_descriptions(interface_id)
         ]
         client = self._clients[interface_id]
         for dev_desc in dev_descriptions:
             try:
                 if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
-                    self.raw_devices.add_device_description(interface_id, dev_desc)
+                    self.device_descriptions.add_device_description(interface_id, dev_desc)
                     await client.fetch_paramset_descriptions(dev_desc)
             except Exception as err:
                 _LOGGER.error("add_new_devices: Exception (%s)", err.args)
-        await self.raw_devices.save()
+        await self.device_descriptions.save()
         await self.paramset_descriptions.save()
         await self.names.load()
         await create_devices(self)
@@ -685,7 +685,7 @@ class CentralUnit:
         """
         Clear all stored data.
         """
-        await self.raw_devices.clear()
+        await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
         await self.names.clear()
         await self.rooms.clear()
@@ -866,6 +866,7 @@ class NamesCache:
 
     async def load(self) -> None:
         """Fetch names from backend."""
+        _LOGGER.info("load: Loading names for %s", self._central.instance_name)
         await self._central.get_client().fetch_names()
 
     def add(self, address: str, name: str) -> None:
@@ -954,16 +955,16 @@ class BasePersitentCache(ABC):
         await self._central.async_add_executor_job(_clear)
 
 
-class RawDevicesCache(BasePersitentCache):
+class DeviceDescriptionCache(BasePersitentCache):
     """Cache for device/channel names."""
 
     def __init__(self, central: CentralUnit):
         # {interface_id, [device_descriptions]}
-        self._devices_raw_cache: dict[str, list[dict[str, Any]]] = {}
+        self._device_description_cache: dict[str, list[dict[str, Any]]] = {}
         super().__init__(
             central=central,
             filename=FILE_DEVICES,
-            cache_dict=self._devices_raw_cache,
+            cache_dict=self._device_description_cache,
         )
 
         # {interface_id, {device_address, [channel_address]}}
@@ -975,9 +976,9 @@ class RawDevicesCache(BasePersitentCache):
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
         """Add device_descriptions to cache."""
-        if interface_id not in self._devices_raw_cache:
-            self._devices_raw_cache[interface_id] = []
-        self._devices_raw_cache[interface_id] = device_descriptions
+        if interface_id not in self._device_description_cache:
+            self._device_description_cache[interface_id] = []
+        self._device_description_cache[interface_id] = device_descriptions
 
         self._handle_device_descriptions(
             interface_id=interface_id, device_descriptions=device_descriptions
@@ -987,11 +988,11 @@ class RawDevicesCache(BasePersitentCache):
         self, interface_id: str, device_description: dict[str, Any]
     ) -> None:
         """Add device_description to cache."""
-        if interface_id not in self._devices_raw_cache:
-            self._devices_raw_cache[interface_id] = []
+        if interface_id not in self._device_description_cache:
+            self._device_description_cache[interface_id] = []
 
-        if device_description not in self._devices_raw_cache[interface_id]:
-            self._devices_raw_cache[interface_id].append(device_description)
+        if device_description not in self._device_description_cache[interface_id]:
+            self._device_description_cache[interface_id].append(device_description)
 
         self._handle_device_description(
             interface_id=interface_id, device_description=device_description
@@ -999,7 +1000,7 @@ class RawDevicesCache(BasePersitentCache):
 
     def get_device_descriptions(self, interface_id: str) -> list[dict[str, Any]]:
         """Find raw device in cache."""
-        return self._devices_raw_cache.get(interface_id, [])
+        return self._device_description_cache.get(interface_id, [])
 
     async def cleanup(self, interface_id: str, deleted_addresses: list[str]) -> None:
         """Remove device from cache."""
@@ -1101,7 +1102,7 @@ class RawDevicesCache(BasePersitentCache):
         Load device data from disk into devices_raw.
         """
         result = await super().load()
-        for interface_id, device_descriptions in self._devices_raw_cache.items():
+        for interface_id, device_descriptions in self._device_description_cache.items():
             self._handle_device_descriptions(interface_id, device_descriptions)
         return result
 
