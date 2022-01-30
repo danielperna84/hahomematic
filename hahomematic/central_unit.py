@@ -77,7 +77,9 @@ class CentralUnit:
             central=self
         )
         self.names: NamesCache = NamesCache(central=self)
-        self.device_descriptions: DeviceDescriptionCache = DeviceDescriptionCache(central=self)
+        self.device_descriptions: DeviceDescriptionCache = DeviceDescriptionCache(
+            central=self
+        )
         self.rooms: RoomCache = RoomCache(central=self)
 
         # {interface_id, client}
@@ -470,13 +472,17 @@ class CentralUnit:
         # We need this list to avoid adding duplicates.
         known_addresses = [
             dev_desc[ATTR_HM_ADDRESS]
-            for dev_desc in self.device_descriptions.get_device_descriptions(interface_id)
+            for dev_desc in self.device_descriptions.get_device_descriptions(
+                interface_id
+            )
         ]
         client = self._clients[interface_id]
         for dev_desc in dev_descriptions:
             try:
                 if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
-                    self.device_descriptions.add_device_description(interface_id, dev_desc)
+                    self.device_descriptions.add_device_description(
+                        interface_id, dev_desc
+                    )
                     await client.fetch_paramset_descriptions(dev_desc)
             except Exception as err:
                 _LOGGER.error("add_new_devices: Exception (%s)", err.args)
@@ -867,7 +873,8 @@ class NamesCache:
     async def load(self) -> None:
         """Fetch names from backend."""
         _LOGGER.info("load: Loading names for %s", self._central.instance_name)
-        await self._central.get_client().fetch_names()
+        if client := self._central.get_client():
+            await client.fetch_names()
 
     def add(self, address: str, name: str) -> None:
         """Add name to cache."""

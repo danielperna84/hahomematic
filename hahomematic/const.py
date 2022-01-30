@@ -262,7 +262,6 @@ class HmEntityUsage(Enum):
     CE_SECONDARY = "ce_secondary"
     CE_SENSOR = "ce_sensor"
     ENTITY_NO_CREATE = "entity_no_create"
-    ENTITY_NO_PARAMSET_DATA = "entity_no_paramset_data"
     ENTITY = "ENTITY"
     EVENT = "event"
 

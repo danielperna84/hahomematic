@@ -413,7 +413,9 @@ class Client(ABC):
         """
         Update paramsets descriptionsfor provided device_address.
         """
-        if not self._central.device_descriptions.get_interface(interface_id=self.interface_id):
+        if not self._central.device_descriptions.get_interface(
+            interface_id=self.interface_id
+        ):
             _LOGGER.warning(
                 "update_paramset_descriptions: Interface ID missing in central_unit.raw_devices.devices_raw_dict. Not updating paramsets for %s.",
                 device_address,
