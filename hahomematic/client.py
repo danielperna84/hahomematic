@@ -793,7 +793,7 @@ class _ClientConfig:
         )
         self.xml_rpc_proxy_read: XmlRpcProxy = XmlRpcProxy(
             self.central.loop,
-            max_workers=3,
+            max_workers=1,
             uri=self.api_url,
             tls=self._central_config.tls,
             verify_tls=self._central_config.verify_tls,
