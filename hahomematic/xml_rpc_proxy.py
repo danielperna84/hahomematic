@@ -29,10 +29,10 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
     def __init__(
         self,
         loop: asyncio.AbstractEventLoop,
-        max_workers,
+        max_workers: int,
         *args: Any,
         **kwargs: Any,
-    ):
+    ) -> None:
         """
         Initialize new proxy for server and get local ip
         """

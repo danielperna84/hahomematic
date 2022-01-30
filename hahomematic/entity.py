@@ -36,7 +36,6 @@ from hahomematic.const import (
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
-    OPERATION_READ,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -395,25 +394,16 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             (self.channel_address, self.parameter)
         ].append(self.event)
 
-    def init_entity_value(self) -> None:
+    async def init_entity_value(self) -> None:
         """Init the entity data."""
         if self._updated_within_minutes():
             return None
 
         self.set_value(
-            value=self._device.paramset_cache.get_value(
+            value=await self._device.value_cache.get_value(
                 channel_address=self.channel_address, parameter=self.parameter
             )
         )
-
-        if (
-            self.usage != HmEntityUsage.ENTITY_NO_CREATE
-            and self.operations & OPERATION_READ
-            and self._device.paramset_cache.paramset_has_no_entry_for_parameter(
-                channel_address=self.channel_address, parameter=self.parameter
-            )
-        ):
-            self.usage = HmEntityUsage.ENTITY_NO_PARAMSET_DATA
 
     def event(
         self, interface_id: str, channel_address: str, parameter: str, raw_value: Any
@@ -600,11 +590,11 @@ class CustomEntity(BaseEntity, CallbackEntity):
             rx_mode=rx_mode,
         )
 
-    def init_entity_value(self) -> None:
+    async def init_entity_value(self) -> None:
         """Init the entity values."""
         for entity in self.data_entities.values():
             if entity:
-                entity.init_entity_value()
+                await entity.init_entity_value()
         self.update_entity()
 
     def _init_entities(self) -> None:
