@@ -758,22 +758,27 @@ class ParamsetCache:
     def __init__(self, device: HmDevice):
         self._device = device
         self._client = device.client
-        self._cache: dict[str, dict[str, Any]] = {}
+        self._paramset_cache: dict[str, dict[str, Any]] = {}
+        self._value_cache: dict[(str, str), Any] = {}
         self._last_update = INIT_DATETIME
 
     def get_value(self, channel_address: str, parameter: str) -> Any | None:
         """Get Value from paramset cache."""
         if not self.is_initialized:
             return None
-        if paramset := self._cache.get(channel_address):
-            return paramset.get(parameter)
+        if len(self._value_cache) > 0:
+            return self._value_cache.get((channel_address, parameter))
+        if len(self._paramset_cache) > 0:
+            if paramset := self._paramset_cache.get(channel_address):
+                return paramset.get(parameter)
         return None
 
     @property
     def is_initialized(self) -> bool:
         """Return im cache is initialized"""
         if not _updated_within_minutes(last_update=self._last_update):
-            self._cache.clear()
+            self._paramset_cache.clear()
+            self._value_cache.clear()
             self._last_update = INIT_DATETIME
             return False
 
@@ -783,15 +788,33 @@ class ParamsetCache:
         self, channel_address: str, parameter: str
     ) -> bool | None:
         """Check if paramset has no entry for parameter."""
-        if paramset := self._cache.get(channel_address):
+        if paramset := self._paramset_cache.get(channel_address):
             return paramset.get(parameter) is None
         return None
 
     async def init(self) -> None:
         """Load data"""
+        await self.init_values()
+
+    async def init_paramset(self) -> None:
+        """Load data by get_paramset"""
         try:
             for channel_address in self._get_channel_addresses():
                 await self._load_channel_data(channel_address=channel_address)
+            self._last_update = datetime.now()
+        except BaseHomematicException as bhe:
+            _LOGGER.debug(
+                " load_data: Failed to init cache for %s, %s (%s)",
+                self._device.device_type,
+                self._device.device_address,
+                bhe,
+            )
+
+    async def init_values(self) -> None:
+        """Load data by get_value"""
+        try:
+            for channel_address, parameter in self._get_channel_parameter_addresses():
+                await self._load_value_data(channel_address=channel_address, parameter=parameter)
             self._last_update = datetime.now()
         except BaseHomematicException as bhe:
             _LOGGER.debug(
@@ -814,6 +837,31 @@ class ParamsetCache:
                 channel_addresses.append(entity.channel_address)
         return set(channel_addresses)
 
+    def _get_channel_parameter_addresses(self) -> set[(str, str)]:
+        """Get entities by channel address and parameter."""
+        channel_parameter_addresses: list[(str, str)] = []
+        for entity in self._device.entities.values():
+            if entity.operations & OPERATION_READ:
+                channel_parameter_addresses.append((entity.channel_address, entity.parameter))
+        return set(channel_parameter_addresses)
+
+    async def _load_value_data(self, channel_address: str, parameter: str) -> int:
+        """Load data"""
+        try:
+            value = await self._client.get_value(
+                channel_address=channel_address, parameter=parameter
+            )
+            self._value_cache[(channel_address, parameter)] = value
+            return DATA_LOAD_SUCCESS
+        except BaseHomematicException as bhe:
+            _LOGGER.debug(
+                "_load_value_data: Failed to get paramset for %s, %s: %s",
+                self._device.device_type,
+                channel_address,
+                bhe,
+            )
+            return DATA_LOAD_FAIL
+
     async def _load_channel_data(self, channel_address: str) -> int:
         """Load data"""
         try:
@@ -821,7 +869,7 @@ class ParamsetCache:
                 channel_address=channel_address, paramset_key=PARAMSET_VALUES
             )
             if len(paramset) > 0:
-                self._cache[channel_address] = paramset
+                self._paramset_cache[channel_address] = paramset
             return DATA_LOAD_SUCCESS
         except BaseHomematicException as bhe:
             _LOGGER.debug(

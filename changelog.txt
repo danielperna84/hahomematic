@@ -1,4 +1,7 @@
-Version 0.28.4 (2022-01-40)
+Version 0.28.5 (2022-01-30)
+- Extend device cache to use get_value
+
+Version 0.28.4 (2022-01-30)
 - Limit read proxy workers to 1
 
 Version 0.28.3 (2022-01-29)
