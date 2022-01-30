@@ -1,3 +1,6 @@
+Version 0.28.4 (2022-01-40)
+- Limit read proxy workers to 1
+
 Version 0.28.3 (2022-01-29)
 - Rename RawDevicesCache to DeviceDescriptionCache
 
