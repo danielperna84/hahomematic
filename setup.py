@@ -15,7 +15,7 @@ package_data = {
     },
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.28.6"
+VERSION = "0.28.7"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 

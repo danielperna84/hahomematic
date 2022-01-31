@@ -1,4 +1,7 @@
-Version 0.28.5 (2022-01-30)
+Version 0.28.7 (2022-01-30)
+- Add additional check to reconnect
+
+Version 0.28.6 (2022-01-30)
 - Optimize get_value caching
 
 Version 0.28.5 (2022-01-30)

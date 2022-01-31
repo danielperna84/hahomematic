@@ -326,7 +326,7 @@ class CentralUnit:
             self._available = True
         return True
 
-    async def reconnect(self, force_immediate: bool = False) -> None:
+    async def reconnect(self, force_immediate: bool = False) -> bool:
         """re-init all RPC clients."""
         if await self.is_connected():
             _LOGGER.info(
@@ -346,6 +346,8 @@ class CentralUnit:
                     "reconnect: re-connected to central_unit %s",
                     self.instance_name,
                 )
+            return True
+        return False
 
     def get_client_by_interface_id(self, interface_id: str) -> hm_client.Client | None:
         """Return a client by interface_id."""
@@ -706,6 +708,7 @@ class ConnectionChecker(threading.Thread):
         threading.Thread.__init__(self)
         self._central = central
         self._active = True
+        self._central_is_connected = True
 
     def run(self) -> None:
         """
@@ -732,13 +735,13 @@ class ConnectionChecker(threading.Thread):
                 self._central.instance_name,
             )
             try:
-                if not await self._central.is_connected():
+                if not self._central_is_connected or not await self._central.is_connected():
                     _LOGGER.warning(
                         "check_connection: No connection to server %s",
                         self._central.instance_name,
                     )
                     await asyncio.sleep(connection_checker_interval)
-                    await self._central.reconnect()
+                    self._central_is_connected = await self._central.reconnect()
                 elif len(self._central.clients) == 0:
                     _LOGGER.warning(
                         "check_connection: No clients exist. Trying to create clients for server %s",
