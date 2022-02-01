@@ -500,7 +500,7 @@ class HmDevice:
             channel_no=get_device_channel(channel_address),
         ):
             _LOGGER.debug(
-                "create_entity_and_append_to_device: Ignoring parameter: %s (%s)",
+                "create_entity_and_append_to_device: Ignoring parameter: %s [%s]",
                 parameter,
                 channel_address,
             )
@@ -723,7 +723,7 @@ async def create_devices(central: hm_central.CentralUnit) -> None:
 
             except Exception as err:
                 _LOGGER.error(
-                    "create_devices: Exception (%s) Failed to create device: %s, %s",
+                    "create_devices: Exception [%s] Failed to create device: %s, %s",
                     err.args,
                     interface_id,
                     device_address,
@@ -741,7 +741,7 @@ async def create_devices(central: hm_central.CentralUnit) -> None:
                     central.hm_devices[device_address] = device
             except Exception as err:
                 _LOGGER.error(
-                    "create_devices: Exception (%s) Failed to create entities: %s, %s",
+                    "create_devices: Exception [%s] Failed to create entities: %s, %s",
                     err.args,
                     interface_id,
                     device_address,
@@ -790,7 +790,7 @@ class ValueCache:
             self._last_update = datetime.now()
         except BaseHomematicException as bhe:
             _LOGGER.debug(
-                "init_values_channel0: Failed to init cache for channel0 %s, %s (%s)",
+                "init_values_channel0: Failed to init cache for channel0 %s, %s [%s]",
                 self._device.device_type,
                 self._device.device_address,
                 bhe,

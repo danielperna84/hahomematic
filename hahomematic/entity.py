@@ -324,7 +324,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 return str(value)  # type: ignore[return-value]
         except ValueError:
             _LOGGER.debug(
-                "_convert_value: conversion failed for %s, %s, %s, value: (%s)",
+                "_convert_value: conversion failed for %s, %s, %s, value: [%s]",
                 self._device.interface_id,
                 self.channel_address,
                 self.parameter,
@@ -343,7 +343,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
             )
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "generic_entity: %s (%s) Failed to set state for: %s, %s, %s, %s",
+                "generic_entity: %s [%s] Failed to set state for: %s, %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 self._device.device_type,
@@ -795,7 +795,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             )
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "action_event: %s (%s) Failed to send value for: %s, %s, %s",
+                "action_event: %s [%s] Failed to send value for: %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 self.channel_address,

@@ -65,7 +65,7 @@ class RPCFunctions:
                     callback(interface_id, channel_address, parameter, value)
             except RuntimeError as rte:
                 _LOGGER.debug(
-                    "event: RuntimeError (%s). Failed to call callback for: %s, %s, %s",
+                    "event: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
                     rte.args,
                     interface_id,
                     channel_address,

@@ -78,7 +78,7 @@ class JsonRpcAioHttpClient:
             return await self._login()
         except ClientError as cer:
             _LOGGER.error(
-                "renew: ClientError (%s) while renewing JSON-RPC session", cer.args
+                "renew: ClientError [%s] while renewing JSON-RPC session", cer.args
             )
             return None
 
@@ -114,7 +114,7 @@ class JsonRpcAioHttpClient:
             return session_id
         except BaseHomematicException as hhe:
             _LOGGER.error(
-                "login: %s (%s) while logging in via JSON-RPC", hhe.name, hhe.args
+                "login: %s [%s] while logging in via JSON-RPC", hhe.name, hhe.args
             )
             return None
 
@@ -195,7 +195,7 @@ class JsonRpcAioHttpClient:
                     return await resp.json(encoding="utf-8")
                 except ValueError as ver:
                     _LOGGER.error(
-                        "_post: ValueError (%s) Failed to parse JSON. Trying workaround",
+                        "_post: ValueError [%s] Failed to parse JSON. Trying workaround",
                         ver.args,
                     )
                     # Workaround for bug in CCU
@@ -240,7 +240,7 @@ class JsonRpcAioHttpClient:
                 _LOGGER.warning("logout: Logout error: %s", response[ATTR_RESULT])
         except ClientError as cer:
             _LOGGER.error(
-                "logout: ClientError (%s) while logging in via JSON-RPC", cer.args
+                "logout: ClientError [%s] while logging in via JSON-RPC", cer.args
             )
         return
 

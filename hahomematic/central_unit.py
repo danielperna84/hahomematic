@@ -65,7 +65,6 @@ class CentralUnit:
         self._domain = self.central_config.domain
 
         self.instance_name: str = self.central_config.name
-        self._available: bool = True
         self._loop: asyncio.AbstractEventLoop = self.central_config.loop
         self._xml_rpc_server: xml_rpc.XmlRpcServer = self.central_config.xml_rpc_server
         self._xml_rpc_server.register_central(self)
@@ -114,7 +113,10 @@ class CentralUnit:
     @property
     def available(self) -> bool:
         """Return the availability of the central_unit."""
-        return self._available
+        for client in self._clients.values():
+            if client.available is False:
+                return False
+        return True
 
     @property
     def clients(self) -> dict[str, hm_client.Client]:
@@ -246,8 +248,7 @@ class CentralUnit:
             return True
         except BaseHomematicException as ex:
             _LOGGER.warning(
-                "create_clients: Failed to create clients for central %s. (%s)",
-                self.clients,
+                "create_clients: Failed to create clients for central [%s].",
                 ex.args,
             )
         return False
@@ -302,53 +303,6 @@ class CentralUnit:
             self.instance_name,
         )
 
-    async def is_connected(self) -> bool:
-        """Check connection to ccu."""
-        for client in self._clients.values():
-            if not await client.is_connected():
-                _LOGGER.warning(
-                    "is_connected: No connection to %s.",
-                    client.interface_id,
-                )
-                if self._available:
-                    self._mark_all_devices_availability(available=False)
-                    _LOGGER.info(
-                        "is_connected: marked all devices unavailable for %s",
-                        self.instance_name,
-                    )
-                    self._available = False
-                return False
-        if not self._available:
-            self._mark_all_devices_availability(available=True)
-            _LOGGER.info(
-                "is_connected: marked all devices available for %s", self.instance_name
-            )
-            self._available = True
-        return True
-
-    async def reconnect(self, force_immediate: bool = False) -> bool:
-        """re-init all RPC clients."""
-        if await self.is_connected():
-            _LOGGER.info(
-                "reconnect: re-connect to central_unit %s",
-                self.instance_name,
-            )
-            if not force_immediate:
-                _LOGGER.info(
-                    "reconnect: waiting to re-connect to central_unit %s for %is",
-                    self.instance_name,
-                    int(config.RECONNECT_WAIT),
-                )
-                await asyncio.sleep(config.RECONNECT_WAIT)
-            for client in self._clients.values():
-                await client.proxy_re_init()
-                _LOGGER.info(
-                    "reconnect: re-connected to central_unit %s",
-                    self.instance_name,
-                )
-            return True
-        return False
-
     def get_client_by_interface_id(self, interface_id: str) -> hm_client.Client | None:
         """Return a client by interface_id."""
         return self._clients.get(interface_id)
@@ -361,7 +315,7 @@ class CentralUnit:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hm_client.Client | None = None
         for client in self._clients.values():
-            if client.get_virtual_remote():
+            if client.get_virtual_remote() and client.available:
                 return client
         return client
 
@@ -399,7 +353,7 @@ class CentralUnit:
             )
         except Exception as err:
             _LOGGER.error(
-                "create_devices: Exception (%s) Failed to create entities", err.args
+                "create_devices: Exception [%s] Failed to create entities", err.args
             )
             raise HaHomematicException("entity-creation-error") from err
 
@@ -487,7 +441,7 @@ class CentralUnit:
                     )
                     await client.fetch_paramset_descriptions(dev_desc)
             except Exception as err:
-                _LOGGER.error("add_new_devices: Exception (%s)", err.args)
+                _LOGGER.error("add_new_devices: Exception [%s]", err.args)
         await self.device_descriptions.save()
         await self.paramset_descriptions.save()
         await self.names.load()
@@ -531,11 +485,6 @@ class CentralUnit:
                 self.instance_name,
             )
             raise HaHomematicException from cer
-
-    def _mark_all_devices_availability(self, available: bool) -> None:
-        """Mark all device's availability state."""
-        for hm_device in self.hm_devices.values():
-            hm_device.set_availability(value=available)
 
     async def get_all_system_variables(self) -> dict[str, Any] | None:
         """Get all system variables from CCU / Homegear."""
@@ -735,26 +684,25 @@ class ConnectionChecker(threading.Thread):
                 self._central.instance_name,
             )
             try:
-                if not self._central_is_connected or not await self._central.is_connected():
-                    _LOGGER.warning(
-                        "check_connection: No connection to server %s",
-                        self._central.instance_name,
-                    )
-                    await asyncio.sleep(connection_checker_interval)
-                    self._central_is_connected = await self._central.reconnect()
-                elif len(self._central.clients) == 0:
+                if len(self._central.clients) == 0:
                     _LOGGER.warning(
                         "check_connection: No clients exist. Trying to create clients for server %s",
                         self._central.instance_name,
                     )
                     await self._central.restart_clients()
-                await asyncio.sleep(connection_checker_interval)
+                else:
+                    reconnects: list[Any] = []
+                    for client in self._central.clients.values():
+                        if client.available is False or not await client.is_connected():
+                            reconnects.append(client.reconnect())
+                    if reconnects:
+                        await asyncio.gather(*reconnects)
             except NoConnection as nex:
                 _LOGGER.error("check_connection: no connection: %s", nex.args)
-                await asyncio.sleep(connection_checker_interval)
                 continue
             except Exception as err:
-                _LOGGER.error("check_connection: Exception (%s)", err.args)
+                _LOGGER.error("check_connection: Exception [%s]", err.args)
+            await asyncio.sleep(connection_checker_interval)
 
 
 class CentralConfig:
@@ -831,7 +779,7 @@ class RoomCache:
 
     async def load(self) -> None:
         """Init room cache."""
-        _LOGGER.info("load: Loading rooms for %s", self._central.instance_name)
+        _LOGGER.debug("load: Loading rooms for %s", self._central.instance_name)
         self._rooms = await self._get_all_rooms()
         self._identify_device_rooms()
 
@@ -875,7 +823,7 @@ class NamesCache:
 
     async def load(self) -> None:
         """Fetch names from backend."""
-        _LOGGER.info("load: Loading names for %s", self._central.instance_name)
+        _LOGGER.debug("load: Loading names for %s", self._central.instance_name)
         if client := self._central.get_client():
             await client.fetch_names()
 
