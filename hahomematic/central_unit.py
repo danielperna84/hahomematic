@@ -212,7 +212,7 @@ class CentralUnit:
         for client in self._clients.values():
             _LOGGER.info("stop_client: Stopping %s.", client.interface_id)
             client.stop()
-        _LOGGER.info("stop_clients: Clearing existing clients.")
+        _LOGGER.debug("stop_clients: Clearing existing clients.")
         self._clients.clear()
         self._clients_by_init_url.clear()
 
