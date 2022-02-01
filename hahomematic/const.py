@@ -306,6 +306,7 @@ class HmEventType(Enum):
 
     KEYPRESS = "homematic.keypress"
     DEVICE = "homematic.device"
+    INTERFACE = "homematic.interface"
 
     def __str__(self) -> str:
         """Return self.value."""

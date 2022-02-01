@@ -16,6 +16,7 @@ from hahomematic.const import (
     ATTR_HM_ADDRESS,
     ATTR_HM_NAME,
     ATTR_HM_PARAMSETS,
+    ATTR_INTERFACE_ID,
     ATTR_NAME,
     ATTR_RESULT,
     ATTR_VALUE,
@@ -30,6 +31,7 @@ from hahomematic.const import (
     PROXY_INIT_FAILED,
     PROXY_INIT_SUCCESS,
     RELEVANT_PARAMSETS,
+    HmEventType,
 )
 from hahomematic.device import HmDevice
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
@@ -101,7 +103,7 @@ class Client(ABC):
                 "proxy_init: init('%s', '%s')", self._init_url, self.interface_id
             )
             await self._proxy.init(self._init_url, self.interface_id)
-            self.mark_all_devices_availability(available=True)
+            self._mark_all_devices_availability(available=True)
             _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
         except BaseHomematicException as hhe:
             _LOGGER.error(
@@ -148,7 +150,7 @@ class Client(ABC):
             return await self.proxy_init()
         return PROXY_DE_INIT_FAILED
 
-    def mark_all_devices_availability(self, available: bool) -> None:
+    def _mark_all_devices_availability(self, available: bool) -> None:
         """Mark device's availability state for this interface."""
         if self._available != available:
             for hm_device in self._central.hm_devices.values():
@@ -160,6 +162,7 @@ class Client(ABC):
                 "available" if available else "unavailable",
                 self.interface_id,
             )
+            self._fire_interface_connect_event(available=available)
 
     async def reconnect(self) -> bool:
         """re-init all RPC clients."""
@@ -196,13 +199,26 @@ class Client(ABC):
         """
         is_connected = await self._check_connection()
         if not is_connected:
-            self.mark_all_devices_availability(available=False)
+            self._mark_all_devices_availability(available=False)
             return False
 
         diff: timedelta = datetime.now() - self.last_updated
         if diff.total_seconds() < config.INIT_TIMEOUT:
             return True
         return False
+
+    def _fire_interface_connect_event(self, available: bool) -> None:
+        """Fire an event about the interface status."""
+
+        event_data = {
+            ATTR_INTERFACE_ID: self.interface_id,
+            ATTR_VALUE: available,
+        }
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
+                HmEventType.INTERFACE,
+                event_data,
+            )
 
     @abstractmethod
     async def _check_connection(self) -> bool:
