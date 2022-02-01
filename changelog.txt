@@ -1,3 +1,6 @@
+Version 0.29.1 (2022-02-01)
+- Check if interface callback is alive
+
 Version 0.29.0 (2022-02-01)
 - Make device availability dependent on the client
 - Fire event about interface availability

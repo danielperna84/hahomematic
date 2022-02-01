@@ -146,6 +146,14 @@ class CentralUnit:
         return self._domain
 
     @property
+    def is_alive(self) -> bool:
+        """Return if XmlRPC-Server is alive."""
+        for client in self.clients.values():
+            if not client.is_callback_alive():
+                return False
+        return True
+
+    @property
     def json_rpc_session(self) -> JsonRpcAioHttpClient:
         """Return the json_rpc_session."""
         return self._json_rpc_session
@@ -693,6 +701,8 @@ class ConnectionChecker(threading.Thread):
                 else:
                     reconnects: list[Any] = []
                     for client in self._central.clients.values():
+                        # check if interface callback is alive
+                        client.is_callback_alive()
                         if client.available is False or not await client.is_connected():
                             reconnects.append(client.reconnect())
                     if reconnects:
