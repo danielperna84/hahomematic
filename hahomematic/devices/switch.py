@@ -115,6 +115,9 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-USBSM": (make_ip_switch, [2]),
     "HmIP-WGC": (make_ip_switch, [2]),
     "HmIP-WHS2": (make_ip_switch, [1, 5]),
-    # HmIP-MIO16-PCB : Don't add it. Too much functionality. Device is better supported without custom entities.
-    # HmIP-MIOB : Don't add it. Too much functionality. Device is better supported without custom entities.
 }
+
+# HmIP-MIO16-PCB : Don't add it. Too much functionality. Device is better supported without custom entities.
+# HmIP-MIOB : Don't add it. Too much functionality. Device is better supported without custom entities.
+
+BLACKLISTED_DEVICES: list[str] = []

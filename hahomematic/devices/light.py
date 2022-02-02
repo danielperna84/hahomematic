@@ -428,3 +428,5 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HM-LC-Dim2T-SM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
     "OLIGO.smart.iq.HM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
 }
+
+BLACKLISTED_DEVICES: list[str] = []

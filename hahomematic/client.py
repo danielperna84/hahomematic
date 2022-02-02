@@ -220,7 +220,8 @@ class Client(ABC):
             if seconds_since_last_event < CONNECTION_CHECKER_INTERVAL * 10:
                 if not self._is_callback_alive:
                     self._fire_interface_event(
-                        interface_event_type=HmInterfaceEventType.CALLBACK, available=True
+                        interface_event_type=HmInterfaceEventType.CALLBACK,
+                        available=True,
                     )
                     self._is_callback_alive = True
                 return True

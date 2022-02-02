@@ -207,7 +207,7 @@ class CeIpBlind(CeBlind):
     async def _set_cover_tilt_level(self, level: float) -> None:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
         await super()._set_cover_tilt_level(level=level)
-        await self.set_cover_position(position=self.current_cover_position)
+        await self.set_cover_position(position=self.current_cover_position or 0)
 
 
 class CeGarage(CustomEntity):
@@ -385,3 +385,5 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HM-Sec-Win": (make_rf_blind, [1]),
     "HMW-LC-Bl1": (make_rf_blind, [3]),
 }
+
+BLACKLISTED_DEVICES: list[str] = []

@@ -558,9 +558,12 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-eTRV": (make_ip_thermostat, [1]),
     "HmIP-HEATING": (make_ip_thermostat_group, [1]),
     "HmIP-STHD": (make_ip_thermostat, [1]),
+    "HmIP-STH": (make_ip_thermostat, [1]),
     "HmIP-WTH": (make_ip_thermostat, [1]),
     "HmIPW-STH": (make_ip_thermostat, [1]),
     "HmIPW-WTH": (make_ip_thermostat, [1]),
     "Thermostat AA": (make_ip_thermostat, [1]),
     "ZEL STG RM FWT": (make_simple_thermostat, [1]),
 }
+
+BLACKLISTED_DEVICES: list[str] = ["HmIP-STHO"]
