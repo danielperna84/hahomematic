@@ -101,9 +101,12 @@ class CeCover(CustomEntity):
 
     async def set_cover_position(self, position: float) -> None:
         """Move the cover to a specific position."""
-        # Hm cover is closed:1 -> open:0
         position = min(100.0, max(0.0, position))
         level = position / 100.0
+        await self._set_cover_level(level=level)
+
+    async def _set_cover_level(self, level: float) -> None:
+        """Move the cover to a specific position. Value range is 0.0 to 1.0."""
         await self._e_level.send_value(level)
 
     @property
@@ -115,11 +118,11 @@ class CeCover(CustomEntity):
 
     async def open_cover(self) -> None:
         """Open the cover."""
-        await self._e_level.send_value(HM_OPEN)
+        await self._set_cover_level(level=HM_OPEN)
 
     async def close_cover(self) -> None:
         """Close the cover."""
-        await self._e_level.send_value(HM_CLOSED)
+        await self._set_cover_level(level=HM_CLOSED)
 
     async def stop_cover(self) -> None:
         """Stop the device if in motion."""
@@ -161,15 +164,19 @@ class CeBlind(CeCover):
         """Move the cover to a specific tilt position."""
         position = min(100.0, max(0.0, position))
         level = position / 100.0
+        await self._set_cover_tilt_level(level)
+
+    async def _set_cover_tilt_level(self, level: float) -> None:
+        """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
         await self._e_level_2.send_value(level)
 
     async def open_cover_tilt(self) -> None:
         """Open the tilt."""
-        await self._e_level_2.send_value(HM_OPEN)
+        await self._set_cover_tilt_level(level=HM_OPEN)
 
     async def close_cover_tilt(self) -> None:
         """Close the tilt."""
-        await self._e_level_2.send_value(HM_CLOSED)
+        await self._set_cover_tilt_level(level=HM_CLOSED)
 
     async def stop_cover_tilt(self) -> None:
         """Stop the device if in motion."""
@@ -182,6 +189,25 @@ class CeBlind(CeCover):
         if self._channel_level_2 and self._channel_level_2 != self._e_level_2.value:
             state_attr[ATTR_CHANNEL_TILT_LEVEL] = self._channel_level_2 * 100
         return state_attr
+
+
+class CeIpBlind(CeBlind):
+    """Class for homematic ip blind entities."""
+
+    async def open_cover(self) -> None:
+        """Open the cover and open the tilt."""
+        await self._set_cover_tilt_level(level=HM_OPEN)
+        await self._set_cover_level(level=HM_OPEN)
+
+    async def close_cover(self) -> None:
+        """Close the cover and close the tilt."""
+        await self._set_cover_tilt_level(level=HM_CLOSED)
+        await self._set_cover_level(level=HM_CLOSED)
+
+    async def _set_cover_tilt_level(self, level: float) -> None:
+        """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
+        await super()._set_cover_tilt_level(level=level)
+        await self.set_cover_position(position=self.current_cover_position)
 
 
 class CeGarage(CustomEntity):
@@ -301,7 +327,7 @@ def make_ip_blind(
     return make_custom_entity(
         device=device,
         device_address=device_address,
-        custom_entity_class=CeBlind,
+        custom_entity_class=CeIpBlind,
         device_enum=EntityDefinition.IP_COVER,
         group_base_channels=group_base_channels,
     )
