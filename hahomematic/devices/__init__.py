@@ -14,6 +14,14 @@ _ALL_DEVICES = [
     switch.DEVICES,
 ]
 
+_BLACKLISTED_DEVICES = [
+    cover.BLACKLISTED_DEVICES,
+    climate.BLACKLISTED_DEVICES,
+    light.BLACKLISTED_DEVICES,
+    lock.BLACKLISTED_DEVICES,
+    switch.BLACKLISTED_DEVICES,
+]
+
 
 def get_device_funcs(
     device_type: str, sub_type: str
@@ -21,6 +29,14 @@ def get_device_funcs(
     """Return the function to create custom entities"""
 
     funcs = []
+    for platform_blacklisted_devices in _BLACKLISTED_DEVICES:
+        if _is_blacklisted_device_by_platform(
+            blacklisted_devices=platform_blacklisted_devices,
+            device_type=device_type,
+            sub_type=sub_type,
+        ):
+            return []
+
     for platform_devices in _ALL_DEVICES:
         if func := _get_device_func_by_platform(
             platform_devices=platform_devices,
@@ -36,13 +52,27 @@ def _get_device_func_by_platform(
 ) -> tuple[Callable, list[int]] | None:
     """Return the function to create custom entities"""
     for name, func in platform_devices.items():
-        if name.lower() == device_type.lower():
-            return func
-        if sub_type and sub_type.lower() == name.lower():
-            return func
-        if device_type.lower().startswith(name.lower()):
+        if (
+            device_type.lower() == name.lower()
+            or (sub_type and sub_type.lower() == name.lower())
+            or device_type.lower().startswith(name.lower())
+        ):
             return func
     return None
+
+
+def _is_blacklisted_device_by_platform(
+    blacklisted_devices: list[str], device_type: str, sub_type: str
+) -> bool:
+    """Return the function to create custom entities"""
+    for blacklisted_device in blacklisted_devices:
+        if (
+            device_type.lower() == blacklisted_device.lower()
+            or (sub_type and sub_type.lower() == blacklisted_device.lower())
+            or device_type.lower().startswith(blacklisted_device.lower())
+        ):
+            return True
+    return False
 
 
 def is_multi_channel_device(device_type: str, sub_type: str) -> bool:

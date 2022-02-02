@@ -15,11 +15,11 @@ package_data = {
     },
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.29.1"
+VERSION = "0.29.2"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
-REQUIRES = ["aiohttp>=3.8.1", "voluptuous>=0.12.2", "python-slugify>=4.0.0"]
+REQUIRES = ["aiohttp>=3.8.1", "voluptuous>=0.12.2", "python-slugify>=4.0.1"]
 
 setup(
     name=PACKAGE_NAME,

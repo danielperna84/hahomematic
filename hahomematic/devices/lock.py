@@ -175,3 +175,5 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-DLD": (make_ip_lock, [1]),
     "HM-Sec-Key": (make_rf_lock, [1]),
 }
+
+BLACKLISTED_DEVICES: list[str] = []
