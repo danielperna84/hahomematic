@@ -57,6 +57,9 @@ class RPCFunctions:
         if (central := self._xml_rpc_server.get_central(interface_id)) is None:
             return
         central.last_events[interface_id] = datetime.now()
+        # No need to check the response of a XmlRPC-PING
+        if parameter == "PONG":
+            return
         if (channel_address, parameter) in central.entity_event_subscriptions:
             try:
                 for callback in central.entity_event_subscriptions[

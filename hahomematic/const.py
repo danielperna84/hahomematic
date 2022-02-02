@@ -241,6 +241,8 @@ DEFAULT_TIMEOUT = 30
 DEFAULT_INIT_TIMEOUT = 90
 DEFAULT_TLS = False
 DEFAULT_VERIFY_TLS = False
+DEFAULT_CONNECTION_CHECKER_INTERVAL = 30
+DEFAULT_RECONNECT_WAIT = 120
 
 HM_ENTITY_UNIT_REPLACE: dict[str, str] = {'"': "", "100%": "%", "% rF": "%"}
 
@@ -307,6 +309,17 @@ class HmEventType(Enum):
     KEYPRESS = "homematic.keypress"
     DEVICE = "homematic.device"
     INTERFACE = "homematic.interface"
+
+    def __str__(self) -> str:
+        """Return self.value."""
+        return str(self.value)
+
+
+class HmInterfaceEventType(Enum):
+    """Enum with hahomematic event types."""
+
+    PROXY = "proxy"
+    CALLBACK = "callback"
 
     def __str__(self) -> str:
         """Return self.value."""
