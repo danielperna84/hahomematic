@@ -22,6 +22,7 @@ class HmAction(GenericEntity[None]):
         device: hm_device.HmDevice,
         unique_id: str,
         channel_address: str,
+        paramset: str,
         parameter: str,
         parameter_data: dict[str, Any],
     ):
@@ -29,6 +30,7 @@ class HmAction(GenericEntity[None]):
             device=device,
             unique_id=unique_id,
             channel_address=channel_address,
+            paramset=paramset,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=HmPlatform.ACTION,

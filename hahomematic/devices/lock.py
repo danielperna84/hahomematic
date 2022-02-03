@@ -23,6 +23,7 @@ from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
+HM_LOCKED_TEXT = "LOCKED"
 HM_LOCKED = 0
 HM_UNLOCKED = 1
 HM_OPEN = 2
@@ -97,7 +98,7 @@ class CeIpLock(BaseLock):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._lock_state == HM_LOCKED
+        return self._lock_state == HM_LOCKED_TEXT
 
     async def lock(self) -> None:
         """Lock the lock."""

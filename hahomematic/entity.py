@@ -36,6 +36,7 @@ from hahomematic.const import (
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
+    PARAMSET_VALUES,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -206,6 +207,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         device: hm_device.HmDevice,
         unique_id: str,
         channel_address: str,
+        paramset: str,
         parameter: str,
         parameter_data: dict[str, Any],
         platform: HmPlatform,
@@ -220,7 +222,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
             channel_no=get_device_channel(channel_address),
             platform=platform,
         )
-
+        self.paramset: str = paramset
         self.parameter: str = parameter
         # Do not create some Entities in HA
         if self.parameter in HIDDEN_PARAMETERS:
@@ -336,8 +338,9 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
         try:
-            await self._client.set_value(
+            await self._client.set_value_by_paramset(
                 channel_address=self.channel_address,
+                paramset=self.paramset,
                 parameter=self.parameter,
                 value=self._convert_value(value),
             )
@@ -363,6 +366,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         device: hm_device.HmDevice,
         unique_id: str,
         channel_address: str,
+        paramset: str,
         parameter: str,
         parameter_data: dict[str, Any],
         platform: HmPlatform,
@@ -375,6 +379,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             device=device,
             unique_id=unique_id,
             channel_address=channel_address,
+            paramset=paramset,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=platform,
@@ -401,7 +406,9 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
 
         self.set_value(
             value=await self._device.value_cache.get_value(
-                channel_address=self.channel_address, parameter=self.parameter
+                channel_address=self.channel_address,
+                paramset=self.paramset,
+                parameter=self.parameter,
             )
         )
 
@@ -713,6 +720,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             device=device,
             unique_id=unique_id,
             channel_address=channel_address,
+            paramset=PARAMSET_VALUES,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=HmPlatform.EVENT,
