@@ -2,6 +2,7 @@ Version 0.30.0 (2022-02-03)
 - Add paramset to entity
 - Add CHANNEL_OPERATION_MODE for HmIP(W)-DRBL4
 - Fix DLD lock_state
+- Add is_jammed to locks
 
 Version 0.29.2 (2022-02-02)
 - Add support for blacklisting a custom entity

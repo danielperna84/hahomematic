@@ -9,6 +9,7 @@ from typing import Any
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
+    FIELD_ERROR,
     FIELD_LOCK_STATE,
     FIELD_LOCK_TARGET_LEVEL,
     FIELD_OPEN,
@@ -64,6 +65,11 @@ class BaseLock(CustomEntity):
         """Return true if lock is on."""
         return True
 
+    @property
+    def is_jammed(self) -> bool:
+        """Return true if lock is jammed."""
+        return False
+
     @abstractmethod
     async def lock(self) -> None:
         """Lock the lock."""
@@ -84,7 +90,7 @@ class CeIpLock(BaseLock):
     """Class for homematic ip lock entities."""
 
     @property
-    def _lock_state(self) -> float | None:
+    def _lock_state(self) -> str | None:
         """Return the lock state of the device."""
         return self._get_entity_value(field_name=FIELD_LOCK_STATE)
 
@@ -96,9 +102,19 @@ class CeIpLock(BaseLock):
         )
 
     @property
+    def _error(self) -> bool | None:
+        """Return the error entity of the device."""
+        return self._get_entity_value(field_name=FIELD_ERROR)
+
+    @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._lock_state == HM_LOCKED_TEXT
+
+    @property
+    def is_jammed(self) -> bool:
+        """Return true if lock is jammed."""
+        return self._error and self._error is True
 
     async def lock(self) -> None:
         """Lock the lock."""
@@ -127,9 +143,19 @@ class CeRfLock(BaseLock):
         return self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
 
     @property
+    def _error(self) -> str | None:
+        """Return the error entity of the device."""
+        return self._get_entity_value(field_name=FIELD_ERROR)
+
+    @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._e_state.value is not True
+
+    @property
+    def is_jammed(self) -> bool:
+        """Return true if lock is jammed."""
+        return self._error and self._error != "NO_ERROR"
 
     async def lock(self) -> None:
         """Lock the lock."""
@@ -173,7 +199,7 @@ def make_rf_lock(
 # Case for device model is not relevant
 # device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
-    "HmIP-DLD": (make_ip_lock, [1]),
+    "HmIP-DLD": (make_ip_lock, [0]),
     "HM-Sec-Key": (make_rf_lock, [1]),
 }
 

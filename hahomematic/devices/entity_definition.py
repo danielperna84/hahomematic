@@ -43,6 +43,7 @@ FIELD_DOOR_COMMAND = "door_command"
 FIELD_DOOR_STATE = "door_state"
 FIELD_DUTY_CYCLE = "duty_cycle"
 FIELD_DUTYCYCLE = "dutycycle"
+FIELD_ERROR = "error"
 FIELD_ENERGY_COUNTER = "energy_counter"
 FIELD_FREQUENCY = "frequency"
 FIELD_HEATING_COOLING = "heating_cooling"
@@ -253,11 +254,17 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         EntityDefinition.IP_LOCK: {
             ED_DEVICE_GROUP: {
-                ED_PRIMARY_CHANNEL: 0,
+                ED_PRIMARY_CHANNEL: 1,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LOCK_STATE: "LOCK_STATE",
                     FIELD_LOCK_TARGET_LEVEL: "LOCK_TARGET_LEVEL",
                 },
+                ED_FIELDS: {
+                    0: {
+                        FIELD_ERROR: "ERROR_JAMMED",
+                    },
+                }
+
             },
         },
         EntityDefinition.IP_THERMOSTAT: {
@@ -338,6 +345,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_OPEN: "OPEN",
                     FIELD_STATE: "STATE",
+                    FIELD_ERROR: "ERROR",
                 },
             },
         },
