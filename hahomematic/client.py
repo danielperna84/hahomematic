@@ -17,9 +17,12 @@ from hahomematic.const import (
     ATTR_HM_ADDRESS,
     ATTR_HM_NAME,
     ATTR_HM_PARAMSETS,
+    ATTR_HM_PARENT_TYPE,
+    ATTR_HM_TYPE,
     ATTR_INTERFACE_ID,
     ATTR_NAME,
     ATTR_RESULT,
+    ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
     BACKEND_CCU,
@@ -27,18 +30,24 @@ from hahomematic.const import (
     BACKEND_PYDEVCCU,
     HM_VIRTUAL_REMOTES,
     INIT_DATETIME,
+    PARAMSET_VALUES,
     PROXY_DE_INIT_FAILED,
     PROXY_DE_INIT_SKIPPED,
     PROXY_DE_INIT_SUCCESS,
     PROXY_INIT_FAILED,
     PROXY_INIT_SUCCESS,
-    RELEVANT_PARAMSETS,
     HmEventType,
     HmInterfaceEventType,
 )
 from hahomematic.device import HmDevice
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
-from hahomematic.helpers import build_api_url, get_local_ip, parse_ccu_sys_var
+from hahomematic.helpers import (
+    build_api_url,
+    get_channel_no,
+    get_local_ip,
+    is_relevant_paramsets,
+    parse_ccu_sys_var,
+)
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
@@ -341,6 +350,20 @@ class Client(ABC):
             )
             raise HaHomematicException from hhe
 
+    async def get_value_by_paramset(
+        self, channel_address: str, paramset: str, parameter: str
+    ) -> Any:
+        """Return a value by paramset from CCU."""
+        if paramset == PARAMSET_VALUES:
+            return await self.get_value(
+                channel_address=channel_address, parameter=parameter
+            )
+        if paramset := await self.get_paramset(
+            channel_address=channel_address, paramset_key=paramset
+        ):
+            return paramset.get(parameter)
+        return None
+
     async def set_value(
         self,
         channel_address: str,
@@ -364,6 +387,30 @@ class Client(ABC):
                 parameter,
                 value,
             )
+
+    async def set_value_by_paramset(
+        self,
+        channel_address: str,
+        paramset: str,
+        parameter: str,
+        value: Any,
+        rx_mode: str | None = None,
+    ) -> None:
+        """Set single value on paramset VALUES."""
+        if paramset == PARAMSET_VALUES:
+            await self.set_value(
+                channel_address=channel_address,
+                parameter=parameter,
+                value=value,
+                rx_mode=rx_mode,
+            )
+            return
+        await self.put_paramset(
+            channel_address=channel_address,
+            paramset_key=paramset,
+            value={paramset: value},
+            rx_mode=rx_mode,
+        )
 
     async def get_paramset(self, channel_address: str, paramset_key: str) -> Any:
         """Return a paramset from CCU."""
@@ -445,7 +492,7 @@ class Client(ABC):
         Fetch paramsets for provided device description.
         """
         data = await self.get_paramset_descriptions(
-            device_description=device_description, relevant_paramsets=RELEVANT_PARAMSETS
+            device_description=device_description
         )
         for address, paramsets in data.items():
             _LOGGER.debug("fetch_paramset_descriptions for %s", address)
@@ -460,17 +507,28 @@ class Client(ABC):
     async def get_paramset_descriptions(
         self,
         device_description: dict[str, Any],
-        relevant_paramsets: list[str] | None = None,
     ) -> dict[str, dict[str, Any]]:
         """Get paramsets for provided device description."""
         if not device_description:
             return {}
         paramsets: dict[str, dict[str, Any]] = {}
         address = device_description[ATTR_HM_ADDRESS]
+        sub_type = device_description.get(ATTR_SUBTYPE)
         paramsets[address] = {}
         _LOGGER.debug("get_paramset_descriptions for %s", address)
         for paramset in device_description.get(ATTR_HM_PARAMSETS, []):
-            if relevant_paramsets and paramset not in relevant_paramsets:
+            device_channel = get_channel_no(address)
+            device_type = (
+                device_description[ATTR_HM_TYPE]
+                if device_channel is None
+                else device_description[ATTR_HM_PARENT_TYPE]
+            )
+            if not is_relevant_paramsets(
+                paramset=paramset,
+                device_channel=device_channel,
+                device_type=device_type,
+                sub_type=sub_type,
+            ):
                 continue
             try:
                 paramsets[address][

@@ -33,6 +33,7 @@ FIELD_BOOST_MODE = "boost_mode"
 FIELD_CHANNEL_COLOR = "channel_color"
 FIELD_CHANNEL_LEVEL = "channel_level"
 FIELD_CHANNEL_LEVEL_2 = "channel_level_2"
+FIELD_CHANNEL_OPERATION_MODE = "channel_operation_mode"
 FIELD_CHANNEL_STATE = "channel_state"
 FIELD_COLOR = "color"
 FIELD_COMFORT_MODE = "comfort_mode"
@@ -168,6 +169,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     0: {
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                         FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
+                        FIELD_CHANNEL_OPERATION_MODE: "CHANNEL_OPERATION_MODE",
                     },
                 },
             },

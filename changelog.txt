@@ -1,3 +1,6 @@
+Version 0.30.0 (2022-02-03)
+- Add paramset to entity
+
 Version 0.29.2 (2022-02-02)
 - Add support for blacklisting a custom entity
 - Add HmIP-STH to climate custom entities

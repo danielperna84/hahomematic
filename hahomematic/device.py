@@ -32,11 +32,13 @@ from hahomematic.const import (
     IGNORED_PARAMETERS_WILDCARDS_START,
     INIT_DATETIME,
     MANUFACTURER,
+    MASTER_PARAMSET_WHITELIST,
     OPERATION_EVENT,
     OPERATION_READ,
     OPERATION_WRITE,
+    PARAMSET_MASTER,
     PARAMSET_VALUES,
-    RELEVANT_PARAMSETS,
+    PREFETCH_PARAMETERS,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_ENUM,
@@ -55,7 +57,13 @@ from hahomematic.entity import (
     GenericEntity,
 )
 from hahomematic.exceptions import BaseHomematicException
-from hahomematic.helpers import generate_unique_id, get_device_channel, get_device_name
+from hahomematic.helpers import (
+    generate_unique_id,
+    get_channel_no,
+    get_device_channel,
+    get_device_name,
+    is_relevant_paramsets,
+)
 from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
 from hahomematic.platforms.binary_sensor import HmBinarySensor
@@ -327,11 +335,10 @@ class HmDevice:
     async def reload_paramset_descriptions(self) -> None:
         """Reload paramset for device."""
         for entity in self.entities.values():
-            for paramset in RELEVANT_PARAMSETS:
-                await self._client.fetch_paramset_description(
-                    channel_address=entity.channel_address, paramset=paramset
-                )
-                entity.update_parameter_data()
+            await self._client.fetch_paramset_description(
+                channel_address=entity.channel_address, paramset=PARAMSET_VALUES
+            )
+            entity.update_parameter_data()
         self.update_device()
 
     async def load_value_cache(self) -> None:
@@ -361,7 +368,12 @@ class HmDevice:
             ) in self._central.paramset_descriptions.get_by_interface_channel_address(
                 interface_id=self._interface_id, channel_address=channel_address
             ):
-                if paramset != PARAMSET_VALUES:
+                if not is_relevant_paramsets(
+                    paramset=paramset,
+                    device_channel=get_channel_no(channel_address),
+                    device_type=self.device_type,
+                    sub_type=self.sub_type,
+                ):
                     continue
                 for (
                     parameter,
@@ -383,6 +395,7 @@ class HmDevice:
                         if self.device_type in HM_VIRTUAL_REMOTES:
                             self._create_action_and_append_to_device(
                                 channel_address=channel_address,
+                                paramset=paramset,
                                 parameter=parameter,
                                 parameter_data=parameter_data,
                             )
@@ -395,6 +408,7 @@ class HmDevice:
                         and not _parameter_is_whitelisted(
                             device_type=self.device_type,
                             sub_type=self.sub_type,
+                            paramset=paramset,
                             parameter=parameter,
                         )
                     ):
@@ -406,6 +420,7 @@ class HmDevice:
                     if parameter not in CLICK_EVENTS:
                         self._create_entity_and_append_to_device(
                             channel_address=channel_address,
+                            paramset=paramset,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
@@ -426,7 +441,11 @@ class HmDevice:
                 device_func(self, self._device_address, group_base_channels)
 
     def _create_action_and_append_to_device(
-        self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
+        self,
+        channel_address: str,
+        paramset: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
     ) -> None:
         """Create the actions associated to this device"""
         unique_id = generate_unique_id(
@@ -447,6 +466,7 @@ class HmDevice:
             device=self,
             unique_id=unique_id,
             channel_address=channel_address,
+            paramset=paramset,
             parameter=parameter,
             parameter_data=parameter_data,
         ):
@@ -487,7 +507,11 @@ class HmDevice:
             action_event.add_to_collections()
 
     def _create_entity_and_append_to_device(
-        self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
+        self,
+        channel_address: str,
+        paramset: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
     ) -> None:
         """
         Helper that looks at the paramsets, decides which default
@@ -496,6 +520,7 @@ class HmDevice:
         if _ignore_parameter(
             device_type=self.device_type,
             sub_type=self.sub_type,
+            paramset=paramset,
             parameter=parameter,
             channel_no=get_device_channel(channel_address),
         ):
@@ -540,6 +565,7 @@ class HmDevice:
                             device=self,
                             unique_id=unique_id,
                             channel_address=channel_address,
+                            paramset=paramset,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
@@ -548,6 +574,7 @@ class HmDevice:
                             device=self,
                             unique_id=unique_id,
                             channel_address=channel_address,
+                            paramset=paramset,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
@@ -561,6 +588,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
+                        paramset=paramset,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -575,6 +603,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
+                        paramset=paramset,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -588,6 +617,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
+                        paramset=paramset,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -601,6 +631,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
+                        paramset=paramset,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -614,6 +645,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
+                        paramset=paramset,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -627,6 +659,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
+                        paramset=paramset,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -641,6 +674,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
+                        paramset=paramset,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -663,6 +697,7 @@ class HmDevice:
                     device=self,
                     unique_id=unique_id,
                     channel_address=channel_address,
+                    paramset=paramset,
                     parameter=parameter,
                     parameter_data=parameter_data,
                 )
@@ -676,6 +711,7 @@ class HmDevice:
                     device=self,
                     unique_id=unique_id,
                     channel_address=channel_address,
+                    paramset=paramset,
                     parameter=parameter,
                     parameter_data=parameter_data,
                 )
@@ -759,14 +795,16 @@ class ValueCache:
         self._value_cache: dict[tuple[str, str], Any] = {}
         self._last_update = INIT_DATETIME
 
-    async def get_value(self, channel_address: str, parameter: str) -> Any | None:
+    async def get_value(
+        self, channel_address: str, paramset: str, parameter: str
+    ) -> Any | None:
         """Get Value from value cache."""
         if not self.is_initialized:
             return None
         if value := self._value_cache.get((channel_address, parameter)):
             return value
         return await self._get_or_load_value(
-            channel_address=channel_address, parameter=parameter
+            channel_address=channel_address, paramset=paramset, parameter=parameter
         )
 
     @property
@@ -782,9 +820,11 @@ class ValueCache:
     async def init_entities_channel0(self) -> None:
         """Load data by get_value"""
         try:
-            for entity in self._get_entities_for_channel0():
+            for entity in self._get_prefetch_entities():
                 value = await self._get_or_load_value(
-                    channel_address=entity.channel_address, parameter=entity.parameter
+                    channel_address=entity.channel_address,
+                    paramset=entity.paramset,
+                    parameter=entity.parameter,
                 )
                 entity.set_value(value=value)
             self._last_update = datetime.now()
@@ -796,21 +836,24 @@ class ValueCache:
                 bhe,
             )
 
-    def _get_entities_for_channel0(self) -> set[GenericEntity]:
+    def _get_prefetch_entities(self) -> set[GenericEntity]:
         """Get entities by channel address and parameter."""
         entities: list[GenericEntity] = []
         for entity in self._device.entities.values():
-            if entity.operations & OPERATION_READ and entity.channel_no == 0:
+            if (
+                entity.operations & OPERATION_READ
+                and entity.parameter in PREFETCH_PARAMETERS
+            ):
                 entities.append(entity)
         return set(entities)
 
     async def _get_or_load_value(
-        self, channel_address: str, parameter: str
+        self, channel_address: str, paramset: str, parameter: str
     ) -> Any | None:
         """Load data"""
         try:
-            value = await self._client.get_value(
-                channel_address=channel_address, parameter=parameter
+            value = await self._client.get_value_by_paramset(
+                channel_address=channel_address, paramset=paramset, parameter=parameter
             )
             self._value_cache[(channel_address, parameter)] = value
             return value
@@ -848,38 +891,51 @@ def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
 
 
 def _ignore_parameter(
-    device_type: str, sub_type: str | None, parameter: str, channel_no: int
+    device_type: str,
+    sub_type: str | None,
+    paramset: str,
+    parameter: str,
+    channel_no: int,
 ) -> bool:
     """Check if parameter can be ignored."""
-    if _parameter_is_whitelisted(
-        device_type=device_type, sub_type=sub_type, parameter=parameter
-    ):
-        return False
-    if parameter in IGNORED_PARAMETERS:
-        return True
-    if parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS_END)):
-        return True
-    if parameter.startswith(tuple(IGNORED_PARAMETERS_WILDCARDS_START)):
-        return True
-    if (accept_channel := ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)) is not None:
-        if accept_channel != channel_no:
+    if paramset == PARAMSET_VALUES:
+        if _parameter_is_whitelisted(
+            device_type=device_type,
+            sub_type=sub_type,
+            paramset=paramset,
+            parameter=parameter,
+        ):
+            return False
+        if (
+            parameter in IGNORED_PARAMETERS
+            or parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS_END))
+            or parameter.startswith(tuple(IGNORED_PARAMETERS_WILDCARDS_START))
+        ):
+            return True
+        if (
+            accept_channel := ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
+        ) is not None:
+            if accept_channel != channel_no:
+                return True
+    if paramset == PARAMSET_MASTER:
+        if parameter not in MASTER_PARAMSET_WHITELIST:
             return True
     return False
 
 
 def _parameter_is_whitelisted(
-    device_type: str, sub_type: str | None, parameter: str
+    device_type: str, sub_type: str | None, paramset: str, parameter: str
 ) -> bool:
     """Return if parameter is white listed"""
-    if sub_type and sub_type in WHITELIST_PARAMETERS_BY_DEVICE:
-        whitelist_parameters = WHITELIST_PARAMETERS_BY_DEVICE[sub_type]
-        if parameter in whitelist_parameters:
-            return True
+    if paramset == PARAMSET_VALUES:
+        if sub_type and sub_type in WHITELIST_PARAMETERS_BY_DEVICE:
+            whitelist_parameters = WHITELIST_PARAMETERS_BY_DEVICE[sub_type]
+            if parameter in whitelist_parameters:
+                return True
 
-    if device_type.startswith(tuple(WHITELIST_PARAMETERS_BY_DEVICE)):
-        for device, whitelist_parameters in WHITELIST_PARAMETERS_BY_DEVICE.items():
-            if device_type.startswith(device):
-                if parameter in whitelist_parameters:
-                    return True
-
+        if device_type.startswith(tuple(WHITELIST_PARAMETERS_BY_DEVICE)):
+            for device, whitelist_parameters in WHITELIST_PARAMETERS_BY_DEVICE.items():
+                if device_type.startswith(device):
+                    if parameter in whitelist_parameters:
+                        return True
     return False
