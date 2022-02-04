@@ -192,13 +192,13 @@ class CentralUnit:
             return None
         await self._start_clients()
         self._start_connection_checker()
-        await self._init_hub()
 
     async def _start_clients(self) -> None:
         """Start clients ."""
         if await self._create_clients():
             await self._load_caches()
             await self._create_devices()
+            await self._init_hub()
             await self._init_clients()
 
     async def stop(self) -> None:
@@ -286,13 +286,14 @@ class CentralUnit:
 
     async def _init_hub(self) -> None:
         """Init the hub."""
-        self.hub = self._create_hub()
-        _LOGGER.info(
-            "init_hub: Starting hub for %s",
-            self.instance_name,
-        )
-        if isinstance(self.hub, HmHub):
-            await self.hub.fetch_data()
+        if not self.hub:
+            self.hub = self._create_hub()
+            _LOGGER.info(
+                "init_hub: Starting hub for %s",
+                self.instance_name,
+            )
+        if self.hub and isinstance(self.hub, HmHub):
+                await self.hub.fetch_data()
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
