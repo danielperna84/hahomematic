@@ -1,3 +1,6 @@
+Version 0.30.2 (2022-02-05)
+- Add last_update to every value_cache_entry
+
 Version 0.30.1 (2022-02-04)
 - Start hub earlier
 

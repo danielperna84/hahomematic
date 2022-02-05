@@ -57,6 +57,7 @@ from hahomematic.helpers import (
     get_device_channel,
     get_entity_name,
     get_event_name,
+    updated_within_seconds,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,15 +109,6 @@ class CallbackEntity(ABC):
 
     def _set_last_update(self) -> None:
         self.last_update = datetime.now()
-
-    def _updated_within_minutes(self, minutes: int = 5) -> bool:
-        """Entity has been updated within X minutes."""
-        if self.last_update == INIT_DATETIME:
-            return False
-        delta = datetime.now() - self.last_update
-        if delta.seconds < (minutes * 60):
-            return True
-        return False
 
 
 class BaseEntity(ABC):
@@ -222,7 +214,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
             channel_no=get_device_channel(channel_address),
             platform=platform,
         )
-        self.paramset: str = paramset
+        self._paramset: str = paramset
         self.parameter: str = parameter
         # Do not create some Entities in HA
         if self.parameter in HIDDEN_PARAMETERS:
@@ -277,14 +269,29 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return self._default
 
     @property
-    def min(self) -> ParameterType:
-        """Return min value."""
-        return self._min
+    def hmtype(self) -> str:
+        """Return the homematic type."""
+        return self._type
 
     @property
     def max(self) -> ParameterType:
         """Return max value."""
         return self._max
+
+    @property
+    def min(self) -> ParameterType:
+        """Return min value."""
+        return self._min
+
+    @property
+    def operations(self) -> int:
+        """Return the operations mode of the entity."""
+        return self._operations
+
+    @property
+    def paramset(self) -> str:
+        """Return the paramset of the entity."""
+        return self._paramset
 
     @property
     def unit(self) -> str | None:
@@ -297,14 +304,9 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return self._value_list
 
     @property
-    def hmtype(self) -> str:
-        """Return the homematic type."""
-        return self._type
-
-    @property
-    def operations(self) -> int:
-        """Return the operations mode of the entity."""
-        return self._operations
+    def should_poll(self) -> bool:
+        """Return the if entity ishould be pulled."""
+        return self._paramset != PARAMSET_VALUES
 
     @property
     def visible(self) -> bool:
@@ -340,7 +342,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         try:
             await self._client.set_value_by_paramset(
                 channel_address=self.channel_address,
-                paramset=self.paramset,
+                paramset=self._paramset,
                 parameter=self.parameter,
                 value=self._convert_value(value),
             )
@@ -401,13 +403,13 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
 
     async def init_entity_value(self) -> None:
         """Init the entity data."""
-        if self._updated_within_minutes():
+        if updated_within_seconds(last_update=self.last_update):
             return None
 
         self.set_value(
             value=await self._device.value_cache.get_value(
                 channel_address=self.channel_address,
-                paramset=self.paramset,
+                paramset=self._paramset,
                 parameter=self.parameter,
             )
         )

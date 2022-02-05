@@ -263,8 +263,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     0: {
                         FIELD_ERROR: "ERROR_JAMMED",
                     },
-                }
-
+                },
             },
         },
         EntityDefinition.IP_THERMOSTAT: {
