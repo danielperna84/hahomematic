@@ -401,7 +401,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             (self.channel_address, self.parameter)
         ].append(self.event)
 
-    async def init_entity_value(self) -> None:
+    async def load_entity_value(self) -> None:
         """Init the entity data."""
         if updated_within_seconds(last_update=self.last_update):
             return None
@@ -599,11 +599,11 @@ class CustomEntity(BaseEntity, CallbackEntity):
             rx_mode=rx_mode,
         )
 
-    async def init_entity_value(self) -> None:
+    async def load_entity_value(self) -> None:
         """Init the entity values."""
         for entity in self.data_entities.values():
             if entity:
-                await entity.init_entity_value()
+                await entity.load_entity_value()
         self.update_entity()
 
     def _init_entities(self) -> None:
