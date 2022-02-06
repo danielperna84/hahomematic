@@ -3,6 +3,7 @@ Helper functions used within hahomematic
 """
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 import os
 import socket
@@ -20,6 +21,7 @@ from hahomematic.const import (
     ATTR_TYPE,
     ATTR_VALUE,
     DEVICE_RELEVANT_MASTER_PARAMSETS,
+    INIT_DATETIME,
     PARAMSET_MASTER,
     PARAMSET_VALUES,
     HmEntityUsage,
@@ -354,3 +356,13 @@ def get_local_ip(host: str, port: int) -> str:
     tmp_socket.close()
     _LOGGER.debug("Got local ip: %s", local_ip)
     return local_ip
+
+
+def updated_within_seconds(last_update: datetime, age_seconds: int = 120) -> bool:
+    """Entity has been updated within X minutes."""
+    if last_update == INIT_DATETIME:
+        return False
+    delta = datetime.now() - last_update
+    if delta.seconds < age_seconds:
+        return True
+    return False

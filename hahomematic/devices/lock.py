@@ -114,7 +114,7 @@ class CeIpLock(BaseLock):
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._error and self._error is True
+        return self._error is not None and self._error is True
 
     async def lock(self) -> None:
         """Lock the lock."""
@@ -155,7 +155,7 @@ class CeRfLock(BaseLock):
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._error and self._error != "NO_ERROR"
+        return self._error is not None and self._error != "NO_ERROR"
 
     async def lock(self) -> None:
         """Lock the lock."""

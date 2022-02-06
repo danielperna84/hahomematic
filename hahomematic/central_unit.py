@@ -293,7 +293,7 @@ class CentralUnit:
                 self.instance_name,
             )
         if self.hub and isinstance(self.hub, HmHub):
-                await self.hub.fetch_data()
+            await self.hub.fetch_data()
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""

@@ -4,6 +4,7 @@ Module for the Device class.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import Any
@@ -32,7 +33,7 @@ from hahomematic.const import (
     IGNORED_PARAMETERS_WILDCARDS_START,
     INIT_DATETIME,
     MANUFACTURER,
-    MASTER_PARAMSET_WHITELIST,
+    MASTER_PARAMSET_UNIGNORE_LIST,
     OPERATION_EVENT,
     OPERATION_READ,
     OPERATION_WRITE,
@@ -45,7 +46,7 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
-    WHITELIST_PARAMETERS_BY_DEVICE,
+    UNIGNORE_PARAMETERS_BY_DEVICE,
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
@@ -63,6 +64,7 @@ from hahomematic.helpers import (
     get_device_channel,
     get_device_name,
     is_relevant_paramsets,
+    updated_within_seconds,
 )
 from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
@@ -405,9 +407,7 @@ class HmDevice:
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
                     ) or (
                         parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL
-                        and not _parameter_is_whitelisted(
-                            device_type=self.device_type,
-                            sub_type=self.sub_type,
+                        and not self._parameter_is_unignored(
                             paramset=paramset,
                             parameter=parameter,
                         )
@@ -517,9 +517,7 @@ class HmDevice:
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
         """
-        if _ignore_parameter(
-            device_type=self.device_type,
-            sub_type=self.sub_type,
+        if self._ignore_parameter(
             paramset=paramset,
             parameter=parameter,
             channel_no=get_device_channel(channel_address),
@@ -718,6 +716,53 @@ class HmDevice:
         if entity:
             entity.add_to_collections()
 
+    def _ignore_parameter(
+        self,
+        paramset: str,
+        parameter: str,
+        channel_no: int,
+    ) -> bool:
+        """Check if parameter can be ignored."""
+        if paramset == PARAMSET_VALUES:
+            if self._parameter_is_unignored(
+                paramset=paramset,
+                parameter=parameter,
+            ):
+                return False
+            if (
+                parameter in IGNORED_PARAMETERS
+                or parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS_END))
+                or parameter.startswith(tuple(IGNORED_PARAMETERS_WILDCARDS_START))
+            ):
+                return True
+            if (
+                accept_channel := ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
+            ) is not None:
+                if accept_channel != channel_no:
+                    return True
+        if paramset == PARAMSET_MASTER:
+            if parameter not in MASTER_PARAMSET_UNIGNORE_LIST:
+                return True
+        return False
+
+    def _parameter_is_unignored(self, paramset: str, parameter: str) -> bool:
+        """Return if parameter is on unignore list"""
+        if paramset == PARAMSET_VALUES:
+            if self.sub_type and self.sub_type in UNIGNORE_PARAMETERS_BY_DEVICE:
+                unignore_parameters = UNIGNORE_PARAMETERS_BY_DEVICE[self.sub_type]
+                if parameter in unignore_parameters:
+                    return True
+
+            if self.device_type.startswith(tuple(UNIGNORE_PARAMETERS_BY_DEVICE)):
+                for (
+                    device,
+                    unignore_parameters,
+                ) in UNIGNORE_PARAMETERS_BY_DEVICE.items():
+                    if self.device_type.startswith(device):
+                        if parameter in unignore_parameters:
+                            return True
+        return False
+
 
 async def create_devices(central: hm_central.CentralUnit) -> None:
     """
@@ -792,30 +837,27 @@ class ValueCache:
     def __init__(self, device: HmDevice):
         self._device = device
         self._client = device.client
-        self._value_cache: dict[tuple[str, str], Any] = {}
-        self._last_update = INIT_DATETIME
+        # { paramset, {(channel_address, parameter}, CacheEntry}
+        self._value_cache: dict[str, dict[tuple[str, str], CacheEntry]] = {}
 
     async def get_value(
-        self, channel_address: str, paramset: str, parameter: str
+        self,
+        channel_address: str,
+        paramset: str,
+        parameter: str,
+        age_seconds: int = 120,
     ) -> Any | None:
         """Get Value from value cache."""
-        if not self.is_initialized:
-            return None
-        if value := self._value_cache.get((channel_address, parameter)):
-            return value
+        if paramset_cache := self._value_cache.get(paramset):
+            if cache_entry := paramset_cache.get((channel_address, parameter)):
+                if updated_within_seconds(
+                    last_update=cache_entry.last_update, age_seconds=age_seconds
+                ):
+                    return cache_entry.value
+
         return await self._get_or_load_value(
             channel_address=channel_address, paramset=paramset, parameter=parameter
         )
-
-    @property
-    def is_initialized(self) -> bool:
-        """Return im cache is initialized"""
-        if not _updated_within_minutes(last_update=self._last_update):
-            self._value_cache.clear()
-            self._last_update = INIT_DATETIME
-            return False
-
-        return True
 
     async def init_entities_channel0(self) -> None:
         """Load data by get_value"""
@@ -827,7 +869,6 @@ class ValueCache:
                     parameter=entity.parameter,
                 )
                 entity.set_value(value=value)
-            self._last_update = datetime.now()
         except BaseHomematicException as bhe:
             _LOGGER.debug(
                 "init_values_channel0: Failed to init cache for channel0 %s, %s [%s]",
@@ -851,11 +892,16 @@ class ValueCache:
         self, channel_address: str, paramset: str, parameter: str
     ) -> Any | None:
         """Load data"""
+        if paramset not in self._value_cache:
+            self._value_cache[paramset] = {}
+
         try:
             value = await self._client.get_value_by_paramset(
                 channel_address=channel_address, paramset=paramset, parameter=parameter
             )
-            self._value_cache[(channel_address, parameter)] = value
+            self._value_cache[paramset][(channel_address, parameter)] = CacheEntry(
+                value=value, last_update=datetime.now()
+            )
             return value
         except BaseHomematicException as bhe:
             _LOGGER.debug(
@@ -868,14 +914,12 @@ class ValueCache:
             return None
 
 
-def _updated_within_minutes(last_update: datetime, minutes: int = 5) -> bool:
-    """Entity has been updated within X minutes."""
-    if last_update == INIT_DATETIME:
-        return False
-    delta = datetime.now() - last_update
-    if delta.seconds < (minutes * 60):
-        return True
-    return False
+@dataclass
+class CacheEntry:
+    """An entry for the value cache."""
+
+    value: Any
+    last_update: datetime
 
 
 def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
@@ -887,55 +931,4 @@ def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
         return True
     if value_list == ["DRY", "RAIN"]:
         return True
-    return False
-
-
-def _ignore_parameter(
-    device_type: str,
-    sub_type: str | None,
-    paramset: str,
-    parameter: str,
-    channel_no: int,
-) -> bool:
-    """Check if parameter can be ignored."""
-    if paramset == PARAMSET_VALUES:
-        if _parameter_is_whitelisted(
-            device_type=device_type,
-            sub_type=sub_type,
-            paramset=paramset,
-            parameter=parameter,
-        ):
-            return False
-        if (
-            parameter in IGNORED_PARAMETERS
-            or parameter.endswith(tuple(IGNORED_PARAMETERS_WILDCARDS_END))
-            or parameter.startswith(tuple(IGNORED_PARAMETERS_WILDCARDS_START))
-        ):
-            return True
-        if (
-            accept_channel := ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
-        ) is not None:
-            if accept_channel != channel_no:
-                return True
-    if paramset == PARAMSET_MASTER:
-        if parameter not in MASTER_PARAMSET_WHITELIST:
-            return True
-    return False
-
-
-def _parameter_is_whitelisted(
-    device_type: str, sub_type: str | None, paramset: str, parameter: str
-) -> bool:
-    """Return if parameter is white listed"""
-    if paramset == PARAMSET_VALUES:
-        if sub_type and sub_type in WHITELIST_PARAMETERS_BY_DEVICE:
-            whitelist_parameters = WHITELIST_PARAMETERS_BY_DEVICE[sub_type]
-            if parameter in whitelist_parameters:
-                return True
-
-        if device_type.startswith(tuple(WHITELIST_PARAMETERS_BY_DEVICE)):
-            for device, whitelist_parameters in WHITELIST_PARAMETERS_BY_DEVICE.items():
-                if device_type.startswith(device):
-                    if parameter in whitelist_parameters:
-                        return True
     return False
