@@ -11,6 +11,7 @@ from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
     FIELD_CHANNEL_OPERATION_MODE,
+    FIELD_DIRECTION,
     FIELD_DOOR_COMMAND,
     FIELD_DOOR_STATE,
     FIELD_LEVEL,
@@ -30,6 +31,9 @@ ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
 HM_OPEN: float = 1.0
 # must be float!
 HM_CLOSED: float = 0.0
+
+HM_OPENING = "UP"
+HM_CLOSING = "DOWN"
 
 GARAGE_DOOR_COMMAND_NOP = 0
 GARAGE_DOOR_COMMAND_OPEN = 1
@@ -74,6 +78,11 @@ class CeCover(CustomEntity):
             device_address,
             unique_id,
         )
+
+    @property
+    def _direction(self) -> str | None:
+        """Return the channel level of the cover."""
+        return self._get_entity_value(field_name=FIELD_DIRECTION)
 
     @property
     def _e_level(self) -> HmFloat:
@@ -129,6 +138,20 @@ class CeCover(CustomEntity):
         """Return if the cover is closed."""
         if self._channel_level is not None:
             return self._channel_level == HM_CLOSED
+        return None
+
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is opening."""
+        if self._direction is not None:
+            return self._direction == HM_OPENING
+        return None
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is closing."""
+        if self._direction is not None:
+            return self._direction == HM_CLOSING
         return None
 
     async def open_cover(self) -> None:

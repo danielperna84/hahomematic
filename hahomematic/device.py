@@ -46,6 +46,7 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
+    UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS,
     UNIGNORE_PARAMETERS_BY_DEVICE,
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
@@ -748,6 +749,12 @@ class HmDevice:
     def _parameter_is_unignored(self, paramset: str, parameter: str) -> bool:
         """Return if parameter is on unignore list"""
         if paramset == PARAMSET_VALUES:
+            if parameter in UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS or (
+                self._central.custom_unignore_parameters
+                and parameter in self._central.custom_unignore_parameters
+            ):
+                return True
+
             if self.sub_type and self.sub_type in UNIGNORE_PARAMETERS_BY_DEVICE:
                 unignore_parameters = UNIGNORE_PARAMETERS_BY_DEVICE[self.sub_type]
                 if parameter in unignore_parameters:
@@ -930,5 +937,7 @@ def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     if value_list == ["CLOSED", "OPEN"]:
         return True
     if value_list == ["DRY", "RAIN"]:
+        return True
+    if value_list == ["STABLE", "NOT_STABLE"]:
         return True
     return False

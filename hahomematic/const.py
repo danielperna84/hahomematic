@@ -20,6 +20,7 @@ PATH_JSON_RPC = "/api/homematic.cgi"
 
 FILE_DEVICES = "homematic_devices.json"
 FILE_PARAMSETS = "homematic_paramsets.json"
+FILE_CUSTOM_UNIGNORE_PARAMETERS = "unignore"
 
 PARAMSET_MASTER = "MASTER"
 PARAMSET_VALUES = "VALUES"
@@ -77,6 +78,8 @@ HIDDEN_PARAMETERS = [
     EVENT_UN_REACH,
     EVENT_UPDATE_PENDING,
     PARAM_CHANNEL_OPERATION_MODE,
+    "ACTIVITY_STATE",
+    "DIRECTION",
 ]
 
 PREFETCH_PARAMETERS = [
@@ -90,6 +93,8 @@ PREFETCH_PARAMETERS = [
 
 BUTTON_ACTIONS = ["RESET_MOTION", "RESET_PRESENCE"]
 
+UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS = ["INHIBIT"]
+
 # Parameters within the paramsets for which we create entities.
 UNIGNORE_PARAMETERS_BY_DEVICE = {
     "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
@@ -100,7 +105,6 @@ UNIGNORE_PARAMETERS_BY_DEVICE = {
 
 # Parameters within the paramsets for which we don't create entities.
 IGNORED_PARAMETERS = [
-    "ACTIVITY_STATE",
     "AES_KEY",
     "BOOST_TIME",
     "BOOT",
@@ -116,7 +120,6 @@ IGNORED_PARAMETERS = [
     "FROST_PROTECTION",
     "HUMIDITY_LIMITER",
     "INCLUSION_UNSUPPORTED_DEVICE",
-    "INHIBIT",
     "INSTALL_MODE",
     "LEVEL_COMBINED",
     "LEVEL_REAL",
