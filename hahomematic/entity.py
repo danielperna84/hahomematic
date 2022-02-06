@@ -41,7 +41,6 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
-    UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS,
     HmEntityType,
     HmEntityUsage,
     HmEventType,
@@ -140,6 +139,8 @@ class BaseEntity(ABC):
             if self._device.is_custom_entity
             else HmEntityUsage.ENTITY
         )
+
+        self.should_poll = False
         self._client: hm_client.Client = self._central.clients[self._interface_id]
         self.name: str = (
             self._central.names.get_name(self.channel_address) or self.unique_id
@@ -217,6 +218,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         )
         self._paramset: str = paramset
         self.parameter: str = parameter
+        self.should_poll = self._paramset != PARAMSET_VALUES
         # Do not create some Entities in HA
         if self.parameter in HIDDEN_PARAMETERS:
             self.usage = HmEntityUsage.ENTITY_NO_CREATE
@@ -303,11 +305,6 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     def value_list(self) -> list[str] | None:
         """Return the value_list."""
         return self._value_list
-
-    @property
-    def should_poll(self) -> bool:
-        """Return the if entity ishould be pulled."""
-        return self._paramset != PARAMSET_VALUES
 
     @property
     def visible(self) -> bool:
@@ -549,7 +546,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
         )
 
         CallbackEntity.__init__(self)
-
         self._device_enum = device_enum
         self._device_desc = device_def
         self._entity_def = entity_def
@@ -648,9 +644,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
         # add custom ignore entities
         self._mark_entity_by_custom_unignore_parameters(
             unignore_list=self._central.custom_unignore_parameters
-        )
-        self._mark_entity_by_custom_unignore_parameters(
-            unignore_list=UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS
         )
 
     def _add_entities(self, field_dict_name: str, is_sensor: bool = False) -> None:

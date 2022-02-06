@@ -46,7 +46,6 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
-    UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS,
     UNIGNORE_PARAMETERS_BY_DEVICE,
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
@@ -749,7 +748,7 @@ class HmDevice:
     def _parameter_is_unignored(self, paramset: str, parameter: str) -> bool:
         """Return if parameter is on unignore list"""
         if paramset == PARAMSET_VALUES:
-            if parameter in UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS or (
+            if (
                 self._central.custom_unignore_parameters
                 and parameter in self._central.custom_unignore_parameters
             ):

@@ -93,8 +93,6 @@ PREFETCH_PARAMETERS = [
 
 BUTTON_ACTIONS = ["RESET_MOTION", "RESET_PRESENCE"]
 
-UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS = []
-
 # Parameters within the paramsets for which we create entities.
 UNIGNORE_PARAMETERS_BY_DEVICE = {
     "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
