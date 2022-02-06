@@ -1,4 +1,8 @@
-Version 0.30.2 (2022-02-05)
+Version 0.30.3 (2022-02-06)
+- Add missing return statement
+- Readd INHIBIT to ignore parameter list
+
+Version 0.30.2 (2022-02-06)
 - Add last_update to every value_cache_entry
 - Rename init_entity_value to load_entity_value
 - move (un)ignore methods to device

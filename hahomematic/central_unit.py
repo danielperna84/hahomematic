@@ -339,6 +339,8 @@ class CentralUnit:
         """Read custom unignore parameters from disk."""
 
         def _read() -> None:
+            if not check_or_create_directory(self.central_config.storage_folder):
+                return
             if not os.path.exists(
                 os.path.join(
                     self.central_config.storage_folder, FILE_CUSTOM_UNIGNORE_PARAMETERS
@@ -348,6 +350,7 @@ class CentralUnit:
                     "read_custom_unignore_parameters_from_disk: No file found in %s",
                     self.central_config.storage_folder,
                 )
+                return
 
             try:
                 custom_unignore_parameters: set[str] = set()
