@@ -2,6 +2,9 @@ Version 0.30.2 (2022-02-05)
 - Add last_update to every value_cache_entry
 - Rename init_entity_value to load_entity_value
 - move (un)ignore methods to device
+- Remove INHIBIT from ignore parameter list
+- Add support for unignore file
+- Make PROCESS a binary_sensor
 
 Version 0.30.1 (2022-02-04)
 - Start hub earlier

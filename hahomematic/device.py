@@ -937,4 +937,6 @@ def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
         return True
     if value_list == ["DRY", "RAIN"]:
         return True
+    if value_list == ["STABLE", "NOT_STABLE"]:
+        return True
     return False
