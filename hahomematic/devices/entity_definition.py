@@ -39,6 +39,7 @@ FIELD_COLOR = "color"
 FIELD_COMFORT_MODE = "comfort_mode"
 FIELD_CONTROL_MODE = "control_mode"
 FIELD_CURRENT = "current"
+FIELD_DIRECTION = "direction"
 FIELD_DOOR_COMMAND = "door_command"
 FIELD_DOOR_STATE = "door_state"
 FIELD_DUTY_CYCLE = "duty_cycle"
@@ -48,6 +49,7 @@ FIELD_ENERGY_COUNTER = "energy_counter"
 FIELD_FREQUENCY = "frequency"
 FIELD_HEATING_COOLING = "heating_cooling"
 FIELD_HUMIDITY = "humidity"
+FIELD_INHIBIT = "inhibit"
 FIELD_LEVEL = "level"
 FIELD_LEVEL_2 = "level_2"
 FIELD_LOCK_STATE = "lock_state"
@@ -168,6 +170,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 },
                 ED_FIELDS: {
                     0: {
+                        FIELD_DIRECTION: "ACTIVITY_STATE",
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                         FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
                         FIELD_CHANNEL_OPERATION_MODE: "CHANNEL_OPERATION_MODE",
@@ -313,6 +316,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
+                    FIELD_DIRECTION: "DIRECTION",
                     FIELD_LEVEL: "LEVEL",
                     FIELD_LEVEL_2: "LEVEL_2",
                     FIELD_STOP: "STOP",
@@ -437,6 +441,16 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             1: {
                 "DIRECTION",
                 "ERROR",
+            },
+        },
+        "HmIPW-DR": {
+            0: {
+                "ACTUAL_TEMPERATURE",
+            },
+        },
+        "HmIP-DR": {
+            0: {
+                "ACTUAL_TEMPERATURE",
             },
         },
     },

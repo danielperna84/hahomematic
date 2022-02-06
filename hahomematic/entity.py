@@ -41,6 +41,7 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
+    UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS,
     HmEntityType,
     HmEntityUsage,
     HmEventType,
@@ -647,6 +648,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
         # add custom ignore entities
         self._mark_entity_by_custom_unignore_parameters(
             unignore_list=self._central.custom_unignore_parameters
+        )
+        self._mark_entity_by_custom_unignore_parameters(
+            unignore_list=UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS
         )
 
     def _add_entities(self, field_dict_name: str, is_sensor: bool = False) -> None:

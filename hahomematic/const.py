@@ -78,6 +78,8 @@ HIDDEN_PARAMETERS = [
     EVENT_UN_REACH,
     EVENT_UPDATE_PENDING,
     PARAM_CHANNEL_OPERATION_MODE,
+    "ACTIVITY_STATE",
+    "DIRECTION",
 ]
 
 PREFETCH_PARAMETERS = [
@@ -91,6 +93,8 @@ PREFETCH_PARAMETERS = [
 
 BUTTON_ACTIONS = ["RESET_MOTION", "RESET_PRESENCE"]
 
+UNIGNORE_AND_ALWAYS_SHOW_PARAMETERS = ["INHIBIT"]
+
 # Parameters within the paramsets for which we create entities.
 UNIGNORE_PARAMETERS_BY_DEVICE = {
     "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
@@ -101,7 +105,6 @@ UNIGNORE_PARAMETERS_BY_DEVICE = {
 
 # Parameters within the paramsets for which we don't create entities.
 IGNORED_PARAMETERS = [
-    "ACTIVITY_STATE",
     "AES_KEY",
     "BOOST_TIME",
     "BOOT",
