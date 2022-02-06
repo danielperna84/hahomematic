@@ -644,6 +644,11 @@ class CustomEntity(BaseEntity, CallbackEntity):
             )
         )
 
+        # add custom ignore entities
+        self._mark_entity_by_custom_unignore_parameters(
+            unignore_list=self._central.custom_unignore_parameters
+        )
+
     def _add_entities(self, field_dict_name: str, is_sensor: bool = False) -> None:
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
@@ -669,6 +674,16 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 )
                 if entity:
                     entity.usage = HmEntityUsage.ENTITY
+
+    def _mark_entity_by_custom_unignore_parameters(
+        self, unignore_list: list[str]
+    ) -> None:
+        """Mark entities to be created in HA."""
+        if not unignore_list:
+            return None
+        for entity in self._device.entities.values():
+            if entity.parameter in unignore_list:
+                entity.usage = HmEntityUsage.ENTITY
 
     def _add_entity(self, field_name: str, entity: GenericEntity | None) -> None:
         """Add entity to collection and register callback"""

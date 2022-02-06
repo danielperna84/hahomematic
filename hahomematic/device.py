@@ -748,6 +748,12 @@ class HmDevice:
     def _parameter_is_unignored(self, paramset: str, parameter: str) -> bool:
         """Return if parameter is on unignore list"""
         if paramset == PARAMSET_VALUES:
+            if (
+                self._central.custom_unignore_parameters
+                and parameter in self._central.custom_unignore_parameters
+            ):
+                return True
+
             if self.sub_type and self.sub_type in UNIGNORE_PARAMETERS_BY_DEVICE:
                 unignore_parameters = UNIGNORE_PARAMETERS_BY_DEVICE[self.sub_type]
                 if parameter in unignore_parameters:

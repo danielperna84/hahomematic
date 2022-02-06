@@ -28,6 +28,7 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
+    FILE_CUSTOM_UNIGNORE_PARAMETERS,
     FILE_DEVICES,
     FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
@@ -70,6 +71,7 @@ class CentralUnit:
         self._xml_rpc_server.register_central(self)
         self._interface_configs = self.central_config.interface_configs
         self._model: str | None = None
+        self.custom_unignore_parameters: list[str] = []
 
         # Caches for CCU data
         self.paramset_descriptions: ParamsetDescriptionCache = ParamsetDescriptionCache(
@@ -190,6 +192,7 @@ class CentralUnit:
         if check_only:
             await self._create_clients()
             return None
+        await self._read_custom_unignore_parameters_from_disk()
         await self._start_clients()
         self._start_connection_checker()
 
@@ -331,6 +334,46 @@ class CentralUnit:
     def has_client(self, interface_id: str) -> bool:
         """Check if client exists in central."""
         return self._clients.get(interface_id) is not None
+
+    async def _read_custom_unignore_parameters_from_disk(self) -> None:
+        """Read custom unignore parameters from disk."""
+
+        def _read() -> None:
+            if not os.path.exists(
+                os.path.join(
+                    self.central_config.storage_folder, FILE_CUSTOM_UNIGNORE_PARAMETERS
+                )
+            ):
+                _LOGGER.debug(
+                    "read_custom_unignore_parameters_from_disk: No file found in %s",
+                    self.central_config.storage_folder,
+                )
+
+            try:
+                custom_unignore_parameters: set[str] = set()
+                with open(
+                    file=os.path.join(
+                        self.central_config.storage_folder,
+                        FILE_CUSTOM_UNIGNORE_PARAMETERS,
+                    ),
+                    mode="r",
+                    encoding=DEFAULT_ENCODING,
+                ) as fptr:
+                    for line in fptr.readlines():
+                        custom_unignore_parameters.add(line.strip().upper())
+                self.custom_unignore_parameters.extend(custom_unignore_parameters)
+
+                _LOGGER.info(
+                    "read_custom_unignore_parameters_from_disk: Read unignore file %i entries.",
+                    len(custom_unignore_parameters),
+                )
+            except Exception as ex:
+                _LOGGER.warning(
+                    "read_custom_unignore_parameters_from_disk: Could not read unignore file %s",
+                    ex.args,
+                )
+
+        await self.async_add_executor_job(_read)
 
     async def _load_caches(self) -> None:
         """Load files to caches."""
