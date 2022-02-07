@@ -364,7 +364,7 @@ class CentralUnit:
                 ) as fptr:
                     for line in fptr.readlines():
                         custom_un_ignore_parameters.add(line.strip().upper())
-                self.custom_un_ignore_parameters= custom_un_ignore_parameters
+                self.custom_un_ignore_parameters = custom_un_ignore_parameters
 
                 _LOGGER.info(
                     "read_custom_un_ignore_parameters_from_disk: Read un_ignore file %i entries.",
@@ -1143,7 +1143,7 @@ class ParamsetDescriptionCache(BasePersitentCache):
         self,
         interface_id: str,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         paramset_description: dict[str, Any],
     ) -> None:
         """Add paramset description to cache."""
@@ -1152,15 +1152,15 @@ class ParamsetDescriptionCache(BasePersitentCache):
         if channel_address not in self._paramset_descriptions_cache[interface_id]:
             self._paramset_descriptions_cache[interface_id][channel_address] = {}
         if (
-            paramset
+            paramset_key
             not in self._paramset_descriptions_cache[interface_id][channel_address]
         ):
             self._paramset_descriptions_cache[interface_id][channel_address][
-                paramset
+                paramset_key
             ] = {}
 
         self._paramset_descriptions_cache[interface_id][channel_address][
-            paramset
+            paramset_key
         ] = paramset_description
 
     def remove(self, interface_id: str, channel_address: str) -> None:
@@ -1184,13 +1184,13 @@ class ParamsetDescriptionCache(BasePersitentCache):
         )
 
     def get_by_interface_channel_address_paramset_key(
-        self, interface_id: str, channel_address: str, paramset: str
+        self, interface_id: str, channel_address: str, paramset_key: str
     ) -> dict[str, Any]:
         """Get paramset descriptions by interface, channel_address, paramset_key in cache."""
         return (
             self._paramset_descriptions_cache.get(interface_id, {})
             .get(channel_address, {})
-            .get(paramset, {})
+            .get(paramset_key, {})
         )
 
     def has_multiple_channels(self, channel_address: str, parameter: str) -> bool:

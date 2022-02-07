@@ -25,7 +25,7 @@ class HmBinarySensor(GenericEntity[bool]):
         device: hm_device.HmDevice,
         unique_id: str,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         parameter: str,
         parameter_data: dict[str, Any],
     ):
@@ -33,7 +33,7 @@ class HmBinarySensor(GenericEntity[bool]):
             device=device,
             unique_id=unique_id,
             channel_address=channel_address,
-            paramset=paramset,
+            paramset_key=paramset_key,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=HmPlatform.BINARY_SENSOR,

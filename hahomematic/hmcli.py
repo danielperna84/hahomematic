@@ -8,6 +8,7 @@ import sys
 from typing import Any
 from xmlrpc.client import ServerProxy
 
+from hahomematic.const import PARAMSET_KEY_MASTER, PARAMSET_KEY_VALUES
 from hahomematic.helpers import build_api_url, get_tls_context
 
 
@@ -48,9 +49,9 @@ def main() -> None:
         help="Address of HomeMatic device, including channel.",
     )
     parser.add_argument(
-        "--paramset",
-        default="VALUES",
-        choices=["VALUES", "MASTER"],
+        "--paramset_key",
+        default=PARAMSET_KEY_VALUES,
+        choices=[PARAMSET_KEY_VALUES, PARAMSET_KEY_MASTER],
         help="Paramset of HomeMatic device. Default: VALUES",
     )
     parser.add_argument(
@@ -80,14 +81,14 @@ def main() -> None:
     proxy = ServerProxy(url, context=context)
 
     try:
-        if args.paramset == "VALUES" and args.value is None:
+        if args.paramset_key == PARAMSET_KEY_VALUES and args.value is None:
             res = proxy.getValue(args.address, args.parameter)
             if args.json:
                 print(json.dumps({args.parameter: res}))
             else:
                 print(res)
             sys.exit(0)
-        elif args.paramset == "VALUES" and args.value:
+        elif args.paramset_key == PARAMSET_KEY_VALUES and args.value:
             value: Any
             if args.type == "int":
                 value = int(args.value)
@@ -99,16 +100,16 @@ def main() -> None:
                 value = args.value
             proxy.setValue(args.address, args.parameter, value)
             sys.exit(0)
-        elif args.paramset == "MASTER" and args.value is None:
+        elif args.paramset_key == PARAMSET_KEY_MASTER and args.value is None:
             paramset: dict[str, Any] | None
-            if paramset := proxy.getParamset(args.address, args.paramset):  # type: ignore
+            if paramset := proxy.getParamset(args.address, args.paramset_key):  # type: ignore
                 if param_value := paramset.get(args.parameter):
                     if args.json:
                         print(json.dumps({args.parameter: param_value}))
                     else:
                         print(param_value)
             sys.exit(0)
-        elif args.paramset == "MASTER" and args.value:
+        elif args.paramset_key == PARAMSET_KEY_MASTER and args.value:
             if args.type == "int":
                 value = int(args.value)
             elif args.type == "float":
@@ -117,7 +118,7 @@ def main() -> None:
                 value = bool(int(args.value))
             else:
                 value = args.value
-            proxy.putParamset(args.address, args.paramset, {args.parameter: value})
+            proxy.putParamset(args.address, args.paramset_key, {args.parameter: value})
             sys.exit(0)
     except Exception as err:
         print(err)

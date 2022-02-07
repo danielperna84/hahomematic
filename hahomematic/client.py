@@ -45,7 +45,7 @@ from hahomematic.helpers import (
     build_api_url,
     get_channel_no,
     get_local_ip,
-    is_relevant_paramsets,
+    is_relevant_paramset,
     parse_ccu_sys_var,
 )
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
@@ -350,16 +350,16 @@ class Client(ABC):
             )
             raise HaHomematicException from hhe
 
-    async def get_value_by_paramset(
-        self, channel_address: str, paramset: str, parameter: str
+    async def get_value_by_paramset_key(
+        self, channel_address: str, paramset_key: str, parameter: str
     ) -> Any:
-        """Return a value by paramset from CCU."""
-        if paramset == PARAMSET_KEY_VALUES:
+        """Return a value by paramset_key from CCU."""
+        if paramset_key == PARAMSET_KEY_VALUES:
             return await self.get_value(
                 channel_address=channel_address, parameter=parameter
             )
         if paramset := await self.get_paramset(
-            channel_address=channel_address, paramset_key=paramset
+            channel_address=channel_address, paramset_key=paramset_key
         ):
             return paramset.get(parameter)
         return None
@@ -388,16 +388,16 @@ class Client(ABC):
                 value,
             )
 
-    async def set_value_by_paramset(
+    async def set_value_by_paramset_key(
         self,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         parameter: str,
         value: Any,
         rx_mode: str | None = None,
     ) -> None:
         """Set single value on paramset VALUES."""
-        if paramset == PARAMSET_KEY_VALUES:
+        if paramset_key == PARAMSET_KEY_VALUES:
             await self.set_value(
                 channel_address=channel_address,
                 parameter=parameter,
@@ -407,8 +407,8 @@ class Client(ABC):
             return
         await self.put_paramset(
             channel_address=channel_address,
-            paramset_key=paramset,
-            value={paramset: value},
+            paramset_key=paramset_key,
+            value={paramset_key: value},
             rx_mode=rx_mode,
         )
 
@@ -456,23 +456,23 @@ class Client(ABC):
             )
 
     async def fetch_paramset_description(
-        self, channel_address: str, paramset: str
+        self, channel_address: str, paramset_key: str
     ) -> None:
         """
         Fetch a specific paramset and add it to the known ones.
         """
         _LOGGER.debug(
-            "fetch_paramset_description: %s for %s", paramset, channel_address
+            "fetch_paramset_description: %s for %s", paramset_key, channel_address
         )
 
         try:
             parameter_data = await self._proxy_read.getParamsetDescription(
-                channel_address, paramset
+                channel_address, paramset_key
             )
             self._central.paramset_descriptions.add(
                 interface_id=self.interface_id,
                 channel_address=channel_address,
-                paramset=paramset,
+                paramset_key=paramset_key,
                 paramset_description=parameter_data,
             )
         except BaseHomematicException as hhe:
@@ -480,7 +480,7 @@ class Client(ABC):
                 "fetch_paramset_description: %s [%s] Unable to get paramset %s for channel_address %s",
                 hhe.name,
                 hhe.args,
-                paramset,
+                paramset_key,
                 channel_address,
             )
         await self._central.paramset_descriptions.save()
@@ -496,11 +496,11 @@ class Client(ABC):
         )
         for address, paramsets in data.items():
             _LOGGER.debug("fetch_paramset_descriptions for %s", address)
-            for paramset, paramset_description in paramsets.items():
+            for paramset_key, paramset_description in paramsets.items():
                 self._central.paramset_descriptions.add(
                     interface_id=self.interface_id,
                     channel_address=address,
-                    paramset=paramset,
+                    paramset_key=paramset_key,
                     paramset_description=paramset_description,
                 )
 
@@ -516,15 +516,15 @@ class Client(ABC):
         sub_type = device_description.get(ATTR_SUBTYPE)
         paramsets[address] = {}
         _LOGGER.debug("get_paramset_descriptions for %s", address)
-        for paramset in device_description.get(ATTR_HM_PARAMSETS, []):
+        for paramset_key in device_description.get(ATTR_HM_PARAMSETS, []):
             device_channel = get_channel_no(address)
             device_type = (
                 device_description[ATTR_HM_TYPE]
                 if device_channel is None
                 else device_description[ATTR_HM_PARENT_TYPE]
             )
-            if not is_relevant_paramsets(
-                paramset=paramset,
+            if not is_relevant_paramset(
+                paramset_key=paramset_key,
                 device_channel=device_channel,
                 device_type=device_type,
                 sub_type=sub_type,
@@ -532,14 +532,14 @@ class Client(ABC):
                 continue
             try:
                 paramsets[address][
-                    paramset
-                ] = await self._proxy_read.getParamsetDescription(address, paramset)
+                    paramset_key
+                ] = await self._proxy_read.getParamsetDescription(address, paramset_key)
             except BaseHomematicException as hhe:
                 _LOGGER.warning(
                     "get_paramsets failed with %s [%s] for %s address %s.",
                     hhe.name,
                     hhe.args,
-                    paramset,
+                    paramset_key,
                     address,
                 )
         return paramsets

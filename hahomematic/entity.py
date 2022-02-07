@@ -18,7 +18,7 @@ from hahomematic.const import (
     ATTR_HM_FLAGS,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
-    ATTR_HM_OPERATIONS, GENERAL_UN_IGNORE_PARAMS,
+    ATTR_HM_OPERATIONS,
     ATTR_HM_SPECIAL,
     ATTR_HM_TYPE,
     ATTR_HM_UNIT,
@@ -33,6 +33,7 @@ from hahomematic.const import (
     EVENT_UN_REACH,
     FLAG_SERVICE,
     FLAG_VISIBLE,
+    GENERAL_UN_IGNORE_PARAMS,
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
@@ -201,7 +202,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         device: hm_device.HmDevice,
         unique_id: str,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         parameter: str,
         parameter_data: dict[str, Any],
         platform: HmPlatform,
@@ -216,9 +217,9 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
             channel_no=get_device_channel(channel_address),
             platform=platform,
         )
-        self._paramset: str = paramset
+        self._paramset_key: str = paramset_key
         self.parameter: str = parameter
-        self.should_poll = self._paramset != PARAMSET_KEY_VALUES
+        self.should_poll = self._paramset_key != PARAMSET_KEY_VALUES
         # Do not create some Entities in HA
         if self.parameter in HIDDEN_PARAMETERS:
             self.usage = HmEntityUsage.ENTITY_NO_CREATE
@@ -292,9 +293,9 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return self._operations
 
     @property
-    def paramset(self) -> str:
-        """Return the paramset of the entity."""
-        return self._paramset
+    def paramset_key(self) -> str:
+        """Return the paramset_key of the entity."""
+        return self._paramset_key
 
     @property
     def unit(self) -> str | None:
@@ -338,9 +339,9 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
         try:
-            await self._client.set_value_by_paramset(
+            await self._client.set_value_by_paramset_key(
                 channel_address=self.channel_address,
-                paramset=self._paramset,
+                paramset_key=self._paramset_key,
                 parameter=self.parameter,
                 value=self._convert_value(value),
             )
@@ -366,7 +367,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         device: hm_device.HmDevice,
         unique_id: str,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         parameter: str,
         parameter_data: dict[str, Any],
         platform: HmPlatform,
@@ -379,7 +380,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             device=device,
             unique_id=unique_id,
             channel_address=channel_address,
-            paramset=paramset,
+            paramset_key=paramset_key,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=platform,
@@ -407,7 +408,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         self.set_value(
             value=await self._device.value_cache.get_value(
                 channel_address=self.channel_address,
-                paramset=self._paramset,
+                paramset_key=self._paramset_key,
                 parameter=self.parameter,
             )
         )
@@ -586,12 +587,12 @@ class CustomEntity(BaseEntity, CallbackEntity):
         return HmEntityUsage.CE_PRIMARY
 
     async def put_paramset(
-        self, paramset: str, value: Any, rx_mode: str | None = None
+        self, paramset_key: str, value: Any, rx_mode: str | None = None
     ) -> None:
         """Set paramsets manually."""
         await self._client.put_paramset(
             channel_address=self.channel_address,
-            paramset_key=paramset,
+            paramset_key=paramset_key,
             value=value,
             rx_mode=rx_mode,
         )
@@ -738,7 +739,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             device=device,
             unique_id=unique_id,
             channel_address=channel_address,
-            paramset=PARAMSET_KEY_VALUES,
+            paramset_key=PARAMSET_KEY_VALUES,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=HmPlatform.EVENT,
