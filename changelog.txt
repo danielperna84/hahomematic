@@ -1,3 +1,7 @@
+Version 0.31.1 (2022-02-07)
+- Improve naming
+- Add multiplier to entity
+
 Version 0.31.0 (2022-02-06)
 - Add missing return statement
 - Add last_update to every value_cache_entry
