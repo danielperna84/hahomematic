@@ -254,7 +254,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         self._service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
         self._operations: int = self._parameter_data[ATTR_HM_OPERATIONS]
         self._special: dict[str, Any] | None = self._parameter_data.get(ATTR_HM_SPECIAL)
-        self._unit: str | None = fix_unit(self._parameter_data.get(ATTR_HM_UNIT))
+        self._unit: str | None = self._parameter_data.get(ATTR_HM_UNIT)
 
     def update_parameter_data(self) -> None:
         """Update parameter data"""
@@ -288,6 +288,11 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return self._min
 
     @property
+    def multiplier(self) -> int:
+        """Return multiplier value."""
+        return 100 if self._unit and self._unit == "100%" else 1
+
+    @property
     def operations(self) -> int:
         """Return the operations mode of the entity."""
         return self._operations
@@ -300,7 +305,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     @property
     def unit(self) -> str | None:
         """Return unit value."""
-        return self._unit
+        return fix_unit(self._unit)
 
     @property
     def value_list(self) -> list[str] | None:

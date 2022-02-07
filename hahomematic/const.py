@@ -264,7 +264,12 @@ DEFAULT_VERIFY_TLS = False
 DEFAULT_CONNECTION_CHECKER_INTERVAL = 30
 DEFAULT_RECONNECT_WAIT = 120
 
-HM_ENTITY_UNIT_REPLACE: dict[str, str] = {'"': "", "100%": "%", "% rF": "%"}
+HM_ENTITY_UNIT_REPLACE: dict[str, str] = {
+    '"': "",
+    "100%": "%",
+    "% rF": "%",
+    "degree": "°C",
+}
 
 # virtual remotes device_types
 HM_VIRTUAL_REMOTE_HM = "HM-RCV-50"
