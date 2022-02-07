@@ -22,8 +22,8 @@ from hahomematic.const import (
     ATTR_VALUE,
     DEVICE_RELEVANT_MASTER_PARAMSETS,
     INIT_DATETIME,
-    PARAMSET_MASTER,
-    PARAMSET_VALUES,
+    PARAMSET_KEY_MASTER,
+    PARAMSET_KEY_VALUES,
     HmEntityUsage,
 )
 import hahomematic.devices.entity_definition as hm_entity_definition
@@ -327,9 +327,9 @@ def is_relevant_paramsets(
     paramset: str, device_channel: int | None, device_type: str, sub_type: str | None
 ) -> bool:
     """Return if a paramset is relevant."""
-    if paramset == PARAMSET_VALUES:
+    if paramset == PARAMSET_KEY_VALUES:
         return True
-    if device_channel is not None and paramset == PARAMSET_MASTER:
+    if device_channel is not None and paramset == PARAMSET_KEY_MASTER:
         for d_type, channel_nos in DEVICE_RELEVANT_MASTER_PARAMSETS.items():
             if device_channel in channel_nos and (
                 device_type.lower() == d_type.lower()

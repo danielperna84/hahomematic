@@ -18,7 +18,7 @@ from hahomematic.const import (
     ATTR_HM_FLAGS,
     ATTR_HM_MAX,
     ATTR_HM_MIN,
-    ATTR_HM_OPERATIONS,
+    ATTR_HM_OPERATIONS, GENERAL_UN_IGNORE_PARAMS,
     ATTR_HM_SPECIAL,
     ATTR_HM_TYPE,
     ATTR_HM_UNIT,
@@ -36,7 +36,7 @@ from hahomematic.const import (
     HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
-    PARAMSET_VALUES,
+    PARAMSET_KEY_VALUES,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -218,7 +218,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         )
         self._paramset: str = paramset
         self.parameter: str = parameter
-        self.should_poll = self._paramset != PARAMSET_VALUES
+        self.should_poll = self._paramset != PARAMSET_KEY_VALUES
         # Do not create some Entities in HA
         if self.parameter in HIDDEN_PARAMETERS:
             self.usage = HmEntityUsage.ENTITY_NO_CREATE
@@ -641,9 +641,13 @@ class CustomEntity(BaseEntity, CallbackEntity):
             )
         )
 
-        # add custom ignore entities
-        self._mark_entity_by_custom_unignore_parameters(
-            unignore_list=self._central.custom_unignore_parameters
+        # add custom un_ignore entities
+        self._mark_entity_by_custom_un_ignore_parameters(
+            un_ignore_params=self._central.custom_un_ignore_parameters
+        )
+        # add general un_ignore entities
+        self._mark_entity_by_custom_un_ignore_parameters(
+            un_ignore_params=GENERAL_UN_IGNORE_PARAMS
         )
 
     def _add_entities(self, field_dict_name: str, is_sensor: bool = False) -> None:
@@ -672,14 +676,14 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 if entity:
                     entity.usage = HmEntityUsage.ENTITY
 
-    def _mark_entity_by_custom_unignore_parameters(
-        self, unignore_list: list[str]
+    def _mark_entity_by_custom_un_ignore_parameters(
+        self, un_ignore_params: set[str]
     ) -> None:
         """Mark entities to be created in HA."""
-        if not unignore_list:
+        if not un_ignore_params:
             return None
         for entity in self._device.entities.values():
-            if entity.parameter in unignore_list:
+            if entity.parameter in un_ignore_params:
                 entity.usage = HmEntityUsage.ENTITY
 
     def _add_entity(self, field_name: str, entity: GenericEntity | None) -> None:
@@ -734,7 +738,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             device=device,
             unique_id=unique_id,
             channel_address=channel_address,
-            paramset=PARAMSET_VALUES,
+            paramset=PARAMSET_KEY_VALUES,
             parameter=parameter,
             parameter_data=parameter_data,
             platform=HmPlatform.EVENT,

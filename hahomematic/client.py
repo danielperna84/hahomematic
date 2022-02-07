@@ -30,7 +30,7 @@ from hahomematic.const import (
     BACKEND_PYDEVCCU,
     HM_VIRTUAL_REMOTES,
     INIT_DATETIME,
-    PARAMSET_VALUES,
+    PARAMSET_KEY_VALUES,
     PROXY_DE_INIT_FAILED,
     PROXY_DE_INIT_SKIPPED,
     PROXY_DE_INIT_SUCCESS,
@@ -354,7 +354,7 @@ class Client(ABC):
         self, channel_address: str, paramset: str, parameter: str
     ) -> Any:
         """Return a value by paramset from CCU."""
-        if paramset == PARAMSET_VALUES:
+        if paramset == PARAMSET_KEY_VALUES:
             return await self.get_value(
                 channel_address=channel_address, parameter=parameter
             )
@@ -397,7 +397,7 @@ class Client(ABC):
         rx_mode: str | None = None,
     ) -> None:
         """Set single value on paramset VALUES."""
-        if paramset == PARAMSET_VALUES:
+        if paramset == PARAMSET_KEY_VALUES:
             await self.set_value(
                 channel_address=channel_address,
                 parameter=parameter,

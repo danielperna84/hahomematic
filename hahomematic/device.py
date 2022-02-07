@@ -33,12 +33,12 @@ from hahomematic.const import (
     IGNORED_PARAMETERS_WILDCARDS_START,
     INIT_DATETIME,
     MANUFACTURER,
-    MASTER_PARAMSET_UNIGNORE_LIST,
+    MASTER_PARAMSET_UN_IGNORE_PARAMS,
     OPERATION_EVENT,
     OPERATION_READ,
     OPERATION_WRITE,
-    PARAMSET_MASTER,
-    PARAMSET_VALUES,
+    PARAMSET_KEY_MASTER,
+    PARAMSET_KEY_VALUES,
     PREFETCH_PARAMETERS,
     TYPE_ACTION,
     TYPE_BOOL,
@@ -46,7 +46,7 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
-    UNIGNORE_PARAMETERS_BY_DEVICE,
+    UN_IGNORE_PARAMETERS_BY_DEVICE, GENERAL_UN_IGNORE_PARAMS,
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
@@ -338,7 +338,7 @@ class HmDevice:
         """Reload paramset for device."""
         for entity in self.entities.values():
             await self._client.fetch_paramset_description(
-                channel_address=entity.channel_address, paramset=PARAMSET_VALUES
+                channel_address=entity.channel_address, paramset=PARAMSET_KEY_VALUES
             )
             entity.update_parameter_data()
         self.update_device()
@@ -407,7 +407,7 @@ class HmDevice:
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
                     ) or (
                         parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL
-                        and not self._parameter_is_unignored(
+                        and not self._parameter_is_un_ignored(
                             paramset=paramset,
                             parameter=parameter,
                         )
@@ -723,8 +723,8 @@ class HmDevice:
         channel_no: int,
     ) -> bool:
         """Check if parameter can be ignored."""
-        if paramset == PARAMSET_VALUES:
-            if self._parameter_is_unignored(
+        if paramset == PARAMSET_KEY_VALUES:
+            if self._parameter_is_un_ignored(
                 paramset=paramset,
                 parameter=parameter,
             ):
@@ -740,32 +740,32 @@ class HmDevice:
             ) is not None:
                 if accept_channel != channel_no:
                     return True
-        if paramset == PARAMSET_MASTER:
-            if parameter not in MASTER_PARAMSET_UNIGNORE_LIST:
+        if paramset == PARAMSET_KEY_MASTER:
+            if parameter not in MASTER_PARAMSET_UN_IGNORE_PARAMS:
                 return True
         return False
 
-    def _parameter_is_unignored(self, paramset: str, parameter: str) -> bool:
-        """Return if parameter is on unignore list"""
-        if paramset == PARAMSET_VALUES:
-            if (
-                self._central.custom_unignore_parameters
-                and parameter in self._central.custom_unignore_parameters
+    def _parameter_is_un_ignored(self, paramset: str, parameter: str) -> bool:
+        """Return if parameter is on un_ignore list"""
+        if paramset == PARAMSET_KEY_VALUES:
+            if parameter in GENERAL_UN_IGNORE_PARAMS or(
+                self._central.custom_un_ignore_parameters
+                and parameter in self._central.custom_un_ignore_parameters
             ):
                 return True
 
-            if self.sub_type and self.sub_type in UNIGNORE_PARAMETERS_BY_DEVICE:
-                unignore_parameters = UNIGNORE_PARAMETERS_BY_DEVICE[self.sub_type]
-                if parameter in unignore_parameters:
+            if self.sub_type and self.sub_type in UN_IGNORE_PARAMETERS_BY_DEVICE:
+                un_ignore_parameters = UN_IGNORE_PARAMETERS_BY_DEVICE[self.sub_type]
+                if parameter in un_ignore_parameters:
                     return True
 
-            if self.device_type.startswith(tuple(UNIGNORE_PARAMETERS_BY_DEVICE)):
+            if self.device_type.startswith(tuple(UN_IGNORE_PARAMETERS_BY_DEVICE)):
                 for (
                     device,
-                    unignore_parameters,
-                ) in UNIGNORE_PARAMETERS_BY_DEVICE.items():
+                    un_ignore_parameters,
+                ) in UN_IGNORE_PARAMETERS_BY_DEVICE.items():
                     if self.device_type.startswith(device):
-                        if parameter in unignore_parameters:
+                        if parameter in un_ignore_parameters:
                             return True
         return False
 
