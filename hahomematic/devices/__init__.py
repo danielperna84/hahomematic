@@ -27,7 +27,7 @@ def get_device_funcs(
     device_type: str, sub_type: str
 ) -> list[tuple[Callable, list[int]]]:
     """Return the function to create custom entities"""
-
+    device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
     for platform_blacklisted_devices in _BLACKLISTED_DEVICES:
         if _is_blacklisted_device_by_platform(

@@ -1,6 +1,7 @@
 Version 0.31.1 (2022-02-07)
 - Improve naming
 - Add multiplier to entity
+- Substitute device_type of HB devices for usage in custom_entities
 
 Version 0.31.0 (2022-02-06)
 - Add missing return statement
