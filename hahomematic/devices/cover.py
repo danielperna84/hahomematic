@@ -404,7 +404,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-FROLL": (make_ip_cover, [3]),
     "HmIP-BBL": (make_ip_blind, [3]),
     "HmIP-FBL": (make_ip_blind, [3]),
-    "HmIP-HDM1": (make_ip_blind, [0]),  # 0 is correct, HDM1 has no status channel.
+    "HmIP-HDM": (make_ip_blind, [0]),  # 0 is correct, HDM1 has no status channel.
     "HmIP-DRBLI4": (make_ip_blind, [9, 13, 17, 21]),
     "HmIPW-DRBL4": (make_ip_blind, [1, 5, 9, 13]),
     "HmIP-MOD-HO": (make_ip_garage, [1]),

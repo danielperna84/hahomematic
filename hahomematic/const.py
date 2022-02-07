@@ -20,7 +20,7 @@ PATH_JSON_RPC = "/api/homematic.cgi"
 
 FILE_DEVICES = "homematic_devices.json"
 FILE_PARAMSETS = "homematic_paramsets.json"
-FILE_CUSTOM_UN_IGNORE_PARAMETERS = "un_ignore"
+FILE_CUSTOM_UN_IGNORE_PARAMETERS = "unignore"
 
 PARAMSET_KEY_MASTER = "MASTER"
 PARAMSET_KEY_VALUES = "VALUES"
