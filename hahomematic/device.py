@@ -25,6 +25,7 @@ from hahomematic.const import (
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
     FLAG_INTERAL,
+    GENERAL_UN_IGNORE_PARAMS,
     HH_EVENT_DEVICES_CREATED,
     HM_VIRTUAL_REMOTES,
     IDENTIFIERS_SEPARATOR,
@@ -33,12 +34,12 @@ from hahomematic.const import (
     IGNORED_PARAMETERS_WILDCARDS_START,
     INIT_DATETIME,
     MANUFACTURER,
-    MASTER_PARAMSET_UNIGNORE_LIST,
+    MASTER_PARAMSET_UN_IGNORE_PARAMS,
     OPERATION_EVENT,
     OPERATION_READ,
     OPERATION_WRITE,
-    PARAMSET_MASTER,
-    PARAMSET_VALUES,
+    PARAMSET_KEY_MASTER,
+    PARAMSET_KEY_VALUES,
     PREFETCH_PARAMETERS,
     TYPE_ACTION,
     TYPE_BOOL,
@@ -46,7 +47,7 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
-    UNIGNORE_PARAMETERS_BY_DEVICE,
+    UN_IGNORE_PARAMETERS_BY_DEVICE,
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
@@ -63,7 +64,7 @@ from hahomematic.helpers import (
     get_channel_no,
     get_device_channel,
     get_device_name,
-    is_relevant_paramsets,
+    is_relevant_paramset,
     updated_within_seconds,
 )
 from hahomematic.internal.action import HmAction
@@ -181,7 +182,7 @@ class HmDevice:
 
     @property
     def value_cache(self) -> ValueCache:
-        """Return the paramset cache."""
+        """Return the value cache."""
         return self._value_cache
 
     @property
@@ -338,7 +339,7 @@ class HmDevice:
         """Reload paramset for device."""
         for entity in self.entities.values():
             await self._client.fetch_paramset_description(
-                channel_address=entity.channel_address, paramset=PARAMSET_VALUES
+                channel_address=entity.channel_address, paramset_key=PARAMSET_KEY_VALUES
             )
             entity.update_parameter_data()
         self.update_device()
@@ -366,12 +367,12 @@ class HmDevice:
                 )
                 continue
             for (
-                paramset
+                paramset_key
             ) in self._central.paramset_descriptions.get_by_interface_channel_address(
                 interface_id=self._interface_id, channel_address=channel_address
             ):
-                if not is_relevant_paramsets(
-                    paramset=paramset,
+                if not is_relevant_paramset(
+                    paramset_key=paramset_key,
                     device_channel=get_channel_no(channel_address),
                     device_type=self.device_type,
                     sub_type=self.sub_type,
@@ -383,7 +384,7 @@ class HmDevice:
                 ) in self._central.paramset_descriptions.get_by_interface_channel_address_paramset_key(
                     interface_id=self._interface_id,
                     channel_address=channel_address,
-                    paramset=paramset,
+                    paramset_key=paramset_key,
                 ).items():
                     if (
                         parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
@@ -397,7 +398,7 @@ class HmDevice:
                         if self.device_type in HM_VIRTUAL_REMOTES:
                             self._create_action_and_append_to_device(
                                 channel_address=channel_address,
-                                paramset=paramset,
+                                paramset_key=paramset_key,
                                 parameter=parameter,
                                 parameter_data=parameter_data,
                             )
@@ -407,8 +408,8 @@ class HmDevice:
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
                     ) or (
                         parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL
-                        and not self._parameter_is_unignored(
-                            paramset=paramset,
+                        and not self._parameter_is_un_ignored(
+                            paramset_key=paramset_key,
                             parameter=parameter,
                         )
                     ):
@@ -420,7 +421,7 @@ class HmDevice:
                     if parameter not in CLICK_EVENTS:
                         self._create_entity_and_append_to_device(
                             channel_address=channel_address,
-                            paramset=paramset,
+                            paramset_key=paramset_key,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
@@ -443,7 +444,7 @@ class HmDevice:
     def _create_action_and_append_to_device(
         self,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         parameter: str,
         parameter_data: dict[str, Any],
     ) -> None:
@@ -466,7 +467,7 @@ class HmDevice:
             device=self,
             unique_id=unique_id,
             channel_address=channel_address,
-            paramset=paramset,
+            paramset_key=paramset_key,
             parameter=parameter,
             parameter_data=parameter_data,
         ):
@@ -509,7 +510,7 @@ class HmDevice:
     def _create_entity_and_append_to_device(
         self,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         parameter: str,
         parameter_data: dict[str, Any],
     ) -> None:
@@ -518,7 +519,7 @@ class HmDevice:
         platform should be used, and creates the required entities.
         """
         if self._ignore_parameter(
-            paramset=paramset,
+            paramset_key=paramset_key,
             parameter=parameter,
             channel_no=get_device_channel(channel_address),
         ):
@@ -563,7 +564,7 @@ class HmDevice:
                             device=self,
                             unique_id=unique_id,
                             channel_address=channel_address,
-                            paramset=paramset,
+                            paramset_key=paramset_key,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
@@ -572,7 +573,7 @@ class HmDevice:
                             device=self,
                             unique_id=unique_id,
                             channel_address=channel_address,
-                            paramset=paramset,
+                            paramset_key=paramset_key,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
@@ -586,7 +587,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
-                        paramset=paramset,
+                        paramset_key=paramset_key,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -601,7 +602,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
-                        paramset=paramset,
+                        paramset_key=paramset_key,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -615,7 +616,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
-                        paramset=paramset,
+                        paramset_key=paramset_key,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -629,7 +630,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
-                        paramset=paramset,
+                        paramset_key=paramset_key,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -643,7 +644,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
-                        paramset=paramset,
+                        paramset_key=paramset_key,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -657,7 +658,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
-                        paramset=paramset,
+                        paramset_key=paramset_key,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -672,7 +673,7 @@ class HmDevice:
                         device=self,
                         unique_id=unique_id,
                         channel_address=channel_address,
-                        paramset=paramset,
+                        paramset_key=paramset_key,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -695,7 +696,7 @@ class HmDevice:
                     device=self,
                     unique_id=unique_id,
                     channel_address=channel_address,
-                    paramset=paramset,
+                    paramset_key=paramset_key,
                     parameter=parameter,
                     parameter_data=parameter_data,
                 )
@@ -709,7 +710,7 @@ class HmDevice:
                     device=self,
                     unique_id=unique_id,
                     channel_address=channel_address,
-                    paramset=paramset,
+                    paramset_key=paramset_key,
                     parameter=parameter,
                     parameter_data=parameter_data,
                 )
@@ -718,14 +719,14 @@ class HmDevice:
 
     def _ignore_parameter(
         self,
-        paramset: str,
+        paramset_key: str,
         parameter: str,
         channel_no: int,
     ) -> bool:
         """Check if parameter can be ignored."""
-        if paramset == PARAMSET_VALUES:
-            if self._parameter_is_unignored(
-                paramset=paramset,
+        if paramset_key == PARAMSET_KEY_VALUES:
+            if self._parameter_is_un_ignored(
+                paramset_key=paramset_key,
                 parameter=parameter,
             ):
                 return False
@@ -740,32 +741,32 @@ class HmDevice:
             ) is not None:
                 if accept_channel != channel_no:
                     return True
-        if paramset == PARAMSET_MASTER:
-            if parameter not in MASTER_PARAMSET_UNIGNORE_LIST:
+        if paramset_key == PARAMSET_KEY_MASTER:
+            if parameter not in MASTER_PARAMSET_UN_IGNORE_PARAMS:
                 return True
         return False
 
-    def _parameter_is_unignored(self, paramset: str, parameter: str) -> bool:
-        """Return if parameter is on unignore list"""
-        if paramset == PARAMSET_VALUES:
-            if (
-                self._central.custom_unignore_parameters
-                and parameter in self._central.custom_unignore_parameters
+    def _parameter_is_un_ignored(self, paramset_key: str, parameter: str) -> bool:
+        """Return if parameter is on un_ignore list"""
+        if paramset_key == PARAMSET_KEY_VALUES:
+            if parameter in GENERAL_UN_IGNORE_PARAMS or (
+                self._central.custom_un_ignore_parameters
+                and parameter in self._central.custom_un_ignore_parameters
             ):
                 return True
 
-            if self.sub_type and self.sub_type in UNIGNORE_PARAMETERS_BY_DEVICE:
-                unignore_parameters = UNIGNORE_PARAMETERS_BY_DEVICE[self.sub_type]
-                if parameter in unignore_parameters:
+            if self.sub_type and self.sub_type in UN_IGNORE_PARAMETERS_BY_DEVICE:
+                un_ignore_parameters = UN_IGNORE_PARAMETERS_BY_DEVICE[self.sub_type]
+                if parameter in un_ignore_parameters:
                     return True
 
-            if self.device_type.startswith(tuple(UNIGNORE_PARAMETERS_BY_DEVICE)):
+            if self.device_type.startswith(tuple(UN_IGNORE_PARAMETERS_BY_DEVICE)):
                 for (
                     device,
-                    unignore_parameters,
-                ) in UNIGNORE_PARAMETERS_BY_DEVICE.items():
+                    un_ignore_parameters,
+                ) in UN_IGNORE_PARAMETERS_BY_DEVICE.items():
                     if self.device_type.startswith(device):
-                        if parameter in unignore_parameters:
+                        if parameter in un_ignore_parameters:
                             return True
         return False
 
@@ -843,18 +844,18 @@ class ValueCache:
     def __init__(self, device: HmDevice):
         self._device = device
         self._client = device.client
-        # { paramset, {(channel_address, parameter}, CacheEntry}
+        # { parparamset_key, {(channel_address, parameter}, CacheEntry}
         self._value_cache: dict[str, dict[tuple[str, str], CacheEntry]] = {}
 
     async def get_value(
         self,
         channel_address: str,
-        paramset: str,
+        paramset_key: str,
         parameter: str,
         age_seconds: int = 120,
     ) -> Any | None:
         """Get Value from value cache."""
-        if paramset_cache := self._value_cache.get(paramset):
+        if paramset_cache := self._value_cache.get(paramset_key):
             if cache_entry := paramset_cache.get((channel_address, parameter)):
                 if updated_within_seconds(
                     last_update=cache_entry.last_update, age_seconds=age_seconds
@@ -862,7 +863,9 @@ class ValueCache:
                     return cache_entry.value
 
         return await self._get_or_load_value(
-            channel_address=channel_address, paramset=paramset, parameter=parameter
+            channel_address=channel_address,
+            paramset_key=paramset_key,
+            parameter=parameter,
         )
 
     async def init_entities_channel0(self) -> None:
@@ -871,7 +874,7 @@ class ValueCache:
             for entity in self._get_prefetch_entities():
                 value = await self._get_or_load_value(
                     channel_address=entity.channel_address,
-                    paramset=entity.paramset,
+                    paramset_key=entity.paramset_key,
                     parameter=entity.parameter,
                 )
                 entity.set_value(value=value)
@@ -895,17 +898,19 @@ class ValueCache:
         return set(entities)
 
     async def _get_or_load_value(
-        self, channel_address: str, paramset: str, parameter: str
+        self, channel_address: str, paramset_key: str, parameter: str
     ) -> Any | None:
         """Load data"""
-        if paramset not in self._value_cache:
-            self._value_cache[paramset] = {}
+        if paramset_key not in self._value_cache:
+            self._value_cache[paramset_key] = {}
 
         try:
-            value = await self._client.get_value_by_paramset(
-                channel_address=channel_address, paramset=paramset, parameter=parameter
+            value = await self._client.get_value_by_paramset_key(
+                channel_address=channel_address,
+                paramset_key=paramset_key,
+                parameter=parameter,
             )
-            self._value_cache[paramset][(channel_address, parameter)] = CacheEntry(
+            self._value_cache[paramset_key][(channel_address, parameter)] = CacheEntry(
                 value=value, last_update=datetime.now()
             )
             return value
