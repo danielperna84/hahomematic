@@ -2,7 +2,7 @@
 from conftest import (
     get_hm_custom_entity,
     get_hm_device,
-    get_hm_genertic_entity,
+    get_hm_generic_entity,
     get_value_from_generic_entity,
     send_device_value_to_ccu,
 )
@@ -20,7 +20,7 @@ async def test_central(central, loop) -> None:
     assert central.get_client_by_interface_id("ccu-dev-hm").model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
     assert len(central.hm_devices) == 344
-    assert len(central.hm_entities) == 4318
+    assert len(central.hm_entities) == 4319
 
     data = {}
     for device in central.hm_devices.values():
@@ -62,11 +62,11 @@ async def test_central(central, loop) -> None:
             units.add(entity._unit)
 
     assert len(data) == 344
-    assert len(custom_entities) == 219
-    assert len(ce_channels) == 88
+    assert len(custom_entities) == 220
+    assert len(ce_channels) == 89
     assert len(entity_types) == 6
 
-    assert len(parameters) == 176
+    assert len(parameters) == 177
 
 
 @pytest.mark.asyncio
@@ -75,7 +75,7 @@ async def test_device_set_data(central, pydev_ccu, loop) -> None:
     assert central
     assert pydev_ccu
     old_value = await get_value_from_generic_entity(
-        central, "VCU6354483:1", "SET_POINT_TEMPERATURE"
+        central_unit=central, address="VCU6354483:1", parameter="SET_POINT_TEMPERATURE"
     )
     assert old_value == 4.5
     send_device_value_to_ccu(pydev_ccu, "VCU6354483:1", "SET_POINT_TEMPERATURE", 19.0)
@@ -109,7 +109,7 @@ async def test_device_hm_heatgroup(central, pydev_ccu, loop) -> None:
     """Test callback."""
     assert central
     assert pydev_ccu
-    entity = await get_hm_genertic_entity(central, "INT0000001:1", "SET_TEMPERATURE")
+    entity = await get_hm_generic_entity(central, "INT0000001:1", "SET_TEMPERATURE")
     old_value = entity.value
     assert old_value is None
 
@@ -124,4 +124,3 @@ async def test_device_hm_heatgroup(central, pydev_ccu, loop) -> None:
     assert new_value == 19.0
     assert custom_entity._e_setpoint.value == 19.0
     assert custom_entity.target_temperature == 19.0
-

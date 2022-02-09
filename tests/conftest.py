@@ -65,10 +65,12 @@ async def central(
             global GOT_DEVICES
             GOT_DEVICES = True
 
-    interface_configs = {InterfaceConfig(
-        name="hm",
-        port=2001,
-    )}
+    interface_configs = {
+        InterfaceConfig(
+            name="hm",
+            port=2001,
+        )
+    }
 
     central_unit = await CentralConfig(
         domain="hahm",
@@ -79,7 +81,7 @@ async def central(
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
         storage_folder="hahm",
-        interface_configs= interface_configs,
+        interface_configs=interface_configs,
     ).get_central()
     central_unit.callback_system_event = systemcallback
     await central_unit.start()
@@ -94,14 +96,14 @@ async def central(
 
 
 async def get_value_from_generic_entity(
-    central_unit: CentralUnit, address: str, parameter: str, do_load: bool = False
+    central_unit: CentralUnit, address: str, parameter: str
 ) -> Any:
     """Return the device value."""
-    hm_entity = await get_hm_genertic_entity(central_unit, address, parameter)
+    hm_entity = await get_hm_generic_entity(
+        central_unit=central_unit, address=address, parameter=parameter
+    )
     assert hm_entity
-    if do_load:
-        await hm_entity.load_entity_data()
-        assert hm_entity.value
+    await hm_entity.load_entity_value()
     return hm_entity.value
 
 
@@ -111,15 +113,14 @@ def get_hm_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
     return central_unit.hm_devices.get(d_address)
 
 
-async def get_hm_genertic_entity(
-    central_unit: CentralUnit, address: str, parameter: str, do_load: bool = False
+async def get_hm_generic_entity(
+    central_unit: CentralUnit, address: str, parameter: str
 ) -> GenericEntity | None:
     """Return the hm generic_entity."""
     hm_device = get_hm_device(central_unit, address)
     assert hm_device
     hm_entity = hm_device.entities.get((address, parameter))
-    if hm_entity and do_load:
-        await hm_entity.load_entity_data()
+    assert hm_entity
     return hm_entity
 
 
