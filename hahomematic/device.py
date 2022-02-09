@@ -20,13 +20,11 @@ from hahomematic.const import (
     ATTR_HM_TYPE,
     BUTTON_ACTIONS,
     CLICK_EVENTS,
-    DATA_LOAD_FAIL,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
     FLAG_INTERAL,
     GENERAL_UN_IGNORE_PARAMS,
-    HH_EVENT_DEVICES_CREATED,
     HM_VIRTUAL_REMOTES,
     IDENTIFIERS_SEPARATOR,
     IGNORED_PARAMETERS,
@@ -769,73 +767,6 @@ class HmDevice:
                         if parameter in un_ignore_parameters:
                             return True
         return False
-
-
-async def create_devices(central: hm_central.CentralUnit) -> None:
-    """
-    Trigger creation of the objects that expose the functionality.
-    """
-    new_devices = set[HmDevice]()
-    for interface_id, client in central.clients.items():
-        if not client:
-            _LOGGER.debug(
-                "create_devices: Skipping interface %s, missing client.", interface_id
-            )
-            continue
-        if not central.paramset_descriptions.get_by_interface(
-            interface_id=interface_id
-        ):
-            _LOGGER.debug(
-                "create_devices: Skipping interface %s, missing paramsets.",
-                interface_id,
-            )
-            continue
-        for device_address in central.device_descriptions.get_addresses(
-            interface_id=interface_id
-        ):
-            # Do we check for duplicates here? For now, we do.
-            device: HmDevice | None = None
-            if device_address in central.hm_devices:
-                _LOGGER.debug(
-                    "create_devices: Skipping device %s on %s, already exists.",
-                    device_address,
-                    interface_id,
-                )
-                continue
-            try:
-                device = HmDevice(
-                    central=central,
-                    interface_id=interface_id,
-                    device_address=device_address,
-                )
-
-            except Exception as err:
-                _LOGGER.error(
-                    "create_devices: Exception [%s] Failed to create device: %s, %s",
-                    err.args,
-                    interface_id,
-                    device_address,
-                )
-            try:
-                if device:
-                    device.create_entities_and_append_to_device()
-                    if DATA_LOAD_FAIL == await device.load_value_cache():
-                        _LOGGER.debug(
-                            "create_devices: Data load failed for %s, %s",
-                            interface_id,
-                            device_address,
-                        )
-                    new_devices.add(device)
-                    central.hm_devices[device_address] = device
-            except Exception as err:
-                _LOGGER.error(
-                    "create_devices: Exception [%s] Failed to create entities: %s, %s",
-                    err.args,
-                    interface_id,
-                    device_address,
-                )
-    if callable(central.callback_system_event):
-        central.callback_system_event(HH_EVENT_DEVICES_CREATED, new_devices)
 
 
 class ValueCache:
