@@ -8,6 +8,7 @@ from conftest import (
 )
 import pytest
 
+from hahomematic.const import HmEntityUsage
 from hahomematic.devices.climate import ATTR_TEMPERATURE, CeRfThermostat
 
 
@@ -19,8 +20,6 @@ async def test_central(central, loop) -> None:
     assert central.model == "PyDevCCU"
     assert central.get_client_by_interface_id("ccu-dev-hm").model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
-    assert len(central.hm_devices) == 344
-    assert len(central.hm_entities) == 4319
 
     data = {}
     for device in central.hm_devices.values():
@@ -61,12 +60,27 @@ async def test_central(central, loop) -> None:
         if hasattr(entity, "_unit"):
             units.add(entity._unit)
 
+    usage_types: dict[HmEntityUsage,int] = {}
+    for entity in central.hm_entities.values():
+        if hasattr(entity, "usage"):
+            if entity.usage not in usage_types:
+                usage_types[entity.usage] = 0
+            counter = usage_types[entity.usage]
+            usage_types[entity.usage] = counter + 1
+
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1658
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 136
+    assert usage_types[HmEntityUsage.ENTITY] == 2400
+    assert usage_types[HmEntityUsage.CE_SENSOR] == 34
+    assert usage_types[HmEntityUsage.CE_SECONDARY] == 84
+
+    assert len(central.hm_devices) == 344
+    assert len(central.hm_entities) == 4312
     assert len(data) == 344
     assert len(custom_entities) == 220
     assert len(ce_channels) == 89
     assert len(entity_types) == 6
-
-    assert len(parameters) == 177
+    assert len(parameters) == 176
 
 
 @pytest.mark.asyncio

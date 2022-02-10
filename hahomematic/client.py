@@ -45,7 +45,6 @@ from hahomematic.helpers import (
     build_api_url,
     get_channel_no,
     get_local_ip,
-    is_relevant_paramset,
     parse_ccu_sys_var,
 )
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
@@ -408,7 +407,7 @@ class Client(ABC):
         await self.put_paramset(
             channel_address=channel_address,
             paramset_key=paramset_key,
-            value={paramset_key: value},
+            value={parameter: value},
             rx_mode=rx_mode,
         )
 
@@ -517,17 +516,23 @@ class Client(ABC):
         paramsets[address] = {}
         _LOGGER.debug("get_paramset_descriptions for %s", address)
         for paramset_key in device_description.get(ATTR_HM_PARAMSETS, []):
-            device_channel = get_channel_no(address)
+            if (device_channel := get_channel_no(address)) is None:
+                # No paramsets at root device
+                continue
+
             device_type = (
                 device_description[ATTR_HM_TYPE]
                 if device_channel is None
                 else device_description[ATTR_HM_PARENT_TYPE]
             )
-            if not is_relevant_paramset(
-                paramset_key=paramset_key,
-                device_channel=device_channel,
-                device_type=device_type,
-                sub_type=sub_type,
+            if (
+                device_channel
+                and not self._central.parameter_visibility.is_relevant_paramset(
+                    device_type=device_type,
+                    sub_type=sub_type,
+                    device_channel=device_channel,
+                    paramset_key=paramset_key,
+                )
             ):
                 continue
             try:

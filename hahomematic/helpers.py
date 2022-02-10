@@ -20,10 +20,7 @@ from hahomematic.const import (
     ATTR_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
-    DEVICE_RELEVANT_MASTER_PARAMSETS,
     INIT_DATETIME,
-    PARAMSET_KEY_MASTER,
-    PARAMSET_KEY_VALUES,
     HmEntityUsage,
 )
 import hahomematic.devices.entity_definition as hm_entity_definition
@@ -321,26 +318,6 @@ def get_channel_no(address: str) -> int | None:
     if ":" not in address:
         return None
     return int(address.split(":")[1])
-
-
-def is_relevant_paramset(
-    paramset_key: str,
-    device_channel: int | None,
-    device_type: str,
-    sub_type: str | None,
-) -> bool:
-    """Return if a paramset is relevant."""
-    if paramset_key == PARAMSET_KEY_VALUES:
-        return True
-    if device_channel is not None and paramset_key == PARAMSET_KEY_MASTER:
-        for d_type, channel_nos in DEVICE_RELEVANT_MASTER_PARAMSETS.items():
-            if device_channel in channel_nos and (
-                device_type.lower() == d_type.lower()
-                or (sub_type and sub_type.lower() == d_type.lower())
-                or device_type.lower().startswith(d_type.lower())
-            ):
-                return True
-    return False
 
 
 # Do not add: pylint disable=no-member
