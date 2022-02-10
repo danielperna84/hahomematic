@@ -1,5 +1,6 @@
 Version 0.32.0 (2022-02-10)
 - Move create_devices to central
+- Move parameter visibility relevant data to own module
 
 Version 0.31.2 (2022-02-08)
 - Add HmIP-HDM2 to cover

@@ -1,6 +1,4 @@
-"""
-Constants used by hahomematic.
-"""
+""" Constants used by hahomematic. """
 from __future__ import annotations
 
 from datetime import datetime
@@ -24,16 +22,6 @@ FILE_CUSTOM_UN_IGNORE_PARAMETERS = "unignore"
 
 PARAMSET_KEY_MASTER = "MASTER"
 PARAMSET_KEY_VALUES = "VALUES"
-
-# {device_type: channel_no}
-DEVICE_RELEVANT_MASTER_PARAMSETS: dict[str, set[int]] = {
-    "HmIPW-DRBL4": {1, 5, 9, 13},
-    "HmIP-DRBLI4": {9, 13, 17, 21},
-}
-
-GENERAL_UN_IGNORE_PARAMS: set[str] = set()
-
-MASTER_PARAMSET_UN_IGNORE_PARAMS: set[str] = {"CHANNEL_OPERATION_MODE"}
 
 HH_EVENT_DELETE_DEVICES = "deleteDevices"
 HH_EVENT_DEVICES_CREATED = "devicesCreated"
@@ -73,17 +61,6 @@ CLICK_EVENTS: set[str] = {
     EVENT_PRESS_LONG_START,
 }
 
-HIDDEN_PARAMETERS: set[str] = {
-    EVENT_CONFIG_PENDING,
-    EVENT_ERROR,
-    EVENT_STICKY_UN_REACH,
-    EVENT_UN_REACH,
-    EVENT_UPDATE_PENDING,
-    PARAM_CHANNEL_OPERATION_MODE,
-    "ACTIVITY_STATE",
-    "DIRECTION",
-}
-
 PREFETCH_PARAMETERS: set[str] = {
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
@@ -94,84 +71,6 @@ PREFETCH_PARAMETERS: set[str] = {
 }
 
 BUTTON_ACTIONS: set[str] = {"RESET_MOTION", "RESET_PRESENCE"}
-
-# Parameters within the paramsets for which we create entities.
-UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
-    "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
-    "SD": ["SMOKE_DETECTOR_ALARM_STATUS"],  # HmIP-SWSD
-    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],  # HM-Sec-Win*
-    "HM-Sec-Key": ["DIRECTION", "ERROR"],  # HM-Sec-Key*
-}
-
-# Parameters within the paramsets for which we don't create entities.
-IGNORED_PARAMETERS: set[str] = {
-    "AES_KEY",
-    "BOOST_TIME",
-    "BOOT",
-    "BURST_LIMIT_WARNING",
-    "CLEAR_WINDOW_OPEN_SYMBOL",
-    "COMBINED_PARAMETER",
-    "DATE_TIME_UNKNOWN",
-    "DECISION_VALUE",
-    "DEVICE_IN_BOOTLOADER",
-    "DEW_POINT_ALARM",
-    "EMERGENCY_OPERATION",
-    "EXTERNAL_CLOCK",
-    "FROST_PROTECTION",
-    "HUMIDITY_LIMITER",
-    "INCLUSION_UNSUPPORTED_DEVICE",
-    "INHIBIT",
-    "INSTALL_MODE",
-    "LEVEL_COMBINED",
-    "LEVEL_REAL",
-    "OLD_LEVEL",
-    "ON_TIME",
-    "PARTY_SET_POINT_TEMPERATURE",
-    "PARTY_TIME_END",
-    "PARTY_TIME_START",
-    "PROCESS",
-    "QUICK_VETO_TIME",
-    "RAMP_STOP",
-    "RELOCK_DELAY",
-    "SECTION",
-    "SELF_CALIBRATION",
-    "SENSOR_ERROR",
-    "SET_SYMBOL_FOR_HEATING_PHASE",
-    "SMOKE_DETECTOR_COMMAND",
-    "STATE_UNCERTAIN",
-    "SWITCH_POINT_OCCURED",
-    "TEMPERATURE_LIMITER",
-    "TEMPERATURE_OUT_OF_RANGE",
-    "TIME_OF_OPERATION",
-    "WOCHENPROGRAMM",
-}
-
-# Ignore Parameter that end with
-IGNORED_PARAMETERS_WILDCARDS_END: set[str] = {
-    "OVERFLOW",
-    "OVERHEAT",
-    "OVERRUN",
-    "REPORTING",
-    "RESULT",
-    "STATUS",
-    "SUBMIT",
-    "WORKING",
-}
-
-# Ignore Parameter that start with
-IGNORED_PARAMETERS_WILDCARDS_START: set[str] = {
-    "ADJUSTING",
-    "ERR_TTM",
-    "ERROR",
-    "IDENTIFICATION_MODE_KEY_VISUAL",
-    "IDENTIFY_",
-    "PARTY_START",
-    "PARTY_STOP",
-    "STATUS_FLAG",
-    "WEEK_PROGRAM",
-}
-
-ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
 
 BACKEND_CCU = "CCU"
 BACKEND_HOMEGEAR = "Homegear"

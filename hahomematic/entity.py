@@ -33,8 +33,6 @@ from hahomematic.const import (
     EVENT_UN_REACH,
     FLAG_SERVICE,
     FLAG_VISIBLE,
-    GENERAL_UN_IGNORE_PARAMS,
-    HIDDEN_PARAMETERS,
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
     PARAMSET_KEY_VALUES,
@@ -60,6 +58,7 @@ from hahomematic.helpers import (
     get_event_name,
     updated_within_seconds,
 )
+from hahomematic.parameter_visibility import HIDDEN_PARAMETERS
 
 _LOGGER = logging.getLogger(__name__)
 ParameterType = TypeVar("ParameterType", bool, int, float, str, Union[int, str], None)
@@ -649,11 +648,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
         # add custom un_ignore entities
         self._mark_entity_by_custom_un_ignore_parameters(
-            un_ignore_params=self._central.custom_un_ignore_parameters
-        )
-        # add general un_ignore entities
-        self._mark_entity_by_custom_un_ignore_parameters(
-            un_ignore_params=GENERAL_UN_IGNORE_PARAMS
+            un_ignore_params_by_paramset_key=self._central.parameter_visibility.get_un_ignore_parameters(
+                device_type=self.device_type, device_channel=self.channel_no
+            )
         )
 
     def _add_entities(self, field_dict_name: str, is_sensor: bool = False) -> None:
@@ -683,14 +680,18 @@ class CustomEntity(BaseEntity, CallbackEntity):
                     entity.usage = HmEntityUsage.ENTITY
 
     def _mark_entity_by_custom_un_ignore_parameters(
-        self, un_ignore_params: set[str]
+        self, un_ignore_params_by_paramset_key: dict[str, set[str]]
     ) -> None:
         """Mark entities to be created in HA."""
-        if not un_ignore_params:
+        if not un_ignore_params_by_paramset_key:
             return None
-        for entity in self._device.entities.values():
-            if entity.parameter in un_ignore_params:
-                entity.usage = HmEntityUsage.ENTITY
+        for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
+            for entity in self._device.entities.values():
+                if (
+                    entity.paramset_key == paramset_key
+                    and entity.parameter in un_ignore_params
+                ):
+                    entity.usage = HmEntityUsage.ENTITY
 
     def _add_entity(self, field_name: str, entity: GenericEntity | None) -> None:
         """Add entity to collection and register callback"""
