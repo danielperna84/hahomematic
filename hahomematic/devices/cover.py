@@ -41,10 +41,10 @@ GARAGE_DOOR_COMMAND_STOP = 2
 GARAGE_DOOR_COMMAND_CLOSE = 3
 GARAGE_DOOR_COMMAND_PARTIAL_OPEN = 4
 
-GARAGE_DOOR_STATE_CLOSED = 0
-GARAGE_DOOR_STATE_OPEN = 1
-GARAGE_DOOR_STATE_VENTILATION_POSITION = 2
-GARAGE_DOOR_STATE_POSITION_UNKNOWN = 3
+GARAGE_DOOR_STATE_CLOSED = "CLOSED"
+GARAGE_DOOR_STATE_OPEN = "OPEN"
+GARAGE_DOOR_STATE_VENTILATION_POSITION = "VENTILATION_POSITION"
+GARAGE_DOOR_STATE_POSITION_UNKNOWN = "POSITION_UNKNOWN"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,7 +279,7 @@ class CeGarage(CustomEntity):
         )
 
     @property
-    def _door_state(self) -> int | None:
+    def _door_state(self) -> str | None:
         """Return the door state entity of the garage door."""
         return self._get_entity_value(field_name=FIELD_DOOR_STATE)
 

@@ -197,7 +197,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
-                    FIELD_DOOR_COMMAND: "DOOR_COMMAND,",
+                    FIELD_DOOR_COMMAND: "DOOR_COMMAND",
                     FIELD_DOOR_STATE: "DOOR_STATE",
                 },
             },
