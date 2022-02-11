@@ -115,6 +115,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-USBSM": (make_ip_switch, [2]),
     "HmIP-WGC": (make_ip_switch, [2]),
     "HmIP-WHS2": (make_ip_switch, [1, 5]),
+    "HmIPW-FIO6": (make_ip_switch, [7, 11, 15, 19, 23, 27]),
 }
 
 # HmIP-MIO16-PCB : Don't add it. Too much functionality. Device is better supported without custom entities.
