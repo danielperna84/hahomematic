@@ -201,6 +201,11 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_DOOR_STATE: "DOOR_STATE",
                 },
             },
+            ED_ADDITIONAL_ENTITIES: {
+                1: {
+                    "STATE",
+                },
+            },
         },
         EntityDefinition.IP_FIXED_COLOR_LIGHT: {
             ED_DEVICE_GROUP: {
