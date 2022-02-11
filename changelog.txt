@@ -1,3 +1,6 @@
+Version 0.32.2 (2022-02-11)
+- Fix HmIP-MOD-HO
+
 Version 0.32.1 (2022-02-11)
 - Update to pydevccu 0.1.3
 - Priotize detection of devices for custom entities (e.g. HmIP-PCBS2)
