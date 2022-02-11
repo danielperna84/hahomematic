@@ -68,19 +68,19 @@ async def test_central(central, loop) -> None:
             counter = usage_types[entity.usage]
             usage_types[entity.usage] = counter + 1
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1658
-    assert usage_types[HmEntityUsage.CE_PRIMARY] == 136
-    assert usage_types[HmEntityUsage.ENTITY] == 2400
-    assert usage_types[HmEntityUsage.CE_SENSOR] == 34
-    assert usage_types[HmEntityUsage.CE_SECONDARY] == 84
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1810
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 155
+    assert usage_types[HmEntityUsage.ENTITY] == 2509
+    assert usage_types[HmEntityUsage.CE_SENSOR] == 49
+    assert usage_types[HmEntityUsage.CE_SECONDARY] == 114
 
-    assert len(central.hm_devices) == 344
-    assert len(central.hm_entities) == 4312
-    assert len(data) == 344
-    assert len(custom_entities) == 220
-    assert len(ce_channels) == 89
+    assert len(central.hm_devices) == 362
+    assert len(central.hm_entities) == 4637
+    assert len(data) == 362
+    assert len(custom_entities) == 269
+    assert len(ce_channels) == 98
     assert len(entity_types) == 6
-    assert len(parameters) == 176
+    assert len(parameters) == 179
 
 
 @pytest.mark.asyncio

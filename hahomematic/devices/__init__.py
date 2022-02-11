@@ -52,12 +52,15 @@ def _get_device_func_by_platform(
 ) -> tuple[Callable, list[int]] | None:
     """Return the function to create custom entities"""
     for name, func in platform_devices.items():
-        if (
-            device_type.lower() == name.lower()
-            or (sub_type and sub_type.lower() == name.lower())
-            or device_type.lower().startswith(name.lower())
-        ):
+        if device_type.lower() == name.lower():
             return func
+    for name, func in platform_devices.items():
+        if sub_type and sub_type.lower() == name.lower():
+            return func
+    for name, func in platform_devices.items():
+        if device_type.lower().startswith(name.lower()):
+            return func
+
     return None
 
 
