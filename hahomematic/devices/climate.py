@@ -557,7 +557,6 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-BWTH": (make_ip_thermostat, [1]),
     "HmIP-eTRV": (make_ip_thermostat, [1]),
     "HmIP-HEATING": (make_ip_thermostat_group, [1]),
-    "HmIP-STHD": (make_ip_thermostat, [1]),
     "HmIP-STH": (make_ip_thermostat, [1]),
     "HmIP-WTH": (make_ip_thermostat, [1]),
     "HmIPW-STH": (make_ip_thermostat, [1]),
