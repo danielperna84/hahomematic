@@ -68,6 +68,7 @@ FIELD_RAMP_TIME_VALUE = "ramp_time_value"
 FIELD_RSSI_DEVICE = "rssi_device"
 FIELD_RSSI_PEER = "rssi_peer"
 FIELD_SABOTAGE = "sabotage"
+FIELD_SECTION = "section"
 FIELD_SET_POINT_MODE = "set_point_mode"
 FIELD_SETPOINT = "setpoint"
 FIELD_STATE = "state"
@@ -199,9 +200,11 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_DOOR_COMMAND: "DOOR_COMMAND",
                     FIELD_DOOR_STATE: "DOOR_STATE",
+                    FIELD_SECTION: "SECTION",
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
+                0: {"DOOR_STATE"},
                 1: {
                     "STATE",
                 },

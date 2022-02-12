@@ -16,6 +16,7 @@ from hahomematic.devices.entity_definition import (
     FIELD_DOOR_STATE,
     FIELD_LEVEL,
     FIELD_LEVEL_2,
+    FIELD_SECTION,
     FIELD_STOP,
     EntityDefinition,
     make_custom_entity,
@@ -41,10 +42,14 @@ GARAGE_DOOR_COMMAND_STOP = "STOP"
 GARAGE_DOOR_COMMAND_CLOSE = "CLOSE"
 GARAGE_DOOR_COMMAND_PARTIAL_OPEN = "PARTIAL_OPEN"
 
+GARAGE_DOOR_SECTION_CLOSING = 2
+GARAGE_DOOR_SECTION_OPENING = 5
+
 GARAGE_DOOR_STATE_CLOSED = "CLOSED"
 GARAGE_DOOR_STATE_OPEN = "OPEN"
 GARAGE_DOOR_STATE_VENTILATION_POSITION = "VENTILATION_POSITION"
 GARAGE_DOOR_STATE_POSITION_UNKNOWN = "POSITION_UNKNOWN"
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -289,6 +294,11 @@ class CeGarage(CustomEntity):
         return self._get_entity(field_name=FIELD_DOOR_COMMAND, entity_type=HmAction)
 
     @property
+    def _section(self) -> int | None:
+        """Return the section entity of the garage door."""
+        return self._get_entity_value(field_name=FIELD_SECTION)
+
+    @property
     def current_cover_position(self) -> int | None:
         """Return current position of the garage door ."""
         if self._door_state == GARAGE_DOOR_STATE_OPEN:
@@ -313,6 +323,20 @@ class CeGarage(CustomEntity):
         """Return if the garage door is closed."""
         if self._door_state is not None:
             return self._door_state == GARAGE_DOOR_STATE_CLOSED
+        return None
+
+    @property
+    def is_opening(self) -> bool | None:
+        """Return if the garage door is opening."""
+        if self._section is not None:
+            return self._section == GARAGE_DOOR_SECTION_OPENING
+        return None
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Return if the garage door is closing."""
+        if self._section is not None:
+            return self._section == GARAGE_DOOR_SECTION_CLOSING
         return None
 
     async def open_cover(self) -> None:
