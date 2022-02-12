@@ -35,3 +35,15 @@ class HmAction(GenericEntity[None]):
             parameter_data=parameter_data,
             platform=HmPlatform.ACTION,
         )
+
+    async def send_value(self, value: Any) -> None:
+        """Set the value of the entity."""
+        # We allow setting the value via index as well, just in case.
+        if (
+            value is not None
+            and self._value_list
+            and isinstance(value, str)
+        ):
+            await super().send_value(self._value_list.index(value))
+        else:
+            await super().send_value(value)
