@@ -133,7 +133,7 @@ async def get_hm_custom_entity(
     for custom_entity in hm_device.custom_entities.values():
         if custom_entity.channel_no == channel_no:
             if do_load:
-                await custom_entity.load_data()
+                await custom_entity.load_entity_value()
             return custom_entity
     return None
 

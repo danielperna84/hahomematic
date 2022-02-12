@@ -10,6 +10,7 @@ import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.devices.climate import ATTR_TEMPERATURE, CeRfThermostat
+from hahomematic.devices.lock import LOCK_TARGET_LEVEL_OPEN
 
 
 @pytest.mark.asyncio
@@ -97,6 +98,18 @@ async def test_device_set_data(central, pydev_ccu, loop) -> None:
         central, "VCU6354483:1", "SET_POINT_TEMPERATURE"
     )
     assert new_value == 19.0
+
+
+@pytest.mark.asyncio
+async def test_action_on_lock(central, pydev_ccu, loop) -> None:
+    """Test callback."""
+    assert central
+    assert pydev_ccu
+    lock = await get_hm_custom_entity(central_unit=central, address="VCU9724704", channel_no=1, do_load=True)
+    assert lock
+    assert lock.is_locked is False
+    await lock.lock()
+    assert lock
 
 
 @pytest.mark.asyncio

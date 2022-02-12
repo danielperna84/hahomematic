@@ -24,10 +24,13 @@ from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
-HM_LOCKED_TEXT = "LOCKED"
-HM_LOCKED = 0
-HM_UNLOCKED = 1
-HM_OPEN = 2
+LOCK_STATE_UNKNOWN = "UNKNOWN"
+LOCK_STATE_LOCKED = "LOCKED"
+LOCK_STATE_UNLOCKED = "UNLOCKED"
+
+LOCK_TARGET_LEVEL_LOCKED = "LOCKED"
+LOCK_TARGET_LEVEL_UNLOCKED = "UNLOCKED"
+LOCK_TARGET_LEVEL_OPEN = "OPEN"
 
 
 class BaseLock(CustomEntity):
@@ -109,7 +112,7 @@ class CeIpLock(BaseLock):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._lock_state == HM_LOCKED_TEXT
+        return self._lock_state == LOCK_STATE_LOCKED
 
     @property
     def is_jammed(self) -> bool:
@@ -118,15 +121,15 @@ class CeIpLock(BaseLock):
 
     async def lock(self) -> None:
         """Lock the lock."""
-        await self._e_lock_target_level.send_value(HM_LOCKED)
+        await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_LOCKED)
 
     async def unlock(self) -> None:
         """Unlock the lock."""
-        await self._e_lock_target_level.send_value(HM_UNLOCKED)
+        await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_UNLOCKED)
 
     async def open(self) -> None:
         """Open the lock."""
-        await self._e_lock_target_level.send_value(HM_OPEN)
+        await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_OPEN)
 
 
 class CeRfLock(BaseLock):
