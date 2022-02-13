@@ -61,6 +61,13 @@ async def test_central(central, loop) -> None:
         if hasattr(entity, "_unit"):
             units.add(entity._unit)
 
+    lowbats = set()
+    for entity in central.hm_entities.values():
+        if hasattr(entity, "parameter") and entity.parameter == "LOWBAT":
+            lowbats.add(entity.device_type)
+    lowbats_sorted = sorted(lowbats)
+    print(lowbats_sorted)
+
     usage_types: dict[HmEntityUsage,int] = {}
     for entity in central.hm_entities.values():
         if hasattr(entity, "usage"):
@@ -69,19 +76,19 @@ async def test_central(central, loop) -> None:
             counter = usage_types[entity.usage]
             usage_types[entity.usage] = counter + 1
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1835
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1831
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 161
-    assert usage_types[HmEntityUsage.ENTITY] == 2478
+    assert usage_types[HmEntityUsage.ENTITY] == 2476
     assert usage_types[HmEntityUsage.CE_SENSOR] == 55
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
     assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 4655
+    assert len(central.hm_entities) == 4649
     assert len(data) == 362
     assert len(custom_entities) == 287
     assert len(ce_channels) == 99
     assert len(entity_types) == 6
-    assert len(parameters) == 179
+    assert len(parameters) == 178
 
 
 @pytest.mark.asyncio

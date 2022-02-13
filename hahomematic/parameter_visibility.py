@@ -115,6 +115,12 @@ _IGNORED_PARAMETERS_WILDCARDS_START: set[str] = {
     "STATUS_FLAG",
     "WEEK_PROGRAM",
 }
+
+# Parameters by device within the VALUES paramset for which we don't create entities.
+_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
+    "LOWBAT": ["HM-LC-Sw4-DR"],
+}
+
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
 
 
@@ -133,6 +139,16 @@ class ParameterVisibilityCache:
             PARAMSET_KEY_MASTER: set(),
             PARAMSET_KEY_VALUES: set(),
         }
+        self._ignore_parameters_by_device_lower: dict[str, list[str]] = {
+            parameter: [device_type.lower() for device_type in device_types]
+            for parameter, device_types in _IGNORE_PARAMETERS_BY_DEVICE.items()
+        }
+
+        self._un_ignore_parameters_by_device_lower: dict[str, list[str]] = {
+            device_type.lower(): parameters
+            for device_type, parameters in _UN_IGNORE_PARAMETERS_BY_DEVICE.items()
+        }
+
         # device_type, channel_no, paramset_key, list[parameter]
         self._un_ignore_parameters_by_device: dict[
             str, dict[int, dict[str, set[str]]]
@@ -147,19 +163,23 @@ class ParameterVisibilityCache:
             device_type,
             channels_parameter,
         ) in _RELEVANT_MASTER_PARAMSETS_BY_DEVICE.items():
+            device_type_l = device_type.lower()
             channel_nos, parameter = channels_parameter
-            if device_type not in self._relevant_master_paramsets_by_device:
-                self._relevant_master_paramsets_by_device[device_type] = set()
-            if device_type not in self._un_ignore_parameters_by_device:
-                self._un_ignore_parameters_by_device[device_type] = {}
+            if device_type_l not in self._relevant_master_paramsets_by_device:
+                self._relevant_master_paramsets_by_device[device_type_l] = set()
+            if device_type_l not in self._un_ignore_parameters_by_device:
+                self._un_ignore_parameters_by_device[device_type_l] = {}
             for channel_no in channel_nos:
-                self._relevant_master_paramsets_by_device[device_type].add(channel_no)
-                if channel_no not in self._un_ignore_parameters_by_device[device_type]:
-                    self._un_ignore_parameters_by_device[device_type][channel_no] = {
+                self._relevant_master_paramsets_by_device[device_type_l].add(channel_no)
+                if (
+                    channel_no
+                    not in self._un_ignore_parameters_by_device[device_type_l]
+                ):
+                    self._un_ignore_parameters_by_device[device_type_l][channel_no] = {
                         PARAMSET_KEY_MASTER: set()
                     }
 
-                self._un_ignore_parameters_by_device[device_type][channel_no][
+                self._un_ignore_parameters_by_device[device_type_l][channel_no][
                     PARAMSET_KEY_MASTER
                 ].add(parameter)
 
@@ -167,10 +187,11 @@ class ParameterVisibilityCache:
         self, device_type: str, device_channel: int
     ) -> dict[str, set[str]]:
         """Return un_ignore_parameters"""
+        device_type_l = device_type.lower()
         un_ignore_parameters: dict[str, set[str]] = {}
-        if device_type is not None and device_channel is not None:
+        if device_type_l is not None and device_channel is not None:
             un_ignore_parameters = self._un_ignore_parameters_by_device.get(
-                device_type, {}
+                device_type_l, {}
             ).get(device_channel, {})
 
         for (
@@ -191,6 +212,9 @@ class ParameterVisibilityCache:
         parameter: str,
     ) -> bool:
         """Check if parameter can be ignored."""
+        device_type_l = device.device_type.lower()
+        sub_type_l = device.sub_type.lower() if device.sub_type else device.sub_type
+
         if paramset_key == PARAMSET_KEY_VALUES:
             if self.parameter_is_un_ignored(
                 device=device,
@@ -199,12 +223,19 @@ class ParameterVisibilityCache:
                 parameter=parameter,
             ):
                 return False
+
             if (
                 parameter in _IGNORED_PARAMETERS
                 or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
                 or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
+                or device_type_l.startswith(
+                    tuple(self._ignore_parameters_by_device_lower.get(parameter, []))
+                )
+                or sub_type_l
+                in self._ignore_parameters_by_device_lower.get(parameter, [])
             ):
                 return True
+
             if (
                 accept_channel := _ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
             ) is not None:
@@ -225,30 +256,36 @@ class ParameterVisibilityCache:
         parameter: str,
     ) -> bool:
         """Return if parameter is on un_ignore list"""
+
+        device_type_l = device.device_type.lower()
+        sub_type_l = device.sub_type.lower() if device.sub_type else device.sub_type
+
         if parameter in self._un_ignore_parameters_general[paramset_key]:
             return True
 
-        if parameter in self._un_ignore_parameters_by_device.get(
-            device.device_type, {}
-        ).get(device_channel, {}).get(paramset_key, set()):
+        if parameter in self._un_ignore_parameters_by_device.get(device_type_l, {}).get(
+            device_channel, {}
+        ).get(paramset_key, set()):
             return True
 
-        if parameter in self._un_ignore_parameters_by_device.get(
-            device.sub_type, {}
-        ).get(device_channel, {}).get(paramset_key, set()):
+        if parameter in self._un_ignore_parameters_by_device.get(sub_type_l, {}).get(
+            device_channel, {}
+        ).get(paramset_key, set()):
             return True
 
-        if device.sub_type and device.sub_type in _UN_IGNORE_PARAMETERS_BY_DEVICE:
-            un_ignore_parameters = _UN_IGNORE_PARAMETERS_BY_DEVICE[device.sub_type]
+        if sub_type_l and sub_type_l in self._un_ignore_parameters_by_device_lower:
+            un_ignore_parameters = self._un_ignore_parameters_by_device_lower[
+                sub_type_l
+            ]
             if parameter in un_ignore_parameters:
                 return True
 
-        if device.device_type.startswith(tuple(_UN_IGNORE_PARAMETERS_BY_DEVICE)):
+        if device_type_l.startswith(tuple(self._un_ignore_parameters_by_device_lower)):
             for (
                 device_type,
                 un_ignore_parameters,
-            ) in _UN_IGNORE_PARAMETERS_BY_DEVICE.items():
-                if device.device_type.startswith(device_type):
+            ) in self._un_ignore_parameters_by_device_lower.items():
+                if device_type_l.startswith(device_type):
                     if parameter in un_ignore_parameters:
                         return True
         return False
@@ -277,7 +314,7 @@ class ParameterVisibilityCache:
                         line,
                     )
                     return
-                device_type = device_data[0]
+                device_type = device_data[0].lower()
                 channel_no = int(device_data[1])
                 paramset_key = device_data[2]
                 if device_type not in self._un_ignore_parameters_by_device:
@@ -331,6 +368,9 @@ class ParameterVisibilityCache:
         device_channel: int,
     ) -> bool:
         """Return if a paramset is relevant."""
+        device_type_l = device_type.lower()
+        sub_type_l = sub_type.lower() if sub_type else None
+
         if paramset_key == PARAMSET_KEY_VALUES:
             return True
         if device_channel is not None and paramset_key == PARAMSET_KEY_MASTER:
@@ -339,9 +379,9 @@ class ParameterVisibilityCache:
                 channel_nos,
             ) in self._relevant_master_paramsets_by_device.items():
                 if device_channel in channel_nos and (
-                    device_type.lower() == d_type.lower()
-                    or (sub_type and sub_type.lower() == d_type.lower())
-                    or device_type.lower().startswith(d_type.lower())
+                    device_type_l == d_type.lower()
+                    or (sub_type_l and sub_type_l == d_type.lower())
+                    or device_type_l.startswith(d_type.lower())
                 ):
                     return True
         return False
