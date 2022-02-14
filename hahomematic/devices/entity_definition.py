@@ -4,12 +4,12 @@ This module contains device descriptions for custom entities.
 from __future__ import annotations
 
 from copy import deepcopy
-from enum import Enum
 import logging
 from typing import Any
 
 from voluptuous import Invalid, Optional, Required, Schema
 
+from hahomematic.backport import StrEnum
 import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
 from hahomematic.helpers import generate_unique_id
@@ -83,7 +83,7 @@ FIELD_VOLTAGE = "voltage"
 _LOGGER = logging.getLogger(__name__)
 
 
-class EntityDefinition(Enum):
+class EntityDefinition(StrEnum):
     """Enum for entity definitions."""
 
     IP_COVER = "IPCover"
@@ -102,10 +102,6 @@ class EntityDefinition(Enum):
     RF_THERMOSTAT = "RfThermostat"
     RF_THERMOSTAT_GROUP = "RfThermostatGroup"
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
-
-    def __str__(self) -> str:
-        """Return self.value."""
-        return str(self.value)
 
 
 SCHEMA_ED_ADDITIONAL_ENTITIES = Schema({Optional(int): Schema({Optional(str)})})

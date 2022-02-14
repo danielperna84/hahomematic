@@ -40,9 +40,9 @@ HM_MODE_AUTO = "AUTO-MODE"
 HM_MODE_MANU = "MANU-MODE"
 HM_MODE_AWAY = "PARTY-MODE"
 HM_MODE_BOOST = "BOOST-MODE"
-HMIP_SET_POINT_MODE_AUTO = 0
-HMIP_SET_POINT_MODE_MANU = 1
-HMIP_SET_POINT_MODE_AWAY = 2
+HMIP_MODE_AUTO = 0
+HMIP_MODE_MANU = 1
+HMIP_MODE_AWAY = 2
 
 ATTR_TEMPERATURE = "temperature"
 CURRENT_HVAC_COOL = "cooling"
@@ -53,13 +53,16 @@ HVAC_MODE_OFF = "off"
 HVAC_MODE_HEAT = "heat"
 HVAC_MODE_AUTO = "auto"
 HVAC_MODE_COOL = "cool"
+
 PARTY_INIT_DATE = "2000_01_01 00:00"
 PARTY_DATE_FORMAT = "%Y_%m_%d %H:%M"
+
 PRESET_NONE = "none"
 PRESET_AWAY = "away"
 PRESET_BOOST = "boost"
 PRESET_COMFORT = "comfort"
 PRESET_ECO = "eco"
+
 TEMP_CELSIUS = "°C"
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
@@ -401,9 +404,9 @@ class CeIpThermostat(BaseClimateEntity):
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= self.min_temp:
             return HVAC_MODE_OFF
-        if self._e_set_point_mode.value == HMIP_SET_POINT_MODE_MANU:
+        if self._e_set_point_mode.value == HMIP_MODE_MANU:
             return HVAC_MODE_HEAT if self._is_heating_mode else HVAC_MODE_COOL
-        if self._e_set_point_mode.value == HMIP_SET_POINT_MODE_AUTO:
+        if self._e_set_point_mode.value == HMIP_MODE_AUTO:
             return HVAC_MODE_AUTO
         return HVAC_MODE_AUTO
 
@@ -421,7 +424,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Return the current preset mode."""
         if self._e_boost_mode.value:
             return PRESET_BOOST
-        if self._e_set_point_mode.value == HMIP_SET_POINT_MODE_AWAY:
+        if self._e_set_point_mode.value == HMIP_MODE_AWAY:
             return PRESET_AWAY
         if self.hvac_mode == HVAC_MODE_AUTO:
             return (
@@ -442,11 +445,11 @@ class CeIpThermostat(BaseClimateEntity):
     async def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_AUTO:
-            await self._e_control_mode.send_value(HMIP_SET_POINT_MODE_AUTO)
+            await self._e_control_mode.send_value(HMIP_MODE_AUTO)
         elif hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL):
-            await self._e_control_mode.send_value(HMIP_SET_POINT_MODE_MANU)
+            await self._e_control_mode.send_value(HMIP_MODE_MANU)
         elif hvac_mode == HVAC_MODE_OFF:
-            await self._e_control_mode.send_value(HMIP_SET_POINT_MODE_MANU)
+            await self._e_control_mode.send_value(HMIP_MODE_MANU)
             await self.set_temperature(temperature=self.min_temp)
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
@@ -474,7 +477,7 @@ class CeIpThermostat(BaseClimateEntity):
         await self.put_paramset(
             paramset_key="VALUES",
             value={
-                "CONTROL_MODE": HMIP_SET_POINT_MODE_AWAY,
+                "CONTROL_MODE": HMIP_MODE_AWAY,
                 "PARTY_TIME_END": end.strftime(PARTY_DATE_FORMAT),
                 "PARTY_TIME_START": start.strftime(PARTY_DATE_FORMAT),
             },
@@ -501,7 +504,7 @@ class CeIpThermostat(BaseClimateEntity):
         await self.put_paramset(
             paramset_key="VALUES",
             value={
-                "CONTROL_MODE": HMIP_SET_POINT_MODE_AUTO,
+                "CONTROL_MODE": HMIP_MODE_AUTO,
                 "PARTY_TIME_START": PARTY_INIT_DATE,
                 "PARTY_TIME_END": PARTY_INIT_DATE,
             },
