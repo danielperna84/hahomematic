@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+
+from hahomematic.backport import StrEnum
 
 DEFAULT_ENCODING = "UTF-8"
 MANUFACTURER = "eQ-3"
@@ -181,7 +182,7 @@ HM_VIRTUAL_REMOTES = [
 ]
 
 
-class HmEntityUsage(Enum):
+class HmEntityUsage(StrEnum):
     """Enum with information about usage in Home Assistant."""
 
     CE_PRIMARY = "ce_primary"
@@ -192,7 +193,7 @@ class HmEntityUsage(Enum):
     EVENT = "event"
 
 
-class HmPlatform(Enum):
+class HmPlatform(StrEnum):
     """Enum with platforms relevant for Home Assistant."""
 
     ACTION = "action"
@@ -211,43 +212,27 @@ class HmPlatform(Enum):
     SWITCH = "switch"
     TEXT = "text"
 
-    def __str__(self) -> str:
-        """Return self.value."""
-        return str(self.value)
 
-
-class HmEntityType(Enum):
+class HmEntityType(StrEnum):
     """Enum with hahomematic entity types."""
 
     GENERIC = "generic"
     CUSTOM = "custom"
 
-    def __str__(self) -> str:
-        """Return self.value."""
-        return str(self.value)
 
-
-class HmEventType(Enum):
+class HmEventType(StrEnum):
     """Enum with hahomematic event types."""
 
     KEYPRESS = "homematic.keypress"
     DEVICE = "homematic.device"
     INTERFACE = "homematic.interface"
 
-    def __str__(self) -> str:
-        """Return self.value."""
-        return str(self.value)
 
-
-class HmInterfaceEventType(Enum):
+class HmInterfaceEventType(StrEnum):
     """Enum with hahomematic event types."""
 
     PROXY = "proxy"
     CALLBACK = "callback"
-
-    def __str__(self) -> str:
-        """Return self.value."""
-        return str(self.value)
 
 
 AVAILABLE_HM_PLATFORMS = [
