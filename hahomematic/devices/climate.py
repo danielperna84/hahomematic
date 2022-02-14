@@ -36,26 +36,34 @@ from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
+# HA constants
 HM_MODE_AUTO = "AUTO-MODE"
 HM_MODE_MANU = "MANU-MODE"
 HM_MODE_AWAY = "PARTY-MODE"
 HM_MODE_BOOST = "BOOST-MODE"
+
 HMIP_MODE_AUTO = 0
 HMIP_MODE_MANU = 1
 HMIP_MODE_AWAY = 2
 
+HM_MIN_VALUE = 4.5
+HM_MAX_VALUE = 30.5
+
+PARTY_INIT_DATE = "2000_01_01 00:00"
+PARTY_DATE_FORMAT = "%Y_%m_%d %H:%M"
+
+# HA constants
 ATTR_TEMPERATURE = "temperature"
+
 CURRENT_HVAC_COOL = "cooling"
 CURRENT_HVAC_HEAT = "heating"
 CURRENT_HVAC_IDLE = "idle"
 CURRENT_HVAC_OFF = "off"
+
 HVAC_MODE_OFF = "off"
 HVAC_MODE_HEAT = "heat"
 HVAC_MODE_AUTO = "auto"
 HVAC_MODE_COOL = "cool"
-
-PARTY_INIT_DATE = "2000_01_01 00:00"
-PARTY_DATE_FORMAT = "%Y_%m_%d %H:%M"
 
 PRESET_NONE = "none"
 PRESET_AWAY = "away"
@@ -63,12 +71,10 @@ PRESET_BOOST = "boost"
 PRESET_COMFORT = "comfort"
 PRESET_ECO = "eco"
 
-TEMP_CELSIUS = "°C"
 SUPPORT_TARGET_TEMPERATURE = 1
 SUPPORT_PRESET_MODE = 16
 
-HM_MIN_VALUE = 4.5
-HM_MAX_VALUE = 30.5
+TEMP_CELSIUS = "°C"
 
 
 class BaseClimateEntity(CustomEntity):

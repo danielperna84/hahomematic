@@ -24,20 +24,25 @@ from hahomematic.internal.action import HmAction
 from hahomematic.platforms.number import HmFloat
 from hahomematic.platforms.select import HmSelect
 
+_LOGGER = logging.getLogger(__name__)
+
+# HM constants
 ATTR_BRIGHTNESS = "brightness"
 ATTR_COLOR_NAME = "color_name"
 ATTR_CHANNEL_COLOR = "channel_color"
 ATTR_CHANNEL_LEVEL = "channel_level"
 ATTR_CHANNEL_STATE = "channel_state"
+
+HM_DIMMER_OFF: float = 0.0
+
+# HA constants
 COLOR_MODE_ONOFF = "onoff"
 COLOR_MODE_BRIGHTNESS = "brightness"  # Must be the only supported mode
 COLOR_MODE_HS = "hs"
+
 SUPPORT_BRIGHTNESS = 1
 SUPPORT_COLOR = 16
 SUPPORT_TRANSITION = 32
-HM_DIMMER_OFF: float = 0.0
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class BaseHmLight(CustomEntity):

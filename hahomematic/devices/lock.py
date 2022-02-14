@@ -24,6 +24,7 @@ from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
+# HM constants
 LOCK_STATE_UNKNOWN = "UNKNOWN"
 LOCK_STATE_LOCKED = "LOCKED"
 LOCK_STATE_UNLOCKED = "UNLOCKED"
