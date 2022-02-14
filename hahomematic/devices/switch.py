@@ -16,9 +16,10 @@ import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.platforms.switch import HmSwitch
 
-ATTR_CHANNEL_STATE = "channel_state"
-
 _LOGGER = logging.getLogger(__name__)
+
+# HM constants
+ATTR_CHANNEL_STATE = "channel_state"
 
 
 class CeSwitch(CustomEntity):

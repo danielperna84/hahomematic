@@ -26,12 +26,14 @@ from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
 from hahomematic.platforms.number import HmFloat
 
+_LOGGER = logging.getLogger(__name__)
+
+# HM constants
 ATTR_CHANNEL_COVER_LEVEL = "channel_cover_level"
 ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
-# must be float!
-HM_OPEN: float = 1.0
-# must be float!
-HM_CLOSED: float = 0.0
+
+HM_OPEN: float = 1.0  # must be float!
+HM_CLOSED: float = 0.0  # must be float!
 
 HM_OPENING = "UP"
 HM_CLOSING = "DOWN"
@@ -49,9 +51,6 @@ GARAGE_DOOR_STATE_CLOSED = "CLOSED"
 GARAGE_DOOR_STATE_OPEN = "OPEN"
 GARAGE_DOOR_STATE_VENTILATION_POSITION = "VENTILATION_POSITION"
 GARAGE_DOOR_STATE_POSITION_UNKNOWN = "POSITION_UNKNOWN"
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CeCover(CustomEntity):
