@@ -77,6 +77,7 @@ FIELD_SWITCH_MAIN = "switch_main"
 FIELD_SWITCH_V1 = "vswitch_1"
 FIELD_SWITCH_V2 = "vswitch_2"
 FIELD_TEMPERATURE = "temperature"
+FIELD_VALVE_STATE = "valve_state"
 FIELD_VOLTAGE = "voltage"
 
 _LOGGER = logging.getLogger(__name__)
@@ -378,12 +379,16 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
                 },
+                ED_SENSOR_CHANNELS: {
+                    0: {
+                        FIELD_VALVE_STATE: "VALVE_STATE",
+                    },
+                },
             },
             ED_ADDITIONAL_ENTITIES: {
                 0: {
                     "ACTUAL_HUMIDITY",
                     "ACTUAL_TEMPERATURE",
-                    "VALVE_STATE",
                 }
             },
         },
