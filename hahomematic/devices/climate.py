@@ -15,11 +15,13 @@ from hahomematic.devices.entity_definition import (
     FIELD_CONTROL_MODE,
     FIELD_HEATING_COOLING,
     FIELD_HUMIDITY,
+    FIELD_LEVEL,
     FIELD_LOWERING_MODE,
     FIELD_MANU_MODE,
     FIELD_PARTY_MODE,
     FIELD_SET_POINT_MODE,
     FIELD_SETPOINT,
+    FIELD_STATE,
     FIELD_TEMPERATURE,
     EntityDefinition,
     make_custom_entity,
@@ -42,6 +44,10 @@ HMIP_SET_POINT_MODE_MANU = 1
 HMIP_SET_POINT_MODE_AWAY = 2
 
 ATTR_TEMPERATURE = "temperature"
+CURRENT_HVAC_COOL = "cooling"
+CURRENT_HVAC_HEAT = "heating"
+CURRENT_HVAC_IDLE = "idle"
+CURRENT_HVAC_OFF = "off"
 HVAC_MODE_OFF = "off"
 HVAC_MODE_HEAT = "heat"
 HVAC_MODE_AUTO = "auto"
@@ -150,6 +156,11 @@ class BaseClimateEntity(CustomEntity):
     def preset_modes(self) -> list[str]:
         """Return available preset modes."""
         return [PRESET_NONE]
+
+    @property
+    def hvac_action(self) -> str | None:
+        """Return the hvac action"""
+        return None
 
     @property
     def hvac_mode(self) -> str:
@@ -322,7 +333,7 @@ class CeIpThermostat(BaseClimateEntity):
         return self._get_entity(field_name=FIELD_CONTROL_MODE, entity_type=HmAction)
 
     @property
-    def _is_heating(self) -> bool | None:
+    def _is_heating_mode(self) -> bool | None:
         if heating_cooling := self._get_entity(
             field_name=FIELD_HEATING_COOLING, entity_type=HmSelect
         ):
@@ -341,9 +352,32 @@ class CeIpThermostat(BaseClimateEntity):
         return self._get_entity(field_name=FIELD_SET_POINT_MODE, entity_type=HmInteger)
 
     @property
+    def _level(self) -> float | None:
+        """Return the level of the device."""
+        return self._get_entity_value(field_name=FIELD_LEVEL)
+
+    @property
+    def _state(self) -> bool | None:
+        """Return the state of the device."""
+        return self._get_entity_value(field_name=FIELD_STATE)
+
+    @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+
+    @property
+    def hvac_action(self) -> str | None:
+        """Return the hvac action"""
+        if self._state is None and self._level is None:
+            return None
+        if self.hvac_mode == HVAC_MODE_OFF:
+            return CURRENT_HVAC_OFF
+        if self._is_heating_mode is not None and (
+            self._state is True or (self._level and self._level > 0.0)
+        ):
+            return CURRENT_HVAC_HEAT if self._is_heating_mode else CURRENT_HVAC_COOL
+        return CURRENT_HVAC_IDLE
 
     @property
     def hvac_mode(self) -> str:
@@ -351,7 +385,7 @@ class CeIpThermostat(BaseClimateEntity):
         if self.target_temperature and self.target_temperature <= self.min_temp:
             return HVAC_MODE_OFF
         if self._e_set_point_mode.value == HMIP_SET_POINT_MODE_MANU:
-            return HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_COOL
+            return HVAC_MODE_HEAT if self._is_heating_mode else HVAC_MODE_COOL
         if self._e_set_point_mode.value == HMIP_SET_POINT_MODE_AUTO:
             return HVAC_MODE_AUTO
         return HVAC_MODE_AUTO
@@ -361,7 +395,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Return the list of available hvac operation modes."""
         return [
             HVAC_MODE_AUTO,
-            HVAC_MODE_HEAT if self._is_heating else HVAC_MODE_COOL,
+            HVAC_MODE_HEAT if self._is_heating_mode else HVAC_MODE_COOL,
             HVAC_MODE_OFF,
         ]
 
