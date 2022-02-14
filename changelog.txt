@@ -1,6 +1,6 @@
 Version 0.32.5 (2022-02-13)
 - Make parameter availability more robust
-- Add is_heating, is_cooling to IP Thermostats
+- Add hvac_action to IP Thermostats
 
 Version 0.32.4 (2022-02-12)
 - add opening/closing to IPGarage
