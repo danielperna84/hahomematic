@@ -23,6 +23,7 @@ from hahomematic.devices.entity_definition import (
     FIELD_SETPOINT,
     FIELD_STATE,
     FIELD_TEMPERATURE,
+    FIELD_VALVE_STATE,
     EntityDefinition,
     make_custom_entity,
 )
@@ -249,9 +250,25 @@ class CeRfThermostat(BaseClimateEntity):
         return self._get_entity_value(field_name=FIELD_CONTROL_MODE)
 
     @property
+    def _valve_state(self) -> int | None:
+        """Return the valve state of the device."""
+        return self._get_entity_value(field_name=FIELD_VALVE_STATE)
+
+    @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+
+    @property
+    def hvac_action(self) -> str | None:
+        """Return the hvac action"""
+        if self._valve_state is None:
+            return None
+        if self.hvac_mode == HVAC_MODE_OFF:
+            return CURRENT_HVAC_OFF
+        if self._valve_state and self._valve_state > 0:
+            return CURRENT_HVAC_HEAT
+        return CURRENT_HVAC_IDLE
 
     @property
     def hvac_mode(self) -> str:
