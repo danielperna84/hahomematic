@@ -209,6 +209,7 @@ class HmPlatform(StrEnum):
     NUMBER = "number"
     SELECT = "select"
     SENSOR = "sensor"
+    SIREN = "siren"
     SWITCH = "switch"
     TEXT = "text"
 
@@ -245,5 +246,6 @@ AVAILABLE_HM_PLATFORMS = [
     HmPlatform.NUMBER,
     HmPlatform.SELECT,
     HmPlatform.SENSOR,
+    HmPlatform.SIREN,
     HmPlatform.SWITCH,
 ]

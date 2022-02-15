@@ -4,13 +4,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from hahomematic.devices import climate, cover, light, lock, switch
+from hahomematic.devices import climate, cover, light, lock, siren, switch
 
 _ALL_DEVICES = [
     cover.DEVICES,
     climate.DEVICES,
     light.DEVICES,
     lock.DEVICES,
+    siren.DEVICES,
     switch.DEVICES,
 ]
 
@@ -19,6 +20,7 @@ _BLACKLISTED_DEVICES = [
     climate.BLACKLISTED_DEVICES,
     light.BLACKLISTED_DEVICES,
     lock.BLACKLISTED_DEVICES,
+    siren.BLACKLISTED_DEVICES,
     switch.BLACKLISTED_DEVICES,
 ]
 
