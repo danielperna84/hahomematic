@@ -80,6 +80,11 @@ FIELD_TEMPERATURE = "temperature"
 FIELD_VALVE_STATE = "valve_state"
 FIELD_VOLTAGE = "voltage"
 
+FIELD_ACOUSTIC_ALARM_ACTIVE = "acoustic_alarm_active"
+FIELD_ACOUSTIC_ALARM_SELECTION = "acoustic_alarm_selection"
+FIELD_OPTICAL_ALARM_ACTIVE = "optical_alarm_active"
+FIELD_OPTICAL_ALARM_SELECTION = "optical_alarm_selection"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -95,12 +100,14 @@ class EntityDefinition(StrEnum):
     IP_LOCK = "IPLock"
     IP_THERMOSTAT = "IPThermostat"
     IP_THERMOSTAT_GROUP = "IPThermostatGroup"
+    IP_SIREN = "IPSiren"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
     RF_DIMMER_WITH_VIRT_CHANNEL = "RfDimmerWithVirtChannel"
     RF_LOCK = "RfLock"
     RF_THERMOSTAT = "RfThermostat"
     RF_THERMOSTAT_GROUP = "RfThermostatGroup"
+    RF_SIREN = "RfSiren"
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
 
 
@@ -271,6 +278,17 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     0: {
                         FIELD_ERROR: "ERROR_JAMMED",
                     },
+                },
+            },
+        },
+        EntityDefinition.IP_SIREN: {
+            ED_DEVICE_GROUP: {
+                ED_PRIMARY_CHANNEL: 3,
+                ED_REPEATABLE_FIELDS: {
+                    FIELD_ACOUSTIC_ALARM_ACTIVE: "ACOUSTIC_ALARM_ACTIVE",
+                    FIELD_ACOUSTIC_ALARM_SELECTION: "ACOUSTIC_ALARM_SELECTION",
+                    FIELD_OPTICAL_ALARM_ACTIVE: "ACOUSTIC_ALARM_ACTIVE",
+                    FIELD_OPTICAL_ALARM_SELECTION: "ACOUSTIC_ALARM_SELECTION",
                 },
             },
         },
