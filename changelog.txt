@@ -1,4 +1,7 @@
-Version 0.34.0 (2022-02-16)
+Version 0.34.2 (2022-02-16)
+- Add is_locking/is_unlocking to lock
+
+Version 0.34.1 (2022-02-16)
 - Fix siren definition
 
 Version 0.34.0 (2022-02-15)

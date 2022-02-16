@@ -271,6 +271,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
                 ED_REPEATABLE_FIELDS: {
+                    FIELD_DIRECTION: "ACTIVITY_STATE",
                     FIELD_LOCK_STATE: "LOCK_STATE",
                     FIELD_LOCK_TARGET_LEVEL: "LOCK_TARGET_LEVEL",
                 },
@@ -373,6 +374,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
+                    FIELD_DIRECTION: "DIRECTION",
                     FIELD_OPEN: "OPEN",
                     FIELD_STATE: "STATE",
                     FIELD_ERROR: "ERROR",

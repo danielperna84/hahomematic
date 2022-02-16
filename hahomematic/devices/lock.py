@@ -9,6 +9,7 @@ from typing import Any
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
+    FIELD_DIRECTION,
     FIELD_ERROR,
     FIELD_LOCK_STATE,
     FIELD_LOCK_TARGET_LEVEL,
@@ -32,6 +33,9 @@ LOCK_STATE_UNLOCKED = "UNLOCKED"
 LOCK_TARGET_LEVEL_LOCKED = "LOCKED"
 LOCK_TARGET_LEVEL_UNLOCKED = "UNLOCKED"
 LOCK_TARGET_LEVEL_OPEN = "OPEN"
+
+HM_UNLOCKING = "UP"
+HM_LOCKING = "DOWN"
 
 
 class BaseLock(CustomEntity):
@@ -74,6 +78,16 @@ class BaseLock(CustomEntity):
         """Return true if lock is jammed."""
         return False
 
+    @property
+    def is_locking(self) -> bool | None:
+        """Return true if the lock is locking."""
+        return None
+
+    @property
+    def is_unlocking(self) -> bool | None:
+        """Return true if the lock is unlocking."""
+        return None
+
     @abstractmethod
     async def lock(self) -> None:
         """Lock the lock."""
@@ -106,6 +120,11 @@ class CeIpLock(BaseLock):
         )
 
     @property
+    def _direction(self) -> str | None:
+        """Return the direction entity of the lock."""
+        return self._get_entity_value(field_name=FIELD_DIRECTION)
+
+    @property
     def _error(self) -> bool | None:
         """Return the error entity of the device."""
         return self._get_entity_value(field_name=FIELD_ERROR)
@@ -114,6 +133,20 @@ class CeIpLock(BaseLock):
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._lock_state == LOCK_STATE_LOCKED
+
+    @property
+    def is_locking(self) -> bool | None:
+        """Return true if the lock is locking."""
+        if self._direction is not None:
+            return self._direction == HM_LOCKING
+        return None
+
+    @property
+    def is_unlocking(self) -> bool | None:
+        """Return true if the lock is unlocking."""
+        if self._direction is not None:
+            return self._direction == HM_UNLOCKING
+        return None
 
     @property
     def is_jammed(self) -> bool:
@@ -147,6 +180,11 @@ class CeRfLock(BaseLock):
         return self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
 
     @property
+    def _direction(self) -> str | None:
+        """Return the direction entity of the lock."""
+        return self._get_entity_value(field_name=FIELD_DIRECTION)
+
+    @property
     def _error(self) -> str | None:
         """Return the error entity of the device."""
         return self._get_entity_value(field_name=FIELD_ERROR)
@@ -155,6 +193,20 @@ class CeRfLock(BaseLock):
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._e_state.value is not True
+
+    @property
+    def is_locking(self) -> bool | None:
+        """Return true if the lock is locking."""
+        if self._direction is not None:
+            return self._direction == HM_LOCKING
+        return None
+
+    @property
+    def is_unlocking(self) -> bool | None:
+        """Return true if the lock is unlocking."""
+        if self._direction is not None:
+            return self._direction == HM_UNLOCKING
+        return None
 
     @property
     def is_jammed(self) -> bool:
