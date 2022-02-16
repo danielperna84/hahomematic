@@ -1,3 +1,6 @@
+Version 0.34.0 (2022-02-16)
+- Fix siren definition
+
 Version 0.34.0 (2022-02-15)
 - Use backported StrEnum
 - Sort constants to identify HA constants

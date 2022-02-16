@@ -73,7 +73,12 @@ class BaseSiren(CustomEntity):
 
     @property
     def available_tones(self) -> list[str] | None:
-        """Return a list of available tones.."""
+        """Return a list of available tones."""
+        return None
+
+    @property
+    def available_lights(self) -> list[str] | None:
+        """Return a list of available lights."""
         return None
 
     @abstractmethod
@@ -125,6 +130,11 @@ class CeIpSiren(BaseSiren):
     def available_tones(self) -> list[str] | None:
         """Return a list of available tones."""
         return cast(list[str], self._e_acoustic_alarm_selection.value_list)
+
+    @property
+    def available_lights(self) -> list[str] | None:
+        """Return a list of available lights."""
+        return cast(list[str], self._e_optical_alarm_selection.value_list)
 
     async def turn_on(
         self,
