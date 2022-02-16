@@ -287,8 +287,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_ACOUSTIC_ALARM_ACTIVE: "ACOUSTIC_ALARM_ACTIVE",
                     FIELD_ACOUSTIC_ALARM_SELECTION: "ACOUSTIC_ALARM_SELECTION",
-                    FIELD_OPTICAL_ALARM_ACTIVE: "ACOUSTIC_ALARM_ACTIVE",
-                    FIELD_OPTICAL_ALARM_SELECTION: "ACOUSTIC_ALARM_SELECTION",
+                    FIELD_OPTICAL_ALARM_ACTIVE: "OPTICAL_ALARM_ACTIVE",
+                    FIELD_OPTICAL_ALARM_SELECTION: "OPTICAL_ALARM_SELECTION",
                 },
             },
         },
