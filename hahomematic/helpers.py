@@ -6,11 +6,9 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 import os
-import socket
 import ssl
 from typing import Any
 
-from hahomematic import config
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ATTR_HM_ALARM,
@@ -318,24 +316,6 @@ def get_channel_no(address: str) -> int | None:
     if ":" not in address:
         return None
     return int(address.split(":")[1])
-
-
-# Do not add: pylint disable=no-member
-# This is only an issue on MacOS
-def get_local_ip(host: str, port: int) -> str:
-    """Get local_ip from socket."""
-    try:
-        socket.gethostbyname(host)
-    except Exception as ex:
-        _LOGGER.warning("Can't resolve host for %s", host)
-        raise ClientException(ex) from ex
-    tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    tmp_socket.settimeout(config.TIMEOUT)
-    tmp_socket.connect((host, port))
-    local_ip = str(tmp_socket.getsockname()[0])
-    tmp_socket.close()
-    _LOGGER.debug("Got local ip: %s", local_ip)
-    return local_ip
 
 
 def updated_within_seconds(last_update: datetime, age_seconds: int = 120) -> bool:

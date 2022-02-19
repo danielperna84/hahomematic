@@ -41,12 +41,7 @@ from hahomematic.const import (
 )
 from hahomematic.device import HmDevice
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
-from hahomematic.helpers import (
-    build_api_url,
-    get_channel_no,
-    get_local_ip,
-    parse_ccu_sys_var,
-)
+from hahomematic.helpers import build_api_url, get_channel_no, parse_ccu_sys_var
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
@@ -908,7 +903,10 @@ class _ClientConfig:
     """Config for a Client."""
 
     def __init__(
-        self, central: hm_central.CentralUnit, interface_config: InterfaceConfig
+        self,
+        central: hm_central.CentralUnit,
+        interface_config: InterfaceConfig,
+        local_ip: str,
     ):
         self.central = central
         self.name: str = interface_config.name
@@ -916,9 +914,7 @@ class _ClientConfig:
         self._callback_host: str = (
             self._central_config.callback_host
             if self._central_config.callback_host
-            else get_local_ip(
-                host=self._central_config.host, port=interface_config.port
-            )
+            else local_ip
         )
         self._callback_port: int = (
             self._central_config.callback_port
@@ -983,9 +979,11 @@ class InterfaceConfig:
 
 
 async def create_client(
-    central: hm_central.CentralUnit, interface_config: InterfaceConfig
+    central: hm_central.CentralUnit,
+    interface_config: InterfaceConfig,
+    local_ip: str,
 ) -> Client:
     """Return a new client for with a given interface_config."""
     return await _ClientConfig(
-        central=central, interface_config=interface_config
+        central=central, interface_config=interface_config, local_ip=local_ip
     ).get_client()

@@ -11,8 +11,9 @@ from datetime import datetime
 import json
 import logging
 import os
+import socket
 import threading
-from typing import Any
+from typing import Any, TypeVar
 
 from aiohttp import ClientSession
 
@@ -57,6 +58,7 @@ from hahomematic.parameter_visibility import ParameterVisibilityCache
 import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
+T = TypeVar("T")
 
 
 class CentralUnit:
@@ -245,10 +247,18 @@ class CentralUnit:
                 self.instance_name,
             )
             return False
+        if len(self._interface_configs) == 0:
+            _LOGGER.info(
+                "create_clients: No Interfaces for %s defined.",
+                self.instance_name,
+            )
+            return False
+
         try:
+            local_ip = await self._identify_callback_ip(list(self._interface_configs)[0].port)
             for interface_config in self._interface_configs:
                 if client := await hm_client.create_client(
-                    central=self, interface_config=interface_config
+                    central=self, interface_config=interface_config, local_ip=local_ip
                 ):
                     _LOGGER.debug(
                         "create_clients: Adding client %s to %s.",
@@ -281,6 +291,38 @@ class CentralUnit:
         for name, client in self._clients.items():
             if await client.proxy_de_init():
                 _LOGGER.info("stop: Proxy de-initialized: %s", name)
+
+    async def _identify_callback_ip(self, port: int) -> str:
+        """Identify local IP used for callbacks."""
+
+        # Do not add: pylint disable=no-member
+        # This is only an issue on MacOS
+        def get_local_ip(host: str) -> str | None:
+            """Get local_ip from socket."""
+            try:
+                socket.gethostbyname(host)
+            except Exception:
+                _LOGGER.warning("Can't resolve host for %s", host)
+                return None
+            tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            tmp_socket.settimeout(config.TIMEOUT)
+            tmp_socket.connect((host, port))
+            local_ip = str(tmp_socket.getsockname()[0])
+            tmp_socket.close()
+            _LOGGER.debug("Got local ip: %s", local_ip)
+            return local_ip
+
+        callback_ip: str | None = None
+        while callback_ip is None:
+            if (
+                callback_ip := await self.async_add_executor_job(
+                    get_local_ip, self.central_config.host
+                )
+            ) is None:
+                _LOGGER.warning("Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL)
+                await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
+
+        return callback_ip
 
     def _create_hub(self) -> HmHub | HmDummyHub:
         """Create the hub."""
@@ -553,8 +595,8 @@ class CentralUnit:
             return None
 
     async def async_add_executor_job(
-        self, executor_func: Callable, *args: Any
-    ) -> Awaitable:
+        self, executor_func: Callable[..., T], *args: Any
+    ) -> T:
         """Add an executor job from within the event loop."""
         try:
             return await self.loop.run_in_executor(None, executor_func, *args)
@@ -941,7 +983,7 @@ class BasePersitentCache(ABC):
         self._filename = f"{self._central.instance_name}_{filename}"
         self._cache_dict = cache_dict
 
-    async def save(self) -> Awaitable[int]:
+    async def save(self) -> int:
         """
         Save current name data in NAMES to disk.
         """
@@ -959,7 +1001,7 @@ class BasePersitentCache(ABC):
 
         return await self._central.async_add_executor_job(_save)
 
-    async def load(self) -> Awaitable[int]:
+    async def load(self) -> int:
         """
         Load file from disk into dict.
         """
@@ -1136,7 +1178,7 @@ class DeviceDescriptionCache(BasePersitentCache):
             device_address = get_device_address(address)
             self._addresses[interface_id][device_address].append(address)
 
-    async def load(self) -> Awaitable[int]:
+    async def load(self) -> int:
         """
         Load device data from disk into devices_raw.
         """
@@ -1272,7 +1314,7 @@ class ParamsetDescriptionCache(BasePersitentCache):
                             (device_address, parameter)
                         ].append(get_device_channel(channel_address))
 
-    async def load(self) -> Awaitable[int]:
+    async def load(self) -> int:
         """
         Load paramset descriptions from disk into paramset cache.
         """
@@ -1280,7 +1322,7 @@ class ParamsetDescriptionCache(BasePersitentCache):
         self._init_address_parameter_list()
         return result
 
-    async def save(self) -> Awaitable[int]:
+    async def save(self) -> int:
         """
         Save current paramset descriptions to disk.
         """
