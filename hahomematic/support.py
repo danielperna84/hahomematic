@@ -1,7 +1,6 @@
 """Module to support hahomematic eco system."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
 from copy import copy
 import json
 import logging
@@ -100,7 +99,7 @@ class DeviceExporter:
         address_parts[0] = self._random_id
         return ":".join(address_parts)
 
-    async def _save(self, file_dir: str, filename: str, data: Any) -> Awaitable[int]:
+    async def _save(self, file_dir: str, filename: str, data: Any) -> int:
         """Save file to disk."""
 
         def _save() -> int:
