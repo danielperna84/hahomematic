@@ -255,7 +255,9 @@ class CentralUnit:
             return False
 
         try:
-            local_ip = await self._identify_callback_ip(list(self._interface_configs)[0].port)
+            local_ip = await self._identify_callback_ip(
+                list(self._interface_configs)[0].port
+            )
             for interface_config in self._interface_configs:
                 if client := await hm_client.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip

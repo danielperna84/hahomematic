@@ -150,7 +150,7 @@ class ParameterVisibilityCache:
         }
 
         # device_type, channel_no, paramset_key, list[parameter]
-        self._un_ignore_parameters_by_device: dict[
+        self._un_ignore_parameters_by_device_paramset_key: dict[
             str, dict[int, dict[str, set[str]]]
         ] = {}
         # device_type, channel_no
@@ -167,21 +167,23 @@ class ParameterVisibilityCache:
             channel_nos, parameter = channels_parameter
             if device_type_l not in self._relevant_master_paramsets_by_device:
                 self._relevant_master_paramsets_by_device[device_type_l] = set()
-            if device_type_l not in self._un_ignore_parameters_by_device:
-                self._un_ignore_parameters_by_device[device_type_l] = {}
+            if device_type_l not in self._un_ignore_parameters_by_device_paramset_key:
+                self._un_ignore_parameters_by_device_paramset_key[device_type_l] = {}
             for channel_no in channel_nos:
                 self._relevant_master_paramsets_by_device[device_type_l].add(channel_no)
                 if (
                     channel_no
-                    not in self._un_ignore_parameters_by_device[device_type_l]
+                    not in self._un_ignore_parameters_by_device_paramset_key[
+                        device_type_l
+                    ]
                 ):
-                    self._un_ignore_parameters_by_device[device_type_l][channel_no] = {
-                        PARAMSET_KEY_MASTER: set()
-                    }
+                    self._un_ignore_parameters_by_device_paramset_key[device_type_l][
+                        channel_no
+                    ] = {PARAMSET_KEY_MASTER: set()}
 
-                self._un_ignore_parameters_by_device[device_type_l][channel_no][
-                    PARAMSET_KEY_MASTER
-                ].add(parameter)
+                self._un_ignore_parameters_by_device_paramset_key[device_type_l][
+                    channel_no
+                ][PARAMSET_KEY_MASTER].add(parameter)
 
     def get_un_ignore_parameters(
         self, device_type: str, device_channel: int
@@ -190,9 +192,11 @@ class ParameterVisibilityCache:
         device_type_l = device_type.lower()
         un_ignore_parameters: dict[str, set[str]] = {}
         if device_type_l is not None and device_channel is not None:
-            un_ignore_parameters = self._un_ignore_parameters_by_device.get(
-                device_type_l, {}
-            ).get(device_channel, {})
+            un_ignore_parameters = (
+                self._un_ignore_parameters_by_device_paramset_key.get(
+                    device_type_l, {}
+                ).get(device_channel, {})
+            )
 
         for (
             paramset_key,
@@ -242,8 +246,8 @@ class ParameterVisibilityCache:
                 if accept_channel != device_channel:
                     return True
         if paramset_key == PARAMSET_KEY_MASTER:
-            if parameter not in self._un_ignore_parameters_by_device.get(
-                device.device_type, {}
+            if parameter not in self._un_ignore_parameters_by_device_paramset_key.get(
+                device.device_type.lower(), {}
             ).get(device_channel, {}).get(PARAMSET_KEY_MASTER, []):
                 return True
         return False
@@ -263,14 +267,14 @@ class ParameterVisibilityCache:
         if parameter in self._un_ignore_parameters_general[paramset_key]:
             return True
 
-        if parameter in self._un_ignore_parameters_by_device.get(device_type_l, {}).get(
-            device_channel, {}
-        ).get(paramset_key, set()):
+        if parameter in self._un_ignore_parameters_by_device_paramset_key.get(
+            device_type_l, {}
+        ).get(device_channel, {}).get(paramset_key, set()):
             return True
 
-        if parameter in self._un_ignore_parameters_by_device.get(sub_type_l, {}).get(
-            device_channel, {}
-        ).get(paramset_key, set()):
+        if parameter in self._un_ignore_parameters_by_device_paramset_key.get(
+            sub_type_l, {}
+        ).get(device_channel, {}).get(paramset_key, set()):
             return True
 
         if sub_type_l and sub_type_l in self._un_ignore_parameters_by_device_lower:
@@ -317,20 +321,29 @@ class ParameterVisibilityCache:
                 device_type = device_data[0].lower()
                 channel_no = int(device_data[1])
                 paramset_key = device_data[2]
-                if device_type not in self._un_ignore_parameters_by_device:
-                    self._un_ignore_parameters_by_device[device_type] = {}
-                if channel_no not in self._un_ignore_parameters_by_device[device_type]:
-                    self._un_ignore_parameters_by_device[device_type][channel_no] = {}
+                if device_type not in self._un_ignore_parameters_by_device_paramset_key:
+                    self._un_ignore_parameters_by_device_paramset_key[device_type] = {}
+                if (
+                    channel_no
+                    not in self._un_ignore_parameters_by_device_paramset_key[
+                        device_type
+                    ]
+                ):
+                    self._un_ignore_parameters_by_device_paramset_key[device_type][
+                        channel_no
+                    ] = {}
                 if (
                     paramset_key
-                    not in self._un_ignore_parameters_by_device[device_type][channel_no]
+                    not in self._un_ignore_parameters_by_device_paramset_key[
+                        device_type
+                    ][channel_no]
                 ):
-                    self._un_ignore_parameters_by_device[device_type][channel_no][
-                        paramset_key
-                    ] = set()
-                self._un_ignore_parameters_by_device[device_type][channel_no][
-                    paramset_key
-                ].add(parameter)
+                    self._un_ignore_parameters_by_device_paramset_key[device_type][
+                        channel_no
+                    ][paramset_key] = set()
+                self._un_ignore_parameters_by_device_paramset_key[device_type][
+                    channel_no
+                ][paramset_key].add(parameter)
 
                 if paramset_key == PARAMSET_KEY_MASTER:
                     if device_type not in self._relevant_master_paramsets_by_device:
