@@ -238,12 +238,12 @@ class CeIpBlind(CeBlind):
 
     async def open_cover(self) -> None:
         """Open the cover and open the tilt."""
-        await self._set_cover_tilt_level(level=HM_OPEN)
+        await super()._set_cover_tilt_level(level=HM_OPEN)
         await self._set_cover_level(level=HM_OPEN)
 
     async def close_cover(self) -> None:
         """Close the cover and close the tilt."""
-        await self._set_cover_tilt_level(level=HM_CLOSED)
+        await super()._set_cover_tilt_level(level=HM_CLOSED)
         await self._set_cover_level(level=HM_CLOSED)
 
     async def _set_cover_tilt_level(self, level: float) -> None:

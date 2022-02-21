@@ -1,3 +1,6 @@
+Version 0.35.1 (2022-02-21)
+- Fix IpBlind
+
 Version 0.35.0 (2022-02-19)
 - Fix usage of async_add_executor_job
 - Improve local_ip identification
