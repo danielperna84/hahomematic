@@ -1,3 +1,6 @@
+Version 0.35.2 (2022-02-22)
+- Remove password from Exceptions
+
 Version 0.35.1 (2022-02-21)
 - Fix IpBlind
 - Fix parameter visibility
