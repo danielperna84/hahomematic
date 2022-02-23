@@ -3,6 +3,7 @@ Helper functions used within hahomematic
 """
 from __future__ import annotations
 
+import base64
 from datetime import datetime
 import logging
 import os
@@ -54,32 +55,13 @@ def generate_unique_id(
     return f"{domain}_{unique_id}".lower()
 
 
-def make_http_credentials(
-    username: str | None = None, password: str | None = None
-) -> str:
-    """Build auth part for api_url."""
-    credentials = ""
-    if username is None:
-        return credentials
-    if username is not None:
-        if ":" in username:
-            return credentials
-        credentials += username
-    if credentials and password is not None:
-        credentials += f":{password}"
-    return f"{credentials}@"
-
-
-def build_api_url(
+def build_xml_rpc_uri(
     host: str,
     port: int,
     path: str | None,
-    username: str | None = None,
-    password: str | None = None,
     tls: bool = False,
 ) -> str:
     """Build XML-RPC API URL from components."""
-    credentials = make_http_credentials(username, password)
     scheme = "http"
     if not path:
         path = ""
@@ -87,7 +69,17 @@ def build_api_url(
         path = f"/{path}"
     if tls:
         scheme += "s"
-    return f"{scheme}://{credentials}{host}:{port}{path}"
+    return f"{scheme}://{host}:{port}{path}"
+
+
+def build_headers(
+    username: str | None = None,
+    password: str | None = None,
+) -> list[tuple[str, str]]:
+    """Build XML-RPC API header."""
+    cred_bytes = f"{username}:{password}".encode("utf-8")
+    base64_message = base64.b64encode(cred_bytes).decode("utf-8")
+    return [("Authorization", f"Basic {base64_message}")]
 
 
 def check_or_create_directory(directory: str) -> bool:

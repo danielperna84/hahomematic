@@ -41,7 +41,12 @@ from hahomematic.const import (
 )
 from hahomematic.device import HmDevice
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
-from hahomematic.helpers import build_api_url, get_channel_no, parse_ccu_sys_var
+from hahomematic.helpers import (
+    build_xml_rpc_uri,
+    build_headers,
+    get_channel_no,
+    parse_ccu_sys_var,
+)
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
@@ -921,34 +926,38 @@ class _ClientConfig:
             if self._central_config.callback_port
             else self.central.local_port
         )
-        self.init_url: str = f"http://{self._callback_host}:{self._callback_port}"
-        self.api_url = build_api_url(
-            host=self._central_config.host,
-            port=interface_config.port,
-            path=interface_config.path,
-            username=self._central_config.username,
-            password=self._central_config.password,
-            tls=self._central_config.tls,
-        )
         self.has_credentials: bool = (
             self._central_config.username is not None
             and self._central_config.password is not None
         )
-        self.version: str | None = None
+        self.init_url: str = f"http://{self._callback_host}:{self._callback_port}"
+        self.xml_rpc_uri = build_xml_rpc_uri(
+            host=self._central_config.host,
+            port=interface_config.port,
+            path=interface_config.path,
+            tls=self._central_config.tls,
+        )
+        self.xml_rpc_headers = build_headers(
+            username=self._central_config.username,
+            password=self._central_config.password,
+        )
         self.xml_rpc_proxy: XmlRpcProxy = XmlRpcProxy(
             self.central.loop,
             max_workers=1,
-            uri=self.api_url,
+            uri=self.xml_rpc_uri,
+            headers=self.xml_rpc_headers,
             tls=self._central_config.tls,
             verify_tls=self._central_config.verify_tls,
         )
         self.xml_rpc_proxy_read: XmlRpcProxy = XmlRpcProxy(
             self.central.loop,
             max_workers=1,
-            uri=self.api_url,
+            uri=self.xml_rpc_uri,
+            headers=self.xml_rpc_headers,
             tls=self._central_config.tls,
             verify_tls=self._central_config.verify_tls,
         )
+        self.version: str | None = None
 
     async def get_client(self) -> Client:
         """Identify the used client."""
@@ -956,7 +965,7 @@ class _ClientConfig:
             self.version = await self.xml_rpc_proxy.getVersion()
         except BaseHomematicException as hhe:
             raise HaHomematicException(
-                f"Failed to get backend version. Not creating client: {self.api_url}"
+                f"Failed to get backend version. Not creating client: {self.xml_rpc_uri}"
             ) from hhe
         if self.version:
             if "Homegear" in self.version or "pydevccu" in self.version:
