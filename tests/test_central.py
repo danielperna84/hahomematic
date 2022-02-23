@@ -83,12 +83,12 @@ async def test_central(central, loop) -> None:
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
     assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 4651
+    assert len(central.hm_entities) == 4655
     assert len(data) == 362
     assert len(custom_entities) == 289
     assert len(ce_channels) == 101
     assert len(entity_types) == 6
-    assert len(parameters) == 178
+    assert len(parameters) == 179
 
 
 @pytest.mark.asyncio

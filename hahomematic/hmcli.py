@@ -9,7 +9,7 @@ from typing import Any
 from xmlrpc.client import ServerProxy
 
 from hahomematic.const import PARAMSET_KEY_MASTER, PARAMSET_KEY_VALUES
-from hahomematic.helpers import build_api_url, get_tls_context
+from hahomematic.helpers import build_xml_rpc_uri, build_headers, get_tls_context
 
 
 def main() -> None:
@@ -67,18 +67,17 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    url = build_api_url(
+    url = build_xml_rpc_uri(
         host=args.host,
         port=args.port,
         path=args.path,
-        username=args.username,
-        password=args.password,
         tls=args.tls,
     )
+    headers = build_headers(username=args.username, password=args.password)
     context = None
     if args.tls:
         context = get_tls_context(verify_tls=args.verify)
-    proxy = ServerProxy(url, context=context)
+    proxy = ServerProxy(url, context=context, headers=headers)
 
     try:
         if args.paramset_key == PARAMSET_KEY_VALUES and args.value is None:
