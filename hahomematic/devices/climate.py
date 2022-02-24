@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
+from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
@@ -52,29 +53,42 @@ HM_MAX_VALUE = 30.5
 PARTY_INIT_DATE = "2000_01_01 00:00"
 PARTY_DATE_FORMAT = "%Y_%m_%d %H:%M"
 
-# HA constants
-ATTR_TEMPERATURE = "temperature"
-
-CURRENT_HVAC_COOL = "cooling"
-CURRENT_HVAC_HEAT = "heating"
-CURRENT_HVAC_IDLE = "idle"
-CURRENT_HVAC_OFF = "off"
-
-HVAC_MODE_OFF = "off"
-HVAC_MODE_HEAT = "heat"
-HVAC_MODE_AUTO = "auto"
-HVAC_MODE_COOL = "cool"
-
-PRESET_NONE = "none"
-PRESET_AWAY = "away"
-PRESET_BOOST = "boost"
-PRESET_COMFORT = "comfort"
-PRESET_ECO = "eco"
-
-SUPPORT_TARGET_TEMPERATURE = 1
-SUPPORT_PRESET_MODE = 16
-
+HM_PRESET_MODE_PREFIX = "Profile "
 TEMP_CELSIUS = "°C"
+
+
+class HmHvacAction(StrEnum):
+    """Enum with the hvac actions."""
+
+    COOL = "cooling"
+    HEAT = "heating"
+    IDLE = "idle"
+    OFF = "off"
+
+
+class HmHvacMode(StrEnum):
+    """Enum with the hvac modes."""
+
+    OFF = "off"
+    HEAT = "heat"
+    AUTO = "auto"
+    COOL = "cool"
+
+
+class HmPresetMode(StrEnum):
+    """Enum with preset modes."""
+
+    NONE = "none"
+    AWAY = "away"
+    BOOST = "boost"
+    COMFORT = "comfort"
+    ECO = "eco"
+    PROFILE_1 = "Profile 1"
+    PROFILE_2 = "Profile 2"
+    PROFILE_3 = "Profile 3"
+    PROFILE_4 = "Profile 4"
+    PROFILE_5 = "Profile 5"
+    PROFILE_6 = "Profile 6"
 
 
 class BaseClimateEntity(CustomEntity):
@@ -138,11 +152,6 @@ class BaseClimateEntity(CustomEntity):
         return self._e_setpoint.max
 
     @property
-    def target_temperature_step(self) -> float:
-        """Return the supported step of target temperature."""
-        return 0.5
-
-    @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._humidity
@@ -158,49 +167,51 @@ class BaseClimateEntity(CustomEntity):
         return self._e_setpoint.value
 
     @property
-    def preset_mode(self) -> str:
+    def target_temperature_step(self) -> float:
+        """Return the supported step of target temperature."""
+        return 0.5
+
+    @property
+    def preset_mode(self) -> HmPresetMode:
         """Return the current preset mode."""
-        return PRESET_NONE
+        return HmPresetMode.NONE
 
     @property
-    def preset_modes(self) -> list[str]:
+    def preset_modes(self) -> list[HmPresetMode]:
         """Return available preset modes."""
-        return [PRESET_NONE]
+        return [HmPresetMode.NONE]
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HmHvacAction | None:
         """Return the hvac action"""
         return None
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HmHvacMode:
         """Return hvac operation mode."""
-        return HVAC_MODE_AUTO
+        return HmHvacMode.AUTO
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HmHvacMode]:
         """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_AUTO]
+        return [HmHvacMode.AUTO]
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+    def supports_preset(self) -> bool:
+        """Flag if climate supports preset."""
+        return False
 
-    async def set_temperature(self, **kwargs: Any) -> None:
+    async def set_temperature(self, temperature: float) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return None
-        await self._e_setpoint.send_value(float(temperature))
+        await self._e_setpoint.send_value(temperature)
 
     # pylint: disable=no-self-use
-    async def set_hvac_mode(self, hvac_mode: str) -> None:
+    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> None:
         """Set new target hvac mode."""
         return None
 
     # pylint: disable=no-self-use
-    async def set_preset_mode(self, preset_mode: str) -> None:
+    async def set_preset_mode(self, preset_mode: HmPresetMode) -> None:
         """Set new preset mode."""
         return None
 
@@ -264,44 +275,39 @@ class CeRfThermostat(BaseClimateEntity):
         return self._get_entity_value(field_name=FIELD_VALVE_STATE)
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
-    @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HmHvacAction | None:
         """Return the hvac action"""
         if self._valve_state is None:
             return None
-        if self.hvac_mode == HVAC_MODE_OFF:
-            return CURRENT_HVAC_OFF
+        if self.hvac_mode == HmHvacMode.OFF:
+            return HmHvacAction.OFF
         if self._valve_state and self._valve_state > 0:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+            return HmHvacAction.HEAT
+        return HmHvacAction.IDLE
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HmHvacMode:
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= self.min_temp:
-            return HVAC_MODE_OFF
+            return HmHvacMode.OFF
         if self._control_mode == HM_MODE_MANU:
-            return HVAC_MODE_HEAT
-        return HVAC_MODE_AUTO
+            return HmHvacMode.HEAT
+        return HmHvacMode.AUTO
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HmHvacMode]:
         """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+        return [HmHvacMode.AUTO, HmHvacMode.HEAT, HmHvacMode.OFF]
 
     @property
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> HmPresetMode:
         """Return the current preset mode."""
         if self._control_mode is None:
-            return PRESET_NONE
+            return HmPresetMode.NONE
         if self._control_mode == HM_MODE_BOOST:
-            return PRESET_BOOST
+            return HmPresetMode.BOOST
         if self._control_mode == HM_MODE_AWAY:
-            return PRESET_AWAY
+            return HmPresetMode.AWAY
         # This mode (PRESET_AWY) generally is available, but
         # we can't set it from the Home Assistant UI natively.
         # We could create 2 input_datetime entities and reference them
@@ -309,34 +315,44 @@ class CeRfThermostat(BaseClimateEntity):
         # More info on format: https://homematic-forum.de/forum/viewtopic.php?t=34673#p330200
         # Example-payload (21.5° from 2021-03-16T01:00-2021-03-17T23:00):
         # "21.5,60,16,3,21,1380,17,3,21"
-        return PRESET_NONE
+        return HmPresetMode.NONE
 
     @property
-    def preset_modes(self) -> list[str]:
+    def preset_modes(self) -> list[HmPresetMode]:
         """Return available preset modes."""
-        return [PRESET_BOOST, PRESET_COMFORT, PRESET_ECO, PRESET_NONE]
+        return [
+            HmPresetMode.BOOST,
+            HmPresetMode.COMFORT,
+            HmPresetMode.ECO,
+            HmPresetMode.NONE,
+        ]
 
-    async def set_hvac_mode(self, hvac_mode: str) -> None:
+    @property
+    def supports_preset(self) -> bool:
+        """Flag if climate supports preset."""
+        return True
+
+    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HmHvacMode.AUTO:
             await self._e_auto_mode.send_value(True)
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HmHvacMode.HEAT:
             await self._e_manu_mode.send_value(self.current_temperature)
-        elif hvac_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HmHvacMode.OFF:
             await self.set_temperature(temperature=self.min_temp)
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
-            await self.set_preset_mode(PRESET_NONE)
+            await self.set_preset_mode(HmPresetMode.NONE)
 
-    async def set_preset_mode(self, preset_mode: str) -> None:
+    async def set_preset_mode(self, preset_mode: HmPresetMode) -> None:
         """Set new preset mode."""
-        if preset_mode == PRESET_BOOST:
+        if preset_mode == HmPresetMode.BOOST:
             await self._e_boost_mode.send_value(True)
-        elif preset_mode == PRESET_COMFORT:
+        elif preset_mode == HmPresetMode.COMFORT:
             await self._e_comfort_mode.send_value(True)
-        elif preset_mode == PRESET_ECO:
+        elif preset_mode == HmPresetMode.ECO:
             await self._e_lowering_mode.send_value(True)
-        elif preset_mode == PRESET_NONE:
+        elif preset_mode == HmPresetMode.NONE:
             await self._e_boost_mode.send_value(False)
 
 
@@ -388,89 +404,89 @@ class CeIpThermostat(BaseClimateEntity):
         return self._get_entity_value(field_name=FIELD_STATE)
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
-    @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HmHvacAction | None:
         """Return the hvac action"""
         if self._state is None and self._level is None:
             return None
-        if self.hvac_mode == HVAC_MODE_OFF:
-            return CURRENT_HVAC_OFF
+        if self.hvac_mode == HmHvacMode.OFF:
+            return HmHvacAction.OFF
         if self._is_heating_mode is not None and (
             self._state is True or (self._level and self._level > 0.0)
         ):
-            return CURRENT_HVAC_HEAT if self._is_heating_mode else CURRENT_HVAC_COOL
-        return CURRENT_HVAC_IDLE
+            return HmHvacAction.HEAT if self._is_heating_mode else HmHvacAction.COOL
+        return HmHvacAction.IDLE
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HmHvacMode:
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= self.min_temp:
-            return HVAC_MODE_OFF
+            return HmHvacMode.OFF
         if self._e_set_point_mode.value == HMIP_MODE_MANU:
-            return HVAC_MODE_HEAT if self._is_heating_mode else HVAC_MODE_COOL
+            return HmHvacMode.HEAT if self._is_heating_mode else HmHvacMode.COOL
         if self._e_set_point_mode.value == HMIP_MODE_AUTO:
-            return HVAC_MODE_AUTO
-        return HVAC_MODE_AUTO
+            return HmHvacMode.AUTO
+        return HmHvacMode.AUTO
 
     @property
-    def hvac_modes(self) -> list[str]:
+    def hvac_modes(self) -> list[HmHvacMode]:
         """Return the list of available hvac operation modes."""
         return [
-            HVAC_MODE_AUTO,
-            HVAC_MODE_HEAT if self._is_heating_mode else HVAC_MODE_COOL,
-            HVAC_MODE_OFF,
+            HmHvacMode.AUTO,
+            HmHvacMode.HEAT if self._is_heating_mode else HmHvacMode.COOL,
+            HmHvacMode.OFF,
         ]
 
     @property
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> HmPresetMode:
         """Return the current preset mode."""
         if self._e_boost_mode.value:
-            return PRESET_BOOST
+            return HmPresetMode.BOOST
         if self._e_set_point_mode.value == HMIP_MODE_AWAY:
-            return PRESET_AWAY
-        if self.hvac_mode == HVAC_MODE_AUTO:
+            return HmPresetMode.AWAY
+        if self.hvac_mode == HmHvacMode.AUTO:
             return (
                 self._current_profile_name
                 if self._current_profile_name
-                else PRESET_NONE
+                else HmPresetMode.NONE
             )
-        return PRESET_NONE
+        return HmPresetMode.NONE
 
     @property
-    def preset_modes(self) -> list[str]:
+    def preset_modes(self) -> list[HmPresetMode]:
         """Return available preset modes."""
-        presets = [PRESET_BOOST, PRESET_NONE]
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        presets = [HmPresetMode.BOOST, HmPresetMode.NONE]
+        if self.hvac_mode == HmHvacMode.AUTO:
             presets.extend(self._profile_names)
         return presets
 
-    async def set_hvac_mode(self, hvac_mode: str) -> None:
+    @property
+    def supports_preset(self) -> bool:
+        """Flag if climate supports preset."""
+        return True
+
+    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HmHvacMode.AUTO:
             await self._e_control_mode.send_value(HMIP_MODE_AUTO)
-        elif hvac_mode in (HVAC_MODE_HEAT, HVAC_MODE_COOL):
+        elif hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
             await self._e_control_mode.send_value(HMIP_MODE_MANU)
-        elif hvac_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HmHvacMode.OFF:
             await self._e_control_mode.send_value(HMIP_MODE_MANU)
             await self.set_temperature(temperature=self.min_temp)
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
-            await self.set_preset_mode(PRESET_NONE)
+            await self.set_preset_mode(HmPresetMode.NONE)
 
-    async def set_preset_mode(self, preset_mode: str) -> None:
+    async def set_preset_mode(self, preset_mode: HmPresetMode) -> None:
         """Set new preset mode."""
-        if preset_mode == PRESET_BOOST:
+        if preset_mode == HmPresetMode.BOOST:
             await self._e_boost_mode.send_value(True)
-        if preset_mode == PRESET_NONE:
+        if preset_mode == HmPresetMode.NONE:
             await self._e_boost_mode.send_value(False)
 
         if preset_mode in self._profile_names:
-            if self.hvac_mode != HVAC_MODE_AUTO:
-                await self.set_hvac_mode(HVAC_MODE_AUTO)
+            if self.hvac_mode != HmHvacMode.AUTO:
+                await self.set_hvac_mode(HmHvacMode.AUTO)
             profile_idx = self._profiles.get(preset_mode)
             await self._e_boost_mode.send_value(False)
             if profile_idx:
@@ -517,24 +533,26 @@ class CeIpThermostat(BaseClimateEntity):
         )
 
     @property
-    def _profile_names(self) -> list[str]:
+    def _profile_names(self) -> list[HmPresetMode]:
         """Return a collection of profile names."""
         return list(self._profiles.keys())
 
     @property
-    def _current_profile_name(self) -> str | None:
+    def _current_profile_name(self) -> HmPresetMode | None:
         """Return a profile index by name."""
-        inv_profiles: dict[int, str] = {v: k for k, v in self._profiles.items()}
+        inv_profiles: dict[int, HmPresetMode] = {
+            v: k for k, v in self._profiles.items()
+        }
         if self._e_active_profile.value:
             return inv_profiles.get(int(self._e_active_profile.value))
         return None
 
     @property
-    def _profiles(self) -> dict[str, int]:
+    def _profiles(self) -> dict[HmPresetMode, int]:
         """Return the profile groups."""
-        profiles: dict[str, int] = {}
+        profiles: dict[HmPresetMode, int] = {}
         for i in range(self._e_active_profile.min, self._e_active_profile.max + 1):
-            profiles[f"Profile {i}"] = i
+            profiles[HmPresetMode(f"{HM_PRESET_MODE_PREFIX}{i}")] = i
 
         return profiles
 

@@ -42,8 +42,8 @@ from hahomematic.const import (
 from hahomematic.device import HmDevice
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import (
-    build_xml_rpc_uri,
     build_headers,
+    build_xml_rpc_uri,
     get_channel_no,
     parse_ccu_sys_var,
 )

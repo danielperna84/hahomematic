@@ -9,7 +9,7 @@ from typing import Any
 from xmlrpc.client import ServerProxy
 
 from hahomematic.const import PARAMSET_KEY_MASTER, PARAMSET_KEY_VALUES
-from hahomematic.helpers import build_xml_rpc_uri, build_headers, get_tls_context
+from hahomematic.helpers import build_headers, build_xml_rpc_uri, get_tls_context
 
 
 def main() -> None:
