@@ -35,15 +35,6 @@ ATTR_CHANNEL_STATE = "channel_state"
 
 HM_DIMMER_OFF: float = 0.0
 
-# HA constants
-COLOR_MODE_ONOFF = "onoff"
-COLOR_MODE_BRIGHTNESS = "brightness"  # Must be the only supported mode
-COLOR_MODE_HS = "hs"
-
-SUPPORT_BRIGHTNESS = 1
-SUPPORT_COLOR = 16
-SUPPORT_TRANSITION = 32
-
 
 class BaseHmLight(CustomEntity):
     """Base class for homematic light entities."""
@@ -92,24 +83,24 @@ class BaseHmLight(CustomEntity):
         return 0
 
     @property
-    def color_mode(self) -> str:
-        """Return the color mode of the light."""
-        return COLOR_MODE_ONOFF
-
-    @property
-    def supported_color_modes(self) -> set[str]:
-        """Return the supported color modes."""
-        return {COLOR_MODE_ONOFF}
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return 0
-
-    @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         return 0.0, 0.0
+
+    @property
+    def supports_brightness(self) -> bool:
+        """Flag if light supports brightness."""
+        return False
+
+    @property
+    def supports_hs_color(self) -> bool:
+        """Flag if light supports color."""
+        return False
+
+    @property
+    def supports_transition(self) -> bool:
+        """Flag if light supports transition."""
+        return False
 
     @abstractmethod
     async def turn_on(
@@ -150,19 +141,14 @@ class CeDimmer(BaseHmLight):
         return int((self._e_level.value or 0.0) * 255)
 
     @property
-    def color_mode(self) -> str:
-        """Return the color mode of the light."""
-        return COLOR_MODE_BRIGHTNESS
+    def supports_brightness(self) -> bool:
+        """Flag if light supports brightness."""
+        return True
 
     @property
-    def supported_color_modes(self) -> set[str]:
-        """Return the supported color modes."""
-        return {COLOR_MODE_BRIGHTNESS}
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_TRANSITION
+    def supports_transition(self) -> bool:
+        """Flag if light supports transition."""
+        return True
 
     async def turn_on(
         self,
@@ -247,11 +233,6 @@ class CeIpFixedColorLight(BaseHmLight):
         return int((self._e_level.value or 0.0) * 255)
 
     @property
-    def color_mode(self) -> str:
-        """Return the color mode of the light."""
-        return COLOR_MODE_HS
-
-    @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         if self._e_color.value:
@@ -259,9 +240,14 @@ class CeIpFixedColorLight(BaseHmLight):
         return 0.0, 0.0
 
     @property
-    def supported_color_modes(self) -> set[str]:
-        """Return the supported color modes."""
-        return {COLOR_MODE_HS}
+    def supports_brightness(self) -> bool:
+        """Flag if light supports brightness."""
+        return True
+
+    @property
+    def supports_hs_color(self) -> bool:
+        """Flag if light supports color."""
+        return True
 
     async def turn_on(
         self,
