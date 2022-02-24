@@ -9,7 +9,7 @@ from conftest import (
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.devices.climate import ATTR_TEMPERATURE, CeRfThermostat
+from hahomematic.devices.climate import CeRfThermostat
 from hahomematic.devices.lock import LOCK_TARGET_LEVEL_OPEN
 
 
@@ -149,8 +149,7 @@ async def test_device_hm_heatgroup(central, pydev_ccu, loop) -> None:
 
     custom_entity: CeRfThermostat = await get_hm_custom_entity(central, "INT0000001", 1)
     assert custom_entity.current_temperature is None
-    kwargs = {ATTR_TEMPERATURE: 19.0}
-    await custom_entity.set_temperature(**kwargs)
+    await custom_entity.set_temperature(19.0)
 
     new_value = await get_value_from_generic_entity(
         central, "INT0000001:1", "SET_TEMPERATURE"
