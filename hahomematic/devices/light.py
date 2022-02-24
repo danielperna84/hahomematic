@@ -27,11 +27,9 @@ from hahomematic.platforms.select import HmSelect
 _LOGGER = logging.getLogger(__name__)
 
 # HM constants
-ATTR_BRIGHTNESS = "brightness"
 ATTR_COLOR_NAME = "color_name"
 ATTR_CHANNEL_COLOR = "channel_color"
 ATTR_CHANNEL_LEVEL = "channel_level"
-ATTR_CHANNEL_STATE = "channel_state"
 
 HM_DIMMER_OFF: float = 0.0
 
