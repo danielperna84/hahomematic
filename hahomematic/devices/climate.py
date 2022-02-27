@@ -478,10 +478,9 @@ class CeIpThermostat(BaseClimateEntity):
         """Set new preset mode."""
         if preset_mode == HmPresetMode.BOOST:
             await self._e_boost_mode.send_value(True)
-        if preset_mode == HmPresetMode.NONE:
+        elif preset_mode == HmPresetMode.NONE:
             await self._e_boost_mode.send_value(False)
-
-        if preset_mode in self._profile_names:
+        elif preset_mode in self._profile_names:
             if self.hvac_mode != HmHvacMode.AUTO:
                 await self.set_hvac_mode(HmHvacMode.AUTO)
             profile_idx = self._profiles.get(preset_mode)
