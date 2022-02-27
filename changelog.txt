@@ -1,3 +1,6 @@
+Version 0.36.1 (2022-02-27)
+- Small climate fix
+
 Version 0.36.0 (2022-02-24)
 - Remove HA constants
 - Use enums own constants
