@@ -1,4 +1,7 @@
-Version 0.36.1 (2022-02-27)
+Version 0.36.2 (2022-03-06)
+- Fix cover device mapping
+
+Version 0.36.1 (2022-03-06)
 - Small climate fix
 - Make more devices custom_entities
 
