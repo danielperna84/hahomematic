@@ -438,6 +438,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HM-LC-Bl1-SM-2": (make_rf_cover, [1]),
     "HM-LC-Bl1-SM": (make_rf_cover, [1]),
     "HM-LC-Bl1PBU-FM": (make_rf_cover, [1]),
+    "HM-LC-DW-WM": (make_rf_cover, [1]),
     "HM-LC-Ja1PBU-FM": (make_rf_blind, [1]),
     "ZEL STG RM FEP 230V": (make_rf_blind, [1]),
     "263 146": (make_rf_blind, [1]),

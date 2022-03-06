@@ -415,6 +415,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HM-LC-Dim2L-SM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
     "HM-LC-Dim2T-SM-2": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
     "HM-LC-Dim2T-SM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
+    "HM-LC-DW-WM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
     "OLIGO.smart.iq.HM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
 }
 
