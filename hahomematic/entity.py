@@ -91,7 +91,7 @@ class CallbackEntity(ABC):
 
     def register_remove_callback(self, remove_callback: Callable) -> None:
         """register the remove callback"""
-        if callable(remove_callback):
+        if callable(remove_callback) and remove_callback not in self._remove_callbacks:
             self._remove_callbacks.append(remove_callback)
 
     def unregister_remove_callback(self, remove_callback: Callable) -> None:
