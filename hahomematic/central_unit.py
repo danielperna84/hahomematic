@@ -34,6 +34,7 @@ from hahomematic.const import (
     FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_DEVICES_CREATED,
+    HH_EVENT_HUB_CREATED,
     HH_EVENT_NEW_DEVICES,
     MANUFACTURER,
     PROXY_INIT_SUCCESS,
@@ -144,7 +145,7 @@ class CentralUnit:
         }
 
     @property
-    def hub(self) -> HmHub:
+    def hub(self) -> HmHub | HmDummyHub | None:
         """Return the Hub"""
         return self._hub
 
@@ -350,6 +351,11 @@ class CentralUnit:
             )
         if self._hub and isinstance(self._hub, HmHub):
             await self._hub.fetch_data()
+            if self.callback_system_event is not None and callable(
+                self.callback_system_event
+            ):
+                # pylint: disable=not-callable
+                self.callback_system_event(HH_EVENT_HUB_CREATED, self._hub)
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""

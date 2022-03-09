@@ -1,6 +1,7 @@
 Version 0.36.3 (2022-03-09)
 - Add hub property
 - Add check if callback is already registered
+- Use callback when hub is created
 
 Version 0.36.2 (2022-03-06)
 - Fix cover device mapping
