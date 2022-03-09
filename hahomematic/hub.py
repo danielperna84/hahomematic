@@ -100,7 +100,7 @@ class BaseHubEntity(ABC):
 
     def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
-        if callable(update_callback):
+        if callable(update_callback) and update_callback not in self._update_callbacks:
             self._update_callbacks.append(update_callback)
 
     def unregister_update_callback(self, update_callback: Callable) -> None:

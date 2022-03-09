@@ -116,7 +116,7 @@ class CentralUnit:
 
         hm_data.INSTANCES[self.instance_name] = self
         self._connection_checker = ConnectionChecker(self)
-        self.hub: HmHub | HmDummyHub | None = None
+        self._hub: HmHub | HmDummyHub | None = None
 
     @property
     def available(self) -> bool:
@@ -142,6 +142,11 @@ class CentralUnit:
             "sw_version": self.version,
             "device_url": self.device_url,
         }
+
+    @property
+    def hub(self) -> HmHub:
+        """Return the Hub"""
+        return self._hub
 
     @property
     def device_url(self) -> str:
@@ -337,14 +342,14 @@ class CentralUnit:
 
     async def _init_hub(self) -> None:
         """Init the hub."""
-        if not self.hub:
-            self.hub = self._create_hub()
+        if not self._hub:
+            self._hub = self._create_hub()
             _LOGGER.info(
                 "init_hub: Starting hub for %s",
                 self.instance_name,
             )
-        if self.hub and isinstance(self.hub, HmHub):
-            await self.hub.fetch_data()
+        if self._hub and isinstance(self._hub, HmHub):
+            await self._hub.fetch_data()
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
