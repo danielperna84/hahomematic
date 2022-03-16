@@ -38,3 +38,10 @@ class HmBinarySensor(GenericEntity[bool]):
             parameter_data=parameter_data,
             platform=HmPlatform.BINARY_SENSOR,
         )
+
+    @property
+    def value(self) -> bool | None:
+        """Return the value of the entity."""
+        if self._value is not None:
+            return self._value
+        return self._default

@@ -1,3 +1,12 @@
+Version 0.37.0 (2022-03-15)
+- Avoid unnecessary prefetches
+- Fix JsonRPC Session handling
+- Rename NamesCache to DeviceDetailsCache
+- Move RoomCache to DeviceDetailsCache
+- Move hm value converter to helpers
+- Use JSON RPC for get_value, get_paramset, get_paramset_description
+- Use default for binary_sensor
+
 Version 0.36.3 (2022-03-09)
 - Add hub property
 - Add check if callback is already registered

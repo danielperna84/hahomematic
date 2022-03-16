@@ -37,9 +37,6 @@ from hahomematic.const import (
     INIT_DATETIME,
     PARAMSET_KEY_VALUES,
     TYPE_BOOL,
-    TYPE_FLOAT,
-    TYPE_INTEGER,
-    TYPE_STRING,
     HmEntityType,
     HmEntityUsage,
     HmEventType,
@@ -51,6 +48,7 @@ import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
     check_channel_is_only_primary_channel,
+    convert_value,
     get_custom_entity_name,
     get_device_address,
     get_device_channel,
@@ -143,7 +141,8 @@ class BaseEntity(ABC):
         self.should_poll = False
         self._client: hm_client.Client = self._central.clients[self._interface_id]
         self.name: str = (
-            self._central.names.get_name(self.channel_address) or self.unique_id
+            self._central.device_details.get_name(self.channel_address)
+            or self.unique_id
         )
 
     @property
@@ -321,14 +320,15 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         if value is None:
             return None
         try:
-            if self._type == TYPE_BOOL:
-                return bool(value)  # type: ignore[return-value]
-            if self._type == TYPE_FLOAT:
-                return float(value)  # type: ignore[return-value]
-            if self._type == TYPE_INTEGER:
-                return int(float(value))  # type: ignore[return-value]
-            if self._type == TYPE_STRING:
-                return str(value)  # type: ignore[return-value]
+            if (
+                self._type == TYPE_BOOL
+                and self._value_list is not None
+                and value is not None
+            ):
+                return convert_value(  # type: ignore[no-any-return]
+                    value=self._value_list.index(value), target_type=self._type  # type: ignore[arg-type]
+                )
+            return convert_value(value=value, target_type=self._type)  # type: ignore[no-any-return]
         except ValueError:
             _LOGGER.debug(
                 "_convert_value: conversion failed for %s, %s, %s, value: [%s]",
@@ -338,7 +338,6 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 value,
             )
             return None  # type: ignore[return-value]
-        return value
 
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""

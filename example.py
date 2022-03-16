@@ -59,15 +59,15 @@ class Example:
     async def example_run(self):
         interface_configs = {
             InterfaceConfig(
-                name="hmip",
+                name="HmIP-Rf",
                 port=2010,
             ),
             InterfaceConfig(
-                name="rf",
+                name="BidCos-RF",
                 port=2001,
             ),
             InterfaceConfig(
-                name="groups",
+                name="VirtualDevices",
                 port=9292,
                 path="/groups",
             ),

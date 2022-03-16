@@ -60,6 +60,7 @@ import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
+sema_add_devices = asyncio.BoundedSemaphore(1)
 
 
 class CentralUnit:
@@ -81,14 +82,13 @@ class CentralUnit:
         self.paramset_descriptions: ParamsetDescriptionCache = ParamsetDescriptionCache(
             central=self
         )
-        self.names: NamesCache = NamesCache(central=self)
+        self.device_details: DeviceDetailsCache = DeviceDetailsCache(central=self)
         self.device_descriptions: DeviceDescriptionCache = DeviceDescriptionCache(
             central=self
         )
         self.parameter_visibility: ParameterVisibilityCache = ParameterVisibilityCache(
             central=self
         )
-        self.rooms: RoomCache = RoomCache(central=self)
 
         # {interface_id, client}
         self._clients: dict[str, hm_client.Client] = {}
@@ -399,8 +399,7 @@ class CentralUnit:
         try:
             await self.device_descriptions.load()
             await self.paramset_descriptions.load()
-            await self.names.load()
-            await self.rooms.load()
+            await self.device_details.load()
         except json.decoder.JSONDecodeError:
             _LOGGER.warning(
                 "load_caches: Failed to load caches for %s.", self.instance_name
@@ -411,6 +410,7 @@ class CentralUnit:
         """
         Trigger creation of the objects that expose the functionality.
         """
+
         if not self._clients:
             raise Exception(
                 f"create_devices: No clients initialized. Not starting central {self.instance_name}."
@@ -532,7 +532,7 @@ class CentralUnit:
                     self.paramset_descriptions.remove(
                         interface_id=interface_id, channel_address=address
                     )
-                self.names.remove(address=address)
+                self.device_details.remove(address=address)
                 if hm_device := self.hm_devices.get(address):
                     hm_device.remove_event_subscriptions()
                     hm_device.remove_from_collections()
@@ -559,27 +559,28 @@ class CentralUnit:
             )
             return None
 
-        # We need this list to avoid adding duplicates.
-        known_addresses = [
-            dev_desc[ATTR_HM_ADDRESS]
-            for dev_desc in self.device_descriptions.get_device_descriptions(
-                interface_id
-            )
-        ]
-        client = self._clients[interface_id]
-        for dev_desc in dev_descriptions:
-            try:
-                if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
-                    self.device_descriptions.add_device_description(
-                        interface_id, dev_desc
-                    )
-                    await client.fetch_paramset_descriptions(dev_desc)
-            except Exception as err:
-                _LOGGER.error("add_new_devices: Exception [%s]", err.args)
-        await self.device_descriptions.save()
-        await self.paramset_descriptions.save()
-        await self.names.load()
-        await self._create_devices()
+        async with sema_add_devices:
+            # We need this list to avoid adding duplicates.
+            known_addresses = [
+                dev_desc[ATTR_HM_ADDRESS]
+                for dev_desc in self.device_descriptions.get_device_descriptions(
+                    interface_id
+                )
+            ]
+            client = self._clients[interface_id]
+            for dev_desc in dev_descriptions:
+                try:
+                    if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
+                        self.device_descriptions.add_device_description(
+                            interface_id, dev_desc
+                        )
+                        await client.fetch_paramset_descriptions(dev_desc)
+                except Exception as err:
+                    _LOGGER.error("add_new_devices: Exception [%s]", err.args)
+            await self.device_descriptions.save()
+            await self.paramset_descriptions.save()
+            await self.device_details.load()
+            await self._create_devices()
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
@@ -674,8 +675,7 @@ class CentralUnit:
 
         if client := self.get_client_by_interface_id(interface_id=interface_id):
             return await client.get_value(
-                channel_address=channel_address,
-                parameter=parameter,
+                channel_address=channel_address, parameter=parameter
             )
         return None
 
@@ -707,8 +707,7 @@ class CentralUnit:
 
         if client := self.get_client_by_interface_id(interface_id=interface_id):
             return await client.get_paramset(
-                channel_address=channel_address,
-                paramset_key=paramset_key,
+                channel_address=channel_address, paramset_key=paramset_key
             )
         return None
 
@@ -778,8 +777,7 @@ class CentralUnit:
         """
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
-        await self.names.clear()
-        await self.rooms.clear()
+        await self.device_details.clear()
 
 
 class ConnectionChecker(threading.Thread):
@@ -902,22 +900,73 @@ class CentralConfig:
         return CentralUnit(self)
 
 
-class RoomCache:
-    """Cache for rooms."""
+class DeviceDetailsCache:
+    """Cache for device/channel details."""
 
-    def __init__(
-        self,
-        central: CentralUnit,
-    ):
-        self._central = central
+    def __init__(self, central: CentralUnit):
+        # {address, name}
+        self._names_cache: dict[str, str] = {}
+        self._interface_cache: dict[str, str] = {}
+        self._device_channel_ids: dict[str, str] = {}
         self._rooms: dict[str, str] = {}
         self._device_rooms: dict[str, list[str]] = {}
+        self._central = central
 
     async def load(self) -> None:
-        """Init room cache."""
+        """Fetch names from backend."""
+        _LOGGER.debug("load: Loading names for %s", self._central.instance_name)
+        if client := self._central.get_client():
+            await client.fetch_device_details()
         _LOGGER.debug("load: Loading rooms for %s", self._central.instance_name)
         self._rooms = await self._get_all_rooms()
         self._identify_device_rooms()
+
+    def add_name(self, address: str, name: str) -> None:
+        """Add name to cache."""
+        if address not in self._names_cache:
+            self._names_cache[address] = name
+
+    def get_name(self, address: str) -> str | None:
+        """Get name from cache."""
+        return self._names_cache.get(address)
+
+    def add_interface(self, address: str, interface: str) -> None:
+        """Add interface to cache."""
+        if address not in self._interface_cache:
+            self._interface_cache[address] = interface
+
+    def get_interface(self, address: str) -> str | None:
+        """Get interface from cache."""
+        return self._interface_cache.get(address)
+
+    def add_device_channel_id(self, address: str, channel_id: str) -> None:
+        """Add channel id for a channel"""
+        self._device_channel_ids[address] = channel_id
+
+    @property
+    def device_channel_ids(self) -> dict[str, str]:
+        """Return device channel_ids"""
+        return self._device_channel_ids
+
+    async def _get_all_rooms(self) -> dict[str, str]:
+        """Get all rooms, if available."""
+        if client := self._central.get_client():
+            return await client.get_all_rooms()
+        return {}
+
+    def get_room(self, address: str) -> str | None:
+        """Return room by address"""
+        return self._rooms.get(address)
+
+    def remove(self, address: str) -> None:
+        """Remove name from cache."""
+        if address in self._names_cache:
+            del self._names_cache[address]
+
+    async def clear(self) -> None:
+        """Clear the cache."""
+        self._names_cache.clear()
+        self._rooms.clear()
 
     def _identify_device_rooms(self) -> None:
         """
@@ -933,53 +982,6 @@ class RoomCache:
         for device_address, rooms in device_rooms.items():
             if rooms and len(set(rooms)) == 1:
                 self._rooms[device_address] = list(set(rooms))[0]
-
-    async def clear(self) -> None:
-        """Clear the cache."""
-        self._rooms.clear()
-
-    async def _get_all_rooms(self) -> dict[str, str]:
-        """Get all rooms, if available."""
-        if client := self._central.get_client():
-            return await client.get_all_rooms()
-        return {}
-
-    def get_room(self, address: str) -> str | None:
-        """Return room by address"""
-        return self._rooms.get(address)
-
-
-class NamesCache:
-    """Cache for device/channel names."""
-
-    def __init__(self, central: CentralUnit):
-        # {address, name}
-        self._names_cache: dict[str, str] = {}
-        self._central = central
-
-    async def load(self) -> None:
-        """Fetch names from backend."""
-        _LOGGER.debug("load: Loading names for %s", self._central.instance_name)
-        if client := self._central.get_client():
-            await client.fetch_names()
-
-    def add(self, address: str, name: str) -> None:
-        """Add name to cache."""
-        if address not in self._names_cache:
-            self._names_cache[address] = name
-
-    def get_name(self, address: str) -> str | None:
-        """Get name from cache."""
-        return self._names_cache.get(address)
-
-    def remove(self, address: str) -> None:
-        """Remove name from cache."""
-        if address in self._names_cache:
-            del self._names_cache[address]
-
-    async def clear(self) -> None:
-        """Clear the cache."""
-        self._names_cache.clear()
 
 
 class BasePersitentCache(ABC):

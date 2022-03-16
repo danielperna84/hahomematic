@@ -3,6 +3,7 @@ Implementation of an async json-rpc client.
 """
 from __future__ import annotations
 
+from datetime import datetime
 import json
 import logging
 import ssl
@@ -43,6 +44,7 @@ class JsonRpcAioHttpClient:
                 connector=conn, loop=self._central_config.loop
             )
         self._session_id: str | None = None
+        self._last_session_id_refresh: datetime | None = None
         self._username: str = self._central_config.username
         self._password: str | None = self._central_config.password
         self._tls: bool = self._central_config.tls
@@ -60,6 +62,7 @@ class JsonRpcAioHttpClient:
         """Renew JSON-RPC session or perform login."""
         if not self.is_activated:
             self._session_id = await self._login()
+            self._last_session_id_refresh = datetime.now()
             return self._session_id is not None
         if self._session_id:
             self._session_id = await self._renew_login(self._session_id)
@@ -68,19 +71,33 @@ class JsonRpcAioHttpClient:
     async def _renew_login(self, session_id: str) -> str | None:
         """Renew JSON-RPC session or perform login."""
         try:
+            if self._updated_within_seconds():
+                return session_id
+
             response = await self._post(
                 session_id=session_id,
                 method="Session.renew",
                 extra_params={ATTR_SESSION_ID: session_id},
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                return str(response[ATTR_RESULT])
+                if response[ATTR_RESULT] is True:
+                    self._last_session_id_refresh = datetime.now()
+                    return session_id
             return await self._login()
         except ClientError as cer:
             _LOGGER.error(
                 "renew: ClientError [%s] while renewing JSON-RPC session", cer.args
             )
             return None
+
+    def _updated_within_seconds(self, age_seconds: int = 90) -> bool:
+        """Check if session id has been updated within 90 seconds."""
+        if self._last_session_id_refresh is None:
+            return False
+        delta = datetime.now() - self._last_session_id_refresh
+        if delta.seconds < age_seconds:
+            return True
+        return False
 
     async def _login(self) -> str | None:
         """Login to CCU and return session."""
@@ -123,7 +140,7 @@ class JsonRpcAioHttpClient:
         method: str,
         extra_params: dict[str, str] | None = None,
         use_default_params: bool = True,
-        keep_session: bool = False,
+        keep_session: bool = True,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST function."""
         if keep_session:

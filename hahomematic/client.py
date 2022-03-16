@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from copy import deepcopy
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -19,16 +20,21 @@ from hahomematic.const import (
     ATTR_HM_PARAMSETS,
     ATTR_HM_PARENT_TYPE,
     ATTR_HM_TYPE,
+    ATTR_ID,
+    ATTR_INTERFACE,
     ATTR_INTERFACE_ID,
     ATTR_NAME,
+    ATTR_PARAMSET_KEY,
     ATTR_RESULT,
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
+    ATTR_VALUE_KEY,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
     HM_VIRTUAL_REMOTES,
+    IF_NAMES,
     INIT_DATETIME,
     PARAMSET_KEY_VALUES,
     PROXY_DE_INIT_FAILED,
@@ -44,6 +50,7 @@ from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import (
     build_headers,
     build_xml_rpc_uri,
+    convert_value,
     get_channel_no,
     parse_ccu_sys_var,
 )
@@ -69,6 +76,7 @@ class Client(ABC):
         self._version: str | None = self._client_config.version
         self._available: bool = True
         self.name: str = self._client_config.name
+        self._hm_interface: str = self._client_config.hm_interface
         # This is the actual interface_id used for init
         self.interface_id: str = f"{self._central.instance_name}-{self.name}"
         self._has_credentials = self._client_config.has_credentials
@@ -202,7 +210,7 @@ class Client(ABC):
         self._proxy.stop()
 
     @abstractmethod
-    async def fetch_names(self) -> None:
+    async def fetch_device_details(self) -> None:
         """Fetch names from backend."""
         ...
 
@@ -334,10 +342,17 @@ class Client(ABC):
             _LOGGER.warning("get_install_mode: %s [%s]", hhe.name, hhe.args)
         return 0
 
-    async def get_value(self, channel_address: str, parameter: str) -> Any:
+    async def get_value(
+        self, channel_address: str, parameter: str, cached: bool = False
+    ) -> Any:
         """Return a value from CCU."""
         try:
-            _LOGGER.debug("get_value: %s, %s", channel_address, parameter)
+            _LOGGER.debug(
+                "get_value: channel_address %s, parameter %s, cache %s",
+                channel_address,
+                parameter,
+                cached,
+            )
             return await self._proxy_read.getValue(channel_address, parameter)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
@@ -350,15 +365,19 @@ class Client(ABC):
             raise HaHomematicException from hhe
 
     async def get_value_by_paramset_key(
-        self, channel_address: str, paramset_key: str, parameter: str
+        self,
+        channel_address: str,
+        paramset_key: str,
+        parameter: str,
+        cached: bool = True,
     ) -> Any:
-        """Return a value by paramset_key from CCU."""
+        """Return a value by paramset_keys from CCU."""
         if paramset_key == PARAMSET_KEY_VALUES:
             return await self.get_value(
-                channel_address=channel_address, parameter=parameter
+                channel_address=channel_address, parameter=parameter, cached=cached
             )
         if paramset := await self.get_paramset(
-            channel_address=channel_address, paramset_key=paramset_key
+            channel_address=channel_address, paramset_key=paramset_key, cached=cached
         ):
             return paramset.get(parameter)
         return None
@@ -411,10 +430,17 @@ class Client(ABC):
             rx_mode=rx_mode,
         )
 
-    async def get_paramset(self, channel_address: str, paramset_key: str) -> Any:
+    async def get_paramset(
+        self, channel_address: str, paramset_key: str, cached: bool = False
+    ) -> Any:
         """Return a paramset from CCU."""
         try:
-            _LOGGER.debug("get_paramset: %s, %s", channel_address, paramset_key)
+            _LOGGER.debug(
+                "get_paramset: channel_address %s, paramset_key %s, cached %s",
+                channel_address,
+                paramset_key,
+                cached,
+            )
             return await self._proxy_read.getParamset(channel_address, paramset_key)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
@@ -465,8 +491,8 @@ class Client(ABC):
         )
 
         try:
-            parameter_data = await self._proxy_read.getParamsetDescription(
-                channel_address, paramset_key
+            parameter_data = await self._get_paramset_description(
+                address=channel_address, paramset_key=paramset_key
             )
             self._central.paramset_descriptions.add(
                 interface_id=self.interface_id,
@@ -504,8 +530,7 @@ class Client(ABC):
                 )
 
     async def get_paramset_descriptions(
-        self,
-        device_description: dict[str, Any],
+        self, device_description: dict[str, Any]
     ) -> dict[str, dict[str, Any]]:
         """Get paramsets for provided device description."""
         if not device_description:
@@ -536,9 +561,9 @@ class Client(ABC):
             ):
                 continue
             try:
-                paramsets[address][
-                    paramset_key
-                ] = await self._proxy_read.getParamsetDescription(address, paramset_key)
+                paramsets[address][paramset_key] = await self._get_paramset_description(
+                    address=address, paramset_key=paramset_key
+                )
             except BaseHomematicException as hhe:
                 _LOGGER.warning(
                     "get_paramsets failed with %s [%s] for %s address %s.",
@@ -548,6 +573,10 @@ class Client(ABC):
                     address,
                 )
         return paramsets
+
+    async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
+        """Get paramset description from CCU."""
+        return await self._proxy_read.getParamsetDescription(address, paramset_key)
 
     async def get_all_paramset_descriptions(
         self, device_descriptions: list[dict[str, Any]]
@@ -599,7 +628,7 @@ class ClientCCU(Client):
         """Return the model of the backend."""
         return BACKEND_CCU
 
-    async def fetch_names(self) -> None:
+    async def fetch_device_details(self) -> None:
         """
         Get all names via JSON-RPS and store in data.NAMES.
         """
@@ -616,13 +645,58 @@ class ClientCCU(Client):
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 _LOGGER.debug("fetch_names_json: Resolving device names")
                 for device in response[ATTR_RESULT]:
-                    self._central.names.add(device[ATTR_ADDRESS], device[ATTR_NAME])
+                    self._central.device_details.add_name(
+                        address=device[ATTR_ADDRESS], name=device[ATTR_NAME]
+                    )
+                    self._central.device_details.add_device_channel_id(
+                        address=device[ATTR_ADDRESS], channel_id=device[ATTR_ID]
+                    )
                     for channel in device.get(ATTR_CHANNELS, []):
-                        self._central.names.add(
-                            channel[ATTR_ADDRESS], channel[ATTR_NAME]
+                        self._central.device_details.add_name(
+                            address=channel[ATTR_ADDRESS], name=channel[ATTR_NAME]
                         )
+                        self._central.device_details.add_device_channel_id(
+                            address=channel[ATTR_ADDRESS], channel_id=channel[ATTR_ID]
+                        )
+                    self._central.device_details.add_interface(
+                        device[ATTR_ADDRESS], device[ATTR_INTERFACE]
+                    )
+
         except BaseHomematicException as hhe:
             _LOGGER.warning("fetch_names_json: %s, %s", hhe.name, hhe.args)
+
+    async def _get_paramset_description(
+        self, address: str, paramset_key: str
+    ) -> dict[str, Any]:
+        """Get paramset description from CCU."""
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "_get_paramset_description: No username set. Not getting paramset description via JSON-RPC."
+            )
+            return {}
+
+        _LOGGER.debug(
+            "_get_paramset_description: Getting paramset description via JSON-RPC."
+        )
+        try:
+            params = {
+                ATTR_INTERFACE: self._hm_interface,
+                ATTR_ADDRESS: address,
+                ATTR_PARAMSET_KEY: paramset_key,
+            }
+            response = await self._json_rpc_session.post(
+                "Interface.getParamsetDescription", params
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                _LOGGER.debug(
+                    "_get_paramset_description: Getting paramset description."
+                )
+                return convert_from_json_paramset_description(response[ATTR_RESULT])
+
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("_get_paramset_description: %s, %s", hhe.name, hhe.args)
+
+        return {}
 
     async def _check_connection(self) -> bool:
         """Check if _proxy is still initialized."""
@@ -717,6 +791,76 @@ class ClientCCU(Client):
 
         return var
 
+    async def get_value(
+        self, channel_address: str, parameter: str, cached: bool = True
+    ) -> Any:
+        """Return a cached value from CCU."""
+        if not cached:
+            return super().get_value(
+                channel_address=channel_address, parameter=parameter, cached=False
+            )
+
+        value = None
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "get_value: You have to set username ans password to get a value via JSON-RPC"
+            )
+            return value
+
+        _LOGGER.debug("get_value: Getting value via JSON-RPC")
+        try:
+            params = {
+                ATTR_INTERFACE: self._hm_interface,
+                ATTR_ADDRESS: channel_address,
+                ATTR_VALUE_KEY: parameter,
+            }
+            response = await self._json_rpc_session.post(
+                "Interface.getValue",
+                params,
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                # This does not yet support strings
+                value = response[ATTR_RESULT]
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_system_variable: %s [%s]", hhe.name, hhe.args)
+
+        return value
+
+    async def get_paramset(
+        self, channel_address: str, paramset_key: str, cached: bool = True
+    ) -> Any:
+        """Return a cached paramset from CCU."""
+        if not cached:
+            return super().get_paramset(
+                channel_address=channel_address, paramset_key=paramset_key, cached=False
+            )
+
+        value = None
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "get_cached_paramset: You have to set username ans password to get a paramset via JSON-RPC"
+            )
+            return value
+
+        _LOGGER.debug("get_cached_paramset: Getting value via JSON-RPC")
+        try:
+            params = {
+                ATTR_INTERFACE: self._hm_interface,
+                ATTR_ADDRESS: channel_address,
+                ATTR_PARAMSET_KEY: paramset_key,
+            }
+            response = await self._json_rpc_session.post(
+                "Interface.getParamset",
+                params,
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                # This does not yet support strings
+                value = response[ATTR_RESULT]
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_cached_paramset: %s [%s]", hhe.name, hhe.args)
+
+        return value
+
     async def get_all_system_variables(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
         variables: dict[str, Any] = {}
@@ -745,7 +889,7 @@ class ClientCCU(Client):
     async def get_all_rooms(self) -> dict[str, str]:
         """Get all rooms from CCU."""
         rooms: dict[str, str] = {}
-        device_channel_ids = await self._get_device_channel_ids()
+        device_channel_ids = self._central.device_details.device_channel_ids
         channel_ids_room = await self._get_all_channel_ids_room()
         for address, channel_id in device_channel_ids.items():
             if name := channel_ids_room.get(channel_id):
@@ -778,32 +922,6 @@ class ClientCCU(Client):
 
         return channel_ids_room
 
-    async def _get_device_channel_ids(self) -> dict[str, str]:
-        """Get all device_channel_ids from CCU / Homegear."""
-        device_channel_ids: dict[str, str] = {}
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "_get_device_channel_ids: You have to set username ans password to get device channel_ids via JSON-RPC"
-            )
-            return device_channel_ids
-
-        _LOGGER.debug(
-            "_get_all_device_details: Getting all device channel_ids via JSON-RPC"
-        )
-        try:
-            response = await self._json_rpc_session.post(
-                "Device.listAllDetail",
-            )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                for device in response[ATTR_RESULT]:
-                    device_channel_ids[device["address"]] = device["id"]
-                    for channel in device["channels"]:
-                        device_channel_ids[channel["address"]] = channel["id"]
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("_get_device_channel_ids: %s [%s]", hhe.name, hhe.args)
-
-        return device_channel_ids
-
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for device_type in HM_VIRTUAL_REMOTES:
@@ -830,7 +948,7 @@ class ClientHomegear(Client):
             )
         return BACKEND_CCU
 
-    async def fetch_names(self) -> None:
+    async def fetch_device_details(self) -> None:
         """
         Get all names from metadata (Homegear).
         """
@@ -839,7 +957,7 @@ class ClientHomegear(Client):
             interface_id=self.interface_id
         ):
             try:
-                self._central.names.add(
+                self._central.device_details.add_name(
                     address,
                     await self._proxy_read.getMetadata(address, ATTR_HM_NAME),
                 )
@@ -914,7 +1032,9 @@ class _ClientConfig:
         local_ip: str,
     ):
         self.central = central
+        self.interface_config = interface_config
         self.name: str = interface_config.name
+        self.hm_interface: str = interface_config.name
         self._central_config = self.central.central_config
         self._callback_host: str = (
             self._central_config.callback_host
@@ -985,6 +1105,15 @@ class InterfaceConfig:
         self.name = name
         self.port = port
         self.path = path
+        self.validate()
+
+    def validate(self) -> None:
+        """Validate the client_config."""
+        if self.name not in IF_NAMES:
+            _LOGGER.warning(
+                "InterfaceConfig: Interface names must be within [%s] ",
+                ", ".join(IF_NAMES),
+            )
 
 
 async def create_client(
@@ -996,3 +1125,27 @@ async def create_client(
     return await _ClientConfig(
         central=central, interface_config=interface_config, local_ip=local_ip
     ).get_client()
+
+
+def convert_from_json_paramset_description(
+    json_paramset_descriptions: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Fix types of values."""
+    convert_to_int = ["FLAGS", "OPERATIONS", "TAB_ORDER"]
+    convert_to_target_type = ["DEFAULT", "MAX", "MIN"]
+    convert_to_list = ["VALUE_LIST"]
+    new_psds: dict[str, Any] = {}
+    for json_paramset_description in json_paramset_descriptions:
+        new_psd = deepcopy(json_paramset_description)
+        hm_name = new_psd.pop("NAME")
+        hm_type = new_psd["TYPE"]
+        for key, value in new_psd.items():
+            if key in convert_to_int:
+                new_psd[key] = int(value)
+            elif key in convert_to_target_type:
+                new_psd[key] = convert_value(value=value, target_type=hm_type)
+            elif key in convert_to_list:
+                new_psd[key] = value.split(" ")
+        new_psds[hm_name] = new_psd
+
+    return new_psds

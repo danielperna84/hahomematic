@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import base64
 from datetime import datetime
+from distutils import util
 import logging
 import os
 import ssl
@@ -20,6 +21,10 @@ from hahomematic.const import (
     ATTR_TYPE,
     ATTR_VALUE,
     INIT_DATETIME,
+    TYPE_BOOL,
+    TYPE_FLOAT,
+    TYPE_INTEGER,
+    TYPE_STRING,
     HmEntityUsage,
 )
 import hahomematic.devices.entity_definition as hm_entity_definition
@@ -235,7 +240,7 @@ def get_device_name(
     central: hm_central.CentralUnit, device_address: str, device_type: str
 ) -> str:
     """Return the cached name for a device, or an auto-generated."""
-    if name := central.names.get_name(address=device_address):
+    if name := central.device_details.get_name(address=device_address):
         return name
 
     _LOGGER.debug(
@@ -270,10 +275,12 @@ def _get_base_name_from_channel_or_device(
 ) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""
     default_channel_name = f"{device_type} {channel_address}"
-    name = central.names.get_name(channel_address)
+    name = central.device_details.get_name(channel_address)
     if name is None or name == default_channel_name:
         channel_no = get_device_channel(channel_address)
-        if device_name := central.names.get_name(get_device_address(channel_address)):
+        if device_name := central.device_details.get_name(
+            get_device_address(channel_address)
+        ):
             name = f"{device_name}:{channel_no}"
     return name
 
@@ -318,3 +325,20 @@ def updated_within_seconds(last_update: datetime, age_seconds: int = 120) -> boo
     if delta.seconds < age_seconds:
         return True
     return False
+
+
+def convert_value(value: Any, target_type: str) -> Any:
+    """Convert to value to target_type"""
+    if value is None:
+        return None
+    if target_type == TYPE_BOOL:
+        if isinstance(value, str):
+            return bool(util.strtobool(value))
+        return bool(value)
+    if target_type == TYPE_FLOAT:
+        return float(value)
+    if target_type == TYPE_INTEGER:
+        return int(float(value))
+    if target_type == TYPE_STRING:
+        return str(value)
+    return value

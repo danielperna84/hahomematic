@@ -43,7 +43,7 @@ class HmSensor(GenericEntity[Any]):
     def value(self) -> Any | None:
         """Return the value."""
         if self._value is not None and self._value_list is not None:
-            return self._value_list[self._value]
+            return self._value_list[int(self._value)]
         if convert_func := self._get_converter_func():
             return convert_func(self._value)
         return self._value
