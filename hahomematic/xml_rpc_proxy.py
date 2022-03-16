@@ -56,6 +56,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """
         Call method on server side
         """
+        _LOGGER.debug("__async_request: %s", args)
         parent = xmlrpc.client.ServerProxy
         try:
             return await self._async_add_proxy_executor_job(

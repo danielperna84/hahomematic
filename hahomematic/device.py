@@ -3,6 +3,7 @@ Module for the Device class.
 """
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -721,6 +722,8 @@ class HmDevice:
 class ValueCache:
     """A Cache to temporaily stored values"""
 
+    _sema_get_or_load_value = asyncio.BoundedSemaphore(1)
+
     def __init__(self, device: HmDevice):
         self._device = device
         self._client = device.client
@@ -799,47 +802,49 @@ class ValueCache:
         age_seconds: int = 120,
     ) -> Any | None:
         """Load data"""
-        if (
-            cached_value := self._get_or_value_from_cache(
-                channel_address=channel_address,
-                paramset_key=paramset_key,
-                parameter=parameter,
-                age_seconds=age_seconds,
-            )
-        ) != NO_CACHE_ENTRY:
-            return cached_value
 
-        if paramset_key not in self._value_cache:
-            self._value_cache[paramset_key] = {}
-
-        try:
-            # try a cached paramset at first, to get as much data without device access
-            if channel_address not in self._value_cache[paramset_key]:
-                paramset = (
-                    await self._client.get_paramset(
-                        channel_address=channel_address,
-                        paramset_key=paramset_key,
-                        cached=True,
-                    )
-                    or {}
+        async with self._sema_get_or_load_value:
+            if (
+                cached_value := self._get_or_value_from_cache(
+                    channel_address=channel_address,
+                    paramset_key=paramset_key,
+                    parameter=parameter,
+                    age_seconds=age_seconds,
                 )
-                last_update = datetime.now()
-                self._value_cache[paramset_key][channel_address] = {}
-                for param, value in paramset.items():
-                    self._value_cache[paramset_key][channel_address][
-                        param
-                    ] = CacheEntry(value=value, last_update=last_update)
-                if parameter in paramset:
-                    return paramset[parameter]
+            ) != NO_CACHE_ENTRY:
+                return cached_value
 
-        except BaseHomematicException as bhe:
-            _LOGGER.debug(
-                "_get_or_load_value: Failed to get cached paramset for %s, %s, %s: %s",
-                self._device.device_type,
-                channel_address,
-                parameter,
-                bhe,
-            )
+            if paramset_key not in self._value_cache:
+                self._value_cache[paramset_key] = {}
+
+            try:
+                # try a cached paramset at first, to get as much data without device access
+                if channel_address not in self._value_cache[paramset_key]:
+                    paramset = (
+                        await self._client.get_paramset(
+                            channel_address=channel_address,
+                            paramset_key=paramset_key,
+                            cached=True,
+                        )
+                        or {}
+                    )
+                    last_update = datetime.now()
+                    self._value_cache[paramset_key][channel_address] = {}
+                    for param, value in paramset.items():
+                        self._value_cache[paramset_key][channel_address][
+                            param
+                        ] = CacheEntry(value=value, last_update=last_update)
+                    if parameter in paramset:
+                        return paramset[parameter]
+
+            except BaseHomematicException as bhe:
+                _LOGGER.debug(
+                    "_get_or_load_value: Failed to get cached paramset for %s, %s, %s: %s",
+                    self._device.device_type,
+                    channel_address,
+                    parameter,
+                    bhe,
+                )
 
         return None
 
