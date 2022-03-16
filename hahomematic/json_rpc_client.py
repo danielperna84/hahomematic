@@ -183,7 +183,7 @@ class JsonRpcAioHttpClient:
 
         params = _get_params(session_id, extra_params, use_default_params)
 
-        _LOGGER.debug("_post: Method: %s", method)
+        _LOGGER.debug("_post: Method: %s, [%s]", method, extra_params)
         try:
             payload = json.dumps(
                 {"method": method, "params": params, "jsonrpc": "1.1", "id": 0}
@@ -194,7 +194,6 @@ class JsonRpcAioHttpClient:
                 "Content-Length": str(len(payload)),
             }
 
-            _LOGGER.debug("_post: API-Endpoint: %s", self._url)
             if self._tls:
                 resp = await self._client_session.post(
                     self._url,
