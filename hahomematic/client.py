@@ -38,6 +38,7 @@ from hahomematic.const import (
     BACKEND_PYDEVCCU,
     DEFAULT_ENCODING,
     HM_VIRTUAL_REMOTES,
+    IF_BIDCOS_RF_NAME,
     IF_NAMES,
     INIT_DATETIME,
     PARAMSET_KEY_MASTER,
@@ -304,6 +305,11 @@ class Client(ABC):
     @abstractmethod
     async def get_all_system_variables(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
+        ...
+
+    @abstractmethod
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
         ...
 
     @abstractmethod
@@ -938,6 +944,30 @@ class ClientCCU(Client):
 
         return variables
 
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
+        interfaces: list[str] = []
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "get_available_interfaces: You have to set username ans password to get available interfaces via JSON-RPC"
+            )
+            return interfaces
+
+        _LOGGER.debug(
+            "get_available_interfaces: Getting all available interfaces via JSON-RPC"
+        )
+        try:
+            response = await self._json_rpc_session.post(
+                "Interface.listInterfaces",
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                for interface in response[ATTR_RESULT]:
+                    interfaces.append(interface[ATTR_NAME])
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_available_interfaces: %s [%s]", hhe.name, hhe.args)
+
+        return interfaces
+
     async def get_all_rooms(self) -> dict[str, str]:
         """Get all rooms from CCU."""
         rooms: dict[str, str] = {}
@@ -1068,6 +1098,10 @@ class ClientHomegear(Client):
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_all_system_variables: %s [%s]", hhe.name, hhe.args)
         return None
+
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
+        return [IF_BIDCOS_RF_NAME]
 
     async def get_all_rooms(self) -> dict[str, str]:
         """Get all rooms from Homegear."""

@@ -1,4 +1,7 @@
-Version 0.37.3 (2022-03-17)
+Version 0.37.4 (2022-03-17)
+- Add api for available interfaces
+
+Version 0.37.4 (2022-03-17)
 - Fix reload paramset
 - Fix value converter
 
