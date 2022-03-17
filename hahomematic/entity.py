@@ -324,6 +324,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 self._type == TYPE_BOOL
                 and self._value_list is not None
                 and value is not None
+                and isinstance(value, str)
             ):
                 return convert_value(  # type: ignore[no-any-return]
                     value=self._value_list.index(value), target_type=self._type  # type: ignore[arg-type]
