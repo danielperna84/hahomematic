@@ -15,7 +15,7 @@ package_data = {
     },
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.37.1"
+VERSION = "0.37.2"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
@@ -31,7 +31,7 @@ setup(
     author_email="danielperna84@gmail.com",
     description="Homematic interface for Home Assistant",
     packages=PACKAGES,
-    package_data={'hahomematic': ['py.typed']},
+    package_data={'hahomematic': ['py.typed', 'rega_scripts/*.fn']},
     zip_safe=False,
     platforms="any",
     python_requires=">=3.9",

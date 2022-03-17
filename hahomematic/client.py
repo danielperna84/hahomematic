@@ -5,7 +5,10 @@ from abc import ABC, abstractmethod
 import asyncio
 from copy import deepcopy
 from datetime import datetime, timedelta
+import json
 import logging
+import os
+from pathlib import Path
 from typing import Any
 
 from hahomematic import config
@@ -33,6 +36,7 @@ from hahomematic.const import (
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
+    DEFAULT_ENCODING,
     HM_VIRTUAL_REMOTES,
     IF_NAMES,
     INIT_DATETIME,
@@ -42,6 +46,8 @@ from hahomematic.const import (
     PROXY_DE_INIT_SUCCESS,
     PROXY_INIT_FAILED,
     PROXY_INIT_SUCCESS,
+    REGA_SCRIPT_DATA_LOAD,
+    REGA_SCRIPT_PATH,
     HmEventType,
     HmInterfaceEventType,
 )
@@ -208,6 +214,11 @@ class Client(ABC):
     def stop(self) -> None:
         """Stop depending services."""
         self._proxy.stop()
+
+    @abstractmethod
+    async def fetch_all_device_data(self) -> None:
+        """fetch all device data from CCU."""
+        ...
 
     @abstractmethod
     async def fetch_device_details(self) -> None:
@@ -665,6 +676,39 @@ class ClientCCU(Client):
         except BaseHomematicException as hhe:
             _LOGGER.warning("fetch_names_json: %s, %s", hhe.name, hhe.args)
 
+    async def fetch_all_device_data(self) -> None:
+        """fetch all device data from CCU."""
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "fetch_all_device_data: No username set. Not fetching all device data via JSON-RPC."
+            )
+            return None
+
+        _LOGGER.debug(
+            "fetch_all_device_data: Fetching all device data via JSON-RPC RegaScript."
+        )
+        try:
+            source_path = Path(__file__).resolve()
+            script_file = os.path.join(
+                source_path.parent, REGA_SCRIPT_PATH, REGA_SCRIPT_DATA_LOAD
+            )
+            script = Path(script_file).read_text(encoding=DEFAULT_ENCODING)
+
+            response = await self._json_rpc_session.post(
+                "ReGa.runScript", {"script": script}
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                _LOGGER.debug("fetch_all_device_data: Fetched all device data.")
+                self.central.device_data.add_device_data(
+                    device_data=json.loads(response[ATTR_RESULT])
+                )
+                return
+
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("fetch_all_device_data: %s, %s", hhe.name, hhe.args)
+
+        return None
+
     async def _get_paramset_description(
         self, address: str, paramset_key: str
     ) -> dict[str, Any]:
@@ -947,6 +991,10 @@ class ClientHomegear(Client):
                 else BACKEND_HOMEGEAR
             )
         return BACKEND_CCU
+
+    async def fetch_all_device_data(self) -> None:
+        """fetch all device data from CCU."""
+        return
 
     async def fetch_device_details(self) -> None:
         """

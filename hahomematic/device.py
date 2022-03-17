@@ -774,7 +774,7 @@ class ValueCache:
                 entities.append(entity)
         return set(entities)
 
-    def _get_or_value_from_cache(
+    def _get_value_from_cache(
         self,
         channel_address: str,
         paramset_key: str,
@@ -782,6 +782,18 @@ class ValueCache:
         age_seconds: int,
     ) -> Any | None:
         """Load data"""
+        if (
+            global_value := self._client.central.device_data.get_device_data(
+                interface=self._client.name,
+                channel_address=channel_address,
+                parameter=parameter,
+            )
+        ) is not None:
+            return global_value
+
+        if not self._client.central.device_data.is_empty:
+            return None
+
         if (
             cache_entry := self._value_cache.get(paramset_key, {})
             .get(channel_address, {})
@@ -805,7 +817,7 @@ class ValueCache:
 
         async with self._sema_get_or_load_value:
             if (
-                cached_value := self._get_or_value_from_cache(
+                cached_value := self._get_value_from_cache(
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                     parameter=parameter,
@@ -813,6 +825,9 @@ class ValueCache:
                 )
             ) != NO_CACHE_ENTRY:
                 return cached_value
+
+            if not self._client.central.device_data.is_empty:
+                return None
 
             if paramset_key not in self._value_cache:
                 self._value_cache[paramset_key] = {}
