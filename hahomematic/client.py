@@ -40,6 +40,7 @@ from hahomematic.const import (
     HM_VIRTUAL_REMOTES,
     IF_NAMES,
     INIT_DATETIME,
+    PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
     PROXY_DE_INIT_FAILED,
     PROXY_DE_INIT_SKIPPED,
@@ -354,44 +355,38 @@ class Client(ABC):
         return 0
 
     async def get_value(
-        self, channel_address: str, parameter: str, cached: bool = False
+        self,
+        channel_address: str,
+        parameter: str,
+        paramset_key: str = PARAMSET_KEY_VALUES,
+        cached: bool = False,
     ) -> Any:
         """Return a value from CCU."""
         try:
             _LOGGER.debug(
-                "get_value: channel_address %s, parameter %s, cache %s",
+                "get_value: channel_address %s, parameter %s, paramset_key, %s, cache %s",
                 channel_address,
                 parameter,
+                paramset_key,
                 cached,
             )
-            return await self._proxy_read.getValue(channel_address, parameter)
+            if paramset_key == PARAMSET_KEY_VALUES:
+                return await self._proxy_read.getValue(channel_address, parameter)
+            paramset = (
+                await self._proxy_read.getParamset(channel_address, PARAMSET_KEY_MASTER)
+                or {}
+            )
+            return paramset.get(parameter)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
-                "get_value failed with %s [%s]: %s, %s",
+                "get_value failed with %s [%s]: %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 channel_address,
                 parameter,
+                paramset_key,
             )
             raise HaHomematicException from hhe
-
-    async def get_value_by_paramset_key(
-        self,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        cached: bool = True,
-    ) -> Any:
-        """Return a value by paramset_keys from CCU."""
-        if paramset_key == PARAMSET_KEY_VALUES:
-            return await self.get_value(
-                channel_address=channel_address, parameter=parameter, cached=cached
-            )
-        if paramset := await self.get_paramset(
-            channel_address=channel_address, paramset_key=paramset_key, cached=cached
-        ):
-            return paramset.get(parameter)
-        return None
 
     async def set_value(
         self,
@@ -836,12 +831,19 @@ class ClientCCU(Client):
         return var
 
     async def get_value(
-        self, channel_address: str, parameter: str, cached: bool = True
+        self,
+        channel_address: str,
+        parameter: str,
+        paramset_key: str = PARAMSET_KEY_VALUES,
+        cached: bool = True,
     ) -> Any:
         """Return a cached value from CCU."""
         if not cached:
             return super().get_value(
-                channel_address=channel_address, parameter=parameter, cached=False
+                channel_address=channel_address,
+                parameter=parameter,
+                paramset_key=paramset_key,
+                cached=False,
             )
 
         value = None
@@ -858,15 +860,20 @@ class ClientCCU(Client):
                 ATTR_ADDRESS: channel_address,
                 ATTR_VALUE_KEY: parameter,
             }
+            method = (
+                "Interface.getValue"
+                if paramset_key == PARAMSET_KEY_VALUES
+                else "Interface.getMasterValue"
+            )
             response = await self._json_rpc_session.post(
-                "Interface.getValue",
-                params,
+                method=method,
+                extra_params=params,
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 # This does not yet support strings
                 value = response[ATTR_RESULT]
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_system_variable: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("get_value: %s [%s]", hhe.name, hhe.args)
 
         return value
 

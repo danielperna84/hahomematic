@@ -730,25 +730,11 @@ class ValueCache:
         # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
         self._value_cache: dict[str, dict[str, dict[str, CacheEntry]]] = {}
 
-    async def get_value(
-        self,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-    ) -> Any | None:
-        """Get Value from value cache."""
-
-        return await self._get_or_load_value(
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-        )
-
     async def init_entities_channel0(self) -> None:
         """Load data by get_value"""
         try:
             for entity in self._get_entities_channel0():
-                value = await self._get_or_load_value(
+                value = await self.get_value(
                     channel_address=entity.channel_address,
                     paramset_key=entity.paramset_key,
                     parameter=entity.parameter,
@@ -774,6 +760,60 @@ class ValueCache:
                 entities.append(entity)
         return set(entities)
 
+    async def get_value(
+        self,
+        channel_address: str,
+        paramset_key: str,
+        parameter: str,
+        age_seconds: int = 120,
+    ) -> Any | None:
+        """Load data"""
+        async with self._sema_get_or_load_value:
+
+            if (
+                cached_value := self._get_value_from_cache(
+                    channel_address=channel_address,
+                    paramset_key=paramset_key,
+                    parameter=parameter,
+                    age_seconds=age_seconds,
+                )
+            ) != NO_CACHE_ENTRY:
+                return cached_value
+
+            if (
+                paramset_key == PARAMSET_KEY_VALUES
+                and not self._client.central.device_data.is_empty
+            ):
+                return None
+
+            if paramset_key not in self._value_cache:
+                self._value_cache[paramset_key] = {}
+            if channel_address not in self._value_cache[paramset_key]:
+                self._value_cache[paramset_key][channel_address] = {}
+
+            try:
+                value = await self._client.get_value(
+                    channel_address=channel_address,
+                    parameter=parameter,
+                    paramset_key=paramset_key,
+                    cached=True,
+                )
+                self._value_cache[paramset_key][channel_address][
+                    parameter
+                ] = CacheEntry(value=value, last_update=datetime.now())
+                return value
+
+            except BaseHomematicException as bhe:
+                _LOGGER.debug(
+                    "_get_or_load_value: Failed to get cached paramset for %s, %s, %s: %s",
+                    self._device.device_type,
+                    channel_address,
+                    parameter,
+                    bhe,
+                )
+
+        return None
+
     def _get_value_from_cache(
         self,
         channel_address: str,
@@ -791,7 +831,10 @@ class ValueCache:
         ) is not None:
             return global_value
 
-        if not self._client.central.device_data.is_empty:
+        if (
+            paramset_key == PARAMSET_KEY_VALUES
+            and not self._client.central.device_data.is_empty
+        ):
             return None
 
         if (
@@ -805,63 +848,6 @@ class ValueCache:
                 if cache_value := cache_entry.value:
                     return cache_value
         return NO_CACHE_ENTRY
-
-    async def _get_or_load_value(
-        self,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        age_seconds: int = 120,
-    ) -> Any | None:
-        """Load data"""
-
-        async with self._sema_get_or_load_value:
-            if (
-                cached_value := self._get_value_from_cache(
-                    channel_address=channel_address,
-                    paramset_key=paramset_key,
-                    parameter=parameter,
-                    age_seconds=age_seconds,
-                )
-            ) != NO_CACHE_ENTRY:
-                return cached_value
-
-            if not self._client.central.device_data.is_empty:
-                return None
-
-            if paramset_key not in self._value_cache:
-                self._value_cache[paramset_key] = {}
-
-            try:
-                # try a cached paramset at first, to get as much data without device access
-                if channel_address not in self._value_cache[paramset_key]:
-                    paramset = (
-                        await self._client.get_paramset(
-                            channel_address=channel_address,
-                            paramset_key=paramset_key,
-                            cached=True,
-                        )
-                        or {}
-                    )
-                    last_update = datetime.now()
-                    self._value_cache[paramset_key][channel_address] = {}
-                    for param, value in paramset.items():
-                        self._value_cache[paramset_key][channel_address][
-                            param
-                        ] = CacheEntry(value=value, last_update=last_update)
-                    if parameter in paramset:
-                        return paramset[parameter]
-
-            except BaseHomematicException as bhe:
-                _LOGGER.debug(
-                    "_get_or_load_value: Failed to get cached paramset for %s, %s, %s: %s",
-                    self._device.device_type,
-                    channel_address,
-                    parameter,
-                    bhe,
-                )
-
-        return None
 
 
 @dataclass
