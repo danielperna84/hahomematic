@@ -134,6 +134,9 @@ ATTR_HM_VALUE = "VALUE"  # Float or integer, depending on TYPE
 # Members for ENUM
 ATTR_HM_VALUE_LIST = "VALUE_LIST"
 
+REGA_SCRIPT_PATH = "rega_scripts"
+REGA_SCRIPT_DATA_LOAD = "datapoints.fn"
+
 OPERATION_NONE = 0
 OPERATION_READ = 1
 OPERATION_WRITE = 2

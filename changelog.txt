@@ -1,4 +1,7 @@
-Version 0.37.1 (2022-03-15)
+Version 0.37.2 (2022-03-17)
+- Use homematic script to fetch initial data for CCU/HM
+
+Version 0.37.1 (2022-03-16)
 - Add semaphore(1) to improve cache usage (less api calls)
 
 Version 0.37.0 (2022-03-15)

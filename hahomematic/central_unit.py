@@ -82,6 +82,7 @@ class CentralUnit:
         self.paramset_descriptions: ParamsetDescriptionCache = ParamsetDescriptionCache(
             central=self
         )
+        self.device_data: DeviceDataCache = DeviceDataCache(central=self)
         self.device_details: DeviceDetailsCache = DeviceDetailsCache(central=self)
         self.device_descriptions: DeviceDescriptionCache = DeviceDescriptionCache(
             central=self
@@ -400,6 +401,7 @@ class CentralUnit:
             await self.device_descriptions.load()
             await self.paramset_descriptions.load()
             await self.device_details.load()
+            await self.device_data.load()
         except json.decoder.JSONDecodeError:
             _LOGGER.warning(
                 "load_caches: Failed to load caches for %s.", self.instance_name
@@ -580,6 +582,7 @@ class CentralUnit:
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
             await self.device_details.load()
+            await self.device_data.load()
             await self._create_devices()
 
     def create_task(self, target: Awaitable) -> None:
@@ -982,6 +985,59 @@ class DeviceDetailsCache:
         for device_address, rooms in device_rooms.items():
             if rooms and len(set(rooms)) == 1:
                 self._rooms[device_address] = list(set(rooms))[0]
+
+
+class DeviceDataCache:
+    """Cache for device/channel initial data."""
+
+    def __init__(self, central: CentralUnit):
+        # {address, name}
+        self._device_data: dict[str, str] = {}
+        # { interface, {channel_address, {parameter, CacheEntry}}}
+        self._central_values_cache: dict[str, dict[str, dict[str, Any]]] = {}
+
+        self._central = central
+
+    @property
+    def is_empty(self) -> bool:
+        """Return if cache is empty."""
+        return len(self._central_values_cache) == 0
+
+    async def load(self) -> None:
+        """Fetch device data from backend."""
+        _LOGGER.debug("load: device data for %s", self._central.instance_name)
+        if client := self._central.get_client():
+            await client.fetch_all_device_data()
+
+    def add_device_data(self, device_data: dict[str, Any]) -> None:
+        """Add device data to cache."""
+        for device_adr, value in device_data.items():
+            device_adr = device_adr.replace("%3A", ":")
+            device_adrs = device_adr.split(".")
+            interface = device_adrs[0]
+            if interface not in self._central_values_cache:
+                self._central_values_cache[interface] = {}
+            channel_address = device_adrs[1]
+            if channel_address not in self._central_values_cache[interface]:
+                self._central_values_cache[interface][channel_address] = {}
+            parameter = device_adrs[2]
+            if parameter not in self._central_values_cache[interface][channel_address]:
+                self._central_values_cache[interface][channel_address][parameter] = {}
+            self._central_values_cache[interface][channel_address][parameter] = value
+
+    def get_device_data(
+        self, interface: str, channel_address: str, parameter: str
+    ) -> Any | None:
+        """Get device data from cache."""
+        return (
+            self._central_values_cache.get(interface, {})
+            .get(channel_address, {})
+            .get(parameter)
+        )
+
+    async def clear(self) -> None:
+        """Clear the cache."""
+        self._device_data.clear()
 
 
 class BasePersitentCache(ABC):
