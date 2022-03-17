@@ -1361,6 +1361,23 @@ class ParamsetDescriptionCache(BasePersitentCache):
 
         return sorted(parameters)
 
+    def get_device_channels_by_paramset(
+        self, interface_id: str, device_address: str
+    ) -> dict[str, list[str]]:
+        """Get device channels by paramset_key."""
+        device_channels_by_paramset_key: dict[str, list[str]] = {}
+        interface_psds = self._paramset_descriptions_cache[interface_id]
+        for channel_address, psds in interface_psds.items():
+            if channel_address.startswith(device_address):
+                for paramset_key in psds:
+                    if paramset_key not in device_channels_by_paramset_key:
+                        device_channels_by_paramset_key[paramset_key] = []
+                    device_channels_by_paramset_key[paramset_key].append(
+                        channel_address
+                    )
+
+        return device_channels_by_paramset_key
+
     def _init_address_parameter_list(self) -> None:
         """
         Initialize a device_address/parameter list to identify,
