@@ -1,4 +1,7 @@
 Version 0.37.3 (2022-03-17)
+- Fix reload paramset
+
+Version 0.37.3 (2022-03-17)
 - Cleanup caching code
 
 Version 0.37.2 (2022-03-17)

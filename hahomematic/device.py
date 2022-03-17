@@ -327,10 +327,20 @@ class HmDevice:
 
     async def reload_paramset_descriptions(self) -> None:
         """Reload paramset for device."""
+        for (
+            paramset_key,
+            channel_addresses,
+        ) in self._central.paramset_descriptions.get_device_channels_by_paramset(
+            interface_id=self.interface_id, device_address=self.device_address
+        ).items():
+            for channel_address in channel_addresses:
+                await self._client.fetch_paramset_description(
+                    channel_address=channel_address,
+                    paramset_key=paramset_key,
+                    save_to_file=False,
+                )
+        await self.central.paramset_descriptions.save()
         for entity in self.entities.values():
-            await self._client.fetch_paramset_description(
-                channel_address=entity.channel_address, paramset_key=PARAMSET_KEY_VALUES
-            )
             entity.update_parameter_data()
         self.update_device()
 
