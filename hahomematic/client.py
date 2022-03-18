@@ -612,7 +612,7 @@ class Client(ABC):
         """
         Update paramsets descriptionsfor provided device_address.
         """
-        if not self._central.device_descriptions.get_interface(
+        if not self._central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
         ):
             _LOGGER.warning(
@@ -1043,7 +1043,7 @@ class ClientHomegear(Client):
         Get all names from metadata (Homegear).
         """
         _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in self._central.device_descriptions.get_interface(
+        for address in self._central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
         ):
             try:

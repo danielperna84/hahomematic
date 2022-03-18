@@ -566,7 +566,7 @@ class CentralUnit:
             # We need this list to avoid adding duplicates.
             known_addresses = [
                 dev_desc[ATTR_HM_ADDRESS]
-                for dev_desc in self.device_descriptions.get_device_descriptions(
+                for dev_desc in self.device_descriptions.get_raw_device_descriptions(
                     interface_id
                 )
             ]
@@ -1113,11 +1113,11 @@ class DeviceDescriptionCache(BasePersitentCache):
 
     def __init__(self, central: CentralUnit):
         # {interface_id, [device_descriptions]}
-        self._device_description_cache: dict[str, list[dict[str, Any]]] = {}
+        self._raw_device_descriptions: dict[str, list[dict[str, Any]]] = {}
         super().__init__(
             central=central,
             filename=FILE_DEVICES,
-            cache_dict=self._device_description_cache,
+            cache_dict=self._raw_device_descriptions,
         )
 
         # {interface_id, {device_address, [channel_address]}}
@@ -1129,9 +1129,9 @@ class DeviceDescriptionCache(BasePersitentCache):
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
         """Add device_descriptions to cache."""
-        if interface_id not in self._device_description_cache:
-            self._device_description_cache[interface_id] = []
-        self._device_description_cache[interface_id] = device_descriptions
+        if interface_id not in self._raw_device_descriptions:
+            self._raw_device_descriptions[interface_id] = []
+        self._raw_device_descriptions[interface_id] = device_descriptions
 
         self._handle_device_descriptions(
             interface_id=interface_id, device_descriptions=device_descriptions
@@ -1141,19 +1141,19 @@ class DeviceDescriptionCache(BasePersitentCache):
         self, interface_id: str, device_description: dict[str, Any]
     ) -> None:
         """Add device_description to cache."""
-        if interface_id not in self._device_description_cache:
-            self._device_description_cache[interface_id] = []
+        if interface_id not in self._raw_device_descriptions:
+            self._raw_device_descriptions[interface_id] = []
 
-        if device_description not in self._device_description_cache[interface_id]:
-            self._device_description_cache[interface_id].append(device_description)
+        if device_description not in self._raw_device_descriptions[interface_id]:
+            self._raw_device_descriptions[interface_id].append(device_description)
 
         self._handle_device_description(
             interface_id=interface_id, device_description=device_description
         )
 
-    def get_device_descriptions(self, interface_id: str) -> list[dict[str, Any]]:
+    def get_raw_device_descriptions(self, interface_id: str) -> list[dict[str, Any]]:
         """Find raw device in cache."""
-        return self._device_description_cache.get(interface_id, [])
+        return self._raw_device_descriptions.get(interface_id, [])
 
     async def cleanup(self, interface_id: str, deleted_addresses: list[str]) -> None:
         """Remove device from cache."""
@@ -1161,7 +1161,7 @@ class DeviceDescriptionCache(BasePersitentCache):
             interface_id=interface_id,
             device_descriptions=[
                 device
-                for device in self.get_device_descriptions(interface_id)
+                for device in self.get_raw_device_descriptions(interface_id)
                 if device[ATTR_HM_ADDRESS] not in deleted_addresses
             ],
         )
@@ -1186,7 +1186,7 @@ class DeviceDescriptionCache(BasePersitentCache):
         """Return the device channels by interface and device_address"""
         return self._addresses.get(interface_id, {}).get(device_address, [])
 
-    def get_interface(self, interface_id: str) -> dict[str, dict[str, Any]]:
+    def get_device_descriptions(self, interface_id: str) -> dict[str, dict[str, Any]]:
         """Return the devices by interface"""
         return self._dev_descriptions.get(interface_id, {})
 
@@ -1252,10 +1252,10 @@ class DeviceDescriptionCache(BasePersitentCache):
 
     async def load(self) -> int:
         """
-        Load device data from disk into devices_raw.
+        Load device data from disk into _device_description_cache.
         """
         result = await super().load()
-        for interface_id, device_descriptions in self._device_description_cache.items():
+        for interface_id, device_descriptions in self._raw_device_descriptions.items():
             self._handle_device_descriptions(interface_id, device_descriptions)
         return result
 
