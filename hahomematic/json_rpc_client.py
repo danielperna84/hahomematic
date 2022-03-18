@@ -243,7 +243,7 @@ class JsonRpcAioHttpClient:
     async def _logout(self, session_id: str | None) -> None:
         """Logout of CCU."""
         if not session_id:
-            _LOGGER.warning("logout: Not logged in. Not logging out.")
+            _LOGGER.debug("logout: Not logged in. Not logging out.")
             return
         try:
             params = {"_session_id_": session_id}

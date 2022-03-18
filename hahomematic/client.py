@@ -150,8 +150,6 @@ class Client(ABC):
         """
         De-init to stop CCU from sending events for this remote.
         """
-        if self._json_rpc_session.is_activated:
-            await self._json_rpc_session.logout()
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)",
