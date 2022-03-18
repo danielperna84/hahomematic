@@ -227,6 +227,8 @@ class CentralUnit:
         """Stop processing of the central unit."""
         self._stop_connection_checker()
         await self._stop_clients()
+        if self._json_rpc_session.is_activated:
+            await self._json_rpc_session.logout()
 
         # un-register this instance from XmlRPC-Server
         self._xml_rpc_server.un_register_central(central=self)

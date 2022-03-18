@@ -1,7 +1,10 @@
+Version 0.37.6 (2022-03-19)
+- Add JsonRPC.Session.logout before central stop to avoid warn logs at CCU.
+
 Version 0.37.5 (2022-03-18)
 - Add api for available interfaces
 - Send event if interface is not available
-- Dont't block available interfaces
+- Don't block available interfaces
 
 Version 0.37.4 (2022-03-17)
 - Fix reload paramset
