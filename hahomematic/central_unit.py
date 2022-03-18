@@ -262,11 +262,12 @@ class CentralUnit:
             )
             return False
 
-        try:
-            local_ip = await self._identify_callback_ip(
-                list(self._interface_configs)[0].port
-            )
-            for interface_config in self._interface_configs:
+        local_ip = await self._identify_callback_ip(
+            list(self._interface_configs)[0].port
+        )
+        for interface_config in self._interface_configs:
+            min_one_client: bool = False
+            try:
                 if client := await hm_client.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
@@ -280,13 +281,13 @@ class CentralUnit:
                     if client.init_url not in self._clients_by_init_url:
                         self._clients_by_init_url[client.init_url] = []
                     self._clients_by_init_url[client.init_url].append(client)
-            return True
-        except BaseHomematicException as ex:
-            _LOGGER.warning(
-                "create_clients: Failed to create clients for central [%s].",
-                ex.args,
-            )
-        return False
+                    min_one_client = True
+            except BaseHomematicException as ex:
+                _LOGGER.warning(
+                    "create_clients: Failed to create client for central [%s].",
+                    ex.args,
+                )
+        return min_one_client
 
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
