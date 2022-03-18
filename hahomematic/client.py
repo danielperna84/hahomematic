@@ -25,12 +25,10 @@ from hahomematic.const import (
     ATTR_HM_TYPE,
     ATTR_ID,
     ATTR_INTERFACE,
-    ATTR_INTERFACE_ID,
     ATTR_NAME,
     ATTR_PARAMSET_KEY,
     ATTR_RESULT,
     ATTR_SUBTYPE,
-    ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_KEY,
     BACKEND_CCU,
@@ -38,6 +36,7 @@ from hahomematic.const import (
     BACKEND_PYDEVCCU,
     DEFAULT_ENCODING,
     HM_VIRTUAL_REMOTES,
+    IF_BIDCOS_RF_NAME,
     IF_NAMES,
     INIT_DATETIME,
     PARAMSET_KEY_MASTER,
@@ -49,7 +48,6 @@ from hahomematic.const import (
     PROXY_INIT_SUCCESS,
     REGA_SCRIPT_DATA_LOAD,
     REGA_SCRIPT_PATH,
-    HmEventType,
     HmInterfaceEventType,
 )
 from hahomematic.device import HmDevice
@@ -82,10 +80,9 @@ class Client(ABC):
         self._central: hm_central.CentralUnit = self._client_config.central
         self._version: str | None = self._client_config.version
         self._available: bool = True
-        self.name: str = self._client_config.name
-        self._hm_interface: str = self._client_config.hm_interface
+        self._interface: str = self._client_config.interface
         # This is the actual interface_id used for init
-        self.interface_id: str = f"{self._central.instance_name}-{self.name}"
+        self.interface_id: str = f"{self._central.instance_name}-{self._interface}"
         self._has_credentials = self._client_config.has_credentials
         self._init_url: str = self._client_config.init_url
         # for all device related interaction
@@ -109,6 +106,11 @@ class Client(ABC):
     def init_url(self) -> str:
         """Return the init_url of the client."""
         return self._init_url
+
+    @property
+    def interface(self) -> str:
+        """Return the interface of the client."""
+        return self._interface
 
     @property
     def model(self) -> str:
@@ -153,7 +155,7 @@ class Client(ABC):
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)",
-                self.name,
+                self._interface,
             )
             return PROXY_DE_INIT_SKIPPED
         try:
@@ -164,7 +166,7 @@ class Client(ABC):
                 "proxy_de_init: %s [%s] Failed to de-initialize proxy for %s",
                 hhe.name,
                 hhe.args,
-                self.name,
+                self._interface,
             )
             return PROXY_DE_INIT_FAILED
 
@@ -189,8 +191,10 @@ class Client(ABC):
                 "available" if available else "unavailable",
                 self.interface_id,
             )
-            self._fire_interface_event(
-                interface_event_type=HmInterfaceEventType.PROXY, available=available
+            self._central.fire_interface_event(
+                interface=self.interface,
+                interface_event_type=HmInterfaceEventType.PROXY,
+                available=available,
             )
 
     async def reconnect(self) -> bool:
@@ -247,7 +251,8 @@ class Client(ABC):
             seconds_since_last_event = (datetime.now() - last_events_time).seconds
             if seconds_since_last_event < CONNECTION_CHECKER_INTERVAL * 10:
                 if not self._is_callback_alive:
-                    self._fire_interface_event(
+                    self.central.fire_interface_event(
+                        interface=self.interface,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
                         available=True,
                     )
@@ -259,27 +264,13 @@ class Client(ABC):
                 seconds_since_last_event,
             )
         if self._is_callback_alive:
-            self._fire_interface_event(
-                interface_event_type=HmInterfaceEventType.CALLBACK, available=False
+            self._central.fire_interface_event(
+                interface=self.interface,
+                interface_event_type=HmInterfaceEventType.CALLBACK,
+                available=False,
             )
             self._is_callback_alive = False
         return False
-
-    def _fire_interface_event(
-        self, interface_event_type: HmInterfaceEventType, available: bool
-    ) -> None:
-        """Fire an event about the interface status."""
-
-        event_data = {
-            ATTR_INTERFACE_ID: self.interface_id,
-            ATTR_TYPE: interface_event_type,
-            ATTR_VALUE: available,
-        }
-        if callable(self._central.callback_ha_event):
-            self._central.callback_ha_event(
-                HmEventType.INTERFACE,
-                event_data,
-            )
 
     @abstractmethod
     async def _check_connection(self) -> bool:
@@ -304,6 +295,11 @@ class Client(ABC):
     @abstractmethod
     async def get_all_system_variables(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
+        ...
+
+    @abstractmethod
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
         ...
 
     @abstractmethod
@@ -602,7 +598,7 @@ class Client(ABC):
         """
         Update paramsets descriptionsfor provided device_address.
         """
-        if not self._central.device_descriptions.get_interface(
+        if not self._central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
         ):
             _LOGGER.warning(
@@ -720,7 +716,7 @@ class ClientCCU(Client):
         )
         try:
             params = {
-                ATTR_INTERFACE: self._hm_interface,
+                ATTR_INTERFACE: self._interface,
                 ATTR_ADDRESS: address,
                 ATTR_PARAMSET_KEY: paramset_key,
             }
@@ -857,7 +853,7 @@ class ClientCCU(Client):
         _LOGGER.debug("get_value: Getting value via JSON-RPC")
         try:
             params = {
-                ATTR_INTERFACE: self._hm_interface,
+                ATTR_INTERFACE: self._interface,
                 ATTR_ADDRESS: channel_address,
                 ATTR_VALUE_KEY: parameter,
             }
@@ -897,7 +893,7 @@ class ClientCCU(Client):
         _LOGGER.debug("get_cached_paramset: Getting value via JSON-RPC")
         try:
             params = {
-                ATTR_INTERFACE: self._hm_interface,
+                ATTR_INTERFACE: self._interface,
                 ATTR_ADDRESS: channel_address,
                 ATTR_PARAMSET_KEY: paramset_key,
             }
@@ -937,6 +933,30 @@ class ClientCCU(Client):
             _LOGGER.warning("get_all_system_variables: %s [%s]", hhe.name, hhe.args)
 
         return variables
+
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
+        interfaces: list[str] = []
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "get_available_interfaces: You have to set username ans password to get available interfaces via JSON-RPC"
+            )
+            return interfaces
+
+        _LOGGER.debug(
+            "get_available_interfaces: Getting all available interfaces via JSON-RPC"
+        )
+        try:
+            response = await self._json_rpc_session.post(
+                "Interface.listInterfaces",
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                for interface in response[ATTR_RESULT]:
+                    interfaces.append(interface[ATTR_NAME])
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_available_interfaces: %s [%s]", hhe.name, hhe.args)
+
+        return interfaces
 
     async def get_all_rooms(self) -> dict[str, str]:
         """Get all rooms from CCU."""
@@ -1009,7 +1029,7 @@ class ClientHomegear(Client):
         Get all names from metadata (Homegear).
         """
         _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in self._central.device_descriptions.get_interface(
+        for address in self._central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
         ):
             try:
@@ -1069,6 +1089,10 @@ class ClientHomegear(Client):
             _LOGGER.warning("get_all_system_variables: %s [%s]", hhe.name, hhe.args)
         return None
 
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
+        return [IF_BIDCOS_RF_NAME]
+
     async def get_all_rooms(self) -> dict[str, str]:
         """Get all rooms from Homegear."""
         return {}
@@ -1089,8 +1113,7 @@ class _ClientConfig:
     ):
         self.central = central
         self.interface_config = interface_config
-        self.name: str = interface_config.name
-        self.hm_interface: str = interface_config.name
+        self.interface: str = interface_config.interface
         self._central_config = self.central.central_config
         self._callback_host: str = (
             self._central_config.callback_host
@@ -1154,18 +1177,18 @@ class InterfaceConfig:
 
     def __init__(
         self,
-        name: str,
+        interface: str,
         port: int,
         path: str | None = None,
     ):
-        self.name = name
+        self.interface = interface
         self.port = port
         self.path = path
         self.validate()
 
     def validate(self) -> None:
         """Validate the client_config."""
-        if self.name not in IF_NAMES:
+        if self.interface not in IF_NAMES:
             _LOGGER.warning(
                 "InterfaceConfig: Interface names must be within [%s] ",
                 ", ".join(IF_NAMES),

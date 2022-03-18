@@ -21,6 +21,9 @@ from hahomematic import config
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
+    ATTR_INTERFACE,
+    ATTR_TYPE,
+    ATTR_VALUE,
     BACKEND_PYDEVCCU,
     DATA_LOAD_FAIL,
     DATA_LOAD_SUCCESS,
@@ -36,8 +39,11 @@ from hahomematic.const import (
     HH_EVENT_DEVICES_CREATED,
     HH_EVENT_HUB_CREATED,
     HH_EVENT_NEW_DEVICES,
+    IF_BIDCOS_RF_NAME,
     MANUFACTURER,
     PROXY_INIT_SUCCESS,
+    HmEventType,
+    HmInterfaceEventType,
 )
 import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
@@ -261,11 +267,12 @@ class CentralUnit:
             )
             return False
 
-        try:
-            local_ip = await self._identify_callback_ip(
-                list(self._interface_configs)[0].port
-            )
-            for interface_config in self._interface_configs:
+        local_ip = await self._identify_callback_ip(
+            list(self._interface_configs)[0].port
+        )
+        for interface_config in self._interface_configs:
+            min_one_client: bool = False
+            try:
                 if client := await hm_client.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
@@ -279,13 +286,38 @@ class CentralUnit:
                     if client.init_url not in self._clients_by_init_url:
                         self._clients_by_init_url[client.init_url] = []
                     self._clients_by_init_url[client.init_url].append(client)
-            return True
-        except BaseHomematicException as ex:
-            _LOGGER.warning(
-                "create_clients: Failed to create clients for central [%s].",
-                ex.args,
+                    min_one_client = True
+            except BaseHomematicException as ex:
+                self.fire_interface_event(
+                    interface=interface_config.interface,
+                    interface_event_type=HmInterfaceEventType.PROXY,
+                    available=False,
+                )
+                _LOGGER.warning(
+                    "create_clients: Failed to create client for central [%s].",
+                    ex.args,
+                )
+        return min_one_client
+
+    def fire_interface_event(
+        self,
+        interface: str,
+        interface_event_type: HmInterfaceEventType,
+        available: bool,
+    ) -> None:
+        """Fire an event about the interface status."""
+
+        event_data = {
+            ATTR_INTERFACE: interface,
+            ATTR_TYPE: interface_event_type,
+            ATTR_VALUE: available,
+        }
+        # pylint: disable=not-callable
+        if callable(self.callback_ha_event):
+            self.callback_ha_event(
+                HmEventType.INTERFACE,
+                event_data,
             )
-        return False
 
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
@@ -565,7 +597,7 @@ class CentralUnit:
             # We need this list to avoid adding duplicates.
             known_addresses = [
                 dev_desc[ATTR_HM_ADDRESS]
-                for dev_desc in self.device_descriptions.get_device_descriptions(
+                for dev_desc in self.device_descriptions.get_raw_device_descriptions(
                     interface_id
                 )
             ]
@@ -938,9 +970,9 @@ class DeviceDetailsCache:
         if address not in self._interface_cache:
             self._interface_cache[address] = interface
 
-    def get_interface(self, address: str) -> str | None:
+    def get_interface(self, address: str) -> str:
         """Get interface from cache."""
-        return self._interface_cache.get(address)
+        return self._interface_cache.get(address) or IF_BIDCOS_RF_NAME
 
     def add_device_channel_id(self, address: str, channel_id: str) -> None:
         """Add channel id for a channel"""
@@ -1112,11 +1144,11 @@ class DeviceDescriptionCache(BasePersitentCache):
 
     def __init__(self, central: CentralUnit):
         # {interface_id, [device_descriptions]}
-        self._device_description_cache: dict[str, list[dict[str, Any]]] = {}
+        self._raw_device_descriptions: dict[str, list[dict[str, Any]]] = {}
         super().__init__(
             central=central,
             filename=FILE_DEVICES,
-            cache_dict=self._device_description_cache,
+            cache_dict=self._raw_device_descriptions,
         )
 
         # {interface_id, {device_address, [channel_address]}}
@@ -1128,9 +1160,9 @@ class DeviceDescriptionCache(BasePersitentCache):
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
         """Add device_descriptions to cache."""
-        if interface_id not in self._device_description_cache:
-            self._device_description_cache[interface_id] = []
-        self._device_description_cache[interface_id] = device_descriptions
+        if interface_id not in self._raw_device_descriptions:
+            self._raw_device_descriptions[interface_id] = []
+        self._raw_device_descriptions[interface_id] = device_descriptions
 
         self._handle_device_descriptions(
             interface_id=interface_id, device_descriptions=device_descriptions
@@ -1140,19 +1172,19 @@ class DeviceDescriptionCache(BasePersitentCache):
         self, interface_id: str, device_description: dict[str, Any]
     ) -> None:
         """Add device_description to cache."""
-        if interface_id not in self._device_description_cache:
-            self._device_description_cache[interface_id] = []
+        if interface_id not in self._raw_device_descriptions:
+            self._raw_device_descriptions[interface_id] = []
 
-        if device_description not in self._device_description_cache[interface_id]:
-            self._device_description_cache[interface_id].append(device_description)
+        if device_description not in self._raw_device_descriptions[interface_id]:
+            self._raw_device_descriptions[interface_id].append(device_description)
 
         self._handle_device_description(
             interface_id=interface_id, device_description=device_description
         )
 
-    def get_device_descriptions(self, interface_id: str) -> list[dict[str, Any]]:
+    def get_raw_device_descriptions(self, interface_id: str) -> list[dict[str, Any]]:
         """Find raw device in cache."""
-        return self._device_description_cache.get(interface_id, [])
+        return self._raw_device_descriptions.get(interface_id, [])
 
     async def cleanup(self, interface_id: str, deleted_addresses: list[str]) -> None:
         """Remove device from cache."""
@@ -1160,7 +1192,7 @@ class DeviceDescriptionCache(BasePersitentCache):
             interface_id=interface_id,
             device_descriptions=[
                 device
-                for device in self.get_device_descriptions(interface_id)
+                for device in self.get_raw_device_descriptions(interface_id)
                 if device[ATTR_HM_ADDRESS] not in deleted_addresses
             ],
         )
@@ -1185,7 +1217,7 @@ class DeviceDescriptionCache(BasePersitentCache):
         """Return the device channels by interface and device_address"""
         return self._addresses.get(interface_id, {}).get(device_address, [])
 
-    def get_interface(self, interface_id: str) -> dict[str, dict[str, Any]]:
+    def get_device_descriptions(self, interface_id: str) -> dict[str, dict[str, Any]]:
         """Return the devices by interface"""
         return self._dev_descriptions.get(interface_id, {})
 
@@ -1251,10 +1283,10 @@ class DeviceDescriptionCache(BasePersitentCache):
 
     async def load(self) -> int:
         """
-        Load device data from disk into devices_raw.
+        Load device data from disk into _device_description_cache.
         """
         result = await super().load()
-        for interface_id, device_descriptions in self._device_description_cache.items():
+        for interface_id, device_descriptions in self._raw_device_descriptions.items():
             self._handle_device_descriptions(interface_id, device_descriptions)
         return result
 

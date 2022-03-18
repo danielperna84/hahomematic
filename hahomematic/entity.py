@@ -327,7 +327,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 and isinstance(value, str)
             ):
                 return convert_value(  # type: ignore[no-any-return]
-                    value=self._value_list.index(value), target_type=self._type  # type: ignore[arg-type]
+                    value=self._value_list.index(value), target_type=self._type
                 )
             return convert_value(value=value, target_type=self._type)  # type: ignore[no-any-return]
         except ValueError:

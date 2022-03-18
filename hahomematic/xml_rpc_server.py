@@ -107,7 +107,7 @@ class RPCFunctions:
             return []
         _LOGGER.debug("listDevices: interface_id = %s", interface_id)
 
-        return central.device_descriptions.get_device_descriptions(
+        return central.device_descriptions.get_raw_device_descriptions(
             interface_id=interface_id
         )
 
