@@ -67,7 +67,7 @@ async def central(
 
     interface_configs = {
         InterfaceConfig(
-            name="hm",
+            interface="hm",
             port=2001,
         )
     }

@@ -83,6 +83,7 @@ class HmDevice:
         """
         self._central = central
         self._interface_id = interface_id
+        self._interface = self._central.device_details.get_interface(device_address)
         self._client = self._central.clients[self._interface_id]
         self._device_address = device_address
         self._channels = self._central.device_descriptions.get_channels(
@@ -149,6 +150,11 @@ class HmDevice:
     def client(self) -> hm_client.Client:
         """Return the client."""
         return self._client
+
+    @property
+    def interface(self) -> str:
+        """Return the interface of the client."""
+        return self._interface
 
     @property
     def interface_id(self) -> str:
@@ -834,7 +840,7 @@ class ValueCache:
         """Load data"""
         if (
             global_value := self._client.central.device_data.get_device_data(
-                interface=self._client.name,
+                interface=self._client.interface,
                 channel_address=channel_address,
                 parameter=parameter,
             )

@@ -83,10 +83,9 @@ class Client(ABC):
         self._central: hm_central.CentralUnit = self._client_config.central
         self._version: str | None = self._client_config.version
         self._available: bool = True
-        self.name: str = self._client_config.name
-        self._hm_interface: str = self._client_config.hm_interface
+        self._interface: str = self._client_config.interface
         # This is the actual interface_id used for init
-        self.interface_id: str = f"{self._central.instance_name}-{self.name}"
+        self.interface_id: str = f"{self._central.instance_name}-{self._interface}"
         self._has_credentials = self._client_config.has_credentials
         self._init_url: str = self._client_config.init_url
         # for all device related interaction
@@ -110,6 +109,11 @@ class Client(ABC):
     def init_url(self) -> str:
         """Return the init_url of the client."""
         return self._init_url
+
+    @property
+    def interface(self) -> str:
+        """Return the interface of the client."""
+        return self._interface
 
     @property
     def model(self) -> str:
@@ -154,7 +158,7 @@ class Client(ABC):
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)",
-                self.name,
+                self._interface,
             )
             return PROXY_DE_INIT_SKIPPED
         try:
@@ -165,7 +169,7 @@ class Client(ABC):
                 "proxy_de_init: %s [%s] Failed to de-initialize proxy for %s",
                 hhe.name,
                 hhe.args,
-                self.name,
+                self._interface,
             )
             return PROXY_DE_INIT_FAILED
 
@@ -726,7 +730,7 @@ class ClientCCU(Client):
         )
         try:
             params = {
-                ATTR_INTERFACE: self._hm_interface,
+                ATTR_INTERFACE: self._interface,
                 ATTR_ADDRESS: address,
                 ATTR_PARAMSET_KEY: paramset_key,
             }
@@ -863,7 +867,7 @@ class ClientCCU(Client):
         _LOGGER.debug("get_value: Getting value via JSON-RPC")
         try:
             params = {
-                ATTR_INTERFACE: self._hm_interface,
+                ATTR_INTERFACE: self._interface,
                 ATTR_ADDRESS: channel_address,
                 ATTR_VALUE_KEY: parameter,
             }
@@ -903,7 +907,7 @@ class ClientCCU(Client):
         _LOGGER.debug("get_cached_paramset: Getting value via JSON-RPC")
         try:
             params = {
-                ATTR_INTERFACE: self._hm_interface,
+                ATTR_INTERFACE: self._interface,
                 ATTR_ADDRESS: channel_address,
                 ATTR_PARAMSET_KEY: paramset_key,
             }
@@ -1123,8 +1127,7 @@ class _ClientConfig:
     ):
         self.central = central
         self.interface_config = interface_config
-        self.name: str = interface_config.name
-        self.hm_interface: str = interface_config.name
+        self.interface: str = interface_config.interface
         self._central_config = self.central.central_config
         self._callback_host: str = (
             self._central_config.callback_host
@@ -1188,18 +1191,18 @@ class InterfaceConfig:
 
     def __init__(
         self,
-        name: str,
+        interface: str,
         port: int,
         path: str | None = None,
     ):
-        self.name = name
+        self.interface = interface
         self.port = port
         self.path = path
         self.validate()
 
     def validate(self) -> None:
         """Validate the client_config."""
-        if self.name not in IF_NAMES:
+        if self.interface not in IF_NAMES:
             _LOGGER.warning(
                 "InterfaceConfig: Interface names must be within [%s] ",
                 ", ".join(IF_NAMES),

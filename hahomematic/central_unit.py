@@ -36,6 +36,7 @@ from hahomematic.const import (
     HH_EVENT_DEVICES_CREATED,
     HH_EVENT_HUB_CREATED,
     HH_EVENT_NEW_DEVICES,
+    IF_BIDCOS_RF_NAME,
     MANUFACTURER,
     PROXY_INIT_SUCCESS,
 )
@@ -938,9 +939,9 @@ class DeviceDetailsCache:
         if address not in self._interface_cache:
             self._interface_cache[address] = interface
 
-    def get_interface(self, address: str) -> str | None:
+    def get_interface(self, address: str) -> str:
         """Get interface from cache."""
-        return self._interface_cache.get(address)
+        return self._interface_cache.get(address) or IF_BIDCOS_RF_NAME
 
     def add_device_channel_id(self, address: str, channel_id: str) -> None:
         """Add channel id for a channel"""
