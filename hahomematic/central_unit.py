@@ -21,6 +21,9 @@ from hahomematic import config
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
+    ATTR_INTERFACE,
+    ATTR_TYPE,
+    ATTR_VALUE,
     BACKEND_PYDEVCCU,
     DATA_LOAD_FAIL,
     DATA_LOAD_SUCCESS,
@@ -39,6 +42,8 @@ from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
     MANUFACTURER,
     PROXY_INIT_SUCCESS,
+    HmEventType,
+    HmInterfaceEventType,
 )
 import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
@@ -283,11 +288,36 @@ class CentralUnit:
                     self._clients_by_init_url[client.init_url].append(client)
                     min_one_client = True
             except BaseHomematicException as ex:
+                self.fire_interface_event(
+                    interface=interface_config.interface,
+                    interface_event_type=HmInterfaceEventType.PROXY,
+                    available=False,
+                )
                 _LOGGER.warning(
                     "create_clients: Failed to create client for central [%s].",
                     ex.args,
                 )
         return min_one_client
+
+    def fire_interface_event(
+        self,
+        interface: str,
+        interface_event_type: HmInterfaceEventType,
+        available: bool,
+    ) -> None:
+        """Fire an event about the interface status."""
+
+        event_data = {
+            ATTR_INTERFACE: interface,
+            ATTR_TYPE: interface_event_type,
+            ATTR_VALUE: available,
+        }
+        # pylint: disable=not-callable
+        if callable(self.callback_ha_event):
+            self.callback_ha_event(
+                HmEventType.INTERFACE,
+                event_data,
+            )
 
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""

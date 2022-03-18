@@ -25,12 +25,10 @@ from hahomematic.const import (
     ATTR_HM_TYPE,
     ATTR_ID,
     ATTR_INTERFACE,
-    ATTR_INTERFACE_ID,
     ATTR_NAME,
     ATTR_PARAMSET_KEY,
     ATTR_RESULT,
     ATTR_SUBTYPE,
-    ATTR_TYPE,
     ATTR_VALUE,
     ATTR_VALUE_KEY,
     BACKEND_CCU,
@@ -50,7 +48,6 @@ from hahomematic.const import (
     PROXY_INIT_SUCCESS,
     REGA_SCRIPT_DATA_LOAD,
     REGA_SCRIPT_PATH,
-    HmEventType,
     HmInterfaceEventType,
 )
 from hahomematic.device import HmDevice
@@ -194,8 +191,10 @@ class Client(ABC):
                 "available" if available else "unavailable",
                 self.interface_id,
             )
-            self._fire_interface_event(
-                interface_event_type=HmInterfaceEventType.PROXY, available=available
+            self._central.fire_interface_event(
+                interface=self.interface,
+                interface_event_type=HmInterfaceEventType.PROXY,
+                available=available,
             )
 
     async def reconnect(self) -> bool:
@@ -252,7 +251,8 @@ class Client(ABC):
             seconds_since_last_event = (datetime.now() - last_events_time).seconds
             if seconds_since_last_event < CONNECTION_CHECKER_INTERVAL * 10:
                 if not self._is_callback_alive:
-                    self._fire_interface_event(
+                    self.central.fire_interface_event(
+                        interface=self.interface,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
                         available=True,
                     )
@@ -264,27 +264,13 @@ class Client(ABC):
                 seconds_since_last_event,
             )
         if self._is_callback_alive:
-            self._fire_interface_event(
-                interface_event_type=HmInterfaceEventType.CALLBACK, available=False
+            self._central.fire_interface_event(
+                interface=self.interface,
+                interface_event_type=HmInterfaceEventType.CALLBACK,
+                available=False,
             )
             self._is_callback_alive = False
         return False
-
-    def _fire_interface_event(
-        self, interface_event_type: HmInterfaceEventType, available: bool
-    ) -> None:
-        """Fire an event about the interface status."""
-
-        event_data = {
-            ATTR_INTERFACE_ID: self.interface_id,
-            ATTR_TYPE: interface_event_type,
-            ATTR_VALUE: available,
-        }
-        if callable(self._central.callback_ha_event):
-            self._central.callback_ha_event(
-                HmEventType.INTERFACE,
-                event_data,
-            )
 
     @abstractmethod
     async def _check_connection(self) -> bool:
