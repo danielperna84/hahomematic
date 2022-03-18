@@ -190,6 +190,26 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
     )
 
 
+class HaHomematicXMLRPCServer(SimpleXMLRPCServer):
+    """Simple XML-RPC server.
+
+    Simple XML-RPC server that allows functions and a single instance
+    to be installed to handle requests. The default implementation
+    attempts to dispatch XML-RPC calls to the functions or instance
+    installed in the server. Override the _dispatch method inherited
+    from SimpleXMLRPCDispatcher to change this behavior.
+
+    This implementation adds an additional method (system_listMethods(self, interface_id: str).
+    """
+
+    # pylint: disable=arguments-differ
+    def system_listMethods(self, interface_id: str | None = None) -> list[str]:
+        """system.listMethods() => ['add', 'subtract', 'multiple']
+        Returns a list of the methods supported by the server.
+        Required for Homematic CCU usage."""
+        return SimpleXMLRPCServer.system_listMethods(self)
+
+
 class XmlRpcServer(threading.Thread):
     """
     XML-RPC server thread to handle messages from CCU / Homegear.
@@ -208,7 +228,7 @@ class XmlRpcServer(threading.Thread):
 
         _rpc_functions = RPCFunctions(self)
         _LOGGER.debug("__init__: Setting up server")
-        self._simple_xml_rpc_server = SimpleXMLRPCServer(
+        self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
             (self.local_ip, self.local_port),
             requestHandler=RequestHandler,
             logRequests=False,
