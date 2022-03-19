@@ -4,6 +4,9 @@ about: Create a report to help us improve.
 
 ---
 
+DONT'T DELETE THIS.
+Please answer all questions as good as possible.
+
 Make sure you have read the documentation at https://github.com/danielperna84/custom_homematic#custom_homematic.
 
 Make sure you are running the latest version of hahomematic or it's custom_component (and Home Assistant) before reporting an issue.
