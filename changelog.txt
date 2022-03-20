@@ -1,3 +1,6 @@
+Version 0.38.2 (2022-03-20)
+- Catch SysVar parsing exceptions
+
 Version 0.38.1 (2022-03-20)
 - Fix lock/unlock for HM-Sec-Key
 
