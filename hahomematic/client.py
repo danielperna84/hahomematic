@@ -7,8 +7,6 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 import json
 import logging
-import os
-from pathlib import Path
 from typing import Any
 
 from hahomematic import config
@@ -34,7 +32,6 @@ from hahomematic.const import (
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
-    DEFAULT_ENCODING,
     HM_VIRTUAL_REMOTES,
     IF_BIDCOS_RF_NAME,
     IF_NAMES,
@@ -46,8 +43,7 @@ from hahomematic.const import (
     PROXY_DE_INIT_SUCCESS,
     PROXY_INIT_FAILED,
     PROXY_INIT_SUCCESS,
-    REGA_SCRIPT_DATA_LOAD,
-    REGA_SCRIPT_PATH,
+    REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     HmInterfaceEventType,
 )
 from hahomematic.device import HmDevice
@@ -678,14 +674,8 @@ class ClientCCU(Client):
             "fetch_all_device_data: Fetching all device data via JSON-RPC RegaScript."
         )
         try:
-            source_path = Path(__file__).resolve()
-            script_file = os.path.join(
-                source_path.parent, REGA_SCRIPT_PATH, REGA_SCRIPT_DATA_LOAD
-            )
-            script = Path(script_file).read_text(encoding=DEFAULT_ENCODING)
-
-            response = await self._json_rpc_session.post(
-                "ReGa.runScript", {"script": script}
+            response = await self._json_rpc_session.post_script(
+                script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 _LOGGER.debug("fetch_all_device_data: Fetched all device data.")

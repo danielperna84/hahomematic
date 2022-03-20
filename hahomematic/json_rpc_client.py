@@ -6,6 +6,8 @@ from __future__ import annotations
 from datetime import datetime
 import json
 import logging
+import os
+from pathlib import Path
 import ssl
 from typing import Any
 
@@ -19,7 +21,9 @@ from hahomematic.const import (
     ATTR_RESULT,
     ATTR_SESSION_ID,
     ATTR_USERNAME,
+    DEFAULT_ENCODING,
     PATH_JSON_RPC,
+    REGA_SCRIPT_PATH,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import get_tls_context
@@ -73,15 +77,16 @@ class JsonRpcAioHttpClient:
         try:
             if self._updated_within_seconds():
                 return session_id
-
+            method = "Session.renew"
             response = await self._post(
                 session_id=session_id,
-                method="Session.renew",
+                method=method,
                 extra_params={ATTR_SESSION_ID: session_id},
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 if response[ATTR_RESULT] is True:
                     self._last_session_id_refresh = datetime.now()
+                    _LOGGER.debug("_renew_login: Method: %s [%s]", method, session_id)
                     return session_id
             return await self._login()
         except ClientError as cer:
@@ -114,14 +119,17 @@ class JsonRpcAioHttpClient:
                 ATTR_USERNAME: self._username,
                 ATTR_PASSWORD: self._password,
             }
+            method = "Session.login"
             response = await self._post(
                 session_id=False,
-                method="Session.login",
+                method=method,
                 extra_params=params,
                 use_default_params=False,
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 session_id = response[ATTR_RESULT]
+
+            _LOGGER.debug("_login: Method: %s [%s]", method, session_id)
 
             if not session_id:
                 _LOGGER.warning(
@@ -153,12 +161,45 @@ class JsonRpcAioHttpClient:
             _LOGGER.warning("post: Error while logging in via JSON-RPC.")
             return {"error": "Unable to open session.", "result": {}}
 
+        _LOGGER.debug("post: Method: %s, [%s]", method, extra_params)
         result = await self._post(
             session_id=session_id,
             method=method,
             extra_params=extra_params,
             use_default_params=use_default_params,
         )
+
+        if not keep_session:
+            await self._logout(session_id=session_id)
+        return result
+
+    async def post_script(
+        self,
+        script_name: str,
+        keep_session: bool = True,
+    ) -> dict[str, Any] | Any:
+        """Reusable JSON-RPC POST_SCRIPT function."""
+        if keep_session:
+            await self.login_or_renew()
+            session_id = self._session_id
+        else:
+            session_id = await self._login()
+
+        if not session_id:
+            _LOGGER.warning("post_script: Error while logging in via JSON-RPC.")
+            return {"error": "Unable to open session.", "result": {}}
+
+        source_path = Path(__file__).resolve()
+        script_file = os.path.join(source_path.parent, REGA_SCRIPT_PATH, script_name)
+        script = Path(script_file).read_text(encoding=DEFAULT_ENCODING)
+
+        method = "ReGa.runScript"
+        result = await self._post(
+            session_id=session_id,
+            method=method,
+            extra_params={"script": script},
+        )
+        _LOGGER.debug("post_script: Method: %s [%s]", method, script_name)
 
         if not keep_session:
             await self._logout(session_id=session_id)
@@ -183,7 +224,6 @@ class JsonRpcAioHttpClient:
 
         params = _get_params(session_id, extra_params, use_default_params)
 
-        _LOGGER.debug("_post: Method: %s, [%s]", method, extra_params)
         try:
             payload = json.dumps(
                 {"method": method, "params": params, "jsonrpc": "1.1", "id": 0}
@@ -243,15 +283,17 @@ class JsonRpcAioHttpClient:
     async def _logout(self, session_id: str | None) -> None:
         """Logout of CCU."""
         if not session_id:
-            _LOGGER.debug("logout: Not logged in. Not logging out.")
+            _LOGGER.debug("_logout: Not logged in. Not logging out.")
             return
         try:
+            method = "Session.logout"
             params = {"_session_id_": session_id}
             response = await self._post(
                 session_id=session_id,
-                method="Session.logout",
+                method=method,
                 extra_params=params,
             )
+            _LOGGER.debug("_logout: Method: %s [%s]", method, session_id)
             if response[ATTR_ERROR]:
                 _LOGGER.warning("logout: Logout error: %s", response[ATTR_RESULT])
         except ClientError as cer:

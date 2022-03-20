@@ -135,7 +135,7 @@ ATTR_HM_VALUE = "VALUE"  # Float or integer, depending on TYPE
 ATTR_HM_VALUE_LIST = "VALUE_LIST"
 
 REGA_SCRIPT_PATH = "rega_scripts"
-REGA_SCRIPT_DATA_LOAD = "datapoints.fn"
+REGA_SCRIPT_FETCH_ALL_DEVICE_DATA = "fetch_all_device_data.fn"
 
 OPERATION_NONE = 0
 OPERATION_READ = 1
