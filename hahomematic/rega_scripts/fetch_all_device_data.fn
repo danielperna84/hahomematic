@@ -1,9 +1,15 @@
+!# fetch_all_device_data
+!#  This script fetches all device data required to initialize the entities without affecting the duty cycle.
+!#
+!# Original script: https://github.com/ioBroker/ioBroker.hm-rega/blob/master/regascripts/datapoints.fn
+!#
 !# datapoints.fn 1.9
 !#
 !# Dieses Homematic-Script gibt eine Liste aller Datenpunkte (ausser WORKING/DIRECTION) als JSON String aus
 !#
 !# 3'2013-9'2014 hobbyquaker https://github.com/hobbyquaker
 !#
+
 
 string sDevId;
 string sChnId;
