@@ -29,6 +29,22 @@ class NoConnection(BaseHomematicException):
         super().__init__("NoConnection", *args)
 
 
+class NoClients(BaseHomematicException):
+    """hahomematic NoClients exception."""
+
+    def __init__(self, *args: Any) -> None:
+        """Init the NoClients."""
+        super().__init__("NoClients", *args)
+
+
+class AuthFailure(BaseHomematicException):
+    """hahomematic AuthFailure exception."""
+
+    def __init__(self, *args: Any) -> None:
+        """Init the AuthFailure."""
+        super().__init__("AuthFailure", *args)
+
+
 class HaHomematicException(BaseHomematicException):
     """hahomematic HaHomematicException exception."""
 

@@ -1,3 +1,6 @@
+Version 0.37.8 (2022-03-19)
+- Add central validation
+
 Version 0.37.7 (2022-03-18)
 - Add additional system_listMethods to avoid errors on CCU
 

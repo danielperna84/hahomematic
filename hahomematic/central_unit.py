@@ -52,6 +52,7 @@ from hahomematic.entity import BaseEntity, GenericEntity
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
+    NoClients,
     NoConnection,
 )
 from hahomematic.helpers import (
@@ -273,7 +274,6 @@ class CentralUnit:
             list(self._interface_configs)[0].port
         )
         for interface_config in self._interface_configs:
-            min_one_client: bool = False
             try:
                 if client := await hm_client.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
@@ -288,7 +288,6 @@ class CentralUnit:
                     if client.init_url not in self._clients_by_init_url:
                         self._clients_by_init_url[client.init_url] = []
                     self._clients_by_init_url[client.init_url].append(client)
-                    min_one_client = True
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface=interface_config.interface,
@@ -296,10 +295,10 @@ class CentralUnit:
                     available=False,
                 )
                 _LOGGER.warning(
-                    "create_clients: Failed to create client for central [%s].",
+                    "create_clients: Failed to create client for central [%s]. Check logs.",
                     ex.args,
                 )
-        return min_one_client
+        return len(self._clients) > 0
 
     def fire_interface_event(
         self,
@@ -408,6 +407,20 @@ class CentralUnit:
             "stop_connection_checker: Stopped connection_checker for %s",
             self.instance_name,
         )
+
+    async def validate_config(self) -> bool:
+        """Validate the central configuration."""
+        if len(self._interface_configs) == 0:
+            raise NoClients("validate_config: No cliets defined.")
+
+        local_ip = await self._identify_callback_ip(
+            list(self._interface_configs)[0].port
+        )
+        for interface_config in self._interface_configs:
+            await hm_client.create_client(
+                central=self, interface_config=interface_config, local_ip=local_ip
+            )
+        return True
 
     def get_client_by_interface_id(self, interface_id: str) -> hm_client.Client | None:
         """Return a client by interface_id."""
