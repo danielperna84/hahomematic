@@ -11,7 +11,7 @@ from typing import Any
 import xmlrpc.client
 
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
-from hahomematic.exceptions import NoConnection, ProxyException
+from hahomematic.exceptions import AuthFailure, NoConnection, ProxyException
 from hahomematic.helpers import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,6 +70,10 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             raise NoConnection(ose) from ose
         except xmlrpc.client.Fault as fex:
             raise ProxyException(fex) from fex
+        except xmlrpc.client.ProtocolError as per:
+            if per.errmsg == "Unauthorized":
+                raise AuthFailure(per) from per
+            raise NoConnection(per) from per
         except Exception as ex:
             raise ProxyException(ex) from ex
 

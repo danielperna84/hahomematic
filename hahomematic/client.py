@@ -1158,12 +1158,7 @@ class _ClientConfig:
 
     async def get_client(self) -> Client:
         """Identify the used client."""
-        try:
-            self.version = await self.xml_rpc_proxy.getVersion()
-        except BaseHomematicException as hhe:
-            raise HaHomematicException(
-                f"Failed to get backend version. Not creating client: {self.xml_rpc_uri}"
-            ) from hhe
+        self.version = await self.xml_rpc_proxy.getVersion()
         if self.version:
             if "Homegear" in self.version or "pydevccu" in self.version:
                 return ClientHomegear(self)
