@@ -207,11 +207,8 @@ class CentralUnit:
             return client.version
         return None
 
-    async def start(self, check_only: bool = False) -> None:
+    async def start(self) -> None:
         """Start processing of the central unit."""
-        if check_only:
-            await self._create_clients()
-            return None
         await self.parameter_visibility.load()
         await self._start_clients()
         self._start_connection_checker()

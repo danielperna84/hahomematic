@@ -215,11 +215,11 @@ class CeRfLock(BaseLock):
 
     async def lock(self) -> None:
         """Lock the lock."""
-        await self._e_state.send_value(True)
+        await self._e_state.send_value(False)
 
     async def unlock(self) -> None:
         """Unlock the lock."""
-        await self._e_state.send_value(False)
+        await self._e_state.send_value(True)
 
     async def open(self) -> None:
         """Open the lock."""
