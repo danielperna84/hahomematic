@@ -17,7 +17,6 @@ from hahomematic.const import (
     ATTR_HM_LIST,
     ATTR_HM_LOGIC,
     ATTR_HM_NUMBER,
-    ATTR_NAME,
     ATTR_TYPE,
     ATTR_VALUE,
     INIT_DATETIME,
@@ -105,18 +104,18 @@ def check_or_create_directory(directory: str) -> bool:
     return True
 
 
-def parse_ccu_sys_var(data: dict[str, Any]) -> tuple[str, Any]:
+def parse_ccu_sys_var(data: dict[str, Any]) -> Any:
     """Helper to parse type of system variables of CCU."""
     # pylint: disable=no-else-return
     if data[ATTR_TYPE] == ATTR_HM_LOGIC:
-        return data[ATTR_NAME], data[ATTR_VALUE] == "true"
+        return data[ATTR_VALUE] == "true"
     if data[ATTR_TYPE] == ATTR_HM_ALARM:
-        return data[ATTR_NAME], data[ATTR_VALUE] == "true"
+        return data[ATTR_VALUE] == "true"
     elif data[ATTR_TYPE] == ATTR_HM_NUMBER:
-        return data[ATTR_NAME], float(data[ATTR_VALUE])
+        return float(data[ATTR_VALUE])
     elif data[ATTR_TYPE] == ATTR_HM_LIST:
-        return data[ATTR_NAME], int(data[ATTR_VALUE])
-    return data[ATTR_NAME], data[ATTR_VALUE]
+        return int(data[ATTR_VALUE])
+    return data[ATTR_VALUE]
 
 
 def get_entity_name(

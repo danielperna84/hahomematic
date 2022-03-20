@@ -915,8 +915,16 @@ class ClientCCU(Client):
             )
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 for var in response[ATTR_RESULT]:
-                    key, value = parse_ccu_sys_var(var)
-                    variables[key] = value
+                    name = var[ATTR_NAME]
+                    try:
+                        value = parse_ccu_sys_var(var)
+                        variables[name] = value
+                    except ValueError as verr:
+                        _LOGGER.error(
+                            "get_all_system_variables: ValueError [%s] Failed to parse SysVar %s ",
+                            verr.args, name,
+                        )
+
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_all_system_variables: %s [%s]", hhe.name, hhe.args)
 
