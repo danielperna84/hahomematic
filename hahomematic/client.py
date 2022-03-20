@@ -1156,6 +1156,10 @@ class _ClientConfig:
 
     async def get_client(self) -> Client:
         """Identify the used client."""
+        methods = await self.xml_rpc_proxy.system.listMethods()
+        if "getVersion" not in methods:
+            self.version = "unknown"
+            return ClientCCU(self)
         self.version = await self.xml_rpc_proxy.getVersion()
         if self.version:
             if "Homegear" in self.version or "pydevccu" in self.version:
