@@ -1,5 +1,6 @@
 Version 0.38.3 (2022-03-20)
 - Add check for available API method to identify BidCos Wired
+- Cleanup backend identification
 
 Version 0.38.2 (2022-03-20)
 - Catch SysVar parsing exceptions
