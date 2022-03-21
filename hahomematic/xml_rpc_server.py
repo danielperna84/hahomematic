@@ -118,6 +118,11 @@ class RPCFunctions:
         The CCU / Homegear informs us about newly added devices.
         We react on that and add those devices as well.
         """
+        _LOGGER.debug(
+            "newDevices: interface_id = %s, dev_descriptions = %s",
+            interface_id,
+            str(dev_descriptions),
+        )
 
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
