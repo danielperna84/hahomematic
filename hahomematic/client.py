@@ -1199,7 +1199,7 @@ class _ClientConfig:
             client: Client | None = None
             methods = await self.xml_rpc_proxy.system.listMethods()
             if "getVersion" not in methods:
-                # HS485D does not support getVersion()
+                # BidCos-Wired does not support getVersion()
                 client = ClientCCU(self)
             elif version := await self.xml_rpc_proxy.getVersion():
                 if "Homegear" in version or "pydevccu" in version:
