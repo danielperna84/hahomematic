@@ -40,6 +40,7 @@ from hahomematic.const import (
     HH_EVENT_HUB_CREATED,
     HH_EVENT_NEW_DEVICES,
     IF_BIDCOS_RF_NAME,
+    IF_PRIMARY,
     MANUFACTURER,
     PROXY_INIT_SUCCESS,
     HmEventType,
@@ -431,7 +432,7 @@ class CentralUnit:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hm_client.Client | None = None
         for client in self._clients.values():
-            if client.get_virtual_remote() and client.available:
+            if client.interface in IF_PRIMARY and client.available:
                 return client
         return client
 

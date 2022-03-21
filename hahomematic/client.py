@@ -7,7 +7,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from hahomematic import config
 import hahomematic.central_unit as hm_central
@@ -47,7 +47,12 @@ from hahomematic.const import (
     HmInterfaceEventType,
 )
 from hahomematic.device import HmDevice
-from hahomematic.exceptions import BaseHomematicException, HaHomematicException
+from hahomematic.exceptions import (
+    AuthFailure,
+    BaseHomematicException,
+    HaHomematicException,
+    NoConnection,
+)
 from hahomematic.helpers import (
     build_headers,
     build_xml_rpc_uri,
@@ -74,7 +79,6 @@ class Client(ABC):
         """
         self._client_config: _ClientConfig = client_config
         self._central: hm_central.CentralUnit = self._client_config.central
-        self._version: str | None = self._client_config.version
         self._available: bool = True
         self._interface: str = self._client_config.interface
         # This is the actual interface_id used for init
@@ -87,6 +91,7 @@ class Client(ABC):
         self.last_updated: datetime = INIT_DATETIME
         self._json_rpc_session: JsonRpcAioHttpClient = self._central.json_rpc_session
         self._is_callback_alive = True
+        self._version: str | None = None
 
     @property
     def available(self) -> bool:
@@ -117,6 +122,10 @@ class Client(ABC):
     def version(self) -> str | None:
         """Return the version of the backend."""
         return self._version
+
+    async def init(self) -> None:
+        """Initialize basic values."""
+        self._version = await self.get_version()
 
     async def proxy_init(self) -> int:
         """
@@ -300,6 +309,10 @@ class Client(ABC):
     async def get_all_rooms(self) -> dict[str, str]:
         """Get all rooms, if available."""
         ...
+
+    @abstractmethod
+    async def get_version(self) -> str:
+        """Get the version of the backend."""
 
     @abstractmethod
     def get_virtual_remote(self) -> HmDevice | None:
@@ -922,7 +935,8 @@ class ClientCCU(Client):
                     except ValueError as verr:
                         _LOGGER.error(
                             "get_all_system_variables: ValueError [%s] Failed to parse SysVar %s ",
-                            verr.args, name,
+                            verr.args,
+                            name,
                         )
 
         except BaseHomematicException as hhe:
@@ -989,6 +1003,27 @@ class ClientCCU(Client):
             )
 
         return channel_ids_room
+
+    async def get_version(self) -> str:
+        """Get the version of the backend."""
+        version = "unknown"
+        if not self._has_credentials:
+            _LOGGER.warning(
+                "get_version: You have to set username ans password to the version via JSON-RPC"
+            )
+            return version
+
+        _LOGGER.debug("get_version: Getting the backend version via JSON-RPC")
+        try:
+            response = await self._json_rpc_session.post(
+                method="CCU.getVersion",
+            )
+            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+                version = response[ATTR_RESULT]
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_version: %s [%s]", hhe.name, hhe.args)
+
+        return version
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
@@ -1093,6 +1128,10 @@ class ClientHomegear(Client):
         """Get all rooms from Homegear."""
         return {}
 
+    async def get_version(self) -> str:
+        """Get the version of the backend."""
+        return cast(str, await self._proxy.getVersion())
+
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         return None
@@ -1152,19 +1191,27 @@ class _ClientConfig:
             tls=self._central_config.tls,
             verify_tls=self._central_config.verify_tls,
         )
-        self.version: str | None = None
 
     async def get_client(self) -> Client:
         """Identify the used client."""
-        methods = await self.xml_rpc_proxy.system.listMethods()
-        if "getVersion" not in methods:
-            self.version = "unknown"
-            return ClientCCU(self)
-        self.version = await self.xml_rpc_proxy.getVersion()
-        if self.version:
-            if "Homegear" in self.version or "pydevccu" in self.version:
-                return ClientHomegear(self)
-        return ClientCCU(self)
+
+        try:
+            client: Client | None = None
+            methods = await self.xml_rpc_proxy.system.listMethods()
+            if "getVersion" not in methods:
+                # HS485D does not support getVersion()
+                client = ClientCCU(self)
+            elif version := await self.xml_rpc_proxy.getVersion():
+                if "Homegear" in version or "pydevccu" in version:
+                    client = ClientHomegear(self)
+            if not client:
+                client = ClientCCU(self)
+            await client.init()
+            return client
+        except AuthFailure as auf:
+            raise AuthFailure(f"Unable to authenticate {auf.args}.") from auf
+        except Exception as noc:
+            raise NoConnection(f"Unable to connect {noc.args}.") from noc
 
 
 class InterfaceConfig:
