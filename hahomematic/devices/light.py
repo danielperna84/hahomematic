@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import logging
-from typing import Any
+from typing import Any, cast
 
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
@@ -11,6 +11,7 @@ from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_COLOR,
     FIELD_CHANNEL_LEVEL,
     FIELD_COLOR,
+    FIELD_COLOR_LEVEL,
     FIELD_LEVEL,
     FIELD_RAMP_TIME,
     FIELD_RAMP_TIME_UNIT,
@@ -27,9 +28,13 @@ from hahomematic.platforms.select import HmSelect
 _LOGGER = logging.getLogger(__name__)
 
 # HM constants
-ATTR_COLOR_NAME = "color_name"
-ATTR_CHANNEL_COLOR = "channel_color"
-ATTR_CHANNEL_LEVEL = "channel_level"
+ATTR_HM_BRIGHTNESS = "brightness"
+ATTR_HM_COLOR_NAME = "color_name"
+ATTR_HM_COLOR_TEMP = "color_temp"
+ATTR_HM_CHANNEL_COLOR = "channel_color"
+ATTR_HM_CHANNEL_LEVEL = "channel_level"
+ATTR_HM_HS_COLOR = "hs_color"
+ATTR_HM_RAMP_TIME = "ramp_time"
 
 HM_DIMMER_OFF: float = 0.0
 
@@ -76,18 +81,28 @@ class BaseHmLight(CustomEntity):
         ...
 
     @property
-    def brightness(self) -> int:
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return 0
+        return None
 
     @property
-    def hs_color(self) -> tuple[float, float]:
+    def color_temp(self) -> int | None:
+        """Return the color temperature of this light between 0..255."""
+        return None
+
+    @property
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
-        return 0.0, 0.0
+        return None
 
     @property
     def supports_brightness(self) -> bool:
         """Flag if light supports brightness."""
+        return False
+
+    @property
+    def supports_color_temperature(self) -> bool:
+        """Flag if light supports color temperature."""
         return False
 
     @property
@@ -103,9 +118,7 @@ class BaseHmLight(CustomEntity):
     @abstractmethod
     async def turn_on(
         self,
-        hs_color: tuple[float, float] | None,
-        brightness: int | None,
-        ramp_time: float | None,
+        **kwargs: dict[str, Any] | None,
     ) -> None:
         """Turn the light on."""
         ...
@@ -148,21 +161,17 @@ class CeDimmer(BaseHmLight):
         """Flag if light supports transition."""
         return True
 
-    async def turn_on(
-        self,
-        hs_color: tuple[float, float] | None,
-        brightness: int | None,
-        ramp_time: float | None,
-    ) -> None:
+    async def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ramp_time:
+        if ramp_time := kwargs.get(ATTR_HM_RAMP_TIME):
             await self._e_ramp_time.send_value(ramp_time)
 
         # Minimum brightness is 10, otherwise the LED is disabled
-        if brightness:
+        if ATTR_HM_BRIGHTNESS in kwargs:
+            brightness: int = cast(int, kwargs[ATTR_HM_BRIGHTNESS])
             brightness = max(10, brightness)
-            dim_level = brightness / 255.0
-            await self._e_level.send_value(dim_level)
+            level = brightness / 255.0
+            await self._e_level.send_value(level)
 
     @property
     def attributes(self) -> dict[str, Any]:
@@ -173,8 +182,45 @@ class CeDimmer(BaseHmLight):
             and self._e_level.value
             and self._channel_level != self._e_level.value
         ):
-            state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
+            state_attr[ATTR_HM_CHANNEL_LEVEL] = self._channel_level * 255
         return state_attr
+
+
+class CeColorTempDimmer(CeDimmer):
+    """Class for homematic dimmer with colortemperature entities."""
+
+    @property
+    def _e_color_level(self) -> HmFloat:
+        """Return the color level entity of the device."""
+        return self._get_entity(field_name=FIELD_COLOR_LEVEL, entity_type=HmFloat)
+
+    @property
+    def color_temp(self) -> int:
+        """Return the color temperature of this light between 0..255."""
+        return int((self._e_color_level.value or 0.0) * 255)
+
+    @property
+    def supports_color_temperature(self) -> bool:
+        """Flag if light supports color temperature."""
+        return True
+
+    async def turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        if ATTR_HM_RAMP_TIME in kwargs:
+            ramp_time = kwargs[ATTR_HM_RAMP_TIME]
+            await self._e_ramp_time.send_value(ramp_time)
+
+        if ATTR_HM_COLOR_TEMP in kwargs:
+            color_temp = kwargs[ATTR_HM_COLOR_TEMP]
+            color_level = cast(int, color_temp) / 255.0
+            await self._e_color_level.send_value(color_level)
+
+        # Minimum brightness is 10, otherwise the LED is disabled
+        if ATTR_HM_BRIGHTNESS in kwargs:
+            brightness: int = cast(int, kwargs[ATTR_HM_BRIGHTNESS])
+            brightness = max(10, brightness)
+            level = brightness / 255.0
+            await self._e_level.send_value(level)
 
 
 class CeIpFixedColorLight(BaseHmLight):
@@ -247,36 +293,34 @@ class CeIpFixedColorLight(BaseHmLight):
         """Flag if light supports color."""
         return True
 
-    async def turn_on(
-        self,
-        hs_color: tuple[float, float] | None,
-        brightness: int | None,
-        ramp_time: float | None,
-    ) -> None:
+    async def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if hs_color:
+        if ATTR_HM_HS_COLOR in kwargs:
+            hs_color = kwargs[ATTR_HM_HS_COLOR]
             simple_rgb_color = _convert_color(hs_color)
             await self._e_color.send_value(simple_rgb_color)
-        if ramp_time:
+        if ATTR_HM_RAMP_TIME in kwargs:
+            ramp_time = kwargs[ATTR_HM_RAMP_TIME]
             # ramp_time_unit is 0 == seconds
             await self._e_ramp_time_unit.send_value(0)
             await self._e_ramp_time_value.send_value(ramp_time)
-        if brightness:
+        if ATTR_HM_BRIGHTNESS in kwargs:
+            brightness: int = cast(int, kwargs[ATTR_HM_BRIGHTNESS])
             # Minimum brightness is 10, otherwise the LED is disabled
             brightness = max(10, brightness)
-            dim_level = brightness / 255.0
-            await self._e_level.send_value(dim_level)
+            level = brightness / 255.0
+            await self._e_level.send_value(level)
 
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the notification light sensor."""
         state_attr = super().attributes
         if self.is_on:
-            state_attr[ATTR_COLOR_NAME] = self._e_color.value
+            state_attr[ATTR_HM_COLOR_NAME] = self._e_color.value
         if self._channel_level and self._channel_level != self._e_level.value:
-            state_attr[ATTR_CHANNEL_LEVEL] = self._channel_level * 255
+            state_attr[ATTR_HM_CHANNEL_LEVEL] = self._channel_level * 255
         if self._channel_color and self._channel_color:
-            state_attr[ATTR_CHANNEL_COLOR] = self._channel_color
+            state_attr[ATTR_HM_CHANNEL_COLOR] = self._channel_color
         return state_attr
 
 
@@ -332,6 +376,19 @@ def make_rf_dimmer(
         device_address=device_address,
         custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.RF_DIMMER,
+        group_base_channels=group_base_channels,
+    )
+
+
+def make_rf_dimmer_color_temp(
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+) -> list[hm_entity.BaseEntity]:
+    """Creates homematic classic dimmer with color temperature entities."""
+    return make_custom_entity(
+        device=device,
+        device_address=device_address,
+        custom_entity_class=CeColorTempDimmer,
+        device_enum=EntityDefinition.RF_DIMMER_COLOR_TEMP,
         group_base_channels=group_base_channels,
     )
 
@@ -415,7 +472,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HM-LC-Dim2L-SM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
     "HM-LC-Dim2T-SM-2": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
     "HM-LC-Dim2T-SM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
-    "HM-LC-DW-WM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
+    "HM-LC-DW-WM": (make_rf_dimmer_color_temp, [1, 3, 5]),
     "OLIGO.smart.iq.HM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
 }
 
