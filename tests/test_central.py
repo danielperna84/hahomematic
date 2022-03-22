@@ -77,13 +77,13 @@ async def test_central(central, loop) -> None:
             usage_types[entity.usage] = counter + 1
 
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1862
-    assert usage_types[HmEntityUsage.CE_PRIMARY] == 170
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
     assert usage_types[HmEntityUsage.ENTITY] == 2441
     assert usage_types[HmEntityUsage.CE_SENSOR] == 63
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
     assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 4662
+    assert len(central.hm_entities) == 4659
     assert len(data) == 362
     assert len(custom_entities) == 296
     assert len(ce_channels) == 103
