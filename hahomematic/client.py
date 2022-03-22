@@ -195,7 +195,7 @@ class Client(ABC):
                 self.interface_id,
             )
             self._central.fire_interface_event(
-                interface=self.interface,
+                interface_id=self.interface_id,
                 interface_event_type=HmInterfaceEventType.PROXY,
                 available=available,
             )
@@ -255,7 +255,7 @@ class Client(ABC):
             if seconds_since_last_event < CONNECTION_CHECKER_INTERVAL * 10:
                 if not self._is_callback_alive:
                     self.central.fire_interface_event(
-                        interface=self.interface,
+                        interface_id=self.interface_id,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
                         available=True,
                     )
@@ -268,7 +268,7 @@ class Client(ABC):
             )
         if self._is_callback_alive:
             self._central.fire_interface_event(
-                interface=self.interface,
+                interface_id=self.interface_id,
                 interface_event_type=HmInterfaceEventType.CALLBACK,
                 available=False,
             )

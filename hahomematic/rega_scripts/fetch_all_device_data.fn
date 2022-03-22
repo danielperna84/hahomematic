@@ -15,12 +15,11 @@ string sDevId;
 string sChnId;
 string sDPId;
 string sValue;
-string sChnId;
 string sDPId;
 boolean dpFirst = true;
 Write('{');
 foreach (sDevId, root.Devices().EnumUsedIDs()) {
-    object oDevice   = dom.GetObject(sDevId);
+    object oDevice = dom.GetObject(sDevId);
     boolean bDevReady = oDevice.ReadyConfig();
     if (bDevReady) {
         foreach (sChnId, oDevice.Channels()) {

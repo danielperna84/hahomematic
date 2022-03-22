@@ -21,7 +21,7 @@ from hahomematic import config
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
-    ATTR_INTERFACE,
+    ATTR_INTERFACE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
     BACKEND_PYDEVCCU,
@@ -288,7 +288,7 @@ class CentralUnit:
                     self._clients_by_init_url[client.init_url].append(client)
             except BaseHomematicException as ex:
                 self.fire_interface_event(
-                    interface=interface_config.interface,
+                    interface_id=client.interface_id,
                     interface_event_type=HmInterfaceEventType.PROXY,
                     available=False,
                 )
@@ -300,14 +300,14 @@ class CentralUnit:
 
     def fire_interface_event(
         self,
-        interface: str,
+        interface_id: str,
         interface_event_type: HmInterfaceEventType,
         available: bool,
     ) -> None:
         """Fire an event about the interface status."""
 
         event_data = {
-            ATTR_INTERFACE: interface,
+            ATTR_INTERFACE_ID: interface_id,
             ATTR_TYPE: interface_event_type,
             ATTR_VALUE: available,
         }
