@@ -36,6 +36,9 @@ ATTR_HM_CHANNEL_LEVEL = "channel_level"
 ATTR_HM_HS_COLOR = "hs_color"
 ATTR_HM_RAMP_TIME = "ramp_time"
 
+HM_MAX_MIREDS: int = 500
+HM_MIN_MIREDS: int = 153
+
 HM_DIMMER_OFF: float = 0.0
 
 
@@ -87,7 +90,7 @@ class BaseHmLight(CustomEntity):
 
     @property
     def color_temp(self) -> int | None:
-        """Return the color temperature of this light between 0..255."""
+        """Return the color temperature in mireds of this light between 153..500."""
         return None
 
     @property
@@ -196,8 +199,11 @@ class CeColorTempDimmer(CeDimmer):
 
     @property
     def color_temp(self) -> int:
-        """Return the color temperature of this light between 0..255."""
-        return int((self._e_color_level.value or 0.0) * 255)
+        """Return the color temperature in mireds of this light between 153..500."""
+        return int(
+            HM_MAX_MIREDS
+            - (HM_MAX_MIREDS - HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
+        )
 
     @property
     def supports_color_temperature(self) -> bool:
@@ -211,8 +217,9 @@ class CeColorTempDimmer(CeDimmer):
             await self._e_ramp_time.send_value(ramp_time)
 
         if ATTR_HM_COLOR_TEMP in kwargs:
-            color_temp = kwargs[ATTR_HM_COLOR_TEMP]
-            color_level = cast(int, color_temp) / 255.0
+            color_level = (HM_MAX_MIREDS - kwargs[ATTR_HM_COLOR_TEMP]) / (
+                HM_MAX_MIREDS - HM_MIN_MIREDS
+            )
             await self._e_color_level.send_value(color_level)
 
         # Minimum brightness is 10, otherwise the LED is disabled
