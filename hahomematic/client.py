@@ -15,7 +15,6 @@ from hahomematic.config import CONNECTION_CHECKER_INTERVAL
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
-    ATTR_ERROR,
     ATTR_HM_ADDRESS,
     ATTR_HM_NAME,
     ATTR_HM_PARAMSETS,
@@ -92,6 +91,7 @@ class Client(ABC):
         self._json_rpc_session: JsonRpcAioHttpClient = self._central.json_rpc_session
         self._is_callback_alive = True
         self._version: str | None = None
+        self._serial: str | None = None
 
     @property
     def available(self) -> bool:
@@ -123,9 +123,15 @@ class Client(ABC):
         """Return the version of the backend."""
         return self._version
 
+    @property
+    def serial(self) -> str | None:
+        """Return the serial of the backend."""
+        return self._serial
+
     async def init(self) -> None:
         """Initialize basic values."""
         self._version = await self.get_version()
+        self._serial = await self.get_serial()
 
     async def proxy_init(self) -> int:
         """
@@ -309,6 +315,10 @@ class Client(ABC):
     async def get_all_rooms(self) -> dict[str, str]:
         """Get all rooms, if available."""
         ...
+
+    @abstractmethod
+    async def get_serial(self) -> str:
+        """Get the serial of the backend."""
 
     @abstractmethod
     async def get_version(self) -> str:
@@ -642,19 +652,14 @@ class ClientCCU(Client):
         """
         Get all names via JSON-RPS and store in data.NAMES.
         """
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "fetch_names_json: No username set. Not fetching names via JSON-RPC."
-            )
-            return
         _LOGGER.debug("fetch_names_json: Fetching names via JSON-RPC.")
         try:
             response = await self._json_rpc_session.post(
                 "Device.listAllDetail",
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
                 _LOGGER.debug("fetch_names_json: Resolving device names")
-                for device in response[ATTR_RESULT]:
+                for device in json_result:
                     self._central.device_details.add_name(
                         address=device[ATTR_ADDRESS], name=device[ATTR_NAME]
                     )
@@ -677,12 +682,6 @@ class ClientCCU(Client):
 
     async def fetch_all_device_data(self) -> None:
         """fetch all device data from CCU."""
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "fetch_all_device_data: No username set. Not fetching all device data via JSON-RPC."
-            )
-            return None
-
         _LOGGER.debug(
             "fetch_all_device_data: Fetching all device data via JSON-RPC RegaScript."
         )
@@ -690,10 +689,10 @@ class ClientCCU(Client):
             response = await self._json_rpc_session.post_script(
                 script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
                 _LOGGER.debug("fetch_all_device_data: Fetched all device data.")
                 self.central.device_data.add_device_data(
-                    device_data=json.loads(response[ATTR_RESULT])
+                    device_data=json.loads(json_result)
                 )
                 return
 
@@ -706,12 +705,6 @@ class ClientCCU(Client):
         self, address: str, paramset_key: str
     ) -> dict[str, Any]:
         """Get paramset description from CCU."""
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "_get_paramset_description: No username set. Not getting paramset description via JSON-RPC."
-            )
-            return {}
-
         _LOGGER.debug(
             "_get_paramset_description: Getting paramset description via JSON-RPC."
         )
@@ -724,11 +717,11 @@ class ClientCCU(Client):
             response = await self._json_rpc_session.post(
                 "Interface.getParamsetDescription", params
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
                 _LOGGER.debug(
                     "_get_paramset_description: Getting paramset description."
                 )
-                return convert_from_json_paramset_description(response[ATTR_RESULT])
+                return convert_from_json_paramset_description(json_result)
 
         except BaseHomematicException as hhe:
             _LOGGER.warning("_get_paramset_description: %s, %s", hhe.name, hhe.args)
@@ -749,11 +742,6 @@ class ClientCCU(Client):
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "set_system_variable: You have to set username ans password to set a system variable via JSON-RPC"
-            )
-            return
         _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
         try:
             params = {
@@ -765,29 +753,17 @@ class ClientCCU(Client):
                 response = await self._json_rpc_session.post("SysVar.setBool", params)
             else:
                 response = await self._json_rpc_session.post("SysVar.setFloat", params)
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                res = response[ATTR_RESULT]
+            if json_result := response[ATTR_RESULT]:
+                res = json_result
                 _LOGGER.debug(
                     "set_system_variable: Result while setting variable: %s",
                     str(res),
                 )
-            else:
-                if response[ATTR_ERROR]:
-                    _LOGGER.debug(
-                        "set_system_variable: Error while setting variable: %s",
-                        str(response[ATTR_ERROR]),
-                    )
         except BaseHomematicException as hhe:
             _LOGGER.warning("set_system_variable: %s [%s]", hhe.name, hhe.args)
 
     async def delete_system_variable(self, name: str) -> None:
         """Delete a system variable from CCU / Homegear."""
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "delete_system_variable: You have to set username ans password to delete a system variable via JSON-RPC"
-            )
-            return
-
         _LOGGER.debug("delete_system_variable: Getting System variable via JSON-RPC")
         try:
             params = {ATTR_NAME: name}
@@ -795,8 +771,8 @@ class ClientCCU(Client):
                 "SysVar.deleteSysVarByName",
                 params,
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                deleted = response[ATTR_RESULT]
+            if json_result := response[ATTR_RESULT]:
+                deleted = json_result
                 _LOGGER.debug("delete_system_variable: Deleted: %s", str(deleted))
         except BaseHomematicException as hhe:
             _LOGGER.warning("delete_system_variable: %s [%s]", hhe.name, hhe.args)
@@ -804,12 +780,6 @@ class ClientCCU(Client):
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         var = None
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "get_system_variable: You have to set username ans password to get a system variable via JSON-RPC"
-            )
-            return var
-
         _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
         try:
             params = {ATTR_NAME: name}
@@ -817,12 +787,12 @@ class ClientCCU(Client):
                 "SysVar.getValueByName",
                 params,
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
                 # This does not yet support strings
                 try:
-                    var = float(response[ATTR_RESULT])
+                    var = float(json_result)
                 except Exception:
-                    var = response[ATTR_RESULT] == "true"
+                    var = json_result == "true"
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_system_variable: %s [%s]", hhe.name, hhe.args)
 
@@ -845,12 +815,6 @@ class ClientCCU(Client):
             )
 
         value = None
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "get_value: You have to set username ans password to get a value via JSON-RPC"
-            )
-            return value
-
         _LOGGER.debug("get_value: Getting value via JSON-RPC")
         try:
             params = {
@@ -867,9 +831,9 @@ class ClientCCU(Client):
                 method=method,
                 extra_params=params,
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
                 # This does not yet support strings
-                value = response[ATTR_RESULT]
+                value = json_result
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_value: %s [%s]", hhe.name, hhe.args)
 
@@ -885,12 +849,6 @@ class ClientCCU(Client):
             )
 
         value = None
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "get_cached_paramset: You have to set username ans password to get a paramset via JSON-RPC"
-            )
-            return value
-
         _LOGGER.debug("get_cached_paramset: Getting value via JSON-RPC")
         try:
             params = {
@@ -902,9 +860,9 @@ class ClientCCU(Client):
                 "Interface.getParamset",
                 params,
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
                 # This does not yet support strings
-                value = response[ATTR_RESULT]
+                value = json_result
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_cached_paramset: %s [%s]", hhe.name, hhe.args)
 
@@ -913,12 +871,6 @@ class ClientCCU(Client):
     async def get_all_system_variables(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
         variables: dict[str, Any] = {}
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "get_all_system_variables: You have to set username ans password to get system variables via JSON-RPC"
-            )
-            return variables
-
         _LOGGER.debug(
             "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
@@ -926,8 +878,8 @@ class ClientCCU(Client):
             response = await self._json_rpc_session.post(
                 "SysVar.getAll",
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                for var in response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
+                for var in json_result:
                     name = var[ATTR_NAME]
                     try:
                         value = parse_ccu_sys_var(var)
@@ -947,12 +899,6 @@ class ClientCCU(Client):
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
         interfaces: list[str] = []
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "get_available_interfaces: You have to set username ans password to get available interfaces via JSON-RPC"
-            )
-            return interfaces
-
         _LOGGER.debug(
             "get_available_interfaces: Getting all available interfaces via JSON-RPC"
         )
@@ -960,8 +906,8 @@ class ClientCCU(Client):
             response = await self._json_rpc_session.post(
                 "Interface.listInterfaces",
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                for interface in response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
+                for interface in json_result:
                     interfaces.append(interface[ATTR_NAME])
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_available_interfaces: %s [%s]", hhe.name, hhe.args)
@@ -981,19 +927,13 @@ class ClientCCU(Client):
     async def _get_all_channel_ids_room(self) -> dict[str, str]:
         """Get all channel_ids per room from CCU / Homegear."""
         channel_ids_room: dict[str, str] = {}
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "_get_all_channel_ids_per_room: You have to set username ans password to get rooms via JSON-RPC"
-            )
-            return channel_ids_room
-
         _LOGGER.debug("_get_all_channel_ids_per_room: Getting all rooms via JSON-RPC")
         try:
             response = await self._json_rpc_session.post(
                 "Room.getAll",
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                for room in response[ATTR_RESULT]:
+            if json_result := response[ATTR_RESULT]:
+                for room in json_result:
                     channel_ids_room[room["id"]] = room["name"]
                     for channel_id in room["channelIds"]:
                         channel_ids_room[channel_id] = room["name"]
@@ -1004,22 +944,33 @@ class ClientCCU(Client):
 
         return channel_ids_room
 
+    async def get_serial(self) -> str:
+        """Get the serial of the backend."""
+        serial = "unknown"
+
+        _LOGGER.debug("get_serial: Getting the backend serial via JSON-RPC")
+        try:
+            response = await self._json_rpc_session.post(
+                method="CCU.getSerial",
+            )
+            if json_result := response[ATTR_RESULT]:
+                serial = json_result
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_serial: %s [%s]", hhe.name, hhe.args)
+
+        return serial
+
     async def get_version(self) -> str:
         """Get the version of the backend."""
         version = "unknown"
-        if not self._has_credentials:
-            _LOGGER.warning(
-                "get_version: You have to set username ans password to the version via JSON-RPC"
-            )
-            return version
 
         _LOGGER.debug("get_version: Getting the backend version via JSON-RPC")
         try:
             response = await self._json_rpc_session.post(
                 method="CCU.getVersion",
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                version = response[ATTR_RESULT]
+            if json_result := response[ATTR_RESULT]:
+                version = json_result
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_version: %s [%s]", hhe.name, hhe.args)
 
@@ -1127,6 +1078,10 @@ class ClientHomegear(Client):
     async def get_all_rooms(self) -> dict[str, str]:
         """Get all rooms from Homegear."""
         return {}
+
+    async def get_serial(self) -> str:
+        """Get the serial of the backend."""
+        return "Homegear_SN0815"
 
     async def get_version(self) -> str:
         """Get the version of the backend."""

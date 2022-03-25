@@ -202,6 +202,13 @@ class CentralUnit:
         return self._model
 
     @property
+    def serial(self) -> str | None:
+        """Return the serial of the backend."""
+        if client := self.get_client():
+            return client.serial
+        return None
+
+    @property
     def version(self) -> str | None:
         """Return the version of the backend."""
         if client := self.get_client():

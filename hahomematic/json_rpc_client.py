@@ -162,7 +162,7 @@ class JsonRpcAioHttpClient:
             return {"error": "Unable to open session.", "result": {}}
 
         _LOGGER.debug("post: Method: %s, [%s]", method, extra_params)
-        result = await self._post(
+        response = await self._post(
             session_id=session_id,
             method=method,
             extra_params=extra_params,
@@ -171,7 +171,9 @@ class JsonRpcAioHttpClient:
 
         if not keep_session:
             await self._logout(session_id=session_id)
-        return result
+        if (error := response["error"]) is not None:
+            raise HaHomematicException(f"post: error: {error}")
+        return response
 
     async def post_script(
         self,
@@ -194,7 +196,7 @@ class JsonRpcAioHttpClient:
         script = Path(script_file).read_text(encoding=DEFAULT_ENCODING)
 
         method = "ReGa.runScript"
-        result = await self._post(
+        response = await self._post(
             session_id=session_id,
             method=method,
             extra_params={"script": script},
@@ -203,7 +205,10 @@ class JsonRpcAioHttpClient:
 
         if not keep_session:
             await self._logout(session_id=session_id)
-        return result
+
+        if (error := response["error"]) is not None:
+            raise HaHomematicException(f"post_script: error: {error}")
+        return response
 
     async def _post(
         self,
@@ -235,7 +240,7 @@ class JsonRpcAioHttpClient:
             }
 
             if self._tls:
-                resp = await self._client_session.post(
+                response = await self._client_session.post(
                     self._url,
                     data=payload,
                     headers=headers,
@@ -243,12 +248,12 @@ class JsonRpcAioHttpClient:
                     ssl=self._tls_context,
                 )
             else:
-                resp = await self._client_session.post(
+                response = await self._client_session.post(
                     self._url, data=payload, headers=headers, timeout=config.TIMEOUT
                 )
-            if resp.status == 200:
+            if response.status == 200:
                 try:
-                    return await resp.json(encoding="utf-8")
+                    return await response.json(encoding="utf-8")
                 except ValueError as ver:
                     _LOGGER.error(
                         "_post: ValueError [%s] Failed to parse JSON. Trying workaround",
@@ -256,11 +261,11 @@ class JsonRpcAioHttpClient:
                     )
                     # Workaround for bug in CCU
                     return json.loads(
-                        (await resp.json(encoding="utf-8")).replace("\\", "")
+                        (await response.json(encoding="utf-8")).replace("\\", "")
                     )
             else:
-                _LOGGER.warning("_post: Status: %i", resp.status)
-                return {"error": resp.status, "result": {}}
+                _LOGGER.warning("_post: Status: %i", response.status)
+                return {"error": response.status, "result": {}}
         except ClientConnectorError as err:
             _LOGGER.error("_post: ClientConnectorError")
             return {"error": str(err), "result": {}}
@@ -301,6 +306,10 @@ class JsonRpcAioHttpClient:
                 "logout: ClientError [%s] while logging in via JSON-RPC", cer.args
             )
         return
+
+    def _has_credentials(self) -> bool:
+        """Return if credentials are available."""
+        return self._username is not None and self._password is not None
 
 
 def _get_params(

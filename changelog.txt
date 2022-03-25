@@ -1,3 +1,6 @@
+Version 0.39.0 (2022-03-25)
+- simplify json usage
+
 Version 0.38.5 (2022-03-22)
 - Use interface_id for interface events
 - Add support for color temp dimmer
