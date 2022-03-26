@@ -177,7 +177,7 @@ class CentralUnit:
         return True
 
     @property
-    def json_rpc_session(self) -> JsonRpcAioHttpClient:
+    def json_rpc_client(self) -> JsonRpcAioHttpClient:
         """Return the json_rpc_session."""
         return self._json_rpc_session
 
@@ -283,6 +283,15 @@ class CentralUnit:
                 if client := await hm_client.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
+                    if (
+                        interface_config.interface
+                        not in await client.get_available_interfaces()
+                    ):
+                        _LOGGER.warning(
+                            "_create_clients: Interface: %s is not available for backend.",
+                            interface_config.interface,
+                        )
+                        continue
                     _LOGGER.debug(
                         "create_clients: Adding client %s to %s.",
                         client.interface_id,
@@ -682,6 +691,12 @@ class CentralUnit:
             return await client.get_all_system_variables()
         return None
 
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
+        if client := self.get_client():
+            return await client.get_available_interfaces()
+        return []
+
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""
         if client := self.get_client():
@@ -1061,21 +1076,11 @@ class DeviceDataCache:
         if client := self._central.get_client():
             await client.fetch_all_device_data()
 
-    def add_device_data(self, device_data: dict[str, Any]) -> None:
+    def add_device_data(
+        self, device_data: dict[str, dict[str, dict[str, Any]]]
+    ) -> None:
         """Add device data to cache."""
-        for device_adr, value in device_data.items():
-            device_adr = device_adr.replace("%3A", ":")
-            device_adrs = device_adr.split(".")
-            interface = device_adrs[0]
-            if interface not in self._central_values_cache:
-                self._central_values_cache[interface] = {}
-            channel_address = device_adrs[1]
-            if channel_address not in self._central_values_cache[interface]:
-                self._central_values_cache[interface][channel_address] = {}
-            parameter = device_adrs[2]
-            if parameter not in self._central_values_cache[interface][channel_address]:
-                self._central_values_cache[interface][channel_address][parameter] = {}
-            self._central_values_cache[interface][channel_address][parameter] = value
+        self._central_values_cache = device_data
 
     def get_device_data(
         self, interface: str, channel_address: str, parameter: str
