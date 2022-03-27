@@ -518,7 +518,7 @@ class Client(ABC):
             await self._central.paramset_descriptions.save()
 
     async def fetch_paramset_descriptions(
-        self, device_description: dict[str, Any], update: bool = False
+        self, device_description: dict[str, Any]
     ) -> None:
         """
         Fetch paramsets for provided device description.
@@ -581,11 +581,10 @@ class Client(ABC):
                 )
         return paramsets
 
+    @abstractmethod
     async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
         """Get paramset description from CCU."""
-        return await self._json_rpc_client.get_paramset_description(
-            interface=self._interface, address=address, paramset_key=paramset_key
-        )
+        ...
 
     async def get_all_paramset_descriptions(
         self, device_descriptions: list[dict[str, Any]]
@@ -624,7 +623,6 @@ class Client(ABC):
             self._central.device_descriptions.get_device(
                 interface_id=self.interface_id, device_address=device_address
             ),
-            update=True,
         )
         await self._central.paramset_descriptions.save()
 
@@ -733,6 +731,12 @@ class ClientCCU(Client):
             paramset_key=paramset_key,
         )
 
+    async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
+        """Get paramset description from CCU."""
+        return await self._json_rpc_client.get_paramset_description(
+            interface=self._interface, address=address, paramset_key=paramset_key
+        )
+
     async def get_all_system_variables(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
         return await self._json_rpc_client.get_all_system_variables()
@@ -824,6 +828,10 @@ class ClientHomegear(Client):
         )
         self.last_updated = INIT_DATETIME
         return False
+
+    async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
+        """Get paramset description from CCU."""
+        return await self._proxy_read.getParamsetDescription(address, paramset_key)
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
