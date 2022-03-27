@@ -3,6 +3,7 @@ Implementation of an async json-rpc client.
 """
 from __future__ import annotations
 
+import asyncio
 from copy import deepcopy
 from datetime import datetime
 import json
@@ -15,7 +16,6 @@ from typing import Any
 from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnector
 
 from hahomematic import config
-import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_ERROR,
@@ -45,26 +45,27 @@ class JsonRpcAioHttpClient:
 
     def __init__(
         self,
-        central_config: hm_central.CentralConfig,
+        loop: asyncio.AbstractEventLoop,
+        username: str,
+        password: str,
+        device_url: str,
+        client_session: ClientSession | None = None,
+        tls: bool = False,
+        verify_tls: bool = False,
     ):
         """Session setup."""
-        self._central_config = central_config
-        if self._central_config.client_session:
-            self._client_session = self._central_config.client_session
+        if client_session:
+            self._client_session = client_session
         else:
             conn = TCPConnector(limit=3)
-            self._client_session = ClientSession(
-                connector=conn, loop=self._central_config.loop
-            )
+            self._client_session = ClientSession(connector=conn, loop=loop)
         self._session_id: str | None = None
         self._last_session_id_refresh: datetime | None = None
-        self._username: str = self._central_config.username
-        self._password: str | None = self._central_config.password
-        self._tls: bool = self._central_config.tls
-        self._tls_context: ssl.SSLContext = get_tls_context(
-            self._central_config.verify_tls
-        )
-        self._url = f"{self._central_config.device_url}{PATH_JSON_RPC}"
+        self._username: str = username
+        self._password: str | None = password
+        self._tls: bool = tls
+        self._tls_context: ssl.SSLContext = get_tls_context(verify_tls)
+        self._url = f"{device_url}{PATH_JSON_RPC}"
 
     @property
     def is_activated(self) -> bool:
@@ -95,12 +96,15 @@ class JsonRpcAioHttpClient:
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 if response[ATTR_RESULT] is True:
                     self._last_session_id_refresh = datetime.now()
-                    _LOGGER.debug("_do_renew_login: Method: %s [%s]", method, session_id)
+                    _LOGGER.debug(
+                        "_do_renew_login: Method: %s [%s]", method, session_id
+                    )
                     return session_id
             return await self._do_login()
         except ClientError as cer:
             _LOGGER.error(
-                "_do_renew_login: ClientError [%s] while renewing JSON-RPC session", cer.args
+                "_do_renew_login: ClientError [%s] while renewing JSON-RPC session",
+                cer.args,
             )
             return None
 
@@ -478,9 +482,7 @@ class JsonRpcAioHttpClient:
             }
             response = await self._post("Interface.getParamsetDescription", params)
             if json_result := response[ATTR_RESULT]:
-                _LOGGER.debug(
-                    "get_paramset_description: Getting paramset description."
-                )
+                _LOGGER.debug("get_paramset_description: Getting paramset description.")
                 return _convert_from_json_paramset_description(json_result)
 
         except BaseHomematicException as hhe:
@@ -502,9 +504,7 @@ class JsonRpcAioHttpClient:
                     for channel_id in room["channelIds"]:
                         channel_ids_room[channel_id] = room["name"]
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "get_all_channel_ids_per_room: %s [%s]", hhe.name, hhe.args
-            )
+            _LOGGER.warning("get_all_channel_ids_per_room: %s [%s]", hhe.name, hhe.args)
 
         return channel_ids_room
 

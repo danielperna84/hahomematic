@@ -120,8 +120,8 @@ class CentralUnit:
         # Signature: (event_type, event_data)
         self.callback_ha_event: Callable | None = None
 
-        self._json_rpc_session: JsonRpcAioHttpClient = JsonRpcAioHttpClient(
-            central_config=self.central_config
+        self._json_rpc_client: JsonRpcAioHttpClient = (
+            self.central_config.get_json_rpc_client()
         )
 
         hm_data.INSTANCES[self.instance_name] = self
@@ -179,7 +179,7 @@ class CentralUnit:
     @property
     def json_rpc_client(self) -> JsonRpcAioHttpClient:
         """Return the json_rpc_session."""
-        return self._json_rpc_session
+        return self._json_rpc_client
 
     @property
     def loop(self) -> asyncio.AbstractEventLoop:
@@ -233,8 +233,8 @@ class CentralUnit:
         """Stop processing of the central unit."""
         self._stop_connection_checker()
         await self._stop_clients()
-        if self._json_rpc_session.is_activated:
-            await self._json_rpc_session.logout()
+        if self._json_rpc_client.is_activated:
+            await self._json_rpc_client.logout()
 
         # un-register this instance from XmlRPC-Server
         self._xml_rpc_server.un_register_central(central=self)
@@ -923,9 +923,9 @@ class CentralConfig:
         username: str,
         password: str,
         interface_configs: set[hm_client.InterfaceConfig],
+        client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
-        client_session: ClientSession | None = None,
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
@@ -939,9 +939,9 @@ class CentralConfig:
         self.username = username
         self.password = password
         self.interface_configs = interface_configs
+        self.client_session = client_session
         self.tls = tls
         self.verify_tls = verify_tls
-        self.client_session = client_session
         self.callback_host = callback_host
         self.callback_port = callback_port
         self.json_port = json_port
@@ -968,6 +968,18 @@ class CentralConfig:
     async def get_central(self) -> CentralUnit:
         """Return the central."""
         return CentralUnit(self)
+
+    def get_json_rpc_client(self) -> JsonRpcAioHttpClient:
+        """Return the json rpc client."""
+        return JsonRpcAioHttpClient(
+            loop=self.loop,
+            username=self.username,
+            password=self.password,
+            device_url=self.device_url,
+            client_session=self.client_session,
+            tls=self.tls,
+            verify_tls=self.verify_tls,
+        )
 
 
 class DeviceDetailsCache:
