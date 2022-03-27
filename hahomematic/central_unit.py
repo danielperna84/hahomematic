@@ -120,8 +120,8 @@ class CentralUnit:
         # Signature: (event_type, event_data)
         self.callback_ha_event: Callable | None = None
 
-        self._json_rpc_session: JsonRpcAioHttpClient = JsonRpcAioHttpClient(
-            central_config=self.central_config
+        self._json_rpc_client: JsonRpcAioHttpClient = (
+            self.central_config.get_json_rpc_client()
         )
 
         hm_data.INSTANCES[self.instance_name] = self
@@ -177,9 +177,9 @@ class CentralUnit:
         return True
 
     @property
-    def json_rpc_session(self) -> JsonRpcAioHttpClient:
+    def json_rpc_client(self) -> JsonRpcAioHttpClient:
         """Return the json_rpc_session."""
-        return self._json_rpc_session
+        return self._json_rpc_client
 
     @property
     def loop(self) -> asyncio.AbstractEventLoop:
@@ -200,6 +200,13 @@ class CentralUnit:
             if client := self.get_client():
                 self._model = client.model
         return self._model
+
+    @property
+    def serial(self) -> str | None:
+        """Return the serial of the backend."""
+        if client := self.get_client():
+            return client.serial
+        return None
 
     @property
     def version(self) -> str | None:
@@ -226,8 +233,8 @@ class CentralUnit:
         """Stop processing of the central unit."""
         self._stop_connection_checker()
         await self._stop_clients()
-        if self._json_rpc_session.is_activated:
-            await self._json_rpc_session.logout()
+        if self._json_rpc_client.is_activated:
+            await self._json_rpc_client.logout()
 
         # un-register this instance from XmlRPC-Server
         self._xml_rpc_server.un_register_central(central=self)
@@ -276,6 +283,15 @@ class CentralUnit:
                 if client := await hm_client.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
+                    if (
+                        interface_config.interface
+                        not in await client.get_available_interfaces()
+                    ):
+                        _LOGGER.warning(
+                            "_create_clients: Interface: %s is not available for backend.",
+                            interface_config.interface,
+                        )
+                        continue
                     _LOGGER.debug(
                         "create_clients: Adding client %s to %s.",
                         client.interface_id,
@@ -675,6 +691,12 @@ class CentralUnit:
             return await client.get_all_system_variables()
         return None
 
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
+        if client := self.get_client():
+            return await client.get_available_interfaces()
+        return []
+
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""
         if client := self.get_client():
@@ -901,9 +923,9 @@ class CentralConfig:
         username: str,
         password: str,
         interface_configs: set[hm_client.InterfaceConfig],
+        client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
-        client_session: ClientSession | None = None,
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
@@ -917,9 +939,9 @@ class CentralConfig:
         self.username = username
         self.password = password
         self.interface_configs = interface_configs
+        self.client_session = client_session
         self.tls = tls
         self.verify_tls = verify_tls
-        self.client_session = client_session
         self.callback_host = callback_host
         self.callback_port = callback_port
         self.json_port = json_port
@@ -946,6 +968,18 @@ class CentralConfig:
     async def get_central(self) -> CentralUnit:
         """Return the central."""
         return CentralUnit(self)
+
+    def get_json_rpc_client(self) -> JsonRpcAioHttpClient:
+        """Return the json rpc client."""
+        return JsonRpcAioHttpClient(
+            loop=self.loop,
+            username=self.username,
+            password=self.password,
+            device_url=self.device_url,
+            client_session=self.client_session,
+            tls=self.tls,
+            verify_tls=self.verify_tls,
+        )
 
 
 class DeviceDetailsCache:
@@ -1054,21 +1088,11 @@ class DeviceDataCache:
         if client := self._central.get_client():
             await client.fetch_all_device_data()
 
-    def add_device_data(self, device_data: dict[str, Any]) -> None:
+    def add_device_data(
+        self, device_data: dict[str, dict[str, dict[str, Any]]]
+    ) -> None:
         """Add device data to cache."""
-        for device_adr, value in device_data.items():
-            device_adr = device_adr.replace("%3A", ":")
-            device_adrs = device_adr.split(".")
-            interface = device_adrs[0]
-            if interface not in self._central_values_cache:
-                self._central_values_cache[interface] = {}
-            channel_address = device_adrs[1]
-            if channel_address not in self._central_values_cache[interface]:
-                self._central_values_cache[interface][channel_address] = {}
-            parameter = device_adrs[2]
-            if parameter not in self._central_values_cache[interface][channel_address]:
-                self._central_values_cache[interface][channel_address][parameter] = {}
-            self._central_values_cache[interface][channel_address][parameter] = value
+        self._central_values_cache = device_data
 
     def get_device_data(
         self, interface: str, channel_address: str, parameter: str
