@@ -601,13 +601,13 @@ class Client(ABC):
 
     async def update_paramset_descriptions(self, device_address: str) -> None:
         """
-        Update paramsets descriptionsfor provided device_address.
+        Update paramsets descriptions for provided device_address.
         """
         if not self._central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
         ):
             _LOGGER.warning(
-                "update_paramset_descriptions: Interface ID missing in central_unit.raw_devices.devices_raw_dict. Not updating paramsets for %s.",
+                "update_paramset_descriptions: Interface missing in central_unit cache. Not updating paramsets for %s.",
                 device_address,
             )
             return
@@ -615,7 +615,7 @@ class Client(ABC):
             interface_id=self.interface_id, device_address=device_address
         ):
             _LOGGER.warning(
-                "update_paramset_descriptions: Channel missing in central_unit.raw_devices.devices_raw_dict[_interface_id]. Not updating paramsets for %s.",
+                "update_paramset_descriptions: Channel missing in central_unit.cache. Not updating paramsets for %s.",
                 device_address,
             )
             return

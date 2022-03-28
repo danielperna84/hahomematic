@@ -422,19 +422,22 @@ class CentralUnit:
             self.instance_name,
         )
 
-    async def validate_config(self) -> bool:
+    async def validate_config_and_get_serial(self) -> str | None:
         """Validate the central configuration."""
         if len(self._interface_configs) == 0:
-            raise NoClients("validate_config: No cliets defined.")
+            raise NoClients("validate_config: No clients defined.")
 
         local_ip = await self._identify_callback_ip(
             list(self._interface_configs)[0].port
         )
+        serial: str | None = None
         for interface_config in self._interface_configs:
-            await hm_client.create_client(
+            client = await hm_client.create_client(
                 central=self, interface_config=interface_config, local_ip=local_ip
             )
-        return True
+            if not serial:
+                serial = await client.get_serial()
+        return serial
 
     def get_client_by_interface_id(self, interface_id: str) -> hm_client.Client | None:
         """Return a client by interface_id."""
@@ -923,7 +926,7 @@ class CentralConfig:
         username: str,
         password: str,
         interface_configs: set[hm_client.InterfaceConfig],
-        client_session: ClientSession | None,
+        client_session: ClientSession | None = None,
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
         callback_host: str | None = None,
