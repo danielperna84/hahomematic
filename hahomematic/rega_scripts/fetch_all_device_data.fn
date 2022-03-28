@@ -1,0 +1,66 @@
+!# fetch_all_device_data
+!#  This script fetches all device data required to initialize the entities without affecting the duty cycle.
+!#
+!# Original script: https://github.com/ioBroker/ioBroker.hm-rega/blob/master/regascripts/datapoints.fn
+!#
+!# datapoints.fn 1.9
+!#
+!# Dieses Homematic-Script gibt eine Liste aller Datenpunkte (ausser WORKING/DIRECTION) als JSON String aus
+!#
+!# 3'2013-9'2014 hobbyquaker https://github.com/hobbyquaker
+!#
+
+
+string sDevId;
+string sChnId;
+string sDPId;
+string sValue;
+string sDPId;
+boolean dpFirst = true;
+Write('{');
+foreach (sDevId, root.Devices().EnumUsedIDs()) {
+    object oDevice = dom.GetObject(sDevId);
+    boolean bDevReady = oDevice.ReadyConfig();
+    if (bDevReady) {
+        foreach (sChnId, oDevice.Channels()) {
+            object oChannel = dom.GetObject(sChnId);
+            foreach(sDPId, oChannel.DPs().EnumUsedIDs()) {
+                object oDP = dom.GetObject(sDPId);
+                if (oDP && oDP.Timestamp().ToInteger() > 0) {
+                    if (oDP.TypeName() != "VARDP") {
+                        if (dpFirst) {
+                          dpFirst = false;
+                        } else {
+                          WriteLine(',');
+                        }
+                        string sValueType = oDP.ValueType();
+                        Write('"');
+                        WriteURL(oDP.Name());
+                        Write('":');
+                        if (sValueType == 20) {
+                            Write('"');
+                            WriteURL(oDP.Value());
+                            Write('"');
+                        } else {
+                            sValue = oDP.Value();
+                            if (sValueType == 2) {
+                                if (sValue) {
+                                    Write("true");
+                                } else {
+                                    Write("false");
+                                }
+                            } else {
+                               if (sValue == "") {
+                                    Write("0");
+                               } else {
+                                    Write(sValue);
+                               }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+Write('}');

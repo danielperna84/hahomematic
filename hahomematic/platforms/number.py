@@ -2,50 +2,85 @@
 Module for entities implemented using the
 number platform (https://www.home-assistant.io/integrations/number/).
 """
+from __future__ import annotations
 
 import logging
+from typing import Any
 
-from hahomematic.const import ATTR_HM_VALUE, HA_PLATFORM_NUMBER
-from hahomematic.entity import GenericEntity
+from hahomematic.const import ATTR_HM_VALUE, HmPlatform
+import hahomematic.device as hm_device
+from hahomematic.entity import GenericEntity, ParameterType
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmNumber(GenericEntity):
+class BaseNumber(GenericEntity[ParameterType]):
     """
     Implementation of a number.
     This is a default platform that gets automatically generated.
     """
 
-    def __init__(self, device, unique_id, address, parameter, parameter_data):
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        channel_address: str,
+        paramset_key: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            address=address,
+            channel_address=channel_address,
+            paramset_key=paramset_key,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HA_PLATFORM_NUMBER,
+            platform=HmPlatform.NUMBER,
         )
 
-    @property
-    def state(self):
-        """Get the state of the entity."""
-        return self._state
 
-    async def set_state(self, value):
-        """Set the state of the entity."""
-        # pylint: disable=no-else-return
-        if self._min <= value <= self._max:
-            await self.send_value(value)
-            return
+class HmFloat(BaseNumber[float]):
+    """
+    Implementation of a Float.
+    This is a default platform that gets automatically generated.
+    """
+
+    async def send_value(self, value: float) -> None:
+        """Set the value of the entity."""
+        if value is not None and self._min <= float(value) <= self._max:
+            await super().send_value(value)
         elif self._special:
-            if [sv for sv in self._special if value == sv[ATTR_HM_VALUE]]:
-                await self.send_value(value)
-                return
-        _LOGGER.error(
-            "number: Invalid value: %s (min: %s, max: %s, special: %s)",
-            value,
-            self._min,
-            self._max,
-            self._special,
-        )
+            if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
+                await super().send_value(value)
+        else:
+            _LOGGER.warning(
+                "number.float: Invalid value: %s (min: %s, max: %s, special: %s)",
+                value,
+                self._min,
+                self._max,
+                self._special,
+            )
+
+
+class HmInteger(BaseNumber[int]):
+    """
+    Implementation of an Integer.
+    This is a default platform that gets automatically generated.
+    """
+
+    async def send_value(self, value: int) -> None:
+        """Set the value of the entity."""
+        if value is not None and self._min <= int(value) <= self._max:
+            await super().send_value(value)
+        elif self._special:
+            if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
+                await super().send_value(value)
+        else:
+            _LOGGER.warning(
+                "number.int: Invalid value: %s (min: %s, max: %s, special: %s)",
+                value,
+                self._min,
+                self._max,
+                self._special,
+            )

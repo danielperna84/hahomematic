@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 
 from setuptools import find_packages, setup
@@ -8,13 +10,16 @@ def readme():
         return fptr.read()
 
 
+package_data = {
+        'foopkg': ['py.typed'],
+    },
 PACKAGE_NAME = "hahomematic"
 HERE = os.path.abspath(os.path.dirname(__file__))
-VERSION = "0.0.4"
+VERSION = "1.0.0"
 
 PACKAGES = find_packages(exclude=["tests", "tests.*", "dist", "build"])
 
-REQUIRES = ["aiohttp==3.8.0", "voluptuous==0.12.2"]
+REQUIRES = ["aiohttp>=3.8.1", "voluptuous>=0.12.2", "python-slugify>=4.0.1"]
 
 setup(
     name=PACKAGE_NAME,
@@ -26,17 +31,23 @@ setup(
     author_email="danielperna84@gmail.com",
     description="Homematic interface for Home Assistant",
     packages=PACKAGES,
-    include_package_data=True,
+    package_data={'hahomematic': ['py.typed', 'rega_scripts/*.fn']},
     zip_safe=False,
     platforms="any",
-    python_requires=">=3.6",
+    python_requires=">=3.9",
     install_requires=REQUIRES,
     keywords=["home", "assistant", "homematic"],
+    entry_points={
+        'console_scripts': [
+            'hahomematic = hahomematic.hmcli:main'
+        ]
+    },
     classifiers=[
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Home Automation",
     ],
 )
