@@ -145,10 +145,10 @@ class HmSystemVariable(BaseHubEntity):
         self._hub: HmHub | HmDummyHub | None = central.hub
         unique_id = generate_unique_id(
             domain=central.domain,
-            instance_name=central.instance_name,
+            instance_name="",
             address=SYSVAR_ADDRESS,
             parameter=slugify(name),
-            prefix=central.instance_name,
+            prefix=central.serial,
         )
         super().__init__(
             central=central,
