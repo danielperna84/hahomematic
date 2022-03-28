@@ -73,14 +73,14 @@ async def central(
     }
 
     central_unit = await CentralConfig(
-        domain="hahm",
+        domain="homematicip_local",
         name="ccu-dev",
         loop=loop,
         xml_rpc_server=register_xml_rpc_server(),
         host=CCU_HOST,
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
-        storage_folder="hahm",
+        storage_folder="homematicip_local",
         interface_configs=interface_configs,
     ).get_central()
     central_unit.callback_system_event = systemcallback

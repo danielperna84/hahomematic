@@ -926,7 +926,7 @@ class CentralConfig:
         username: str,
         password: str,
         interface_configs: set[hm_client.InterfaceConfig],
-        client_session: ClientSession | None,
+        client_session: ClientSession | None = None,
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
         callback_host: str | None = None,
