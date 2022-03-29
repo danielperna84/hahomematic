@@ -1,3 +1,6 @@
+Version 1.0.2 (2022-03-29)
+- Revert to XmlRPC getParamsetDescription for CCU
+
 Version 1.0.1 (2022-03-29)
 - Add central_id for uniqueness of heating groups, sysvars and hub
 

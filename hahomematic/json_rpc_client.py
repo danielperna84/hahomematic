@@ -4,7 +4,6 @@ Implementation of an async json-rpc client.
 from __future__ import annotations
 
 import asyncio
-from copy import deepcopy
 from datetime import datetime
 import json
 import logging
@@ -35,7 +34,7 @@ from hahomematic.const import (
     REGA_SCRIPT_PATH,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
-from hahomematic.helpers import convert_value, get_tls_context, parse_ccu_sys_var
+from hahomematic.helpers import get_tls_context, parse_ccu_sys_var
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -467,29 +466,6 @@ class JsonRpcAioHttpClient:
 
         return value
 
-    async def get_paramset_description(
-        self, interface: str, address: str, paramset_key: str
-    ) -> dict[str, Any]:
-        """Get paramset description from CCU."""
-        _LOGGER.debug(
-            "get_paramset_description: Getting paramset description via JSON-RPC."
-        )
-        try:
-            params = {
-                ATTR_INTERFACE: interface,
-                ATTR_ADDRESS: address,
-                ATTR_PARAMSET_KEY: paramset_key,
-            }
-            response = await self._post("Interface.getParamsetDescription", params)
-            if json_result := response[ATTR_RESULT]:
-                _LOGGER.debug("get_paramset_description: Getting paramset description.")
-                return _convert_from_json_paramset_description(json_result)
-
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("get_paramset_description: %s, %s", hhe.name, hhe.args)
-
-        return {}
-
     async def get_all_channel_ids_room(self) -> dict[str, str]:
         """Get all channel_ids per room from CCU / Homegear."""
         channel_ids_room: dict[str, str] = {}
@@ -601,30 +577,6 @@ def _get_params(
     if extra_params:
         params.update(extra_params)
     return params
-
-
-def _convert_from_json_paramset_description(
-    json_paramset_descriptions: list[dict[str, Any]]
-) -> dict[str, Any]:
-    """Fix types of values."""
-    convert_to_int = ["FLAGS", "OPERATIONS", "TAB_ORDER"]
-    convert_to_target_type = ["DEFAULT", "MAX", "MIN"]
-    convert_to_list = ["VALUE_LIST"]
-    new_psds: dict[str, Any] = {}
-    for json_paramset_description in json_paramset_descriptions:
-        new_psd = deepcopy(json_paramset_description)
-        hm_name = new_psd.pop("NAME")
-        hm_type = new_psd["TYPE"]
-        for key, value in new_psd.items():
-            if key in convert_to_int:
-                new_psd[key] = int(value)
-            elif key in convert_to_target_type:
-                new_psd[key] = convert_value(value=value, target_type=hm_type)
-            elif key in convert_to_list:
-                new_psd[key] = value.split(" ")
-        new_psds[hm_name] = new_psd
-
-    return new_psds
 
 
 def _convert_to_values_cache(
