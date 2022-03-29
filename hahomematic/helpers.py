@@ -19,7 +19,9 @@ from hahomematic.const import (
     ATTR_HM_NUMBER,
     ATTR_TYPE,
     ATTR_VALUE,
+    HUB_ADDRESS,
     INIT_DATETIME,
+    SYSVAR_ADDRESS,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -37,8 +39,7 @@ class ClientException(Exception):
 
 
 def generate_unique_id(
-    domain: str,
-    instance_name: str,
+    central: hm_central.CentralUnit,
     address: str,
     parameter: str | None = None,
     prefix: str | None = None,
@@ -54,9 +55,9 @@ def generate_unique_id(
 
     if prefix:
         unique_id = f"{prefix}_{unique_id}"
-    if address.startswith("INT000"):
-        return f"{domain}_{instance_name}_{unique_id}".lower()
-    return f"{domain}_{unique_id}".lower()
+    if address in (HUB_ADDRESS, SYSVAR_ADDRESS) or address.startswith("INT000"):
+        return f"{central.domain}_{central.central_id}_{unique_id}".lower()
+    return f"{central.domain}_{unique_id}".lower()
 
 
 def build_xml_rpc_uri(

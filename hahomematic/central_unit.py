@@ -159,6 +159,11 @@ class CentralUnit:
         return self._hub
 
     @property
+    def central_id(self) -> str:
+        """Return the device_url of the backend."""
+        return self.central_config.central_id
+
+    @property
     def device_url(self) -> str:
         """Return the device_url of the backend."""
         return self.central_config.device_url
@@ -925,6 +930,7 @@ class CentralConfig:
         host: str,
         username: str,
         password: str,
+        central_id: str,
         interface_configs: set[hm_client.InterfaceConfig],
         client_session: ClientSession | None = None,
         tls: bool = DEFAULT_TLS,
@@ -941,6 +947,7 @@ class CentralConfig:
         self.host = host
         self.username = username
         self.password = password
+        self.central_id = central_id
         self.interface_configs = interface_configs
         self.client_session = client_session
         self.tls = tls

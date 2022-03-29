@@ -10,7 +10,14 @@ from typing import Any
 from slugify import slugify
 
 import hahomematic.central_unit as hm_central
-from hahomematic.const import BACKEND_CCU, INIT_DATETIME, HmEntityUsage, HmPlatform
+from hahomematic.const import (
+    BACKEND_CCU,
+    HUB_ADDRESS,
+    INIT_DATETIME,
+    SYSVAR_ADDRESS,
+    HmEntityUsage,
+    HmPlatform,
+)
 from hahomematic.helpers import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,8 +31,6 @@ EXCLUDED = [
 ]
 
 SERVICE_MESSAGES = "Servicemeldungen"
-SYSVAR_ADDRESS = "sysvar"
-HUB_ADDRESS = "hub"
 
 
 class BaseHubEntity(ABC):
@@ -144,11 +149,9 @@ class HmSystemVariable(BaseHubEntity):
     def __init__(self, central: hm_central.CentralUnit, name: str, value: Any):
         self._hub: HmHub | HmDummyHub | None = central.hub
         unique_id = generate_unique_id(
-            domain=central.domain,
-            instance_name="",
+            central=central,
             address=SYSVAR_ADDRESS,
             parameter=slugify(name),
-            prefix=central.serial,
         )
         super().__init__(
             central=central,
@@ -193,11 +196,7 @@ class HmHub(BaseHubEntity):
 
     def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
-        unique_id: str = generate_unique_id(
-            domain=central.domain,
-            instance_name=central.instance_name,
-            address=HUB_ADDRESS,
-        )
+        unique_id: str = generate_unique_id(central=central, address=HUB_ADDRESS)
         name: str = central.instance_name
         super().__init__(central, unique_id, name)
         self.hub_entities: dict[str, HmSystemVariable] = {}
@@ -292,10 +291,7 @@ class HmDummyHub(BaseHubEntity):
     def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
         unique_id: str = generate_unique_id(
-            domain=central.domain,
-            instance_name=central.instance_name,
-            address=central.instance_name,
-            prefix="hub",
+            central=central, address=central.instance_name, prefix="hub"
         )
         name: str = central.instance_name
         super().__init__(central, unique_id, name)

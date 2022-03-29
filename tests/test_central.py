@@ -19,7 +19,7 @@ async def test_central(central, loop) -> None:
     assert central
     assert central.instance_name == "ccu-dev"
     assert central.model == "PyDevCCU"
-    assert central.get_client_by_interface_id("ccu-dev-hm").model == "PyDevCCU"
+    assert central.get_client_by_interface_id("ccu-dev-BidCos-RF").model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
 
     data = {}
