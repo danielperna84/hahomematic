@@ -13,7 +13,7 @@ Make sure you are running the latest version of hahomematic or it's custom_compo
 
 
 **custom_component/hahomematic version (if applicable):**
-0.x.x
+1.x.x
 
 **Home Assistant version (if applicable):**
 2022.x.x
@@ -40,7 +40,19 @@ Steps to reproduce the behavior:
 3. Scroll down to '....'
 4. See error
 
-**Relevant HA log entries**
+**Screenshots (if applicable)**
+- CCU firewall
+- integrations view
+- device view
+- enity view
+
+**Relevant HA log entries (full log)**
+```
+
+
+```
+
+**Diagnostic Information (available on every device)**
 ```
 
 
