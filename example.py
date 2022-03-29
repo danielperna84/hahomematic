@@ -80,6 +80,7 @@ class Example:
             host=CCU_HOST,
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
+            central_id="1234",
             storage_folder="homematicip_local",
             interface_configs=interface_configs,
         ).get_central()

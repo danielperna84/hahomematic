@@ -465,8 +465,7 @@ class HmDevice:
     ) -> None:
         """Create the actions associated to this device"""
         unique_id = generate_unique_id(
-            domain=self._central.domain,
-            instance_name=self._central.instance_name,
+            central=self._central,
             address=channel_address,
             parameter=parameter,
             prefix=f"button_{self._central.instance_name}",
@@ -496,8 +495,7 @@ class HmDevice:
             self._central.entity_event_subscriptions[(channel_address, parameter)] = []
 
         unique_id = generate_unique_id(
-            domain=self._central.domain,
-            instance_name=self._central.instance_name,
+            central=self._central,
             address=channel_address,
             parameter=parameter,
             prefix=f"event_{self._central.instance_name}",
@@ -549,10 +547,7 @@ class HmDevice:
             self._central.entity_event_subscriptions[(channel_address, parameter)] = []
 
         unique_id = generate_unique_id(
-            domain=self._central.domain,
-            instance_name=self._central.instance_name,
-            address=channel_address,
-            parameter=parameter,
+            central=self._central, address=channel_address, parameter=parameter
         )
         if unique_id in self._central.hm_entities:
             _LOGGER.debug(

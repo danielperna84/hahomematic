@@ -67,7 +67,7 @@ async def central(
 
     interface_configs = {
         InterfaceConfig(
-            interface="hm",
+            interface="BidCos-RF",
             port=2001,
         )
     }
@@ -80,6 +80,7 @@ async def central(
         host=CCU_HOST,
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
+        central_id="test1234",
         storage_folder="homematicip_local",
         interface_configs=interface_configs,
     ).get_central()

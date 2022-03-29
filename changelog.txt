@@ -1,4 +1,7 @@
-Version 1.0.0 (2022-03-29)
+Version 1.0.1 (2022-03-29)
+- Add central_id for uniqueness of heating groups, sysvars and hub
+
+Version 1.0.0 (2022-03-28)
 - Simplify json usage
 - Move json methods to json client
 - Make json client independent from central config
