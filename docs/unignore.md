@@ -18,5 +18,5 @@ You must accept the following before using the _unignore mechanism_:
 - Changes require a restart
 - Customization to entities must be done with HA customisations
 
-To use the _unignore mechanism_ create a file named `unignore`(no prefix!) in the `{ha config dir}/hahm` and put the parameters in there. 
+To use the _unignore mechanism_ create a file named `unignore`(no prefix!) in the `{ha config dir}/homematicip_local` and put the parameters in there. 
 
