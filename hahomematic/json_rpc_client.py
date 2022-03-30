@@ -550,22 +550,6 @@ class JsonRpcAioHttpClient:
 
         return serial
 
-    async def get_version(self) -> str:
-        """Get the version of the backend."""
-        version = "unknown"
-
-        _LOGGER.debug("get_version: Getting the backend version via JSON-RPC")
-        try:
-            response = await self._post(
-                method="CCU.getVersion",
-            )
-            if json_result := response[ATTR_RESULT]:
-                version = json_result
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("get_version: %s [%s]", hhe.name, hhe.args)
-
-        return version
-
 
 def _get_params(
     session_id: bool | str,
