@@ -307,9 +307,9 @@ class Client(ABC):
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
 
-    @abstractmethod
     async def get_version(self) -> str:
         """Get the version of the backend."""
+        return cast(str, await self._proxy.getVersion())
 
     @abstractmethod
     def get_virtual_remote(self) -> HmDevice | None:
@@ -752,10 +752,6 @@ class ClientCCU(Client):
         """Get the serial of the backend."""
         return await self._json_rpc_client.get_serial()
 
-    async def get_version(self) -> str:
-        """Get the version of the backend."""
-        return await self._json_rpc_client.get_version()
-
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for device_type in HM_VIRTUAL_REMOTES:
@@ -862,10 +858,6 @@ class ClientHomegear(Client):
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
         return "Homegear_SN0815"
-
-    async def get_version(self) -> str:
-        """Get the version of the backend."""
-        return cast(str, await self._proxy.getVersion())
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
