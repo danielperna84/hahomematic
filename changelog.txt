@@ -1,3 +1,6 @@
+Version 1.0.4 (2022-03-30)
+- Use max version of interfaces for backend version
+
 Version 1.0.3 (2022-03-30)
 - Revert to XmlRPC getVersion for CCU
 
