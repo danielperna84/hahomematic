@@ -239,6 +239,16 @@ class CentralUnit:
             await self._init_hub()
             await self._init_clients()
 
+    async def start_direct(self) -> None:
+        """Start the central unit for temporary usage."""
+        await self.parameter_visibility.load()
+        await self._create_clients()
+        for client in self._clients.values():
+            dev_descriptions = await client.get_all_device_descriptions()
+            await self._add_new_devices(
+                interface_id=client.interface_id, dev_descriptions=dev_descriptions
+            )
+
     async def stop(self) -> None:
         """Stop processing of the central unit."""
         self._stop_connection_checker()
@@ -619,6 +629,14 @@ class CentralUnit:
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
+        self, interface_id: str, dev_descriptions: list[dict[str, Any]]
+    ) -> None:
+        """Add new devices to central unit."""
+        await self._add_new_devices(
+            interface_id=interface_id, dev_descriptions=dev_descriptions
+        )
+
+    async def _add_new_devices(
         self, interface_id: str, dev_descriptions: list[dict[str, Any]]
     ) -> None:
         """Add new devices to central unit."""
