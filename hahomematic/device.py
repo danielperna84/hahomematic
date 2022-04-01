@@ -422,7 +422,8 @@ class HmDevice:
                     ) or (
                         parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL
                         and not self._central.parameter_visibility.parameter_is_un_ignored(
-                            device=self,
+                            device_type=self.device_type,
+                            sub_type=self.sub_type,
                             device_channel=device_channel,
                             paramset_key=paramset_key,
                             parameter=parameter,
@@ -532,7 +533,8 @@ class HmDevice:
         platform should be used, and creates the required entities.
         """
         if self._central.parameter_visibility.ignore_parameter(
-            device=self,
+            device_type=self.device_type,
+            sub_type=self.sub_type,
             device_channel=get_device_channel(channel_address),
             paramset_key=paramset_key,
             parameter=parameter,
