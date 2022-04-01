@@ -17,7 +17,6 @@ from hahomematic.const import (
     PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
 )
-import hahomematic.device as hm_device
 from hahomematic.helpers import check_or_create_directory
 
 _LOGGER = logging.getLogger(__name__)
@@ -210,18 +209,20 @@ class ParameterVisibilityCache:
 
     def ignore_parameter(
         self,
-        device: hm_device.HmDevice,
+        device_type: str,
+        sub_type: str | None,
         device_channel: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
         """Check if parameter can be ignored."""
-        device_type_l = device.device_type.lower()
-        sub_type_l = device.sub_type.lower() if device.sub_type else device.sub_type
+        device_type_l = device_type.lower()
+        sub_type_l = sub_type.lower() if sub_type else None
 
         if paramset_key == PARAMSET_KEY_VALUES:
             if self.parameter_is_un_ignored(
-                device=device,
+                device_type=device_type,
+                sub_type=sub_type,
                 device_channel=device_channel,
                 paramset_key=paramset_key,
                 parameter=parameter,
@@ -247,22 +248,23 @@ class ParameterVisibilityCache:
                     return True
         if paramset_key == PARAMSET_KEY_MASTER:
             if parameter not in self._un_ignore_parameters_by_device_paramset_key.get(
-                device.device_type.lower(), {}
+                device_type_l, {}
             ).get(device_channel, {}).get(PARAMSET_KEY_MASTER, []):
                 return True
         return False
 
     def parameter_is_un_ignored(
         self,
-        device: hm_device.HmDevice,
+        device_type: str,
+        sub_type: str | None,
         device_channel: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
         """Return if parameter is on un_ignore list"""
 
-        device_type_l = device.device_type.lower()
-        sub_type_l = device.sub_type.lower() if device.sub_type else device.sub_type
+        device_type_l = device_type.lower()
+        sub_type_l = sub_type.lower() if sub_type else None
 
         if parameter in self._un_ignore_parameters_general[paramset_key]:
             return True
@@ -272,10 +274,11 @@ class ParameterVisibilityCache:
         ).get(device_channel, {}).get(paramset_key, set()):
             return True
 
-        if parameter in self._un_ignore_parameters_by_device_paramset_key.get(
-            sub_type_l, {}
-        ).get(device_channel, {}).get(paramset_key, set()):
-            return True
+        if sub_type_l:
+            if parameter in self._un_ignore_parameters_by_device_paramset_key.get(
+                sub_type_l, {}
+            ).get(device_channel, {}).get(paramset_key, set()):
+                return True
 
         if sub_type_l and sub_type_l in self._un_ignore_parameters_by_device_lower:
             un_ignore_parameters = self._un_ignore_parameters_by_device_lower[
@@ -286,10 +289,10 @@ class ParameterVisibilityCache:
 
         if device_type_l.startswith(tuple(self._un_ignore_parameters_by_device_lower)):
             for (
-                device_type,
+                device_t,
                 un_ignore_parameters,
             ) in self._un_ignore_parameters_by_device_lower.items():
-                if device_type_l.startswith(device_type):
+                if device_type_l.startswith(device_t):
                     if parameter in un_ignore_parameters:
                         return True
         return False

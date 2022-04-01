@@ -1,5 +1,8 @@
 Version 1.0.4 (2022-03-30)
 - Use max version of interfaces for backend version
+- Remove device as parameter from parameter_availability
+- Add XmlRPC.listDevice to Client
+- Add start_direct for starts without waiting for events (only for temporary usage)
 
 Version 1.0.3 (2022-03-30)
 - Revert to XmlRPC getVersion for CCU
