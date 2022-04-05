@@ -227,8 +227,11 @@ class HmHub(BaseHubEntity):
 
     async def _update_hub_state(self) -> None:
         """Retrieve latest service_messages."""
-        service_messages = await self._central.get_system_variable(SERVICE_MESSAGES)
-        value = 0 if service_messages is None else int(service_messages)
+        value = 0
+        if self._central.model == BACKEND_CCU:
+            service_messages = await self._central.get_system_variable(SERVICE_MESSAGES)
+            if service_messages is not None and isinstance(service_messages, float):
+                value = int(service_messages)
 
         if self._value != value:
             self._value = value

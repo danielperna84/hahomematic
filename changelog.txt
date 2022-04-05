@@ -1,3 +1,6 @@
+Version 1.0.5 (2022-04-05)
+- Limit hub_state to ccu only
+
 Version 1.0.4 (2022-03-30)
 - Use max version of interfaces for backend version
 - Remove device as parameter from parameter_availability

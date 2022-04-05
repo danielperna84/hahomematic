@@ -1142,7 +1142,7 @@ class DeviceDataCache:
         self._device_data.clear()
 
 
-class BasePersitentCache(ABC):
+class BasePersistentCache(ABC):
     """Cache for files."""
 
     def __init__(
@@ -1209,7 +1209,7 @@ class BasePersitentCache(ABC):
         await self._central.async_add_executor_job(_clear)
 
 
-class DeviceDescriptionCache(BasePersitentCache):
+class DeviceDescriptionCache(BasePersistentCache):
     """Cache for device/channel names."""
 
     def __init__(self, central: CentralUnit):
@@ -1361,7 +1361,7 @@ class DeviceDescriptionCache(BasePersitentCache):
         return result
 
 
-class ParamsetDescriptionCache(BasePersitentCache):
+class ParamsetDescriptionCache(BasePersistentCache):
     """Cache for paramset descriptions."""
 
     def __init__(self, central: CentralUnit):
