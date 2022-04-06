@@ -1,3 +1,6 @@
+Version 1.0.6 (2022-04-06)
+- Revert to XmlRPC getValue and getParamset for CCU
+
 Version 1.0.5 (2022-04-05)
 - Limit hub_state to ccu only
 

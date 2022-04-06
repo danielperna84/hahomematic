@@ -809,7 +809,6 @@ class ValueCache:
                     channel_address=channel_address,
                     parameter=parameter,
                     paramset_key=paramset_key,
-                    cached=True,
                 )
                 self._value_cache[paramset_key][channel_address][
                     parameter

@@ -367,16 +367,14 @@ class Client(ABC):
         channel_address: str,
         parameter: str,
         paramset_key: str = PARAMSET_KEY_VALUES,
-        cached: bool = False,
     ) -> Any:
         """Return a value from CCU."""
         try:
             _LOGGER.debug(
-                "get_value: channel_address %s, parameter %s, paramset_key, %s, cache %s",
+                "get_value: channel_address %s, parameter %s, paramset_key, %s",
                 channel_address,
                 parameter,
                 paramset_key,
-                cached,
             )
             if paramset_key == PARAMSET_KEY_VALUES:
                 return await self._proxy_read.getValue(channel_address, parameter)
@@ -444,16 +442,13 @@ class Client(ABC):
             rx_mode=rx_mode,
         )
 
-    async def get_paramset(
-        self, channel_address: str, paramset_key: str, cached: bool = False
-    ) -> Any:
+    async def get_paramset(self, channel_address: str, paramset_key: str) -> Any:
         """Return a paramset from CCU."""
         try:
             _LOGGER.debug(
-                "get_paramset: channel_address %s, paramset_key %s, cached %s",
+                "get_paramset: channel_address %s, paramset_key %s",
                 channel_address,
                 paramset_key,
-                cached,
             )
             return await self._proxy_read.getParamset(channel_address, paramset_key)
         except BaseHomematicException as hhe:
@@ -702,41 +697,6 @@ class ClientCCU(Client):
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         return await self._json_rpc_client.get_system_variable(name=name)
-
-    async def get_value(
-        self,
-        channel_address: str,
-        parameter: str,
-        paramset_key: str = PARAMSET_KEY_VALUES,
-        cached: bool = True,
-    ) -> Any:
-        """Return a cached value from CCU."""
-        if not cached:
-            return super().get_value(
-                channel_address=channel_address,
-                parameter=parameter,
-                paramset_key=paramset_key,
-            )
-        return await self._json_rpc_client.get_value(
-            interface=self.interface_id,
-            channel_address=channel_address,
-            parameter=parameter,
-            paramset_key=paramset_key,
-        )
-
-    async def get_paramset(
-        self, channel_address: str, paramset_key: str, cached: bool = True
-    ) -> Any:
-        """Return a cached paramset from CCU."""
-        if not cached:
-            return super().get_paramset(
-                channel_address=channel_address, paramset_key=paramset_key
-            )
-        return await self._json_rpc_client.get_paramset(
-            interface=self._interface,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-        )
 
     async def get_all_system_variables(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
