@@ -16,19 +16,14 @@ from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnect
 
 from hahomematic import config
 from hahomematic.const import (
-    ATTR_ADDRESS,
     ATTR_ERROR,
-    ATTR_INTERFACE,
     ATTR_NAME,
-    ATTR_PARAMSET_KEY,
     ATTR_PASSWORD,
     ATTR_RESULT,
     ATTR_SESSION_ID,
     ATTR_USERNAME,
     ATTR_VALUE,
-    ATTR_VALUE_KEY,
     DEFAULT_ENCODING,
-    PARAMSET_KEY_VALUES,
     PATH_JSON_RPC,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     REGA_SCRIPT_PATH,
@@ -408,63 +403,6 @@ class JsonRpcAioHttpClient:
             _LOGGER.warning("get_all_system_variables: %s [%s]", hhe.name, hhe.args)
 
         return variables
-
-    async def get_value(
-        self,
-        interface: str,
-        channel_address: str,
-        parameter: str,
-        paramset_key: str = PARAMSET_KEY_VALUES,
-    ) -> Any:
-        """Return a cached value from CCU."""
-        value = None
-        _LOGGER.debug("get_value: Getting value via JSON-RPC")
-        try:
-            params = {
-                ATTR_INTERFACE: interface,
-                ATTR_ADDRESS: channel_address,
-                ATTR_VALUE_KEY: parameter,
-            }
-            method = (
-                "Interface.getValue"
-                if paramset_key == PARAMSET_KEY_VALUES
-                else "Interface.getMasterValue"
-            )
-            response = await self._post(
-                method=method,
-                extra_params=params,
-            )
-            if json_result := response[ATTR_RESULT]:
-                # This does not yet support strings
-                value = json_result
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("get_value: %s [%s]", hhe.name, hhe.args)
-
-        return value
-
-    async def get_paramset(
-        self, interface: str, channel_address: str, paramset_key: str
-    ) -> Any:
-        """Return a cached paramset from CCU."""
-        value = None
-        _LOGGER.debug("get_paramset: Getting value via JSON-RPC")
-        try:
-            params = {
-                ATTR_INTERFACE: interface,
-                ATTR_ADDRESS: channel_address,
-                ATTR_PARAMSET_KEY: paramset_key,
-            }
-            response = await self._post(
-                "Interface.getParamset",
-                params,
-            )
-            if json_result := response[ATTR_RESULT]:
-                # This does not yet support strings
-                value = json_result
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("get_paramset: %s [%s]", hhe.name, hhe.args)
-
-        return value
 
     async def get_all_channel_ids_room(self) -> dict[str, str]:
         """Get all channel_ids per room from CCU / Homegear."""
