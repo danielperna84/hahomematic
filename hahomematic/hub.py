@@ -18,7 +18,7 @@ from hahomematic.const import (
     HmEntityUsage,
     HmPlatform,
 )
-from hahomematic.helpers import generate_unique_id
+from hahomematic.helpers import HmDeviceInfo, generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,9 +65,9 @@ class BaseHubEntity(ABC):
         return self._central.available
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_information(self) -> HmDeviceInfo:
         """Return central specific attributes."""
-        return self._central.device_info
+        return self._central.device_information
 
     @property
     def attributes(self) -> dict[str, Any]:
@@ -161,11 +161,11 @@ class HmSystemVariable(BaseHubEntity):
         )
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_information(self) -> HmDeviceInfo:
         """Return device specific attributes."""
         if self._hub:
-            return self._hub.device_info
-        return {}
+            return self._hub.device_information
+        return HmDeviceInfo(identifier="NN")
 
     @property
     def platform(self) -> HmPlatform:
@@ -301,9 +301,9 @@ class HmDummyHub(BaseHubEntity):
         self.hub_entities: dict[str, BaseHubEntity] = {}
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_information(self) -> HmDeviceInfo:
         """Return central specific attributes."""
-        return self._central.device_info
+        return self._central.device_information
 
     @property
     def attributes(self) -> dict[str, Any]:

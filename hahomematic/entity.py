@@ -47,6 +47,7 @@ import hahomematic.devices as hm_custom_entity
 import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
+    HmDeviceInfo,
     check_channel_is_only_primary_channel,
     convert_value,
     get_custom_entity_name,
@@ -166,9 +167,11 @@ class BaseEntity(ABC):
         return self._device.available
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_information(self) -> HmDeviceInfo:
         """Return device specific attributes."""
-        return self._device.device_info
+        device_info = self._device.device_information
+        device_info.channel_no = self._channel_no
+        return device_info
 
     @property
     def attributes(self) -> dict[str, Any]:

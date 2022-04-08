@@ -1,5 +1,6 @@
-Version 1.0.6 (2022-04-07)
+Version 1.0.6 (2022-04-08)
 - Add BATTERY_STATE to DEFAULT_ENTITIES
+- Migrate device_info to dataclass
 
 Version 1.0.6 (2022-04-06)
 - Revert to XmlRPC getValue and getParamset for CCU

@@ -50,6 +50,7 @@ from hahomematic.entity import (
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
+    HmDeviceInfo,
     generate_unique_id,
     get_channel_no,
     get_device_channel,
@@ -285,22 +286,19 @@ class HmDevice:
         return f"address: {self._device_address}, type: {self.device_type}, name: {self.name}, entities: {self.entities}"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_information(self) -> HmDeviceInfo:
         """Return device specific attributes."""
-        return {
-            "identifiers": {
-                (
-                    self._central.domain,
-                    f"{self._device_address}{IDENTIFIERS_SEPARATOR}{self._interface_id}",
-                )
-            },
-            "name": self.name,
-            "manufacturer": MANUFACTURER,
-            "model": self.device_type,
-            "sw_version": self.firmware,
-            "suggested_area": self.room,
-            "via_device": (self._central.domain, self._central.instance_name),
-        }
+        return HmDeviceInfo(
+            interface=self._interface_id,
+            address=self._device_address,
+            identifier=f"{self._device_address}{IDENTIFIERS_SEPARATOR}{self._interface_id}",
+            manufacturer=MANUFACTURER,
+            name=self.name,
+            model=self.device_type,
+            version=self.firmware,
+            room=self.room,
+            central=self._central.instance_name,
+        )
 
     @property
     def available(self) -> bool:
