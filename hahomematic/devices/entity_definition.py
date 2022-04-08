@@ -164,6 +164,12 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             "RSSI_DEVICE",
             "RSSI_PEER",
             "SABOTAGE",
+        },
+        2: {
+            "BATTERY_STATE",
+        },
+        4: {
+            "BATTERY_STATE",
         }
     },
     ED_DEVICE_DEFINITIONS: {
@@ -492,11 +498,13 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 "ERROR",
             },
         },
+        # HmIPW-DR*
         "HmIPW-DR": {
             0: {
                 "ACTUAL_TEMPERATURE",
             },
         },
+        # HmIP-DR*
         "HmIP-DR": {
             0: {
                 "ACTUAL_TEMPERATURE",
