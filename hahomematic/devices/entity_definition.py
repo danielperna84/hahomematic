@@ -170,7 +170,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         },
         4: {
             "BATTERY_STATE",
-        }
+        },
     },
     ED_DEVICE_DEFINITIONS: {
         EntityDefinition.IP_COVER: {

@@ -4,6 +4,7 @@ Helper functions used within hahomematic
 from __future__ import annotations
 
 import base64
+from dataclasses import dataclass
 from datetime import datetime
 from distutils import util
 import logging
@@ -36,6 +37,23 @@ _LOGGER = logging.getLogger(__name__)
 
 class ClientException(Exception):
     """hahomematic Client exception."""
+
+
+@dataclass
+class HmDeviceInfo:
+    """HM entity device information for HA device registry."""
+
+    identifier: str
+    interface: str | None = None
+    address: str | None = None
+    channel_no: int | None = None
+    central_url: str | None = None
+    manufacturer: str | None = None
+    model: str | None = None
+    name: str | None = None
+    room: str | None = None
+    version: str | None = None
+    central: str | None = None
 
 
 def generate_unique_id(

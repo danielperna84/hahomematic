@@ -57,6 +57,7 @@ from hahomematic.exceptions import (
     NoConnection,
 )
 from hahomematic.helpers import (
+    HmDeviceInfo,
     check_or_create_directory,
     get_device_address,
     get_device_channel,
@@ -143,16 +144,16 @@ class CentralUnit:
         return self._clients
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_information(self) -> HmDeviceInfo:
         """Return central specific attributes."""
-        return {
-            "identifiers": {(self._domain, self.instance_name)},
-            "name": self.instance_name,
-            "manufacturer": MANUFACTURER,
-            "model": self.model,
-            "sw_version": self.version,
-            "device_url": self.device_url,
-        }
+        return HmDeviceInfo(
+            identifier=self.instance_name,
+            manufacturer=MANUFACTURER,
+            name=self.instance_name,
+            model=self.model,
+            version=self.version,
+            central_url=self.central_url,
+        )
 
     @property
     def hub(self) -> HmHub | HmDummyHub | None:
@@ -165,9 +166,9 @@ class CentralUnit:
         return self.central_config.central_id
 
     @property
-    def device_url(self) -> str:
-        """Return the device_url of the backend."""
-        return self.central_config.device_url
+    def central_url(self) -> str:
+        """Return the central_url of the backend."""
+        return self.central_config.central_url
 
     @property
     def domain(self) -> str:
@@ -980,7 +981,7 @@ class CentralConfig:
         self.json_port = json_port
 
     @property
-    def device_url(self) -> str:
+    def central_url(self) -> str:
         """Return the required url."""
         url = "http://"
         if self.tls:
@@ -1008,7 +1009,7 @@ class CentralConfig:
             loop=self.loop,
             username=self.username,
             password=self.password,
-            device_url=self.device_url,
+            device_url=self.central_url,
             client_session=self.client_session,
             tls=self.tls,
             verify_tls=self.verify_tls,
