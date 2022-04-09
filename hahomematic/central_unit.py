@@ -1533,3 +1533,16 @@ def _remove_dummy_service_message(
         ]:
             new_service_messages.append(client_messages)
     return new_service_messages
+
+
+def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
+    """Clean up the used cached directories."""
+    cache_dir = f"{storage_folder}/cache"
+    files_to_delete = [FILE_DEVICES, FILE_PARAMSETS]
+
+    def _delete_file(file_name: str) -> None:
+        if os.path.exists(os.path.join(cache_dir, file_name)):
+            os.unlink(os.path.join(cache_dir, file_name))
+
+    for file_to_delete in files_to_delete:
+        _delete_file(file_name=f"{instance_name}_{file_to_delete}")
