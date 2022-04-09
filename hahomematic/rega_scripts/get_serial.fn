@@ -1,0 +1,44 @@
+!# get_serial
+!#
+!#  Erstellt durch @baxxy13 2022-04-09
+!#
+!# Dieses Script liefert die Seriennummer des Funkmoduls in folgender Priorisierung zurück:
+!#  1. /var/board_sgtin
+!#  2. /var/board_serial
+!#  3. /sys/module/plat_eq3ccu2/parameters/board_serial
+!#
+!#  Dieses Script wird als Ersatz für JsonRPC CCU.getSerial verwendet.
+!#
+
+string serial;
+boolean find = false;
+string cmd_a = "/bin/sh -c 'cat /var/board_sgtin'";
+string cmd_b = "/bin/sh -c 'cat /var/board_serial'";
+string cmd_c = "/bin/sh -c 'cat /sys/module/plat_eq3ccu2/parameters/board_serial'";
+
+!# Try uses /var/board_sgtin
+system.Exec(cmd_a, &serial, &error);
+if (serial) {
+  serial = serial.Trim();
+  find = true;
+}
+!# Try uses /var/board_serial
+if (!find) {
+  system.Exec(cmd_b, &serial, &error);
+  if (serial) {
+    serial = serial.Trim();
+    find = true;
+  }
+}
+!# Try uses /sys/module/plat_eq3ccu2/parameters/board_serial
+if (!find) {
+  system.Exec(cmd_c, &serial, &error);
+  if (serial) {
+    serial = serial.Trim();
+  }
+}
+
+if (!serial) {
+  serial = "unknown";
+}
+WriteLine('{"serial": "'# serial #'"}');

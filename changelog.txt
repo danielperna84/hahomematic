@@ -1,6 +1,7 @@
-Version 1.0.6 (2022-04-08)
+Version 1.1.0 (2022-04-09)
 - Add BATTERY_STATE to DEFAULT_ENTITIES
 - Migrate device_info to dataclass
+- Add rega script (provided by @baxxy13) to get serial from CCU
 
 Version 1.0.6 (2022-04-06)
 - Revert to XmlRPC getValue and getParamset for CCU

@@ -26,6 +26,7 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     PATH_JSON_RPC,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
+    REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
@@ -478,11 +479,12 @@ class JsonRpcAioHttpClient:
 
         _LOGGER.debug("get_serial: Getting the backend serial via JSON-RPC")
         try:
-            response = await self._post(
-                method="CCU.getSerial",
-            )
+            response = await self._post_script(script_name=REGA_SCRIPT_GET_SERIAL)
             if json_result := response[ATTR_RESULT]:
-                serial = json_result
+                result = json.loads(json_result)
+                serial = result["serial"]
+                if len(serial) > 10:
+                    serial = serial[-10:]
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_serial: %s [%s]", hhe.name, hhe.args)
 
