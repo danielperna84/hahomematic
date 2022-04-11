@@ -9,6 +9,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import re
 import ssl
 from typing import Any
 
@@ -338,6 +339,12 @@ class JsonRpcAioHttpClient:
                 params[ATTR_VALUE] = int(value)
                 response = await self._post("SysVar.setBool", params)
             elif isinstance(value, str):
+                if re.findall("<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});", value):
+                    _LOGGER.warning(
+                        "set_system_variable: value (%s) contains html tags. This is not allowed.",
+                        value,
+                    )
+                    return
                 response = await self._post_script(
                     script_name=REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
                 )
