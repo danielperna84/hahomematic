@@ -140,6 +140,7 @@ ATTR_HM_VALUE_LIST = "VALUE_LIST"
 REGA_SCRIPT_PATH = "rega_scripts"
 REGA_SCRIPT_FETCH_ALL_DEVICE_DATA = "fetch_all_device_data.fn"
 REGA_SCRIPT_GET_SERIAL = "get_serial.fn"
+REGA_SCRIPT_SET_SYSTEM_VARIABLE = "set_system_variable.fn"
 
 OPERATION_NONE = 0
 OPERATION_READ = 1

@@ -28,6 +28,7 @@ from hahomematic.const import (
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
+    REGA_SCRIPT_SET_SYSTEM_VARIABLE,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import get_tls_context, parse_ccu_sys_var
@@ -333,11 +334,16 @@ class JsonRpcAioHttpClient:
                 ATTR_NAME: name,
                 ATTR_VALUE: value,
             }
-            if value is True or value is False:
+            if isinstance(value, bool):
                 params[ATTR_VALUE] = int(value)
                 response = await self._post("SysVar.setBool", params)
+            elif isinstance(value, str):
+                response = await self._post_script(
+                    script_name=REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
+                )
             else:
                 response = await self._post("SysVar.setFloat", params)
+
             if json_result := response[ATTR_RESULT]:
                 res = json_result
                 _LOGGER.debug(
