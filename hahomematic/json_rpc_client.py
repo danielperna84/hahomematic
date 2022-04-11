@@ -186,6 +186,7 @@ class JsonRpcAioHttpClient:
     async def _post_script(
         self,
         script_name: str,
+        extra_params: dict[str, str] | None = None,
         keep_session: bool = True,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST_SCRIPT function."""
@@ -199,9 +200,14 @@ class JsonRpcAioHttpClient:
             _LOGGER.warning("_post_script: Error while logging in via JSON-RPC.")
             return {"error": "Unable to open session.", "result": {}}
 
-        source_path = Path(__file__).resolve()
-        script_file = os.path.join(source_path.parent, REGA_SCRIPT_PATH, script_name)
+        script_file = os.path.join(
+            Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name
+        )
         script = Path(script_file).read_text(encoding=DEFAULT_ENCODING)
+
+        if extra_params:
+            for variable, value in extra_params.items():
+                script = script.replace(f"##{variable}##", value)
 
         method = "ReGa.runScript"
         response = await self._do_post(

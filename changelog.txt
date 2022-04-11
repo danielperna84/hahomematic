@@ -1,3 +1,6 @@
+Version 1.1.2 (2022-04-12)
+- Add extra_params to _post_script
+
 Version 1.1.1 (2022-04-11)
 - Read version and serial in get_client
 
