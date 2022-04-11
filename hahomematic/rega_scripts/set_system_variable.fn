@@ -9,5 +9,7 @@ string sv_name = "##name##";
 string sv_value = "##value##";
 object target_sv = dom.GetObject(ID_SYSTEM_VARIABLES).Get(sv_name);
 if (target_sv) {
-    Write(target_sv.State(sv_value));
+    if (target_sv.ValueTypeStr() == "String") {
+       Write(target_sv.State(sv_value));
+    }
 }
