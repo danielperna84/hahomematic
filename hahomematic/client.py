@@ -77,7 +77,6 @@ class Client(ABC):
         self.last_updated: datetime = INIT_DATETIME
         self._json_rpc_client: JsonRpcAioHttpClient = self._central.json_rpc_client
         self._is_callback_alive = True
-        self._version: str | None = None
         self._serial: str | None = None
 
     @property
@@ -106,19 +105,14 @@ class Client(ABC):
         return ""
 
     @property
-    def version(self) -> str | None:
+    def version(self) -> str:
         """Return the version of the backend."""
-        return self._version
+        return self._client_config.version
 
     @property
-    def serial(self) -> str | None:
+    def serial(self) -> str:
         """Return the serial of the backend."""
-        return self._serial
-
-    async def init(self) -> None:
-        """Initialize basic values."""
-        self._version = await self.get_version()
-        self._serial = await self.get_serial()
+        return self._client_config.serial
 
     async def proxy_init(self) -> int:
         """
@@ -306,10 +300,6 @@ class Client(ABC):
     @abstractmethod
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
-
-    async def get_version(self) -> str:
-        """Get the version of the backend."""
-        return cast(str, await self._proxy.getVersion())
 
     @abstractmethod
     def get_virtual_remote(self) -> HmDevice | None:
@@ -886,6 +876,8 @@ class _ClientConfig:
             tls=self._central_config.tls,
             verify_tls=self._central_config.verify_tls,
         )
+        self.version: str = "0"
+        self.serial: str = "0"
 
     async def get_client(self) -> Client:
         """Identify the used client."""
@@ -897,11 +889,12 @@ class _ClientConfig:
                 # BidCos-Wired does not support getVersion()
                 client = ClientCCU(self)
             elif version := await self.xml_rpc_proxy.getVersion():
+                self.version = cast(str, version)
                 if "Homegear" in version or "pydevccu" in version:
                     client = ClientHomegear(self)
             if not client:
                 client = ClientCCU(self)
-            await client.init()
+            self.serial = await client.get_serial()
             return client
         except AuthFailure as auf:
             raise AuthFailure(f"Unable to authenticate {auf.args}.") from auf

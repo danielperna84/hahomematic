@@ -1,3 +1,6 @@
+Version 1.1.1 (2022-04-11)
+- Read version and serial in get_client
+
 Version 1.1.0 (2022-04-09)
 - Add BATTERY_STATE to DEFAULT_ENTITIES
 - Migrate device_info to dataclass
