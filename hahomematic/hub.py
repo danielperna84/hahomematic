@@ -242,7 +242,16 @@ class HmHub(BaseHubEntity):
         self._variables.clear()
         variables = await self._central.get_all_system_variables()
         if not variables:
+            _LOGGER.debug(
+                "_update_entities: No sysvars received for %s",
+                self._central.instance_name,
+            )
             return
+        _LOGGER.debug(
+            "_update_entities: %i sysvars received for %s",
+            len(variables),
+            self._central.instance_name,
+        )
 
         # remove some variables in case of CCU Backend
         # - OldValue(s) are for internal calculations
@@ -260,15 +269,6 @@ class HmHub(BaseHubEntity):
             else:
                 self._create_system_variable(name, value)
 
-        # check if hub_entities can be deletes
-        del_entities = []
-        for entity_name in self.hub_entities:
-            if entity_name not in variables.keys():
-                del_entities.append(entity_name)
-
-        # remove entity if necessary
-        for to_delete in del_entities:
-            del self.hub_entities[to_delete]
         self.update_entity()
 
     def _create_system_variable(self, name: str, value: Any) -> None:

@@ -28,6 +28,7 @@ from hahomematic.const import (
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
+    REGA_SCRIPT_SET_SYSTEM_VARIABLE,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import get_tls_context, parse_ccu_sys_var
@@ -186,6 +187,7 @@ class JsonRpcAioHttpClient:
     async def _post_script(
         self,
         script_name: str,
+        extra_params: dict[str, str] | None = None,
         keep_session: bool = True,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST_SCRIPT function."""
@@ -199,9 +201,14 @@ class JsonRpcAioHttpClient:
             _LOGGER.warning("_post_script: Error while logging in via JSON-RPC.")
             return {"error": "Unable to open session.", "result": {}}
 
-        source_path = Path(__file__).resolve()
-        script_file = os.path.join(source_path.parent, REGA_SCRIPT_PATH, script_name)
+        script_file = os.path.join(
+            Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name
+        )
         script = Path(script_file).read_text(encoding=DEFAULT_ENCODING)
+
+        if extra_params:
+            for variable, value in extra_params.items():
+                script = script.replace(f"##{variable}##", value)
 
         method = "ReGa.runScript"
         response = await self._do_post(
@@ -327,11 +334,16 @@ class JsonRpcAioHttpClient:
                 ATTR_NAME: name,
                 ATTR_VALUE: value,
             }
-            if value is True or value is False:
+            if isinstance(value, bool):
                 params[ATTR_VALUE] = int(value)
                 response = await self._post("SysVar.setBool", params)
+            elif isinstance(value, str):
+                response = await self._post_script(
+                    script_name=REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
+                )
             else:
                 response = await self._post("SysVar.setFloat", params)
+
             if json_result := response[ATTR_RESULT]:
                 res = json_result
                 _LOGGER.debug(
