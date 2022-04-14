@@ -13,6 +13,7 @@ from hahomematic.devices.entity_definition import (
     FIELD_COLOR,
     FIELD_COLOR_LEVEL,
     FIELD_LEVEL,
+    FIELD_PROGRAM,
     FIELD_RAMP_TIME,
     FIELD_RAMP_TIME_UNIT,
     FIELD_RAMP_TIME_VALUE,
@@ -22,7 +23,7 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
-from hahomematic.platforms.number import HmFloat
+from hahomematic.platforms.number import HmFloat, HmInteger
 from hahomematic.platforms.select import HmSelect
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ ATTR_HM_COLOR_NAME = "color_name"
 ATTR_HM_COLOR_TEMP = "color_temp"
 ATTR_HM_CHANNEL_COLOR = "channel_color"
 ATTR_HM_CHANNEL_LEVEL = "channel_level"
+ATTR_HM_EFFECT = "effect"
 ATTR_HM_HS_COLOR = "hs_color"
 ATTR_HM_RAMP_TIME = "ramp_time"
 
@@ -109,6 +111,11 @@ class BaseHmLight(CustomEntity):
         return False
 
     @property
+    def supports_effects(self) -> bool:
+        """Flag if light supports effects."""
+        return False
+
+    @property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return False
@@ -117,6 +124,16 @@ class BaseHmLight(CustomEntity):
     def supports_transition(self) -> bool:
         """Flag if light supports transition."""
         return False
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        return None
+
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects."""
+        return None
 
     @abstractmethod
     async def turn_on(
@@ -187,6 +204,96 @@ class CeDimmer(BaseHmLight):
         ):
             state_attr[ATTR_HM_CHANNEL_LEVEL] = self._channel_level * 255
         return state_attr
+
+
+class CeColorDimmer(CeDimmer):
+    """Class for homematic dimmer with color entities."""
+
+    _effect_list: list[str] = [
+        "Off",
+        "Slow color change",
+        "Medium color change",
+        "Fast color change",
+        "Campfire",
+        "Waterfall",
+        "TV simulation",
+    ]
+
+    @property
+    def _e_color(self) -> HmInteger:
+        """Return the color entity of the device."""
+        return self._get_entity(field_name=FIELD_COLOR, entity_type=HmInteger)
+
+    @property
+    def _e_effect(self) -> HmInteger:
+        """Return the effect entity of the device."""
+        return self._get_entity(field_name=FIELD_PROGRAM, entity_type=HmInteger)
+
+    @property
+    def hs_color(self) -> tuple[float, float]:
+        """Return the hue and saturation color value [float, float]."""
+        if self._e_color.value:
+            hm_color = self._e_color.value
+            if hm_color >= 200:
+                # 200 is a special case (white), so we have a saturation of 0.
+                # Larger values are undefined. For the sake of robustness we return "white" anyway.
+                return 0.0, 0.0
+
+            # For all other colors we assume saturation of 1
+            return hm_color / 200, 1
+        return 0.0, 0.0
+
+    @property
+    def supports_hs_color(self) -> bool:
+        """Flag if light supports color temperature."""
+        return True
+
+    @property
+    def supports_effects(self) -> bool:
+        """Flag if light supports effects."""
+        return True
+
+    @property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if self._e_effect is not None and self._e_effect.value is not None:
+            return self._effect_list[int(self._e_effect.value)]
+        return None
+
+    @property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects."""
+        return self._effect_list
+
+    async def turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        if ATTR_HM_RAMP_TIME in kwargs:
+            ramp_time = kwargs[ATTR_HM_RAMP_TIME]
+            await self._e_ramp_time.send_value(ramp_time)
+
+        if ATTR_HM_HS_COLOR in kwargs:
+            # disable effect
+            await self._e_effect.send_value(0)
+            hue, saturation = kwargs[ATTR_HM_HS_COLOR]
+            if saturation < 0.1:  # Special case (white)
+                hm_color = 200
+            else:
+                hm_color = int(round(max(min(hue, 1), 0) * 199))
+
+            await self._e_color.send_value(hm_color)
+
+        # Minimum brightness is 10, otherwise the LED is disabled
+        if ATTR_HM_BRIGHTNESS in kwargs:
+            brightness: int = cast(int, kwargs[ATTR_HM_BRIGHTNESS])
+            brightness = max(10, brightness)
+            level = brightness / 255.0
+            await self._e_level.send_value(level)
+
+        if ATTR_HM_EFFECT in kwargs:
+            effect = str(kwargs[ATTR_HM_EFFECT])
+            effect_idx = self._effect_list.index(effect)
+            if effect_idx is not None:
+                await self._e_effect.send_value(effect_idx)
 
 
 class CeColorTempDimmer(CeDimmer):
@@ -387,6 +494,19 @@ def make_rf_dimmer(
     )
 
 
+def make_rf_dimmer_color(
+    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+) -> list[hm_entity.BaseEntity]:
+    """Creates homematic classic dimmer with color entities."""
+    return make_custom_entity(
+        device=device,
+        device_address=device_address,
+        custom_entity_class=CeColorDimmer,
+        device_enum=EntityDefinition.RF_DIMMER_COLOR,
+        group_base_channels=group_base_channels,
+    )
+
+
 def make_rf_dimmer_color_temp(
     device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
@@ -480,6 +600,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HM-LC-Dim2T-SM-2": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
     "HM-LC-Dim2T-SM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
     "HM-LC-DW-WM": (make_rf_dimmer_color_temp, [1, 3, 5]),
+    "HM-LC-RGBW-WM": (make_rf_dimmer_color, [1, 3, 5]),
     "OLIGO.smart.iq.HM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
 }
 

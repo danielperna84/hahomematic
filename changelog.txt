@@ -1,3 +1,6 @@
+Version 1.1.3 (2022-04-14)
+- Add CeColorDimmer for HM-LC-RGBW-WM
+
 Version 1.1.2 (2022-04-12)
 - Add extra_params to _post_script
 - Add set_system_variable with string value

@@ -62,6 +62,7 @@ FIELD_MANU_MODE = "manu_mode"
 FIELD_OPERATING_VOLTAGE = "operating_voltage"
 FIELD_OPEN = "open"
 FIELD_PARTY_MODE = "party_mode"
+FIELD_PROGRAM = "program"
 FIELD_POWER = "power"
 FIELD_RAMP_TIME = "ramp_time"
 FIELD_RAMP_TIME_UNIT = "ramp_time_unit"
@@ -104,6 +105,7 @@ class EntityDefinition(StrEnum):
     IP_SIREN = "IPSiren"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
+    RF_DIMMER_COLOR = "RfDimmer_Color"
     RF_DIMMER_COLOR_TEMP = "RfDimmer_Color_Temp"
     RF_DIMMER_WITH_VIRT_CHANNEL = "RfDimmerWithVirtChannel"
     RF_LOCK = "RfLock"
@@ -365,6 +367,23 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_RAMP_TIME: "RAMP_TIME",
+                },
+            },
+        },
+        EntityDefinition.RF_DIMMER_COLOR: {
+            ED_DEVICE_GROUP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_RAMP_TIME: "RAMP_TIME",
+                },
+                ED_FIELDS: {
+                    1: {
+                        FIELD_COLOR: "COLOR",
+                    },
+                    2: {
+                        FIELD_PROGRAM: "PROGRAM",
+                    },
                 },
             },
         },
