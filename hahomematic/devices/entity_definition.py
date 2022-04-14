@@ -104,6 +104,7 @@ class EntityDefinition(StrEnum):
     IP_SIREN = "IPSiren"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
+    RF_DIMMER_COLOR = "RfDimmer_Color"
     RF_DIMMER_COLOR_TEMP = "RfDimmer_Color_Temp"
     RF_DIMMER_WITH_VIRT_CHANNEL = "RfDimmerWithVirtChannel"
     RF_LOCK = "RfLock"
@@ -365,6 +366,20 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_RAMP_TIME: "RAMP_TIME",
+                },
+            },
+        },
+        EntityDefinition.RF_DIMMER_COLOR: {
+            ED_DEVICE_GROUP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_RAMP_TIME: "RAMP_TIME",
+                },
+                ED_FIELDS: {
+                    1: {
+                        FIELD_COLOR: "COLOR",
+                    },
                 },
             },
         },
