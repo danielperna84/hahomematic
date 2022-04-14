@@ -62,6 +62,7 @@ FIELD_MANU_MODE = "manu_mode"
 FIELD_OPERATING_VOLTAGE = "operating_voltage"
 FIELD_OPEN = "open"
 FIELD_PARTY_MODE = "party_mode"
+FIELD_PROGRAM = "program"
 FIELD_POWER = "power"
 FIELD_RAMP_TIME = "ramp_time"
 FIELD_RAMP_TIME_UNIT = "ramp_time_unit"
@@ -379,6 +380,9 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_FIELDS: {
                     1: {
                         FIELD_COLOR: "COLOR",
+                    },
+                    2: {
+                        FIELD_PROGRAM: "PROGRAM",
                     },
                 },
             },
