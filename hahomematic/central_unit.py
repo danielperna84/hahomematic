@@ -325,7 +325,10 @@ class CentralUnit:
                     self._clients_by_init_url[client.init_url].append(client)
             except BaseHomematicException as ex:
                 self.fire_interface_event(
-                    interface_id=client.interface_id,
+                    interface_id=hm_client.get_interface_id(
+                        instance_name=self.instance_name,
+                        interface=interface_config.interface,
+                    ),
                     interface_event_type=HmInterfaceEventType.PROXY,
                     available=False,
                 )

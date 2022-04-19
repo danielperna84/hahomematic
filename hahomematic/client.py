@@ -68,7 +68,9 @@ class Client(ABC):
         self._available: bool = True
         self._interface: str = self._client_config.interface
         # This is the actual interface_id used for init
-        self.interface_id: str = f"{self._central.instance_name}-{self._interface}"
+        self.interface_id: str = get_interface_id(
+            instance_name=self._central.instance_name, interface=self._interface
+        )
         self._has_credentials = self._client_config.has_credentials
         self._init_url: str = self._client_config.init_url
         # for all device related interaction
@@ -181,11 +183,11 @@ class Client(ABC):
                 "available" if available else "unavailable",
                 self.interface_id,
             )
-            self._central.fire_interface_event(
-                interface_id=self.interface_id,
-                interface_event_type=HmInterfaceEventType.PROXY,
-                available=available,
-            )
+        self._central.fire_interface_event(
+            interface_id=self.interface_id,
+            interface_event_type=HmInterfaceEventType.PROXY,
+            available=available,
+        )
 
     async def reconnect(self) -> bool:
         """re-init all RPC clients."""
@@ -934,3 +936,8 @@ async def create_client(
     return await _ClientConfig(
         central=central, interface_config=interface_config, local_ip=local_ip
     ).get_client()
+
+
+def get_interface_id(instance_name: str, interface: str) -> str:
+    """Return the interface id."""
+    return f"{instance_name}-{interface}"
