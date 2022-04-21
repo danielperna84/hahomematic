@@ -546,7 +546,8 @@ class CentralUnit:
 
                 except Exception as err:
                     _LOGGER.error(
-                        "create_devices: Exception [%s] Failed to create device: %s, %s",
+                        "create_devices: %s [%s] Failed to create device: %s, %s",
+                        type(err).__name__,
                         err.args,
                         interface_id,
                         device_address,
@@ -564,7 +565,8 @@ class CentralUnit:
                         self.hm_devices[device_address] = device
                 except Exception as err:
                     _LOGGER.error(
-                        "create_devices: Exception [%s] Failed to create entities: %s, %s",
+                        "create_devices: %s [%s] Failed to create entities: %s, %s",
+                        type(err).__name__,
                         err.args,
                         interface_id,
                         device_address,
@@ -674,7 +676,9 @@ class CentralUnit:
                         )
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:
-                    _LOGGER.error("add_new_devices: Exception [%s]", err.args)
+                    _LOGGER.error(
+                        "add_new_devices: %s [%s]", type(err).__name__, err.args
+                    )
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
             await self.device_details.load()
@@ -940,7 +944,7 @@ class ConnectionChecker(threading.Thread):
                 _LOGGER.error("check_connection: no connection: %s", nex.args)
                 continue
             except Exception as err:
-                _LOGGER.error("check_connection: Exception [%s]", err.args)
+                _LOGGER.error("check_connection: %s [%s]", type(err).__name__, err.args)
             await asyncio.sleep(connection_checker_interval)
 
 

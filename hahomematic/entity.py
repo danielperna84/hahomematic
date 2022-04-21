@@ -241,14 +241,14 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         self._value_list: list[str] | None = self._parameter_data.get(
             ATTR_HM_VALUE_LIST
         )
-        self._default: ParameterType = self._convert_value(
-            self._parameter_data[ATTR_HM_DEFAULT]
-        )
         self._max: ParameterType = self._convert_value(
             self._parameter_data[ATTR_HM_MAX]
         )
         self._min: ParameterType = self._convert_value(
             self._parameter_data[ATTR_HM_MIN]
+        )
+        self._default: ParameterType = self._convert_value(
+            self._parameter_data.get(ATTR_HM_DEFAULT, self._min)
         )
         flags: int = self._parameter_data[ATTR_HM_FLAGS]
         self._visible: bool = flags & FLAG_VISIBLE == FLAG_VISIBLE
