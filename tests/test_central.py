@@ -76,9 +76,9 @@ async def test_central(central, loop) -> None:
             counter = usage_types[entity.usage]
             usage_types[entity.usage] = counter + 1
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1859
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1861
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
-    assert usage_types[HmEntityUsage.ENTITY] == 2444
+    assert usage_types[HmEntityUsage.ENTITY] == 2442
     assert usage_types[HmEntityUsage.CE_SENSOR] == 63
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
