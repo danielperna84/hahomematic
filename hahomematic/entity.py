@@ -345,23 +345,12 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
 
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
-        try:
-            await self._client.set_value_by_paramset_key(
-                channel_address=self.channel_address,
-                paramset_key=self._paramset_key,
-                parameter=self.parameter,
-                value=self._convert_value(value),
-            )
-        except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "generic_entity: %s [%s] Failed to set state for: %s, %s, %s, %s",
-                hhe.name,
-                hhe.args,
-                self._device.device_type,
-                self.channel_address,
-                self.parameter,
-                value,
-            )
+        await self._client.set_value_by_paramset_key(
+            channel_address=self.channel_address,
+            paramset_key=self._paramset_key,
+            parameter=self.parameter,
+            value=self._convert_value(value),
+        )
 
 
 class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):

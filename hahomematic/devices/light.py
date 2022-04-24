@@ -14,7 +14,6 @@ from hahomematic.devices.entity_definition import (
     FIELD_COLOR_LEVEL,
     FIELD_LEVEL,
     FIELD_PROGRAM,
-    FIELD_RAMP_TIME,
     FIELD_RAMP_TIME_UNIT,
     FIELD_RAMP_TIME_VALUE,
     EntityDefinition,
@@ -29,14 +28,14 @@ from hahomematic.platforms.select import HmSelect
 _LOGGER = logging.getLogger(__name__)
 
 # HM constants
-ATTR_HM_BRIGHTNESS = "brightness"
-ATTR_HM_COLOR_NAME = "color_name"
-ATTR_HM_COLOR_TEMP = "color_temp"
-ATTR_HM_CHANNEL_COLOR = "channel_color"
-ATTR_HM_CHANNEL_LEVEL = "channel_level"
-ATTR_HM_EFFECT = "effect"
-ATTR_HM_HS_COLOR = "hs_color"
-ATTR_HM_RAMP_TIME = "ramp_time"
+HM_ARG_BRIGHTNESS = "brightness"
+HM_ARG_COLOR_NAME = "color_name"
+HM_ARG_COLOR_TEMP = "color_temp"
+HM_ARG_CHANNEL_COLOR = "channel_color"
+HM_ARG_CHANNEL_LEVEL = "channel_level"
+HM_ARG_EFFECT = "effect"
+HM_ARG_HS_COLOR = "hs_color"
+HM_ARG_RAMP_TIME = "ramp_time"
 
 HM_MAX_MIREDS: int = 500
 HM_MIN_MIREDS: int = 153
@@ -78,6 +77,11 @@ class BaseHmLight(CustomEntity):
     def _e_level(self) -> HmFloat:
         """Return the level entity of the device."""
         return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
+
+    @property
+    def _e_ramp_time_value(self) -> HmAction:
+        """Return the ramp time entity device."""
+        return self._get_entity(field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction)
 
     @property
     @abstractmethod
@@ -135,13 +139,21 @@ class BaseHmLight(CustomEntity):
         """Return the list of supported effects."""
         return None
 
-    @abstractmethod
     async def turn_on(
         self,
         **kwargs: dict[str, Any] | None,
     ) -> None:
         """Turn the light on."""
-        ...
+        if HM_ARG_RAMP_TIME in kwargs and isinstance(self._e_ramp_time_value, HmAction):
+            ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
+            await self._e_ramp_time_value.send_value(ramp_time)
+
+        # Minimum brightness is 10, otherwise the LED is disabled
+        if HM_ARG_BRIGHTNESS in kwargs:
+            brightness: int = int(cast(int, kwargs[HM_ARG_BRIGHTNESS]))
+            brightness = max(10, brightness)
+            level = brightness / 255.0
+            await self._e_level.send_value(level)
 
     async def turn_off(self) -> None:
         """Turn the light off."""
@@ -150,11 +162,6 @@ class BaseHmLight(CustomEntity):
 
 class CeDimmer(BaseHmLight):
     """Class for homematic dimmer entities."""
-
-    @property
-    def _e_ramp_time(self) -> HmAction:
-        """Return the ramp time entity device."""
-        return self._get_entity(field_name=FIELD_RAMP_TIME, entity_type=HmAction)
 
     @property
     def _channel_level(self) -> float | None:
@@ -181,18 +188,6 @@ class CeDimmer(BaseHmLight):
         """Flag if light supports transition."""
         return True
 
-    async def turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on."""
-        if ramp_time := kwargs.get(ATTR_HM_RAMP_TIME):
-            await self._e_ramp_time.send_value(ramp_time)
-
-        # Minimum brightness is 10, otherwise the LED is disabled
-        if ATTR_HM_BRIGHTNESS in kwargs:
-            brightness: int = cast(int, kwargs[ATTR_HM_BRIGHTNESS])
-            brightness = max(10, brightness)
-            level = brightness / 255.0
-            await self._e_level.send_value(level)
-
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the light."""
@@ -202,7 +197,7 @@ class CeDimmer(BaseHmLight):
             and self._e_level.value
             and self._channel_level != self._e_level.value
         ):
-            state_attr[ATTR_HM_CHANNEL_LEVEL] = self._channel_level * 255
+            state_attr[HM_ARG_CHANNEL_LEVEL] = self._channel_level * 255
         return state_attr
 
 
@@ -267,14 +262,10 @@ class CeColorDimmer(CeDimmer):
 
     async def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_HM_RAMP_TIME in kwargs:
-            ramp_time = kwargs[ATTR_HM_RAMP_TIME]
-            await self._e_ramp_time.send_value(ramp_time)
-
-        if ATTR_HM_HS_COLOR in kwargs:
+        if HM_ARG_HS_COLOR in kwargs:
             # disable effect
             await self._e_effect.send_value(0)
-            hue, saturation = kwargs[ATTR_HM_HS_COLOR]
+            hue, saturation = kwargs[HM_ARG_HS_COLOR]
             if saturation < 0.1:  # Special case (white)
                 hm_color = 200
             else:
@@ -282,18 +273,13 @@ class CeColorDimmer(CeDimmer):
 
             await self._e_color.send_value(hm_color)
 
-        # Minimum brightness is 10, otherwise the LED is disabled
-        if ATTR_HM_BRIGHTNESS in kwargs:
-            brightness: int = cast(int, kwargs[ATTR_HM_BRIGHTNESS])
-            brightness = max(10, brightness)
-            level = brightness / 255.0
-            await self._e_level.send_value(level)
-
-        if ATTR_HM_EFFECT in kwargs:
-            effect = str(kwargs[ATTR_HM_EFFECT])
+        if HM_ARG_EFFECT in kwargs:
+            effect = str(kwargs[HM_ARG_EFFECT])
             effect_idx = self._effect_list.index(effect)
             if effect_idx is not None:
                 await self._e_effect.send_value(effect_idx)
+
+        await super().turn_on(**kwargs)
 
 
 class CeColorTempDimmer(CeDimmer):
@@ -319,22 +305,14 @@ class CeColorTempDimmer(CeDimmer):
 
     async def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_HM_RAMP_TIME in kwargs:
-            ramp_time = kwargs[ATTR_HM_RAMP_TIME]
-            await self._e_ramp_time.send_value(ramp_time)
 
-        if ATTR_HM_COLOR_TEMP in kwargs:
-            color_level = (HM_MAX_MIREDS - kwargs[ATTR_HM_COLOR_TEMP]) / (
+        if HM_ARG_COLOR_TEMP in kwargs:
+            color_level = (HM_MAX_MIREDS - kwargs[HM_ARG_COLOR_TEMP]) / (
                 HM_MAX_MIREDS - HM_MIN_MIREDS
             )
             await self._e_color_level.send_value(color_level)
 
-        # Minimum brightness is 10, otherwise the LED is disabled
-        if ATTR_HM_BRIGHTNESS in kwargs:
-            brightness: int = cast(int, kwargs[ATTR_HM_BRIGHTNESS])
-            brightness = max(10, brightness)
-            level = brightness / 255.0
-            await self._e_level.send_value(level)
+        await super().turn_on(**kwargs)
 
 
 class CeIpFixedColorLight(BaseHmLight):
@@ -376,11 +354,6 @@ class CeIpFixedColorLight(BaseHmLight):
         return self._get_entity(field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction)
 
     @property
-    def _e_ramp_time_value(self) -> HmAction:
-        """Return the ramp time value entity of the device."""
-        return self._get_entity(field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction)
-
-    @property
     def is_on(self) -> bool:
         """Return true if dimmer is on."""
         return self._e_level.value is not None and self._e_level.value > 0.0
@@ -409,32 +382,26 @@ class CeIpFixedColorLight(BaseHmLight):
 
     async def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_HM_HS_COLOR in kwargs:
-            hs_color = kwargs[ATTR_HM_HS_COLOR]
+        if HM_ARG_HS_COLOR in kwargs:
+            hs_color = kwargs[HM_ARG_HS_COLOR]
             simple_rgb_color = _convert_color(hs_color)
             await self._e_color.send_value(simple_rgb_color)
-        if ATTR_HM_RAMP_TIME in kwargs:
-            ramp_time = kwargs[ATTR_HM_RAMP_TIME]
-            # ramp_time_unit is 0 == seconds
+
+        if HM_ARG_RAMP_TIME in kwargs:
             await self._e_ramp_time_unit.send_value(0)
-            await self._e_ramp_time_value.send_value(ramp_time)
-        if ATTR_HM_BRIGHTNESS in kwargs:
-            brightness: int = cast(int, kwargs[ATTR_HM_BRIGHTNESS])
-            # Minimum brightness is 10, otherwise the LED is disabled
-            brightness = max(10, brightness)
-            level = brightness / 255.0
-            await self._e_level.send_value(level)
+
+        await super().turn_on(**kwargs)
 
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the notification light sensor."""
         state_attr = super().attributes
         if self.is_on:
-            state_attr[ATTR_HM_COLOR_NAME] = self._e_color.value
+            state_attr[HM_ARG_COLOR_NAME] = self._e_color.value
         if self._channel_level and self._channel_level != self._e_level.value:
-            state_attr[ATTR_HM_CHANNEL_LEVEL] = self._channel_level * 255
+            state_attr[HM_ARG_CHANNEL_LEVEL] = self._channel_level * 255
         if self._channel_color and self._channel_color:
-            state_attr[ATTR_HM_CHANNEL_COLOR] = self._channel_color
+            state_attr[HM_ARG_CHANNEL_COLOR] = self._channel_color
         return state_attr
 
 

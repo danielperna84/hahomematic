@@ -11,6 +11,8 @@ import pytest
 from hahomematic.const import HmEntityUsage
 from hahomematic.devices.climate import CeRfThermostat
 from hahomematic.devices.lock import LOCK_TARGET_LEVEL_OPEN
+from hahomematic.platforms.switch import HmSwitch as HmSwitchPlatform
+from hahomematic.devices.switch import HmSwitch as CESwitch
 
 
 @pytest.mark.asyncio
@@ -76,19 +78,19 @@ async def test_central(central, loop) -> None:
             counter = usage_types[entity.usage]
             usage_types[entity.usage] = counter + 1
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1861
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2094
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
-    assert usage_types[HmEntityUsage.ENTITY] == 2442
+    assert usage_types[HmEntityUsage.ENTITY] == 2589
     assert usage_types[HmEntityUsage.CE_SENSOR] == 63
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
     assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 4659
+    assert len(central.hm_entities) == 5039
     assert len(data) == 362
     assert len(custom_entities) == 293
     assert len(ce_channels) == 103
     assert len(entity_types) == 6
-    assert len(parameters) == 179
+    assert len(parameters) == 180
 
 
 @pytest.mark.asyncio

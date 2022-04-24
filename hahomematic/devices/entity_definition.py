@@ -64,9 +64,8 @@ FIELD_OPEN = "open"
 FIELD_PARTY_MODE = "party_mode"
 FIELD_PROGRAM = "program"
 FIELD_POWER = "power"
-FIELD_RAMP_TIME = "ramp_time"
-FIELD_RAMP_TIME_UNIT = "ramp_time_unit"
 FIELD_RAMP_TIME_VALUE = "ramp_time_value"
+FIELD_RAMP_TIME_UNIT = "ramp_time_unit"
 FIELD_RSSI_DEVICE = "rssi_device"
 FIELD_RSSI_PEER = "rssi_peer"
 FIELD_SABOTAGE = "sabotage"
@@ -199,7 +198,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_SECONDARY_CHANNELS: [2, 3],
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
-                    FIELD_RAMP_TIME: "RAMP_TIME",
+                    FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
                 ED_SENSOR_CHANNELS: {
                     0: {
@@ -366,7 +365,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
-                    FIELD_RAMP_TIME: "RAMP_TIME",
+                    FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
             },
         },
@@ -375,7 +374,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
-                    FIELD_RAMP_TIME: "RAMP_TIME",
+                    FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
                 ED_FIELDS: {
                     1: {
@@ -392,7 +391,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
-                    FIELD_RAMP_TIME: "RAMP_TIME",
+                    FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
                 ED_FIELDS: {
                     1: {
@@ -407,7 +406,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_SECONDARY_CHANNELS: [1, 2],
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
-                    FIELD_RAMP_TIME: "RAMP_TIME",
+                    FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
             },
         },
