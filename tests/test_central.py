@@ -78,6 +78,20 @@ async def test_central(central, loop) -> None:
             counter = usage_types[entity.usage]
             usage_types[entity.usage] = counter + 1
 
+    switches: dict[str, set[int]] = {}
+
+    for entity in central.hm_entities.values():
+        #if isinstance(entity, HmSwitchPlatform):
+        if hasattr(entity, "parameter") and entity.parameter == "ON_TIME":
+            device_type = entity.device_type[:8]
+            if device_type.lower().startswith("hmip"):
+                continue
+
+            channel_no = entity.channel_no
+            if device_type not in switches:
+                switches[device_type] = set()
+            switches[device_type].add(channel_no)
+
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2094
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
     assert usage_types[HmEntityUsage.ENTITY] == 2589

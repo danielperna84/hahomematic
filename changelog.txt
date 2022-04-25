@@ -1,5 +1,6 @@
 Version 1.1.5 (2022-04-24)
 - Reorg light attributes
+- Add on_time to light and switch
 
 Version 1.1.4 (2022-04-21)
 - Use min as default if default is unset for parameter_data
