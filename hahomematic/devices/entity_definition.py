@@ -59,6 +59,8 @@ FIELD_LOW_BAT = "low_bat"
 FIELD_LOWBAT = "lowbat"
 FIELD_LOWERING_MODE = "lowering_mode"
 FIELD_MANU_MODE = "manu_mode"
+FIELD_ON_TIME_VALUE = "on_time_value"
+FIELD_ON_TIME_UNIT = "on_time_unit"
 FIELD_OPERATING_VOLTAGE = "operating_voltage"
 FIELD_OPEN = "open"
 FIELD_PARTY_MODE = "party_mode"
@@ -111,6 +113,7 @@ class EntityDefinition(StrEnum):
     RF_THERMOSTAT = "RfThermostat"
     RF_THERMOSTAT_GROUP = "RfThermostatGroup"
     RF_SIREN = "RfSiren"
+    RF_SWITCH = "RfSwitch"
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
 
 
@@ -198,6 +201,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_SECONDARY_CHANNELS: [2, 3],
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_ON_TIME_VALUE: "ON_TIME",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
                 ED_SENSOR_CHANNELS: {
@@ -230,6 +234,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_ON_TIME_UNIT: "DURATION_UNIT",
+                    FIELD_ON_TIME_VALUE: "DURATION_VALUE",
                     FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME_VALUE",
                 },
@@ -247,6 +253,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_ON_TIME_UNIT: "DURATION_UNIT",
+                    FIELD_ON_TIME_VALUE: "DURATION_VALUE",
                     FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME_VALUE",
                 },
@@ -258,6 +266,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_SECONDARY_CHANNELS: [2, 3],
                 ED_REPEATABLE_FIELDS: {
                     FIELD_STATE: "STATE",
+                    FIELD_ON_TIME_VALUE: "ON_TIME",
                 },
                 ED_SENSOR_CHANNELS: {
                     0: {
@@ -365,6 +374,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_ON_TIME_VALUE: "ON_TIME",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
             },
@@ -374,6 +384,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_ON_TIME_VALUE: "ON_TIME",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
                 ED_FIELDS: {
@@ -391,6 +402,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_ON_TIME_VALUE: "ON_TIME",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
                 ED_FIELDS: {
@@ -406,6 +418,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_SECONDARY_CHANNELS: [1, 2],
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
+                    FIELD_ON_TIME_VALUE: "ON_TIME",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
             },
@@ -418,6 +431,24 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_OPEN: "OPEN",
                     FIELD_STATE: "STATE",
                     FIELD_ERROR: "ERROR",
+                },
+            },
+        },
+        EntityDefinition.RF_SWITCH: {
+            ED_DEVICE_GROUP: {
+                ED_PRIMARY_CHANNEL: 0,
+                ED_REPEATABLE_FIELDS: {
+                    FIELD_STATE: "STATE",
+                    FIELD_ON_TIME_VALUE: "ON_TIME",
+                },
+            },
+            ED_ADDITIONAL_ENTITIES: {
+                1: {
+                    "CURRENT",
+                    "ENERGY_COUNTER",
+                    "FREQUENCY",
+                    "POWER",
+                    "VOLTAGE",
                 },
             },
         },

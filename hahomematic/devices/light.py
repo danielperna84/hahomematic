@@ -5,7 +5,7 @@ from abc import abstractmethod
 import logging
 from typing import Any, cast
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import HM_ARG_ON_TIME, HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_COLOR,
@@ -13,6 +13,8 @@ from hahomematic.devices.entity_definition import (
     FIELD_COLOR,
     FIELD_COLOR_LEVEL,
     FIELD_LEVEL,
+    FIELD_ON_TIME_UNIT,
+    FIELD_ON_TIME_VALUE,
     FIELD_PROGRAM,
     FIELD_RAMP_TIME_UNIT,
     FIELD_RAMP_TIME_VALUE,
@@ -41,6 +43,10 @@ HM_MAX_MIREDS: int = 500
 HM_MIN_MIREDS: int = 153
 
 HM_DIMMER_OFF: float = 0.0
+
+TIME_UNIT_SECONDS = 0
+TIME_UNIT_MINUTES = 1
+TIME_UNIT_HOURS = 2
 
 
 class BaseHmLight(CustomEntity):
@@ -79,6 +85,11 @@ class BaseHmLight(CustomEntity):
         return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
 
     @property
+    def _e_on_time_value(self) -> HmAction:
+        """Return the on_time entity of the device."""
+        return self._get_entity(field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction)
+
+    @property
     def _e_ramp_time_value(self) -> HmAction:
         """Return the ramp time entity device."""
         return self._get_entity(field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction)
@@ -107,7 +118,7 @@ class BaseHmLight(CustomEntity):
     @property
     def supports_brightness(self) -> bool:
         """Flag if light supports brightness."""
-        return False
+        return isinstance(self._e_level, HmFloat)
 
     @property
     def supports_color_temperature(self) -> bool:
@@ -127,7 +138,7 @@ class BaseHmLight(CustomEntity):
     @property
     def supports_transition(self) -> bool:
         """Flag if light supports transition."""
-        return False
+        return isinstance(self._e_ramp_time_value, HmAction)
 
     @property
     def effect(self) -> str | None:
@@ -144,9 +155,13 @@ class BaseHmLight(CustomEntity):
         **kwargs: dict[str, Any] | None,
     ) -> None:
         """Turn the light on."""
-        if HM_ARG_RAMP_TIME in kwargs and isinstance(self._e_ramp_time_value, HmAction):
+        if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
-            await self._e_ramp_time_value.send_value(ramp_time)
+            await self.set_ramp_time_value(ramp_time=ramp_time)
+
+        if HM_ARG_ON_TIME in kwargs:
+            on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
+            await self.set_on_time_value(on_time=on_time)
 
         # Minimum brightness is 10, otherwise the LED is disabled
         if HM_ARG_BRIGHTNESS in kwargs:
@@ -158,6 +173,16 @@ class BaseHmLight(CustomEntity):
     async def turn_off(self) -> None:
         """Turn the light off."""
         await self._e_level.send_value(HM_DIMMER_OFF)
+
+    async def set_on_time_value(self, on_time: float) -> None:
+        """Set the on time value in seconds."""
+        if isinstance(self._e_on_time_value, HmAction):
+            await self._e_on_time_value.send_value(on_time)
+
+    async def set_ramp_time_value(self, ramp_time: float) -> None:
+        """Set the ramp time value in seconds."""
+        if isinstance(self._e_ramp_time_value, HmAction):
+            await self._e_ramp_time_value.send_value(ramp_time)
 
 
 class CeDimmer(BaseHmLight):
@@ -177,16 +202,6 @@ class CeDimmer(BaseHmLight):
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int((self._e_level.value or 0.0) * 255)
-
-    @property
-    def supports_brightness(self) -> bool:
-        """Flag if light supports brightness."""
-        return True
-
-    @property
-    def supports_transition(self) -> bool:
-        """Flag if light supports transition."""
-        return True
 
     @property
     def attributes(self) -> dict[str, Any]:
@@ -283,7 +298,7 @@ class CeColorDimmer(CeDimmer):
 
 
 class CeColorTempDimmer(CeDimmer):
-    """Class for homematic dimmer with colortemperature entities."""
+    """Class for homematic dimmer with color temperature entities."""
 
     @property
     def _e_color_level(self) -> HmFloat:
@@ -349,6 +364,11 @@ class CeIpFixedColorLight(BaseHmLight):
         return self._get_entity_value(field_name=FIELD_CHANNEL_LEVEL)
 
     @property
+    def _e_on_time_unit(self) -> HmAction:
+        """Return the on time unit entity of the device."""
+        return self._get_entity(field_name=FIELD_ON_TIME_UNIT, entity_type=HmAction)
+
+    @property
     def _e_ramp_time_unit(self) -> HmAction:
         """Return the ramp time unit entity of the device."""
         return self._get_entity(field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction)
@@ -371,11 +391,6 @@ class CeIpFixedColorLight(BaseHmLight):
         return 0.0, 0.0
 
     @property
-    def supports_brightness(self) -> bool:
-        """Flag if light supports brightness."""
-        return True
-
-    @property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return True
@@ -387,10 +402,39 @@ class CeIpFixedColorLight(BaseHmLight):
             simple_rgb_color = _convert_color(hs_color)
             await self._e_color.send_value(simple_rgb_color)
 
-        if HM_ARG_RAMP_TIME in kwargs:
-            await self._e_ramp_time_unit.send_value(0)
-
         await super().turn_on(**kwargs)
+
+    async def set_on_time_value(self, on_time: float) -> None:
+        """Set the on time value in seconds."""
+        on_time_unit = TIME_UNIT_SECONDS
+        if on_time > 16343:
+            on_time /= 60
+            on_time_unit = TIME_UNIT_MINUTES
+        if on_time > 16343:
+            on_time /= 60
+            on_time_unit = TIME_UNIT_HOURS
+
+        if isinstance(self._e_on_time_value, HmAction) and isinstance(
+            self._e_on_time_unit, HmAction
+        ):
+            await self._e_on_time_value.send_value(on_time_unit)
+            await self._e_on_time_value.send_value(float(on_time))
+
+    async def set_ramp_time_value(self, ramp_time: float) -> None:
+        """Set the ramp time value in seconds."""
+        ramp_time_unit = TIME_UNIT_SECONDS
+        if ramp_time > 16343:
+            ramp_time /= 60
+            ramp_time_unit = TIME_UNIT_MINUTES
+        if ramp_time > 16343:
+            ramp_time /= 60
+            ramp_time_unit = TIME_UNIT_HOURS
+
+        if isinstance(self._e_ramp_time_value, HmAction) and isinstance(
+            self._e_ramp_time_unit, HmAction
+        ):
+            await self._e_ramp_time_value.send_value(ramp_time_unit)
+            await self._e_ramp_time_value.send_value(float(ramp_time))
 
     @property
     def attributes(self) -> dict[str, Any]:
