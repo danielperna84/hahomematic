@@ -9,7 +9,7 @@ from typing import Any, cast
 
 from hahomematic import config
 import hahomematic.central_unit as hm_central
-from hahomematic.config import CONNECTION_CHECKER_INTERVAL
+from hahomematic.config import CALLBACK_CHECKER_INTERVAL
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
@@ -241,28 +241,29 @@ class Client(ABC):
         """Return if XmlRPC-Server is alive based on received events for this client."""
         if last_events_time := self._central.last_events.get(self.interface_id):
             seconds_since_last_event = (datetime.now() - last_events_time).seconds
-            if seconds_since_last_event < CONNECTION_CHECKER_INTERVAL * 10:
-                if not self._is_callback_alive:
+            if seconds_since_last_event > CALLBACK_CHECKER_INTERVAL:
+                if self._is_callback_alive:
                     self.central.fire_interface_event(
                         interface_id=self.interface_id,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
-                        available=True,
+                        available=False,
                     )
-                    self._is_callback_alive = True
-                return True
-            _LOGGER.warning(
-                "is_callback_alive: Callback for %s has not received events for %i seconds')",
-                self.interface_id,
-                seconds_since_last_event,
-            )
-        if self._is_callback_alive:
-            self._central.fire_interface_event(
-                interface_id=self.interface_id,
-                interface_event_type=HmInterfaceEventType.CALLBACK,
-                available=False,
-            )
-            self._is_callback_alive = False
-        return False
+                    self._is_callback_alive = False
+                _LOGGER.warning(
+                    "is_callback_alive: Callback for %s has not received events for %i seconds')",
+                    self.interface_id,
+                    seconds_since_last_event,
+                )
+                return False
+
+            if not self._is_callback_alive:
+                self._central.fire_interface_event(
+                    interface_id=self.interface_id,
+                    interface_event_type=HmInterfaceEventType.CALLBACK,
+                    available=True,
+                )
+                self._is_callback_alive = True
+        return True
 
     @abstractmethod
     async def _check_connection(self) -> bool:

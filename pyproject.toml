@@ -64,6 +64,7 @@ good-names = [
     "k",
     "Run",
     "ip",
+    "T",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
@@ -89,6 +90,7 @@ disable = [
     "format",
     "abstract-class-little-used",
     "abstract-method",
+    "broad-except",
     "cyclic-import",
     "duplicate-code",
     "inconsistent-return-statements",
