@@ -1,4 +1,7 @@
-Version 1.1.5 (2022-04-24)
+Version 1.2.0 (2022-04-26)
+- Cleanup build
+
+Version 1.1.5 (2022-04-25)
 - Reorg light attributes
 - Add on_time to light and switch
 
