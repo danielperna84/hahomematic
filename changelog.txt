@@ -1,5 +1,6 @@
 Version 1.2.1 (2022-04-27)
 - Fix callback alive check
+- Reconnect clients based on outstanding xml callback events
 
 Version 1.2.0 (2022-04-26)
 - Cleanup build
