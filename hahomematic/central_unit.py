@@ -934,9 +934,15 @@ class ConnectionChecker(threading.Thread):
                 else:
                     reconnects: list[Any] = []
                     for client in self._central.clients.values():
-                        # check if interface callback is alive
-                        client.is_callback_alive()
-                        if client.available is False or not await client.is_connected():
+                        # check:
+                        #  - client is available
+                        #  - client is connected
+                        #  - interface callback is alive
+                        if (
+                            client.available is False
+                            or not await client.is_connected()
+                            or not client.is_callback_alive()
+                        ):
                             reconnects.append(client.reconnect())
                     if reconnects:
                         await asyncio.gather(*reconnects)

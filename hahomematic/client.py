@@ -199,12 +199,11 @@ class Client(ABC):
             )
             await asyncio.sleep(config.RECONNECT_WAIT)
 
-            if self.available is False:
-                await self.proxy_re_init()
-                _LOGGER.info(
-                    "reconnect: re-connected client %s",
-                    self.interface_id,
-                )
+            await self.proxy_re_init()
+            _LOGGER.info(
+                "reconnect: re-connected client %s",
+                self.interface_id,
+            )
             return True
         return False
 
