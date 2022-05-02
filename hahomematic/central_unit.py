@@ -856,30 +856,6 @@ class CentralUnit:
                     return entity
         return None
 
-    def has_address(self, address: str) -> bool:
-        """Check if address is handled by central_unit."""
-        return self.hm_devices.get(get_device_address(address)) is not None
-
-    def get_all_used_parameters(self) -> list[str]:
-        """Return used parameters"""
-        parameters: set[str] = set()
-        for entity in self.hm_entities.values():
-            if isinstance(entity, GenericEntity):
-                if getattr(entity, "parameter", None):
-                    parameters.add(entity.parameter)
-
-        return sorted(parameters)
-
-    def get_used_parameters(self, device_address: str) -> list[str]:
-        """Return used parameters"""
-        parameters: set[str] = set()
-        if device := self.hm_devices.get(device_address):
-            for entity in device.entities.values():
-                if getattr(entity, "parameter", None):
-                    parameters.add(entity.parameter)
-
-        return sorted(parameters)
-
     async def clear_all(self) -> None:
         """
         Clear all stored data.
