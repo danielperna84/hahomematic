@@ -232,14 +232,6 @@ class CentralUnit:
         await self._start_clients()
         self._start_connection_checker()
 
-    async def _start_clients(self) -> None:
-        """Start clients ."""
-        if await self._create_clients():
-            await self._load_caches()
-            await self._create_devices()
-            await self._init_hub()
-            await self._init_clients()
-
     async def start_direct(self) -> None:
         """Start the central unit for temporary usage."""
         await self.parameter_visibility.load()
@@ -265,20 +257,28 @@ class CentralUnit:
         _LOGGER.info("stop: Removing instance")
         del hm_data.INSTANCES[self.instance_name]
 
+    async def restart_clients(self) -> None:
+        """Restart clients"""
+        await self._stop_clients()
+        await self._start_clients()
+
+    async def _start_clients(self) -> None:
+        """Start clients ."""
+        if await self._create_clients():
+            await self._load_caches()
+            await self._create_devices()
+            await self._init_hub()
+            await self._init_clients()
+
     async def _stop_clients(self) -> None:
         """Stop clients."""
-        await self._de_init_client()
+        await self._de_init_clients()
         for client in self._clients.values():
             _LOGGER.info("stop_client: Stopping %s.", client.interface_id)
             client.stop()
         _LOGGER.debug("stop_clients: Clearing existing clients.")
         self._clients.clear()
         self._clients_by_init_url.clear()
-
-    async def restart_clients(self) -> None:
-        """Restart clients"""
-        await self._stop_clients()
-        await self._start_clients()
 
     async def _create_clients(self) -> bool:
         """Create clients for the central unit. Start connection checker afterwards"""
@@ -338,6 +338,20 @@ class CentralUnit:
                 )
         return len(self._clients) > 0
 
+    async def _init_clients(self) -> None:
+        """Init clients of control unit, and start connection checker."""
+        for client in self._clients.values():
+            if PROXY_INIT_SUCCESS == await client.proxy_init():
+                _LOGGER.info(
+                    "init_clients: client for %s initialized", client.interface_id
+                )
+
+    async def _de_init_clients(self) -> None:
+        """De-init clients"""
+        for name, client in self._clients.items():
+            if await client.proxy_de_init():
+                _LOGGER.info("stop: Proxy de-initialized: %s", name)
+
     def fire_interface_event(
         self,
         interface_id: str,
@@ -357,20 +371,6 @@ class CentralUnit:
                 HmEventType.INTERFACE,
                 event_data,
             )
-
-    async def _init_clients(self) -> None:
-        """Init clients of control unit, and start connection checker."""
-        for client in self._clients.values():
-            if PROXY_INIT_SUCCESS == await client.proxy_init():
-                _LOGGER.info(
-                    "init_clients: client for %s initialized", client.interface_id
-                )
-
-    async def _de_init_client(self) -> None:
-        """De-init clients"""
-        for name, client in self._clients.items():
-            if await client.proxy_de_init():
-                _LOGGER.info("stop: Proxy de-initialized: %s", name)
 
     async def _identify_callback_ip(self, port: int) -> str:
         """Identify local IP used for callbacks."""
