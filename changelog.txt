@@ -1,3 +1,6 @@
+Version 1.2.2 (2022-05-02)
+- Fix light channel for multi dimmer
+
 Version 1.2.1 (2022-04-27)
 - Fix callback alive check
 - Reconnect clients based on outstanding xml callback events
