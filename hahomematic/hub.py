@@ -151,7 +151,7 @@ class HmSystemVariable(BaseHubEntity):
     def __init__(
         self, central: hm_central.CentralUnit, name: str, value: Any, unit: str | None
     ):
-        self._hub: HmHub | HmDummyHub | None = central.hub
+        self._hub: HmHub | None = central.hub
         unique_id = generate_unique_id(
             central=central,
             address=SYSVAR_ADDRESS,
@@ -294,43 +294,6 @@ class HmHub(BaseHubEntity):
             return
 
         await self._central.set_system_variable(name, value)
-
-
-class HmDummyHub(BaseHubEntity):
-    """The HomeMatic hub. (CCU/HomeGear)."""
-
-    def __init__(self, central: hm_central.CentralUnit):
-        """Initialize HomeMatic hub."""
-        unique_id: str = generate_unique_id(
-            central=central, address=central.instance_name, prefix="hub"
-        )
-        name: str = central.instance_name
-        super().__init__(central, unique_id, name)
-        self.hub_entities: dict[str, BaseHubEntity] = {}
-
-    @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return central specific attributes."""
-        return self._central.device_information
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {}
-
-    @property
-    def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
-        """Return the system variables by platform"""
-        return {}
-
-    async def fetch_data(self) -> None:
-        """do not fetch data for the hub."""
-        return
-
-    # pylint: disable=unnecessary-pass
-    async def set_system_variable(self, name: str, value: Any) -> None:
-        """Do not set variable value on CCU/Homegear."""
-        pass
 
 
 def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
