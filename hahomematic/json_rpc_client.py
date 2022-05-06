@@ -22,6 +22,7 @@ from hahomematic.const import (
     ATTR_PASSWORD,
     ATTR_RESULT,
     ATTR_SESSION_ID,
+    ATTR_UNIT,
     ATTR_USERNAME,
     ATTR_VALUE,
     DEFAULT_ENCODING,
@@ -396,9 +397,9 @@ class JsonRpcAioHttpClient:
 
         return var
 
-    async def get_all_system_variables(self) -> dict[str, Any]:
+    async def get_all_system_variables(self) -> dict[str, tuple[Any, str | None]]:
         """Get all system variables from CCU / Homegear."""
-        variables: dict[str, Any] = {}
+        variables: dict[str, tuple[Any, str | None]] = {}
         _LOGGER.debug(
             "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
@@ -409,9 +410,10 @@ class JsonRpcAioHttpClient:
             if json_result := response[ATTR_RESULT]:
                 for var in json_result:
                     name = var[ATTR_NAME]
+                    unit = var[ATTR_UNIT]
                     try:
                         value = parse_ccu_sys_var(var)
-                        variables[name] = value
+                        variables[name] = (value, unit)
                     except ValueError as verr:
                         _LOGGER.error(
                             "get_all_system_variables: ValueError [%s] Failed to parse SysVar %s ",

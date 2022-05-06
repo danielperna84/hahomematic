@@ -44,6 +44,7 @@ class BaseHubEntity(ABC):
         unique_id: str,
         name: str,
         value: Any | None = None,
+        unit: str | None = None,
     ):
         """
         Initialize the entity.
@@ -52,6 +53,7 @@ class BaseHubEntity(ABC):
         self.unique_id = unique_id
         self.name = name
         self._value = value
+        self._unit = unit
         self.last_update: datetime = INIT_DATETIME
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
@@ -87,8 +89,8 @@ class BaseHubEntity(ABC):
     @property
     def unit(self) -> str | None:
         """Return the unit of the entity."""
-        if isinstance(self._value, (bool, str)):
-            return None
+        if self._unit:
+            return self._unit
         if isinstance(self._value, (int, float)):
             return "#"
         return None
@@ -146,8 +148,10 @@ class BaseHubEntity(ABC):
 class HmSystemVariable(BaseHubEntity):
     """Class for a homematic system variable."""
 
-    def __init__(self, central: hm_central.CentralUnit, name: str, value: Any):
-        self._hub: HmHub | HmDummyHub | None = central.hub
+    def __init__(
+        self, central: hm_central.CentralUnit, name: str, value: Any, unit: str | None
+    ):
+        self._hub: HmHub | None = central.hub
         unique_id = generate_unique_id(
             central=central,
             address=SYSVAR_ADDRESS,
@@ -158,6 +162,7 @@ class HmSystemVariable(BaseHubEntity):
             unique_id=unique_id,
             name=f"{central.instance_name}_SV_{name}",
             value=value,
+            unit=unit,
         )
 
     @property
@@ -258,7 +263,9 @@ class HmHub(BaseHubEntity):
         if self._central.model is BACKEND_CCU:
             variables = _clean_variables(variables)
 
-        for name, value in variables.items():
+        for name, data in variables.items():
+            value = data[0]
+            unit = data[1]
             if _is_excluded(name, EXCLUDED_FROM_SENSOR):
                 self._variables[name] = value
                 continue
@@ -267,16 +274,17 @@ class HmHub(BaseHubEntity):
             if entity:
                 await entity.set_value(value)
             else:
-                self._create_system_variable(name, value)
+                self._create_system_variable(name, value, unit)
 
         self.update_entity()
 
-    def _create_system_variable(self, name: str, value: Any) -> None:
+    def _create_system_variable(self, name: str, value: Any, unit: str | None) -> None:
         """Create system variable as entity."""
         self.hub_entities[name] = HmSystemVariable(
             central=self._central,
             name=name,
             value=value,
+            unit=unit,
         )
 
     async def set_system_variable(self, name: str, value: Any) -> None:
@@ -286,43 +294,6 @@ class HmHub(BaseHubEntity):
             return
 
         await self._central.set_system_variable(name, value)
-
-
-class HmDummyHub(BaseHubEntity):
-    """The HomeMatic hub. (CCU/HomeGear)."""
-
-    def __init__(self, central: hm_central.CentralUnit):
-        """Initialize HomeMatic hub."""
-        unique_id: str = generate_unique_id(
-            central=central, address=central.instance_name, prefix="hub"
-        )
-        name: str = central.instance_name
-        super().__init__(central, unique_id, name)
-        self.hub_entities: dict[str, BaseHubEntity] = {}
-
-    @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return central specific attributes."""
-        return self._central.device_information
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {}
-
-    @property
-    def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
-        """Return the system variables by platform"""
-        return {}
-
-    async def fetch_data(self) -> None:
-        """do not fetch data for the hub."""
-        return
-
-    # pylint: disable=unnecessary-pass
-    async def set_system_variable(self, name: str, value: Any) -> None:
-        """Do not set variable value on CCU/Homegear."""
-        pass
 
 
 def _is_excluded(variable: str, exclude_list: list[str]) -> bool:

@@ -285,7 +285,7 @@ class Client(ABC):
         ...
 
     @abstractmethod
-    async def get_all_system_variables(self) -> dict[str, Any]:
+    async def get_all_system_variables(self) -> dict[str, tuple[Any, str | None]]:
         """Get all system variables from CCU / Homegear."""
         ...
 
@@ -690,7 +690,7 @@ class ClientCCU(Client):
         """Get single system variable from CCU / Homegear."""
         return await self._json_rpc_client.get_system_variable(name=name)
 
-    async def get_all_system_variables(self) -> dict[str, Any]:
+    async def get_all_system_variables(self) -> dict[str, tuple[Any, str | None]]:
         """Get all system variables from CCU / Homegear."""
         return await self._json_rpc_client.get_all_system_variables()
 
@@ -799,13 +799,16 @@ class ClientHomegear(Client):
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_system_variable: %s [%s]", hhe.name, hhe.args)
 
-    async def get_all_system_variables(self) -> Any:
+    async def get_all_system_variables(self) -> dict[str, tuple[Any, str | None]]:
         """Get all system variables from CCU / Homegear."""
+        variables: dict[str, tuple[Any, str | None]] = {}
         try:
-            return await self._proxy.getAllSystemVariables()
+            if hg_variables := await self._proxy.getAllSystemVariables():
+                for name, value in hg_variables.items():
+                    variables[name] = (value, None)
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_all_system_variables: %s [%s]", hhe.name, hhe.args)
-        return None
+        return variables
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""

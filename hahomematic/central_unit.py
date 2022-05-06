@@ -24,7 +24,6 @@ from hahomematic.const import (
     ATTR_INTERFACE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
-    BACKEND_PYDEVCCU,
     DATA_LOAD_FAIL,
     DATA_LOAD_SUCCESS,
     DATA_NO_LOAD,
@@ -62,7 +61,7 @@ from hahomematic.helpers import (
     get_device_address,
     get_device_channel,
 )
-from hahomematic.hub import HmDummyHub, HmHub
+from hahomematic.hub import HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.parameter_visibility import ParameterVisibilityCache
 import hahomematic.xml_rpc_server as xml_rpc
@@ -127,7 +126,7 @@ class CentralUnit:
 
         hm_data.INSTANCES[self.instance_name] = self
         self._connection_checker = ConnectionChecker(self)
-        self._hub: HmHub | HmDummyHub | None = None
+        self._hub: HmHub | None = None
         self._version: str | None = None
 
     @property
@@ -156,7 +155,7 @@ class CentralUnit:
         )
 
     @property
-    def hub(self) -> HmHub | HmDummyHub | None:
+    def hub(self) -> HmHub | None:
         """Return the Hub"""
         return self._hub
 
@@ -404,14 +403,9 @@ class CentralUnit:
 
         return callback_ip
 
-    def _create_hub(self) -> HmHub | HmDummyHub:
+    def _create_hub(self) -> HmHub:
         """Create the hub."""
-        hub: HmHub | HmDummyHub
-        if self.model is BACKEND_PYDEVCCU:
-            hub = HmDummyHub(central=self)
-        else:
-            hub = HmHub(central=self)
-        return hub
+        return HmHub(central=self)
 
     async def _init_hub(self) -> None:
         """Init the hub."""
@@ -431,12 +425,11 @@ class CentralUnit:
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
-        if self.model is not BACKEND_PYDEVCCU:
-            _LOGGER.info(
-                "start_connection_checker: Starting connection_checker for %s",
-                self.instance_name,
-            )
-            self._connection_checker.start()
+        _LOGGER.info(
+            "start_connection_checker: Starting connection_checker for %s",
+            self.instance_name,
+        )
+        self._connection_checker.start()
 
     def _stop_connection_checker(self) -> None:
         """Start the connection checker."""
