@@ -349,8 +349,6 @@ class CeRfThermostat(BaseClimateEntity):
             await self._e_comfort_mode.send_value(True)
         elif preset_mode == HmPresetMode.ECO:
             await self._e_lowering_mode.send_value(True)
-        elif preset_mode == HmPresetMode.NONE:
-            await self._e_boost_mode.send_value(False)
 
 
 class CeIpThermostat(BaseClimateEntity):

@@ -1,6 +1,7 @@
 Version 1.3.0 (2022-05-06)
 - Use unit for vars, if available
 - Remove special handling for pydevccu
+- Remove set boost mode to false, when preset is none for bidcos climate entities
 
 Version 1.2.2 (2022-05-02)
 - Fix light channel for multi dimmer
