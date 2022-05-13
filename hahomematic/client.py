@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Any, cast
 
 from hahomematic import config
 import hahomematic.central_unit as hm_central
-from hahomematic.config import CALLBACK_CHECKER_INTERVAL
+from hahomematic.config import CHECK_INTERVAL
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
@@ -231,16 +231,17 @@ class Client(ABC):
             self._mark_all_devices_availability(available=False)
             return False
 
-        diff: timedelta = datetime.now() - self.last_updated
-        if diff.total_seconds() < config.INIT_TIMEOUT:
+        if (datetime.now() - self.last_updated).total_seconds() < CHECK_INTERVAL:
             return True
         return False
 
     def is_callback_alive(self) -> bool:
         """Return if XmlRPC-Server is alive based on received events for this client."""
         if last_events_time := self._central.last_events.get(self.interface_id):
-            seconds_since_last_event = (datetime.now() - last_events_time).seconds
-            if seconds_since_last_event > CALLBACK_CHECKER_INTERVAL:
+            seconds_since_last_event = (
+                datetime.now() - last_events_time
+            ).total_seconds()
+            if seconds_since_last_event > CHECK_INTERVAL:
                 if self._is_callback_alive:
                     self.central.fire_interface_event(
                         interface_id=self.interface_id,
