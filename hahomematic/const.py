@@ -196,12 +196,14 @@ IF_DEFAULT_ALLOCATION = {
     IF_BIDCOS_RF_TLS_PORT: IF_BIDCOS_RF_NAME,
 }
 
-DEFAULT_TIMEOUT = 30
-DEFAULT_INIT_TIMEOUT = 90
 DEFAULT_TLS = False
 DEFAULT_VERIFY_TLS = False
+# default timeout for a connection
+DEFAULT_TIMEOUT = 60
+# check if connection is available via rpc ping every:
 DEFAULT_CONNECTION_CHECKER_INTERVAL = 30
-DEFAULT_RECONNECT_WAIT = 90
+# wait with reconnect after a first ping was successful
+DEFAULT_RECONNECT_WAIT = 120
 
 HM_ENTITY_UNIT_REPLACE: dict[str, str] = {
     '"': "",
