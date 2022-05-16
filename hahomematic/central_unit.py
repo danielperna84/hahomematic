@@ -254,7 +254,8 @@ class CentralUnit:
         xml_rpc.un_register_xml_rpc_server()
 
         _LOGGER.info("stop: Removing instance")
-        del hm_data.INSTANCES[self.instance_name]
+        if self.instance_name in hm_data.INSTANCES:
+            del hm_data.INSTANCES[self.instance_name]
 
     async def restart_clients(self) -> None:
         """Restart clients"""
