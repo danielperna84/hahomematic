@@ -116,7 +116,40 @@ _IGNORED_PARAMETERS_WILDCARDS_START: set[str] = {
 
 # Parameters by device within the VALUES paramset for which we don't create entities.
 _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
-    "LOWBAT": ["HM-LC-Sw4-DR"],
+    "LOWBAT": [
+        "HM-LC-Sw1-FM",
+        "HM-LC-Sw1PBU-FM",
+        "HM-LC-Sw4-DR",
+        "HM-SwI-3-FM",
+    ],
+    "LOW_BAT": ["HmIP-BWTH"],
+    "OPERATING_VOLTAGE": [
+        "HmIP-BDT",
+        "HmIP-BSL",
+        "HmIP-BSM",
+        "HmIP-BWTH",
+        "HmIP-DRSI4",
+        "HmIP-FDT",
+        "HmIP-FSM",
+        "HmIP-PDT",
+        "HmIP-PS",
+        "HmIP-SFD",
+    ],
+    "RSSI_PEER": [
+        "HmIP-ASIR",
+        "HmIP-KR",
+        "HmIP-RC",
+        "HmIP-SW",
+        "HmIP-SCI",
+        "HmIP-SFD",
+        "HmIP-SLO",
+        "HmIP-SPI",
+        "HmIP-SRD",
+        "HmIP-SRH",
+        "HmIP-STE2-PCB",
+        "HmIP-STH",
+        "HmIP-WRC",
+    ],
 }
 
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
