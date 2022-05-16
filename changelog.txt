@@ -1,5 +1,6 @@
 Version 1.4.0 (2022-05-16)
 - Block parameters by device_type that should not create entities in HA
+- Fix remove instance on shutdown
 
 Version 1.3.1 (2022-05-13)
 - Increase connection timeout(30s->60s) and reconnect interval(90s->120s) to better support slower hardware
