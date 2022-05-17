@@ -135,21 +135,6 @@ _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
         "HmIP-PS",
         "HmIP-SFD",
     ],
-    "RSSI_PEER": [
-        "HmIP-ASIR",
-        "HmIP-KR",
-        "HmIP-RC",
-        "HmIP-SW",
-        "HmIP-SCI",
-        "HmIP-SFD",
-        "HmIP-SLO",
-        "HmIP-SPI",
-        "HmIP-SRD",
-        "HmIP-SRH",
-        "HmIP-STE2-PCB",
-        "HmIP-STH",
-        "HmIP-WRC",
-    ],
 }
 
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
