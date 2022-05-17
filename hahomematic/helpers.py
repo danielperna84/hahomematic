@@ -22,6 +22,7 @@ from hahomematic.const import (
     ATTR_VALUE,
     HUB_ADDRESS,
     INIT_DATETIME,
+    PARAMETER_FRIENDLY_NAME,
     SYSVAR_ADDRESS,
     TYPE_BOOL,
     TYPE_FLOAT,
@@ -64,7 +65,7 @@ def generate_unique_id(
 ) -> str:
     """
     Build unique id from address and parameter.
-    Instance_name is addionally used for heating groups.
+    Central id is addionally used for heating groups.
     Prefix is used for events and buttons.
     """
     unique_id = address.replace(":", "_").replace("-", "_")
@@ -150,9 +151,14 @@ def get_entity_name(
         channel_address=channel_address,
         device_type=device_type,
     ):
+        new_parameter = parameter
+        # Check if friendly name is available for parameter.
+        if (friendly_name := PARAMETER_FRIENDLY_NAME.get(parameter)) is not None:
+            new_parameter = friendly_name
+        p_name = new_parameter.title().replace("_", " ")
+
         if _check_channel_name_with_channel_no(name=entity_name):
             d_name = entity_name.split(":")[0]
-            p_name = parameter.title().replace("_", " ")
             c_name = ""
             if central.paramset_descriptions.has_multiple_channels(
                 channel_address=channel_address, parameter=parameter
@@ -162,9 +168,8 @@ def get_entity_name(
             entity_name = f"{d_name} {p_name}{c_name}"
         else:
             d_name = entity_name
-            p_name = parameter.title().replace("_", " ")
             entity_name = f"{d_name} {p_name}"
-        return entity_name
+        return entity_name.strip()
 
     _LOGGER.debug(
         "get_entity_name: Using unique_id for %s %s %s",
@@ -188,17 +193,16 @@ def get_event_name(
         channel_address=channel_address,
         device_type=device_type,
     ):
+        p_name = parameter.title().replace("_", " ")
         if _check_channel_name_with_channel_no(name=event_name):
             d_name = event_name.split(":")[0]
-            p_name = parameter.title().replace("_", " ")
             c_no = event_name.split(":")[1]
             c_name = "" if c_no == "0" else f" Channel {c_no}"
             event_name = f"{d_name}{c_name} {p_name}"
         else:
             d_name = event_name
-            p_name = parameter.title().replace("_", " ")
             event_name = f"{d_name} {p_name}"
-        return event_name
+        return event_name.strip()
 
     _LOGGER.debug(
         "Helper.get_event_name: Using unique_id for %s %s %s",
@@ -231,7 +235,7 @@ def get_custom_entity_name(
         if _check_channel_name_with_channel_no(name=custom_entity_name):
             marker = " ch" if usage == HmEntityUsage.CE_PRIMARY else " vch"
             return custom_entity_name.replace(":", marker)
-        return custom_entity_name
+        return custom_entity_name.strip()
 
     _LOGGER.debug(
         "Helper.get_custom_entity_name: Using unique_id for %s %s %s",
