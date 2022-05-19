@@ -1,5 +1,6 @@
 Version 1.4.1 (2022-05-17)
 - Add option to replace too technical parameter name by friendly parameter name
+- Ignore more parameters by device
 
 Version 1.4.0 (2022-05-16)
 - Block parameters by device_type that should not create entities in HA

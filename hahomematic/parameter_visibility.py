@@ -27,14 +27,6 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[str, tuple[set[int], str]] = {
     "HmIP-DRBLI4": ({9, 13, 17, 21}, PARAM_CHANNEL_OPERATION_MODE),
 }
 
-# Parameters within the paramsets for which we create entities.
-_UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
-    "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
-    "SD": ["SMOKE_DETECTOR_ALARM_STATUS"],  # HmIP-SWSD
-    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],  # HM-Sec-Win*
-    "HM-Sec-Key": ["DIRECTION", "ERROR"],  # HM-Sec-Key*
-}
-
 HIDDEN_PARAMETERS: set[str] = {
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
@@ -114,23 +106,40 @@ _IGNORED_PARAMETERS_WILDCARDS_START: set[str] = {
     "WEEK_PROGRAM",
 }
 
+
+# Parameters within the paramsets for which we create entities.
+_UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
+    "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
+    "SD": ["SMOKE_DETECTOR_ALARM_STATUS"],  # HmIP-SWSD
+    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],  # HM-Sec-Win*
+    "HM-Sec-Key": ["DIRECTION", "ERROR"],  # HM-Sec-Key*
+    "HmIP-PCBS-BAT": [
+        "OPERATING_VOLTAGE",
+        "LOW_BAT",
+    ],  # To override ignore for HmIP-PCBS
+}
+
 # Parameters by device within the VALUES paramset for which we don't create entities.
 _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
     "LOWBAT": [
         "HM-LC-Sw1-FM",
         "HM-LC-Sw1PBU-FM",
+        "HM-LC-Sw1-Pl-DN-R1",
+        "HM-LC-Sw1-PCB",
         "HM-LC-Sw4-DR",
         "HM-SwI-3-FM",
     ],
-    "LOW_BAT": ["HmIP-BWTH"],
+    "LOW_BAT": ["HmIP-BWTH", "HmIP-PCBS"],
     "OPERATING_VOLTAGE": [
         "HmIP-BDT",
         "HmIP-BSL",
         "HmIP-BSM",
         "HmIP-BWTH",
-        "HmIP-DRSI4",
+        "HmIP-DR",
         "HmIP-FDT",
         "HmIP-FSM",
+        "HmIP-MOD-OC8",
+        "HmIP-PCBS",
         "HmIP-PDT",
         "HmIP-PS",
         "HmIP-SFD",
