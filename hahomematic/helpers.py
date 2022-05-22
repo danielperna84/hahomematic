@@ -18,8 +18,6 @@ from hahomematic.const import (
     ATTR_HM_LIST,
     ATTR_HM_LOGIC,
     ATTR_HM_NUMBER,
-    ATTR_TYPE,
-    ATTR_VALUE,
     HUB_ADDRESS,
     INIT_DATETIME,
     PARAMETER_FRIENDLY_NAME,
@@ -124,18 +122,18 @@ def check_or_create_directory(directory: str) -> bool:
     return True
 
 
-def parse_ccu_sys_var(data: dict[str, Any]) -> Any:
+def parse_ccu_sys_var(data_type: str, raw_value: Any) -> Any:
     """Helper to parse type of system variables of CCU."""
     # pylint: disable=no-else-return
-    if data[ATTR_TYPE] == ATTR_HM_LOGIC:
-        return data[ATTR_VALUE] == "true"
-    if data[ATTR_TYPE] == ATTR_HM_ALARM:
-        return data[ATTR_VALUE] == "true"
-    elif data[ATTR_TYPE] == ATTR_HM_NUMBER:
-        return float(data[ATTR_VALUE])
-    elif data[ATTR_TYPE] == ATTR_HM_LIST:
-        return int(data[ATTR_VALUE])
-    return data[ATTR_VALUE]
+    if data_type == ATTR_HM_LOGIC:
+        return raw_value == "true"
+    if data_type == ATTR_HM_ALARM:
+        return raw_value == "true"
+    elif data_type == ATTR_HM_NUMBER:
+        return float(raw_value)
+    elif data_type == ATTR_HM_LIST:
+        return int(raw_value)
+    return raw_value
 
 
 def get_entity_name(
@@ -364,3 +362,17 @@ def convert_value(value: Any, target_type: str) -> Any:
     if target_type == TYPE_STRING:
         return str(value)
     return value
+
+
+@dataclass
+class SystemVariableData:
+    """Dataclass for system variables."""
+
+    name: str
+    data_type: str | None = None
+    unit: str | None = None
+    value: Any | None = None
+    value_list: list[str] | None = None
+    max_value: Any | None = None
+    min_value: Any | None = None
+    internal: bool = False

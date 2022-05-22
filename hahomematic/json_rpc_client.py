@@ -18,13 +18,18 @@ from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnect
 from hahomematic import config
 from hahomematic.const import (
     ATTR_ERROR,
+    ATTR_IS_INTERNAL,
+    ATTR_MAX_VALUE,
+    ATTR_MIN_VALUE,
     ATTR_NAME,
     ATTR_PASSWORD,
     ATTR_RESULT,
     ATTR_SESSION_ID,
+    ATTR_TYPE,
     ATTR_UNIT,
     ATTR_USERNAME,
     ATTR_VALUE,
+    ATTR_VALUELIST,
     DEFAULT_ENCODING,
     PATH_JSON_RPC,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
@@ -33,7 +38,7 @@ from hahomematic.const import (
     REGA_SCRIPT_SET_SYSTEM_VARIABLE,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
-from hahomematic.helpers import get_tls_context, parse_ccu_sys_var
+from hahomematic.helpers import SystemVariableData, get_tls_context, parse_ccu_sys_var
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -397,9 +402,9 @@ class JsonRpcAioHttpClient:
 
         return var
 
-    async def get_all_system_variables(self) -> dict[str, tuple[Any, str | None]]:
+    async def get_all_system_variables(self) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
-        variables: dict[str, tuple[Any, str | None]] = {}
+        variables: list[SystemVariableData] = []
         _LOGGER.debug(
             "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
@@ -410,10 +415,37 @@ class JsonRpcAioHttpClient:
             if json_result := response[ATTR_RESULT]:
                 for var in json_result:
                     name = var[ATTR_NAME]
+                    data_type = var[ATTR_TYPE]
+                    raw_value = var[ATTR_VALUE]
                     unit = var[ATTR_UNIT]
+                    internal = var[ATTR_IS_INTERNAL]
+                    value_list = var.get(ATTR_VALUELIST)
                     try:
-                        value = parse_ccu_sys_var(var)
-                        variables[name] = (value, unit)
+                        value = parse_ccu_sys_var(
+                            data_type=data_type, raw_value=raw_value
+                        )
+                        max_value = None
+                        if raw_max_value := var.get(ATTR_MAX_VALUE):
+                            max_value = parse_ccu_sys_var(
+                                data_type=data_type, raw_value=raw_max_value
+                            )
+                        min_value = None
+                        if raw_min_value := var.get(ATTR_MIN_VALUE):
+                            min_value = parse_ccu_sys_var(
+                                data_type=data_type, raw_value=raw_min_value
+                            )
+                        variables.append(
+                            SystemVariableData(
+                                name=name,
+                                data_type=data_type,
+                                unit=unit,
+                                value=value,
+                                value_list=value_list,
+                                max_value=max_value,
+                                min_value=min_value,
+                                internal=internal,
+                            )
+                        )
                     except ValueError as verr:
                         _LOGGER.error(
                             "get_all_system_variables: ValueError [%s] Failed to parse SysVar %s ",

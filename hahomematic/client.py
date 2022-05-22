@@ -45,7 +45,12 @@ from hahomematic.exceptions import (
     HaHomematicException,
     NoConnection,
 )
-from hahomematic.helpers import build_headers, build_xml_rpc_uri, get_channel_no
+from hahomematic.helpers import (
+    SystemVariableData,
+    build_headers,
+    build_xml_rpc_uri,
+    get_channel_no,
+)
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
@@ -286,7 +291,7 @@ class Client(ABC):
         ...
 
     @abstractmethod
-    async def get_all_system_variables(self) -> dict[str, tuple[Any, str | None]]:
+    async def get_all_system_variables(self) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         ...
 
@@ -691,7 +696,7 @@ class ClientCCU(Client):
         """Get single system variable from CCU / Homegear."""
         return await self._json_rpc_client.get_system_variable(name=name)
 
-    async def get_all_system_variables(self) -> dict[str, tuple[Any, str | None]]:
+    async def get_all_system_variables(self) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         return await self._json_rpc_client.get_all_system_variables()
 
@@ -800,13 +805,13 @@ class ClientHomegear(Client):
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_system_variable: %s [%s]", hhe.name, hhe.args)
 
-    async def get_all_system_variables(self) -> dict[str, tuple[Any, str | None]]:
+    async def get_all_system_variables(self) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
-        variables: dict[str, tuple[Any, str | None]] = {}
+        variables: list[SystemVariableData] = []
         try:
             if hg_variables := await self._proxy.getAllSystemVariables():
                 for name, value in hg_variables.items():
-                    variables[name] = (value, None)
+                    variables.append(SystemVariableData(name=name, value=value))
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_all_system_variables: %s [%s]", hhe.name, hhe.args)
         return variables

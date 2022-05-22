@@ -57,6 +57,7 @@ from hahomematic.exceptions import (
 )
 from hahomematic.helpers import (
     HmDeviceInfo,
+    SystemVariableData,
     check_or_create_directory,
     get_device_address,
     get_device_channel,
@@ -718,7 +719,7 @@ class CentralUnit:
             )
             raise HaHomematicException from cer
 
-    async def get_all_system_variables(self) -> dict[str, Any] | None:
+    async def get_all_system_variables(self) -> list[SystemVariableData] | None:
         """Get all system variables from CCU / Homegear."""
         if client := self.get_client():
             return await client.get_all_system_variables()
