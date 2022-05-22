@@ -18,24 +18,25 @@ from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnect
 from hahomematic import config
 from hahomematic.const import (
     ATTR_ERROR,
-    ATTR_IS_INTERNAL,
-    ATTR_MAX_VALUE,
-    ATTR_MIN_VALUE,
     ATTR_NAME,
     ATTR_PASSWORD,
     ATTR_RESULT,
     ATTR_SESSION_ID,
-    ATTR_TYPE,
-    ATTR_UNIT,
     ATTR_USERNAME,
-    ATTR_VALUE,
-    ATTR_VALUELIST,
     DEFAULT_ENCODING,
     PATH_JSON_RPC,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
     REGA_SCRIPT_SET_SYSTEM_VARIABLE,
+    SYSVAR_IS_INTERNAL,
+    SYSVAR_MAX_VALUE,
+    SYSVAR_MIN_VALUE,
+    SYSVAR_NAME,
+    SYSVAR_TYPE,
+    SYSVAR_UNIT,
+    SYSVAR_VALUE,
+    SYSVAR_VALUE_LIST,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import SystemVariableData, get_tls_context, parse_ccu_sys_var
@@ -338,11 +339,11 @@ class JsonRpcAioHttpClient:
         _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
         try:
             params = {
-                ATTR_NAME: name,
-                ATTR_VALUE: value,
+                SYSVAR_NAME: name,
+                SYSVAR_VALUE: value,
             }
             if isinstance(value, bool):
-                params[ATTR_VALUE] = int(value)
+                params[SYSVAR_VALUE] = int(value)
                 response = await self._post("SysVar.setBool", params)
             elif isinstance(value, str):
                 if re.findall("<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});", value):
@@ -370,7 +371,7 @@ class JsonRpcAioHttpClient:
         """Delete a system variable from CCU / Homegear."""
         _LOGGER.debug("delete_system_variable: Getting System variable via JSON-RPC")
         try:
-            params = {ATTR_NAME: name}
+            params = {SYSVAR_NAME: name}
             response = await self._post(
                 "SysVar.deleteSysVarByName",
                 params,
@@ -386,7 +387,7 @@ class JsonRpcAioHttpClient:
         var = None
         _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
         try:
-            params = {ATTR_NAME: name}
+            params = {SYSVAR_NAME: name}
             response = await self._post(
                 "SysVar.getValueByName",
                 params,
@@ -414,23 +415,23 @@ class JsonRpcAioHttpClient:
             )
             if json_result := response[ATTR_RESULT]:
                 for var in json_result:
-                    name = var[ATTR_NAME]
-                    data_type = var[ATTR_TYPE]
-                    raw_value = var[ATTR_VALUE]
-                    unit = var[ATTR_UNIT]
-                    internal = var[ATTR_IS_INTERNAL]
-                    value_list = var.get(ATTR_VALUELIST)
+                    name = var[SYSVAR_NAME]
+                    data_type = var[SYSVAR_TYPE]
+                    raw_value = var[SYSVAR_VALUE]
+                    unit = var[SYSVAR_UNIT]
+                    internal = var[SYSVAR_IS_INTERNAL]
+                    value_list = var.get(SYSVAR_VALUE_LIST)
                     try:
                         value = parse_ccu_sys_var(
                             data_type=data_type, raw_value=raw_value
                         )
                         max_value = None
-                        if raw_max_value := var.get(ATTR_MAX_VALUE):
+                        if raw_max_value := var.get(SYSVAR_MAX_VALUE):
                             max_value = parse_ccu_sys_var(
                                 data_type=data_type, raw_value=raw_max_value
                             )
                         min_value = None
-                        if raw_min_value := var.get(ATTR_MIN_VALUE):
+                        if raw_min_value := var.get(SYSVAR_MIN_VALUE):
                             min_value = parse_ccu_sys_var(
                                 data_type=data_type, raw_value=raw_min_value
                             )
