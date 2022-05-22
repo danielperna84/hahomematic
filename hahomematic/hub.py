@@ -15,10 +15,16 @@ from hahomematic.const import (
     HUB_ADDRESS,
     INIT_DATETIME,
     SYSVAR_ADDRESS,
+    TYPE_LIST,
     HmEntityUsage,
     HmPlatform,
 )
-from hahomematic.helpers import HmDeviceInfo, SystemVariableData, generate_unique_id
+from hahomematic.helpers import (
+    HmDeviceInfo,
+    SystemVariableData,
+    generate_unique_id,
+    parse_ccu_sys_var,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,8 +49,6 @@ class BaseHubEntity(ABC):
         central: hm_central.CentralUnit,
         unique_id: str,
         name: str,
-        value: Any | None = None,
-        unit: str | None = None,
     ):
         """
         Initialize the entity.
@@ -52,8 +56,6 @@ class BaseHubEntity(ABC):
         self._central = central
         self.unique_id = unique_id
         self.name = name
-        self._value = value
-        self._unit = unit
         self.last_update: datetime = INIT_DATETIME
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
@@ -80,20 +82,6 @@ class BaseHubEntity(ABC):
     def platform(self) -> HmPlatform:
         """Return the platform."""
         return HmPlatform.HUB_SENSOR
-
-    @property
-    def value(self) -> Any:
-        """Return the value of the entity."""
-        return self._value
-
-    @property
-    def unit(self) -> str | None:
-        """Return the unit of the entity."""
-        if self._unit:
-            return self._unit
-        if isinstance(self._value, (int, float)):
-            return "#"
-        return None
 
     # pylint: disable=no-self-use
     async def load_data(self) -> None:
@@ -148,22 +136,26 @@ class BaseHubEntity(ABC):
 class HmSystemVariable(BaseHubEntity):
     """Class for a homematic system variable."""
 
-    def __init__(
-        self, central: hm_central.CentralUnit, name: str, value: Any, unit: str | None
-    ):
+    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
         self._hub: HmHub | None = central.hub
+        self._data = data
         unique_id = generate_unique_id(
             central=central,
             address=SYSVAR_ADDRESS,
-            parameter=slugify(name),
+            parameter=slugify(data.name),
         )
         super().__init__(
             central=central,
             unique_id=unique_id,
-            name=f"{central.instance_name}_SV_{name}",
-            value=value,
-            unit=unit,
+            name=f"{central.instance_name}_SV_{data.name}",
         )
+        self._unit = data.unit
+        self.data_type = data.data_type
+        self._value = data.value
+        self._value_list = data.value_list
+        self.max_value = data.max_value
+        self.min_value = data.min_value
+        self.internal = data.internal
 
     @property
     def device_information(self) -> HmDeviceInfo:
@@ -179,21 +171,54 @@ class HmSystemVariable(BaseHubEntity):
             return HmPlatform.HUB_BINARY_SENSOR
         return HmPlatform.HUB_SENSOR
 
-    async def set_value(self, value: Any) -> None:
+    @property
+    def value(self) -> Any:
+        """Return the value of the entity."""
+        return self._value
+
+    @property
+    def value_list(self) -> list[str] | None:
+        """Return the value list of the entity."""
+        return self._value_list
+
+    @property
+    def unit(self) -> str | None:
+        """Return the unit of the entity."""
+        if self._unit:
+            return self._unit
+        if isinstance(self._value, (int, float)):
+            return "#"
+        return None
+
+    def update_value(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        old_value = self._value
-        if isinstance(old_value, bool):
-            value = bool(value)
-        elif isinstance(old_value, float):
-            value = float(value)
-        elif isinstance(old_value, int):
-            value = int(value)
-        elif isinstance(old_value, str):
-            value = str(value)
+        if self.data_type:
+            value = parse_ccu_sys_var(data_type=self.data_type, raw_value=value)
+        else:
+            old_value = self._value
+            if isinstance(old_value, bool):
+                value = bool(value)
+            elif isinstance(old_value, float):
+                value = float(value)
+            elif isinstance(old_value, int):
+                value = int(value)
+            elif isinstance(old_value, str):
+                value = str(value)
 
         if self._value != value:
             self._value = value
             self.update_entity()
+
+    async def send_variable(self, value: Any) -> None:
+        """Set variable value on CCU/Homegear."""
+        if self.data_type == TYPE_LIST and isinstance(value, str) and self._value_list:
+            await self._central.set_system_variable(
+                name=self.name, value=self._value_list.index(value)
+            )
+
+        await self._central.set_system_variable(
+            name=self.name, value=parse_ccu_sys_var(self.data_type, value)
+        )
 
 
 class HmHub(BaseHubEntity):
@@ -207,11 +232,17 @@ class HmHub(BaseHubEntity):
         self.hub_entities: dict[str, HmSystemVariable] = {}
         self._variables: dict[str, Any] = {}
         self.should_poll = True
+        self._value: int = 0
 
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._variables.copy()
+
+    @property
+    def value(self) -> int:
+        """Return the value of the entity."""
+        return self._value
 
     @property
     def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
@@ -266,26 +297,23 @@ class HmHub(BaseHubEntity):
         for sysvar in variables:
             name = sysvar.name
             value = sysvar.value
-            unit = sysvar.unit
             if _is_excluded(name, EXCLUDED_FROM_SENSOR):
                 self._variables[name] = value
                 continue
 
             entity: HmSystemVariable | None = self.hub_entities.get(name)
             if entity:
-                await entity.set_value(value)
+                entity.update_value(value)
             else:
-                self._create_system_variable(name, value, unit)
+                self._create_system_variable(data=sysvar)
 
         self.update_entity()
 
-    def _create_system_variable(self, name: str, value: Any, unit: str | None) -> None:
+    def _create_system_variable(self, data: SystemVariableData) -> None:
         """Create system variable as entity."""
-        self.hub_entities[name] = HmSystemVariable(
+        self.hub_entities[data.name] = HmSystemVariable(
             central=self._central,
-            name=name,
-            value=value,
-            unit=unit,
+            data=data,
         )
 
     async def set_system_variable(self, name: str, value: Any) -> None:
