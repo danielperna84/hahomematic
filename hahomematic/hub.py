@@ -18,7 +18,7 @@ from hahomematic.const import (
     HmEntityUsage,
     HmPlatform,
 )
-from hahomematic.helpers import HmDeviceInfo, generate_unique_id
+from hahomematic.helpers import HmDeviceInfo, SystemVariableData, generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -263,9 +263,10 @@ class HmHub(BaseHubEntity):
         if self._central.model is BACKEND_CCU:
             variables = _clean_variables(variables)
 
-        for name, data in variables.items():
-            value = data[0]
-            unit = data[1]
+        for sysvar in variables:
+            name = sysvar.name
+            value = sysvar.value
+            unit = sysvar.unit
             if _is_excluded(name, EXCLUDED_FROM_SENSOR):
                 self._variables[name] = value
                 continue
@@ -304,10 +305,10 @@ def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
     return False
 
 
-def _clean_variables(variables: dict[str, Any]) -> dict[str, Any]:
-    cleaned_variables: dict[str, Any] = {}
-    for name, value in variables.items():
-        if _is_excluded(name, EXCLUDED):
+def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:
+    cleaned_variables: list[SystemVariableData] = []
+    for sysvar in variables:
+        if _is_excluded(sysvar.name, EXCLUDED):
             continue
-        cleaned_variables[name] = value
+        cleaned_variables.append(sysvar)
     return cleaned_variables
