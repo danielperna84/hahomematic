@@ -420,7 +420,9 @@ class JsonRpcAioHttpClient:
                     raw_value = var[SYSVAR_VALUE]
                     unit = var[SYSVAR_UNIT]
                     internal = var[SYSVAR_IS_INTERNAL]
-                    value_list = var.get(SYSVAR_VALUE_LIST)
+                    value_list: list[str] | None = None
+                    if val_list := var.get(SYSVAR_VALUE_LIST):
+                        value_list = val_list.split(";")
                     try:
                         value = parse_ccu_sys_var(
                             data_type=data_type, raw_value=raw_value

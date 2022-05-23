@@ -122,9 +122,11 @@ def check_or_create_directory(directory: str) -> bool:
     return True
 
 
-def parse_ccu_sys_var(data_type: str, raw_value: Any) -> Any:
+def parse_ccu_sys_var(data_type: str | None, raw_value: Any) -> Any:
     """Helper to parse type of system variables of CCU."""
     # pylint: disable=no-else-return
+    if not data_type:
+        return raw_value
     if data_type == ATTR_HM_LOGIC:
         return raw_value == "true"
     if data_type == ATTR_HM_ALARM:

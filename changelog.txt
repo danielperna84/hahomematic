@@ -1,7 +1,8 @@
-Version 1.4.1 (2022-05-17)
+Version 1.5.0 (2022-05-23)
 - Add option to replace too technical parameter name by friendly parameter name
 - Ignore more parameters by device
 - Use dataclass for sysvars
+- Limit sysvar length to 255 chars due to HA limitations
 
 Version 1.4.0 (2022-05-16)
 - Block parameters by device_type that should not create entities in HA
