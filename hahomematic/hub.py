@@ -211,13 +211,19 @@ class HmSystemVariable(BaseHubEntity):
 
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        if self.data_type == TYPE_LIST and isinstance(value, str) and self._value_list:
+        if (
+            self.data_type == TYPE_LIST
+            and isinstance(value, str)
+            and self._value_list
+            and value in self._value_list
+        ):
             await self._central.set_system_variable(
-                name=self.name, value=self._value_list.index(value)
+                name=self._data.name, value=self._value_list.index(value)
             )
+            return
 
         await self._central.set_system_variable(
-            name=self.name, value=parse_ccu_sys_var(self.data_type, value)
+            name=self._data.name, value=parse_ccu_sys_var(self.data_type, value)
         )
 
 
@@ -318,11 +324,12 @@ class HmHub(BaseHubEntity):
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        if name not in self.hub_entities:
+        if entity := self.hub_entities.get(name):
+            await entity.send_variable(value=value)
+        elif name in self.attributes:
+            await self._central.set_system_variable(name=name, value=value)
+        else:
             _LOGGER.warning("Variable %s not found on %s", name, self.name)
-            return
-
-        await self._central.set_system_variable(name, value)
 
 
 def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
