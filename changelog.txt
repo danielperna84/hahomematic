@@ -1,4 +1,4 @@
-Version 1.5.1 (2022-05-24)
+Version 1.5.2 (2022-05-24)
 - Add subsection to attributes
 - Use parser for internal sysvars
 
