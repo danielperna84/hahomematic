@@ -15,7 +15,7 @@ from hahomematic.const import (
     HUB_ADDRESS,
     INIT_DATETIME,
     SYSVAR_ADDRESS,
-    TYPE_LIST,
+    SYSVAR_TYPE_LIST,
     HmEntityUsage,
     HmPlatform,
 )
@@ -23,7 +23,7 @@ from hahomematic.helpers import (
     HmDeviceInfo,
     SystemVariableData,
     generate_unique_id,
-    parse_ccu_sys_var,
+    parse_sys_var,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -193,7 +193,7 @@ class HmSystemVariable(BaseHubEntity):
     def update_value(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         if self.data_type:
-            value = parse_ccu_sys_var(data_type=self.data_type, raw_value=value)
+            value = parse_sys_var(data_type=self.data_type, raw_value=value)
         else:
             old_value = self._value
             if isinstance(old_value, bool):
@@ -212,7 +212,7 @@ class HmSystemVariable(BaseHubEntity):
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         if (
-            self.data_type == TYPE_LIST
+            self.data_type == SYSVAR_TYPE_LIST
             and isinstance(value, str)
             and self._value_list
             and value in self._value_list
@@ -223,7 +223,7 @@ class HmSystemVariable(BaseHubEntity):
             return
 
         await self._central.set_system_variable(
-            name=self._data.name, value=parse_ccu_sys_var(self.data_type, value)
+            name=self._data.name, value=parse_sys_var(self.data_type, value)
         )
 
 

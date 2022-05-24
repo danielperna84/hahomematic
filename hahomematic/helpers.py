@@ -14,14 +14,14 @@ from typing import Any
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
-    ATTR_HM_ALARM,
-    ATTR_HM_LIST,
-    ATTR_HM_LOGIC,
-    ATTR_HM_NUMBER,
     HUB_ADDRESS,
     INIT_DATETIME,
     PARAMETER_FRIENDLY_NAME,
     SYSVAR_ADDRESS,
+    SYSVAR_TYPE_ALARM,
+    SYSVAR_TYPE_LIST,
+    SYSVAR_TYPE_LOGIC,
+    SYSVAR_TYPE_NUMBER,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -127,13 +127,29 @@ def parse_ccu_sys_var(data_type: str | None, raw_value: Any) -> Any:
     # pylint: disable=no-else-return
     if not data_type:
         return raw_value
-    if data_type == ATTR_HM_LOGIC:
+    if data_type == SYSVAR_TYPE_LOGIC:
         return raw_value == "true"
-    if data_type == ATTR_HM_ALARM:
+    if data_type == SYSVAR_TYPE_ALARM:
         return raw_value == "true"
-    elif data_type == ATTR_HM_NUMBER:
+    elif data_type == SYSVAR_TYPE_NUMBER:
         return float(raw_value)
-    elif data_type == ATTR_HM_LIST:
+    elif data_type == SYSVAR_TYPE_LIST:
+        return int(raw_value)
+    return raw_value
+
+
+def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
+    """Helper to parse type of system variables."""
+    # pylint: disable=no-else-return
+    if not data_type:
+        return raw_value
+    if data_type == SYSVAR_TYPE_LOGIC:
+        return bool(raw_value)
+    if data_type == SYSVAR_TYPE_ALARM:
+        return bool(raw_value)
+    elif data_type == SYSVAR_TYPE_NUMBER:
+        return float(raw_value)
+    elif data_type == SYSVAR_TYPE_LIST:
         return int(raw_value)
     return raw_value
 
