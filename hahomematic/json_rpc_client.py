@@ -483,31 +483,31 @@ class JsonRpcAioHttpClient:
 
         return channel_ids_room
 
-    async def get_all_channel_ids_subsection(self) -> dict[str, set[str]]:
-        """Get all channel_ids per subsection from CCU / Homegear."""
-        channel_ids_subsection: dict[str, set[str]] = {}
+    async def get_all_channel_ids_function(self) -> dict[str, set[str]]:
+        """Get all channel_ids per function from CCU / Homegear."""
+        channel_ids_function: dict[str, set[str]] = {}
         _LOGGER.debug(
-            "get_all_channel_ids_per_subsection: Getting all subsections via JSON-RPC"
+            "get_all_channel_ids_per_function: Getting all functions via JSON-RPC"
         )
         try:
             response = await self._post(
                 "Subsection.getAll",
             )
             if json_result := response[ATTR_RESULT]:
-                for subsection in json_result:
-                    if subsection["id"] not in channel_ids_subsection:
-                        channel_ids_subsection[subsection["id"]] = set()
-                    channel_ids_subsection[subsection["id"]].add(subsection["name"])
-                    for channel_id in subsection["channelIds"]:
-                        if channel_id not in channel_ids_subsection:
-                            channel_ids_subsection[channel_id] = set()
-                        channel_ids_subsection[channel_id].add(subsection["name"])
+                for function in json_result:
+                    if function["id"] not in channel_ids_function:
+                        channel_ids_function[function["id"]] = set()
+                    channel_ids_function[function["id"]].add(function["name"])
+                    for channel_id in function["channelIds"]:
+                        if channel_id not in channel_ids_function:
+                            channel_ids_function[channel_id] = set()
+                        channel_ids_function[channel_id].add(function["name"])
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "get_all_channel_ids_per_subsection: %s [%s]", hhe.name, hhe.args
+                "get_all_channel_ids_per_function: %s [%s]", hhe.name, hhe.args
             )
 
-        return channel_ids_subsection
+        return channel_ids_function
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""

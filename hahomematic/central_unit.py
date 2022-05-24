@@ -1010,7 +1010,7 @@ class DeviceDetailsCache:
         self._device_channel_ids: dict[str, str] = {}
         self._channel_rooms: dict[str, set[str]] = {}
         self._device_room: dict[str, str] = {}
-        self._subsections: dict[str, set[str]] = {}
+        self._functions: dict[str, set[str]] = {}
         self._central = central
 
     async def load(self) -> None:
@@ -1021,8 +1021,8 @@ class DeviceDetailsCache:
         _LOGGER.debug("load: Loading rooms for %s", self._central.instance_name)
         self._channel_rooms = await self._get_all_rooms()
         self._identify_device_room()
-        _LOGGER.debug("load: Loading subsections for %s", self._central.instance_name)
-        self._subsections = await self._get_all_subsections()
+        _LOGGER.debug("load: Loading functions for %s", self._central.instance_name)
+        self._functions = await self._get_all_functions()
 
     def add_name(self, address: str, name: str) -> None:
         """Add name to cache."""
@@ -1061,16 +1061,16 @@ class DeviceDetailsCache:
         """Return room by device_address."""
         return self._device_room.get(device_address)
 
-    async def _get_all_subsections(self) -> dict[str, set[str]]:
-        """Get all subsections, if available."""
+    async def _get_all_functions(self) -> dict[str, set[str]]:
+        """Get all functions, if available."""
         if client := self._central.get_client():
-            return await client.get_all_subsections()
+            return await client.get_all_functions()
         return {}
 
-    def get_subsection_text(self, address: str) -> str | None:
-        """Return subsection by address"""
-        if subsections := self._subsections.get(address):
-            return ",".join(subsections)
+    def get_function_text(self, address: str) -> str | None:
+        """Return function by address"""
+        if functions := self._functions.get(address):
+            return ",".join(functions)
         return None
 
     def remove(self, address: str) -> None:
@@ -1082,7 +1082,7 @@ class DeviceDetailsCache:
         """Clear the cache."""
         self._names_cache.clear()
         self._channel_rooms.clear()
-        self._subsections.clear()
+        self._functions.clear()
 
     def _identify_device_room(self) -> None:
         """
