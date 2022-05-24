@@ -25,6 +25,7 @@ from hahomematic.const import (
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
+    ATTR_SUBSECTION,
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -133,6 +134,9 @@ class BaseEntity(ABC):
         self._interface_id: str = self._device.interface_id
         self.device_type: str = self._device.device_type
         self.sub_type: str = self._device.sub_type
+        self._subsection: str | None = self._central.device_details.get_subsection_text(
+            address=self.channel_address
+        )
         self.usage: HmEntityUsage = (
             HmEntityUsage.ENTITY_NO_CREATE
             if self._device.is_custom_entity
@@ -179,6 +183,7 @@ class BaseEntity(ABC):
         return {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.channel_address,
+            ATTR_SUBSECTION: self._subsection,
         }
 
     def add_to_collections(self) -> None:

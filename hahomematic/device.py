@@ -175,7 +175,9 @@ class HmDevice:
     @property
     def room(self) -> str | None:
         """Return the room."""
-        return self._central.device_details.get_room(self._device_address)
+        return self._central.device_details.get_room(
+            device_address=self._device_address
+        )
 
     @property
     def value_cache(self) -> ValueCache:
