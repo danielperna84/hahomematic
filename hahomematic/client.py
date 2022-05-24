@@ -306,8 +306,8 @@ class Client(ABC):
         ...
 
     @abstractmethod
-    async def get_all_subsections(self) -> dict[str, set[str]]:
-        """Get all subsections, if available."""
+    async def get_all_functions(self) -> dict[str, set[str]]:
+        """Get all functions, if available."""
         ...
 
     @abstractmethod
@@ -721,19 +721,19 @@ class ClientCCU(Client):
                 rooms[address].update(names)
         return rooms
 
-    async def get_all_subsections(self) -> dict[str, set[str]]:
-        """Get all subsections from CCU."""
-        subsections: dict[str, set[str]] = {}
+    async def get_all_functions(self) -> dict[str, set[str]]:
+        """Get all functions from CCU."""
+        functions: dict[str, set[str]] = {}
         device_channel_ids = self._central.device_details.device_channel_ids
-        channel_ids_subsection = (
-            await self._json_rpc_client.get_all_channel_ids_subsection()
+        channel_ids_function = (
+            await self._json_rpc_client.get_all_channel_ids_function()
         )
         for address, channel_id in device_channel_ids.items():
-            if sections := channel_ids_subsection.get(channel_id):
-                if address not in subsections:
-                    subsections[address] = set()
-                subsections[address].update(sections)
-        return subsections
+            if sections := channel_ids_function.get(channel_id):
+                if address not in functions:
+                    functions[address] = set()
+                functions[address].update(sections)
+        return functions
 
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
@@ -845,8 +845,8 @@ class ClientHomegear(Client):
         """Get all rooms from Homegear."""
         return {}
 
-    async def get_all_subsections(self) -> dict[str, set[str]]:
-        """Get all subsections from Homegear."""
+    async def get_all_functions(self) -> dict[str, set[str]]:
+        """Get all functions from Homegear."""
         return {}
 
     async def get_serial(self) -> str:

@@ -14,6 +14,7 @@ import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_ENTITY_TYPE,
+    ATTR_FUNCTION,
     ATTR_HM_DEFAULT,
     ATTR_HM_FLAGS,
     ATTR_HM_MAX,
@@ -25,7 +26,6 @@ from hahomematic.const import (
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
-    ATTR_SUBSECTION,
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -134,7 +134,7 @@ class BaseEntity(ABC):
         self._interface_id: str = self._device.interface_id
         self.device_type: str = self._device.device_type
         self.sub_type: str = self._device.sub_type
-        self._subsection: str | None = self._central.device_details.get_subsection_text(
+        self._function: str | None = self._central.device_details.get_function_text(
             address=self.channel_address
         )
         self.usage: HmEntityUsage = (
@@ -183,7 +183,7 @@ class BaseEntity(ABC):
         return {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.channel_address,
-            ATTR_SUBSECTION: self._subsection,
+            ATTR_FUNCTION: self._function,
         }
 
     def add_to_collections(self) -> None:
