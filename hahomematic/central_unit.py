@@ -1008,8 +1008,9 @@ class DeviceDetailsCache:
         self._names_cache: dict[str, str] = {}
         self._interface_cache: dict[str, str] = {}
         self._device_channel_ids: dict[str, str] = {}
-        self._rooms: dict[str, str] = {}
-        self._device_rooms: dict[str, list[str]] = {}
+        self._channel_rooms: dict[str, set[str]] = {}
+        self._device_room: dict[str, str] = {}
+        self._subsections: dict[str, set[str]] = {}
         self._central = central
 
     async def load(self) -> None:
@@ -1018,8 +1019,10 @@ class DeviceDetailsCache:
         if client := self._central.get_client():
             await client.fetch_device_details()
         _LOGGER.debug("load: Loading rooms for %s", self._central.instance_name)
-        self._rooms = await self._get_all_rooms()
-        self._identify_device_rooms()
+        self._channel_rooms = await self._get_all_rooms()
+        self._identify_device_room()
+        _LOGGER.debug("load: Loading subsections for %s", self._central.instance_name)
+        self._subsections = await self._get_all_subsections()
 
     def add_name(self, address: str, name: str) -> None:
         """Add name to cache."""
@@ -1048,15 +1051,27 @@ class DeviceDetailsCache:
         """Return device channel_ids"""
         return self._device_channel_ids
 
-    async def _get_all_rooms(self) -> dict[str, str]:
+    async def _get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms, if available."""
         if client := self._central.get_client():
             return await client.get_all_rooms()
         return {}
 
-    def get_room(self, address: str) -> str | None:
-        """Return room by address"""
-        return self._rooms.get(address)
+    def get_room(self, device_address: str) -> str | None:
+        """Return room by device_address."""
+        return self._device_room.get(device_address)
+
+    async def _get_all_subsections(self) -> dict[str, set[str]]:
+        """Get all subsections, if available."""
+        if client := self._central.get_client():
+            return await client.get_all_subsections()
+        return {}
+
+    def get_subsection_text(self, address: str) -> str | None:
+        """Return subsection by address"""
+        if subsections := self._subsections.get(address):
+            return ",".join(subsections)
+        return None
 
     def remove(self, address: str) -> None:
         """Remove name from cache."""
@@ -1066,22 +1081,23 @@ class DeviceDetailsCache:
     async def clear(self) -> None:
         """Clear the cache."""
         self._names_cache.clear()
-        self._rooms.clear()
+        self._channel_rooms.clear()
+        self._subsections.clear()
 
-    def _identify_device_rooms(self) -> None:
+    def _identify_device_room(self) -> None:
         """
         Identify a possible room of a device.
         A room is relevant for a device, if there is only one room assigned to the channels.
         """
-        device_rooms: dict[str, list[str]] = {}
-        for address, room in self._rooms.items():
+        device_rooms: dict[str, set[str]] = {}
+        for address, rooms in self._channel_rooms.items():
             device_address = get_device_address(address=address)
             if device_address not in device_rooms:
-                device_rooms[device_address] = []
-            device_rooms[device_address].append(room)
+                device_rooms[device_address] = set()
+            device_rooms[device_address].update(rooms)
         for device_address, rooms in device_rooms.items():
             if rooms and len(set(rooms)) == 1:
-                self._rooms[device_address] = list(set(rooms))[0]
+                self._device_room[device_address] = list(set(rooms))[0]
 
 
 class DeviceDataCache:

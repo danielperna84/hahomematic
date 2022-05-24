@@ -461,9 +461,9 @@ class JsonRpcAioHttpClient:
 
         return variables
 
-    async def get_all_channel_ids_room(self) -> dict[str, str]:
+    async def get_all_channel_ids_room(self) -> dict[str, set[str]]:
         """Get all channel_ids per room from CCU / Homegear."""
-        channel_ids_room: dict[str, str] = {}
+        channel_ids_room: dict[str, set[str]] = {}
         _LOGGER.debug("get_all_channel_ids_per_room: Getting all rooms via JSON-RPC")
         try:
             response = await self._post(
@@ -471,13 +471,43 @@ class JsonRpcAioHttpClient:
             )
             if json_result := response[ATTR_RESULT]:
                 for room in json_result:
-                    channel_ids_room[room["id"]] = room["name"]
+                    if room["id"] not in channel_ids_room:
+                        channel_ids_room[room["id"]] = set()
+                    channel_ids_room[room["id"]].add(room["name"])
                     for channel_id in room["channelIds"]:
-                        channel_ids_room[channel_id] = room["name"]
+                        if channel_id not in channel_ids_room:
+                            channel_ids_room[channel_id] = set()
+                        channel_ids_room[channel_id].add(room["name"])
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_all_channel_ids_per_room: %s [%s]", hhe.name, hhe.args)
 
         return channel_ids_room
+
+    async def get_all_channel_ids_subsection(self) -> dict[str, set[str]]:
+        """Get all channel_ids per subsection from CCU / Homegear."""
+        channel_ids_subsection: dict[str, set[str]] = {}
+        _LOGGER.debug(
+            "get_all_channel_ids_per_subsection: Getting all subsections via JSON-RPC"
+        )
+        try:
+            response = await self._post(
+                "Subsection.getAll",
+            )
+            if json_result := response[ATTR_RESULT]:
+                for subsection in json_result:
+                    if subsection["id"] not in channel_ids_subsection:
+                        channel_ids_subsection[subsection["id"]] = set()
+                    channel_ids_subsection[subsection["id"]].add(subsection["name"])
+                    for channel_id in subsection["channelIds"]:
+                        if channel_id not in channel_ids_subsection:
+                            channel_ids_subsection[channel_id] = set()
+                        channel_ids_subsection[channel_id].add(subsection["name"])
+        except BaseHomematicException as hhe:
+            _LOGGER.warning(
+                "get_all_channel_ids_per_subsection: %s [%s]", hhe.name, hhe.args
+            )
+
+        return channel_ids_subsection
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""

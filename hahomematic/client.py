@@ -301,8 +301,13 @@ class Client(ABC):
         ...
 
     @abstractmethod
-    async def get_all_rooms(self) -> dict[str, str]:
+    async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms, if available."""
+        ...
+
+    @abstractmethod
+    async def get_all_subsections(self) -> dict[str, set[str]]:
+        """Get all subsections, if available."""
         ...
 
     @abstractmethod
@@ -704,15 +709,31 @@ class ClientCCU(Client):
         """Get all available interfaces from CCU / Homegear."""
         return await self._json_rpc_client.get_available_interfaces()
 
-    async def get_all_rooms(self) -> dict[str, str]:
+    async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from CCU."""
-        rooms: dict[str, str] = {}
+        rooms: dict[str, set[str]] = {}
         device_channel_ids = self._central.device_details.device_channel_ids
         channel_ids_room = await self._json_rpc_client.get_all_channel_ids_room()
         for address, channel_id in device_channel_ids.items():
-            if name := channel_ids_room.get(channel_id):
-                rooms[address] = name
+            if names := channel_ids_room.get(channel_id):
+                if address not in rooms:
+                    rooms[address] = set()
+                rooms[address].update(names)
         return rooms
+
+    async def get_all_subsections(self) -> dict[str, set[str]]:
+        """Get all subsections from CCU."""
+        subsections: dict[str, set[str]] = {}
+        device_channel_ids = self._central.device_details.device_channel_ids
+        channel_ids_subsection = (
+            await self._json_rpc_client.get_all_channel_ids_subsection()
+        )
+        for address, channel_id in device_channel_ids.items():
+            if sections := channel_ids_subsection.get(channel_id):
+                if address not in subsections:
+                    subsections[address] = set()
+                subsections[address].update(sections)
+        return subsections
 
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
@@ -820,8 +841,12 @@ class ClientHomegear(Client):
         """Get all available interfaces from CCU / Homegear."""
         return [IF_BIDCOS_RF_NAME]
 
-    async def get_all_rooms(self) -> dict[str, str]:
+    async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from Homegear."""
+        return {}
+
+    async def get_all_subsections(self) -> dict[str, set[str]]:
+        """Get all subsections from Homegear."""
         return {}
 
     async def get_serial(self) -> str:
