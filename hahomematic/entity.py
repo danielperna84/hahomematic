@@ -186,6 +186,7 @@ class BaseEntity(ABC):
         }
         if self._function:
             attributes[ATTR_FUNCTION] = self._function
+        return attributes
 
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
