@@ -180,11 +180,12 @@ class BaseEntity(ABC):
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
-        return {
+        attributes:dict[str, Any] = {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.channel_address,
-            ATTR_FUNCTION: self._function,
         }
+        if self._function:
+            attributes[ATTR_FUNCTION] = self._function
 
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""

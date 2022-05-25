@@ -1,3 +1,6 @@
+Version 1.5.4 (2022-05-24)
+- Add function attribute only if set
+
 Version 1.5.3 (2022-05-24)
 - Rename subsection to function
 
