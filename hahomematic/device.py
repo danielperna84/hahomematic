@@ -26,6 +26,7 @@ from hahomematic.const import (
     FLAG_INTERAL,
     HM_VIRTUAL_REMOTES,
     IDENTIFIERS_SEPARATOR,
+    IMPULSE_EVENTS,
     INIT_DATETIME,
     MANUFACTURER,
     OPERATION_EVENT,
@@ -47,6 +48,7 @@ from hahomematic.entity import (
     ClickEvent,
     CustomEntity,
     GenericEntity,
+    ImpulseEvent,
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
@@ -399,9 +401,8 @@ class HmDevice:
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                 ).items():
-                    if (
-                        parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
-                        and parameter in CLICK_EVENTS
+                    if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT and (
+                        parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS
                     ):
                         self._create_event_and_append_to_device(
                             channel_address=channel_address,
@@ -434,7 +435,10 @@ class HmDevice:
                             parameter,
                         )
                         continue
-                    if parameter not in CLICK_EVENTS:
+                    if (
+                        parameter not in CLICK_EVENTS
+                        and parameter not in IMPULSE_EVENTS
+                    ):
                         self._create_entity_and_append_to_device(
                             channel_address=channel_address,
                             paramset_key=paramset_key,
@@ -512,6 +516,14 @@ class HmDevice:
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
             if parameter in CLICK_EVENTS:
                 action_event = ClickEvent(
+                    device=self,
+                    unique_id=unique_id,
+                    channel_address=channel_address,
+                    parameter=parameter,
+                    parameter_data=parameter_data,
+                )
+            if parameter in IMPULSE_EVENTS:
+                action_event = ImpulseEvent(
                     device=self,
                     unique_id=unique_id,
                     channel_address=channel_address,
