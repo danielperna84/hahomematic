@@ -1,6 +1,7 @@
-Version 1.6.0 (2022-05-28)
+Version 1.6.0 (2022-05-29)
 - Add impulse event
 - Add LEVEL and STATE to HmIP-Heating group to display hvac_action
+- Add device_type as model to attributes
 
 Version 1.5.4 (2022-05-24)
 - Add function attribute only if set

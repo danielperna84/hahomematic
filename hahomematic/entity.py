@@ -25,6 +25,7 @@ from hahomematic.const import (
     ATTR_HM_UNIT,
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
+    ATTR_MODEL,
     ATTR_PARAMETER,
     ATTR_SUBTYPE,
     ATTR_TYPE,
@@ -183,6 +184,7 @@ class BaseEntity(ABC):
         attributes: dict[str, Any] = {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.channel_address,
+            ATTR_MODEL: self._device.device_type,
         }
         if self._function:
             attributes[ATTR_FUNCTION] = self._function
