@@ -25,6 +25,7 @@ from hahomematic.const import (
     ATTR_HM_UNIT,
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
+    ATTR_MODEL,
     ATTR_PARAMETER,
     ATTR_SUBTYPE,
     ATTR_TYPE,
@@ -180,9 +181,10 @@ class BaseEntity(ABC):
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
-        attributes:dict[str, Any] = {
+        attributes: dict[str, Any] = {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.channel_address,
+            ATTR_MODEL: self._device.device_type,
         }
         if self._function:
             attributes[ATTR_FUNCTION] = self._function
@@ -882,6 +884,51 @@ class ClickEvent(BaseEvent):
             parameter=parameter,
             parameter_data=parameter_data,
             event_type=HmEventType.KEYPRESS,
+        )
+
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
+        """Get the event_data."""
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: self.device_address,
+            ATTR_TYPE: self.parameter.lower(),
+            ATTR_SUBTYPE: self.channel_no,
+        }
+
+    def fire_event(self, value: Any) -> None:
+        """
+        Do what is needed to fire an event.
+        """
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
+                self.event_type,
+                self.get_event_data(),
+            )
+
+
+class ImpulseEvent(BaseEvent):
+    """
+    class for handling impulse events.
+    """
+
+    def __init__(
+        self,
+        device: hm_device.HmDevice,
+        unique_id: str,
+        channel_address: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ):
+        """
+        Initialize the event handler.
+        """
+        super().__init__(
+            device=device,
+            unique_id=unique_id,
+            channel_address=channel_address,
+            parameter=parameter,
+            parameter_data=parameter_data,
+            event_type=HmEventType.IMPULSE,
         )
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:

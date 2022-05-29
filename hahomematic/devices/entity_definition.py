@@ -355,6 +355,14 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_SET_POINT_MODE: "SET_POINT_MODE",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                 },
+                ED_SENSOR_CHANNELS: {
+                    0: {
+                        FIELD_LEVEL: "LEVEL",
+                    },
+                    3: {
+                        FIELD_STATE: "STATE",
+                    },
+                },
             },
             ED_INCLUDE_DEFAULT_ENTITIES: False,
         },

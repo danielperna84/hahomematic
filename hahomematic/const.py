@@ -52,6 +52,8 @@ EVENT_PRESS_LONG_START = "PRESS_LONG_START"
 EVENT_STICKY_UN_REACH = "STICKY_UNREACH"
 EVENT_UN_REACH = "UNREACH"
 
+EVENT_SEQUENCE_OK = "SEQUENCE_OK"
+
 PARAM_CHANNEL_OPERATION_MODE = "CHANNEL_OPERATION_MODE"
 
 CLICK_EVENTS: set[str] = {
@@ -61,6 +63,10 @@ CLICK_EVENTS: set[str] = {
     EVENT_PRESS_CONT,
     EVENT_PRESS_LONG_RELEASE,
     EVENT_PRESS_LONG_START,
+}
+
+IMPULSE_EVENTS: set[str] = {
+    EVENT_SEQUENCE_OK,
 }
 
 BUTTON_ACTIONS: set[str] = {"RESET_MOTION", "RESET_PRESENCE"}
@@ -99,6 +105,7 @@ ATTR_INTERFACE_ID = "interface_id"
 ATTR_ID = "id"
 ATTR_IP = "ip"
 ATTR_JSON_PORT = "json_port"
+ATTR_MODEL = "model"
 ATTR_NAME = "name"
 ATTR_PASSWORD = "password"
 ATTR_PARAMETER = "parameter"
@@ -280,6 +287,7 @@ class HmEventType(StrEnum):
     KEYPRESS = "homematic.keypress"
     DEVICE = "homematic.device"
     INTERFACE = "homematic.interface"
+    IMPULSE = "homematic.impulse"
 
 
 class HmInterfaceEventType(StrEnum):
