@@ -9,7 +9,7 @@ from typing import Any
 
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.entity import GenericEntity
+from hahomematic.entity import GenericEntity, GenericSystemVariable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +81,17 @@ def _fix_rssi(value: Any) -> int | None:
     if 129 < value < 256:
         return value - 256
     return None
+
+
+class HmSysvarSensor(GenericSystemVariable):
+    """
+    Implementation of a sysvar sensor.
+    """
+
+    @property
+    def value(self) -> Any | None:
+        """Return the value."""
+        return self._value
 
 
 CONVERTERS_BY_DEVICE_PARAM: dict[tuple[str, str], Any] = {

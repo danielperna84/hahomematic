@@ -9,6 +9,8 @@ from datetime import datetime
 import logging
 from typing import Any, Generic, TypeVar, Union, cast
 
+from slugify import slugify
+
 import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
 from hahomematic.const import (
@@ -38,6 +40,11 @@ from hahomematic.const import (
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
     PARAMSET_KEY_VALUES,
+    SYSVAR_ADDRESS,
+    SYSVAR_TYPE_ALARM,
+    SYSVAR_TYPE_LIST,
+    SYSVAR_TYPE_LOGIC,
+    SYSVAR_TYPE_NUMBER,
     TYPE_BOOL,
     HmEntityType,
     HmEntityUsage,
@@ -50,13 +57,16 @@ import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
     HmDeviceInfo,
+    SystemVariableData,
     check_channel_is_only_primary_channel,
     convert_value,
+    generate_unique_id,
     get_custom_entity_name,
     get_device_address,
     get_device_channel,
     get_entity_name,
     get_event_name,
+    parse_sys_var,
     updated_within_seconds,
 )
 from hahomematic.parameter_visibility import HIDDEN_PARAMETERS
@@ -725,6 +735,122 @@ class CustomEntity(BaseEntity, CallbackEntity):
         if entity:
             return entity.value
         return default
+
+
+class GenericSystemVariable(CallbackEntity):
+    """Class for a homematic system variable."""
+
+    def __init__(
+        self,
+        central: hm_central.CentralUnit,
+        data: SystemVariableData,
+    ):
+        """
+        Initialize the entity.
+        """
+        CallbackEntity.__init__(self)
+        self._central = central
+        self._data = data
+        self.unique_id = generate_unique_id(
+            central=central,
+            address=SYSVAR_ADDRESS,
+            parameter=slugify(data.name),
+        )
+        self.name = f"{central.instance_name}_SV_{data.name}"
+        self.create_in_ha: bool = True
+        self.should_poll = False
+        self.usage = HmEntityUsage.ENTITY
+        self._unit = data.unit
+        self.data_type = data.data_type
+        self._value = data.value
+        self._value_list = data.value_list
+        self.max = data.max_value
+        self.min = data.min_value
+        self.internal = data.internal
+
+    @property
+    def available(self) -> bool:
+        """Return the availability of the device."""
+        return self._central.available
+
+    @property
+    def attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the base entity."""
+        return {}
+
+    @property
+    def device_information(self) -> HmDeviceInfo:
+        """Return device specific attributes."""
+        return self._central.device_information
+
+    # pylint: disable=no-self-use
+    async def load_data(self) -> None:
+        """Do not load data for the hub here."""
+        return
+
+    # pylint: disable=no-self-use
+    async def fetch_data(self) -> None:
+        """fetch data for the hub."""
+        return
+
+    @property
+    def platform(self) -> HmPlatform:
+        """Return the platform."""
+        if self.data_type:
+            if self.data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
+                return HmPlatform.HUB_BINARY_SENSOR
+            if self.data_type == SYSVAR_TYPE_LIST:
+                return HmPlatform.HUB_SENSOR
+            if self.data_type == SYSVAR_TYPE_NUMBER:
+                return HmPlatform.HUB_SENSOR
+        if isinstance(self._value, bool):
+            return HmPlatform.HUB_BINARY_SENSOR
+        return HmPlatform.HUB_SENSOR
+
+    @property
+    def unit(self) -> str | None:
+        """Return the unit of the entity."""
+        if self._unit:
+            return self._unit
+        if isinstance(self._value, (int, float)):
+            return "#"
+        return None
+
+    def update_value(self, value: Any) -> None:
+        """Set variable value on CCU/Homegear."""
+        if self.data_type:
+            value = parse_sys_var(data_type=self.data_type, raw_value=value)
+        else:
+            old_value = self._value
+            if isinstance(old_value, bool):
+                value = bool(value)
+            elif isinstance(old_value, float):
+                value = float(value)
+            elif isinstance(old_value, int):
+                value = int(value)
+            elif isinstance(old_value, str):
+                value = str(value)
+
+        if self._value != value:
+            self._value = value
+            self.update_entity()
+
+    async def send_variable(self, value: Any) -> None:
+        """Set variable value on CCU/Homegear."""
+        if (
+            self.data_type == SYSVAR_TYPE_LIST
+            and isinstance(value, str)
+            and self._value_list
+            and value in self._value_list
+        ):
+            await self._central.set_system_variable(
+                name=self._data.name, value=self._value_list.index(value)
+            )
+            return
+
+        await self._central.set_system_variable(
+            name=self._data.name, value=parse_sys_var(self.data_type, value)
+        )
 
 
 class BaseEvent(BaseParameterEntity[bool]):

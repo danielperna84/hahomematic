@@ -9,7 +9,7 @@ from typing import Any
 
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.entity import GenericEntity
+from hahomematic.entity import GenericEntity, GenericSystemVariable
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,3 +45,16 @@ class HmBinarySensor(GenericEntity[bool]):
         if self._value is not None:
             return self._value
         return self._default
+
+
+class HmSysvarBinarySensor(GenericSystemVariable):
+    """
+    Implementation of a sysvar binary_sensor.
+    """
+
+    @property
+    def value(self) -> bool | None:
+        """Return the value of the entity."""
+        if self._value is not None:
+            return bool(self._value)
+        return None
