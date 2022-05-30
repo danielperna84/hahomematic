@@ -144,14 +144,38 @@ def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
     if not data_type:
         return raw_value
     if data_type == SYSVAR_TYPE_LOGIC:
-        return bool(raw_value)
+        return to_bool(raw_value)
     if data_type == SYSVAR_TYPE_ALARM:
-        return bool(raw_value)
+        return to_bool(raw_value)
     elif data_type == SYSVAR_TYPE_NUMBER:
         return float(raw_value)
     elif data_type == SYSVAR_TYPE_LIST:
         return int(raw_value)
     return raw_value
+
+
+def to_bool(value: Any) -> bool:
+    """Convert defined string values to bool."""
+    if isinstance(value, bool):
+        return value
+
+    if not isinstance(value, str):
+        raise ValueError("invalid literal for boolean. Not a string.")
+
+    valid = {
+        "true": True,
+        "on": True,
+        "1": True,
+        "false": False,
+        "off": False,
+        "0": False,
+    }
+
+    lower_value = value.lower()
+    if lower_value in valid:
+        return valid[lower_value]
+
+    raise ValueError(f"invalid literal for boolean: {value}.")
 
 
 def get_entity_name(
