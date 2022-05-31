@@ -804,30 +804,35 @@ class CentralUnit:
     async def get_paramset(
         self,
         interface_id: str,
-        channel_address: str,
+        address: str,
         paramset_key: str,
     ) -> Any:
-        """Set paramsets manually."""
+        """
+        Set paramsets manually.
+        Address is usually the channel_address,
+        but for bidcos devices there is a master paramset at the device."""
 
         if client := self.get_client_by_interface_id(interface_id=interface_id):
-            return await client.get_paramset(
-                channel_address=channel_address, paramset_key=paramset_key
-            )
+            return await client.get_paramset(address=address, paramset_key=paramset_key)
         return None
 
     async def put_paramset(
         self,
         interface_id: str,
-        channel_address: str,
+        address: str,
         paramset_key: str,
         value: Any,
         rx_mode: str | None = None,
     ) -> None:
-        """Set paramsets manually."""
+        """
+        Set paramsets manually.
+        Address is usually the channel_address,
+        but for bidcos devices there is a master paramset at the device.
+        """
 
         if client := self.get_client_by_interface_id(interface_id=interface_id):
             await client.put_paramset(
-                channel_address=channel_address,
+                address=address,
                 paramset_key=paramset_key,
                 value=value,
                 rx_mode=rx_mode,

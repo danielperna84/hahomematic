@@ -602,7 +602,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
     ) -> None:
         """Set paramsets manually."""
         await self._client.put_paramset(
-            channel_address=self.channel_address,
+            address=self.channel_address,
             paramset_key=paramset_key,
             value=value,
             rx_mode=rx_mode,

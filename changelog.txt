@@ -1,3 +1,6 @@
+Version 1.7.1 (2022-05-31)
+- Rename parameter channel_address to address for put/get_paramset
+
 Version 1.7.0 (2022-05-31)
 - Refactor system variables
 - Add more types for sysvar entities
