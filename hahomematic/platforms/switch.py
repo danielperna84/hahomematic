@@ -7,9 +7,11 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
+import hahomematic.central_unit as hm_central
 from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.entity import GenericEntity
+from hahomematic.entity import GenericEntity, GenericSystemVariable
+from hahomematic.helpers import SystemVariableData
 
 PARAM_ON_TIME = "ON_TIME"
 _LOGGER = logging.getLogger(__name__)
@@ -66,3 +68,13 @@ class HmSwitch(GenericEntity[bool]):
             parameter=PARAM_ON_TIME,
             value=float(on_time),
         )
+
+
+class HmSysvarSwitch(GenericSystemVariable):
+    """
+    Implementation of a sysvar switch entity.
+    """
+
+    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
+        """Initialize the entity."""
+        super().__init__(central=central, data=data, platform=HmPlatform.HUB_SWITCH)

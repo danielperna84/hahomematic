@@ -7,9 +7,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import hahomematic.central_unit as hm_central
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericSystemVariable
+from hahomematic.helpers import SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +53,12 @@ class HmSysvarBinarySensor(GenericSystemVariable):
     """
     Implementation of a sysvar binary_sensor.
     """
+
+    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
+        """Initialize the entity."""
+        super().__init__(
+            central=central, data=data, platform=HmPlatform.HUB_BINARY_SENSOR
+        )
 
     @property
     def value(self) -> bool | None:

@@ -7,9 +7,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import hahomematic.central_unit as hm_central
+from hahomematic.config import EXTENDED_SYSVARS
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericSystemVariable
+from hahomematic.helpers import SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,9 +91,19 @@ class HmSysvarSensor(GenericSystemVariable):
     Implementation of a sysvar sensor.
     """
 
+    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
+        """Initialize the entity."""
+        super().__init__(central=central, data=data, platform=HmPlatform.HUB_SENSOR)
+
     @property
     def value(self) -> Any | None:
         """Return the value."""
+        if (
+            EXTENDED_SYSVARS
+            and self._value is not None
+            and self._value_list is not None
+        ):
+            return self._value_list[int(self._value)]
         return self._value
 
 
