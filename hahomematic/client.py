@@ -439,55 +439,59 @@ class Client(ABC):
             )
             return
         await self.put_paramset(
-            channel_address=channel_address,
+            address=channel_address,
             paramset_key=paramset_key,
             value={parameter: value},
             rx_mode=rx_mode,
         )
 
-    async def get_paramset(self, channel_address: str, paramset_key: str) -> Any:
-        """Return a paramset from CCU."""
+    async def get_paramset(self, address: str, paramset_key: str) -> Any:
+        """
+        Return a paramset from CCU.
+        Address is usually the channel_address,
+        but for bidcos devices there is a master paramset at the device.
+        """
         try:
             _LOGGER.debug(
-                "get_paramset: channel_address %s, paramset_key %s",
-                channel_address,
+                "get_paramset: address %s, paramset_key %s",
+                address,
                 paramset_key,
             )
-            return await self._proxy_read.getParamset(channel_address, paramset_key)
+            return await self._proxy_read.getParamset(address, paramset_key)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
                 "get_paramset failed with %s [%s]: %s, %s",
                 hhe.name,
                 hhe.args,
-                channel_address,
+                address,
                 paramset_key,
             )
             raise HaHomematicException from hhe
 
     async def put_paramset(
         self,
-        channel_address: str,
+        address: str,
         paramset_key: str,
         value: Any,
         rx_mode: str | None = None,
     ) -> None:
-        """Set paramsets manually."""
+        """
+        Set paramsets manually.
+        Address is usually the channel_address,
+        but for bidcos devices there is a master paramset at the device.
+        """
         try:
             if rx_mode:
-                await self._proxy.putParamset(
-                    channel_address, paramset_key, value, rx_mode
-                )
+                await self._proxy.putParamset(address, paramset_key, value, rx_mode)
             else:
-                await self._proxy.putParamset(channel_address, paramset_key, value)
-            _LOGGER.debug(
-                "put_paramset: %s, %s, %s", channel_address, paramset_key, value
-            )
+                await self._proxy.putParamset(address, paramset_key, value)
+            _LOGGER.debug("put_paramset: %s, %s, %s", address, paramset_key, value)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "put_paramset failed: %s [%s] %s, %s, %s",
                 hhe.name,
                 hhe.args,
-                channel_address,
+                address,
                 paramset_key,
                 value,
             )
