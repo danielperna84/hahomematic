@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 import hahomematic.central_unit as hm_central
+from hahomematic.config import EXTENDED_SYSVARS
 from hahomematic.const import (
     BACKEND_CCU,
     HUB_ADDRESS,
@@ -18,7 +19,10 @@ from hahomematic.const import (
 from hahomematic.entity import CallbackEntity, GenericSystemVariable
 from hahomematic.helpers import HmDeviceInfo, SystemVariableData, generate_unique_id
 from hahomematic.platforms.binary_sensor import HmSysvarBinarySensor
+from hahomematic.platforms.number import HmSysvarNumber
+from hahomematic.platforms.select import HmSysvarSelect
 from hahomematic.platforms.sensor import HmSysvarSensor
+from hahomematic.platforms.switch import HmSysvarSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,12 +149,19 @@ class HmHub(CallbackEntity):
 
     def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
         data_type = data.data_type
+        internal = data.internal
         if data_type:
             if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
+                if EXTENDED_SYSVARS and internal is False:
+                    return HmSysvarSwitch(central=self._central, data=data)
                 return HmSysvarBinarySensor(central=self._central, data=data)
             if data_type == SYSVAR_TYPE_LIST:
+                if EXTENDED_SYSVARS and internal is False:
+                    return HmSysvarSelect(central=self._central, data=data)
                 return HmSysvarSensor(central=self._central, data=data)
             if data_type == SYSVAR_TYPE_NUMBER:
+                if EXTENDED_SYSVARS and internal is False:
+                    return HmSysvarNumber(central=self._central, data=data)
                 return HmSysvarSensor(central=self._central, data=data)
         if isinstance(self.value, bool):
             return HmSysvarBinarySensor(central=self._central, data=data)

@@ -41,10 +41,6 @@ from hahomematic.const import (
     INIT_DATETIME,
     PARAMSET_KEY_VALUES,
     SYSVAR_ADDRESS,
-    SYSVAR_TYPE_ALARM,
-    SYSVAR_TYPE_LIST,
-    SYSVAR_TYPE_LOGIC,
-    SYSVAR_TYPE_NUMBER,
     TYPE_BOOL,
     HmEntityType,
     HmEntityUsage,
@@ -744,13 +740,14 @@ class GenericSystemVariable(CallbackEntity):
         self,
         central: hm_central.CentralUnit,
         data: SystemVariableData,
+        platform: HmPlatform,
     ):
         """
         Initialize the entity.
         """
         CallbackEntity.__init__(self)
         self._central = central
-        self._data = data
+        self._platform = platform
         self.unique_id = generate_unique_id(
             central=central,
             address=SYSVAR_ADDRESS,
@@ -760,13 +757,14 @@ class GenericSystemVariable(CallbackEntity):
         self.create_in_ha: bool = True
         self.should_poll = False
         self.usage = HmEntityUsage.ENTITY
+        self._ccu_var_name = data.name
         self._unit = data.unit
-        self.data_type = data.data_type
+        self._data_type = data.data_type
         self._value = data.value
         self._value_list = data.value_list
-        self.max = data.max_value
-        self.min = data.min_value
-        self.internal = data.internal
+        self._max = data.max_value
+        self._min = data.min_value
+        self._internal = data.internal
 
     @property
     def available(self) -> bool:
@@ -779,9 +777,39 @@ class GenericSystemVariable(CallbackEntity):
         return {}
 
     @property
+    def data_type(self) -> str | None:
+        """Return the data_type of the base entity."""
+        return self._data_type
+
+    @property
     def device_information(self) -> HmDeviceInfo:
         """Return device specific attributes."""
         return self._central.device_information
+
+    @property
+    def max(self) -> Any | None:
+        """Return max value."""
+        return self._max
+
+    @property
+    def min(self) -> Any | None:
+        """Return min value."""
+        return self._min
+
+    @property
+    def internal(self) -> bool | None:
+        """Return internal value."""
+        return self._internal
+
+    @property
+    def value(self) -> Any | None:
+        """Return the value."""
+        return self._value
+
+    @property
+    def value_list(self) -> list[str] | None:
+        """Return the value_list."""
+        return self._value_list
 
     # pylint: disable=no-self-use
     async def load_data(self) -> None:
@@ -796,16 +824,7 @@ class GenericSystemVariable(CallbackEntity):
     @property
     def platform(self) -> HmPlatform:
         """Return the platform."""
-        if self.data_type:
-            if self.data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
-                return HmPlatform.HUB_BINARY_SENSOR
-            if self.data_type == SYSVAR_TYPE_LIST:
-                return HmPlatform.HUB_SENSOR
-            if self.data_type == SYSVAR_TYPE_NUMBER:
-                return HmPlatform.HUB_SENSOR
-        if isinstance(self._value, bool):
-            return HmPlatform.HUB_BINARY_SENSOR
-        return HmPlatform.HUB_SENSOR
+        return self._platform
 
     @property
     def unit(self) -> str | None:
@@ -837,20 +856,10 @@ class GenericSystemVariable(CallbackEntity):
 
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        if (
-            self.data_type == SYSVAR_TYPE_LIST
-            and isinstance(value, str)
-            and self._value_list
-            and value in self._value_list
-        ):
-            await self._central.set_system_variable(
-                name=self._data.name, value=self._value_list.index(value)
-            )
-            return
-
         await self._central.set_system_variable(
-            name=self._data.name, value=parse_sys_var(self.data_type, value)
+            name=self._ccu_var_name, value=parse_sys_var(self.data_type, value)
         )
+        self.update_value(value=value)
 
 
 class BaseEvent(BaseParameterEntity[bool]):

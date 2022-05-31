@@ -1,5 +1,6 @@
 Version 1.7.0 (2022-05-31)
 - Refactor system variables
+- Add more types for sysvar entities
 
 Version 1.6.2 (2022-05-30)
 - Add more options for boolean conversions

@@ -7,9 +7,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import hahomematic.central_unit as hm_central
 from hahomematic.const import ATTR_HM_VALUE, HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.entity import GenericEntity, ParameterType
+from hahomematic.entity import GenericEntity, GenericSystemVariable, ParameterType
+from hahomematic.helpers import SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,3 +86,25 @@ class HmInteger(BaseNumber[int]):
                 self._max,
                 self._special,
             )
+
+
+class HmSysvarNumber(GenericSystemVariable):
+    """
+    Implementation of a sysvar number.
+    """
+
+    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
+        """Initialize the entity."""
+        super().__init__(central=central, data=data, platform=HmPlatform.HUB_NUMBER)
+
+    async def send_variable(self, value: float) -> None:
+        """Set the value of the entity."""
+        if (
+            value is not None
+            and self._max is not None
+            and self._min is not None
+            and self._min <= float(value) <= self._max
+        ):
+            await super().send_variable(value)
+        else:
+            await super().send_variable(value)
