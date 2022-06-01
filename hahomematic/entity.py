@@ -777,6 +777,11 @@ class GenericSystemVariable(CallbackEntity):
         return {}
 
     @property
+    def ccu_var_name(self) -> str | None:
+        """Return the ccu_var_name of the base entity."""
+        return self._ccu_var_name
+
+    @property
     def data_type(self) -> str | None:
         """Return the data_type of the base entity."""
         return self._data_type

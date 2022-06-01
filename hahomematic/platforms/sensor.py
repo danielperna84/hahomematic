@@ -104,7 +104,7 @@ class HmSysvarSensor(GenericSystemVariable):
             and self._value_list is not None
         ):
             return self._value_list[int(self._value)]
-        return self._value
+        return _check_length_and_warn(name=self.ccu_var_name, value=self._value)
 
 
 CONVERTERS_BY_DEVICE_PARAM: dict[tuple[str, str], Any] = {
@@ -115,3 +115,14 @@ CONVERTERS_BY_PARAM: dict[str, Any] = {
     "RSSI_PEER": _fix_rssi,
     "RSSI_DEVICE": _fix_rssi,
 }
+
+
+def _check_length_and_warn(name: str, value: Any) -> Any:
+    """Check the length of a variable and warn if too long."""
+    if isinstance(value, str) and len(value) > 255:
+        _LOGGER.warning(
+            "Value of sysvar %s exceedes maximum allowed length of 255 chars. Value will be limited to 255 chars.",
+            name,
+        )
+        return value[0:255:1]
+    return value
