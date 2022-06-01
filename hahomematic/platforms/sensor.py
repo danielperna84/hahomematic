@@ -117,7 +117,7 @@ CONVERTERS_BY_PARAM: dict[str, Any] = {
 }
 
 
-def _check_length_and_warn(name: str, value: Any) -> Any:
+def _check_length_and_warn(name: str | None, value: Any) -> Any:
     """Check the length of a variable and warn if too long."""
     if isinstance(value, str) and len(value) > 255:
         _LOGGER.warning(

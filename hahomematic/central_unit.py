@@ -423,6 +423,9 @@ class CentralUnit:
                 self.callback_system_event
             ):
                 # pylint: disable=not-callable
+                _LOGGER.debug(
+                    "_init_hub: Sending HUB_CREATED event for %s.", self.instance_name
+                )
                 self.callback_system_event(HH_EVENT_HUB_CREATED, self._hub)
 
     def _start_connection_checker(self) -> None:
