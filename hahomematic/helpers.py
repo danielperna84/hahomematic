@@ -18,10 +18,11 @@ from hahomematic.const import (
     INIT_DATETIME,
     PARAMETER_FRIENDLY_NAME,
     SYSVAR_ADDRESS,
+    SYSVAR_HM_TYPE_FLOAT,
+    SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
     SYSVAR_TYPE_LIST,
     SYSVAR_TYPE_LOGIC,
-    SYSVAR_TYPE_NUMBER,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
@@ -127,13 +128,11 @@ def parse_ccu_sys_var(data_type: str | None, raw_value: Any) -> Any:
     # pylint: disable=no-else-return
     if not data_type:
         return raw_value
-    if data_type == SYSVAR_TYPE_LOGIC:
+    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
         return raw_value == "true"
-    if data_type == SYSVAR_TYPE_ALARM:
-        return raw_value == "true"
-    elif data_type == SYSVAR_TYPE_NUMBER:
+    if data_type == SYSVAR_HM_TYPE_FLOAT:
         return float(raw_value)
-    elif data_type == SYSVAR_TYPE_LIST:
+    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
         return int(raw_value)
     return raw_value
 
@@ -143,13 +142,11 @@ def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
     # pylint: disable=no-else-return
     if not data_type:
         return raw_value
-    if data_type == SYSVAR_TYPE_LOGIC:
+    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
         return to_bool(raw_value)
-    if data_type == SYSVAR_TYPE_ALARM:
-        return to_bool(raw_value)
-    elif data_type == SYSVAR_TYPE_NUMBER:
+    if data_type == SYSVAR_HM_TYPE_FLOAT:
         return float(raw_value)
-    elif data_type == SYSVAR_TYPE_LIST:
+    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
         return int(raw_value)
     return raw_value
 
@@ -413,8 +410,8 @@ class SystemVariableData:
     name: str
     data_type: str | None = None
     unit: str | None = None
-    value: Any | None = None
+    value: bool | float | int | str | None = None
     value_list: list[str] | None = None
-    max_value: Any | None = None
-    min_value: Any | None = None
+    max_value: float | int | None = None
+    min_value: float | int | None = None
     internal: bool = False
