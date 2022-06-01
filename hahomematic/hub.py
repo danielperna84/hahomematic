@@ -131,7 +131,7 @@ class HmHub(CallbackEntity):
 
         for sysvar in variables:
             name = sysvar.name
-            value = _check_length(name=name, value=sysvar.value)
+            value = sysvar.value
             if _is_excluded(name, EXCLUDED_FROM_SENSOR):
                 self._variables[name] = value
                 continue
@@ -203,17 +203,6 @@ def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
         if marker in variable:
             return True
     return False
-
-
-def _check_length(name: str, value: Any) -> Any:
-    """Check the lenth of a variable."""
-    if isinstance(value, str) and len(value) > 255:
-        _LOGGER.warning(
-            "Value of sysvar %s exceedes maximum allowed length of 255 chars. Value will be limited to 255 chars.",
-            name,
-        )
-        return value[0:255:1]
-    return value
 
 
 def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:

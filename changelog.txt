@@ -1,6 +1,7 @@
 Version 1.7.2 (2022-06-01)
 - Better differentiate between float and int for sysvars
 - Switch from # as unit placeholder for sysvars to ' '
+- Move sysvar length check to sensor
 
 Version 1.7.1 (2022-05-31)
 - Rename parameter channel_address to address for put/get_paramset
