@@ -832,7 +832,7 @@ class GenericSystemVariable(CallbackEntity):
         if self._unit:
             return self._unit
         if isinstance(self._value, (int, float)):
-            return "#"
+            return " "
         return None
 
     def update_value(self, value: Any) -> None:
@@ -843,12 +843,12 @@ class GenericSystemVariable(CallbackEntity):
             old_value = self._value
             if isinstance(old_value, bool):
                 value = bool(value)
-            elif isinstance(old_value, float):
-                value = float(value)
             elif isinstance(old_value, int):
                 value = int(value)
             elif isinstance(old_value, str):
                 value = str(value)
+            elif isinstance(old_value, float):
+                value = float(value)
 
         if self._value != value:
             self._value = value

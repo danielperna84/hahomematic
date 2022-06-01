@@ -29,11 +29,14 @@ from hahomematic.const import (
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
     REGA_SCRIPT_SET_SYSTEM_VARIABLE,
+    SYSVAR_HM_TYPE_FLOAT,
+    SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_IS_INTERNAL,
     SYSVAR_MAX_VALUE,
     SYSVAR_MIN_VALUE,
     SYSVAR_NAME,
     SYSVAR_TYPE,
+    SYSVAR_TYPE_NUMBER,
     SYSVAR_UNIT,
     SYSVAR_VALUE,
     SYSVAR_VALUE_LIST,
@@ -416,8 +419,16 @@ class JsonRpcAioHttpClient:
             if json_result := response[ATTR_RESULT]:
                 for var in json_result:
                     name = var[SYSVAR_NAME]
-                    data_type = var[SYSVAR_TYPE]
+                    org_data_type = var[SYSVAR_TYPE]
                     raw_value = var[SYSVAR_VALUE]
+                    if org_data_type == SYSVAR_TYPE_NUMBER:
+                        data_type = (
+                            SYSVAR_HM_TYPE_FLOAT
+                            if "." in raw_value
+                            else SYSVAR_HM_TYPE_INTEGER
+                        )
+                    else:
+                        data_type = org_data_type
                     unit = var[SYSVAR_UNIT]
                     internal = var[SYSVAR_IS_INTERNAL]
                     value_list: list[str] | None = None

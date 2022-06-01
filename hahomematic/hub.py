@@ -9,10 +9,11 @@ from hahomematic.config import EXTENDED_SYSVARS
 from hahomematic.const import (
     BACKEND_CCU,
     HUB_ADDRESS,
+    SYSVAR_HM_TYPE_FLOAT,
+    SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
     SYSVAR_TYPE_LIST,
     SYSVAR_TYPE_LOGIC,
-    SYSVAR_TYPE_NUMBER,
     HmEntityUsage,
     HmPlatform,
 )
@@ -159,7 +160,7 @@ class HmHub(CallbackEntity):
                 if EXTENDED_SYSVARS and internal is False:
                     return HmSysvarSelect(central=self._central, data=data)
                 return HmSysvarSensor(central=self._central, data=data)
-            if data_type == SYSVAR_TYPE_NUMBER:
+            if data_type in (SYSVAR_HM_TYPE_FLOAT, SYSVAR_HM_TYPE_INTEGER):
                 if EXTENDED_SYSVARS and internal is False:
                     return HmSysvarNumber(central=self._central, data=data)
                 return HmSysvarSensor(central=self._central, data=data)
