@@ -405,28 +405,24 @@ class CentralUnit:
 
         return callback_ip
 
-    def _create_hub(self) -> HmHub:
-        """Create the hub."""
-        return HmHub(central=self)
-
     async def _init_hub(self) -> None:
         """Init the hub."""
         if not self._hub:
-            self._hub = self._create_hub()
+            self._hub = HmHub(central=self)
             _LOGGER.info(
                 "init_hub: Starting hub for %s",
                 self.instance_name,
             )
-        if self._hub and isinstance(self._hub, HmHub):
-            await self._hub.fetch_data()
-            if self.callback_system_event is not None and callable(
-                self.callback_system_event
-            ):
-                # pylint: disable=not-callable
-                _LOGGER.debug(
-                    "_init_hub: Sending HUB_CREATED event for %s.", self.instance_name
-                )
-                self.callback_system_event(HH_EVENT_HUB_CREATED, self._hub)
+
+        await self._hub.fetch_data()
+        if self.callback_system_event is not None and callable(
+            self.callback_system_event
+        ):
+            # pylint: disable=not-callable
+            _LOGGER.debug(
+                "_init_hub: Sending HUB_CREATED event for %s.", self.instance_name
+            )
+            self.callback_system_event(HH_EVENT_HUB_CREATED, self._hub)
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""

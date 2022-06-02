@@ -415,3 +415,4 @@ class SystemVariableData:
     max_value: float | int | None = None
     min_value: float | int | None = None
     internal: bool = False
+    visible: bool = False
