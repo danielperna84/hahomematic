@@ -32,6 +32,7 @@ from hahomematic.const import (
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_IS_INTERNAL,
+    SYSVAR_IS_VISIBLE,
     SYSVAR_MAX_VALUE,
     SYSVAR_MIN_VALUE,
     SYSVAR_NAME,
@@ -431,6 +432,7 @@ class JsonRpcAioHttpClient:
                         data_type = org_data_type
                     unit = var[SYSVAR_UNIT]
                     internal = var[SYSVAR_IS_INTERNAL]
+                    visible = var[SYSVAR_IS_VISIBLE]
                     value_list: list[str] | None = None
                     if val_list := var.get(SYSVAR_VALUE_LIST):
                         value_list = val_list.split(";")

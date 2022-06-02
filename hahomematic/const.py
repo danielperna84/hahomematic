@@ -123,6 +123,7 @@ ATTR_VALUE_KEY = "valueKey"
 ATTR_VERIFY_TLS = "verify_tls"
 
 SYSVAR_IS_INTERNAL = "isInternal"
+SYSVAR_IS_VISIBLE = "isVisible"
 SYSVAR_MAX_VALUE = "maxValue"
 SYSVAR_MIN_VALUE = "minValue"
 SYSVAR_NAME = "name"
