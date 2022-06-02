@@ -460,6 +460,7 @@ class JsonRpcAioHttpClient:
                                 max_value=max_value,
                                 min_value=min_value,
                                 internal=internal,
+                                visible=visible,
                             )
                         )
                     except ValueError as verr:
