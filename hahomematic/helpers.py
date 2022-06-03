@@ -416,3 +416,4 @@ class SystemVariableData:
     min_value: float | int | None = None
     internal: bool = False
     visible: bool = False
+    extended_sysvar: bool = False

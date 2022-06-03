@@ -122,6 +122,7 @@ ATTR_VALUE = "value"
 ATTR_VALUE_KEY = "valueKey"
 ATTR_VERIFY_TLS = "verify_tls"
 
+SYSVAR_DESCRIPTION = "description"
 SYSVAR_IS_INTERNAL = "isInternal"
 SYSVAR_IS_VISIBLE = "isVisible"
 SYSVAR_MAX_VALUE = "maxValue"
@@ -131,6 +132,8 @@ SYSVAR_TYPE = "type"
 SYSVAR_UNIT = "unit"
 SYSVAR_VALUE = "value"
 SYSVAR_VALUE_LIST = "valueList"
+
+SYSVAR_EXT_MARKER = "hahm"
 
 SYSVAR_TYPE_ALARM = "ALARM"
 SYSVAR_TYPE_LOGIC = "LOGIC"
@@ -163,6 +166,7 @@ ATTR_HM_VALUE_LIST = "VALUE_LIST"
 
 REGA_SCRIPT_PATH = "rega_scripts"
 REGA_SCRIPT_FETCH_ALL_DEVICE_DATA = "fetch_all_device_data.fn"
+REGA_SCRIPT_GET_ALL_SYSTEM_VARIABLES = "get_all_system_variables.fn"
 REGA_SCRIPT_GET_SERIAL = "get_serial.fn"
 REGA_SCRIPT_SET_SYSTEM_VARIABLE = "set_system_variable.fn"
 

@@ -1,0 +1,43 @@
+
+var svList = dom.GetObject(ID_SYSTEM_VARIABLES);
+Write("[");
+string id;
+boolean dpFirst = true;
+foreach(id, svList.EnumIDs())
+{
+var sv = dom.GetObject(id);
+if (sv)
+{
+  var sv_type = "UNKNOWN";
+  if (sv.ValueSubType() == istAlarm   ) { sv_type = "ALARM";  }
+  if (sv.ValueSubType() == istBool    ) { sv_type = "LOGIC";  }
+  if (sv.ValueSubType() == istEnum    ) { sv_type = "LIST";   }
+  if (sv.ValueSubType() == istGeneric ) { sv_type = "NUMBER"; }
+  if (sv.ValueSubType() == istChar8859) { sv_type = "STRING"; }
+
+  if (dpFirst) {
+    dpFirst = false;
+  } else {
+    WriteLine(',');
+  }
+  Write("{");
+
+  Write("\"id\": \"" # sv.ID() # "\",");
+  Write("\"name\": \"" # sv.Name() # "\",");
+  Write("\"type\": \"" # sv_type # "\",");
+  Write("\"unit\": \"" # sv.ValueUnit() # "\",");
+  Write("\"value\": \"" # sv.Value() # "\",");
+  Write("\"description\": \"" # sv.DPInfo() # "\",");
+  Write("\"isLogged\": \"" # sv.DPArchive() # "\",");
+  Write("\"isVisible\": \"" # sv.Visible() # "\",");
+  Write("\"isInternal\": \"" # sv.Internal() # "\",");
+  Write("\"channelId\": \"" # sv.Channel() # "\",");
+  Write("\"minValue\": \"" # sv.ValueMin() # "\",");
+  Write("\"maxValue\": \"" # sv.ValueMax() # "\",");
+  Write("\"valueList\": \"" # sv.ValueList() # "\",");
+  Write("\"valueName0\": \"" # sv.ValueName0() # "\",");
+  Write("\"valueName1\": \"" # sv.ValueName1() # "\"");
+  Write("}");
+}
+}
+Write("]");
