@@ -419,9 +419,6 @@ class JsonRpcAioHttpClient:
             "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
         try:
-            # response = await self._post(
-            #    "SysVar.getAll",
-            # )
             response = await self._post_script(
                 script_name=REGA_SCRIPT_GET_ALL_SYSTEM_VARIABLES
             )

@@ -36,7 +36,6 @@ from hahomematic.const import (
     FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_DEVICES_CREATED,
-    HH_EVENT_HUB_CREATED,
     HH_EVENT_NEW_DEVICES,
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
@@ -415,14 +414,6 @@ class CentralUnit:
             )
 
         await self._hub.fetch_data()
-        if self.callback_system_event is not None and callable(
-            self.callback_system_event
-        ):
-            # pylint: disable=not-callable
-            _LOGGER.debug(
-                "_init_hub: Sending HUB_CREATED event for %s.", self.instance_name
-            )
-            self.callback_system_event(HH_EVENT_HUB_CREATED, self._hub)
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""

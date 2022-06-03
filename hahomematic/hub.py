@@ -7,6 +7,7 @@ from typing import Any
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     BACKEND_CCU,
+    HH_EVENT_SYSVARS_CREATED,
     HUB_ADDRESS,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
@@ -46,7 +47,7 @@ class HmHub(CallbackEntity):
         self._central = central
         self.unique_id: str = generate_unique_id(central=central, address=HUB_ADDRESS)
         self.name: str = central.instance_name
-        self.hub_entities: dict[str, GenericSystemVariable] = {}
+        self.syvar_entities: dict[str, GenericSystemVariable] = {}
         self._variables: dict[str, Any] = {}
         self.should_poll = True
         self._value: int = 0
@@ -82,7 +83,7 @@ class HmHub(CallbackEntity):
     def hub_entities_by_platform(self) -> dict[HmPlatform, list[GenericSystemVariable]]:
         """Return the system variables by platform"""
         sysvars: dict[HmPlatform, list[GenericSystemVariable]] = {}
-        for entity in self.hub_entities.values():
+        for entity in self.syvar_entities.values():
             if entity.platform not in sysvars:
                 sysvars[entity.platform] = []
             sysvars[entity.platform].append(entity)
@@ -128,6 +129,8 @@ class HmHub(CallbackEntity):
         if self._central.model is BACKEND_CCU:
             variables = _clean_variables(variables)
 
+        new_sysvars: list[GenericSystemVariable] = []
+
         for sysvar in variables:
             name = sysvar.name
             value = sysvar.value
@@ -135,34 +138,44 @@ class HmHub(CallbackEntity):
                 self._variables[name] = value
                 continue
 
-            entity: GenericSystemVariable | None = self.hub_entities.get(name)
+            entity: GenericSystemVariable | None = self.syvar_entities.get(name)
             if entity:
                 entity.update_value(value)
             else:
-                self._create_system_variable(data=sysvar)
+                new_sysvars.append(self._create_system_variable(data=sysvar))
+
+        if (
+            new_sysvars
+            and self._central.callback_system_event is not None
+            and callable(self._central.callback_system_event)
+        ):
+            self._central.callback_system_event(HH_EVENT_SYSVARS_CREATED, new_sysvars)
 
         self.update_entity()
 
-    def _create_system_variable(self, data: SystemVariableData) -> None:
+    def _create_system_variable(
+        self, data: SystemVariableData
+    ) -> GenericSystemVariable:
         """Create system variable as entity."""
-        self.hub_entities[data.name] = self._create_sysvar_entity(data=data)
+        sysvar_entity = self._create_sysvar_entity(data=data)
+        self.syvar_entities[data.name] = sysvar_entity
+        return sysvar_entity
 
     def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
         data_type = data.data_type
         extended_sysvar = data.extended_sysvar
         if data_type:
             if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
-                if extended_sysvar is True:
+                if extended_sysvar:
                     return HmSysvarSwitch(central=self._central, data=data)
                 return HmSysvarBinarySensor(central=self._central, data=data)
-            if data_type == SYSVAR_TYPE_LIST:
-                if extended_sysvar is True:
-                    return HmSysvarSelect(central=self._central, data=data)
-                return HmSysvarSensor(central=self._central, data=data)
-            if data_type in (SYSVAR_HM_TYPE_FLOAT, SYSVAR_HM_TYPE_INTEGER):
-                if extended_sysvar is True:
-                    return HmSysvarNumber(central=self._central, data=data)
-                return HmSysvarSensor(central=self._central, data=data)
+            if data_type == SYSVAR_TYPE_LIST and extended_sysvar:
+                return HmSysvarSelect(central=self._central, data=data)
+            if (
+                data_type in (SYSVAR_HM_TYPE_FLOAT, SYSVAR_HM_TYPE_INTEGER)
+                and extended_sysvar
+            ):
+                return HmSysvarNumber(central=self._central, data=data)
         else:
             if isinstance(self.value, bool):
                 return HmSysvarBinarySensor(central=self._central, data=data)
@@ -170,7 +183,7 @@ class HmHub(CallbackEntity):
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        if entity := self.hub_entities.get(name):
+        if entity := self.syvar_entities.get(name):
             await entity.send_variable(value=value)
         elif name in self.attributes:
             await self._central.set_system_variable(name=name, value=value)
