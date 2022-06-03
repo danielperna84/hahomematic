@@ -28,6 +28,7 @@ from hahomematic.const import (
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
     ATTR_MODEL,
+    ATTR_NAME,
     ATTR_PARAMETER,
     ATTR_SUBTYPE,
     ATTR_TYPE,
@@ -774,7 +775,7 @@ class GenericSystemVariable(CallbackEntity):
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
-        return {}
+        return {ATTR_NAME: self.ccu_var_name}
 
     @property
     def ccu_var_name(self) -> str | None:

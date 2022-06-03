@@ -27,7 +27,7 @@ PARAMSET_KEY_VALUES = "VALUES"
 HH_EVENT_DELETE_DEVICES = "deleteDevices"
 HH_EVENT_DEVICES_CREATED = "devicesCreated"
 HH_EVENT_ERROR = "error"
-HH_EVENT_HUB_CREATED = "hubCreated"
+HH_EVENT_SYSVARS_CREATED = "sysvarsCreated"
 HH_EVENT_LIST_DEVICES = "listDevices"
 HH_EVENT_NEW_DEVICES = "newDevices"
 HH_EVENT_RE_ADDED_DEVICE = "readdedDevice"
@@ -320,4 +320,12 @@ AVAILABLE_HM_PLATFORMS = [
     HmPlatform.SENSOR,
     HmPlatform.SIREN,
     HmPlatform.SWITCH,
+]
+
+AVAILABLE_HM_SYSVAR_PLATFORMS = [
+    HmPlatform.HUB_BINARY_SENSOR,
+    HmPlatform.HUB_NUMBER,
+    HmPlatform.HUB_SELECT,
+    HmPlatform.HUB_SENSOR,
+    HmPlatform.HUB_SWITCH,
 ]
