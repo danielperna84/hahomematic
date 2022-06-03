@@ -26,9 +26,12 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     PATH_JSON_RPC,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
+    REGA_SCRIPT_GET_ALL_SYSTEM_VARIABLES,
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
     REGA_SCRIPT_SET_SYSTEM_VARIABLE,
+    SYSVAR_DESCRIPTION,
+    SYSVAR_EXT_MARKER,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_IS_INTERNAL,
@@ -228,6 +231,8 @@ class JsonRpcAioHttpClient:
             method=method,
             extra_params={"script": script},
         )
+        if not response[ATTR_ERROR]:
+            response[ATTR_RESULT] = json.loads(response[ATTR_RESULT])
         _LOGGER.debug("_post_script: Method: %s [%s]", method, script_name)
 
         if not keep_session:
@@ -414,8 +419,11 @@ class JsonRpcAioHttpClient:
             "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
         try:
-            response = await self._post(
-                "SysVar.getAll",
+            # response = await self._post(
+            #    "SysVar.getAll",
+            # )
+            response = await self._post_script(
+                script_name=REGA_SCRIPT_GET_ALL_SYSTEM_VARIABLES
             )
             if json_result := response[ATTR_RESULT]:
                 for var in json_result:
@@ -430,9 +438,11 @@ class JsonRpcAioHttpClient:
                         )
                     else:
                         data_type = org_data_type
+                    raw_description = var[SYSVAR_DESCRIPTION]
+                    extended_sysvar = SYSVAR_EXT_MARKER in raw_description.lower()
                     unit = var[SYSVAR_UNIT]
-                    internal = var[SYSVAR_IS_INTERNAL]
-                    visible = var[SYSVAR_IS_VISIBLE]
+                    internal = bool(var[SYSVAR_IS_INTERNAL])
+                    visible = bool(var[SYSVAR_IS_VISIBLE])
                     value_list: list[str] | None = None
                     if val_list := var.get(SYSVAR_VALUE_LIST):
                         value_list = val_list.split(";")
@@ -461,6 +471,7 @@ class JsonRpcAioHttpClient:
                                 min_value=min_value,
                                 internal=internal,
                                 visible=visible,
+                                extended_sysvar=extended_sysvar,
                             )
                         )
                     except ValueError as verr:
@@ -544,7 +555,6 @@ class JsonRpcAioHttpClient:
     async def get_device_details(self) -> list[dict[str, Any]]:
         """Get the device details of the backend."""
         device_details = []
-
         _LOGGER.debug("get_device_details: Getting the device details via JSON-RPC")
         try:
             response = await self._post(
@@ -559,30 +569,27 @@ class JsonRpcAioHttpClient:
 
     async def get_all_device_data(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Get the all device data of the backend."""
-        all_device_data: dict[str, Any] = {}
-
+        all_device_data: dict[str, dict[str, dict[str, Any]]] = {}
         _LOGGER.debug("get_all_device_data: Getting all device data via JSON-RPC")
         try:
             response = await self._post_script(
                 script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA
             )
             if json_result := response[ATTR_RESULT]:
-                all_device_data = json.loads(json_result)
+                all_device_data = _convert_to_values_cache(json_result)
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_all_device_data: %s [%s]", hhe.name, hhe.args)
 
-        return _convert_to_values_cache(all_device_data)
+        return all_device_data
 
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
         serial = "unknown"
-
         _LOGGER.debug("get_serial: Getting the backend serial via JSON-RPC")
         try:
             response = await self._post_script(script_name=REGA_SCRIPT_GET_SERIAL)
             if json_result := response[ATTR_RESULT]:
-                result = json.loads(json_result)
-                serial = result["serial"]
+                serial = json_result["serial"]
                 if len(serial) > 10:
                     serial = serial[-10:]
         except BaseHomematicException as hhe:

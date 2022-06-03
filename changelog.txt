@@ -1,3 +1,6 @@
+Version 1.8.1 (2022-06-03)
+- Use marker in sysvar description for extended sysvars
+
 Version 1.8.0 (2022-06-02)
 - Enable additional sysvar entity types
 

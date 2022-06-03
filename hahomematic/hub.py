@@ -149,18 +149,18 @@ class HmHub(CallbackEntity):
 
     def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
         data_type = data.data_type
-        internal = data.internal
+        extended_sysvar = data.extended_sysvar
         if data_type:
             if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
-                if internal is False:
+                if extended_sysvar is True:
                     return HmSysvarSwitch(central=self._central, data=data)
                 return HmSysvarBinarySensor(central=self._central, data=data)
             if data_type == SYSVAR_TYPE_LIST:
-                if internal is False:
+                if extended_sysvar is True:
                     return HmSysvarSelect(central=self._central, data=data)
                 return HmSysvarSensor(central=self._central, data=data)
             if data_type in (SYSVAR_HM_TYPE_FLOAT, SYSVAR_HM_TYPE_INTEGER):
-                if internal is False:
+                if extended_sysvar is True:
                     return HmSysvarNumber(central=self._central, data=data)
                 return HmSysvarSensor(central=self._central, data=data)
         else:
