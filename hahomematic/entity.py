@@ -817,16 +817,6 @@ class GenericSystemVariable(CallbackEntity):
         """Return the value_list."""
         return self._value_list
 
-    # pylint: disable=no-self-use
-    async def load_data(self) -> None:
-        """Do not load data for the hub here."""
-        return
-
-    # pylint: disable=no-self-use
-    async def fetch_data(self) -> None:
-        """fetch data for the hub."""
-        return
-
     @property
     def platform(self) -> HmPlatform:
         """Return the platform."""
