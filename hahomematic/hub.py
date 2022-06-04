@@ -48,7 +48,7 @@ class HmHub(CallbackEntity):
         self.unique_id: str = generate_unique_id(central=central, address=HUB_ADDRESS)
         self.name: str = central.instance_name
         self.syvar_entities: dict[str, GenericSystemVariable] = {}
-        self._variables: dict[str, Any] = {}
+        self._hub_attributes: dict[str, Any] = {}
         self.should_poll = True
         self._value: int = 0
         self.create_in_ha: bool = True
@@ -67,7 +67,7 @@ class HmHub(CallbackEntity):
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self._variables.copy()
+        return self._hub_attributes.copy()
 
     @property
     def platform(self) -> HmPlatform:
@@ -78,17 +78,6 @@ class HmHub(CallbackEntity):
     def value(self) -> int:
         """Return the value of the entity."""
         return self._value
-
-    @property
-    def hub_entities_by_platform(self) -> dict[HmPlatform, list[GenericSystemVariable]]:
-        """Return the system variables by platform"""
-        sysvars: dict[HmPlatform, list[GenericSystemVariable]] = {}
-        for entity in self.syvar_entities.values():
-            if entity.platform not in sysvars:
-                sysvars[entity.platform] = []
-            sysvars[entity.platform].append(entity)
-
-        return sysvars
 
     async def fetch_data(self) -> None:
         """fetch data for the hub."""
@@ -110,7 +99,7 @@ class HmHub(CallbackEntity):
 
     async def _update_entities(self) -> None:
         """Retrieve all variable data and update hmvariable values."""
-        self._variables.clear()
+        self._hub_attributes.clear()
         variables = await self._central.get_all_system_variables()
         if not variables:
             _LOGGER.debug(
@@ -129,13 +118,17 @@ class HmHub(CallbackEntity):
         if self._central.model is BACKEND_CCU:
             variables = _clean_variables(variables)
 
+        missing_variable_names = self._identify_missing_variable_names(variables=variables)
+        if missing_variable_names:
+            self._remove_sysvar_entity(names=missing_variable_names)
+
         new_sysvars: list[GenericSystemVariable] = []
 
         for sysvar in variables:
             name = sysvar.name
             value = sysvar.value
             if _is_excluded(name, EXCLUDED_FROM_SENSOR):
-                self._variables[name] = value
+                self._hub_attributes[name] = value
                 continue
 
             entity: GenericSystemVariable | None = self.syvar_entities.get(name)
@@ -162,6 +155,7 @@ class HmHub(CallbackEntity):
         return sysvar_entity
 
     def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
+        """Create sysvar entity."""
         data_type = data.data_type
         extended_sysvar = data.extended_sysvar
         if data_type:
@@ -181,6 +175,18 @@ class HmHub(CallbackEntity):
                 return HmSysvarBinarySensor(central=self._central, data=data)
         return HmSysvarSensor(central=self._central, data=data)
 
+    def _remove_sysvar_entity(self, names: list[str]):
+        """Remove sysvar entity from hub."""
+        for name in names:
+            if name in self._hub_attributes:
+                del self._hub_attributes[name]
+
+            if name in self.syvar_entities:
+                entity = self.syvar_entities[name]
+                entity.remove_entity()
+                del self.syvar_entities[name]
+        self.update_entity()
+
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         if entity := self.syvar_entities.get(name):
@@ -195,19 +201,19 @@ class HmHub(CallbackEntity):
         """Do not load data for the hub here."""
         return
 
-    def update_entity(self, *args: Any) -> None:
-        """
-        Do what is needed when the state of the entity has been updated.
-        """
-        self._set_last_update()
-        super().update_entity(*args)
-
-    def remove_entity(self, *args: Any) -> None:
-        """
-        Do what is needed when the entity has been removed.
-        """
-        self._set_last_update()
-        super().remove_entity(*args)
+    def _identify_missing_variable_names(
+        self, variables: list[SystemVariableData]
+    ) -> list[str]:
+        """Identify missing variables."""
+        variable_names: list[str] = [x.name for x in variables]
+        missing_variables: list[str] = []
+        for name in self._hub_attributes:
+            if name not in variable_names:
+                missing_variables.append(name)
+        for name in self.syvar_entities:
+            if name not in variable_names:
+                missing_variables.append(name)
+        return missing_variables
 
 
 def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
@@ -219,6 +225,7 @@ def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
 
 
 def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:
+    "Clean variables by removing excluded."
     cleaned_variables: list[SystemVariableData] = []
     for sysvar in variables:
         if _is_excluded(sysvar.name, EXCLUDED):
