@@ -765,7 +765,6 @@ class GenericSystemVariable(CallbackEntity):
         self._value_list = data.value_list
         self._max = data.max_value
         self._min = data.min_value
-        self._internal = data.internal
 
     @property
     def available(self) -> bool:
@@ -801,11 +800,6 @@ class GenericSystemVariable(CallbackEntity):
     def min(self) -> Any | None:
         """Return min value."""
         return self._min
-
-    @property
-    def internal(self) -> bool | None:
-        """Return internal value."""
-        return self._internal
 
     @property
     def value(self) -> Any | None:

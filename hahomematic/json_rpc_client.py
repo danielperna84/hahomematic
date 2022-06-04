@@ -34,8 +34,6 @@ from hahomematic.const import (
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_ID,
-    SYSVAR_IS_INTERNAL,
-    SYSVAR_IS_VISIBLE,
     SYSVAR_MAX_VALUE,
     SYSVAR_MIN_VALUE,
     SYSVAR_NAME,
@@ -439,8 +437,6 @@ class JsonRpcAioHttpClient:
                         data_type = org_data_type
                     extended_sysvar = ext_markers.get(var_id, False)
                     unit = var[SYSVAR_UNIT]
-                    internal = var[SYSVAR_IS_INTERNAL]
-                    visible = var[SYSVAR_IS_VISIBLE]
                     value_list: list[str] | None = None
                     if val_list := var.get(SYSVAR_VALUE_LIST):
                         value_list = val_list.split(";")
@@ -467,8 +463,6 @@ class JsonRpcAioHttpClient:
                                 value_list=value_list,
                                 max_value=max_value,
                                 min_value=min_value,
-                                internal=internal,
-                                visible=visible,
                                 extended_sysvar=extended_sysvar,
                             )
                         )
