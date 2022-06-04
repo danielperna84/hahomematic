@@ -765,7 +765,6 @@ class GenericSystemVariable(CallbackEntity):
         self._value_list = data.value_list
         self._max = data.max_value
         self._min = data.min_value
-        self._internal = data.internal
 
     @property
     def available(self) -> bool:
@@ -803,11 +802,6 @@ class GenericSystemVariable(CallbackEntity):
         return self._min
 
     @property
-    def internal(self) -> bool | None:
-        """Return internal value."""
-        return self._internal
-
-    @property
     def value(self) -> Any | None:
         """Return the value."""
         return self._value
@@ -816,16 +810,6 @@ class GenericSystemVariable(CallbackEntity):
     def value_list(self) -> list[str] | None:
         """Return the value_list."""
         return self._value_list
-
-    # pylint: disable=no-self-use
-    async def load_data(self) -> None:
-        """Do not load data for the hub here."""
-        return
-
-    # pylint: disable=no-self-use
-    async def fetch_data(self) -> None:
-        """fetch data for the hub."""
-        return
 
     @property
     def platform(self) -> HmPlatform:

@@ -414,6 +414,4 @@ class SystemVariableData:
     value_list: list[str] | None = None
     max_value: float | int | None = None
     min_value: float | int | None = None
-    internal: bool = False
-    visible: bool = False
     extended_sysvar: bool = False
