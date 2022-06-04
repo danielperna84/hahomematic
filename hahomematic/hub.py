@@ -118,7 +118,9 @@ class HmHub(CallbackEntity):
         if self._central.model is BACKEND_CCU:
             variables = _clean_variables(variables)
 
-        missing_variable_names = self._identify_missing_variable_names(variables=variables)
+        missing_variable_names = self._identify_missing_variable_names(
+            variables=variables
+        )
         if missing_variable_names:
             self._remove_sysvar_entity(names=missing_variable_names)
 
@@ -175,7 +177,7 @@ class HmHub(CallbackEntity):
                 return HmSysvarBinarySensor(central=self._central, data=data)
         return HmSysvarSensor(central=self._central, data=data)
 
-    def _remove_sysvar_entity(self, names: list[str]):
+    def _remove_sysvar_entity(self, names: list[str]) -> None:
         """Remove sysvar entity from hub."""
         for name in names:
             if name in self._hub_attributes:
