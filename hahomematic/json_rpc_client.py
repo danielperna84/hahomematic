@@ -26,13 +26,14 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     PATH_JSON_RPC,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
-    REGA_SCRIPT_GET_ALL_SYSTEM_VARIABLES,
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
     REGA_SCRIPT_SET_SYSTEM_VARIABLE,
+    REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER,
     SYSVAR_HASEXTMARKER,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
+    SYSVAR_ID,
     SYSVAR_IS_INTERNAL,
     SYSVAR_IS_VISIBLE,
     SYSVAR_MAX_VALUE,
@@ -418,11 +419,13 @@ class JsonRpcAioHttpClient:
             "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
         try:
-            response = await self._post_script(
-                script_name=REGA_SCRIPT_GET_ALL_SYSTEM_VARIABLES
+            response = await self._post(
+                "SysVar.getAll",
             )
             if json_result := response[ATTR_RESULT]:
+                ext_markers = await self._get_system_variables_ext_markers()
                 for var in json_result:
+                    var_id = var[SYSVAR_ID]
                     name = var[SYSVAR_NAME]
                     org_data_type = var[SYSVAR_TYPE]
                     raw_value = var[SYSVAR_VALUE]
@@ -434,7 +437,7 @@ class JsonRpcAioHttpClient:
                         )
                     else:
                         data_type = org_data_type
-                    extended_sysvar = var[SYSVAR_HASEXTMARKER]
+                    extended_sysvar = ext_markers.get(var_id, False)
                     unit = var[SYSVAR_UNIT]
                     internal = var[SYSVAR_IS_INTERNAL]
                     visible = var[SYSVAR_IS_VISIBLE]
@@ -480,6 +483,27 @@ class JsonRpcAioHttpClient:
             _LOGGER.warning("get_all_system_variables: %s [%s]", hhe.name, hhe.args)
 
         return variables
+
+    async def _get_system_variables_ext_markers(self) -> dict[str, Any]:
+        """Get all system variables from CCU / Homegear."""
+        ext_markers: dict[str, Any] = {}
+        _LOGGER.debug(
+            "get_system_variables_ext_markers: Getting system variables ext markersvia JSON-RPC"
+        )
+        try:
+            response = await self._post_script(
+                script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER
+            )
+            if json_result := response[ATTR_RESULT]:
+                for data in json_result:
+                    ext_markers[data[SYSVAR_ID]] = data[SYSVAR_HASEXTMARKER]
+
+        except BaseHomematicException as hhe:
+            _LOGGER.warning(
+                "get_system_variables_ext_markers: %s [%s]", hhe.name, hhe.args
+            )
+
+        return ext_markers
 
     async def get_all_channel_ids_room(self) -> dict[str, set[str]]:
         """Get all channel_ids per room from CCU / Homegear."""
