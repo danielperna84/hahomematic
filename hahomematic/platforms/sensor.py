@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import hahomematic.central_unit as hm_central
-from hahomematic.const import HmPlatform
+from hahomematic.const import SYSVAR_TYPE_LIST, HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericSystemVariable
 from hahomematic.helpers import SystemVariableData
@@ -97,7 +97,11 @@ class HmSysvarSensor(GenericSystemVariable):
     @property
     def value(self) -> Any | None:
         """Return the value."""
-        if self._value is not None and self._value_list is not None:
+        if (
+            self.data_type == SYSVAR_TYPE_LIST
+            and self._value is not None
+            and self._value_list is not None
+        ):
             return self._value_list[int(self._value)]
         return _check_length_and_warn(name=self.ccu_var_name, value=self._value)
 
