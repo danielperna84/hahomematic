@@ -1,3 +1,6 @@
+Version 1.8.4 (2022-06-04)
+- Refactor all sysvar script
+
 Version 1.8.3 (2022-06-04)
 - Refactor sysvar creation eventing
 

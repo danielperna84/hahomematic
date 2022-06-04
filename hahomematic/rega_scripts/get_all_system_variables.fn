@@ -7,6 +7,7 @@ var svList = dom.GetObject(ID_SYSTEM_VARIABLES);
 
 string id;
 boolean dpFirst = true;
+string SYSVAR_EXT_MARKER = "hahm";
 Write("[");
 foreach(id, svList.EnumIDs())
 {
@@ -32,10 +33,10 @@ foreach(id, svList.EnumIDs())
       Write("\"type\": \"" # sv_type # "\",");
       Write("\"unit\": \"" # sv.ValueUnit() # "\",");
       Write("\"value\": \"" # sv.Value() # "\",");
-      Write("\"description\": \"" # sv.DPInfo() # "\",");
-      Write("\"isLogged\": \"" # sv.DPArchive() # "\",");
-      Write("\"isVisible\": \"" # sv.Visible() # "\",");
-      Write("\"isInternal\": \"" # sv.Internal() # "\",");
+      Write("\"hasExtMarker\": " # sv.DPInfo().ToLower().Contains(SYSVAR_EXT_MARKER) # ",");
+      Write("\"isLogged\": " # sv.DPArchive() # ",");
+      Write("\"isVisible\": " # sv.Visible() # ",");
+      Write("\"isInternal\": " # sv.Internal() # ",");
       Write("\"channelId\": \"" # sv.Channel() # "\",");
       Write("\"minValue\": \"" # sv.ValueMin() # "\",");
       Write("\"maxValue\": \"" # sv.ValueMax() # "\",");
