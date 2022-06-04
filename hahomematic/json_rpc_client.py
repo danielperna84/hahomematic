@@ -30,8 +30,7 @@ from hahomematic.const import (
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
     REGA_SCRIPT_SET_SYSTEM_VARIABLE,
-    SYSVAR_DESCRIPTION,
-    SYSVAR_EXT_MARKER,
+    SYSVAR_HASEXTMARKER,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_IS_INTERNAL,
@@ -435,11 +434,10 @@ class JsonRpcAioHttpClient:
                         )
                     else:
                         data_type = org_data_type
-                    raw_description = var[SYSVAR_DESCRIPTION]
-                    extended_sysvar = SYSVAR_EXT_MARKER in raw_description.lower()
+                    extended_sysvar = var[SYSVAR_HASEXTMARKER]
                     unit = var[SYSVAR_UNIT]
-                    internal = bool(var[SYSVAR_IS_INTERNAL])
-                    visible = bool(var[SYSVAR_IS_VISIBLE])
+                    internal = var[SYSVAR_IS_INTERNAL]
+                    visible = var[SYSVAR_IS_VISIBLE]
                     value_list: list[str] | None = None
                     if val_list := var.get(SYSVAR_VALUE_LIST):
                         value_list = val_list.split(";")
