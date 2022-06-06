@@ -619,27 +619,37 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
 
-        fields_rep = self._device_desc.get(
+        repeating_fields = self._device_desc.get(
             hm_entity_definition.ED_REPEATABLE_FIELDS, {}
         )
         # Add repeating fields
-        for (field_name, parameter) in fields_rep.items():
+        for (field_name, parameter) in repeating_fields.items():
             entity = self._device.get_hm_entity(
                 channel_address=self.channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity)
 
-        # Add sensor entities
-        self._add_entities(
-            field_dict_name=hm_entity_definition.ED_SENSOR_CHANNELS,
-            is_sensor=True,
+        visible_repeating_fields = self._device_desc.get(
+            hm_entity_definition.ED_VISIBLE_REPEATABLE_FIELDS, {}
         )
+        # Add visible repeating fields
+        for (field_name, parameter) in visible_repeating_fields.items():
+            entity = self._device.get_hm_entity(
+                channel_address=self.channel_address, parameter=parameter
+            )
+            self._add_entity(field_name=field_name, entity=entity, is_visible=True)
+
         # Add device fields
         self._add_entities(
             field_dict_name=hm_entity_definition.ED_FIELDS,
         )
+        # Add visible device fields
+        self._add_entities(
+            field_dict_name=hm_entity_definition.ED_VISIBLE_FIELDS,
+            is_visible=True,
+        )
 
-        # add device entities
+        # Add default device entities
         self._mark_entity(field_desc=self._entity_def)
         # add default entities
         if hm_entity_definition.get_include_default_entities(
@@ -661,7 +671,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             )
         )
 
-    def _add_entities(self, field_dict_name: str, is_sensor: bool = False) -> None:
+    def _add_entities(self, field_dict_name: str, is_visible: bool = False) -> None:
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
         for channel_no, channel in fields.items():
@@ -670,8 +680,8 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 if entity := self._device.get_hm_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
-                    if is_sensor:
-                        entity.usage = HmEntityUsage.CE_SENSOR
+                    if is_visible:
+                        entity.usage = HmEntityUsage.CE_VISIBLE
                     self._add_entity(field_name=field_name, entity=entity)
 
     def _mark_entity(self, field_desc: dict[int, set[str]]) -> None:
@@ -701,10 +711,13 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 ):
                     entity.usage = HmEntityUsage.ENTITY
 
-    def _add_entity(self, field_name: str, entity: GenericEntity | None) -> None:
+    def _add_entity(self, field_name: str, entity: GenericEntity | None, is_visible: bool = False) -> None:
         """Add entity to collection and register callback"""
         if not entity:
             return None
+
+        if is_visible:
+            entity.usage = HmEntityUsage.CE_VISIBLE
 
         entity.register_update_callback(self.update_entity)
         self.data_entities[field_name] = entity

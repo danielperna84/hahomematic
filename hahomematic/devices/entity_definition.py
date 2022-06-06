@@ -21,10 +21,11 @@ ED_DEVICE_DEFINITIONS = "device_definitions"
 ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE = "additional_entities_by_device_type"
 ED_ADDITIONAL_ENTITIES = "additional_entities"
 ED_FIELDS = "fields"
-ED_REPEATABLE_FIELDS = "fields_repeatable"
+ED_REPEATABLE_FIELDS = "repeatable_fields"
+ED_VISIBLE_REPEATABLE_FIELDS = "visible_repeatable_fields"
 ED_PRIMARY_CHANNEL = "primary_channel"
 ED_SECONDARY_CHANNELS = "secondary_channels"
-ED_SENSOR_CHANNELS = "sensor_channels"
+ED_VISIBLE_FIELDS = "visible_fields"
 DEFAULT_INCLUDE_DEFAULT_ENTITIES = True
 
 FIELD_ACTIVE_PROFILE = "active_profile"
@@ -117,19 +118,20 @@ class EntityDefinition(StrEnum):
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
 
 
-SCHEMA_ED_ADDITIONAL_ENTITIES = Schema({Optional(int): Schema({Optional(str)})})
+SCHEMA_ED_ADDITIONAL_ENTITIES = Schema({Required(int): Schema({Optional(str)})})
 
-SCHEMA_ED_FIELD_DETAILS = Schema({Optional(str): str, Optional(str): str})
+SCHEMA_ED_FIELD_DETAILS = Schema({Required(str): str})
 
-SCHEMA_ED_FIELD = Schema({Optional(int): SCHEMA_ED_FIELD_DETAILS})
+SCHEMA_ED_FIELD = Schema({Required(int): SCHEMA_ED_FIELD_DETAILS})
 
 SCHEMA_ED_DEVICE_GROUP = Schema(
     {
         Required(ED_PRIMARY_CHANNEL): int,
         Optional(ED_SECONDARY_CHANNELS): [int],
         Optional(ED_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
-        Optional(ED_SENSOR_CHANNELS): SCHEMA_ED_FIELD,
+        Optional(ED_VISIBLE_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
         Optional(ED_FIELDS): SCHEMA_ED_FIELD,
+        Optional(ED_VISIBLE_FIELDS): SCHEMA_ED_FIELD,
     }
 )
 
@@ -204,7 +206,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_ON_TIME_VALUE: "ON_TIME",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME",
                 },
-                ED_SENSOR_CHANNELS: {
+                ED_VISIBLE_FIELDS: {
                     0: {
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                     },
@@ -216,12 +218,13 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_DOOR_COMMAND: "DOOR_COMMAND",
-                    FIELD_DOOR_STATE: "DOOR_STATE",
                     FIELD_SECTION: "SECTION",
+                },
+                ED_VISIBLE_REPEATABLE_FIELDS: {
+                    FIELD_DOOR_STATE: "DOOR_STATE",
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
-                0: {"DOOR_STATE"},
                 1: {
                     "STATE",
                 },
@@ -239,7 +242,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME_VALUE",
                 },
-                ED_SENSOR_CHANNELS: {
+                ED_VISIBLE_FIELDS: {
                     0: {
                         FIELD_CHANNEL_COLOR: "COLOR",
                         FIELD_CHANNEL_LEVEL: "LEVEL",
@@ -268,7 +271,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_STATE: "STATE",
                     FIELD_ON_TIME_VALUE: "ON_TIME",
                 },
-                ED_SENSOR_CHANNELS: {
+                ED_VISIBLE_FIELDS: {
                     0: {
                         FIELD_CHANNEL_STATE: "STATE",
                     },
@@ -305,8 +308,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_PRIMARY_CHANNEL: 3,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_ACOUSTIC_ALARM_ACTIVE: "ACOUSTIC_ALARM_ACTIVE",
-                    FIELD_ACOUSTIC_ALARM_SELECTION: "ACOUSTIC_ALARM_SELECTION",
                     FIELD_OPTICAL_ALARM_ACTIVE: "OPTICAL_ALARM_ACTIVE",
+                    FIELD_ACOUSTIC_ALARM_SELECTION: "ACOUSTIC_ALARM_SELECTION",
                     FIELD_OPTICAL_ALARM_SELECTION: "OPTICAL_ALARM_SELECTION",
                 },
             },
@@ -319,25 +322,21 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_BOOST_MODE: "BOOST_MODE",
                     FIELD_CONTROL_MODE: "CONTROL_MODE",
                     FIELD_HEATING_COOLING: "HEATING_COOLING",
-                    FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_PARTY_MODE: "PARTY_MODE",
                     FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
                     FIELD_SET_POINT_MODE: "SET_POINT_MODE",
+                },
+                ED_VISIBLE_REPEATABLE_FIELDS: {
+                    FIELD_HUMIDITY: "HUMIDITY",
                     FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                 },
-                ED_SENSOR_CHANNELS: {
+                ED_VISIBLE_FIELDS: {
                     0: {
                         FIELD_LEVEL: "LEVEL",
                     },
                     8: {
                         FIELD_STATE: "STATE",
                     },
-                },
-            },
-            ED_ADDITIONAL_ENTITIES: {
-                0: {
-                    "ACTUAL_TEMPERATURE",
-                    "HUMIDITY",
                 },
             },
         },
@@ -468,23 +467,19 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_BOOST_MODE: "BOOST_MODE",
                     FIELD_COMFORT_MODE: "COMFORT_MODE",
                     FIELD_CONTROL_MODE: "CONTROL_MODE",
-                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
                     FIELD_LOWERING_MODE: "LOWERING_MODE",
                     FIELD_MANU_MODE: "MANU_MODE",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
                 },
-                ED_SENSOR_CHANNELS: {
+                ED_VISIBLE_REPEATABLE_FIELDS: {
+                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                },
+                ED_VISIBLE_FIELDS: {
                     0: {
                         FIELD_VALVE_STATE: "VALVE_STATE",
                     },
                 },
-            },
-            ED_ADDITIONAL_ENTITIES: {
-                0: {
-                    "ACTUAL_HUMIDITY",
-                    "ACTUAL_TEMPERATURE",
-                }
             },
         },
         EntityDefinition.RF_THERMOSTAT_GROUP: {
@@ -507,18 +502,16 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         EntityDefinition.SIMPLE_RF_THERMOSTAT: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
-                ED_REPEATABLE_FIELDS: {},
+                ED_VISIBLE_REPEATABLE_FIELDS: {
+                    FIELD_HUMIDITY: "HUMIDITY",
+                    FIELD_TEMPERATURE: "TEMPERATURE",
+                },
                 ED_FIELDS: {
-                    0: {
-                        FIELD_HUMIDITY: "HUMIDITY",
-                        FIELD_TEMPERATURE: "TEMPERATURE",
-                    },
                     1: {
                         FIELD_SETPOINT: "SETPOINT",
                     },
                 },
             },
-            ED_ADDITIONAL_ENTITIES: {0: {"HUMIDITY", "TEMPERATURE"}},
         },
     },
     ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE: {
@@ -704,8 +697,8 @@ def _get_device_group(
     if secondary_channel := group.get(ED_SECONDARY_CHANNELS):
         group[ED_SECONDARY_CHANNELS] = [x + base_channel_no for x in secondary_channel]
 
-    group[ED_SENSOR_CHANNELS] = _rebase_entity_dict(
-        entity_dict=ED_SENSOR_CHANNELS, group=group, base_channel_no=base_channel_no
+    group[ED_VISIBLE_FIELDS] = _rebase_entity_dict(
+        entity_dict=ED_VISIBLE_FIELDS, group=group, base_channel_no=base_channel_no
     )
     group[ED_FIELDS] = _rebase_entity_dict(
         entity_dict=ED_FIELDS, group=group, base_channel_no=base_channel_no
