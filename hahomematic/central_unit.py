@@ -76,14 +76,14 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig):
         _LOGGER.debug("__init__")
-        self.central_config: CentralConfig = central_config
-        self._domain = self.central_config.domain
+        self._central_config: CentralConfig = central_config
+        self._domain = self._central_config.domain
 
-        self.instance_name: str = self.central_config.name
-        self._loop: asyncio.AbstractEventLoop = self.central_config.loop
-        self._xml_rpc_server: xml_rpc.XmlRpcServer = self.central_config.xml_rpc_server
+        self._instance_name: str = self._central_config.name
+        self._loop: asyncio.AbstractEventLoop = self._central_config.loop
+        self._xml_rpc_server: xml_rpc.XmlRpcServer = self._central_config.xml_rpc_server
         self._xml_rpc_server.register_central(self)
-        self._interface_configs = self.central_config.interface_configs
+        self._interface_configs = self._central_config.interface_configs
         self._model: str | None = None
 
         # Caches for CCU data
@@ -121,10 +121,10 @@ class CentralUnit:
         self.callback_ha_event: Callable | None = None
 
         self._json_rpc_client: JsonRpcAioHttpClient = (
-            self.central_config.get_json_rpc_client()
+            self._central_config.get_json_rpc_client()
         )
 
-        hm_data.INSTANCES[self.instance_name] = self
+        hm_data.INSTANCES[self._instance_name] = self
         self._connection_checker = ConnectionChecker(self)
         self._hub: HmHub | None = None
         self._version: str | None = None
@@ -138,21 +138,41 @@ class CentralUnit:
         return True
 
     @property
+    def central_id(self) -> str:
+        """Return the device_url of the backend."""
+        return self._central_config.central_id
+
+    @property
+    def central_url(self) -> str:
+        """Return the central_url of the backend."""
+        return self._central_config.central_url
+
+    @property
     def clients(self) -> dict[str, hm_client.Client]:
         """Return the clients list."""
         return self._clients
 
     @property
+    def central_config(self) -> CentralConfig:
+        """Return the config of the central."""
+        return self._central_config
+
+    @property
     def device_information(self) -> HmDeviceInfo:
         """Return central specific attributes."""
         return HmDeviceInfo(
-            identifier=self.instance_name,
+            identifier=self._instance_name,
             manufacturer=MANUFACTURER,
-            name=self.instance_name,
+            name=self._instance_name,
             model=self.model,
             version=self.version,
             central_url=self.central_url,
         )
+
+    @property
+    def domain(self) -> str:
+        """Return the domain."""
+        return self._domain
 
     @property
     def hub(self) -> HmHub | None:
@@ -160,19 +180,9 @@ class CentralUnit:
         return self._hub
 
     @property
-    def central_id(self) -> str:
-        """Return the device_url of the backend."""
-        return self.central_config.central_id
-
-    @property
-    def central_url(self) -> str:
-        """Return the central_url of the backend."""
-        return self.central_config.central_url
-
-    @property
-    def domain(self) -> str:
-        """Return the domain."""
-        return self._domain
+    def instance_name(self) -> str:
+        """Return the instance name of the central."""
+        return self._instance_name
 
     @property
     def is_alive(self) -> bool:
@@ -254,8 +264,8 @@ class CentralUnit:
         xml_rpc.un_register_xml_rpc_server()
 
         _LOGGER.info("stop: Removing instance")
-        if self.instance_name in hm_data.INSTANCES:
-            del hm_data.INSTANCES[self.instance_name]
+        if self._instance_name in hm_data.INSTANCES:
+            del hm_data.INSTANCES[self._instance_name]
 
     async def restart_clients(self) -> None:
         """Restart clients"""
@@ -286,13 +296,13 @@ class CentralUnit:
         if len(self._clients) > 0:
             _LOGGER.info(
                 "create_clients: Clients for %s are already created.",
-                self.instance_name,
+                self._instance_name,
             )
             return False
         if len(self._interface_configs) == 0:
             _LOGGER.info(
                 "create_clients: No Interfaces for %s defined.",
-                self.instance_name,
+                self._instance_name,
             )
             return False
 
@@ -316,7 +326,7 @@ class CentralUnit:
                     _LOGGER.debug(
                         "create_clients: Adding client %s to %s.",
                         client.interface_id,
-                        self.instance_name,
+                        self._instance_name,
                     )
                     self._clients[client.interface_id] = client
 
@@ -326,7 +336,7 @@ class CentralUnit:
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface_id=hm_client.get_interface_id(
-                        instance_name=self.instance_name,
+                        instance_name=self._instance_name,
                         interface=interface_config.interface,
                     ),
                     interface_event_type=HmInterfaceEventType.PROXY,
@@ -396,7 +406,7 @@ class CentralUnit:
         while callback_ip is None:
             if (
                 callback_ip := await self.async_add_executor_job(
-                    get_local_ip, self.central_config.host
+                    get_local_ip, self._central_config.host
                 )
             ) is None:
                 _LOGGER.warning("Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL)
@@ -410,7 +420,7 @@ class CentralUnit:
             self._hub = HmHub(central=self)
             _LOGGER.info(
                 "init_hub: Starting hub for %s",
-                self.instance_name,
+                self._instance_name,
             )
 
         await self._hub.fetch_data()
@@ -419,7 +429,7 @@ class CentralUnit:
         """Start the connection checker."""
         _LOGGER.info(
             "start_connection_checker: Starting connection_checker for %s",
-            self.instance_name,
+            self._instance_name,
         )
         self._connection_checker.start()
 
@@ -428,7 +438,7 @@ class CentralUnit:
         self._connection_checker.stop()
         _LOGGER.info(
             "stop_connection_checker: Stopped connection_checker for %s",
-            self.instance_name,
+            self._instance_name,
         )
 
     async def validate_config_and_get_serial(self) -> str | None:
@@ -477,7 +487,7 @@ class CentralUnit:
             await self.device_data.load()
         except json.decoder.JSONDecodeError:
             _LOGGER.warning(
-                "load_caches: Failed to load caches for %s.", self.instance_name
+                "load_caches: Failed to load caches for %s.", self._instance_name
             )
             await self.clear_all()
 
@@ -488,10 +498,10 @@ class CentralUnit:
 
         if not self._clients:
             raise Exception(
-                f"create_devices: No clients initialized. Not starting central {self.instance_name}."
+                f"create_devices: No clients initialized. Not starting central {self._instance_name}."
             )
         _LOGGER.debug(
-            "create_devices: Starting to create devices for %s.", self.instance_name
+            "create_devices: Starting to create devices for %s.", self._instance_name
         )
 
         new_devices = set[HmDevice]()
@@ -557,7 +567,7 @@ class CentralUnit:
                         device_address,
                     )
         _LOGGER.debug(
-            "create_devices: Finished creating devices for %s.", self.instance_name
+            "create_devices: Finished creating devices for %s.", self._instance_name
         )
 
         if (
@@ -677,7 +687,7 @@ class CentralUnit:
         except CancelledError:
             _LOGGER.debug(
                 "create_task: task cancelled for %s.",
-                self.instance_name,
+                self._instance_name,
             )
             return None
 
@@ -692,7 +702,7 @@ class CentralUnit:
         except CancelledError:
             _LOGGER.debug(
                 "run_coroutine: coroutine interrupted for %s.",
-                self.instance_name,
+                self._instance_name,
             )
             return None
 
@@ -705,7 +715,7 @@ class CentralUnit:
         except CancelledError as cer:
             _LOGGER.debug(
                 "async_add_executor_job: task cancelled for %s.",
-                self.instance_name,
+                self._instance_name,
             )
             raise HaHomematicException from cer
 

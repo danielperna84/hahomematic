@@ -45,8 +45,8 @@ class HmHub(CallbackEntity):
         """Initialize HomeMatic hub."""
         CallbackEntity.__init__(self)
         self._central = central
-        self.unique_id: str = generate_unique_id(central=central, address=HUB_ADDRESS)
-        self.name: str = central.instance_name
+        self._unique_id: str = generate_unique_id(central=central, address=HUB_ADDRESS)
+        self._name: str = central.instance_name
         self.syvar_entities: dict[str, GenericSystemVariable] = {}
         self._hub_attributes: dict[str, Any] = {}
         self.should_poll = True
@@ -60,19 +60,29 @@ class HmHub(CallbackEntity):
         return self._central.available
 
     @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return central specific attributes."""
-        return self._central.device_information
-
-    @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._hub_attributes.copy()
 
     @property
+    def device_information(self) -> HmDeviceInfo:
+        """Return central specific attributes."""
+        return self._central.device_information
+
+    @property
+    def name(self) -> str:
+        """Return the hub name."""
+        return self._name
+
+    @property
     def platform(self) -> HmPlatform:
         """Return the platform."""
         return HmPlatform.HUB_SENSOR
+
+    @property
+    def unique_id(self) -> str:
+        """Return the hub unique_id."""
+        return self._unique_id
 
     @property
     def value(self) -> int:
@@ -196,7 +206,7 @@ class HmHub(CallbackEntity):
         elif name in self.attributes:
             await self._central.set_system_variable(name=name, value=value)
         else:
-            _LOGGER.warning("Variable %s not found on %s", name, self.name)
+            _LOGGER.warning("Variable %s not found on %s", name, self._name)
 
     # pylint: disable=no-self-use
     async def load_data(self) -> None:

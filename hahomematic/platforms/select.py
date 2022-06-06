@@ -46,7 +46,7 @@ class HmSelect(GenericEntity[Union[int, str]]):
         """Get the value of the entity."""
         if self._value is not None and self._value_list is not None:
             return self._value_list[int(self._value)]
-        return str(self.default)
+        return str(self._default)
 
     async def send_value(self, value: int | str) -> None:
         """Set the value of the entity."""

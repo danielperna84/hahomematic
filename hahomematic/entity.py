@@ -76,7 +76,7 @@ class CallbackEntity(ABC):
     """Base class for callback entities."""
 
     def __init__(self) -> None:
-        self.last_update: datetime = INIT_DATETIME
+        self._last_update: datetime = INIT_DATETIME
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
 
@@ -116,7 +116,7 @@ class CallbackEntity(ABC):
             _callback(*args)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.now()
+        self._last_update = datetime.now()
 
 
 class BaseEntity(ABC):
@@ -134,14 +134,14 @@ class BaseEntity(ABC):
         Initialize the entity.
         """
         self._device = device
-        self.unique_id = unique_id
+        self._unique_id = unique_id
         self._device_address = device_address
         self._channel_no = channel_no
-        self.platform = platform
+        self._platform = platform
         self._central: hm_central.CentralUnit = self._device.central
         self._interface_id: str = self._device.interface_id
-        self.device_type: str = self._device.device_type
-        self.sub_type: str = self._device.sub_type
+        self._device_type: str = self._device.device_type
+        self._sub_type: str = self._device.sub_type
         self._function: str | None = self._central.device_details.get_function_text(
             address=self.channel_address
         )
@@ -153,15 +153,15 @@ class BaseEntity(ABC):
 
         self.should_poll = False
         self._client: hm_client.Client = self._central.clients[self._interface_id]
-        self.name: str = (
+        self._name: str = (
             self._central.device_details.get_name(self.channel_address)
-            or self.unique_id
+            or self._unique_id
         )
 
     @property
-    def device_address(self) -> str:
-        """Return the device address."""
-        return self._device_address
+    def available(self) -> bool:
+        """Return the availability of the device."""
+        return self._device.available
 
     @property
     def channel_address(self) -> str:
@@ -174,9 +174,14 @@ class BaseEntity(ABC):
         return self._channel_no
 
     @property
-    def available(self) -> bool:
-        """Return the availability of the device."""
-        return self._device.available
+    def device_address(self) -> str:
+        """Return the device address."""
+        return self._device_address
+
+    @property
+    def device_type(self) -> str:
+        """Return the device type."""
+        return self._device_type
 
     @property
     def device_information(self) -> HmDeviceInfo:
@@ -184,6 +189,26 @@ class BaseEntity(ABC):
         device_info = self._device.device_information
         device_info.channel_no = self._channel_no
         return device_info
+
+    @property
+    def name(self) -> str:
+        """Return the entity name."""
+        return self._name
+
+    @property
+    def platform(self) -> HmPlatform:
+        """Return the entity platform."""
+        return self._platform
+
+    @property
+    def sub_type(self) -> str:
+        """Return the sub type."""
+        return self._sub_type
+
+    @property
+    def unique_id(self) -> str:
+        """Return the entity unique_id."""
+        return self._unique_id
 
     @property
     def attributes(self) -> dict[str, Any]:
@@ -200,13 +225,13 @@ class BaseEntity(ABC):
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
         self._device.add_hm_entity(self)
-        self._central.hm_entities[self.unique_id] = self
+        self._central.hm_entities[self._unique_id] = self
 
     def __str__(self) -> str:
         """
         Provide some useful information.
         """
-        return f"address: {self.channel_address}, type: {self._device.device_type}, name: {self.name}"
+        return f"address: {self.channel_address}, type: {self._device.device_type}, name: {self._name}"
 
 
 class BaseParameterEntity(Generic[ParameterType], BaseEntity):
@@ -235,20 +260,20 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
             platform=platform,
         )
         self._paramset_key: str = paramset_key
-        self.parameter: str = parameter
+        self._parameter: str = parameter
         self.should_poll = self._paramset_key != PARAMSET_KEY_VALUES
         # Do not create some Entities in HA
-        if self.parameter in HIDDEN_PARAMETERS:
+        if self._parameter in HIDDEN_PARAMETERS:
             self.usage = HmEntityUsage.ENTITY_NO_CREATE
         self._parameter_data = parameter_data
         self._assign_parameter_data()
 
-        self.name = get_entity_name(
+        self._name = get_entity_name(
             central=self._central,
             channel_address=self.channel_address,
-            parameter=self.parameter,
-            unique_id=self.unique_id,
-            device_type=self.device_type,
+            parameter=self._parameter,
+            unique_id=self._unique_id,
+            device_type=self._device_type,
         )
 
     def _assign_parameter_data(self) -> None:
@@ -281,7 +306,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
         state_attr = super().attributes
-        state_attr[ATTR_PARAMETER] = self.parameter
+        state_attr[ATTR_PARAMETER] = self._parameter
         return state_attr
 
     @property
@@ -293,6 +318,11 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
     def hmtype(self) -> str:
         """Return the homematic type."""
         return self._type
+
+    @property
+    def parameter(self) -> str:
+        """Return parameter."""
+        return self._parameter
 
     @property
     def max(self) -> ParameterType:
@@ -354,7 +384,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
                 "_convert_value: conversion failed for %s, %s, %s, value: [%s]",
                 self._device.interface_id,
                 self.channel_address,
-                self.parameter,
+                self._parameter,
                 value,
             )
             return None  # type: ignore[return-value]
@@ -364,7 +394,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         await self._client.set_value_by_paramset_key(
             channel_address=self.channel_address,
             paramset_key=self._paramset_key,
-            parameter=self.parameter,
+            parameter=self._parameter,
             value=self._convert_value(value),
         )
 
@@ -403,25 +433,25 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         # Subscribe for all events of this device
         if (
             self.channel_address,
-            self.parameter,
+            self._parameter,
         ) not in self._central.entity_event_subscriptions:
             self._central.entity_event_subscriptions[
-                (self.channel_address, self.parameter)
+                (self.channel_address, self._parameter)
             ] = []
         self._central.entity_event_subscriptions[
-            (self.channel_address, self.parameter)
+            (self.channel_address, self._parameter)
         ].append(self.event)
 
     async def load_entity_value(self) -> None:
         """Init the entity data."""
-        if updated_within_seconds(last_update=self.last_update):
+        if updated_within_seconds(last_update=self._last_update):
             return None
 
         self.set_value(
             value=await self._device.value_cache.get_value(
                 channel_address=self.channel_address,
                 paramset_key=self._paramset_key,
-                parameter=self.parameter,
+                parameter=self._parameter,
             )
         )
 
@@ -459,26 +489,26 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
                 self.channel_address,
             )
             return
-        if parameter != self.parameter:
+        if parameter != self._parameter:
             _LOGGER.warning(
                 "event: Incorrect parameter: %s - should be: %s",
                 parameter,
-                self.parameter,
+                self._parameter,
             )
             return
 
         self.set_value(value=value)
 
         # send device events, if value has changed
-        if self.parameter in (
+        if self._parameter in (
             EVENT_CONFIG_PENDING,
             EVENT_UN_REACH,
             EVENT_STICKY_UN_REACH,
         ):
-            if self.parameter in (EVENT_UN_REACH, EVENT_STICKY_UN_REACH):
-                self._device.update_device(self.unique_id)
+            if self._parameter in (EVENT_UN_REACH, EVENT_STICKY_UN_REACH):
+                self._device.update_device(self._unique_id)
 
-            if self.parameter == EVENT_CONFIG_PENDING:
+            if self._parameter == EVENT_CONFIG_PENDING:
                 if value is False and old_value is True:
                     self._central.create_task(
                         self._device.reload_paramset_descriptions()
@@ -496,7 +526,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         return {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.device_address,
-            ATTR_PARAMETER: self.parameter,
+            ATTR_PARAMETER: self._parameter,
             ATTR_VALUE: value,
         }
 
@@ -523,7 +553,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
         del self._central.entity_event_subscriptions[
-            (self.channel_address, self.parameter)
+            (self.channel_address, self._parameter)
         ]
 
 
@@ -566,12 +596,12 @@ class CustomEntity(BaseEntity, CallbackEntity):
             device_type=self._device.device_type, sub_type=self._device.sub_type
         )
         self.usage = self._custom_entity_usage()
-        self.name = get_custom_entity_name(
+        self._name = get_custom_entity_name(
             central=self._central,
             device_address=self.device_address,
-            unique_id=self.unique_id,
+            unique_id=self._unique_id,
             channel_no=channel_no,
-            device_type=self.device_type,
+            device_type=self._device_type,
             is_only_primary_channel=check_channel_is_only_primary_channel(
                 current_channel=channel_no,
                 device_def=device_def,
@@ -660,14 +690,14 @@ class CustomEntity(BaseEntity, CallbackEntity):
         # add extra entities for the device type
         self._mark_entity(
             field_desc=hm_entity_definition.get_additional_entities_by_device_type(
-                self.device_type
+                self._device_type
             )
         )
 
         # add custom un_ignore entities
         self._mark_entity_by_custom_un_ignore_parameters(
             un_ignore_params_by_paramset_key=self._central.parameter_visibility.get_un_ignore_parameters(
-                device_type=self.device_type, device_channel=self.channel_no
+                device_type=self._device_type, device_channel=self.channel_no
             )
         )
 
@@ -711,7 +741,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 ):
                     entity.usage = HmEntityUsage.ENTITY
 
-    def _add_entity(self, field_name: str, entity: GenericEntity | None, is_visible: bool = False) -> None:
+    def _add_entity(
+        self, field_name: str, entity: GenericEntity | None, is_visible: bool = False
+    ) -> None:
         """Add entity to collection and register callback"""
         if not entity:
             return None
@@ -762,12 +794,12 @@ class GenericSystemVariable(CallbackEntity):
         CallbackEntity.__init__(self)
         self._central = central
         self._platform = platform
-        self.unique_id = generate_unique_id(
+        self._unique_id = generate_unique_id(
             central=central,
             address=SYSVAR_ADDRESS,
             parameter=slugify(data.name),
         )
-        self.name = f"{central.instance_name}_SV_{data.name}"
+        self._name = f"{central.instance_name}_SV_{data.name}"
         self.create_in_ha: bool = True
         self.should_poll = False
         self.usage = HmEntityUsage.ENTITY
@@ -815,6 +847,11 @@ class GenericSystemVariable(CallbackEntity):
         return self._min
 
     @property
+    def name(self) -> str:
+        """Return the entity name."""
+        return self._name
+
+    @property
     def value(self) -> Any | None:
         """Return the value."""
         return self._value
@@ -828,6 +865,11 @@ class GenericSystemVariable(CallbackEntity):
     def platform(self) -> HmPlatform:
         """Return the platform."""
         return self._platform
+
+    @property
+    def unique_id(self) -> str:
+        """Return the entity unique_id."""
+        return self._unique_id
 
     @property
     def unit(self) -> str | None:
@@ -890,28 +932,28 @@ class BaseEvent(BaseParameterEntity[bool]):
             platform=HmPlatform.EVENT,
         )
 
-        self.name: str = get_event_name(
+        self._name: str = get_event_name(
             central=self._central,
             channel_address=self.channel_address,
-            parameter=self.parameter,
-            unique_id=self.unique_id,
-            device_type=self.device_type,
+            parameter=self._parameter,
+            unique_id=self._unique_id,
+            device_type=self._device_type,
         )
         self.event_type: HmEventType = event_type
         self.usage = HmEntityUsage.EVENT
-        self.last_update: datetime = INIT_DATETIME
+        self._last_update: datetime = INIT_DATETIME
         self._value: Any | None = None
 
         # Subscribe for all action events of this device
         if (
             self.channel_address,
-            self.parameter,
+            self._parameter,
         ) not in self._central.entity_event_subscriptions:
             self._central.entity_event_subscriptions[
-                (self.channel_address, self.parameter)
+                (self.channel_address, self._parameter)
             ] = []
         self._central.entity_event_subscriptions[
-            (self.channel_address, self.parameter)
+            (self.channel_address, self._parameter)
         ].append(self.event)
 
     def event(
@@ -941,11 +983,11 @@ class BaseEvent(BaseParameterEntity[bool]):
                 self.channel_address,
             )
             return
-        if parameter != self.parameter:
+        if parameter != self._parameter:
             _LOGGER.warning(
                 "event: Incorrect parameter: %s - should be: %s",
                 parameter,
-                self.parameter,
+                self._parameter,
             )
             return
 
@@ -962,7 +1004,7 @@ class BaseEvent(BaseParameterEntity[bool]):
         try:
             await self._client.set_value(
                 channel_address=self.channel_address,
-                parameter=self.parameter,
+                parameter=self._parameter,
                 value=value,
             )
         except BaseHomematicException as hhe:
@@ -971,7 +1013,7 @@ class BaseEvent(BaseParameterEntity[bool]):
                 hhe.name,
                 hhe.args,
                 self.channel_address,
-                self.parameter,
+                self._parameter,
                 value,
             )
 
@@ -980,7 +1022,7 @@ class BaseEvent(BaseParameterEntity[bool]):
         self._device.add_hm_action_event(self)
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.now()
+        self._last_update = datetime.now()
 
     @abstractmethod
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
@@ -995,7 +1037,7 @@ class BaseEvent(BaseParameterEntity[bool]):
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
         del self._central.entity_event_subscriptions[
-            (self.channel_address, self.parameter)
+            (self.channel_address, self._parameter)
         ]
 
 
@@ -1029,7 +1071,7 @@ class ClickEvent(BaseEvent):
         return {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.device_address,
-            ATTR_TYPE: self.parameter.lower(),
+            ATTR_TYPE: self._parameter.lower(),
             ATTR_SUBTYPE: self.channel_no,
         }
 
@@ -1074,7 +1116,7 @@ class ImpulseEvent(BaseEvent):
         return {
             ATTR_INTERFACE_ID: self._interface_id,
             ATTR_ADDRESS: self.device_address,
-            ATTR_TYPE: self.parameter.lower(),
+            ATTR_TYPE: self._parameter.lower(),
             ATTR_SUBTYPE: self.channel_no,
         }
 

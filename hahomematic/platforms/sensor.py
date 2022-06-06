@@ -53,10 +53,10 @@ class HmSensor(GenericEntity[Any]):
     def _get_converter_func(self) -> Any:
         """Return a converter based on sensor."""
         if convert_func := CONVERTERS_BY_DEVICE_PARAM.get(
-            (self.device_type, self.parameter)
+            (self._device_type, self._parameter)
         ):
             return convert_func
-        if convert_func := CONVERTERS_BY_PARAM.get(self.parameter):
+        if convert_func := CONVERTERS_BY_PARAM.get(self._parameter):
             return convert_func
 
 
