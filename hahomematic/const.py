@@ -253,9 +253,9 @@ class HmEntityUsage(StrEnum):
 
     CE_PRIMARY = "ce_primary"
     CE_SECONDARY = "ce_secondary"
-    CE_SENSOR = "ce_sensor"
+    CE_VISIBLE = "ce_visible"
     ENTITY_NO_CREATE = "entity_no_create"
-    ENTITY = "ENTITY"
+    ENTITY = "entity"
     EVENT = "event"
 
 
