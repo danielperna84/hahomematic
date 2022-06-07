@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Final
 
 import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
@@ -84,12 +84,12 @@ class HmDevice:
         """
         Initialize the device object.
         """
-        self._central = central
-        self._interface_id = interface_id
-        self._interface = self._central.device_details.get_interface(device_address)
-        self._client = self._central.clients[self._interface_id]
-        self._device_address = device_address
-        self._channels = self._central.device_descriptions.get_channels(
+        self._central: Final = central
+        self._interface_id: Final = interface_id
+        self._interface: Final = self._central.device_details.get_interface(device_address)
+        self._client: Final = self._central.clients[self._interface_id]
+        self._device_address: Final = device_address
+        self._channels: Final = self._central.device_descriptions.get_channels(
             self._interface_id, self._device_address
         )
         _LOGGER.debug(
@@ -103,14 +103,14 @@ class HmDevice:
         self._last_update: datetime = INIT_DATETIME
         self._available: bool = True
         self._update_callbacks: list[Callable] = []
-        self._device_type: str = str(
+        self._device_type: Final = str(
             self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
                 parameter=ATTR_HM_TYPE,
             )
         )
-        self._sub_type: str = str(
+        self._sub_type: Final = str(
             self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
@@ -118,10 +118,10 @@ class HmDevice:
             )
         )
         # marker if device will be created as custom entity
-        self._is_custom_entity: bool = entity_definition_exists(
+        self._is_custom_entity: Final = entity_definition_exists(
             self._device_type, self._sub_type
         )
-        self._firmware: str = str(
+        self._firmware: Final = str(
             self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
@@ -129,12 +129,12 @@ class HmDevice:
             )
         )
 
-        self._name = get_device_name(
+        self._name: Final = get_device_name(
             central=self._central,
             device_address=device_address,
             device_type=self._device_type,
         )
-        self._value_cache = ValueCache(device=self)
+        self._value_cache: Final = ValueCache(device=self)
 
         _LOGGER.debug(
             "__init__: Initialized device: %s, %s, %s, %s",

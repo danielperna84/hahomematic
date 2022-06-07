@@ -7,12 +7,11 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, Generic, TypeVar, Union, cast
+from typing import Any, Generic, TypeVar, Union, cast, Final
 
 from slugify import slugify
 
 import hahomematic.central_unit as hm_central
-import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_ENTITY_TYPE,
@@ -133,35 +132,40 @@ class BaseEntity(ABC):
         """
         Initialize the entity.
         """
-        self._device = device
-        self._unique_id = unique_id
-        self._device_address = device_address
-        self._channel_no = channel_no
-        self._platform = platform
-        self._central: hm_central.CentralUnit = self._device.central
-        self._interface_id: str = self._device.interface_id
-        self._device_type: str = self._device.device_type
-        self._sub_type: str = self._device.sub_type
+        self._device: Final = device
+        self._unique_id: Final = unique_id
+        self._device_address: Final = device_address
+        self._channel_no: Final = channel_no
+        self._platform: Final = platform
+        self._central: Final = self._device.central
+        self._interface_id: Final = self._device.interface_id
+        self._device_type: Final = self._device.device_type
+        self._sub_type: Final = self._device.sub_type
         self._function: str | None = self._central.device_details.get_function_text(
             address=self.channel_address
         )
-        self.usage: HmEntityUsage = (
-            HmEntityUsage.ENTITY_NO_CREATE
-            if self._device.is_custom_entity
-            else HmEntityUsage.ENTITY
-        )
+        self.usage: HmEntityUsage = self._generate_entity_usage()
 
         self.should_poll = False
-        self._client: hm_client.Client = self._central.clients[self._interface_id]
-        self._name: str = (
-            self._central.device_details.get_name(self.channel_address)
-            or self._unique_id
-        )
+        self._client: Final = self._central.clients[self._interface_id]
+        self._name: Final = self._generate_name()
 
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self._device.available
+
+    @property
+    def attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the base entity."""
+        attributes: dict[str, Any] = {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: self.channel_address,
+            ATTR_MODEL: self._device.device_type,
+        }
+        if self._function:
+            attributes[ATTR_FUNCTION] = self._function
+        return attributes
 
     @property
     def channel_address(self) -> str:
@@ -210,17 +214,17 @@ class BaseEntity(ABC):
         """Return the entity unique_id."""
         return self._unique_id
 
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the base entity."""
-        attributes: dict[str, Any] = {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.channel_address,
-            ATTR_MODEL: self._device.device_type,
-        }
-        if self._function:
-            attributes[ATTR_FUNCTION] = self._function
-        return attributes
+    @abstractmethod
+    def _generate_name(self) -> str:
+        """Generate the name for the entity."""
+
+    def _generate_entity_usage(self) -> HmEntityUsage:
+        """Generate the usage for the entity."""
+        return (
+            HmEntityUsage.ENTITY_NO_CREATE
+            if self._device.is_custom_entity
+            else HmEntityUsage.ENTITY
+        )
 
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
@@ -259,22 +263,12 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             channel_no=get_device_channel(channel_address),
             platform=platform,
         )
-        self._paramset_key: str = paramset_key
-        self._parameter: str = parameter
+        self._paramset_key: Final = paramset_key
+        self._parameter: Final = parameter
         self.should_poll = self._paramset_key != PARAMSET_KEY_VALUES
-        # Do not create some Entities in HA
-        if self._parameter in HIDDEN_PARAMETERS:
-            self.usage = HmEntityUsage.ENTITY_NO_CREATE
-        self._parameter_data = parameter_data
-        self._assign_parameter_data()
 
-        self._name = get_entity_name(
-            central=self._central,
-            channel_address=self.channel_address,
-            parameter=self._parameter,
-            unique_id=self._unique_id,
-            device_type=self._device_type,
-        )
+        self._parameter_data: Final = parameter_data
+        self._assign_parameter_data()
 
     def _assign_parameter_data(self) -> None:
         """Assign parameter data to instance variables."""
@@ -293,6 +287,23 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self._operations: int = self._parameter_data[ATTR_HM_OPERATIONS]
         self._special: dict[str, Any] | None = self._parameter_data.get(ATTR_HM_SPECIAL)
         self._unit: str | None = self._parameter_data.get(ATTR_HM_UNIT)
+
+    def _generate_name(self) -> str:
+        """Create the name for the entity."""
+        return get_entity_name(
+            central=self._central,
+            channel_address=self.channel_address,
+            parameter=self._parameter,
+            unique_id=self._unique_id,
+            device_type=self._device_type,
+        )
+    
+    def _generate_entity_usage(self) -> HmEntityUsage:
+        """Generate the usage for the entity."""
+        usage = super()._generate_entity_usage()
+        if self._parameter in HIDDEN_PARAMETERS:
+            usage = HmEntityUsage.ENTITY_NO_CREATE
+        return usage
 
     def update_parameter_data(self) -> None:
         """Update parameter data"""
@@ -585,26 +596,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
         )
 
         CallbackEntity.__init__(self)
-        self._device_enum = device_enum
-        self._device_desc = device_def
-        self._entity_def = entity_def
-        device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
-            device_type=self._device.device_type, sub_type=self._device.sub_type
-        )
-        self.usage = self._custom_entity_usage()
-        self._name = get_custom_entity_name(
-            central=self._central,
-            device_address=self.device_address,
-            unique_id=self._unique_id,
-            channel_no=channel_no,
-            device_type=self._device_type,
-            is_only_primary_channel=check_channel_is_only_primary_channel(
-                current_channel=channel_no,
-                device_def=device_def,
-                device_has_multiple_channels=device_has_multiple_channels,
-            ),
-            usage=self.usage,
-        )
+        self._device_enum: Final = device_enum
+        self._device_desc: Final = device_def
+        self._entity_def: Final = entity_def
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
 
@@ -615,8 +609,27 @@ class CustomEntity(BaseEntity, CallbackEntity):
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.CUSTOM.value
         return state_attr
 
-    def _custom_entity_usage(self) -> HmEntityUsage:
-        """Return the custom entity usage."""
+    def _generate_name(self) -> str:
+        """Create the name for the entity."""
+        device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
+            device_type=self._device.device_type, sub_type=self._device.sub_type
+        )
+        return get_custom_entity_name(
+            central=self._central,
+            device_address=self.device_address,
+            unique_id=self._unique_id,
+            channel_no=self._channel_no,
+            device_type=self._device_type,
+            is_only_primary_channel=check_channel_is_only_primary_channel(
+                current_channel=self._channel_no,
+                device_def=self._device_desc,
+                device_has_multiple_channels=device_has_multiple_channels,
+            ),
+            usage=self.usage,
+        )
+    
+    def _generate_entity_usage(self) -> HmEntityUsage:
+        """Generate the usage for the entity."""
         if secondary_channels := self._device_desc.get(
             hm_entity_definition.ED_SECONDARY_CHANNELS
         ):
@@ -786,24 +799,24 @@ class GenericSystemVariable(CallbackEntity):
         Initialize the entity.
         """
         CallbackEntity.__init__(self)
-        self._central = central
-        self._platform = platform
-        self._unique_id = generate_unique_id(
+        self._central: Final = central
+        self._platform: Final = platform
+        self._unique_id: Final = generate_unique_id(
             central=central,
             address=SYSVAR_ADDRESS,
             parameter=slugify(data.name),
         )
-        self._name = f"{central.instance_name}_SV_{data.name}"
+        self._name: Final = f"{central.instance_name}_SV_{data.name}"
         self.create_in_ha: bool = True
         self.should_poll = False
-        self.usage = HmEntityUsage.ENTITY
-        self._ccu_var_name = data.name
-        self._unit = data.unit
-        self._data_type = data.data_type
+        self.usage: Final = HmEntityUsage.ENTITY
+        self._ccu_var_name: Final = data.name
+        self._unit: Final = data.unit
+        self._data_type: Final = data.data_type
         self._value = data.value
-        self._value_list = data.value_list
-        self._max = data.max_value
-        self._min = data.min_value
+        self._value_list: Final = data.value_list
+        self._max: Final = data.max_value
+        self._min: Final = data.min_value
 
     @property
     def available(self) -> bool:
@@ -926,15 +939,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             platform=HmPlatform.EVENT,
         )
 
-        self._name: str = get_event_name(
-            central=self._central,
-            channel_address=self.channel_address,
-            parameter=self._parameter,
-            unique_id=self._unique_id,
-            device_type=self._device_type,
-        )
-        self.event_type: HmEventType = event_type
-        self.usage = HmEntityUsage.EVENT
+        self.event_type: Final = event_type
         self._last_update: datetime = INIT_DATETIME
         self._value: Any | None = None
 
@@ -992,6 +997,20 @@ class BaseEvent(BaseParameterEntity[bool]):
     def value(self) -> Any:
         """Return the value."""
         return self._value
+
+    def _generate_name(self) -> str:
+        """Create the name for the entity."""
+        return get_event_name(
+            central=self._central,
+            channel_address=self.channel_address,
+            parameter=self._parameter,
+            unique_id=self._unique_id,
+            device_type=self._device_type,
+        )
+
+    def _generate_entity_usage(self) -> HmEntityUsage:
+        """Generate the usage for the entity."""
+        return HmEntityUsage.EVENT
 
     async def send_value(self, value: Any) -> None:
         """Send value to ccu."""
