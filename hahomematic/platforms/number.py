@@ -10,13 +10,13 @@ from typing import Any
 import hahomematic.central_unit as hm_central
 from hahomematic.const import ATTR_HM_VALUE, HmPlatform
 import hahomematic.device as hm_device
-from hahomematic.entity import GenericEntity, GenericSystemVariable, ParameterType
+from hahomematic.entity import GenericEntity, GenericSystemVariable, ParameterT
 from hahomematic.helpers import SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BaseNumber(GenericEntity[ParameterType]):
+class BaseNumber(GenericEntity[ParameterT]):
     """
     Implementation of a number.
     This is a default platform that gets automatically generated.

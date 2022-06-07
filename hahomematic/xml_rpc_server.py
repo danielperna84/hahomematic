@@ -84,7 +84,6 @@ class RPCFunctions:
                 )
 
     @callback_system_event(HH_EVENT_ERROR)
-    # pylint: disable=no-self-use
     def error(self, interface_id: str, error_code: str, msg: str) -> None:
         """
         When some error occurs the CCU / Homegear will send its error message here.
@@ -134,7 +133,6 @@ class RPCFunctions:
             central.create_task(central.delete_devices(interface_id, addresses))
 
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
-    # pylint: disable=no-self-use
     def updateDevice(self, interface_id: str, address: str, hint: int) -> None:
         """
         Update a device.
@@ -149,7 +147,6 @@ class RPCFunctions:
         )
 
     @callback_system_event(HH_EVENT_REPLACE_DEVICE)
-    # pylint: disable=no-self-use
     def replaceDevice(
         self, interface_id: str, old_device_address: str, new_device_address: str
     ) -> None:
@@ -164,7 +161,6 @@ class RPCFunctions:
         )
 
     @callback_system_event(HH_EVENT_RE_ADDED_DEVICE)
-    # pylint: disable=no-self-use
     def readdedDevice(self, interface_id: str, addresses: list[str]) -> None:
         """
         Readded device. Probably irrelevant for us.

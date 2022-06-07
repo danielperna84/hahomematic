@@ -6,7 +6,6 @@ from __future__ import annotations
 import base64
 from dataclasses import dataclass
 from datetime import datetime
-from distutils import util
 import logging
 import os
 import ssl
@@ -30,7 +29,7 @@ from hahomematic.const import (
     HmEntityUsage,
 )
 import hahomematic.devices.entity_definition as hm_entity_definition
-from hahomematic.exceptions import BaseHomematicException
+from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +117,7 @@ def check_or_create_directory(directory: str) -> bool:
                 directory,
                 ose.strerror,
             )
-            raise BaseHomematicException from ose
+            raise HaHomematicException from ose
 
     return True
 
@@ -160,9 +159,15 @@ def to_bool(value: Any) -> bool:
         raise ValueError("invalid literal for boolean. Not a string.")
 
     valid = {
+        "y": True,
+        "yes": True,
+        "t": True,
         "true": True,
         "on": True,
         "1": True,
+        "n": False,
+        "no": False,
+        "f": False,
         "false": False,
         "off": False,
         "0": False,
@@ -392,7 +397,7 @@ def convert_value(value: Any, target_type: str) -> Any:
         return None
     if target_type == TYPE_BOOL:
         if isinstance(value, str):
-            return bool(util.strtobool(value))
+            return to_bool(value)
         return bool(value)
     if target_type == TYPE_FLOAT:
         return float(value)

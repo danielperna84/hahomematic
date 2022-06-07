@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, Final
 
 import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
@@ -84,12 +84,14 @@ class HmDevice:
         """
         Initialize the device object.
         """
-        self._central = central
-        self._interface_id = interface_id
-        self._interface = self._central.device_details.get_interface(device_address)
-        self._client = self._central.clients[self._interface_id]
-        self._device_address = device_address
-        self._channels = self._central.device_descriptions.get_channels(
+        self._central: Final = central
+        self._interface_id: Final = interface_id
+        self._interface: Final = self._central.device_details.get_interface(
+            device_address
+        )
+        self._client: Final = self._central.clients[self._interface_id]
+        self._device_address: Final = device_address
+        self._channels: Final = self._central.device_descriptions.get_channels(
             self._interface_id, self._device_address
         )
         _LOGGER.debug(
@@ -100,17 +102,17 @@ class HmDevice:
         self.entities: dict[tuple[str, str], GenericEntity] = {}
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
-        self.last_update: datetime = INIT_DATETIME
+        self._last_update: datetime = INIT_DATETIME
         self._available: bool = True
         self._update_callbacks: list[Callable] = []
-        self.device_type: str = str(
+        self._device_type: Final = str(
             self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
                 parameter=ATTR_HM_TYPE,
             )
         )
-        self.sub_type: str = str(
+        self._sub_type: Final = str(
             self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
@@ -118,10 +120,10 @@ class HmDevice:
             )
         )
         # marker if device will be created as custom entity
-        self.is_custom_entity: bool = entity_definition_exists(
-            self.device_type, self.sub_type
+        self._is_custom_entity: Final = entity_definition_exists(
+            self._device_type, self._sub_type
         )
-        self.firmware: str = str(
+        self._firmware: Final = str(
             self._central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
@@ -129,19 +131,19 @@ class HmDevice:
             )
         )
 
-        self.name = get_device_name(
+        self._name: Final = get_device_name(
             central=self._central,
             device_address=device_address,
-            device_type=self.device_type,
+            device_type=self._device_type,
         )
-        self._value_cache = ValueCache(device=self)
+        self._value_cache: Final = ValueCache(device=self)
 
         _LOGGER.debug(
             "__init__: Initialized device: %s, %s, %s, %s",
             self._interface_id,
             self._device_address,
-            self.device_type,
-            self.name,
+            self._device_type,
+            self._name,
         )
 
     @property
@@ -150,9 +152,24 @@ class HmDevice:
         return self._central
 
     @property
+    def channels(self) -> list[str]:
+        """Return the channels."""
+        return self._channels
+
+    @property
     def client(self) -> hm_client.Client:
         """Return the client."""
         return self._client
+
+    @property
+    def device_address(self) -> str:
+        """Return the address."""
+        return self._device_address
+
+    @property
+    def device_type(self) -> str:
+        """Return the device type."""
+        return self._device_type
 
     @property
     def interface(self) -> str:
@@ -165,14 +182,14 @@ class HmDevice:
         return self._interface_id
 
     @property
-    def device_address(self) -> str:
-        """Return the address."""
-        return self._device_address
+    def is_custom_entity(self) -> bool:
+        """Return has custom_entity definition."""
+        return self._is_custom_entity
 
     @property
-    def channels(self) -> list[str]:
-        """Return the channels."""
-        return self._channels
+    def name(self) -> str:
+        """Return the device name."""
+        return self._name
 
     @property
     def room(self) -> str | None:
@@ -180,6 +197,11 @@ class HmDevice:
         return self._central.device_details.get_room(
             device_address=self._device_address
         )
+
+    @property
+    def sub_type(self) -> str:
+        """Return the sub type."""
+        return self._sub_type
 
     @property
     def value_cache(self) -> ValueCache:
@@ -275,7 +297,7 @@ class HmDevice:
         )
 
     def _set_last_update(self) -> None:
-        self.last_update = datetime.now()
+        self._last_update = datetime.now()
 
     def get_hm_entity(
         self, channel_address: str, parameter: str
@@ -287,7 +309,7 @@ class HmDevice:
         """
         Provide some useful information.
         """
-        return f"address: {self._device_address}, type: {self.device_type}, name: {self.name}, entities: {self.entities}"
+        return f"address: {self._device_address}, type: {self._device_type}, name: {self._name}, entities: {self.entities}"
 
     @property
     def device_information(self) -> HmDeviceInfo:
@@ -297,9 +319,9 @@ class HmDevice:
             address=self._device_address,
             identifier=f"{self._device_address}{IDENTIFIERS_SEPARATOR}{self._interface_id}",
             manufacturer=MANUFACTURER,
-            name=self.name,
-            model=self.device_type,
-            version=self.firmware,
+            name=self._name,
+            model=self._device_type,
+            version=self._firmware,
             room=self.room,
             central=self._central.instance_name,
         )
@@ -387,8 +409,8 @@ class HmDevice:
                 interface_id=self._interface_id, channel_address=channel_address
             ):
                 if not self._central.parameter_visibility.is_relevant_paramset(
-                    device_type=self.device_type,
-                    sub_type=self.sub_type,
+                    device_type=self._device_type,
+                    sub_type=self._sub_type,
                     device_channel=device_channel,
                     paramset_key=paramset_key,
                 ):
@@ -409,7 +431,7 @@ class HmDevice:
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
-                        if self.device_type in HM_VIRTUAL_REMOTES:
+                        if self._device_type in HM_VIRTUAL_REMOTES:
                             self._create_action_and_append_to_device(
                                 channel_address=channel_address,
                                 paramset_key=paramset_key,
@@ -423,8 +445,8 @@ class HmDevice:
                     ) or (
                         parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL
                         and not self._central.parameter_visibility.parameter_is_un_ignored(
-                            device_type=self.device_type,
-                            sub_type=self.sub_type,
+                            device_type=self._device_type,
+                            sub_type=self._sub_type,
                             device_channel=device_channel,
                             paramset_key=paramset_key,
                             parameter=parameter,
@@ -447,17 +469,17 @@ class HmDevice:
                         )
 
         # create custom entities
-        if self.is_custom_entity:
+        if self._is_custom_entity:
             _LOGGER.debug(
                 "create_entities: Handling custom entity integration: %s, %s, %s",
                 self._interface_id,
                 self._device_address,
-                self.device_type,
+                self._device_type,
             )
 
             # Call the custom creation function.
             for (device_func, group_base_channels) in get_device_funcs(
-                self.device_type, self.sub_type
+                self._device_type, self._sub_type
             ):
                 device_func(self, self._device_address, group_base_channels)
 
@@ -545,8 +567,8 @@ class HmDevice:
         platform should be used, and creates the required entities.
         """
         if self._central.parameter_visibility.ignore_parameter(
-            device_type=self.device_type,
-            sub_type=self.sub_type,
+            device_type=self._device_type,
+            sub_type=self._sub_type,
             device_channel=get_device_channel(channel_address),
             paramset_key=paramset_key,
             parameter=parameter,

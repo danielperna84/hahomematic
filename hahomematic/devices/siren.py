@@ -86,12 +86,10 @@ class BaseSiren(CustomEntity):
         self, acoustic_alarm: str, optical_alarm: str, duration: int
     ) -> None:
         """Turn the device on."""
-        ...
 
     @abstractmethod
     async def turn_off(self) -> None:
         """Turn the device off."""
-        ...
 
 
 class CeIpSiren(BaseSiren):
@@ -144,7 +142,7 @@ class CeIpSiren(BaseSiren):
     ) -> None:
         """Turn the device on."""
         await self._client.put_paramset(
-            address=f"{self.device_address}:3",
+            address=f"{self._device_address}:3",
             paramset_key="VALUES",
             value={
                 HMIP_ACOUSTIC_ALARM_SELECTION: acoustic_alarm,
@@ -157,7 +155,7 @@ class CeIpSiren(BaseSiren):
     async def turn_off(self) -> None:
         """Turn the device off."""
         await self._client.put_paramset(
-            address=f"{self.device_address}:3",
+            address=f"{self._device_address}:3",
             paramset_key="VALUES",
             value={
                 HMIP_ACOUSTIC_ALARM_SELECTION: DISABLE_ACOUSTIC_SIGNAL,
@@ -175,11 +173,9 @@ class CeRfSiren(BaseSiren):
         self, acoustic_alarm: str, optical_alarm: str, duration: int
     ) -> None:
         """Turn the device on."""
-        ...
 
     async def turn_off(self) -> None:
         """Turn the device off."""
-        ...
 
 
 def make_ip_siren(

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Final
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
@@ -156,8 +157,8 @@ class ParameterVisibilityCache:
         self,
         central: hm_central.CentralUnit,
     ):
-        self._central = central
-        self._storage_folder = self._central.central_config.storage_folder
+        self._central: Final = central
+        self._storage_folder: Final = self._central.central_config.storage_folder
 
         # paramset_key, parameter
         self._un_ignore_parameters_general: dict[str, set[str]] = {

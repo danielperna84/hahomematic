@@ -202,12 +202,10 @@ class BaseClimateEntity(CustomEntity):
         """Set new target temperature."""
         await self._e_setpoint.send_value(temperature)
 
-    # pylint: disable=no-self-use
     async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> None:
         """Set new target hvac mode."""
         return None
 
-    # pylint: disable=no-self-use
     async def set_preset_mode(self, preset_mode: HmPresetMode) -> None:
         """Set new preset mode."""
         return None

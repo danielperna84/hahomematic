@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import random
-from typing import Any
+from typing import Any, Final
 
 import hahomematic.client as hm_client
 from hahomematic.const import (
@@ -31,12 +31,12 @@ class DeviceExporter:
     def __init__(
         self, client: hm_client.Client, interface_id: str, device_address: str
     ):
-        self._client = client
-        self._central = client.central
-        self._storage_folder = self._central.central_config.storage_folder
-        self._interface_id = interface_id
-        self._device_address = device_address
-        self._random_id = "VCU%i" % random.randint(1000000, 9999999)
+        self._client: Final = client
+        self._central: Final = client.central
+        self._storage_folder: Final = self._central.central_config.storage_folder
+        self._interface_id: Final = interface_id
+        self._device_address: Final = device_address
+        self._random_id: Final = "VCU%i" % random.randint(1000000, 9999999)
 
     async def export_data(self) -> None:
         """Export data."""

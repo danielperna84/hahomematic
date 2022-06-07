@@ -91,17 +91,14 @@ class BaseLock(CustomEntity):
     @abstractmethod
     async def lock(self) -> None:
         """Lock the lock."""
-        ...
 
     @abstractmethod
     async def unlock(self) -> None:
         """Unlock the lock."""
-        ...
 
     @abstractmethod
     async def open(self) -> None:
         """Open the lock."""
-        ...
 
 
 class CeIpLock(BaseLock):
