@@ -261,7 +261,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self._parameter: Final = parameter
         self.should_poll = self._paramset_key != PARAMSET_KEY_VALUES
         self._parameter_data: Final = parameter_data
-        self._assign_parameter_data()
         super().__init__(
             device=device,
             unique_id=unique_id,
@@ -269,6 +268,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             channel_no=get_device_channel(channel_address),
             platform=platform,
         )
+        self._assign_parameter_data()
 
     def _assign_parameter_data(self) -> None:
         """Assign parameter data to instance variables."""
