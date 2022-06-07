@@ -1,4 +1,7 @@
 Version 1.8.5 (2022-06-06)
+ - Code cleanup
+
+Version 1.8.5 (2022-06-06)
  - Remove sysvars if deleted from CCU
  - Add check for sysvar type in sensor
  - Remove unused sysvar attributes

@@ -224,12 +224,10 @@ class Client(ABC):
     @abstractmethod
     async def fetch_all_device_data(self) -> None:
         """fetch all device data from CCU."""
-        ...
 
     @abstractmethod
     async def fetch_device_details(self) -> None:
         """Fetch names from backend."""
-        ...
 
     async def is_connected(self) -> bool:
         """
@@ -278,42 +276,34 @@ class Client(ABC):
     @abstractmethod
     async def _check_connection(self) -> bool:
         """Send ping to CCU to generate PONG event."""
-        ...
 
     @abstractmethod
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
-        ...
 
     @abstractmethod
     async def delete_system_variable(self, name: str) -> None:
         """Delete a system variable from CCU / Homegear."""
-        ...
 
     @abstractmethod
     async def get_system_variable(self, name: str) -> str:
         """Get single system variable from CCU / Homegear."""
-        ...
 
     @abstractmethod
     async def get_all_system_variables(self) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
-        ...
 
     @abstractmethod
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
-        ...
 
     @abstractmethod
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms, if available."""
-        ...
 
     @abstractmethod
     async def get_all_functions(self) -> dict[str, set[str]]:
         """Get all functions, if available."""
-        ...
 
     @abstractmethod
     async def get_serial(self) -> str:
@@ -322,7 +312,6 @@ class Client(ABC):
     @abstractmethod
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
-        ...
 
     async def get_service_messages(self) -> Any:
         """Get service messages from CCU / Homegear."""

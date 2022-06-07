@@ -69,7 +69,7 @@ from hahomematic.helpers import (
 from hahomematic.parameter_visibility import HIDDEN_PARAMETERS
 
 _LOGGER = logging.getLogger(__name__)
-ParameterType = TypeVar("ParameterType", bool, int, float, str, Union[int, str], None)
+ParameterT = TypeVar("ParameterT", bool, int, float, str, Union[int, str], None)
 
 
 class CallbackEntity(ABC):
@@ -234,7 +234,7 @@ class BaseEntity(ABC):
         return f"address: {self.channel_address}, type: {self._device.device_type}, name: {self._name}"
 
 
-class BaseParameterEntity(Generic[ParameterType], BaseEntity):
+class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     """
     Base class for stateless entities.
     """
@@ -282,13 +282,9 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         self._value_list: list[str] | None = self._parameter_data.get(
             ATTR_HM_VALUE_LIST
         )
-        self._max: ParameterType = self._convert_value(
-            self._parameter_data[ATTR_HM_MAX]
-        )
-        self._min: ParameterType = self._convert_value(
-            self._parameter_data[ATTR_HM_MIN]
-        )
-        self._default: ParameterType = self._convert_value(
+        self._max: ParameterT = self._convert_value(self._parameter_data[ATTR_HM_MAX])
+        self._min: ParameterT = self._convert_value(self._parameter_data[ATTR_HM_MIN])
+        self._default: ParameterT = self._convert_value(
             self._parameter_data.get(ATTR_HM_DEFAULT, self._min)
         )
         flags: int = self._parameter_data[ATTR_HM_FLAGS]
@@ -310,7 +306,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return state_attr
 
     @property
-    def default(self) -> ParameterType:
+    def default(self) -> ParameterT:
         """Return default value."""
         return self._default
 
@@ -325,12 +321,12 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         return self._parameter
 
     @property
-    def max(self) -> ParameterType:
+    def max(self) -> ParameterT:
         """Return max value."""
         return self._max
 
     @property
-    def min(self) -> ParameterType:
+    def min(self) -> ParameterT:
         """Return min value."""
         return self._min
 
@@ -364,8 +360,8 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         """Return the if entity is visible in ccu."""
         return self._visible
 
-    def _convert_value(self, value: ParameterType) -> ParameterType:
-        """Convert to value to ParameterType"""
+    def _convert_value(self, value: ParameterT) -> ParameterT:
+        """Convert to value to ParameterT"""
         if value is None:
             return None
         try:
@@ -399,7 +395,7 @@ class BaseParameterEntity(Generic[ParameterType], BaseEntity):
         )
 
 
-class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
+class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
     """
     Base class for generic entities.
     """
@@ -428,7 +424,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
             platform=platform,
         )
         CallbackEntity.__init__(self)
-        self._value: ParameterType | None = None
+        self._value: ParameterT | None = None
 
         # Subscribe for all events of this device
         if (
@@ -531,7 +527,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         }
 
     @property
-    def value(self) -> ParameterType | None:
+    def value(self) -> ParameterT | None:
         """Return the value of the entity."""
         return self._value
 
@@ -557,7 +553,7 @@ class GenericEntity(BaseParameterEntity[ParameterType], CallbackEntity):
         ]
 
 
-_EntityType = TypeVar("_EntityType", bound=GenericEntity)
+_EntityT = TypeVar("_EntityT", bound=GenericEntity)
 
 
 class CustomEntity(BaseEntity, CallbackEntity):
@@ -761,9 +757,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         entity.unregister_update_callback(self.update_entity)
         del self.data_entities[field_name]
 
-    def _get_entity(
-        self, field_name: str, entity_type: type[_EntityType]
-    ) -> _EntityType:
+    def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """get entity"""
         if entity := self.data_entities.get(field_name):
             return cast(entity_type, entity)  # type: ignore

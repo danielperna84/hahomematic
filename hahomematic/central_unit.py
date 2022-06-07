@@ -87,15 +87,15 @@ class CentralUnit:
         self._model: str | None = None
 
         # Caches for CCU data
-        self.paramset_descriptions: ParamsetDescriptionCache = ParamsetDescriptionCache(
+        self._device_data: DeviceDataCache = DeviceDataCache(central=self)
+        self._device_details: DeviceDetailsCache = DeviceDetailsCache(central=self)
+        self._device_descriptions: DeviceDescriptionCache = DeviceDescriptionCache(
             central=self
         )
-        self.device_data: DeviceDataCache = DeviceDataCache(central=self)
-        self.device_details: DeviceDetailsCache = DeviceDetailsCache(central=self)
-        self.device_descriptions: DeviceDescriptionCache = DeviceDescriptionCache(
-            central=self
+        self._paramset_descriptions: ParamsetDescriptionCache = (
+            ParamsetDescriptionCache(central=self)
         )
-        self.parameter_visibility: ParameterVisibilityCache = ParameterVisibilityCache(
+        self._parameter_visibility: ParameterVisibilityCache = ParameterVisibilityCache(
             central=self
         )
 
@@ -158,6 +158,16 @@ class CentralUnit:
         return self._central_config
 
     @property
+    def device_data(self) -> DeviceDataCache:
+        """Return the device data cache."""
+        return self._device_data
+
+    @property
+    def device_descriptions(self) -> DeviceDescriptionCache:
+        """Return the device descriptions cache."""
+        return self._device_descriptions
+
+    @property
     def device_information(self) -> HmDeviceInfo:
         """Return central specific attributes."""
         return HmDeviceInfo(
@@ -218,6 +228,21 @@ class CentralUnit:
         return self._model
 
     @property
+    def device_details(self) -> DeviceDetailsCache:
+        """Return the device details cache."""
+        return self._device_details
+
+    @property
+    def paramset_descriptions(self) -> ParamsetDescriptionCache:
+        """Return the paramset description cache."""
+        return self._paramset_descriptions
+
+    @property
+    def parameter_visibility(self) -> ParameterVisibilityCache:
+        """Return the parameter visibility cache."""
+        return self._parameter_visibility
+
+    @property
     def serial(self) -> str | None:
         """Return the serial of the backend."""
         if client := self.get_client():
@@ -237,13 +262,13 @@ class CentralUnit:
 
     async def start(self) -> None:
         """Start processing of the central unit."""
-        await self.parameter_visibility.load()
+        await self._parameter_visibility.load()
         await self._start_clients()
         self._start_connection_checker()
 
     async def start_direct(self) -> None:
         """Start the central unit for temporary usage."""
-        await self.parameter_visibility.load()
+        await self._parameter_visibility.load()
         await self._create_clients()
         for client in self._clients.values():
             dev_descriptions = await client.get_all_device_descriptions()
@@ -481,10 +506,10 @@ class CentralUnit:
     async def _load_caches(self) -> None:
         """Load files to caches."""
         try:
-            await self.device_descriptions.load()
-            await self.paramset_descriptions.load()
-            await self.device_details.load()
-            await self.device_data.load()
+            await self._device_descriptions.load()
+            await self._paramset_descriptions.load()
+            await self._device_details.load()
+            await self._device_data.load()
         except json.decoder.JSONDecodeError:
             _LOGGER.warning(
                 "load_caches: Failed to load caches for %s.", self._instance_name
@@ -512,7 +537,7 @@ class CentralUnit:
                     interface_id,
                 )
                 continue
-            if not self.paramset_descriptions.get_by_interface(
+            if not self._paramset_descriptions.get_by_interface(
                 interface_id=interface_id
             ):
                 _LOGGER.debug(
@@ -520,7 +545,7 @@ class CentralUnit:
                     interface_id,
                 )
                 continue
-            for device_address in self.device_descriptions.get_addresses(
+            for device_address in self._device_descriptions.get_addresses(
                 interface_id=interface_id
             ):
                 # Do we check for duplicates here? For now, we do.
@@ -609,24 +634,24 @@ class CentralUnit:
             str(addresses),
         )
 
-        await self.device_descriptions.cleanup(
+        await self._device_descriptions.cleanup(
             interface_id=interface_id, deleted_addresses=addresses
         )
 
         for address in addresses:
             try:
                 if ":" in address:
-                    self.paramset_descriptions.remove(
+                    self._paramset_descriptions.remove(
                         interface_id=interface_id, channel_address=address
                     )
-                self.device_details.remove(address=address)
+                self._device_details.remove(address=address)
                 if hm_device := self.hm_devices.get(address):
                     hm_device.remove_event_subscriptions()
                     hm_device.remove_from_collections()
                     del self.hm_devices[address]
             except KeyError:
                 _LOGGER.warning("delete_devices: Failed to delete: %s", address)
-        await self.paramset_descriptions.save()
+        await self._paramset_descriptions.save()
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
@@ -658,7 +683,7 @@ class CentralUnit:
             # We need this list to avoid adding duplicates.
             known_addresses = [
                 dev_desc[ATTR_HM_ADDRESS]
-                for dev_desc in self.device_descriptions.get_raw_device_descriptions(
+                for dev_desc in self._device_descriptions.get_raw_device_descriptions(
                     interface_id
                 )
             ]
@@ -666,7 +691,7 @@ class CentralUnit:
             for dev_desc in dev_descriptions:
                 try:
                     if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
-                        self.device_descriptions.add_device_description(
+                        self._device_descriptions.add_device_description(
                             interface_id, dev_desc
                         )
                         await client.fetch_paramset_descriptions(dev_desc)
@@ -674,10 +699,10 @@ class CentralUnit:
                     _LOGGER.error(
                         "add_new_devices: %s [%s]", type(err).__name__, err.args
                     )
-            await self.device_descriptions.save()
-            await self.paramset_descriptions.save()
-            await self.device_details.load()
-            await self.device_data.load()
+            await self._device_descriptions.save()
+            await self._paramset_descriptions.save()
+            await self._device_details.load()
+            await self._device_data.load()
             await self._create_devices()
 
     def create_task(self, target: Awaitable) -> None:
@@ -860,9 +885,9 @@ class CentralUnit:
         """
         Clear all stored data.
         """
-        await self.device_descriptions.clear()
-        await self.paramset_descriptions.clear()
-        await self.device_details.clear()
+        await self._device_descriptions.clear()
+        await self._paramset_descriptions.clear()
+        await self._device_details.clear()
 
 
 class ConnectionChecker(threading.Thread):

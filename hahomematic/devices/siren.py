@@ -86,12 +86,10 @@ class BaseSiren(CustomEntity):
         self, acoustic_alarm: str, optical_alarm: str, duration: int
     ) -> None:
         """Turn the device on."""
-        ...
 
     @abstractmethod
     async def turn_off(self) -> None:
         """Turn the device off."""
-        ...
 
 
 class CeIpSiren(BaseSiren):
@@ -175,11 +173,9 @@ class CeRfSiren(BaseSiren):
         self, acoustic_alarm: str, optical_alarm: str, duration: int
     ) -> None:
         """Turn the device on."""
-        ...
 
     async def turn_off(self) -> None:
         """Turn the device off."""
-        ...
 
 
 def make_ip_siren(
