@@ -13,7 +13,7 @@ import logging
 import os
 import socket
 import threading
-from typing import Any, TypeVar
+from typing import Any, Final, TypeVar
 
 from aiohttp import ClientSession
 
@@ -76,28 +76,22 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig):
         _LOGGER.debug("__init__")
-        self._central_config: CentralConfig = central_config
-        self._domain = self._central_config.domain
+        self._central_config: Final = central_config
+        self._domain: Final = self._central_config.domain
 
-        self._instance_name: str = self._central_config.name
+        self._instance_name: Final = self._central_config.name
         self._loop: asyncio.AbstractEventLoop = self._central_config.loop
-        self._xml_rpc_server: xml_rpc.XmlRpcServer = self._central_config.xml_rpc_server
+        self._xml_rpc_server: Final = self._central_config.xml_rpc_server
         self._xml_rpc_server.register_central(self)
-        self._interface_configs = self._central_config.interface_configs
+        self._interface_configs: Final = self._central_config.interface_configs
         self._model: str | None = None
 
         # Caches for CCU data
-        self._device_data: DeviceDataCache = DeviceDataCache(central=self)
-        self._device_details: DeviceDetailsCache = DeviceDetailsCache(central=self)
-        self._device_descriptions: DeviceDescriptionCache = DeviceDescriptionCache(
-            central=self
-        )
-        self._paramset_descriptions: ParamsetDescriptionCache = (
-            ParamsetDescriptionCache(central=self)
-        )
-        self._parameter_visibility: ParameterVisibilityCache = ParameterVisibilityCache(
-            central=self
-        )
+        self._device_data: Final = DeviceDataCache(central=self)
+        self._device_details: Final = DeviceDetailsCache(central=self)
+        self._device_descriptions: Final = DeviceDescriptionCache(central=self)
+        self._paramset_descriptions: Final = ParamsetDescriptionCache(central=self)
+        self._parameter_visibility: Final = ParameterVisibilityCache(central=self)
 
         # {interface_id, client}
         self._clients: dict[str, hm_client.Client] = {}
@@ -120,12 +114,10 @@ class CentralUnit:
         # Signature: (event_type, event_data)
         self.callback_ha_event: Callable | None = None
 
-        self._json_rpc_client: JsonRpcAioHttpClient = (
-            self._central_config.get_json_rpc_client()
-        )
+        self._json_rpc_client: Final = self._central_config.get_json_rpc_client()
 
         hm_data.INSTANCES[self._instance_name] = self
-        self._connection_checker = ConnectionChecker(self)
+        self._connection_checker: Final = ConnectionChecker(self)
         self._hub: HmHub | None = None
         self._version: str | None = None
 
@@ -897,7 +889,7 @@ class ConnectionChecker(threading.Thread):
 
     def __init__(self, central: CentralUnit):
         threading.Thread.__init__(self)
-        self._central = central
+        self._central: Final = central
         self._active = True
         self._central_is_connected = True
 
@@ -977,22 +969,22 @@ class CentralConfig:
         callback_port: int | None = None,
         json_port: int | None = None,
     ):
-        self.loop = loop
-        self.xml_rpc_server = xml_rpc_server
-        self.domain = domain
-        self.storage_folder = storage_folder
-        self.name = name
-        self.host = host
-        self.username = username
-        self.password = password
-        self.central_id = central_id
-        self.interface_configs = interface_configs
-        self.client_session = client_session
-        self.tls = tls
-        self.verify_tls = verify_tls
-        self.callback_host = callback_host
-        self.callback_port = callback_port
-        self.json_port = json_port
+        self.loop: Final = loop
+        self.xml_rpc_server: Final = xml_rpc_server
+        self.domain: Final = domain
+        self.storage_folder: Final = storage_folder
+        self.name: Final = name
+        self.host: Final = host
+        self.username: Final = username
+        self.password: Final = password
+        self.central_id: Final = central_id
+        self.interface_configs: Final = interface_configs
+        self.client_session: Final = client_session
+        self.tls: Final = tls
+        self.verify_tls: Final = verify_tls
+        self.callback_host: Final = callback_host
+        self.callback_port: Final = callback_port
+        self.json_port: Final = json_port
 
     @property
     def central_url(self) -> str:
@@ -1041,7 +1033,7 @@ class DeviceDetailsCache:
         self._channel_rooms: dict[str, set[str]] = {}
         self._device_room: dict[str, str] = {}
         self._functions: dict[str, set[str]] = {}
-        self._central = central
+        self._central: Final = central
 
     async def load(self) -> None:
         """Fetch names from backend."""
@@ -1139,7 +1131,7 @@ class DeviceDataCache:
         # { interface, {channel_address, {parameter, CacheEntry}}}
         self._central_values_cache: dict[str, dict[str, dict[str, Any]]] = {}
 
-        self._central = central
+        self._central: Final = central
 
     @property
     def is_empty(self) -> bool:
@@ -1182,10 +1174,10 @@ class BasePersistentCache(ABC):
         filename: str,
         cache_dict: dict[str, Any],
     ):
-        self._central = central
-        self._cache_dir = f"{self._central.central_config.storage_folder}/cache"
-        self._filename = f"{self._central.instance_name}_{filename}"
-        self._cache_dict = cache_dict
+        self._central: Final = central
+        self._cache_dir: Final = f"{self._central.central_config.storage_folder}/cache"
+        self._filename: Final = f"{self._central.instance_name}_{filename}"
+        self._cache_dict: Final = cache_dict
 
     async def save(self) -> int:
         """

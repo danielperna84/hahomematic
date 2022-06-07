@@ -208,11 +208,6 @@ class HmHub(CallbackEntity):
         else:
             _LOGGER.warning("Variable %s not found on %s", name, self._name)
 
-    # pylint: disable=no-self-use
-    async def load_data(self) -> None:
-        """Do not load data for the hub here."""
-        return
-
     def _identify_missing_variable_names(
         self, variables: list[SystemVariableData]
     ) -> list[str]:

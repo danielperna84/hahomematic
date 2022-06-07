@@ -10,8 +10,7 @@ import logging
 import os
 from pathlib import Path
 import re
-import ssl
-from typing import Any
+from typing import Any, Final
 
 from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnector
 
@@ -63,18 +62,19 @@ class JsonRpcAioHttpClient:
         verify_tls: bool = False,
     ):
         """Session setup."""
-        if client_session:
-            self._client_session = client_session
-        else:
-            conn = TCPConnector(limit=3)
-            self._client_session = ClientSession(connector=conn, loop=loop)
+
+        self._client_session: Final = (
+            client_session
+            if client_session
+            else ClientSession(connector=TCPConnector(limit=3), loop=loop)
+        )
         self._session_id: str | None = None
         self._last_session_id_refresh: datetime | None = None
-        self._username: str = username
-        self._password: str | None = password
-        self._tls: bool = tls
-        self._tls_context: ssl.SSLContext = get_tls_context(verify_tls)
-        self._url = f"{device_url}{PATH_JSON_RPC}"
+        self._username: Final = username
+        self._password: Final = password
+        self._tls: Final = tls
+        self._tls_context: Final = get_tls_context(verify_tls)
+        self._url: Final = f"{device_url}{PATH_JSON_RPC}"
 
     @property
     def is_activated(self) -> bool:

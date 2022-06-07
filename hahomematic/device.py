@@ -86,7 +86,9 @@ class HmDevice:
         """
         self._central: Final = central
         self._interface_id: Final = interface_id
-        self._interface: Final = self._central.device_details.get_interface(device_address)
+        self._interface: Final = self._central.device_details.get_interface(
+            device_address
+        )
         self._client: Final = self._central.clients[self._interface_id]
         self._device_address: Final = device_address
         self._channels: Final = self._central.device_descriptions.get_channels(

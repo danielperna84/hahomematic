@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, Generic, TypeVar, Union, cast, Final
+from typing import Any, Final, Generic, TypeVar, Union, cast
 
 from slugify import slugify
 
@@ -141,7 +141,7 @@ class BaseEntity(ABC):
         self._interface_id: Final = self._device.interface_id
         self._device_type: Final = self._device.device_type
         self._sub_type: Final = self._device.sub_type
-        self._function: str | None = self._central.device_details.get_function_text(
+        self._function: Final = self._central.device_details.get_function_text(
             address=self.channel_address
         )
         self.usage: HmEntityUsage = self._generate_entity_usage()
@@ -256,6 +256,12 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """
         Initialize the entity.
         """
+        self._paramset_key: Final = paramset_key
+        # required for name in BaseEntity
+        self._parameter: Final = parameter
+        self.should_poll = self._paramset_key != PARAMSET_KEY_VALUES
+        self._parameter_data: Final = parameter_data
+        self._assign_parameter_data()
         super().__init__(
             device=device,
             unique_id=unique_id,
@@ -263,12 +269,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             channel_no=get_device_channel(channel_address),
             platform=platform,
         )
-        self._paramset_key: Final = paramset_key
-        self._parameter: Final = parameter
-        self.should_poll = self._paramset_key != PARAMSET_KEY_VALUES
-
-        self._parameter_data: Final = parameter_data
-        self._assign_parameter_data()
 
     def _assign_parameter_data(self) -> None:
         """Assign parameter data to instance variables."""
@@ -297,7 +297,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             unique_id=self._unique_id,
             device_type=self._device_type,
         )
-    
+
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
         usage = super()._generate_entity_usage()
@@ -586,6 +586,10 @@ class CustomEntity(BaseEntity, CallbackEntity):
         """
         Initialize the entity.
         """
+        self._device_enum: Final = device_enum
+        # required for name in BaseEntity
+        self._device_desc: Final = device_def
+        self._entity_def: Final = entity_def
         BaseEntity.__init__(
             self=self,
             device=device,
@@ -594,11 +598,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             channel_no=channel_no,
             platform=platform,
         )
-
         CallbackEntity.__init__(self)
-        self._device_enum: Final = device_enum
-        self._device_desc: Final = device_def
-        self._entity_def: Final = entity_def
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
 
@@ -627,7 +627,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             ),
             usage=self.usage,
         )
-    
+
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
         if secondary_channels := self._device_desc.get(

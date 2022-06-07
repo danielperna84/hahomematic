@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from datetime import datetime
 import logging
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from hahomematic import config
 import hahomematic.central_unit as hm_central
@@ -51,7 +51,6 @@ from hahomematic.helpers import (
     build_xml_rpc_uri,
     get_channel_no,
 )
-from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,22 +67,22 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self._client_config: _ClientConfig = client_config
-        self._central: hm_central.CentralUnit = self._client_config.central
+        self._client_config: Final = client_config
+        self._central: Final = self._client_config.central
         self._available: bool = True
-        self._interface: str = self._client_config.interface
+        self._interface: Final = self._client_config.interface
         # This is the actual interface_id used for init
-        self._interface_id: str = get_interface_id(
+        self._interface_id: Final = get_interface_id(
             instance_name=self._central.instance_name, interface=self._interface
         )
-        self._has_credentials = self._client_config.has_credentials
-        self._init_url: str = self._client_config.init_url
+        self._has_credentials: Final = self._client_config.has_credentials
+        self._init_url: Final = self._client_config.init_url
         # for all device related interaction
-        self._proxy: XmlRpcProxy = self._client_config.xml_rpc_proxy
-        self._proxy_read: XmlRpcProxy = self._client_config.xml_rpc_proxy_read
+        self._proxy: Final = self._client_config.xml_rpc_proxy
+        self._proxy_read: Final = self._client_config.xml_rpc_proxy_read
         self.last_updated: datetime = INIT_DATETIME
-        self._json_rpc_client: JsonRpcAioHttpClient = self._central.json_rpc_client
-        self._is_callback_alive = True
+        self._json_rpc_client: Final = self._central.json_rpc_client
+        self._is_callback_alive: bool = True
         self._serial: str | None = None
 
     @property

@@ -7,7 +7,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
 import logging
-from typing import Any
+from typing import Any, Final
 import xmlrpc.client
 
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
@@ -36,10 +36,10 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """
         Initialize new proxy for server and get local ip
         """
-        self._loop = loop
-        self._proxy_executor = ThreadPoolExecutor(max_workers=max_workers)
-        self._tls = kwargs.pop(ATTR_TLS, False)
-        self._verify_tls = kwargs.pop(ATTR_VERIFY_TLS, True)
+        self._loop: Final = loop
+        self._proxy_executor: Final = ThreadPoolExecutor(max_workers=max_workers)
+        self._tls: Final = kwargs.pop(ATTR_TLS, False)
+        self._verify_tls: Final = kwargs.pop(ATTR_VERIFY_TLS, True)
         if self._tls:
             kwargs[ATTR_CONTEXT] = get_tls_context(self._verify_tls)
         xmlrpc.client.ServerProxy.__init__(  # type: ignore[misc]

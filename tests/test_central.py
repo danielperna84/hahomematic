@@ -29,8 +29,8 @@ async def test_central(central, loop) -> None:
         if device.device_type not in data:
             data[device.device_type] = {}
         for entity in device.entities.values():
-            if entity._parameter not in data[device.device_type]:
-                data[device.device_type][entity._parameter] = f"{entity.hmtype}"
+            if entity.parameter not in data[device.device_type]:
+                data[device.device_type][entity.parameter] = f"{entity.hmtype}"
 
     custom_entities = []
     for device in central.hm_devices.values():
