@@ -52,6 +52,7 @@ import hahomematic.devices as hm_custom_entity
 import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
+    EntityNameData,
     HmDeviceInfo,
     SystemVariableData,
     check_channel_is_only_primary_channel,
@@ -148,7 +149,7 @@ class BaseEntity(ABC):
 
         self.should_poll = False
         self._client: Final = self._central.clients[self._interface_id]
-        self._name: Final = self._generate_name()
+        self._entity_name_data: Final = self._generate_entity_name_data()
 
     @property
     def available(self) -> bool:
@@ -195,9 +196,16 @@ class BaseEntity(ABC):
         return device_info
 
     @property
+    def entity_name_data(self) -> EntityNameData:
+        """Return the entity name."""
+        return self._entity_name_data
+
+    @property
     def name(self) -> str:
         """Return the entity name."""
-        return self._name
+        if name := self._entity_name_data.name:
+            return name
+        return self.unique_id
 
     @property
     def platform(self) -> HmPlatform:
@@ -215,7 +223,7 @@ class BaseEntity(ABC):
         return self._unique_id
 
     @abstractmethod
-    def _generate_name(self) -> str:
+    def _generate_entity_name_data(self) -> EntityNameData:
         """Generate the name for the entity."""
 
     def _generate_entity_usage(self) -> HmEntityUsage:
@@ -235,7 +243,7 @@ class BaseEntity(ABC):
         """
         Provide some useful information.
         """
-        return f"address: {self.channel_address}, type: {self._device.device_type}, name: {self._name}"
+        return f"address: {self.channel_address}, type: {self._device.device_type}, name: {self.name}"
 
 
 class BaseParameterEntity(Generic[ParameterT], BaseEntity):
@@ -288,14 +296,13 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self._special: dict[str, Any] | None = self._parameter_data.get(ATTR_HM_SPECIAL)
         self._unit: str | None = self._parameter_data.get(ATTR_HM_UNIT)
 
-    def _generate_name(self) -> str:
+    def _generate_entity_name_data(self) -> EntityNameData:
         """Create the name for the entity."""
         return get_entity_name(
             central=self._central,
-            channel_address=self.channel_address,
+            device=self._device,
+            channel_no=self._channel_no,
             parameter=self._parameter,
-            unique_id=self._unique_id,
-            device_type=self._device_type,
         )
 
     def _generate_entity_usage(self) -> HmEntityUsage:
@@ -609,22 +616,21 @@ class CustomEntity(BaseEntity, CallbackEntity):
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.CUSTOM.value
         return state_attr
 
-    def _generate_name(self) -> str:
+    def _generate_entity_name_data(self) -> EntityNameData:
         """Create the name for the entity."""
         device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
             device_type=self._device.device_type, sub_type=self._device.sub_type
         )
+        is_only_primary_channel = check_channel_is_only_primary_channel(
+            current_channel=self._channel_no,
+            device_def=self._device_desc,
+            device_has_multiple_channels=device_has_multiple_channels,
+        )
         return get_custom_entity_name(
             central=self._central,
-            device_address=self.device_address,
-            unique_id=self._unique_id,
+            device=self._device,
             channel_no=self._channel_no,
-            device_type=self._device_type,
-            is_only_primary_channel=check_channel_is_only_primary_channel(
-                current_channel=self._channel_no,
-                device_def=self._device_desc,
-                device_has_multiple_channels=device_has_multiple_channels,
-            ),
+            is_only_primary_channel=is_only_primary_channel,
             usage=self.usage,
         )
 
@@ -998,14 +1004,13 @@ class BaseEvent(BaseParameterEntity[bool]):
         """Return the value."""
         return self._value
 
-    def _generate_name(self) -> str:
+    def _generate_entity_name_data(self) -> EntityNameData:
         """Create the name for the entity."""
         return get_event_name(
             central=self._central,
-            channel_address=self.channel_address,
+            device=self._device,
+            channel_no=self.channel_no,
             parameter=self._parameter,
-            unique_id=self._unique_id,
-            device_type=self._device_type,
         )
 
     def _generate_entity_usage(self) -> HmEntityUsage:
