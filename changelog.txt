@@ -1,6 +1,7 @@
 Version 1.9.0 (2022-06-09)
 - Refactor entity name creation
 - Cleanup entity selection
+- Add button to virtual remote
 
 Version 1.8.6 (2022-06-07)
  - Code cleanup
