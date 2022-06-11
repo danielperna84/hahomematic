@@ -1,4 +1,6 @@
 """Test the HaHomematic central."""
+import json
+
 from conftest import (
     get_hm_custom_entity,
     get_hm_device,
@@ -8,6 +10,7 @@ from conftest import (
 )
 import pytest
 
+from hahomematic.entity import GenericEntity
 from hahomematic.const import HmEntityUsage
 from hahomematic.devices.climate import CeRfThermostat
 from hahomematic.devices.lock import LOCK_TARGET_LEVEL_OPEN
@@ -92,19 +95,29 @@ async def test_central(central, loop) -> None:
                 switches[device_type] = set()
             switches[device_type].add(channel_no)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2094
+    entity_type_operations: dict[str, dict[str, set[int]]] = {}
+    for entity in central.hm_entities.values():
+        if isinstance(entity, GenericEntity):
+            if entity.platform not in entity_type_operations:
+                entity_type_operations[entity.platform] = {}
+
+            if entity._type not in entity_type_operations[entity.platform]:
+                entity_type_operations[entity.platform][entity._type] = set()
+            entity_type_operations[entity.platform][entity._type].add(entity._operations)
+
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2110
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
-    assert usage_types[HmEntityUsage.ENTITY] == 2540
+    assert usage_types[HmEntityUsage.ENTITY] == 3571
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 89
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
     assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 5016
+    assert len(central.hm_entities) == 6063
     assert len(data) == 362
     assert len(custom_entities) == 293
     assert len(ce_channels) == 103
     assert len(entity_types) == 6
-    assert len(parameters) == 179
+    assert len(parameters) == 180
 
 
 @pytest.mark.asyncio

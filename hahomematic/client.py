@@ -25,7 +25,7 @@ from hahomematic.const import (
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
-    HM_VIRTUAL_REMOTES,
+    HM_VIRTUAL_REMOTE_TYPES,
     IF_BIDCOS_RF_NAME,
     IF_NAMES,
     INIT_DATETIME,
@@ -738,7 +738,7 @@ class ClientCCU(Client):
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
-        for device_type in HM_VIRTUAL_REMOTES:
+        for device_type in HM_VIRTUAL_REMOTE_TYPES:
             for hm_device in self._central.hm_devices.values():
                 if (
                     hm_device.interface_id == self._interface_id

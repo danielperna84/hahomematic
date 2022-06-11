@@ -24,7 +24,7 @@ from hahomematic.const import (
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
     FLAG_INTERAL,
-    HM_VIRTUAL_REMOTES,
+    HM_VIRTUAL_REMOTE_TYPES,
     IDENTIFIERS_SEPARATOR,
     IMPULSE_EVENTS,
     INIT_DATETIME,
@@ -431,7 +431,7 @@ class HmDevice:
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
-                        if self._device_type in HM_VIRTUAL_REMOTES:
+                        if self._device_type in HM_VIRTUAL_REMOTE_TYPES:
                             self._create_action_and_append_to_device(
                                 channel_address=channel_address,
                                 paramset_key=paramset_key,
@@ -534,25 +534,20 @@ class HmDevice:
             parameter,
             self._interface_id,
         )
-        action_event: BaseEvent | None = None
+        action_event_t: type[BaseEvent] | None = None
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
             if parameter in CLICK_EVENTS:
-                action_event = ClickEvent(
-                    device=self,
-                    unique_id=unique_id,
-                    channel_address=channel_address,
-                    parameter=parameter,
-                    parameter_data=parameter_data,
-                )
+                action_event_t = ClickEvent
             if parameter in IMPULSE_EVENTS:
-                action_event = ImpulseEvent(
-                    device=self,
-                    unique_id=unique_id,
-                    channel_address=channel_address,
-                    parameter=parameter,
-                    parameter_data=parameter_data,
-                )
-        if action_event:
+                action_event_t = ImpulseEvent
+        if action_event_t:
+            action_event = action_event_t(
+                device=self,
+                unique_id=unique_id,
+                channel_address=channel_address,
+                parameter=parameter,
+                parameter_data=parameter_data,
+            )  # type: ignore[call-arg]
             action_event.add_to_collections()
 
     def _create_entity_and_append_to_device(
@@ -597,133 +592,33 @@ class HmDevice:
             parameter,
             self._interface_id,
         )
-        entity: GenericEntity | None = None
+        entity_t: type[GenericEntity] | None = None
         if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
             if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
                 if parameter_data[ATTR_HM_OPERATIONS] == OPERATION_WRITE:
-                    _LOGGER.debug(
-                        "create_entity_and_append_to_device: action (action): %s %s",
-                        channel_address,
-                        parameter,
-                    )
                     if parameter in BUTTON_ACTIONS:
-                        entity = HmButton(
-                            device=self,
-                            unique_id=unique_id,
-                            channel_address=channel_address,
-                            paramset_key=paramset_key,
-                            parameter=parameter,
-                            parameter_data=parameter_data,
-                        )
+                        entity_t = HmButton
                     else:
-                        entity = HmAction(
-                            device=self,
-                            unique_id=unique_id,
-                            channel_address=channel_address,
-                            paramset_key=paramset_key,
-                            parameter=parameter,
-                            parameter_data=parameter_data,
-                        )
+                        entity_t = HmAction
                 else:
-                    _LOGGER.debug(
-                        "create_entity_and_append_to_device: switch (action): %s %s",
-                        channel_address,
-                        parameter,
-                    )
-                    entity = HmSwitch(
-                        device=self,
-                        unique_id=unique_id,
-                        channel_address=channel_address,
-                        paramset_key=paramset_key,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
+                    if parameter in CLICK_EVENTS:
+                        entity_t = HmButton
+                    else:
+                        entity_t = HmSwitch
             else:
                 if parameter_data[ATTR_HM_OPERATIONS] == OPERATION_WRITE:
-                    _LOGGER.debug(
-                        "create_entity_and_append_to_device: action (action): %s %s",
-                        channel_address,
-                        parameter,
-                    )
-                    entity = HmAction(
-                        device=self,
-                        unique_id=unique_id,
-                        channel_address=channel_address,
-                        paramset_key=paramset_key,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
+                    entity_t = HmAction
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
-                    _LOGGER.debug(
-                        "create_entity_and_append_to_device: switch: %s %s",
-                        channel_address,
-                        parameter,
-                    )
-                    entity = HmSwitch(
-                        device=self,
-                        unique_id=unique_id,
-                        channel_address=channel_address,
-                        paramset_key=paramset_key,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
+                    entity_t = HmSwitch
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
-                    _LOGGER.debug(
-                        "create_entity_and_append_to_device: select: %s %s",
-                        channel_address,
-                        parameter,
-                    )
-                    entity = HmSelect(
-                        device=self,
-                        unique_id=unique_id,
-                        channel_address=channel_address,
-                        paramset_key=paramset_key,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
+                    entity_t = HmSelect
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_FLOAT:
-                    _LOGGER.debug(
-                        "create_entity_and_append_to_device: number.integer: %s %s",
-                        channel_address,
-                        parameter,
-                    )
-                    entity = HmFloat(
-                        device=self,
-                        unique_id=unique_id,
-                        channel_address=channel_address,
-                        paramset_key=paramset_key,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
+                    entity_t = HmFloat
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_INTEGER:
-                    _LOGGER.debug(
-                        "create_entity_and_append_to_device: number.float: %s %s",
-                        channel_address,
-                        parameter,
-                    )
-                    entity = HmInteger(
-                        device=self,
-                        unique_id=unique_id,
-                        channel_address=channel_address,
-                        paramset_key=paramset_key,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
+                    entity_t = HmInteger
                 elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
                     # There is currently no entity platform in HA for this.
-                    _LOGGER.debug(
-                        "create_entity_and_append_to_device: text: %s %s",
-                        channel_address,
-                        parameter,
-                    )
-                    entity = HmText(
-                        device=self,
-                        unique_id=unique_id,
-                        channel_address=channel_address,
-                        paramset_key=paramset_key,
-                        parameter=parameter,
-                        parameter_data=parameter_data,
-                    )
+                    entity_t = HmText
                 else:
                     _LOGGER.warning(
                         "create_entity_and_append_to_device: unsupported actor: %s %s %s",
@@ -732,37 +627,29 @@ class HmDevice:
                         parameter_data[ATTR_HM_TYPE],
                     )
         else:
-            # Also check, if sensor could be a binary_sensor due to value_list.
-            if _is_binary_sensor(parameter_data):
-                _LOGGER.debug(
-                    "create_entity_and_append_to_device: binary_sensor: %s %s",
-                    channel_address,
-                    parameter,
-                )
-                parameter_data[ATTR_HM_TYPE] = TYPE_BOOL
-                entity = HmBinarySensor(
-                    device=self,
-                    unique_id=unique_id,
-                    channel_address=channel_address,
-                    paramset_key=paramset_key,
-                    parameter=parameter,
-                    parameter_data=parameter_data,
-                )
-            else:
-                _LOGGER.debug(
-                    "create_entity_and_append_to_device: sensor: %s %s",
-                    channel_address,
-                    parameter,
-                )
-                entity = HmSensor(
-                    device=self,
-                    unique_id=unique_id,
-                    channel_address=channel_address,
-                    paramset_key=paramset_key,
-                    parameter=parameter,
-                    parameter_data=parameter_data,
-                )
-        if entity:
+            if parameter not in CLICK_EVENTS:
+                # Also check, if sensor could be a binary_sensor due to value_list.
+                if _is_binary_sensor(parameter_data):
+                    parameter_data[ATTR_HM_TYPE] = TYPE_BOOL
+                    entity_t = HmBinarySensor
+                else:
+                    entity_t = HmSensor
+
+        if entity_t:
+            entity = entity_t(
+                device=self,
+                unique_id=unique_id,
+                channel_address=channel_address,
+                paramset_key=paramset_key,
+                parameter=parameter,
+                parameter_data=parameter_data,
+            )  # type: ignore[call-arg]
+            _LOGGER.debug(
+                "create_entity_and_append_to_device: %s: %s %s",
+                entity.platform,
+                channel_address,
+                parameter,
+            )
             entity.add_to_collections()
 
 
