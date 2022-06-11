@@ -13,6 +13,7 @@ from typing import Any
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
+    HM_VIRTUAL_REMOTE_ADDRESSES,
     HUB_ADDRESS,
     INIT_DATETIME,
     PARAMETER_FRIENDLY_NAME,
@@ -73,7 +74,11 @@ def generate_unique_id(
 
     if prefix:
         unique_id = f"{prefix}_{unique_id}"
-    if address in (HUB_ADDRESS, SYSVAR_ADDRESS) or address.startswith("INT000"):
+    if (
+        address in (HUB_ADDRESS, SYSVAR_ADDRESS)
+        or address.startswith("INT000")
+        or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
+    ):
         return f"{central.domain}_{central.central_id}_{unique_id}".lower()
     return f"{central.domain}_{unique_id}".lower()
 
