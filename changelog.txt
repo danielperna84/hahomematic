@@ -1,3 +1,6 @@
+Version 1.9.1 (2022-06-29)
+- Remove HmIPW-FIO6 from custom device handling
+
 Version 1.9.0 (2022-06-09)
 - Refactor entity name creation
 - Cleanup entity selection
