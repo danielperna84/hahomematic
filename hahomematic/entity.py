@@ -32,6 +32,7 @@ from hahomematic.const import (
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
+    CHANNEL_OPERATION_MODE_VISIBILITY,
     CONFIGURABLE_CHANNEL,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
@@ -151,7 +152,7 @@ class BaseEntity(ABC):
         self._function: Final = self._central.device_details.get_function_text(
             address=self.channel_address
         )
-        self.usage: HmEntityUsage = self._generate_entity_usage()
+        self._usage: HmEntityUsage = self._generate_entity_usage()
 
         self.should_poll = False
         self._client: Final = self._central.clients[self._interface_id]
@@ -211,6 +212,12 @@ class BaseEntity(ABC):
         device_info.channel_no = self._channel_no
         return device_info
 
+    # pylint: disable=no-self-use
+    @property
+    def force_enabled(self) -> bool | None:
+        """Return, if the entity/event must be enabled."""
+        return None
+
     @property
     def entity_name_data(self) -> EntityNameData:
         """Return the entity name."""
@@ -237,6 +244,22 @@ class BaseEntity(ABC):
     def unique_id(self) -> str:
         """Return the entity unique_id."""
         return self._unique_id
+
+    @property
+    def usage(self) -> HmEntityUsage:
+        """Return the entity usage."""
+        if self.force_enabled is None:
+            return self._usage
+        if isinstance(self, GenericEntity) and self.force_enabled is True:
+            return HmEntityUsage.ENTITY
+        if isinstance(self, BaseEvent) and self.force_enabled is True:
+            return HmEntityUsage.EVENT
+        return HmEntityUsage.ENTITY_NO_CREATE
+
+    @usage.setter
+    def usage(self, usage: HmEntityUsage) -> None:
+        """Set the entity usage."""
+        self._usage = usage
 
     @abstractmethod
     def _generate_entity_name_data(self) -> EntityNameData:
@@ -343,6 +366,21 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     def default(self) -> ParameterT:
         """Return default value."""
         return self._default
+
+    # pylint: disable=no-self-use
+    @property
+    def force_enabled(self) -> bool | None:
+        """Return, if the entity/event must be enabled."""
+        if self.channel_operation_mode is None:
+            return None
+        if (
+            self._channel_type in CONFIGURABLE_CHANNEL
+            and self.parameter in CHANNEL_OPERATION_MODE_VISIBILITY
+            and self.channel_operation_mode
+            in CHANNEL_OPERATION_MODE_VISIBILITY[self.parameter]
+        ):
+            return True
+        return False
 
     @property
     def hmtype(self) -> str:
@@ -647,7 +685,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             device=self._device,
             channel_no=self._channel_no,
             is_only_primary_channel=is_only_primary_channel,
-            usage=self.usage,
+            usage=self._usage,
         )
 
     def _generate_entity_usage(self) -> HmEntityUsage:
