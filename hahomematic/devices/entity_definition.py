@@ -630,6 +630,8 @@ def _create_entities(
     if unique_id in device.central.hm_entities:
         _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_id)
         return entities
+    if f"{device_address}:{channel_no}" not in device.channels:
+        return entities
     entity = custom_entity_class(
         device=device,
         device_address=device_address,

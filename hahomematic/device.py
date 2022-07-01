@@ -457,9 +457,7 @@ class HmDevice:
                             parameter,
                         )
                         continue
-                    if (
-                        parameter not in IMPULSE_EVENTS
-                    ):
+                    if parameter not in IMPULSE_EVENTS:
                         self._create_entity_and_append_to_device(
                             channel_address=channel_address,
                             paramset_key=paramset_key,
