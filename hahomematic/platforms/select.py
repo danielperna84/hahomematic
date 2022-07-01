@@ -16,6 +16,7 @@ from hahomematic.helpers import SystemVariableData
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=consider-alternative-union-syntax
 class HmSelect(GenericEntity[Union[int, str]]):
     """
     Implementation of a select entity.

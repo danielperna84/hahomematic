@@ -83,6 +83,7 @@ class RPCFunctions:
                     ex.args,
                 )
 
+    # pylint: disable=no-self-use
     @callback_system_event(HH_EVENT_ERROR)
     def error(self, interface_id: str, error_code: str, msg: str) -> None:
         """
@@ -132,6 +133,7 @@ class RPCFunctions:
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(central.delete_devices(interface_id, addresses))
 
+    # pylint: disable=no-self-use
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
     def updateDevice(self, interface_id: str, address: str, hint: int) -> None:
         """
@@ -146,6 +148,7 @@ class RPCFunctions:
             str(hint),
         )
 
+    # pylint: disable=no-self-use
     @callback_system_event(HH_EVENT_REPLACE_DEVICE)
     def replaceDevice(
         self, interface_id: str, old_device_address: str, new_device_address: str
@@ -160,6 +163,7 @@ class RPCFunctions:
             new_device_address,
         )
 
+    # pylint: disable=no-self-use
     @callback_system_event(HH_EVENT_RE_ADDED_DEVICE)
     def readdedDevice(self, interface_id: str, addresses: list[str]) -> None:
         """
