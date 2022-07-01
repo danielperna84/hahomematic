@@ -32,6 +32,7 @@ from hahomematic.const import (
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
+    CONFIGURABLE_CHANNEL,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
@@ -39,6 +40,7 @@ from hahomematic.const import (
     FLAG_VISIBLE,
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
+    PARAM_CHANNEL_OPERATION_MODE,
     PARAMSET_KEY_VALUES,
     SYSVAR_ADDRESS,
     TYPE_BOOL,
@@ -69,6 +71,7 @@ from hahomematic.helpers import (
 from hahomematic.parameter_visibility import HIDDEN_PARAMETERS
 
 _LOGGER = logging.getLogger(__name__)
+# pylint: disable=consider-alternative-union-syntax
 ParameterT = TypeVar("ParameterT", bool, int, float, str, Union[int, str], None)
 
 
@@ -142,6 +145,9 @@ class BaseEntity(ABC):
         self._interface_id: Final = self._device.interface_id
         self._device_type: Final = self._device.device_type
         self._sub_type: Final = self._device.sub_type
+        self._channel_type: Final = str(
+            self._device.channels[self.channel_address].type
+        )
         self._function: Final = self._central.device_details.get_function_text(
             address=self.channel_address
         )
@@ -177,6 +183,16 @@ class BaseEntity(ABC):
     def channel_no(self) -> int:
         """Return the channel address."""
         return self._channel_no
+
+    @property
+    def channel_operation_mode(self) -> str | None:
+        """Return the channel operation mode if available."""
+        if self._channel_type in CONFIGURABLE_CHANNEL:
+            if cop := self._device.entities.get(
+                (self.channel_address, PARAM_CHANNEL_OPERATION_MODE)
+            ):
+                return cop.value
+        return None
 
     @property
     def device_address(self) -> str:

@@ -152,7 +152,7 @@ class HmDevice:
         return self._central
 
     @property
-    def channels(self) -> list[str]:
+    def channels(self) -> dict[str, hm_central.Channel]:
         """Return the channels."""
         return self._channels
 
