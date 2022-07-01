@@ -7,6 +7,7 @@ from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from concurrent.futures._base import CancelledError
+from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
@@ -21,6 +22,7 @@ from hahomematic import config
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
+    ATTR_HM_TYPE,
     ATTR_INTERFACE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -605,7 +607,7 @@ class CentralUnit:
 
         if (hm_device := self.hm_devices.get(device_address)) is None:
             return
-        addresses: list[str] = hm_device.channels
+        addresses: list[str] = list(hm_device.channels.keys())
         addresses.append(device_address)
         if len(addresses) == 0:
             _LOGGER.debug(
@@ -1306,9 +1308,24 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Return the addresses by interface"""
         return self._addresses.get(interface_id, {})
 
-    def get_channels(self, interface_id: str, device_address: str) -> list[str]:
+    def get_channels(
+        self, interface_id: str, device_address: str
+    ) -> dict[str, Channel]:
         """Return the device channels by interface and device_address"""
-        return self._addresses.get(interface_id, {}).get(device_address, [])
+        channels: dict[str, Channel] = {}
+        for channel_address in self._addresses.get(interface_id, {}).get(
+            device_address, []
+        ):
+            channel_name = str(
+                self.get_device_parameter(
+                    interface_id=interface_id,
+                    device_address=channel_address,
+                    parameter=ATTR_HM_TYPE,
+                )
+            )
+            channels[channel_address] = Channel(type=channel_name)
+
+        return channels
 
     def get_device_descriptions(self, interface_id: str) -> dict[str, dict[str, Any]]:
         """Return the devices by interface"""
@@ -1568,3 +1585,10 @@ def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
 
     for file_to_delete in files_to_delete:
         _delete_file(file_name=f"{instance_name}_{file_to_delete}")
+
+
+@dataclass
+class Channel:
+    """dataclass for a device channel."""
+
+    type: str

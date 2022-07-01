@@ -1,3 +1,7 @@
+Version 1.9.2 (2022-07-01)
+- Use CHANNEL_OPERATION_MODE for devices with MULTI_MODE_INPUT_TRANSMITTER, KEY_TRANSCEIVER channels
+- Readd HmIPW-FIO6 to custom device handling
+
 Version 1.9.1 (2022-06-29)
 - Remove HmIPW-FIO6 from custom device handling
 
