@@ -540,7 +540,7 @@ class Client(ABC):
                 )
 
     async def get_paramset_descriptions(
-        self, device_description: dict[str, Any]
+        self, device_description: dict[str, Any], only_relevant: bool = True
     ) -> dict[str, dict[str, Any]]:
         """Get paramsets for provided device description."""
         if not device_description:
@@ -561,7 +561,7 @@ class Client(ABC):
                 else device_description[ATTR_HM_PARENT_TYPE]
             )
             if (
-                device_channel
+                only_relevant and device_channel
                 and not self._central.parameter_visibility.is_relevant_paramset(
                     device_type=device_type,
                     sub_type=sub_type,
@@ -596,7 +596,7 @@ class Client(ABC):
         for device_description in device_descriptions:
             all_paramsets.update(
                 await self.get_paramset_descriptions(
-                    device_description=device_description
+                    device_description=device_description, only_relevant=False
                 )
             )
         return all_paramsets
