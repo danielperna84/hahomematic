@@ -1,3 +1,6 @@
+Version 1.9.4 (2022-07-03)
+- Load MASTER data on initial load
+
 Version 1.9.3 (2022-07-02)
 - Fix export of device definitions
 

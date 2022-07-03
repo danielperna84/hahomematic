@@ -561,7 +561,8 @@ class Client(ABC):
                 else device_description[ATTR_HM_PARENT_TYPE]
             )
             if (
-                only_relevant and device_channel
+                only_relevant
+                and device_channel
                 and not self._central.parameter_visibility.is_relevant_paramset(
                     device_type=device_type,
                     sub_type=sub_type,

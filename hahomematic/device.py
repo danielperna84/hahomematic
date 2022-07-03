@@ -32,6 +32,7 @@ from hahomematic.const import (
     OPERATION_EVENT,
     OPERATION_READ,
     OPERATION_WRITE,
+    PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
     TYPE_ACTION,
     TYPE_BOOL,
@@ -377,7 +378,7 @@ class HmDevice:
     async def load_value_cache(self) -> None:
         """Init the parameter cache."""
         if len(self.entities) > 0:
-            await self._value_cache.init_entities_channel0()
+            await self._value_cache.init_base_entities()
         _LOGGER.debug(
             "init_data: Skipping load_data, missing entities for %s.",
             self.device_address,
@@ -661,10 +662,10 @@ class ValueCache:
         # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
         self._value_cache: dict[str, dict[str, dict[str, CacheEntry]]] = {}
 
-    async def init_entities_channel0(self) -> None:
+    async def init_base_entities(self) -> None:
         """Load data by get_value"""
         try:
-            for entity in self._get_entities_channel0():
+            for entity in self._get_base_entities():
                 value = await self.get_value(
                     channel_address=entity.channel_address,
                     paramset_key=entity.paramset_key,
@@ -679,15 +680,15 @@ class ValueCache:
                 bhe,
             )
 
-    def _get_entities_channel0(self) -> set[GenericEntity]:
-        """Get entities by channel address and parameter."""
+    def _get_base_entities(self) -> set[GenericEntity]:
+        """Get entities of channel 0 and master."""
         entities: list[GenericEntity] = []
         for entity in self._device.entities.values():
             if (
                 entity.operations & OPERATION_READ
                 and entity.channel_no == 0
                 and entity.paramset_key == PARAMSET_KEY_VALUES
-            ):
+            ) or entity.paramset_key == PARAMSET_KEY_MASTER:
                 entities.append(entity)
         return set(entities)
 
