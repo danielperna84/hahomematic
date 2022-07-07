@@ -156,8 +156,6 @@ class HmHub(CallbackEntity):
         ):
             self._central.callback_system_event(HH_EVENT_SYSVARS_CREATED, new_sysvars)
 
-        self.update_entity()
-
     def _create_system_variable(
         self, data: SystemVariableData
     ) -> GenericSystemVariable:
