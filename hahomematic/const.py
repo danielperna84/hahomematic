@@ -237,6 +237,7 @@ DEFAULT_TIMEOUT = 60
 DEFAULT_CONNECTION_CHECKER_INTERVAL = 30
 # wait with reconnect after a first ping was successful
 DEFAULT_RECONNECT_WAIT = 120
+NO_CACHE_ENTRY = "NO_CACHE_ENTRY"
 
 HM_ENTITY_UNIT_REPLACE: dict[str, str] = {
     '"': "",

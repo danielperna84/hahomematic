@@ -41,6 +41,7 @@ from hahomematic.const import (
     FLAG_VISIBLE,
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
+    NO_CACHE_ENTRY,
     PARAM_CHANNEL_OPERATION_MODE,
     PARAMSET_KEY_VALUES,
     SYSVAR_ADDRESS,
@@ -605,6 +606,8 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
 
     def set_value(self, value: Any) -> None:
         """Set value to the entity."""
+        if value == NO_CACHE_ENTRY:
+            return
         converted_value = self._convert_value(value)
         if self._value != converted_value:
             self._value = converted_value

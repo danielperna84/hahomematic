@@ -29,6 +29,7 @@ from hahomematic.const import (
     IMPULSE_EVENTS,
     INIT_DATETIME,
     MANUFACTURER,
+    NO_CACHE_ENTRY,
     OPERATION_EVENT,
     OPERATION_READ,
     OPERATION_WRITE,
@@ -70,7 +71,6 @@ from hahomematic.platforms.sensor import HmSensor
 from hahomematic.platforms.switch import HmSwitch
 import hahomematic.support as hm_support
 
-NO_CACHE_ENTRY = "NO_CACHE_ENTRY"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -666,12 +666,14 @@ class ValueCache:
         """Load data by get_value"""
         try:
             for entity in self._get_base_entities():
-                value = await self.get_value(
-                    channel_address=entity.channel_address,
-                    paramset_key=entity.paramset_key,
-                    parameter=entity.parameter,
-                )
-                entity.set_value(value=value)
+                if (
+                    value := await self.get_value(
+                        channel_address=entity.channel_address,
+                        paramset_key=entity.paramset_key,
+                        parameter=entity.parameter,
+                    )
+                ) != NO_CACHE_ENTRY:
+                    entity.set_value(value=value)
         except BaseHomematicException as bhe:
             _LOGGER.debug(
                 "init_values_channel0: Failed to init cache for channel0 %s, %s [%s]",
@@ -698,7 +700,7 @@ class ValueCache:
         paramset_key: str,
         parameter: str,
         age_seconds: int = 120,
-    ) -> Any | None:
+    ) -> Any:
         """Load data"""
         async with self._sema_get_or_load_value:
 
@@ -716,7 +718,7 @@ class ValueCache:
                 paramset_key == PARAMSET_KEY_VALUES
                 and not self._client.central.device_data.is_empty
             ):
-                return None
+                return NO_CACHE_ENTRY
 
             if paramset_key not in self._value_cache:
                 self._value_cache[paramset_key] = {}
@@ -743,7 +745,7 @@ class ValueCache:
                     bhe,
                 )
 
-        return None
+        return NO_CACHE_ENTRY
 
     def _get_value_from_cache(
         self,
@@ -751,7 +753,7 @@ class ValueCache:
         paramset_key: str,
         parameter: str,
         age_seconds: int,
-    ) -> Any | None:
+    ) -> Any:
         """Load data"""
         if (
             global_value := self._client.central.device_data.get_device_data(
@@ -759,20 +761,23 @@ class ValueCache:
                 channel_address=channel_address,
                 parameter=parameter,
             )
-        ) is not None:
+        ) != NO_CACHE_ENTRY:
             return global_value
 
         if (
             paramset_key == PARAMSET_KEY_VALUES
             and not self._client.central.device_data.is_empty
         ):
-            return None
+            return NO_CACHE_ENTRY
 
         if (
             cache_entry := self._value_cache.get(paramset_key, {})
             .get(channel_address, {})
-            .get(parameter)
-        ) is not None:
+            .get(
+                parameter,
+                CacheEntry.empty(),
+            )
+        ) != CacheEntry.empty():
             if updated_within_seconds(
                 last_update=cache_entry.last_update, age_seconds=age_seconds
             ):
@@ -787,6 +792,11 @@ class CacheEntry:
 
     value: Any
     last_update: datetime
+
+    @staticmethod
+    def empty() -> CacheEntry:
+        """Return empty cache entry."""
+        return CacheEntry(value=NO_CACHE_ENTRY, last_update=datetime.min)
 
 
 def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:

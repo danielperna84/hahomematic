@@ -42,6 +42,7 @@ from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
     MANUFACTURER,
+    NO_CACHE_ENTRY,
     PROXY_INIT_SUCCESS,
     HmEventType,
     HmInterfaceEventType,
@@ -1154,12 +1155,12 @@ class DeviceDataCache:
 
     def get_device_data(
         self, interface: str, channel_address: str, parameter: str
-    ) -> Any | None:
+    ) -> Any:
         """Get device data from cache."""
         return (
             self._central_values_cache.get(interface, {})
             .get(channel_address, {})
-            .get(parameter)
+            .get(parameter, NO_CACHE_ENTRY)
         )
 
     async def clear(self) -> None:
