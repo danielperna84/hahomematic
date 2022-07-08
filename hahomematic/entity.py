@@ -91,7 +91,7 @@ class CallbackEntity(ABC):
         return self._last_update
 
     @property
-    def is_valid_value(self) -> bool:
+    def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
         return self._last_update > INIT_DATETIME
 
