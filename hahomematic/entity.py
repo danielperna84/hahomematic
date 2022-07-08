@@ -728,6 +728,13 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 await entity.load_entity_value()
         self.update_entity()
 
+    def update_entity(self, *args: Any) -> None:
+        """
+        Do what is needed when the value of the entity has been updated.
+        """
+        super().update_entity(*args)
+        self._set_last_update()
+
     def _init_entities(self) -> None:
         """init entity collection"""
 
