@@ -85,6 +85,16 @@ class CallbackEntity(ABC):
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
 
+    @property
+    def last_update(self) -> datetime:
+        """Return the last updated datetime value"""
+        return self._last_update
+
+    @property
+    def is_valid_value(self) -> bool:
+        """Return, if the value of the entity is valid based on the last updated datetime."""
+        return self._last_update > INIT_DATETIME
+
     def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
         if callable(update_callback):
