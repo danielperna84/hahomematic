@@ -1,5 +1,5 @@
 Version 2022.7.2 (2022-07-10)
-- Allign enity naming to HA entity name
+- Align enity naming to HA entity name
 - Ensure entity value refresh after reconnect
 - Ignore further parameters by device
 
