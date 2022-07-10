@@ -237,9 +237,7 @@ class BaseEntity(ABC):
     @property
     def name(self) -> str:
         """Return the entity name."""
-        if name := self._entity_name_data.name:
-            return name
-        return self.unique_id
+        return self._entity_name_data.entity_name
 
     @property
     def platform(self) -> HmPlatform:
@@ -886,7 +884,7 @@ class GenericSystemVariable(CallbackEntity):
             address=SYSVAR_ADDRESS,
             parameter=slugify(data.name),
         )
-        self._name: Final = f"{central.instance_name}_SV_{data.name}"
+        self._name: Final = f"SV_{data.name}"
         self.create_in_ha: bool = True
         self.should_poll = False
         self.usage: Final = HmEntityUsage.ENTITY
