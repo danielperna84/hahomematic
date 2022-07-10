@@ -50,7 +50,7 @@ from hahomematic.const import (
 import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
 from hahomematic.device import HmDevice
-from hahomematic.entity import BaseEntity, GenericEntity
+from hahomematic.entity import BaseEntity, CustomEntity, GenericEntity
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
@@ -942,6 +942,11 @@ class ConnectionChecker(threading.Thread):
                             reconnects.append(client.reconnect())
                     if reconnects:
                         await asyncio.gather(*reconnects)
+                        if self._central.available:
+                            # refresh cache
+                            await self._central.device_data.load()
+                            # refresh entity data
+                            await self._central.device_data.refesh_entity_data()
             except NoConnection as nex:
                 _LOGGER.error("check_connection: no connection: %s", nex.args)
                 continue
@@ -1129,11 +1134,8 @@ class DeviceDataCache:
     """Cache for device/channel initial data."""
 
     def __init__(self, central: CentralUnit):
-        # {address, name}
-        self._device_data: dict[str, str] = {}
         # { interface, {channel_address, {parameter, CacheEntry}}}
         self._central_values_cache: dict[str, dict[str, dict[str, Any]]] = {}
-
         self._central: Final = central
 
     @property
@@ -1146,6 +1148,12 @@ class DeviceDataCache:
         _LOGGER.debug("load: device data for %s", self._central.instance_name)
         if client := self._central.get_client():
             await client.fetch_all_device_data()
+
+    async def refesh_entity_data(self) -> None:
+        """Refresh entity data based on cache."""
+        for hm_entity in self._central.hm_entities.values():
+            if isinstance(hm_entity, (CustomEntity, GenericEntity)):
+                await hm_entity.load_entity_value()
 
     def add_device_data(
         self, device_data: dict[str, dict[str, dict[str, Any]]]
@@ -1165,7 +1173,7 @@ class DeviceDataCache:
 
     async def clear(self) -> None:
         """Clear the cache."""
-        self._device_data.clear()
+        self._central_values_cache.clear()
 
 
 class BasePersistentCache(ABC):

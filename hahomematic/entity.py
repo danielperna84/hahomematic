@@ -235,7 +235,7 @@ class BaseEntity(ABC):
         return self._entity_name_data
 
     @property
-    def name(self) -> str:
+    def name(self) -> str | None:
         """Return the entity name."""
         return self._entity_name_data.entity_name
 
@@ -269,6 +269,10 @@ class BaseEntity(ABC):
     def usage(self, usage: HmEntityUsage) -> None:
         """Set the entity usage."""
         self._usage = usage
+
+    async def load_entity_value(self) -> None:
+        """Init the entity data."""
+        return None
 
     @abstractmethod
     def _generate_entity_name_data(self) -> EntityNameData:
