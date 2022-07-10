@@ -137,6 +137,11 @@ _UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
 
 # Parameters by device within the VALUES paramset for which we don't create entities.
 _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
+    "CURRENT_ILLUMINATION": [
+        "HmIP-SMI",
+        "HmIP-SMO",
+        "HmIP-SPI",
+    ],
     "LOWBAT": [
         "HM-LC-Sw1-FM",
         "HM-LC-Sw1PBU-FM",
