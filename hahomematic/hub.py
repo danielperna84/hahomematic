@@ -50,7 +50,7 @@ class HmHub(CallbackEntity):
         self.syvar_entities: dict[str, GenericSystemVariable] = {}
         self._hub_attributes: dict[str, Any] = {}
         self.should_poll = True
-        self._value: int = 0
+        self._value: int | None = None
         self.create_in_ha: bool = True
         self.usage = HmEntityUsage.ENTITY
 
@@ -85,7 +85,7 @@ class HmHub(CallbackEntity):
         return self._unique_id
 
     @property
-    def value(self) -> int:
+    def value(self) -> int | None:
         """Return the value of the entity."""
         return self._value
 
