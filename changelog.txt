@@ -1,5 +1,6 @@
 Version 2022.7.2 (2022-07-10)
 - Ignore further parameters by device
+- Allign enity naming to HA entity name
 
 Version 2022.7.1 (2022-07-07)
 - Better distinguish between NO_CACHE_ENTRY and None
