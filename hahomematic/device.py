@@ -666,14 +666,12 @@ class ValueCache:
         """Load data by get_value"""
         try:
             for entity in self._get_base_entities():
-
                 value = await self.get_value(
                     channel_address=entity.channel_address,
                     paramset_key=entity.paramset_key,
                     parameter=entity.parameter,
                 )
-
-                entity.set_value(value=value)
+                entity.update_value(value=value)
         except BaseHomematicException as bhe:
             _LOGGER.debug(
                 "init_values_channel0: Failed to init cache for channel0 %s, %s [%s]",

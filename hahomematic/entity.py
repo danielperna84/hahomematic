@@ -539,7 +539,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         if not self.operations & 1:
             return None
 
-        self.set_value(
+        self.update_value(
             value=await self._device.value_cache.get_value(
                 channel_address=self.channel_address,
                 paramset_key=self._paramset_key,
@@ -589,7 +589,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             )
             return
 
-        self.set_value(value=value)
+        self.update_value(value=value)
 
         # send device events, if value has changed
         if self._parameter in (
@@ -627,8 +627,8 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         """Return the value of the entity."""
         return self._value
 
-    def set_value(self, value: Any) -> None:
-        """Set value to the entity."""
+    def update_value(self, value: Any) -> None:
+        """Update value of the entity."""
         if value == NO_CACHE_ENTRY:
             if self.last_update != INIT_DATETIME:
                 self._value_uncertain = True
