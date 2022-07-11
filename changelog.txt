@@ -1,6 +1,8 @@
+Version 2022.7.4 (2022-07-11)
+- Set value_uncertain to True if no data could be loaded from CCU
+
 Version 2022.7.3 (2022-07-10)
 - Set default value for hub entity to None
-- Set value_uncertain to True if no data could be loaded from CCU
 
 Version 2022.7.2 (2022-07-10)
 - Align enity naming to HA entity name
