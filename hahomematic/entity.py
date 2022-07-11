@@ -29,6 +29,7 @@ from hahomematic.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_PARAMETER,
+    ATTR_STATE_UNCERTAIN,
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -42,6 +43,9 @@ from hahomematic.const import (
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
+    OPERATION_EVENT,
+    OPERATION_READ,
+    OPERATION_WRITE,
     PARAM_CHANNEL_OPERATION_MODE,
     PARAMSET_KEY_VALUES,
     SYSVAR_ADDRESS,
@@ -82,9 +86,9 @@ class CallbackEntity(ABC):
 
     def __init__(self) -> None:
         self._last_update: datetime = INIT_DATETIME
-        self._value_uncertain: bool = True
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
+        self._state_uncertain: bool = True
 
     @property
     def last_update(self) -> datetime:
@@ -92,14 +96,14 @@ class CallbackEntity(ABC):
         return self._last_update
 
     @property
+    def state_uncertain(self) -> bool:
+        """Return, if the state is uncertain."""
+        return self._state_uncertain
+
+    @property
     def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
         return self._last_update > INIT_DATETIME
-
-    @property
-    def value_uncertain(self) -> bool:
-        """Return, if the value of the entity is uncertain."""
-        return self._value_uncertain
 
     def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
@@ -433,6 +437,21 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         return self._operations
 
     @property
+    def is_readable(self) -> bool:
+        """Return, if entity is readable."""
+        return bool(self._operations & OPERATION_READ)
+
+    @property
+    def is_writeable(self) -> bool:
+        """Return, if entity is writeable."""
+        return bool(self._operations & OPERATION_WRITE)
+
+    @property
+    def supports_events(self) -> bool:
+        """Return, if entity is supports events."""
+        return bool(self._operations & OPERATION_EVENT)
+
+    @property
     def paramset_key(self) -> str:
         """Return the paramset_key of the entity."""
         return self._paramset_key
@@ -536,7 +555,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             return None
 
         # Check, if entity is readable
-        if not self.operations & 1:
+        if not self.is_readable:
             return None
 
         self.update_value(
@@ -631,13 +650,13 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         """Update value of the entity."""
         if value == NO_CACHE_ENTRY:
             if self.last_update != INIT_DATETIME:
-                self._value_uncertain = True
+                self._state_uncertain = True
                 self.update_entity()
             return
         converted_value = self._convert_value(value)
         if self._value != converted_value:
             self._value = converted_value
-            self._value_uncertain = False
+            self._state_uncertain = False
             self.update_entity()
         self._set_last_update()
 
@@ -646,6 +665,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         """Return the state attributes of the generic entity."""
         state_attr = super().attributes
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
+        state_attr[ATTR_STATE_UNCERTAIN] = self.state_uncertain
         return state_attr
 
     def remove_event_subscriptions(self) -> None:
@@ -698,7 +718,16 @@ class CustomEntity(BaseEntity, CallbackEntity):
         """Return the state attributes of the custom entity."""
         state_attr = super().attributes
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.CUSTOM.value
+        state_attr[ATTR_STATE_UNCERTAIN] = self.state_uncertain
         return state_attr
+
+    @property
+    def state_uncertain(self) -> bool:
+        """Return, if the state is uncertain."""
+        for hm_entity in self.data_entities.values():
+            if hm_entity.is_readable and hm_entity.state_uncertain:
+                return True
+        return False
 
     def _generate_entity_name_data(self) -> EntityNameData:
         """Create the name for the entity."""

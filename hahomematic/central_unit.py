@@ -1153,7 +1153,7 @@ class DeviceDataCache:
         """Refresh entity data based on cache."""
         for hm_entity in self._central.hm_entities.values():
             if (
-                isinstance(hm_entity, GenericEntity) and hm_entity.operations & 1
+                isinstance(hm_entity, GenericEntity) and hm_entity.is_readable
             ) or isinstance(hm_entity, CustomEntity):
                 await hm_entity.load_entity_value()
 
