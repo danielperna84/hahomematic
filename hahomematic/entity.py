@@ -82,6 +82,7 @@ class CallbackEntity(ABC):
 
     def __init__(self) -> None:
         self._last_update: datetime = INIT_DATETIME
+        self._value_uncertain: bool = True
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
 
@@ -94,6 +95,11 @@ class CallbackEntity(ABC):
     def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
         return self._last_update > INIT_DATETIME
+
+    @property
+    def value_uncertain(self) -> bool:
+        """Return, if the value of the entity is uncertain."""
+        return self._value_uncertain
 
     def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
@@ -131,6 +137,7 @@ class CallbackEntity(ABC):
             _callback(*args)
 
     def _set_last_update(self) -> None:
+        """Set last_update to current datetime."""
         self._last_update = datetime.now()
 
 
@@ -525,7 +532,11 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
 
     async def load_entity_value(self) -> None:
         """Init the entity data."""
-        if updated_within_seconds(last_update=self._last_update):
+        if updated_within_seconds(last_update=self.last_update):
+            return None
+
+        # Check, if entity is readable
+        if not self.operations & 1:
             return None
 
         self.set_value(
@@ -619,10 +630,14 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
     def set_value(self, value: Any) -> None:
         """Set value to the entity."""
         if value == NO_CACHE_ENTRY:
+            if self.last_update != INIT_DATETIME:
+                self._value_uncertain = True
+                self.update_entity()
             return
         converted_value = self._convert_value(value)
         if self._value != converted_value:
             self._value = converted_value
+            self._value_uncertain = False
             self.update_entity()
         self._set_last_update()
 
