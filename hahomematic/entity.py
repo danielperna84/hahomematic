@@ -85,25 +85,25 @@ class CallbackEntity(ABC):
     """Base class for callback entities."""
 
     def __init__(self) -> None:
-        self._last_update: datetime = INIT_DATETIME
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
-        self._state_uncertain: bool = True
 
     @property
     def last_update(self) -> datetime:
         """Return the last updated datetime value"""
-        return self._last_update
+        # override in subclass
+        return INIT_DATETIME
 
     @property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
-        return self._state_uncertain
+        # override in subclass
+        return True
 
     @property
     def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
-        return self._last_update > INIT_DATETIME
+        return self.last_update > INIT_DATETIME
 
     def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
@@ -136,13 +136,8 @@ class CallbackEntity(ABC):
         """
         Do what is needed when the entity has been removed.
         """
-        self._set_last_update()
         for _callback in self._remove_callbacks:
             _callback(*args)
-
-    def _set_last_update(self) -> None:
-        """Set last_update to current datetime."""
-        self._last_update = datetime.now()
 
 
 class BaseEntity(ABC):
@@ -536,6 +531,8 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         )
         CallbackEntity.__init__(self)
         self._value: ParameterT | None = None
+        self._last_update: datetime = INIT_DATETIME
+        self._state_uncertain: bool = True
 
         # Subscribe for all events of this device
         if (
@@ -548,6 +545,20 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         self._central.entity_event_subscriptions[
             (self.channel_address, self._parameter)
         ].append(self.event)
+
+    @property
+    def last_update(self) -> datetime:
+        """Return the last updated datetime value"""
+        return self._last_update
+
+    @property
+    def state_uncertain(self) -> bool:
+        """Return, if the state is uncertain."""
+        return self._state_uncertain
+
+    def _set_last_update(self) -> None:
+        """Set last_update to current datetime."""
+        self._last_update = datetime.now()
 
     async def load_entity_value(self) -> None:
         """Init the entity data."""
@@ -665,7 +676,8 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         """Return the state attributes of the generic entity."""
         state_attr = super().attributes
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
-        state_attr[ATTR_STATE_UNCERTAIN] = self.state_uncertain
+        if self.is_readable:
+            state_attr[ATTR_STATE_UNCERTAIN] = self.state_uncertain
         return state_attr
 
     def remove_event_subscriptions(self) -> None:
@@ -722,6 +734,17 @@ class CustomEntity(BaseEntity, CallbackEntity):
         return state_attr
 
     @property
+    def last_update(self) -> datetime:
+        """Return, if the state is uncertain."""
+        latest_update: datetime = INIT_DATETIME
+        for hm_entity in self.data_entities.values():
+            if hm_entity.is_readable:
+                if entity_last_update := hm_entity.last_update:
+                    if entity_last_update > latest_update:
+                        latest_update = entity_last_update
+        return latest_update
+
+    @property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
         for hm_entity in self.data_entities.values():
@@ -773,13 +796,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
             if entity:
                 await entity.load_entity_value()
         self.update_entity()
-
-    def update_entity(self, *args: Any) -> None:
-        """
-        Do what is needed when the value of the entity has been updated.
-        """
-        super().update_entity(*args)
-        self._set_last_update()
 
     def _init_entities(self) -> None:
         """init entity collection"""
