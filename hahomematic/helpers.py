@@ -289,7 +289,7 @@ def get_custom_entity_name(
         if is_only_primary_channel and _check_channel_name_with_channel_no(
             name=channel_name
         ):
-            return EntityNameData(channel_name=channel_name.split(":")[0])
+            return EntityNameData(device_name=device.name, channel_name=channel_name.split(":")[0])
         if _check_channel_name_with_channel_no(name=channel_name):
             c_name = channel_name.split(":")[0]
             p_name = channel_name.split(":")[1]
