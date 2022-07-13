@@ -664,12 +664,10 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
                 self._state_uncertain = True
                 self.update_entity()
             return
-        converted_value = self._convert_value(value)
-        if self._value != converted_value:
-            self._value = converted_value
-            self._state_uncertain = False
-            self.update_entity()
+        self._value = self._convert_value(value)
+        self._state_uncertain = False
         self._set_last_update()
+        self.update_entity()
 
     @property
     def attributes(self) -> dict[str, Any]:
