@@ -1,3 +1,6 @@
+Version 2022.7.8 (2022-07-15)
+- Remove state_uncertain from default attributes
+
 Version 2022.7.8 (2022-07-13)
 - Fix entity update
 

@@ -29,7 +29,6 @@ from hahomematic.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_PARAMETER,
-    ATTR_STATE_UNCERTAIN,
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -674,8 +673,6 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         """Return the state attributes of the generic entity."""
         state_attr = super().attributes
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
-        if self.is_readable:
-            state_attr[ATTR_STATE_UNCERTAIN] = self.state_uncertain
         return state_attr
 
     def remove_event_subscriptions(self) -> None:
@@ -728,7 +725,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
         """Return the state attributes of the custom entity."""
         state_attr = super().attributes
         state_attr[ATTR_ENTITY_TYPE] = HmEntityType.CUSTOM.value
-        state_attr[ATTR_STATE_UNCERTAIN] = self.state_uncertain
         return state_attr
 
     @property
