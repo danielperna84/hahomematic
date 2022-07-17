@@ -5,11 +5,14 @@ about: Create a report to help us improve.
 ---
 
 DONT'T DELETE THIS.
+
 Please answer all questions as good as possible.
 
-Make sure you have read the documentation at https://github.com/danielperna84/custom_homematic#custom_homematic.
+Make sure you have read the [documentation](https://github.com/danielperna84/custom_homematic#custom_homematic).
 
-Make sure you are running the latest version of hahomematic or it's custom_component (and Home Assistant) before reporting an issue.
+Make sure you have read the [release notes](https://github.com/danielperna84/custom_homematic/releases). 
+
+Make sure you are running the latest version of the custom_component (and Home Assistant) before reporting an issue.
 
 
 **custom_component/hahomematic version (if applicable):**
@@ -19,8 +22,8 @@ Make sure you are running the latest version of hahomematic or it's custom_compo
 2022.x.x
 
 **CCU version:**
-- Model (CCU2/3, Raspi3/4, NUC, ProxmoxVE, ...):
-- OS (Original, RaspberryMatic, debmatic/...):
+- Model (CCU2/3, Raspi3/4, NUC, ProxmoxVE, HA-Addon ...):
+- OS (Original, RaspberryMatic, debmatic ...):
 - Version: 
 
 **Problem-relevant configuration:**
@@ -28,7 +31,7 @@ Make sure you are running the latest version of hahomematic or it's custom_compo
 Do you use tls?
 Do you use callback?
 Do you use username and password?
-Which interfaces do you use?
+Which interfaces do you use (hmip/bidcos/wired)?
 
 **Describe the bug**
 A clear and concise description of what the bug is.
