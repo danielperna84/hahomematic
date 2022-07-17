@@ -10,9 +10,9 @@ Please answer all questions as good as possible.
 
 Language: english/german
 
-Make sure you have read the [documentation](https://github.com/danielperna84/custom_homematic#custom_homematic).
+Make sure you have read the documentation at https://github.com/danielperna84/custom_homematic#custom_homematic.
 
-Make sure you have read the [release notes](https://github.com/danielperna84/custom_homematic/releases). 
+Make sure you have read the release notes at https://github.com/danielperna84/custom_homematic/releases. 
 
 Make sure you are running the latest version of the custom_component (and Home Assistant) before reporting an issue.
 
