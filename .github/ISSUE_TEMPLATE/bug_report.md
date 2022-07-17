@@ -8,6 +8,8 @@ DONT'T DELETE THIS.
 
 Please answer all questions as good as possible.
 
+Language: english/german
+
 Make sure you have read the [documentation](https://github.com/danielperna84/custom_homematic#custom_homematic).
 
 Make sure you have read the [release notes](https://github.com/danielperna84/custom_homematic/releases). 
