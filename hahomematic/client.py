@@ -675,7 +675,7 @@ class ClientCCU(Client):
                 "fetch_all_device_data: Unable to get all device data via JSON-RPC RegaScript."
             )
 
-    async def _check_connection(self)-> bool:
+    async def _check_connection(self) -> bool:
         """Check if _proxy is still initialized."""
         try:
             await self._proxy.ping(self._interface_id)
