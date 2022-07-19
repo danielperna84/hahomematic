@@ -675,11 +675,10 @@ class ClientCCU(Client):
                 "fetch_all_device_data: Unable to get all device data via JSON-RPC RegaScript."
             )
 
-    async def _check_connection(self) -> bool:
+    async def _check_connection(self)-> bool:
         """Check if _proxy is still initialized."""
         try:
-            success = await self._proxy.ping(self._interface_id)
-            if success:
+            if await self._proxy.ping(self._interface_id) is True:
                 self.last_updated = datetime.now()
                 return True
         except BaseHomematicException as hhe:
@@ -791,15 +790,11 @@ class ClientHomegear(Client):
     async def _check_connection(self) -> bool:
         """Check if proxy is still initialized."""
         try:
-            if await self._proxy.clientServerInitialized(self._interface_id):
+            if await self._proxy.clientServerInitialized(self._interface_id) is True:
                 self.last_updated = datetime.now()
                 return True
         except BaseHomematicException as hhe:
-            _LOGGER.error("ping: %s [%s]", hhe.name, hhe.args)
-        _LOGGER.debug(
-            "_check_connection: Setting initialized to 0 for %s",
-            self._interface_id,
-        )
+            _LOGGER.error("ping failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
