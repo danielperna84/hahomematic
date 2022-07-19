@@ -19,6 +19,7 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
+from hahomematic.platforms.binary_sensor import HmBinarySensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,9 +97,11 @@ class CeIpSiren(BaseSiren):
     """Class for homematic ip siren entities."""
 
     @property
-    def _acoustic_alarm_active(self) -> bool:
-        """Return if the acoustic alarm is active the siren."""
-        return self._get_entity_value(field_name=FIELD_ACOUSTIC_ALARM_ACTIVE) is True
+    def _e_acoustic_alarm_active(self) -> HmBinarySensor:
+        """Return the acoustic alarm entity."""
+        return self._get_entity(
+            field_name=FIELD_ACOUSTIC_ALARM_ACTIVE, entity_type=HmBinarySensor
+        )
 
     @property
     def _e_acoustic_alarm_selection(self) -> HmAction:
@@ -108,9 +111,11 @@ class CeIpSiren(BaseSiren):
         )
 
     @property
-    def _optical_alarm_active(self) -> bool:
-        """Return if the optical alarm is active the siren."""
-        return self._get_entity_value(field_name=FIELD_OPTICAL_ALARM_ACTIVE) is True
+    def _e_optical_alarm_active(self) -> HmBinarySensor:
+        """Return the optical alarm entity."""
+        return self._get_entity(
+            field_name=FIELD_OPTICAL_ALARM_ACTIVE, entity_type=HmBinarySensor
+        )
 
     @property
     def _e_optical_alarm_selection(self) -> HmAction:
@@ -122,7 +127,10 @@ class CeIpSiren(BaseSiren):
     @property
     def is_on(self) -> bool:
         """Return true if siren is on."""
-        return self._acoustic_alarm_active is True or self._optical_alarm_active is True
+        return (
+            self._e_acoustic_alarm_active.value is True
+            or self._e_optical_alarm_active.value is True
+        )
 
     @property
     def available_tones(self) -> list[str] | None:

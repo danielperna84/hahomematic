@@ -912,15 +912,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
             return cast(entity_type, entity)  # type: ignore
         return cast(entity_type, NoneTypeEntity())  # type: ignore
 
-    def _get_entity_value(
-        self, field_name: str, default: Any | None = None
-    ) -> Any | None:
-        """get entity value"""
-        entity = self.data_entities.get(field_name)
-        if entity:
-            return entity.value
-        return default
-
 
 class GenericSystemVariable(CallbackEntity):
     """Class for a homematic system variable."""

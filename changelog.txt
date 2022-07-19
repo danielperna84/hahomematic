@@ -1,4 +1,5 @@
-
+Version 2022.7.10 (2022-07-19)
+- Use entities instead of values inside custom entities
 - Check for true within _check_connection
 
 Version 2022.7.9 (2022-07-17)

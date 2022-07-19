@@ -21,6 +21,8 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
+from hahomematic.platforms.binary_sensor import HmBinarySensor
+from hahomematic.platforms.sensor import HmSensor
 from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,9 +107,9 @@ class CeIpLock(BaseLock):
     """Class for homematic ip lock entities."""
 
     @property
-    def _lock_state(self) -> str | None:
-        """Return the lock state of the device."""
-        return self._get_entity_value(field_name=FIELD_LOCK_STATE)
+    def _e_lock_state(self) -> HmSensor:
+        """Return the lock state entity of the device."""
+        return self._get_entity(field_name=FIELD_LOCK_STATE, entity_type=HmSensor)
 
     @property
     def _e_lock_target_level(self) -> HmAction:
@@ -117,38 +119,38 @@ class CeIpLock(BaseLock):
         )
 
     @property
-    def _direction(self) -> str | None:
+    def _e_direction(self) -> HmSensor:
         """Return the direction entity of the lock."""
-        return self._get_entity_value(field_name=FIELD_DIRECTION)
+        return self._get_entity(field_name=FIELD_DIRECTION, entity_type=HmSensor)
 
     @property
-    def _error(self) -> bool | None:
+    def _e_error(self) -> HmBinarySensor:
         """Return the error entity of the device."""
-        return self._get_entity_value(field_name=FIELD_ERROR)
+        return self._get_entity(field_name=FIELD_ERROR, entity_type=HmBinarySensor)
 
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._lock_state == LOCK_STATE_LOCKED
+        return self._e_lock_state.value == LOCK_STATE_LOCKED
 
     @property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
-        if self._direction is not None:
-            return self._direction == HM_LOCKING
+        if self._e_direction.value is not None:
+            return str(self._e_direction.value) == HM_LOCKING
         return None
 
     @property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
-        if self._direction is not None:
-            return self._direction == HM_UNLOCKING
+        if self._e_direction.value is not None:
+            return str(self._e_direction.value) == HM_UNLOCKING
         return None
 
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._error is not None and self._error is True
+        return self._e_error.value is not None and self._e_error.value is True
 
     async def lock(self) -> None:
         """Lock the lock."""
@@ -177,14 +179,14 @@ class CeRfLock(BaseLock):
         return self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
 
     @property
-    def _direction(self) -> str | None:
+    def _e_direction(self) -> HmSensor:
         """Return the direction entity of the lock."""
-        return self._get_entity_value(field_name=FIELD_DIRECTION)
+        return self._get_entity(field_name=FIELD_DIRECTION, entity_type=HmSensor)
 
     @property
-    def _error(self) -> str | None:
+    def _e_error(self) -> HmSensor:
         """Return the error entity of the device."""
-        return self._get_entity_value(field_name=FIELD_ERROR)
+        return self._get_entity(field_name=FIELD_ERROR, entity_type=HmSensor)
 
     @property
     def is_locked(self) -> bool:
@@ -194,21 +196,21 @@ class CeRfLock(BaseLock):
     @property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
-        if self._direction is not None:
-            return self._direction == HM_LOCKING
+        if self._e_direction.value is not None:
+            return str(self._e_direction.value) == HM_LOCKING
         return None
 
     @property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
-        if self._direction is not None:
-            return self._direction == HM_UNLOCKING
+        if self._e_direction.value is not None:
+            return str(self._e_direction.value) == HM_UNLOCKING
         return None
 
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._error is not None and self._error != "NO_ERROR"
+        return self._e_error.value is not None and self._e_error.value != "NO_ERROR"
 
     async def lock(self) -> None:
         """Lock the lock."""
