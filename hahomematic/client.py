@@ -678,9 +678,9 @@ class ClientCCU(Client):
     async def _check_connection(self)-> bool:
         """Check if _proxy is still initialized."""
         try:
-            if await self._proxy.ping(self._interface_id) is True:
-                self.last_updated = datetime.now()
-                return True
+            await self._proxy.ping(self._interface_id)
+            self.last_updated = datetime.now()
+            return True
         except BaseHomematicException as hhe:
             _LOGGER.error("ping: failed for %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
@@ -790,9 +790,9 @@ class ClientHomegear(Client):
     async def _check_connection(self) -> bool:
         """Check if proxy is still initialized."""
         try:
-            if await self._proxy.clientServerInitialized(self._interface_id) is True:
-                self.last_updated = datetime.now()
-                return True
+            await self._proxy.clientServerInitialized(self._interface_id)
+            self.last_updated = datetime.now()
+            return True
         except BaseHomematicException as hhe:
             _LOGGER.error("ping failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME

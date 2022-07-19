@@ -1,6 +1,6 @@
 Version 2022.7.10 (2022-07-19)
 - Use entities instead of values inside custom entities
-- Check for true within _check_connection
+- Fix _check_connection for Homegear/CCU
 
 Version 2022.7.9 (2022-07-17)
 - Remove state_uncertain from default attributes
