@@ -16,6 +16,7 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
+from hahomematic.platforms.binary_sensor import HmBinarySensor
 from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,9 +66,11 @@ class CeSwitch(CustomEntity):
         return self._get_entity(field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction)
 
     @property
-    def _channel_state(self) -> bool | None:
-        """Return the temperature of the device."""
-        return self._get_entity_value(field_name=FIELD_CHANNEL_STATE)
+    def _e_channel_state(self) -> HmBinarySensor:
+        """Return the temperature entity of the device."""
+        return self._get_entity(
+            field_name=FIELD_CHANNEL_STATE, entity_type=HmBinarySensor
+        )
 
     @property
     def value(self) -> bool | None:
@@ -94,8 +97,11 @@ class CeSwitch(CustomEntity):
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the switch."""
         state_attr = super().attributes
-        if self._channel_state and self._channel_state != self._e_state.value:
-            state_attr[ATTR_CHANNEL_STATE] = self._channel_state
+        if (
+            self._e_channel_state.value
+            and self._e_channel_state.value != self._e_state.value
+        ):
+            state_attr[ATTR_CHANNEL_STATE] = self._e_channel_state.value
         return state_attr
 
 
