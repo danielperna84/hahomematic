@@ -2,6 +2,7 @@ Version 2022.7.12 (2022-07-21)
 - Add ELV-SH-BS2 to custom entities
 - Code Cleanup
 - Rearrange validity check
+- Cleanup entity code
 
 Version 2022.7.11 (2022-07-19)
 - Raise interval for alive checks
