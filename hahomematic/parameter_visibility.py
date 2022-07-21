@@ -152,6 +152,7 @@ _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
     ],
     "LOW_BAT": ["HmIP-BWTH", "HmIP-PCBS"],
     "OPERATING_VOLTAGE": [
+        "ELV-SH-BS2",
         "HmIP-BDT",
         "HmIP-BSL",
         "HmIP-BSM",
