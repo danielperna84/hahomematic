@@ -729,22 +729,34 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
     @property
     def last_update(self) -> datetime:
-        """Return, if the state is uncertain."""
+        """Return the latest last_update timestamp."""
         latest_update: datetime = INIT_DATETIME
-        for hm_entity in self.data_entities.values():
-            if hm_entity.is_readable:
-                if entity_last_update := hm_entity.last_update:
-                    if entity_last_update > latest_update:
-                        latest_update = entity_last_update
+        for hm_entity in self._readable_entities:
+            if entity_last_update := hm_entity.last_update:
+                if entity_last_update > latest_update:
+                    latest_update = entity_last_update
         return latest_update
+
+    @property
+    def is_valid(self) -> bool:
+        """Return if the state is valid."""
+        for hm_entity in self._readable_entities:
+            if hm_entity.is_valid is False:
+                return False
+        return True
 
     @property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
-        for hm_entity in self.data_entities.values():
-            if hm_entity.is_readable and hm_entity.state_uncertain:
+        for hm_entity in self._readable_entities:
+            if hm_entity.state_uncertain:
                 return True
         return False
+
+    @property
+    def _readable_entities(self) -> list[GenericEntity]:
+        """Returns the list of readable entities."""
+        return [e for e in self.data_entities.values() if e.is_readable]
 
     def _generate_entity_name_data(self) -> EntityNameData:
         """Create the name for the entity."""
@@ -1285,6 +1297,7 @@ class NoneTypeEntity:
 
     default: Any = None
     hmtype: Any = None
+    is_valid: bool = False
     max: Any = None
     min: Any = None
     unit: Any = None
