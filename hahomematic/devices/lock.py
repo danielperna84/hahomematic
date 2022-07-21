@@ -71,24 +71,24 @@ class BaseLock(CustomEntity):
         )
 
     @property
+    @abstractmethod
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return True
 
     @property
+    @abstractmethod
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return False
 
     @property
+    @abstractmethod
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
-        return None
 
     @property
+    @abstractmethod
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
-        return None
 
     @abstractmethod
     async def lock(self) -> None:

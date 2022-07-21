@@ -101,9 +101,9 @@ class BaseHmLight(CustomEntity):
         """Return true if light is on."""
 
     @property
+    @abstractmethod
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
-        return None
 
     @property
     def color_temp(self) -> int | None:

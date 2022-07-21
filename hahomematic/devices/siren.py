@@ -68,19 +68,19 @@ class BaseSiren(CustomEntity):
         )
 
     @property
+    @abstractmethod
     def is_on(self) -> bool:
         """Return true if siren is on."""
-        return False
 
     @property
+    @abstractmethod
     def available_tones(self) -> list[str] | None:
         """Return a list of available tones."""
-        return None
 
     @property
+    @abstractmethod
     def available_lights(self) -> list[str] | None:
         """Return a list of available lights."""
-        return None
 
     @abstractmethod
     async def turn_on(
