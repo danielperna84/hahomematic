@@ -87,23 +87,6 @@ class CallbackEntity(ABC):
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
 
-    @property
-    def last_update(self) -> datetime:
-        """Return the last updated datetime value"""
-        # override in subclass
-        return INIT_DATETIME
-
-    @property
-    def state_uncertain(self) -> bool:
-        """Return, if the state is uncertain."""
-        # override in subclass
-        return True
-
-    @property
-    def is_valid(self) -> bool:
-        """Return, if the value of the entity is valid based on the last updated datetime."""
-        return self.last_update > INIT_DATETIME
-
     def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
         if callable(update_callback):
@@ -114,13 +97,6 @@ class CallbackEntity(ABC):
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
 
-    def update_entity(self, *args: Any) -> None:
-        """
-        Do what is needed when the value of the entity has been updated.
-        """
-        for _callback in self._update_callbacks:
-            _callback(*args)
-
     def register_remove_callback(self, remove_callback: Callable) -> None:
         """register the remove callback"""
         if callable(remove_callback) and remove_callback not in self._remove_callbacks:
@@ -130,6 +106,13 @@ class CallbackEntity(ABC):
         """remove the remove callback"""
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
+
+    def update_entity(self, *args: Any) -> None:
+        """
+        Do what is needed when the value of the entity has been updated.
+        """
+        for _callback in self._update_callbacks:
+            _callback(*args)
 
     def remove_entity(self, *args: Any) -> None:
         """
@@ -202,16 +185,6 @@ class BaseEntity(ABC):
         return self._channel_no
 
     @property
-    def channel_operation_mode(self) -> str | None:
-        """Return the channel operation mode if available."""
-        if self._channel_type in CONFIGURABLE_CHANNEL:
-            if cop := self._device.entities.get(
-                (self.channel_address, PARAM_CHANNEL_OPERATION_MODE)
-            ):
-                return cop.value
-        return None
-
-    @property
     def device_address(self) -> str:
         """Return the device address."""
         return self._device_address
@@ -275,6 +248,11 @@ class BaseEntity(ABC):
         """Set the entity usage."""
         self._usage = usage
 
+    def add_to_collections(self) -> None:
+        """add entity to central_unit collections"""
+        self._device.add_hm_entity(self)
+        self._central.hm_entities[self._unique_id] = self
+
     async def load_entity_value(self) -> None:
         """Init the entity data."""
         return None
@@ -290,11 +268,6 @@ class BaseEntity(ABC):
             if self._device.is_custom_entity
             else HmEntityUsage.ENTITY
         )
-
-    def add_to_collections(self) -> None:
-        """add entity to central_unit collections"""
-        self._device.add_hm_entity(self)
-        self._central.hm_entities[self._unique_id] = self
 
     def __str__(self) -> str:
         """
@@ -324,7 +297,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self._paramset_key: Final = paramset_key
         # required for name in BaseEntity
         self._parameter: Final = parameter
-        self.should_poll = self._paramset_key != PARAMSET_KEY_VALUES
         self._parameter_data: Final = parameter_data
         super().__init__(
             device=device,
@@ -353,26 +325,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self._special: dict[str, Any] | None = self._parameter_data.get(ATTR_HM_SPECIAL)
         self._unit: str | None = self._parameter_data.get(ATTR_HM_UNIT)
 
-    def _generate_entity_name_data(self) -> EntityNameData:
-        """Create the name for the entity."""
-        return get_entity_name(
-            central=self._central,
-            device=self._device,
-            channel_no=self._channel_no,
-            parameter=self._parameter,
-        )
-
-    def _generate_entity_usage(self) -> HmEntityUsage:
-        """Generate the usage for the entity."""
-        usage = super()._generate_entity_usage()
-        if self._parameter in HIDDEN_PARAMETERS:
-            usage = HmEntityUsage.ENTITY_NO_CREATE
-        return usage
-
-    def update_parameter_data(self) -> None:
-        """Update parameter data"""
-        self._assign_parameter_data()
-
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
@@ -384,21 +336,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     def default(self) -> ParameterT:
         """Return default value."""
         return self._default
-
-    # pylint: disable=no-self-use
-    @property
-    def force_enabled(self) -> bool | None:
-        """Return, if the entity/event must be enabled."""
-        if self.channel_operation_mode is None:
-            return None
-        if (
-            self._channel_type in CONFIGURABLE_CHANNEL
-            and self.parameter in CHANNEL_OPERATION_MODE_VISIBILITY
-            and self.channel_operation_mode
-            in CHANNEL_OPERATION_MODE_VISIBILITY[self.parameter]
-        ):
-            return True
-        return False
 
     @property
     def hmtype(self) -> str:
@@ -465,6 +402,10 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return the if entity is visible in ccu."""
         return self._visible
 
+    def update_parameter_data(self) -> None:
+        """Update parameter data"""
+        self._assign_parameter_data()
+
     def _convert_value(self, value: ParameterT) -> ParameterT:
         """Convert to value to ParameterT"""
         if value is None:
@@ -490,14 +431,21 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             )
             return None  # type: ignore[return-value]
 
-    async def send_value(self, value: Any) -> None:
-        """send value to ccu."""
-        await self._client.set_value_by_paramset_key(
-            channel_address=self.channel_address,
-            paramset_key=self._paramset_key,
+    def _generate_entity_name_data(self) -> EntityNameData:
+        """Create the name for the entity."""
+        return get_entity_name(
+            central=self._central,
+            device=self._device,
+            channel_no=self._channel_no,
             parameter=self._parameter,
-            value=self._convert_value(value),
         )
+
+    def _generate_entity_usage(self) -> HmEntityUsage:
+        """Generate the usage for the entity."""
+        usage = super()._generate_entity_usage()
+        if self._parameter in HIDDEN_PARAMETERS:
+            usage = HmEntityUsage.ENTITY_NO_CREATE
+        return usage
 
 
 class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
@@ -529,6 +477,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             platform=platform,
         )
         CallbackEntity.__init__(self)
+        self.should_poll = self._paramset_key != PARAMSET_KEY_VALUES
         self._value: ParameterT | None = None
         self._last_update: datetime = INIT_DATETIME
         self._state_uncertain: bool = True
@@ -546,6 +495,43 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         ].append(self.event)
 
     @property
+    def attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the generic entity."""
+        state_attr = super().attributes
+        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
+        return state_attr
+
+    @property
+    def channel_operation_mode(self) -> str | None:
+        """Return the channel operation mode if available."""
+        if self._channel_type in CONFIGURABLE_CHANNEL:
+            if cop := self._device.entities.get(
+                (self.channel_address, PARAM_CHANNEL_OPERATION_MODE)
+            ):
+                return str(cop.value) if cop.value else None
+        return None
+
+    # pylint: disable=no-self-use
+    @property
+    def force_enabled(self) -> bool | None:
+        """Return, if the entity/event must be enabled."""
+        if self.channel_operation_mode is None:
+            return None
+        if (
+            self._channel_type in CONFIGURABLE_CHANNEL
+            and self.parameter in CHANNEL_OPERATION_MODE_VISIBILITY
+            and self.channel_operation_mode
+            in CHANNEL_OPERATION_MODE_VISIBILITY[self.parameter]
+        ):
+            return True
+        return False
+
+    @property
+    def is_valid(self) -> bool:
+        """Return, if the value of the entity is valid based on the last updated datetime."""
+        return self._last_update > INIT_DATETIME
+
+    @property
     def last_update(self) -> datetime:
         """Return the last updated datetime value"""
         return self._last_update
@@ -555,26 +541,10 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         """Return, if the state is uncertain."""
         return self._state_uncertain
 
-    def _set_last_update(self) -> None:
-        """Set last_update to current datetime."""
-        self._last_update = datetime.now()
-
-    async def load_entity_value(self) -> None:
-        """Init the entity data."""
-        if updated_within_seconds(last_update=self.last_update):
-            return None
-
-        # Check, if entity is readable
-        if not self.is_readable:
-            return None
-
-        self.update_value(
-            value=await self._device.value_cache.get_value(
-                channel_address=self.channel_address,
-                paramset_key=self._paramset_key,
-                parameter=self._parameter,
-            )
-        )
+    @property
+    def value(self) -> ParameterT | None:
+        """Return the value of the entity."""
+        return self._value
 
     def event(
         self, interface_id: str, channel_address: str, parameter: str, raw_value: Any
@@ -642,19 +612,22 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
                     self._get_event_data(value),
                 )
 
-    def _get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        return {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.device_address,
-            ATTR_PARAMETER: self._parameter,
-            ATTR_VALUE: value,
-        }
+    async def load_entity_value(self) -> None:
+        """Init the entity data."""
+        if updated_within_seconds(last_update=self._last_update):
+            return None
 
-    @property
-    def value(self) -> ParameterT | None:
-        """Return the value of the entity."""
-        return self._value
+        # Check, if entity is readable
+        if not self.is_readable:
+            return None
+
+        self.update_value(
+            value=await self._device.value_cache.get_value(
+                channel_address=self.channel_address,
+                paramset_key=self._paramset_key,
+                parameter=self._parameter,
+            )
+        )
 
     def update_value(self, value: Any) -> None:
         """Update value of the entity."""
@@ -668,18 +641,33 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         self._set_last_update()
         self.update_entity()
 
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the generic entity."""
-        state_attr = super().attributes
-        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
-        return state_attr
-
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
         del self._central.entity_event_subscriptions[
             (self.channel_address, self._parameter)
         ]
+
+    async def send_value(self, value: Any) -> None:
+        """send value to ccu."""
+        await self._client.set_value_by_paramset_key(
+            channel_address=self.channel_address,
+            paramset_key=self._paramset_key,
+            parameter=self._parameter,
+            value=self._convert_value(value),
+        )
+
+    def _get_event_data(self, value: Any = None) -> dict[str, Any]:
+        """Get the event_data."""
+        return {
+            ATTR_INTERFACE_ID: self._interface_id,
+            ATTR_ADDRESS: self.device_address,
+            ATTR_PARAMETER: self._parameter,
+            ATTR_VALUE: value,
+        }
+
+    def _set_last_update(self) -> None:
+        """Set last_update to current datetime."""
+        self._last_update = datetime.now()
 
 
 _EntityT = TypeVar("_EntityT", bound=GenericEntity)
