@@ -866,13 +866,13 @@ class CentralUnit:
                 return virtual_remote
         return None
 
-    def get_hm_entity_by_parameter(
+    def get_hm_entity(
         self, channel_address: str, parameter: str
     ) -> GenericEntity | None:
         """Get entity by channel_address and parameter."""
         if ":" in channel_address:
             if device := self.hm_devices.get(get_device_address(channel_address)):
-                if entity := device.entities.get((channel_address, parameter)):
+                if entity := device.get_hm_entity(channel_address=channel_address, parameter=parameter):
                     return entity
         return None
 
