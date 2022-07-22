@@ -872,7 +872,9 @@ class CentralUnit:
         """Get entity by channel_address and parameter."""
         if ":" in channel_address:
             if device := self.hm_devices.get(get_device_address(channel_address)):
-                if entity := device.get_hm_entity(channel_address=channel_address, parameter=parameter):
+                if entity := device.get_hm_entity(
+                    channel_address=channel_address, parameter=parameter
+                ):
                     return entity
         return None
 

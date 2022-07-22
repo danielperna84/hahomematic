@@ -231,7 +231,7 @@ def get_entity_name(
         channel_address,
         parameter,
     )
-    return EntityNameData()
+    return EntityNameData.empty()
 
 
 def get_event_name(
@@ -270,7 +270,7 @@ def get_event_name(
         channel_address,
         parameter,
     )
-    return EntityNameData()
+    return EntityNameData.empty()
 
 
 def get_custom_entity_name(
@@ -308,7 +308,7 @@ def get_custom_entity_name(
         device.device_address,
         channel_no,
     )
-    return EntityNameData()
+    return EntityNameData.empty()
 
 
 def _check_channel_name_with_channel_no(name: str) -> bool:
@@ -442,33 +442,45 @@ class SystemVariableData:
     extended_sysvar: bool = False
 
 
-@dataclass
 class EntityNameData:
     """Dataclass for entity name parts"""
 
-    device_name: str | None = None
-    channel_name: str | None = None
-    parameter_name: str | None = None
+    def __init__(
+        self, device_name: str, channel_name: str, parameter_name: str | None = None
+    ):
+        """Init the EntityNameData class."""
+        self._device_name = device_name
+        self._channel_name = channel_name
+        self._parameter_name = parameter_name
 
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        if self.channel_name and self.parameter_name:
-            return f"{self.channel_name} {self.parameter_name}".strip()
-        if self.channel_name:
-            return self.channel_name.strip()
-        return None
+    @staticmethod
+    def empty() -> EntityNameData:
+        """Return an empty EntityNameData."""
+        return EntityNameData(device_name="", channel_name="")
 
     @property
     def entity_name(self) -> str | None:
         """Return the name of the entity only name."""
-        if self.device_name and self.name and self.name.startswith(self.device_name):
-            return self.name.replace(self.device_name, "").strip()
-        return self.name
+        if (
+            self._device_name
+            and self._name
+            and self._name.startswith(self._device_name)
+        ):
+            return self._name.replace(self._device_name, "").strip()
+        return self._name
 
     @property
     def full_name(self) -> str | None:
         """Return the full name of the entity."""
         if self.entity_name:
-            return f"{self.device_name} {self.entity_name}".strip()
-        return self.device_name
+            return f"{self._device_name} {self.entity_name}".strip()
+        return self._device_name
+
+    @property
+    def _name(self) -> str | None:
+        """Return the name of the entity."""
+        if self._channel_name and self._parameter_name:
+            return f"{self._channel_name} {self._parameter_name}".strip()
+        if self._channel_name:
+            return self._channel_name.strip()
+        return None
