@@ -29,6 +29,7 @@ from hahomematic.const import (
     IMPULSE_EVENTS,
     INIT_DATETIME,
     MANUFACTURER,
+    MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
     OPERATION_READ,
@@ -697,7 +698,7 @@ class ValueCache:
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        max_age_seconds: int = 60,
+        max_age_seconds: int = MAX_CACHE_AGE,
         force: bool = False,
     ) -> Any:
         """

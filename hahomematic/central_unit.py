@@ -43,6 +43,7 @@ from hahomematic.const import (
     IF_PRIMARY,
     INIT_DATETIME,
     MANUFACTURER,
+    MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     PROXY_INIT_SUCCESS,
     HmEventType,
@@ -1174,7 +1175,7 @@ class DeviceDataCache:
         interface: str,
         channel_address: str,
         parameter: str,
-        max_age_seconds: int = 60,
+        max_age_seconds: int = MAX_CACHE_AGE,
     ) -> Any:
         """Get device data from cache."""
         if updated_within_seconds(

@@ -172,6 +172,8 @@ ATTR_HM_VALUE = "VALUE"  # Float or integer, depending on TYPE
 # Members for ENUM
 ATTR_HM_VALUE_LIST = "VALUE_LIST"
 
+MAX_CACHE_AGE = 60
+
 REGA_SCRIPT_PATH = "rega_scripts"
 REGA_SCRIPT_FETCH_ALL_DEVICE_DATA = "fetch_all_device_data.fn"
 REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER = "get_system_variables_ext_marker.fn"
