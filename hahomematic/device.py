@@ -737,7 +737,7 @@ class ValueCache:
                     paramset_key=paramset_key,
                 )
             except BaseHomematicException as bhe:
-                _LOGGER.info(
+                _LOGGER.debug(
                     "_get_or_load_value: Failed to get data for %s, %s, %s: %s",
                     self._device.device_type,
                     channel_address,
