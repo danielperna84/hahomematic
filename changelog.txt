@@ -1,6 +1,7 @@
 Version 2022.7.13 (2022-07-22)
 - Cleanup API
 - Limit init cache time usage
+- Avoid repetitive calls to CCU within max_age_seconds
 
 Version 2022.7.12 (2022-07-21)
 - Add ELV-SH-BS2 to custom entities
