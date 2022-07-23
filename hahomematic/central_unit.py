@@ -41,7 +41,9 @@ from hahomematic.const import (
     HH_EVENT_NEW_DEVICES,
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
+    INIT_DATETIME,
     MANUFACTURER,
+    MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     PROXY_INIT_SUCCESS,
     HmEventType,
@@ -63,6 +65,7 @@ from hahomematic.helpers import (
     check_or_create_directory,
     get_device_address,
     get_device_channel,
+    updated_within_seconds,
 )
 from hahomematic.hub import HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
@@ -866,13 +869,15 @@ class CentralUnit:
                 return virtual_remote
         return None
 
-    def get_hm_entity_by_parameter(
+    def get_hm_entity(
         self, channel_address: str, parameter: str
     ) -> GenericEntity | None:
         """Get entity by channel_address and parameter."""
         if ":" in channel_address:
             if device := self.hm_devices.get(get_device_address(channel_address)):
-                if entity := device.entities.get((channel_address, parameter)):
+                if entity := device.get_hm_entity(
+                    channel_address=channel_address, parameter=parameter
+                ):
                     return entity
         return None
 
@@ -1137,6 +1142,7 @@ class DeviceDataCache:
         # { interface, {channel_address, {parameter, CacheEntry}}}
         self._central_values_cache: dict[str, dict[str, dict[str, Any]]] = {}
         self._central: Final = central
+        self._last_updated = INIT_DATETIME
 
     @property
     def is_empty(self) -> bool:
@@ -1162,16 +1168,25 @@ class DeviceDataCache:
     ) -> None:
         """Add device data to cache."""
         self._central_values_cache = device_data
+        self._last_updated = datetime.now()
 
     def get_device_data(
-        self, interface: str, channel_address: str, parameter: str
+        self,
+        interface: str,
+        channel_address: str,
+        parameter: str,
+        max_age_seconds: int = MAX_CACHE_AGE,
     ) -> Any:
         """Get device data from cache."""
-        return (
-            self._central_values_cache.get(interface, {})
-            .get(channel_address, {})
-            .get(parameter, NO_CACHE_ENTRY)
-        )
+        if self.is_empty or updated_within_seconds(
+            last_update=self._last_updated, max_age_seconds=max_age_seconds
+        ):
+            return (
+                self._central_values_cache.get(interface, {})
+                .get(channel_address, {})
+                .get(parameter, NO_CACHE_ENTRY)
+            )
+        return NO_CACHE_ENTRY
 
     async def clear(self) -> None:
         """Clear the cache."""
