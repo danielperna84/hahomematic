@@ -655,6 +655,8 @@ class HmDevice:
 class ValueCache:
     """A Cache to temporaily stored values"""
 
+    _NO_VALUE_CACHE_ENTRY: Final = "NO_VALUE_CACHE_ENTRY"
+
     _sema_get_or_load_value = asyncio.BoundedSemaphore(1)
 
     def __init__(self, device: HmDevice):
@@ -715,8 +717,11 @@ class ValueCache:
                     max_age_seconds=max_age_seconds,
                 )
             ) != NO_CACHE_ENTRY:
-                return cached_value
-
+                return (
+                    NO_CACHE_ENTRY
+                    if cached_value == self._NO_VALUE_CACHE_ENTRY
+                    else cached_value
+                )
             if (
                 paramset_key == PARAMSET_KEY_VALUES
                 and not self._client.central.device_data.is_empty
@@ -724,32 +729,30 @@ class ValueCache:
             ):
                 return NO_CACHE_ENTRY
 
-            if paramset_key not in self._value_cache:
-                self._value_cache[paramset_key] = {}
-            if channel_address not in self._value_cache[paramset_key]:
-                self._value_cache[paramset_key][channel_address] = {}
-
+            value: Any = self._NO_VALUE_CACHE_ENTRY
             try:
                 value = await self._client.get_value(
                     channel_address=channel_address,
                     parameter=parameter,
                     paramset_key=paramset_key,
                 )
-                self._value_cache[paramset_key][channel_address][
-                    parameter
-                ] = CacheEntry(value=value, last_update=datetime.now())
-                return value
-
             except BaseHomematicException as bhe:
-                _LOGGER.debug(
-                    "_get_or_load_value: Failed to get cached paramset for %s, %s, %s: %s",
+                _LOGGER.info(
+                    "_get_or_load_value: Failed to get data for %s, %s, %s: %s",
                     self._device.device_type,
                     channel_address,
                     parameter,
                     bhe,
                 )
-
-        return NO_CACHE_ENTRY
+            if paramset_key not in self._value_cache:
+                self._value_cache[paramset_key] = {}
+            if channel_address not in self._value_cache[paramset_key]:
+                self._value_cache[paramset_key][channel_address] = {}
+            # write value to cache even if an except has occurred to avoid repetitive calls to CCU within max_age_seconds
+            self._value_cache[paramset_key][channel_address][parameter] = CacheEntry(
+                value=value, last_update=datetime.now()
+            )
+            return NO_CACHE_ENTRY if value == self._NO_VALUE_CACHE_ENTRY else value
 
     def _get_value_from_cache(
         self,
@@ -781,8 +784,7 @@ class ValueCache:
             if updated_within_seconds(
                 last_update=cache_entry.last_update, max_age_seconds=max_age_seconds
             ):
-                if cache_value := cache_entry.value:
-                    return cache_value
+                return cache_entry.value
         return NO_CACHE_ENTRY
 
 

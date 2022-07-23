@@ -1178,7 +1178,7 @@ class DeviceDataCache:
         max_age_seconds: int = MAX_CACHE_AGE,
     ) -> Any:
         """Get device data from cache."""
-        if updated_within_seconds(
+        if self.is_empty or updated_within_seconds(
             last_update=self._last_updated, max_age_seconds=max_age_seconds
         ):
             return (
