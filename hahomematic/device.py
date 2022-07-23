@@ -697,9 +697,13 @@ class ValueCache:
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        age_seconds: int = 120,
+        max_age_seconds: int = 60,
+        force: bool = False,
     ) -> Any:
-        """Load data"""
+        """
+        Load data.
+        Use force == true if getValue should be called for paramset_key VALUES, if no data exists in caches.
+        """
         async with self._sema_get_or_load_value:
 
             if (
@@ -707,7 +711,7 @@ class ValueCache:
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                     parameter=parameter,
-                    age_seconds=age_seconds,
+                    max_age_seconds=max_age_seconds,
                 )
             ) != NO_CACHE_ENTRY:
                 return cached_value
@@ -715,6 +719,7 @@ class ValueCache:
             if (
                 paramset_key == PARAMSET_KEY_VALUES
                 and not self._client.central.device_data.is_empty
+                and force is False
             ):
                 return NO_CACHE_ENTRY
 
@@ -750,9 +755,10 @@ class ValueCache:
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        age_seconds: int,
+        max_age_seconds: int,
     ) -> Any:
-        """Load data"""
+        """Load data from caches."""
+        # Try to get data from central cache
         if (
             global_value := self._client.central.device_data.get_device_data(
                 interface=self._client.interface,
@@ -762,12 +768,7 @@ class ValueCache:
         ) != NO_CACHE_ENTRY:
             return global_value
 
-        if (
-            paramset_key == PARAMSET_KEY_VALUES
-            and not self._client.central.device_data.is_empty
-        ):
-            return NO_CACHE_ENTRY
-
+        # Try to get data from device cache
         if (
             cache_entry := self._value_cache.get(paramset_key, {})
             .get(channel_address, {})
@@ -777,7 +778,7 @@ class ValueCache:
             )
         ) != CacheEntry.empty():
             if updated_within_seconds(
-                last_update=cache_entry.last_update, age_seconds=age_seconds
+                last_update=cache_entry.last_update, max_age_seconds=max_age_seconds
             ):
                 if cache_value := cache_entry.value:
                     return cache_value

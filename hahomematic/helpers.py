@@ -401,12 +401,12 @@ def get_channel_no(address: str) -> int | None:
     return int(address.split(":")[1])
 
 
-def updated_within_seconds(last_update: datetime, age_seconds: int = 120) -> bool:
+def updated_within_seconds(last_update: datetime, max_age_seconds: int = 120) -> bool:
     """Entity has been updated within X minutes."""
     if last_update == INIT_DATETIME:
         return False
     delta = datetime.now() - last_update
-    if delta.seconds < age_seconds:
+    if delta.seconds < max_age_seconds:
         return True
     return False
 
