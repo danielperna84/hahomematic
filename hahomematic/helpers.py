@@ -16,6 +16,7 @@ from hahomematic.const import (
     HM_VIRTUAL_REMOTE_ADDRESSES,
     HUB_ADDRESS,
     INIT_DATETIME,
+    MAX_CACHE_AGE,
     PARAMETER_FRIENDLY_NAME,
     SYSVAR_ADDRESS,
     SYSVAR_HM_TYPE_FLOAT,
@@ -401,7 +402,9 @@ def get_channel_no(address: str) -> int | None:
     return int(address.split(":")[1])
 
 
-def updated_within_seconds(last_update: datetime, max_age_seconds: int = 120) -> bool:
+def updated_within_seconds(
+    last_update: datetime, max_age_seconds: int = MAX_CACHE_AGE
+) -> bool:
     """Entity has been updated within X minutes."""
     if last_update == INIT_DATETIME:
         return False
