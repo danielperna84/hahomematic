@@ -135,6 +135,7 @@ def make_rf_switch(
 # device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
     "ELV-SH-BS2": (make_ip_switch, [3, 7]),
+    "HmIP-BS2": (make_ip_switch, [3, 7]),
     "HmIP-BSM": (make_ip_switch, [3]),
     "HmIP-FSM": (make_ip_switch, [1]),
     "HmIP-FSI": (make_ip_switch, [2]),
