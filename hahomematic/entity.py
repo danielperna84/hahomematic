@@ -49,6 +49,7 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     SYSVAR_ADDRESS,
     TYPE_BOOL,
+    HmCallSource,
     HmEntityType,
     HmEntityUsage,
     HmEventType,
@@ -253,7 +254,7 @@ class BaseEntity(ABC):
         self._device.add_hm_entity(self)
         self._central.hm_entities[self._unique_id] = self
 
-    async def load_entity_value(self, force: bool = False) -> None:
+    async def load_entity_value(self, call_source: HmCallSource) -> None:
         """Init the entity data."""
         return None
 
@@ -612,11 +613,11 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
                     self._get_event_data(value),
                 )
 
-    async def load_entity_value(self, force: bool = False) -> None:
-        """
-        Init the entity data.
-        Use force == true if getValue should be called for paramset_key VALUES, if no data exists in caches.
-        """
+    async def load_entity_value(
+        self,
+        call_source: HmCallSource,
+    ) -> None:
+        """Init the entity data."""
         if updated_within_seconds(last_update=self._last_update):
             return None
 
@@ -629,7 +630,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
                 channel_address=self.channel_address,
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
-                force=force,
+                call_source=call_source,
             )
         )
 
@@ -788,11 +789,11 @@ class CustomEntity(BaseEntity, CallbackEntity):
             rx_mode=rx_mode,
         )
 
-    async def load_entity_value(self, force: bool = False) -> None:
+    async def load_entity_value(self, call_source: HmCallSource) -> None:
         """Init the entity values."""
         for entity in self.data_entities.values():
             if entity:
-                await entity.load_entity_value(force=force)
+                await entity.load_entity_value(call_source=call_source)
         self.update_entity()
 
     def _init_entities(self) -> None:

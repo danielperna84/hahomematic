@@ -46,6 +46,7 @@ from hahomematic.const import (
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     PROXY_INIT_SUCCESS,
+    HmCallSource,
     HmEventType,
     HmInterfaceEventType,
 )
@@ -1156,12 +1157,12 @@ class DeviceDataCache:
             await client.fetch_all_device_data()
 
     async def refesh_entity_data(self) -> None:
-        """Refresh entity data based on cache."""
+        """Refresh entity data."""
         for hm_entity in self._central.hm_entities.values():
             if (
                 isinstance(hm_entity, GenericEntity) and hm_entity.is_readable
             ) or isinstance(hm_entity, CustomEntity):
-                await hm_entity.load_entity_value()
+                await hm_entity.load_entity_value(call_source=HmCallSource.HM_INIT)
 
     def add_device_data(
         self, device_data: dict[str, dict[str, dict[str, Any]]]
