@@ -20,6 +20,7 @@ from hahomematic.const import (
     ATTR_HM_TYPE,
     BUTTON_ACTIONS,
     CLICK_EVENTS,
+    RELEVANT_INIT_PARAMETERS,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
@@ -42,6 +43,7 @@ from hahomematic.const import (
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
+    HmCallSource,
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
@@ -673,6 +675,7 @@ class ValueCache:
                     channel_address=entity.channel_address,
                     paramset_key=entity.paramset_key,
                     parameter=entity.parameter,
+                    call_source=HmCallSource.HM_INIT,
                 )
                 entity.update_value(value=value)
         except BaseHomematicException as bhe:
@@ -688,9 +691,9 @@ class ValueCache:
         entities: list[GenericEntity] = []
         for entity in self._device.entities.values():
             if (
-                entity.operations & OPERATION_READ
-                and entity.channel_no == 0
-                and entity.paramset_key == PARAMSET_KEY_VALUES
+                    entity.channel_no == 0
+                    and entity.paramset_key == PARAMSET_KEY_VALUES
+                    and entity.parameter in RELEVANT_INIT_PARAMETERS
             ) or entity.paramset_key == PARAMSET_KEY_MASTER:
                 entities.append(entity)
         return set(entities)
@@ -700,13 +703,10 @@ class ValueCache:
         channel_address: str,
         paramset_key: str,
         parameter: str,
+        call_source: HmCallSource,
         max_age_seconds: int = MAX_CACHE_AGE,
-        force: bool = False,
     ) -> Any:
-        """
-        Load data.
-        Use force == true if getValue should be called for paramset_key VALUES, if no data exists in caches.
-        """
+        """Load data."""
         async with self._sema_get_or_load_value:
 
             if (
@@ -722,12 +722,6 @@ class ValueCache:
                     if cached_value == self._NO_VALUE_CACHE_ENTRY
                     else cached_value
                 )
-            if (
-                paramset_key == PARAMSET_KEY_VALUES
-                and not self._client.central.device_data.is_empty
-                and force is False
-            ):
-                return NO_CACHE_ENTRY
 
             value: Any = self._NO_VALUE_CACHE_ENTRY
             try:
@@ -735,6 +729,7 @@ class ValueCache:
                     channel_address=channel_address,
                     parameter=parameter,
                     paramset_key=paramset_key,
+                    call_source=call_source,
                 )
             except BaseHomematicException as bhe:
                 _LOGGER.debug(

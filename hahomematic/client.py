@@ -36,6 +36,7 @@ from hahomematic.const import (
     PROXY_DE_INIT_SUCCESS,
     PROXY_INIT_FAILED,
     PROXY_INIT_SUCCESS,
+    HmCallSource,
     HmInterfaceEventType,
 )
 from hahomematic.device import HmDevice
@@ -363,14 +364,16 @@ class Client(ABC):
         channel_address: str,
         parameter: str,
         paramset_key: str = PARAMSET_KEY_VALUES,
+        call_source: HmCallSource = HmCallSource.MANUAL,
     ) -> Any:
         """Return a value from CCU."""
         try:
             _LOGGER.debug(
-                "get_value: channel_address %s, parameter %s, paramset_key, %s",
+                "get_value: channel_address %s, parameter %s, paramset_key, %s, source:%s",
                 channel_address,
                 parameter,
                 paramset_key,
+                call_source,
             )
             if paramset_key == PARAMSET_KEY_VALUES:
                 return await self._proxy_read.getValue(channel_address, parameter)

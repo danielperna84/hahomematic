@@ -248,6 +248,12 @@ HM_ENTITY_UNIT_REPLACE: dict[str, str] = {
     "degree": "°C",
 }
 
+RELEVANT_INIT_PARAMETERS: set[str] = {
+    EVENT_CONFIG_PENDING,
+    EVENT_STICKY_UN_REACH,
+    EVENT_UN_REACH,
+}
+
 # virtual remotes device_types
 HM_VIRTUAL_REMOTE_HM_TYPE = "HM-RCV-50"
 HM_VIRTUAL_REMOTE_HMW_TYPE = "HMW-RCV-50"
@@ -329,6 +335,15 @@ class HmEventType(StrEnum):
     DEVICE = "homematic.device"
     INTERFACE = "homematic.interface"
     IMPULSE = "homematic.impulse"
+
+
+class HmCallSource(StrEnum):
+    """Enum with sources for calls."""
+
+    MANUAL = "manual"
+    HA_INIT = "ha_init"
+    HM_INIT = "hm_init"
+    SCHEDULED = "schedueld"
 
 
 class HmInterfaceEventType(StrEnum):

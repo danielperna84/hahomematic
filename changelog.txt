@@ -1,5 +1,6 @@
-Version 2022.7.14 (2022-07-24)
+Version 2022.7.14 (2022-07-28)
 - Add HmIP-BS2 to custom entities
+- Remove force and add call_source for getValue
 
 Version 2022.7.13 (2022-07-22)
 - Cleanup API
