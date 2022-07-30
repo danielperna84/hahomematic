@@ -5,6 +5,7 @@ https://github.com/danielperna84/hahomematic
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import signal
 import sys
@@ -23,7 +24,7 @@ def signal_handler(sig, frame):  # type: ignore[no-untyped-def]
     """Handle signal to shut down central_unit."""
     _LOGGER.info("Got signal: %s. Shutting down central_unit", str(sig))
     for central in hm_data.INSTANCES.values():
-        central.stop()
+        asyncio.run_coroutine_threadsafe(central.stop(), asyncio.get_running_loop())
 
 
 if sys.stdout.isatty():

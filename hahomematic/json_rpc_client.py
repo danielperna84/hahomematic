@@ -23,6 +23,7 @@ from hahomematic.const import (
     ATTR_SESSION_ID,
     ATTR_USERNAME,
     DEFAULT_ENCODING,
+    MAX_JSON_SESSION_AGE,
     PATH_JSON_RPC,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     REGA_SCRIPT_GET_SERIAL,
@@ -117,7 +118,9 @@ class JsonRpcAioHttpClient:
             )
             return None
 
-    def _updated_within_seconds(self, max_age_seconds: int = 90) -> bool:
+    def _updated_within_seconds(
+        self, max_age_seconds: int = MAX_JSON_SESSION_AGE
+    ) -> bool:
         """Check if session id has been updated within 90 seconds."""
         if self._last_session_id_refresh is None:
             return False
