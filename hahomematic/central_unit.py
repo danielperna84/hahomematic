@@ -26,7 +26,6 @@ from hahomematic.const import (
     ATTR_INTERFACE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
-    DATA_LOAD_FAIL,
     DATA_LOAD_SUCCESS,
     DATA_NO_LOAD,
     DATA_NO_SAVE,
@@ -43,7 +42,6 @@ from hahomematic.const import (
     IF_PRIMARY,
     INIT_DATETIME,
     MANUFACTURER,
-    MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     PROXY_INIT_SUCCESS,
     HmCallSource,
@@ -574,12 +572,7 @@ class CentralUnit:
                 try:
                     if device:
                         device.create_entities_and_append_to_device()
-                        if DATA_LOAD_FAIL == await device.load_value_cache():
-                            _LOGGER.debug(
-                                "create_devices: Data load failed for %s, %s",
-                                interface_id,
-                                device_address,
-                            )
+                        await device.load_value_cache()
                         new_devices.add(device)
                         self.hm_devices[device_address] = device
                 except Exception as err:
@@ -715,7 +708,7 @@ class CentralUnit:
             )
             return None
 
-    def _async_create_task(self, target: Awaitable) -> asyncio.Task:
+    def _async_create_task(self, target: Coroutine) -> asyncio.Task:
         """Create a task from within the event loop. This method must be run in the event loop."""
         return self.loop.create_task(target)
 
@@ -1176,10 +1169,10 @@ class DeviceDataCache:
         interface: str,
         channel_address: str,
         parameter: str,
-        max_age_seconds: int = MAX_CACHE_AGE,
+        max_age_seconds: int,
     ) -> Any:
         """Get device data from cache."""
-        if self.is_empty or updated_within_seconds(
+        if not self.is_empty and updated_within_seconds(
             last_update=self._last_updated, max_age_seconds=max_age_seconds
         ):
             return (

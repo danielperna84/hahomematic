@@ -20,7 +20,6 @@ from hahomematic.const import (
     ATTR_HM_TYPE,
     BUTTON_ACTIONS,
     CLICK_EVENTS,
-    RELEVANT_INIT_PARAMETERS,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
@@ -33,10 +32,10 @@ from hahomematic.const import (
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
-    OPERATION_READ,
     OPERATION_WRITE,
     PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
+    RELEVANT_INIT_PARAMETERS,
     TYPE_ACTION,
     TYPE_BOOL,
     TYPE_ENUM,
@@ -691,9 +690,9 @@ class ValueCache:
         entities: list[GenericEntity] = []
         for entity in self._device.entities.values():
             if (
-                    entity.channel_no == 0
-                    and entity.paramset_key == PARAMSET_KEY_VALUES
-                    and entity.parameter in RELEVANT_INIT_PARAMETERS
+                entity.channel_no == 0
+                and entity.paramset_key == PARAMSET_KEY_VALUES
+                and entity.parameter in RELEVANT_INIT_PARAMETERS
             ) or entity.paramset_key == PARAMSET_KEY_MASTER:
                 entities.append(entity)
         return set(entities)
@@ -743,7 +742,8 @@ class ValueCache:
                 self._value_cache[paramset_key] = {}
             if channel_address not in self._value_cache[paramset_key]:
                 self._value_cache[paramset_key][channel_address] = {}
-            # write value to cache even if an except has occurred to avoid repetitive calls to CCU within max_age_seconds
+            # write value to cache even if an exception has occurred
+            # to avoid repetitive calls to CCU within max_age_seconds
             self._value_cache[paramset_key][channel_address][parameter] = CacheEntry(
                 value=value, last_update=datetime.now()
             )
@@ -763,6 +763,7 @@ class ValueCache:
                 interface=self._client.interface,
                 channel_address=channel_address,
                 parameter=parameter,
+                max_age_seconds=max_age_seconds,
             )
         ) != NO_CACHE_ENTRY:
             return global_value

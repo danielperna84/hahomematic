@@ -202,7 +202,6 @@ class BaseEntity(ABC):
         device_info.channel_no = self._channel_no
         return device_info
 
-    # pylint: disable=no-self-use
     @property
     def force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
@@ -512,7 +511,6 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
                 return str(cop.value) if cop.value else None
         return None
 
-    # pylint: disable=no-self-use
     @property
     def force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
