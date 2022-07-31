@@ -84,32 +84,24 @@ class CeCover(CustomEntity):
             unique_id,
         )
 
-    @property
-    def _e_direction(self) -> HmSensor:
-        """Return the channel level entiy of the cover."""
-        return self._get_entity(field_name=FIELD_DIRECTION, entity_type=HmSensor)
-
-    @property
-    def _e_level(self) -> HmFloat:
-        """Return the level entity of the cover."""
-        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
-
-    @property
-    def _e_stop(self) -> HmAction:
-        """Return the stop entity of the cover."""
-        return self._get_entity(field_name=FIELD_STOP, entity_type=HmAction)
-
-    @property
-    def _e_channel_operation_mode(self) -> HmAction:
-        """Return the channel_operation_mode entity of the cover."""
-        return self._get_entity(
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_direction: HmSensor = self._get_entity(
+            field_name=FIELD_DIRECTION, entity_type=HmSensor
+        )
+        self._e_level: HmFloat = self._get_entity(
+            field_name=FIELD_LEVEL, entity_type=HmFloat
+        )
+        self._e_stop: HmAction = self._get_entity(
+            field_name=FIELD_STOP, entity_type=HmAction
+        )
+        self._e_channel_operation_mode: HmAction = self._get_entity(
             field_name=FIELD_CHANNEL_OPERATION_MODE, entity_type=HmAction
         )
-
-    @property
-    def _e_channel_level(self) -> HmSensor:
-        """Return the channel_level entity of the cover."""
-        return self._get_entity(field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor)
+        self._e_channel_level: HmSensor = self._get_entity(
+            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
+        )
 
     @property
     def _channel_level(self) -> float | None:
@@ -187,15 +179,15 @@ class CeCover(CustomEntity):
 class CeBlind(CeCover):
     """Class for homematic blind entities."""
 
-    @property
-    def _e_level_2(self) -> HmFloat:
-        """Return the level entity of the tilt."""
-        return self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmFloat)
-
-    @property
-    def _e_channel_level_2(self) -> HmSensor:
-        """Return the channel level 2 entiy of the tilt."""
-        return self._get_entity(field_name=FIELD_CHANNEL_LEVEL_2, entity_type=HmSensor)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_level_2: HmFloat = self._get_entity(
+            field_name=FIELD_LEVEL_2, entity_type=HmFloat
+        )
+        self._e_channel_level_2: HmSensor = self._get_entity(
+            field_name=FIELD_CHANNEL_LEVEL_2, entity_type=HmSensor
+        )
 
     @property
     def _channel_level_2(self) -> float | None:
@@ -291,20 +283,18 @@ class CeGarage(CustomEntity):
             unique_id,
         )
 
-    @property
-    def _e_door_state(self) -> HmSensor:
-        """Return the door state entity of the garage door."""
-        return self._get_entity(field_name=FIELD_DOOR_STATE, entity_type=HmSensor)
-
-    @property
-    def _e_door_command(self) -> HmAction:
-        """Return the door_command entity of the cover."""
-        return self._get_entity(field_name=FIELD_DOOR_COMMAND, entity_type=HmAction)
-
-    @property
-    def _e_section(self) -> HmSensor:
-        """Return the section entity of the garage door."""
-        return self._get_entity(field_name=FIELD_SECTION, entity_type=HmSensor)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_door_state: HmSensor = self._get_entity(
+            field_name=FIELD_DOOR_STATE, entity_type=HmSensor
+        )
+        self._e_door_command: HmAction = self._get_entity(
+            field_name=FIELD_DOOR_COMMAND, entity_type=HmAction
+        )
+        self._e_section: HmSensor = self._get_entity(
+            field_name=FIELD_SECTION, entity_type=HmSensor
+        )
 
     @property
     def current_cover_position(self) -> int | None:

@@ -668,6 +668,11 @@ class CustomEntity(BaseEntity, CallbackEntity):
         CallbackEntity.__init__(self)
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
+        self._init_entity_fields()
+
+    @abstractmethod
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
 
     @property
     def attributes(self) -> dict[str, Any]:

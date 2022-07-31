@@ -48,6 +48,7 @@ class CeSwitch(CustomEntity):
             platform=HmPlatform.SWITCH,
             channel_no=channel_no,
         )
+
         _LOGGER.debug(
             "BaseHmSwitch.__init__(%s, %s, %s)",
             self.device.interface_id,
@@ -55,20 +56,16 @@ class CeSwitch(CustomEntity):
             unique_id,
         )
 
-    @property
-    def _e_state(self) -> HmSwitch:
-        """Return the state entity of the device."""
-        return self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
-
-    @property
-    def _e_on_time_value(self) -> HmAction:
-        """Return the on_time entity of the device."""
-        return self._get_entity(field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction)
-
-    @property
-    def _e_channel_state(self) -> HmBinarySensor:
-        """Return the temperature entity of the device."""
-        return self._get_entity(
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_state: HmSwitch = self._get_entity(
+            field_name=FIELD_STATE, entity_type=HmSwitch
+        )
+        self._e_on_time_value: HmAction = self._get_entity(
+            field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
+        )
+        self._e_channel_state: HmBinarySensor = self._get_entity(
             field_name=FIELD_CHANNEL_STATE, entity_type=HmBinarySensor
         )
 

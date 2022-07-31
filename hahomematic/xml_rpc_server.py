@@ -230,7 +230,9 @@ class XmlRpcServer(threading.Thread):
             allow_none=True,
         )
 
-        self.local_port: Final[int] = self._simple_xml_rpc_server.socket.getsockname()[1]
+        self.local_port: Final[int] = self._simple_xml_rpc_server.socket.getsockname()[
+            1
+        ]
         self._simple_xml_rpc_server.register_introspection_functions()
         self._simple_xml_rpc_server.register_multicall_functions()
         _LOGGER.debug("__init__: Registering RPC functions")

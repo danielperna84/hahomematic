@@ -120,20 +120,18 @@ class BaseClimateEntity(CustomEntity):
             unique_id,
         )
 
-    @property
-    def _e_humidity(self) -> HmSensor:
-        """Return the humidity entity of the device."""
-        return self._get_entity(field_name=FIELD_HUMIDITY, entity_type=HmSensor)
-
-    @property
-    def _e_setpoint(self) -> HmFloat:
-        """Return the setpoint entity of the device."""
-        return self._get_entity(field_name=FIELD_SETPOINT, entity_type=HmFloat)
-
-    @property
-    def _e_temperature(self) -> HmSensor:
-        """Return the temperature entity of the device."""
-        return self._get_entity(field_name=FIELD_TEMPERATURE, entity_type=HmSensor)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_humidity: HmSensor = self._get_entity(
+            field_name=FIELD_HUMIDITY, entity_type=HmSensor
+        )
+        self._e_setpoint: HmFloat = self._get_entity(
+            field_name=FIELD_SETPOINT, entity_type=HmFloat
+        )
+        self._e_temperature: HmSensor = self._get_entity(
+            field_name=FIELD_TEMPERATURE, entity_type=HmSensor
+        )
 
     @property
     def temperature_unit(self) -> str:
@@ -236,40 +234,30 @@ class CeSimpleRfThermostat(BaseClimateEntity):
 class CeRfThermostat(BaseClimateEntity):
     """Classic HomeMatic thermostat like HM-CC-RT-DN."""
 
-    @property
-    def _e_boost_mode(self) -> HmSwitch:
-        """Return the boost_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_BOOST_MODE, entity_type=HmSwitch)
-
-    @property
-    def _e_auto_mode(self) -> HmAction:
-        """Return the auto_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_AUTO_MODE, entity_type=HmAction)
-
-    @property
-    def _e_manu_mode(self) -> HmAction:
-        """Return the manu_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_MANU_MODE, entity_type=HmAction)
-
-    @property
-    def _e_comfort_mode(self) -> HmAction:
-        """Return the comfort_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_COMFORT_MODE, entity_type=HmAction)
-
-    @property
-    def _e_lowering_mode(self) -> HmAction:
-        """Return the lowering_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_LOWERING_MODE, entity_type=HmAction)
-
-    @property
-    def _e_control_mode(self) -> HmSensor:
-        """Return the control_mode entiy of the device."""
-        return self._get_entity(field_name=FIELD_CONTROL_MODE, entity_type=HmSensor)
-
-    @property
-    def _e_valve_state(self) -> HmSensor:
-        """Return the valve state entiy of the device."""
-        return self._get_entity(field_name=FIELD_VALVE_STATE, entity_type=HmSensor)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_boost_mode: HmSwitch = self._get_entity(
+            field_name=FIELD_BOOST_MODE, entity_type=HmSwitch
+        )
+        self._e_auto_mode: HmAction = self._get_entity(
+            field_name=FIELD_AUTO_MODE, entity_type=HmAction
+        )
+        self._e_manu_mode: HmAction = self._get_entity(
+            field_name=FIELD_MANU_MODE, entity_type=HmAction
+        )
+        self._e_comfort_mode: HmAction = self._get_entity(
+            field_name=FIELD_COMFORT_MODE, entity_type=HmAction
+        )
+        self._e_lowering_mode: HmAction = self._get_entity(
+            field_name=FIELD_LOWERING_MODE, entity_type=HmAction
+        )
+        self._e_control_mode: HmSensor = self._get_entity(
+            field_name=FIELD_CONTROL_MODE, entity_type=HmSensor
+        )
+        self._e_valve_state: HmSensor = self._get_entity(
+            field_name=FIELD_VALVE_STATE, entity_type=HmSensor
+        )
 
     @property
     def hvac_action(self) -> HmHvacAction | None:
@@ -354,52 +342,40 @@ class CeRfThermostat(BaseClimateEntity):
 class CeIpThermostat(BaseClimateEntity):
     """homematic IP thermostat like HmIP-eTRV-B."""
 
-    @property
-    def _e_active_profile(self) -> HmInteger:
-        """Return the active_profile entity of the device."""
-        return self._get_entity(field_name=FIELD_ACTIVE_PROFILE, entity_type=HmInteger)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_active_profile: HmInteger = self._get_entity(
+            field_name=FIELD_ACTIVE_PROFILE, entity_type=HmInteger
+        )
+        self._e_boost_mode: HmSwitch = self._get_entity(
+            field_name=FIELD_BOOST_MODE, entity_type=HmSwitch
+        )
+        self._e_control_mode: HmAction = self._get_entity(
+            field_name=FIELD_CONTROL_MODE, entity_type=HmAction
+        )
+        self._e_heating_mode: HmSelect = self._get_entity(
+            field_name=FIELD_HEATING_COOLING, entity_type=HmSelect
+        )
+        self._e_party_mode: HmBinarySensor = self._get_entity(
+            field_name=FIELD_PARTY_MODE, entity_type=HmBinarySensor
+        )
+        self._e_set_point_mode: HmInteger = self._get_entity(
+            field_name=FIELD_SET_POINT_MODE, entity_type=HmInteger
+        )
+        self._e_level: HmSensor = self._get_entity(
+            field_name=FIELD_LEVEL, entity_type=HmSensor
+        )
+        self._e_state: HmBinarySensor = self._get_entity(
+            field_name=FIELD_STATE, entity_type=HmBinarySensor
+        )
 
     @property
-    def _e_boost_mode(self) -> HmSwitch:
-        """Return the boost_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_BOOST_MODE, entity_type=HmSwitch)
-
-    @property
-    def _e_control_mode(self) -> HmAction:
-        """Return the control_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_CONTROL_MODE, entity_type=HmAction)
-
-    @property
-    def _e_heating_mode(self) -> HmSelect:
-        """Return the heating_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_HEATING_COOLING, entity_type=HmSelect)
-
-    @property
-    def _is_heating_mode(self) -> bool | None:
+    def _is_heating_mode(self) -> bool:
         """Return the heating_mode of the device."""
         if self._e_heating_mode.value:
             return str(self._e_heating_mode.value) == "HEATING"
         return True
-
-    @property
-    def _e_party_mode(self) -> HmBinarySensor:
-        """Return the party_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_PARTY_MODE, entity_type=HmBinarySensor)
-
-    @property
-    def _e_set_point_mode(self) -> HmInteger:
-        """Return the set_point_mode entity of the device."""
-        return self._get_entity(field_name=FIELD_SET_POINT_MODE, entity_type=HmInteger)
-
-    @property
-    def _e_level(self) -> HmSensor:
-        """Return the level entity of the device."""
-        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmSensor)
-
-    @property
-    def _e_state(self) -> HmBinarySensor:
-        """Return the state entity of the device."""
-        return self._get_entity(field_name=FIELD_STATE, entity_type=HmBinarySensor)
 
     @property
     def hvac_action(self) -> HmHvacAction | None:
@@ -408,9 +384,8 @@ class CeIpThermostat(BaseClimateEntity):
             return None
         if self.hvac_mode == HmHvacMode.OFF:
             return HmHvacAction.OFF
-        if self._is_heating_mode is not None and (
-            self._e_state.value is True
-            or (self._e_level.value and self._e_level.value > 0.0)
+        if self._e_state.value is True or (
+            self._e_level.value and self._e_level.value > 0.0
         ):
             return HmHvacAction.HEAT if self._is_heating_mode else HmHvacAction.COOL
         return HmHvacAction.IDLE

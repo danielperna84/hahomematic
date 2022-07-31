@@ -106,27 +106,21 @@ class BaseLock(CustomEntity):
 class CeIpLock(BaseLock):
     """Class for homematic ip lock entities."""
 
-    @property
-    def _e_lock_state(self) -> HmSensor:
-        """Return the lock state entity of the device."""
-        return self._get_entity(field_name=FIELD_LOCK_STATE, entity_type=HmSensor)
-
-    @property
-    def _e_lock_target_level(self) -> HmAction:
-        """Return the lock target level entity of the device."""
-        return self._get_entity(
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_lock_state: HmSensor = self._get_entity(
+            field_name=FIELD_LOCK_STATE, entity_type=HmSensor
+        )
+        self._e_lock_target_level: HmAction = self._get_entity(
             field_name=FIELD_LOCK_TARGET_LEVEL, entity_type=HmAction
         )
-
-    @property
-    def _e_direction(self) -> HmSensor:
-        """Return the direction entity of the lock."""
-        return self._get_entity(field_name=FIELD_DIRECTION, entity_type=HmSensor)
-
-    @property
-    def _e_error(self) -> HmBinarySensor:
-        """Return the error entity of the device."""
-        return self._get_entity(field_name=FIELD_ERROR, entity_type=HmBinarySensor)
+        self._e_direction: HmSensor = self._get_entity(
+            field_name=FIELD_DIRECTION, entity_type=HmSensor
+        )
+        self._e_error: HmBinarySensor = self._get_entity(
+            field_name=FIELD_ERROR, entity_type=HmBinarySensor
+        )
 
     @property
     def is_locked(self) -> bool:
@@ -168,25 +162,21 @@ class CeIpLock(BaseLock):
 class CeRfLock(BaseLock):
     """Class for classic homematic lock entities."""
 
-    @property
-    def _e_state(self) -> HmSwitch:
-        """Return the state entity of the device."""
-        return self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
-
-    @property
-    def _e_open(self) -> HmAction:
-        """Return the open entity of the device."""
-        return self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
-
-    @property
-    def _e_direction(self) -> HmSensor:
-        """Return the direction entity of the lock."""
-        return self._get_entity(field_name=FIELD_DIRECTION, entity_type=HmSensor)
-
-    @property
-    def _e_error(self) -> HmSensor:
-        """Return the error entity of the device."""
-        return self._get_entity(field_name=FIELD_ERROR, entity_type=HmSensor)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_state: HmSwitch = self._get_entity(
+            field_name=FIELD_STATE, entity_type=HmSwitch
+        )
+        self._e_open: HmAction = self._get_entity(
+            field_name=FIELD_OPEN, entity_type=HmAction
+        )
+        self._e_direction: HmSensor = self._get_entity(
+            field_name=FIELD_DIRECTION, entity_type=HmSensor
+        )
+        self._e_error: HmSensor = self._get_entity(
+            field_name=FIELD_ERROR, entity_type=HmSensor
+        )
 
     @property
     def is_locked(self) -> bool:
