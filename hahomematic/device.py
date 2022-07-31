@@ -25,10 +25,8 @@ from hahomematic.const import (
     EVENT_UN_REACH,
     FLAG_INTERAL,
     HM_VIRTUAL_REMOTE_TYPES,
-    IDENTIFIERS_SEPARATOR,
     IMPULSE_EVENTS,
     INIT_DATETIME,
-    MANUFACTURER,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
@@ -56,7 +54,6 @@ from hahomematic.entity import (
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
-    HmDeviceInfo,
     generate_unique_id,
     get_channel_no,
     get_device_channel,
@@ -256,21 +253,6 @@ class HmDevice:
         Provide some useful information.
         """
         return f"address: {self.device_address}, type: {self.device_type}, name: {self.name}, entities: {self.entities}"
-
-    @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return device specific attributes."""
-        return HmDeviceInfo(
-            interface=self.interface_id,
-            address=self.device_address,
-            identifier=f"{self.device_address}{IDENTIFIERS_SEPARATOR}{self.interface_id}",
-            manufacturer=MANUFACTURER,
-            name=self.name,
-            model=self.device_type,
-            version=self.firmware,
-            room=self.room,
-            central=self.central.instance_name,
-        )
 
     @property
     def available(self) -> bool:

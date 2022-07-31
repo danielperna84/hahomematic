@@ -18,7 +18,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.entity import CallbackEntity, GenericSystemVariable
-from hahomematic.helpers import HmDeviceInfo, SystemVariableData, generate_unique_id
+from hahomematic.helpers import SystemVariableData, generate_unique_id
 from hahomematic.platforms.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.number import HmSysvarNumber
 from hahomematic.platforms.select import HmSysvarSelect
@@ -66,11 +66,6 @@ class HmHub(CallbackEntity):
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._hub_attributes.copy()
-
-    @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return central specific attributes."""
-        return self._central.device_information
 
     @property
     def value(self) -> int | None:

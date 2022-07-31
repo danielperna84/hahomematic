@@ -62,7 +62,6 @@ import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
     EntityNameData,
-    HmDeviceInfo,
     SystemVariableData,
     check_channel_is_only_primary_channel,
     convert_value,
@@ -182,13 +181,6 @@ class BaseEntity(ABC):
         if self._function:
             attributes[ATTR_FUNCTION] = self._function
         return attributes
-
-    @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return device specific attributes."""
-        device_info = self.device.device_information
-        device_info.channel_no = self.channel_no
-        return device_info
 
     @property
     def force_enabled(self) -> bool | None:
@@ -892,7 +884,7 @@ class GenericSystemVariable(CallbackEntity):
         Initialize the entity.
         """
         CallbackEntity.__init__(self)
-        self._central: Final[hm_central.CentralUnit] = central
+        self.central: Final[hm_central.CentralUnit] = central
         self.platform: Final[HmPlatform] = platform
         self.unique_id: Final[str] = generate_unique_id(
             central=central,
@@ -914,17 +906,12 @@ class GenericSystemVariable(CallbackEntity):
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
-        return self._central.available
+        return self.central.available
 
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes of the base entity."""
         return {ATTR_NAME: self.ccu_var_name}
-
-    @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return device specific attributes."""
-        return self._central.device_information
 
     @property
     def value(self) -> Any | None:
@@ -961,7 +948,7 @@ class GenericSystemVariable(CallbackEntity):
 
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        await self._central.set_system_variable(
+        await self.central.set_system_variable(
             name=self.ccu_var_name, value=parse_sys_var(self.data_type, value)
         )
         self.update_value(value=value)

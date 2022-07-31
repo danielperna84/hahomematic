@@ -6,14 +6,12 @@ from datetime import datetime
 from hahomematic.backport import StrEnum
 
 DEFAULT_ENCODING = "UTF-8"
-MANUFACTURER = "eQ-3"
 INIT_DATETIME = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
 IP_LOCALHOST_V4 = "127.0.0.1"
 IP_LOCALHOST_V6 = "::1"
 IP_ANY_V4 = "0.0.0.0"
 IP_ANY_V6 = "::"
 PORT_ANY = 0
-IDENTIFIERS_SEPARATOR = "@"
 
 PATH_JSON_RPC = "/api/homematic.cgi"
 

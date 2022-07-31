@@ -41,7 +41,6 @@ from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
     INIT_DATETIME,
-    MANUFACTURER,
     NO_CACHE_ENTRY,
     PROXY_INIT_SUCCESS,
     HmCallSource,
@@ -59,7 +58,6 @@ from hahomematic.exceptions import (
     NoConnection,
 )
 from hahomematic.helpers import (
-    HmDeviceInfo,
     SystemVariableData,
     check_or_create_directory,
     get_device_address,
@@ -149,18 +147,6 @@ class CentralUnit:
             if client.available is False:
                 return False
         return True
-
-    @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return central specific attributes."""
-        return HmDeviceInfo(
-            identifier=self.instance_name,
-            manufacturer=MANUFACTURER,
-            name=self.instance_name,
-            model=self.model,
-            version=self.version,
-            central_url=self.central_url,
-        )
 
     @property
     def hub(self) -> HmHub | None:
