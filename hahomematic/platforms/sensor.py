@@ -53,10 +53,10 @@ class HmSensor(GenericEntity[Any]):
     def _get_converter_func(self) -> Any:
         """Return a converter based on sensor."""
         if convert_func := CONVERTERS_BY_DEVICE_PARAM.get(
-            (self._device_type, self._parameter)
+            (self.device_type, self.parameter)
         ):
             return convert_func
-        if convert_func := CONVERTERS_BY_PARAM.get(self._parameter):
+        if convert_func := CONVERTERS_BY_PARAM.get(self.parameter):
             return convert_func
 
 
@@ -100,9 +100,9 @@ class HmSysvarSensor(GenericSystemVariable):
         if (
             self.data_type == SYSVAR_TYPE_LIST
             and self._value is not None
-            and self._value_list is not None
+            and self.value_list is not None
         ):
-            return self._value_list[int(self._value)]
+            return self.value_list[int(self._value)]
         return _check_length_and_warn(name=self.ccu_var_name, value=self._value)
 
 

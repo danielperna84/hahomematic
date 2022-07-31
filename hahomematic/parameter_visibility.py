@@ -178,8 +178,8 @@ class ParameterVisibilityCache:
         self,
         central: hm_central.CentralUnit,
     ):
-        self._central: Final = central
-        self._storage_folder: Final = self._central.central_config.storage_folder
+        self._central: Final[hm_central.CentralUnit] = central
+        self._storage_folder: Final[str] = self._central.central_config.storage_folder
 
         # paramset_key, parameter
         self._un_ignore_parameters_general: dict[str, set[str]] = {

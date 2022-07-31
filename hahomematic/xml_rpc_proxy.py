@@ -36,10 +36,12 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """
         Initialize new proxy for server and get local ip
         """
-        self._loop: Final = loop
-        self._proxy_executor: Final = ThreadPoolExecutor(max_workers=max_workers)
-        self._tls: Final = kwargs.pop(ATTR_TLS, False)
-        self._verify_tls: Final = kwargs.pop(ATTR_VERIFY_TLS, True)
+        self._loop: Final[asyncio.AbstractEventLoop] = loop
+        self._proxy_executor: Final[ThreadPoolExecutor] = ThreadPoolExecutor(
+            max_workers=max_workers
+        )
+        self._tls: Final[bool] = kwargs.pop(ATTR_TLS, False)
+        self._verify_tls: Final[bool] = kwargs.pop(ATTR_VERIFY_TLS, True)
         if self._tls:
             kwargs[ATTR_CONTEXT] = get_tls_context(self._verify_tls)
         xmlrpc.client.ServerProxy.__init__(  # type: ignore[misc]

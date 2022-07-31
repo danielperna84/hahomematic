@@ -64,7 +64,7 @@ class HmSwitch(GenericEntity[bool]):
         """Set the on time value in seconds."""
         await self._client.set_value_by_paramset_key(
             channel_address=self.channel_address,
-            paramset_key=self._paramset_key,
+            paramset_key=self.paramset_key,
             parameter=PARAM_ON_TIME,
             value=float(on_time),
         )

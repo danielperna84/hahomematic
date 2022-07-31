@@ -75,25 +75,23 @@ class BaseHmLight(CustomEntity):
         )
         _LOGGER.debug(
             "BaseHmLight.__init__(%s, %s, %s)",
-            self._device.interface_id,
+            self.device.interface_id,
             device_address,
             unique_id,
         )
 
-    @property
-    def _e_level(self) -> HmFloat:
-        """Return the level entity of the device."""
-        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
-
-    @property
-    def _e_on_time_value(self) -> HmAction:
-        """Return the on_time entity of the device."""
-        return self._get_entity(field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction)
-
-    @property
-    def _e_ramp_time_value(self) -> HmAction:
-        """Return the ramp time entity device."""
-        return self._get_entity(field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_level: HmFloat = self._get_entity(
+            field_name=FIELD_LEVEL, entity_type=HmFloat
+        )
+        self._e_on_time_value: HmAction = self._get_entity(
+            field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
+        )
+        self._e_ramp_time_value: HmAction = self._get_entity(
+            field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction
+        )
 
     @property
     @abstractmethod
@@ -188,10 +186,12 @@ class BaseHmLight(CustomEntity):
 class CeDimmer(BaseHmLight):
     """Class for homematic dimmer entities."""
 
-    @property
-    def _e_channel_level(self) -> HmSensor:
-        """Return the channel level entity of the device."""
-        return self._get_entity(field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_channel_level: HmSensor = self._get_entity(
+            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
+        )
 
     @property
     def is_on(self) -> bool:
@@ -204,16 +204,9 @@ class CeDimmer(BaseHmLight):
         return int((self._e_level.value or 0.0) * 255)
 
     @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the light."""
-        state_attr = super().attributes
-        if (
-            self._e_channel_level.value
-            and self._e_level.value
-            and self._e_channel_level.value != self._e_level.value
-        ):
-            state_attr[HM_ARG_CHANNEL_LEVEL] = self._e_channel_level.value * 255
-        return state_attr
+    def channel_brightness(self) -> int:
+        """Return the channel_brightness of this light between 0..255."""
+        return int((self._e_channel_level.value or 0.0) * 255)
 
 
 class CeColorDimmer(CeDimmer):
@@ -229,15 +222,15 @@ class CeColorDimmer(CeDimmer):
         "TV simulation",
     ]
 
-    @property
-    def _e_color(self) -> HmInteger:
-        """Return the color entity of the device."""
-        return self._get_entity(field_name=FIELD_COLOR, entity_type=HmInteger)
-
-    @property
-    def _e_effect(self) -> HmInteger:
-        """Return the effect entity of the device."""
-        return self._get_entity(field_name=FIELD_PROGRAM, entity_type=HmInteger)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_color: HmInteger = self._get_entity(
+            field_name=FIELD_COLOR, entity_type=HmInteger
+        )
+        self._e_effect: HmInteger = self._get_entity(
+            field_name=FIELD_PROGRAM, entity_type=HmInteger
+        )
 
     @property
     def hs_color(self) -> tuple[float, float]:
@@ -300,10 +293,12 @@ class CeColorDimmer(CeDimmer):
 class CeColorTempDimmer(CeDimmer):
     """Class for homematic dimmer with color temperature entities."""
 
-    @property
-    def _e_color_level(self) -> HmFloat:
-        """Return the color level entity of the device."""
-        return self._get_entity(field_name=FIELD_COLOR_LEVEL, entity_type=HmFloat)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_color_level: HmFloat = self._get_entity(
+            field_name=FIELD_COLOR_LEVEL, entity_type=HmFloat
+        )
 
     @property
     def color_temp(self) -> int:
@@ -344,34 +339,36 @@ class CeIpFixedColorLight(BaseHmLight):
     }
 
     @property
-    def _e_color(self) -> HmSelect:
-        """Return the color entity of the device."""
-        return self._get_entity(field_name=FIELD_COLOR, entity_type=HmSelect)
+    def color_name(self) -> str | None:
+        """Return the name of the color"""
+        return self._e_color.value
 
     @property
-    def _e_channel_color(self) -> HmSensor:
-        """Return the channel color entity of the device."""
-        return self._get_entity(field_name=FIELD_CHANNEL_COLOR, entity_type=HmSensor)
+    def channel_color_name(self) -> str | None:
+        """Return the name of the channel color"""
+        return self._e_channel_color.value
 
-    @property
-    def _e_level(self) -> HmFloat:
-        """Return the level entity of the device."""
-        return self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
-
-    @property
-    def _e_channel_level(self) -> HmSensor:
-        """Return the channel level entity of the device."""
-        return self._get_entity(field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor)
-
-    @property
-    def _e_on_time_unit(self) -> HmAction:
-        """Return the on time unit entity of the device."""
-        return self._get_entity(field_name=FIELD_ON_TIME_UNIT, entity_type=HmAction)
-
-    @property
-    def _e_ramp_time_unit(self) -> HmAction:
-        """Return the ramp time unit entity of the device."""
-        return self._get_entity(field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_color: HmSelect = self._get_entity(
+            field_name=FIELD_COLOR, entity_type=HmSelect
+        )
+        self._e_channel_color: HmSensor = self._get_entity(
+            field_name=FIELD_CHANNEL_COLOR, entity_type=HmSensor
+        )
+        self._e_level: HmFloat = self._get_entity(
+            field_name=FIELD_LEVEL, entity_type=HmFloat
+        )
+        self._e_channel_level: HmSensor = self._get_entity(
+            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
+        )
+        self._e_on_time_unit: HmAction = self._get_entity(
+            field_name=FIELD_ON_TIME_UNIT, entity_type=HmAction
+        )
+        self._e_ramp_time_unit: HmAction = self._get_entity(
+            field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction
+        )
 
     @property
     def is_on(self) -> bool:
@@ -384,10 +381,22 @@ class CeIpFixedColorLight(BaseHmLight):
         return int((self._e_level.value or 0.0) * 255)
 
     @property
+    def channel_brightness(self) -> int:
+        """Return the channel brightness of this light between 0..255."""
+        return int((self._e_channel_level.value or 0.0) * 255)
+
+    @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         if self._e_color.value:
             return self._color_switcher.get(self._e_color.value, (0.0, 0.0))
+        return 0.0, 0.0
+
+    @property
+    def channel_hs_color(self) -> tuple[float, float]:
+        """Return the channel hue and saturation color value [float, float]."""
+        if self._e_channel_color.value:
+            return self._color_switcher.get(self._e_channel_color.value, (0.0, 0.0))
         return 0.0, 0.0
 
     @property
@@ -435,21 +444,6 @@ class CeIpFixedColorLight(BaseHmLight):
         ):
             await self._e_ramp_time_value.send_value(ramp_time_unit)
             await self._e_ramp_time_value.send_value(float(ramp_time))
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the notification light sensor."""
-        state_attr = super().attributes
-        if self.is_on:
-            state_attr[HM_ARG_COLOR_NAME] = self._e_color.value
-        if (
-            self._e_channel_level.value
-            and self._e_channel_level.value != self._e_level.value
-        ):
-            state_attr[HM_ARG_CHANNEL_LEVEL] = self._e_channel_level.value * 255
-        if self._e_channel_color.value and self._e_channel_color.value:
-            state_attr[HM_ARG_CHANNEL_COLOR] = self._e_channel_color.value
-        return state_attr
 
 
 def _convert_color(color: tuple[float, float] | None) -> str:

@@ -6,14 +6,12 @@ from datetime import datetime
 from hahomematic.backport import StrEnum
 
 DEFAULT_ENCODING = "UTF-8"
-MANUFACTURER = "eQ-3"
 INIT_DATETIME = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
 IP_LOCALHOST_V4 = "127.0.0.1"
 IP_LOCALHOST_V6 = "::1"
 IP_ANY_V4 = "0.0.0.0"
 IP_ANY_V6 = "::"
 PORT_ANY = 0
-IDENTIFIERS_SEPARATOR = "@"
 
 PATH_JSON_RPC = "/api/homematic.cgi"
 
@@ -108,7 +106,6 @@ ATTR_ADDRESS = "address"
 ATTR_CALLBACK_HOST = "callback_host"
 ATTR_CALLBACK_PORT = "callback_port"
 ATTR_CHANNELS = "channels"
-ATTR_ENTITY_TYPE = "entity_type"
 ATTR_ERROR = "error"
 ATTR_HOST = "host"
 ATTR_INTERFACE = "interface"
@@ -116,7 +113,6 @@ ATTR_INTERFACE_ID = "interface_id"
 ATTR_ID = "id"
 ATTR_IP = "ip"
 ATTR_JSON_PORT = "json_port"
-ATTR_MODEL = "model"
 ATTR_NAME = "name"
 ATTR_PASSWORD = "password"
 ATTR_PARAMETER = "parameter"
@@ -126,7 +122,6 @@ ATTR_RESULT = "result"
 ATTR_SESSION_ID = "_session_id_"
 ATTR_TLS = "tls"
 ATTR_TYPE = "type"
-ATTR_FUNCTION = "function"
 ATTR_SUBTYPE = "subtype"
 ATTR_USERNAME = "username"
 ATTR_VALUE = "value"
@@ -284,9 +279,6 @@ HM_VIRTUAL_REMOTE_ADDRESSES = [
 ]
 
 
-PARAMETER_FRIENDLY_NAME: dict[str, str] = {}
-
-
 class HmEntityUsage(StrEnum):
     """Enum with information about usage in Home Assistant."""
 
@@ -320,13 +312,6 @@ class HmPlatform(StrEnum):
     SIREN = "siren"
     SWITCH = "switch"
     TEXT = "text"
-
-
-class HmEntityType(StrEnum):
-    """Enum with hahomematic entity types."""
-
-    GENERIC = "generic"
-    CUSTOM = "custom"
 
 
 class HmEventType(StrEnum):

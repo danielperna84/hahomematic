@@ -70,8 +70,8 @@ class HmSysvarSelect(GenericSystemVariable):
     @property
     def value(self) -> str | None:
         """Get the value of the entity."""
-        if self._value is not None and self._value_list is not None:
-            return self._value_list[int(self._value)]
+        if self._value is not None and self.value_list is not None:
+            return self.value_list[int(self._value)]
         return None
 
     async def send_variable(self, value: int | str) -> None:
@@ -79,5 +79,5 @@ class HmSysvarSelect(GenericSystemVariable):
         # We allow setting the value via index as well, just in case.
         if isinstance(value, int):
             await super().send_variable(value)
-        elif self._value_list:
-            await super().send_variable(self._value_list.index(value))
+        elif self.value_list:
+            await super().send_variable(self.value_list.index(value))

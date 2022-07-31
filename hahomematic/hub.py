@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
@@ -18,7 +18,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.entity import CallbackEntity, GenericSystemVariable
-from hahomematic.helpers import HmDeviceInfo, SystemVariableData, generate_unique_id
+from hahomematic.helpers import SystemVariableData, generate_unique_id
 from hahomematic.platforms.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.number import HmSysvarNumber
 from hahomematic.platforms.select import HmSysvarSelect
@@ -44,15 +44,18 @@ class HmHub(CallbackEntity):
     def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
         CallbackEntity.__init__(self)
-        self._central = central
-        self._unique_id: str = generate_unique_id(central=central, address=HUB_ADDRESS)
-        self._name: str = central.instance_name
-        self.syvar_entities: dict[str, GenericSystemVariable] = {}
-        self._hub_attributes: dict[str, Any] = {}
-        self.should_poll = True
+        self._central: Final[hm_central.CentralUnit] = central
+        self.unique_id: Final[str] = generate_unique_id(
+            central=central, address=HUB_ADDRESS
+        )
+        self.name: Final[str] = central.instance_name
+        self.syvar_entities: Final[dict[str, GenericSystemVariable]] = {}
+        self._hub_attributes: Final[dict[str, Any]] = {}
+        self.platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
+        self.should_poll: Final[bool] = True
         self._value: int | None = None
-        self.create_in_ha: bool = True
-        self.usage = HmEntityUsage.ENTITY
+        self.create_in_ha: Final[bool] = True
+        self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
 
     @property
     def available(self) -> bool:
@@ -63,26 +66,6 @@ class HmHub(CallbackEntity):
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._hub_attributes.copy()
-
-    @property
-    def device_information(self) -> HmDeviceInfo:
-        """Return central specific attributes."""
-        return self._central.device_information
-
-    @property
-    def name(self) -> str:
-        """Return the hub name."""
-        return self._name
-
-    @property
-    def platform(self) -> HmPlatform:
-        """Return the platform."""
-        return HmPlatform.HUB_SENSOR
-
-    @property
-    def unique_id(self) -> str:
-        """Return the hub unique_id."""
-        return self._unique_id
 
     @property
     def value(self) -> int | None:
@@ -204,7 +187,7 @@ class HmHub(CallbackEntity):
         elif name in self.attributes:
             await self._central.set_system_variable(name=name, value=value)
         else:
-            _LOGGER.warning("Variable %s not found on %s", name, self._name)
+            _LOGGER.warning("Variable %s not found on %s", name, self.name)
 
     def _identify_missing_variable_names(
         self, variables: list[SystemVariableData]

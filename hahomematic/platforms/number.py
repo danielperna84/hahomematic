@@ -99,15 +99,15 @@ class HmSysvarNumber(GenericSystemVariable):
 
     async def send_variable(self, value: float) -> None:
         """Set the value of the entity."""
-        if value is not None and self._max is not None and self._min is not None:
-            if self._min <= float(value) <= self._max:
+        if value is not None and self.max is not None and self.min is not None:
+            if self.min <= float(value) <= self.max:
                 await super().send_variable(value)
             else:
                 _LOGGER.warning(
                     "sysvar.number: Invalid value: %s (min: %s, max: %s)",
                     value,
-                    self._min,
-                    self._max,
+                    self.min,
+                    self.max,
                 )
             return
         if value is not None:

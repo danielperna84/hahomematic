@@ -62,7 +62,7 @@ class BaseSiren(CustomEntity):
         )
         _LOGGER.debug(
             "HMSiren.__init__(%s, %s, %s)",
-            self._device.interface_id,
+            self.device.interface_id,
             device_address,
             unique_id,
         )
@@ -96,31 +96,19 @@ class BaseSiren(CustomEntity):
 class CeIpSiren(BaseSiren):
     """Class for homematic ip siren entities."""
 
-    @property
-    def _e_acoustic_alarm_active(self) -> HmBinarySensor:
-        """Return the acoustic alarm entity."""
-        return self._get_entity(
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_acoustic_alarm_active: HmBinarySensor = self._get_entity(
             field_name=FIELD_ACOUSTIC_ALARM_ACTIVE, entity_type=HmBinarySensor
         )
-
-    @property
-    def _e_acoustic_alarm_selection(self) -> HmAction:
-        """Return the available accoustic alarms entity of the siren."""
-        return self._get_entity(
+        self._e_acoustic_alarm_selection: HmAction = self._get_entity(
             field_name=FIELD_ACOUSTIC_ALARM_SELECTION, entity_type=HmAction
         )
-
-    @property
-    def _e_optical_alarm_active(self) -> HmBinarySensor:
-        """Return the optical alarm entity."""
-        return self._get_entity(
+        self._e_optical_alarm_active: HmBinarySensor = self._get_entity(
             field_name=FIELD_OPTICAL_ALARM_ACTIVE, entity_type=HmBinarySensor
         )
-
-    @property
-    def _e_optical_alarm_selection(self) -> HmAction:
-        """Return the available optical alarms entity of the siren."""
-        return self._get_entity(
+        self._e_optical_alarm_selection: HmAction = self._get_entity(
             field_name=FIELD_OPTICAL_ALARM_SELECTION, entity_type=HmAction
         )
 
@@ -150,7 +138,7 @@ class CeIpSiren(BaseSiren):
     ) -> None:
         """Turn the device on."""
         await self._client.put_paramset(
-            address=f"{self._device_address}:3",
+            address=f"{self.device_address}:3",
             paramset_key="VALUES",
             value={
                 HMIP_ACOUSTIC_ALARM_SELECTION: acoustic_alarm,
@@ -163,7 +151,7 @@ class CeIpSiren(BaseSiren):
     async def turn_off(self) -> None:
         """Turn the device off."""
         await self._client.put_paramset(
-            address=f"{self._device_address}:3",
+            address=f"{self.device_address}:3",
             paramset_key="VALUES",
             value={
                 HMIP_ACOUSTIC_ALARM_SELECTION: DISABLE_ACOUSTIC_SIGNAL,

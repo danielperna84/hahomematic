@@ -21,9 +21,6 @@ from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
-# HM constants
-ATTR_CHANNEL_STATE = "channel_state"
-
 
 class CeSwitch(CustomEntity):
     """Class for homematic switch entities."""
@@ -48,29 +45,31 @@ class CeSwitch(CustomEntity):
             platform=HmPlatform.SWITCH,
             channel_no=channel_no,
         )
+
         _LOGGER.debug(
             "BaseHmSwitch.__init__(%s, %s, %s)",
-            self._device.interface_id,
+            self.device.interface_id,
             device_address,
             unique_id,
         )
 
-    @property
-    def _e_state(self) -> HmSwitch:
-        """Return the state entity of the device."""
-        return self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
-
-    @property
-    def _e_on_time_value(self) -> HmAction:
-        """Return the on_time entity of the device."""
-        return self._get_entity(field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction)
-
-    @property
-    def _e_channel_state(self) -> HmBinarySensor:
-        """Return the temperature entity of the device."""
-        return self._get_entity(
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_state: HmSwitch = self._get_entity(
+            field_name=FIELD_STATE, entity_type=HmSwitch
+        )
+        self._e_on_time_value: HmAction = self._get_entity(
+            field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
+        )
+        self._e_channel_state: HmBinarySensor = self._get_entity(
             field_name=FIELD_CHANNEL_STATE, entity_type=HmBinarySensor
         )
+
+    @property
+    def channel_value(self) -> bool | None:
+        """Return the current channelvalue of the switch."""
+        return self._e_channel_state.value
 
     @property
     def value(self) -> bool | None:
@@ -92,17 +91,6 @@ class CeSwitch(CustomEntity):
     async def set_on_time_value(self, on_time: float) -> None:
         """Set the on time value in seconds."""
         await self._e_on_time_value.send_value(float(on_time))
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the switch."""
-        state_attr = super().attributes
-        if (
-            self._e_channel_state.value
-            and self._e_channel_state.value != self._e_state.value
-        ):
-            state_attr[ATTR_CHANNEL_STATE] = self._e_channel_state.value
-        return state_attr
 
 
 def make_ip_switch(
