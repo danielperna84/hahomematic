@@ -284,9 +284,6 @@ HM_VIRTUAL_REMOTE_ADDRESSES = [
 ]
 
 
-PARAMETER_FRIENDLY_NAME: dict[str, str] = {}
-
-
 class HmEntityUsage(StrEnum):
     """Enum with information about usage in Home Assistant."""
 

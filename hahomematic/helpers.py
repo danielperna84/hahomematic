@@ -17,7 +17,6 @@ from hahomematic.const import (
     HUB_ADDRESS,
     INIT_DATETIME,
     MAX_CACHE_AGE,
-    PARAMETER_FRIENDLY_NAME,
     SYSVAR_ADDRESS,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
@@ -200,11 +199,7 @@ def get_entity_name(
         device=device,
         channel_no=channel_no,
     ):
-        new_parameter = parameter
-        # Check if friendly name is available for parameter.
-        if (friendly_name := PARAMETER_FRIENDLY_NAME.get(parameter)) is not None:
-            new_parameter = friendly_name
-        p_name = new_parameter.title().replace("_", " ")
+        p_name = parameter.title().replace("_", " ")
 
         if _check_channel_name_with_channel_no(name=channel_name):
             c_name = channel_name.split(":")[0]
