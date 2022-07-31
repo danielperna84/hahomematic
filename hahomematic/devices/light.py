@@ -204,16 +204,9 @@ class CeDimmer(BaseHmLight):
         return int((self._e_level.value or 0.0) * 255)
 
     @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the light."""
-        state_attr = super().attributes
-        if (
-            self._e_channel_level.value
-            and self._e_level.value
-            and self._e_channel_level.value != self._e_level.value
-        ):
-            state_attr[HM_ARG_CHANNEL_LEVEL] = self._e_channel_level.value * 255
-        return state_attr
+    def channel_brightness(self) -> int:
+        """Return the channel_brightness of this light between 0..255."""
+        return int((self._e_channel_level.value or 0.0) * 255)
 
 
 class CeColorDimmer(CeDimmer):
@@ -345,6 +338,16 @@ class CeIpFixedColorLight(BaseHmLight):
         "PURPLE": (300.0, 100.0),
     }
 
+    @property
+    def color_name(self) -> str | None:
+        """Return the name of the color"""
+        return self._e_color.value
+
+    @property
+    def channel_color_name(self) -> str | None:
+        """Return the name of the channel color"""
+        return self._e_channel_color.value
+
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
@@ -378,10 +381,22 @@ class CeIpFixedColorLight(BaseHmLight):
         return int((self._e_level.value or 0.0) * 255)
 
     @property
+    def channel_brightness(self) -> int:
+        """Return the channel brightness of this light between 0..255."""
+        return int((self._e_channel_level.value or 0.0) * 255)
+
+    @property
     def hs_color(self) -> tuple[float, float]:
         """Return the hue and saturation color value [float, float]."""
         if self._e_color.value:
             return self._color_switcher.get(self._e_color.value, (0.0, 0.0))
+        return 0.0, 0.0
+
+    @property
+    def channel_hs_color(self) -> tuple[float, float]:
+        """Return the channel hue and saturation color value [float, float]."""
+        if self._e_channel_color.value:
+            return self._color_switcher.get(self._e_channel_color.value, (0.0, 0.0))
         return 0.0, 0.0
 
     @property
@@ -429,21 +444,6 @@ class CeIpFixedColorLight(BaseHmLight):
         ):
             await self._e_ramp_time_value.send_value(ramp_time_unit)
             await self._e_ramp_time_value.send_value(float(ramp_time))
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the notification light sensor."""
-        state_attr = super().attributes
-        if self.is_on:
-            state_attr[HM_ARG_COLOR_NAME] = self._e_color.value
-        if (
-            self._e_channel_level.value
-            and self._e_channel_level.value != self._e_level.value
-        ):
-            state_attr[HM_ARG_CHANNEL_LEVEL] = self._e_channel_level.value * 255
-        if self._e_channel_color.value and self._e_channel_color.value:
-            state_attr[HM_ARG_CHANNEL_COLOR] = self._e_channel_color.value
-        return state_attr
 
 
 def _convert_color(color: tuple[float, float] | None) -> str:

@@ -21,9 +21,6 @@ from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
-# HM constants
-ATTR_CHANNEL_STATE = "channel_state"
-
 
 class CeSwitch(CustomEntity):
     """Class for homematic switch entities."""
@@ -70,6 +67,11 @@ class CeSwitch(CustomEntity):
         )
 
     @property
+    def channel_value(self) -> bool | None:
+        """Return the current channelvalue of the switch."""
+        return self._e_channel_state.value
+
+    @property
     def value(self) -> bool | None:
         """Return the current value of the switch."""
         return self._e_state.value
@@ -89,17 +91,6 @@ class CeSwitch(CustomEntity):
     async def set_on_time_value(self, on_time: float) -> None:
         """Set the on time value in seconds."""
         await self._e_on_time_value.send_value(float(on_time))
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the switch."""
-        state_attr = super().attributes
-        if (
-            self._e_channel_state.value
-            and self._e_channel_state.value != self._e_state.value
-        ):
-            state_attr[ATTR_CHANNEL_STATE] = self._e_channel_state.value
-        return state_attr
 
 
 def make_ip_switch(

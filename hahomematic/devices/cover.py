@@ -29,10 +29,6 @@ from hahomematic.platforms.sensor import HmSensor
 
 _LOGGER = logging.getLogger(__name__)
 
-# HM constants
-ATTR_CHANNEL_COVER_LEVEL = "channel_cover_level"
-ATTR_CHANNEL_TILT_LEVEL = "channel_tilt_level"
-
 HM_OPEN: float = 1.0  # must be float!
 HM_CLOSED: float = 0.0  # must be float!
 
@@ -104,7 +100,7 @@ class CeCover(CustomEntity):
         )
 
     @property
-    def _channel_level(self) -> float | None:
+    def channel_level(self) -> float | None:
         """Return the channel level of the cover."""
         if self._e_channel_level.value is not None:
             return float(self._e_channel_level.value)
@@ -113,8 +109,8 @@ class CeCover(CustomEntity):
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
-        if self._channel_level is not None:
-            return int(self._channel_level * 100)
+        if self.channel_level is not None:
+            return int(self.channel_level * 100)
         return None
 
     @property
@@ -137,8 +133,8 @@ class CeCover(CustomEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self._channel_level is not None:
-            return self._channel_level == HM_CLOSED
+        if self.channel_level is not None:
+            return self.channel_level == HM_CLOSED
         return None
 
     @property
@@ -167,14 +163,6 @@ class CeCover(CustomEntity):
         """Stop the device if in motion."""
         await self._e_stop.send_value(True)
 
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the cover."""
-        state_attr = super().attributes
-        if self._channel_level and self._channel_level != self._e_level.value:
-            state_attr[ATTR_CHANNEL_COVER_LEVEL] = self._channel_level * 100
-        return state_attr
-
 
 class CeBlind(CeCover):
     """Class for homematic blind entities."""
@@ -190,7 +178,7 @@ class CeBlind(CeCover):
         )
 
     @property
-    def _channel_level_2(self) -> float | None:
+    def channel_tilt_level(self) -> float | None:
         """Return the channel level of the tilt."""
         if self._e_channel_level_2.value is not None:
             return float(self._e_channel_level_2.value)
@@ -199,8 +187,8 @@ class CeBlind(CeCover):
     @property
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
-        if self._channel_level_2 is not None:
-            return int(self._channel_level_2 * 100)
+        if self.channel_tilt_level is not None:
+            return int(self.channel_tilt_level * 100)
         return None
 
     async def set_cover_tilt_position(self, position: float) -> None:
@@ -224,14 +212,6 @@ class CeBlind(CeCover):
     async def stop_cover_tilt(self) -> None:
         """Stop the device if in motion."""
         await self._e_stop.send_value(True)
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the cover."""
-        state_attr = super().attributes
-        if self._channel_level_2 and self._channel_level_2 != self._e_level_2.value:
-            state_attr[ATTR_CHANNEL_TILT_LEVEL] = self._channel_level_2 * 100
-        return state_attr
 
 
 class CeIpBlind(CeBlind):

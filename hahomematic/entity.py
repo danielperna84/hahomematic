@@ -15,8 +15,6 @@ import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_ADDRESS,
-    ATTR_ENTITY_TYPE,
-    ATTR_FUNCTION,
     ATTR_HM_DEFAULT,
     ATTR_HM_FLAGS,
     ATTR_HM_MAX,
@@ -27,8 +25,6 @@ from hahomematic.const import (
     ATTR_HM_UNIT,
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
-    ATTR_MODEL,
-    ATTR_NAME,
     ATTR_PARAMETER,
     ATTR_SUBTYPE,
     ATTR_TYPE,
@@ -51,7 +47,6 @@ from hahomematic.const import (
     SYSVAR_ADDRESS,
     TYPE_BOOL,
     HmCallSource,
-    HmEntityType,
     HmEntityUsage,
     HmEventType,
     HmPlatform,
@@ -150,7 +145,7 @@ class BaseEntity(ABC):
         self._channel_type: Final[str] = str(
             self.device.channels[self.channel_address].type
         )
-        self._function: Final[
+        self.function: Final[
             str | None
         ] = self._central.device_details.get_function_text(address=self.channel_address)
 
@@ -169,18 +164,6 @@ class BaseEntity(ABC):
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.device.available
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the base entity."""
-        attributes: dict[str, Any] = {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.channel_address,
-            ATTR_MODEL: self.device.device_type,
-        }
-        if self._function:
-            attributes[ATTR_FUNCTION] = self._function
-        return attributes
 
     @property
     def force_enabled(self) -> bool | None:
@@ -276,13 +259,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self._operations: int = parameter_data[ATTR_HM_OPERATIONS]
         self._special: dict[str, Any] | None = parameter_data.get(ATTR_HM_SPECIAL)
         self._unit: str | None = parameter_data.get(ATTR_HM_UNIT)
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the base entity."""
-        state_attr = super().attributes
-        state_attr[ATTR_PARAMETER] = self.parameter
-        return state_attr
 
     @property
     def default(self) -> ParameterT:
@@ -442,13 +418,6 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         self._central.entity_event_subscriptions[
             (self.channel_address, self.parameter)
         ].append(self.event)
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the generic entity."""
-        state_attr = super().attributes
-        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.GENERIC.value
-        return state_attr
 
     @property
     def channel_operation_mode(self) -> str | None:
@@ -665,13 +634,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
     @abstractmethod
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the custom entity."""
-        state_attr = super().attributes
-        state_attr[ATTR_ENTITY_TYPE] = HmEntityType.CUSTOM.value
-        return state_attr
 
     @property
     def last_update(self) -> datetime:
@@ -907,11 +869,6 @@ class GenericSystemVariable(CallbackEntity):
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.central.available
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the base entity."""
-        return {ATTR_NAME: self.ccu_var_name}
 
     @property
     def value(self) -> Any | None:
