@@ -52,6 +52,7 @@ from hahomematic.helpers import (
     build_xml_rpc_uri,
     get_channel_no,
 )
+from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,23 +69,27 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self._client_config: Final = client_config
-        self._central: Final = self._client_config.central
-        self._available: bool = True
-        self._interface: Final = self._client_config.interface
+        self._client_config: Final[_ClientConfig] = client_config
+        self.central: Final[hm_central.CentralUnit] = self._client_config.central
+        self.interface: Final[str] = self._client_config.interface
         # This is the actual interface_id used for init
-        self._interface_id: Final = get_interface_id(
-            instance_name=self._central.instance_name, interface=self._interface
+        self.interface_id: Final[str] = get_interface_id(
+            instance_name=self.central.instance_name, interface=self.interface
         )
-        self._has_credentials: Final = self._client_config.has_credentials
-        self._init_url: Final = self._client_config.init_url
+        self._has_credentials: Final[bool] = self._client_config.has_credentials
+        self.init_url: Final[str] = self._client_config.init_url
         # for all device related interaction
-        self._proxy: Final = self._client_config.xml_rpc_proxy
-        self._proxy_read: Final = self._client_config.xml_rpc_proxy_read
-        self.last_updated: datetime = INIT_DATETIME
-        self._json_rpc_client: Final = self._central.json_rpc_client
+        self._proxy: Final[XmlRpcProxy] = self._client_config.xml_rpc_proxy
+        self._proxy_read: Final[XmlRpcProxy] = self._client_config.xml_rpc_proxy_read
+        self._json_rpc_client: Final[
+            JsonRpcAioHttpClient
+        ] = self.central.json_rpc_client
+        self.serial: Final[str | None] = self._client_config.serial
+        self.version: Final[str] = self._client_config.version
+
         self._is_callback_alive: bool = True
-        self._serial: str | None = None
+        self._available: bool = True
+        self.last_updated: datetime = INIT_DATETIME
 
     @property
     def available(self) -> bool:
@@ -92,39 +97,9 @@ class Client(ABC):
         return self._available
 
     @property
-    def central(self) -> hm_central.CentralUnit:
-        """Return the central of the backend."""
-        return self._central
-
-    @property
-    def init_url(self) -> str:
-        """Return the init_url of the client."""
-        return self._init_url
-
-    @property
-    def interface(self) -> str:
-        """Return the interface of the client."""
-        return self._interface
-
-    @property
-    def interface_id(self) -> str:
-        """Return the interface id of the client."""
-        return self._interface_id
-
-    @property
     def model(self) -> str:
         """Return the model of the backend."""
         return ""
-
-    @property
-    def version(self) -> str:
-        """Return the version of the backend."""
-        return self._client_config.version
-
-    @property
-    def serial(self) -> str:
-        """Return the serial of the backend."""
-        return self._client_config.serial
 
     async def proxy_init(self) -> int:
         """
@@ -133,17 +108,17 @@ class Client(ABC):
         """
         try:
             _LOGGER.debug(
-                "proxy_init: init('%s', '%s')", self._init_url, self._interface_id
+                "proxy_init: init('%s', '%s')", self.init_url, self.interface_id
             )
-            await self._proxy.init(self._init_url, self._interface_id)
+            await self._proxy.init(self.init_url, self.interface_id)
             self._mark_all_devices_availability(available=True)
-            _LOGGER.debug("proxy_init: Proxy for %s initialized", self._interface_id)
+            _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
         except BaseHomematicException as hhe:
             _LOGGER.error(
                 "proxy_init: %s [%s] Failed to initialize proxy for %s",
                 hhe.name,
                 hhe.args,
-                self._interface_id,
+                self.interface_id,
             )
             self.last_updated = INIT_DATETIME
             return PROXY_INIT_FAILED
@@ -157,18 +132,18 @@ class Client(ABC):
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)",
-                self._interface,
+                self.interface,
             )
             return PROXY_DE_INIT_SKIPPED
         try:
-            _LOGGER.debug("proxy_de_init: init('%s')", self._init_url)
-            await self._proxy.init(self._init_url)
+            _LOGGER.debug("proxy_de_init: init('%s')", self.init_url)
+            await self._proxy.init(self.init_url)
         except BaseHomematicException as hhe:
             _LOGGER.error(
                 "proxy_de_init: %s [%s] Failed to de-initialize proxy for %s",
                 hhe.name,
                 hhe.args,
-                self._interface,
+                self.interface,
             )
             return PROXY_DE_INIT_FAILED
 
@@ -184,17 +159,17 @@ class Client(ABC):
     def _mark_all_devices_availability(self, available: bool) -> None:
         """Mark device's availability state for this interface."""
         if self._available != available:
-            for hm_device in self._central.hm_devices.values():
-                if hm_device.interface_id == self._interface_id:
+            for hm_device in self.central.hm_devices.values():
+                if hm_device.interface_id == self.interface_id:
                     hm_device.set_availability(value=available)
             self._available = available
             _LOGGER.info(
                 "mark_all_devices_availability: marked all devices %s for %s",
                 "available" if available else "unavailable",
-                self._interface_id,
+                self.interface_id,
             )
-        self._central.fire_interface_event(
-            interface_id=self._interface_id,
+        self.central.fire_interface_event(
+            interface_id=self.interface_id,
             interface_event_type=HmInterfaceEventType.PROXY,
             available=available,
         )
@@ -204,7 +179,7 @@ class Client(ABC):
         if await self.is_connected():
             _LOGGER.info(
                 "reconnect: waiting to re-connect client %s for %is",
-                self._interface_id,
+                self.interface_id,
                 int(config.RECONNECT_WAIT),
             )
             await asyncio.sleep(config.RECONNECT_WAIT)
@@ -212,7 +187,7 @@ class Client(ABC):
             await self.proxy_re_init()
             _LOGGER.info(
                 "reconnect: re-connected client %s",
-                self._interface_id,
+                self.interface_id,
             )
             return True
         return False
@@ -245,28 +220,28 @@ class Client(ABC):
 
     def is_callback_alive(self) -> bool:
         """Return if XmlRPC-Server is alive based on received events for this client."""
-        if last_events_time := self._central.last_events.get(self._interface_id):
+        if last_events_time := self.central.last_events.get(self.interface_id):
             seconds_since_last_event = (
                 datetime.now() - last_events_time
             ).total_seconds()
             if seconds_since_last_event > CHECK_INTERVAL:
                 if self._is_callback_alive:
                     self.central.fire_interface_event(
-                        interface_id=self._interface_id,
+                        interface_id=self.interface_id,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
                         available=False,
                     )
                     self._is_callback_alive = False
                 _LOGGER.warning(
                     "is_callback_alive: Callback for %s has not received events for %i seconds')",
-                    self._interface_id,
+                    self.interface_id,
                     seconds_since_last_event,
                 )
                 return False
 
             if not self._is_callback_alive:
-                self._central.fire_interface_event(
-                    interface_id=self._interface_id,
+                self.central.fire_interface_event(
+                    interface_id=self.interface_id,
                     interface_event_type=HmInterfaceEventType.CALLBACK,
                     available=True,
                 )
@@ -506,8 +481,8 @@ class Client(ABC):
             parameter_data = await self._get_paramset_description(
                 address=channel_address, paramset_key=paramset_key
             )
-            self._central.paramset_descriptions.add(
-                interface_id=self._interface_id,
+            self.central.paramset_descriptions.add(
+                interface_id=self.interface_id,
                 channel_address=channel_address,
                 paramset_key=paramset_key,
                 paramset_description=parameter_data,
@@ -521,7 +496,7 @@ class Client(ABC):
                 channel_address,
             )
         if save_to_file:
-            await self._central.paramset_descriptions.save()
+            await self.central.paramset_descriptions.save()
 
     async def fetch_paramset_descriptions(
         self, device_description: dict[str, Any]
@@ -535,8 +510,8 @@ class Client(ABC):
         for address, paramsets in data.items():
             _LOGGER.debug("fetch_paramset_descriptions for %s", address)
             for paramset_key, paramset_description in paramsets.items():
-                self._central.paramset_descriptions.add(
-                    interface_id=self._interface_id,
+                self.central.paramset_descriptions.add(
+                    interface_id=self.interface_id,
                     channel_address=address,
                     paramset_key=paramset_key,
                     paramset_description=paramset_description,
@@ -566,7 +541,7 @@ class Client(ABC):
             if (
                 only_relevant
                 and device_channel
-                and not self._central.parameter_visibility.is_relevant_paramset(
+                and not self.central.parameter_visibility.is_relevant_paramset(
                     device_type=device_type,
                     sub_type=sub_type,
                     device_channel=device_channel,
@@ -609,16 +584,16 @@ class Client(ABC):
         """
         Update paramsets descriptions for provided device_address.
         """
-        if not self._central.device_descriptions.get_device_descriptions(
-            interface_id=self._interface_id
+        if not self.central.device_descriptions.get_device_descriptions(
+            interface_id=self.interface_id
         ):
             _LOGGER.warning(
                 "update_paramset_descriptions: Interface missing in central_unit cache. Not updating paramsets for %s.",
                 device_address,
             )
             return
-        if not self._central.device_descriptions.get_device(
-            interface_id=self._interface_id, device_address=device_address
+        if not self.central.device_descriptions.get_device(
+            interface_id=self.interface_id, device_address=device_address
         ):
             _LOGGER.warning(
                 "update_paramset_descriptions: Channel missing in central_unit.cache. Not updating paramsets for %s.",
@@ -626,11 +601,11 @@ class Client(ABC):
             )
             return
         await self.fetch_paramset_descriptions(
-            self._central.device_descriptions.get_device(
-                interface_id=self._interface_id, device_address=device_address
+            self.central.device_descriptions.get_device(
+                interface_id=self.interface_id, device_address=device_address
             ),
         )
-        await self._central.paramset_descriptions.save()
+        await self.central.paramset_descriptions.save()
 
 
 class ClientCCU(Client):
@@ -647,20 +622,20 @@ class ClientCCU(Client):
         """
         if json_result := await self._json_rpc_client.get_device_details():
             for device in json_result:
-                self._central.device_details.add_name(
+                self.central.device_details.add_name(
                     address=device[ATTR_ADDRESS], name=device[ATTR_NAME]
                 )
-                self._central.device_details.add_device_channel_id(
+                self.central.device_details.add_device_channel_id(
                     address=device[ATTR_ADDRESS], channel_id=device[ATTR_ID]
                 )
                 for channel in device.get(ATTR_CHANNELS, []):
-                    self._central.device_details.add_name(
+                    self.central.device_details.add_name(
                         address=channel[ATTR_ADDRESS], name=channel[ATTR_NAME]
                     )
-                    self._central.device_details.add_device_channel_id(
+                    self.central.device_details.add_device_channel_id(
                         address=channel[ATTR_ADDRESS], channel_id=channel[ATTR_ID]
                     )
-                self._central.device_details.add_interface(
+                self.central.device_details.add_interface(
                     device[ATTR_ADDRESS], device[ATTR_INTERFACE]
                 )
         else:
@@ -681,7 +656,7 @@ class ClientCCU(Client):
     async def _check_connection(self) -> bool:
         """Check if _proxy is still initialized."""
         try:
-            await self._proxy.ping(self._interface_id)
+            await self._proxy.ping(self.interface_id)
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
@@ -712,7 +687,7 @@ class ClientCCU(Client):
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from CCU."""
         rooms: dict[str, set[str]] = {}
-        device_channel_ids = self._central.device_details.device_channel_ids
+        device_channel_ids = self.central.device_details.device_channel_ids
         channel_ids_room = await self._json_rpc_client.get_all_channel_ids_room()
         for address, channel_id in device_channel_ids.items():
             if names := channel_ids_room.get(channel_id):
@@ -724,7 +699,7 @@ class ClientCCU(Client):
     async def get_all_functions(self) -> dict[str, set[str]]:
         """Get all functions from CCU."""
         functions: dict[str, set[str]] = {}
-        device_channel_ids = self._central.device_details.device_channel_ids
+        device_channel_ids = self.central.device_details.device_channel_ids
         channel_ids_function = (
             await self._json_rpc_client.get_all_channel_ids_function()
         )
@@ -742,9 +717,9 @@ class ClientCCU(Client):
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for device_type in HM_VIRTUAL_REMOTE_TYPES:
-            for hm_device in self._central.hm_devices.values():
+            for hm_device in self.central.hm_devices.values():
                 if (
-                    hm_device.interface_id == self._interface_id
+                    hm_device.interface_id == self.interface_id
                     and hm_device.device_type == device_type
                 ):
                     return hm_device
@@ -774,11 +749,11 @@ class ClientHomegear(Client):
         Get all names from metadata (Homegear).
         """
         _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
-        for address in self._central.device_descriptions.get_device_descriptions(
-            interface_id=self._interface_id
+        for address in self.central.device_descriptions.get_device_descriptions(
+            interface_id=self.interface_id
         ):
             try:
-                self._central.device_details.add_name(
+                self.central.device_details.add_name(
                     address,
                     await self._proxy_read.getMetadata(address, ATTR_HM_NAME),
                 )
@@ -793,7 +768,7 @@ class ClientHomegear(Client):
     async def _check_connection(self) -> bool:
         """Check if proxy is still initialized."""
         try:
-            await self._proxy.clientServerInitialized(self._interface_id)
+            await self._proxy.clientServerInitialized(self.interface_id)
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
@@ -863,36 +838,40 @@ class _ClientConfig:
         interface_config: InterfaceConfig,
         local_ip: str,
     ):
-        self.central = central
-        self.interface_config = interface_config
-        self.interface: str = interface_config.interface
-        self._central_config = self.central.central_config
-        self._callback_host: str = (
+        self.central: Final[hm_central.CentralUnit] = central
+        self.interface_config: Final[InterfaceConfig] = interface_config
+        self.interface: Final[str] = interface_config.interface
+        self._central_config: Final[
+            hm_central.CentralConfig
+        ] = self.central.central_config
+        self._callback_host: Final[str] = (
             self._central_config.callback_host
             if self._central_config.callback_host
             else local_ip
         )
-        self._callback_port: int = (
+        self._callback_port: Final[int] = (
             self._central_config.callback_port
             if self._central_config.callback_port
             else self.central.local_port
         )
-        self.has_credentials: bool = (
+        self.has_credentials: Final[bool] = (
             self._central_config.username is not None
             and self._central_config.password is not None
         )
-        self.init_url: str = f"http://{self._callback_host}:{self._callback_port}"
-        self.xml_rpc_uri = build_xml_rpc_uri(
+        self.init_url: Final[
+            str
+        ] = f"http://{self._callback_host}:{self._callback_port}"
+        self.xml_rpc_uri: Final[str] = build_xml_rpc_uri(
             host=self._central_config.host,
             port=interface_config.port,
             path=interface_config.path,
             tls=self._central_config.tls,
         )
-        self.xml_rpc_headers = build_headers(
+        self.xml_rpc_headers: Final[list[tuple[str, str]]] = build_headers(
             username=self._central_config.username,
             password=self._central_config.password,
         )
-        self.xml_rpc_proxy: XmlRpcProxy = XmlRpcProxy(
+        self.xml_rpc_proxy: Final[XmlRpcProxy] = XmlRpcProxy(
             self.central.loop,
             max_workers=1,
             uri=self.xml_rpc_uri,
@@ -900,7 +879,7 @@ class _ClientConfig:
             tls=self._central_config.tls,
             verify_tls=self._central_config.verify_tls,
         )
-        self.xml_rpc_proxy_read: XmlRpcProxy = XmlRpcProxy(
+        self.xml_rpc_proxy_read: Final[XmlRpcProxy] = XmlRpcProxy(
             self.central.loop,
             max_workers=1,
             uri=self.xml_rpc_uri,
@@ -943,9 +922,9 @@ class InterfaceConfig:
         port: int,
         path: str | None = None,
     ):
-        self.interface = interface
-        self.port = port
-        self.path = path
+        self.interface: Final[str] = interface
+        self.port: Final[int] = port
+        self.path: Final[str | None] = path
         self.validate()
 
     def validate(self) -> None:

@@ -8,6 +8,7 @@ import os
 import random
 from typing import Any, Final
 
+import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_HM_ADDRESS,
@@ -31,12 +32,12 @@ class DeviceExporter:
     def __init__(
         self, client: hm_client.Client, interface_id: str, device_address: str
     ):
-        self._client: Final = client
-        self._central: Final = client.central
-        self._storage_folder: Final = self._central.central_config.storage_folder
-        self._interface_id: Final = interface_id
-        self._device_address: Final = device_address
-        self._random_id: Final = "VCU%i" % random.randint(1000000, 9999999)
+        self._client: Final[hm_client.Client] = client
+        self._central: Final[hm_central.CentralUnit] = client.central
+        self._storage_folder: Final[str] = self._central.central_config.storage_folder
+        self._interface_id: Final[str] = interface_id
+        self._device_address: Final[str] = device_address
+        self._random_id: Final[str] = "VCU%i" % random.randint(1000000, 9999999)
 
     async def export_data(self) -> None:
         """Export data."""

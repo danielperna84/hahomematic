@@ -10,7 +10,7 @@ class BaseHomematicException(Exception):
     def __init__(self, name: str, *args: Any) -> None:
         """Init the HaHomematicException."""
         super().__init__(*args)
-        self.name: Final = name
+        self.name: Final[str] = name
 
 
 class ProxyException(BaseHomematicException):

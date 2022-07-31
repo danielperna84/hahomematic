@@ -65,7 +65,7 @@ class BaseLock(CustomEntity):
         )
         _LOGGER.debug(
             "HMLock.__init__(%s, %s, %s)",
-            self._device.interface_id,
+            self.device.interface_id,
             device_address,
             unique_id,
         )

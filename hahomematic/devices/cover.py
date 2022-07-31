@@ -79,7 +79,7 @@ class CeCover(CustomEntity):
         )
         _LOGGER.debug(
             "HmCover.__init__(%s, %s, %s)",
-            self._device.interface_id,
+            self.device.interface_id,
             device_address,
             unique_id,
         )
@@ -286,7 +286,7 @@ class CeGarage(CustomEntity):
         )
         _LOGGER.debug(
             "HmGarage.__init__(%s, %s, %s)",
-            self._device.interface_id,
+            self.device.interface_id,
             device_address,
             unique_id,
         )
