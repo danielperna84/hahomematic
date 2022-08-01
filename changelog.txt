@@ -1,4 +1,4 @@
-Version 2022.7.15 (2022-07-30)
+Version 2022.8.0 (2022-08-01)
 - Fix pylint, mypy issues due to newer versions
 - Remove properties of final members
 - Add types to Final
