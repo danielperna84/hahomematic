@@ -112,8 +112,6 @@ class CentralUnit:
 
         # {interface_id, client}
         self.clients: Final[dict[str, hm_client.Client]] = {}
-        # {url, client}
-        self._clients_by_init_url: Final[dict[str, list[hm_client.Client]]] = {}
 
         # {{channel_address, parameter}, event_handle}
         self.entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
@@ -247,7 +245,6 @@ class CentralUnit:
             client.stop()
         _LOGGER.debug("stop_clients: Clearing existing clients.")
         self.clients.clear()
-        self._clients_by_init_url.clear()
 
     async def _create_clients(self) -> bool:
         """Create clients for the central unit. Start connection checker afterwards"""
@@ -288,10 +285,6 @@ class CentralUnit:
                         self.instance_name,
                     )
                     self.clients[client.interface_id] = client
-
-                    if client.init_url not in self._clients_by_init_url:
-                        self._clients_by_init_url[client.init_url] = []
-                    self._clients_by_init_url[client.init_url].append(client)
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface_id=hm_client.get_interface_id(
@@ -420,10 +413,6 @@ class CentralUnit:
     def get_client_by_interface_id(self, interface_id: str) -> hm_client.Client | None:
         """Return a client by interface_id."""
         return self.clients.get(interface_id)
-
-    def get_clients_by_init_url(self, init_url: str) -> list[hm_client.Client]:
-        """Return a client by init url."""
-        return self._clients_by_init_url.get(init_url, [])
 
     def get_client(self) -> hm_client.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
@@ -679,12 +668,6 @@ class CentralUnit:
             return await client.get_all_system_variables()
         return None
 
-    async def get_available_interfaces(self) -> list[str]:
-        """Get all available interfaces from CCU / Homegear."""
-        if client := self.get_client():
-            return await client.get_available_interfaces()
-        return []
-
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""
         if client := self.get_client():
@@ -695,15 +678,6 @@ class CentralUnit:
         """Set a system variable on CCU / Homegear."""
         if client := self.get_client():
             await client.set_system_variable(name=name, value=value)
-
-    async def get_service_messages(self) -> list[list[tuple[str, str, Any]]]:
-        """Get service messages from CCU / Homegear."""
-        service_messages: list[list[tuple[str, str, Any]]] = []
-        for client in self.clients.values():
-            if client.get_virtual_remote():
-                if client_messages := await client.get_service_messages():
-                    service_messages.append(client_messages)
-        return _remove_dummy_service_message(service_messages)
 
     # pylint: disable=invalid-name
     async def set_install_mode(
@@ -726,17 +700,6 @@ class CentralUnit:
             return int(await client.get_install_mode())
         return 0
 
-    async def get_value(
-        self, interface_id: str, channel_address: str, parameter: str
-    ) -> Any | None:
-        """Get a single value on paramset VALUES."""
-
-        if client := self.get_client_by_interface_id(interface_id=interface_id):
-            return await client.get_value(
-                channel_address=channel_address, parameter=parameter
-            )
-        return None
-
     async def set_value(
         self,
         interface_id: str,
@@ -754,21 +717,6 @@ class CentralUnit:
                 value=value,
                 rx_mode=rx_mode,
             )
-
-    async def get_paramset(
-        self,
-        interface_id: str,
-        address: str,
-        paramset_key: str,
-    ) -> Any:
-        """
-        Set paramsets manually.
-        Address is usually the channel_address,
-        but for bidcos devices there is a master paramset at the device."""
-
-        if client := self.get_client_by_interface_id(interface_id=interface_id):
-            return await client.get_paramset(address=address, paramset_key=paramset_key)
-        return None
 
     async def put_paramset(
         self,
@@ -1456,17 +1404,6 @@ class ParamsetDescriptionCache(BasePersistentCache):
             for channel_address in channel:
                 for paramset in channel[channel_address].values():
                     parameters.update(paramset)
-
-        return sorted(parameters)
-
-    def get_parameters(self, device_address: str) -> list[str]:
-        """Return all parameters of a device"""
-        parameters: set[str] = set()
-        for channel in self._paramset_descriptions_cache.values():
-            for channel_address in channel:
-                if channel_address.startswith(device_address):
-                    for paramset in channel[channel_address].values():
-                        parameters.update(paramset)
 
         return sorted(parameters)
 
