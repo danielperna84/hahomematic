@@ -204,9 +204,11 @@ class CeDimmer(BaseHmLight):
         return int((self._e_level.value or 0.0) * 255)
 
     @property
-    def channel_brightness(self) -> int:
+    def channel_brightness(self) -> int | None:
         """Return the channel_brightness of this light between 0..255."""
-        return int((self._e_channel_level.value or 0.0) * 255)
+        if self._e_channel_level.value:
+            return int(self._e_channel_level.value * 255)
+        return None
 
 
 class CeColorDimmer(CeDimmer):
@@ -381,9 +383,11 @@ class CeIpFixedColorLight(BaseHmLight):
         return int((self._e_level.value or 0.0) * 255)
 
     @property
-    def channel_brightness(self) -> int:
+    def channel_brightness(self) -> int | None:
         """Return the channel brightness of this light between 0..255."""
-        return int((self._e_channel_level.value or 0.0) * 255)
+        if self._e_channel_level.value:
+            return int(self._e_channel_level.value * 255)
+        return None
 
     @property
     def hs_color(self) -> tuple[float, float]:
@@ -393,11 +397,11 @@ class CeIpFixedColorLight(BaseHmLight):
         return 0.0, 0.0
 
     @property
-    def channel_hs_color(self) -> tuple[float, float]:
+    def channel_hs_color(self) -> tuple[float, float] | None:
         """Return the channel hue and saturation color value [float, float]."""
         if self._e_channel_color.value:
             return self._color_switcher.get(self._e_channel_color.value, (0.0, 0.0))
-        return 0.0, 0.0
+        return None
 
     @property
     def supports_hs_color(self) -> bool:
