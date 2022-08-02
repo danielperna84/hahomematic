@@ -375,7 +375,7 @@ class CentralUnit:
                 self.instance_name,
             )
 
-        await self._hub.fetch_data()
+        await self._hub.fetch_sysvar_data()
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
@@ -662,11 +662,11 @@ class CentralUnit:
             )
             raise HaHomematicException from cer
 
-    async def get_all_system_variables(self) -> list[SystemVariableData] | None:
+    async def get_all_system_variables(self) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         if client := self.get_client():
             return await client.get_all_system_variables()
-        return None
+        return []
 
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""

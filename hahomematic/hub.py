@@ -7,7 +7,7 @@ from typing import Any, Final
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     BACKEND_CCU,
-    HH_EVENT_SYSVARS_CREATED,
+    HH_EVENT_HUB_ENTITY_CREATED,
     HUB_ADDRESS,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
@@ -72,10 +72,10 @@ class HmHub(CallbackEntity):
         """Return the value of the entity."""
         return self._value
 
-    async def fetch_data(self) -> None:
-        """fetch data for the hub."""
+    async def fetch_sysvar_data(self) -> None:
+        """fetch sysvar data for the hub."""
         if self._central.available:
-            await self._update_entities()
+            await self._update_sysvar_entities()
             await self._update_hub_state()
 
     async def _update_hub_state(self) -> None:
@@ -90,7 +90,7 @@ class HmHub(CallbackEntity):
             self._value = value
             self.update_entity()
 
-    async def _update_entities(self) -> None:
+    async def _update_sysvar_entities(self) -> None:
         """Retrieve all variable data and update hmvariable values."""
         self._hub_attributes.clear()
         variables = await self._central.get_all_system_variables()
@@ -137,7 +137,9 @@ class HmHub(CallbackEntity):
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
-            self._central.callback_system_event(HH_EVENT_SYSVARS_CREATED, new_sysvars)
+            self._central.callback_system_event(
+                HH_EVENT_HUB_ENTITY_CREATED, new_sysvars
+            )
 
     def _create_system_variable(
         self, data: SystemVariableData

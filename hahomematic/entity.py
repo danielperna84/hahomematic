@@ -37,6 +37,7 @@ from hahomematic.const import (
     FLAG_SERVICE,
     FLAG_VISIBLE,
     HM_ENTITY_UNIT_REPLACE,
+    HUB_ENTITY_ADDRESS,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
@@ -44,7 +45,6 @@ from hahomematic.const import (
     OPERATION_WRITE,
     PARAM_CHANNEL_OPERATION_MODE,
     PARAMSET_KEY_VALUES,
-    SYSVAR_ADDRESS,
     TYPE_BOOL,
     HmCallSource,
     HmEntityUsage,
@@ -57,6 +57,7 @@ import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
     EntityNameData,
+    HubData,
     SystemVariableData,
     check_channel_is_only_primary_channel,
     convert_value,
@@ -828,7 +829,42 @@ class CustomEntity(BaseEntity, CallbackEntity):
         return cast(entity_type, NoneTypeEntity())  # type: ignore
 
 
-class GenericSystemVariable(CallbackEntity):
+class GenericHubEntity(CallbackEntity):
+    """Class for a homematic system variable."""
+
+    def __init__(
+        self,
+        central: hm_central.CentralUnit,
+        data: HubData,
+        platform: HmPlatform,
+    ):
+        """
+        Initialize the entity.
+        """
+        CallbackEntity.__init__(self)
+        self.central: Final[hm_central.CentralUnit] = central
+        self.platform: Final[HmPlatform] = platform
+        self.unique_id: Final[str] = generate_unique_id(
+            central=central,
+            address=HUB_ENTITY_ADDRESS,
+            parameter=slugify(data.name),
+        )
+        self.name: Final[str] = self.get_name(data=data)
+        self.create_in_ha: bool = True
+        self.should_poll = False
+        self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
+
+    @property
+    @abstractmethod
+    def available(self) -> bool:
+        """Return the availability of the device."""
+
+    def get_name(self, data: HubData) -> str:
+        """Return the name of the hub entity."""
+        return data.name
+
+
+class GenericSystemVariable(GenericHubEntity):
     """Class for a homematic system variable."""
 
     def __init__(
@@ -840,18 +876,7 @@ class GenericSystemVariable(CallbackEntity):
         """
         Initialize the entity.
         """
-        CallbackEntity.__init__(self)
-        self.central: Final[hm_central.CentralUnit] = central
-        self.platform: Final[HmPlatform] = platform
-        self.unique_id: Final[str] = generate_unique_id(
-            central=central,
-            address=SYSVAR_ADDRESS,
-            parameter=slugify(data.name),
-        )
-        self.name: Final[str] = f"SV_{data.name}"
-        self.create_in_ha: bool = True
-        self.should_poll = False
-        self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
+        super().__init__(central=central, data=data, platform=platform)
         self.ccu_var_name: Final[str] = data.name
         self.data_type: Final[str | None] = data.data_type
         self.value_list: Final[list[str] | None] = data.value_list
@@ -878,6 +903,10 @@ class GenericSystemVariable(CallbackEntity):
         if isinstance(self._value, (int, float)):
             return " "
         return None
+
+    def get_name(self, data: HubData) -> str:
+        """Return the name of the hub entity."""
+        return f"SV_{data.name}"
 
     def update_value(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""

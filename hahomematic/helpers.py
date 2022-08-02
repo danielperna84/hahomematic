@@ -15,9 +15,9 @@ import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     HM_VIRTUAL_REMOTE_ADDRESSES,
     HUB_ADDRESS,
+    HUB_ENTITY_ADDRESS,
     INIT_DATETIME,
     MAX_CACHE_AGE,
-    SYSVAR_ADDRESS,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
@@ -58,7 +58,7 @@ def generate_unique_id(
     if prefix:
         unique_id = f"{prefix}_{unique_id}"
     if (
-        address in (HUB_ADDRESS, SYSVAR_ADDRESS)
+        address in (HUB_ADDRESS, HUB_ENTITY_ADDRESS)
         or address.startswith("INT000")
         or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
     ):
@@ -410,10 +410,16 @@ def convert_value(value: Any, target_type: str) -> Any:
 
 
 @dataclass
-class SystemVariableData:
-    """Dataclass for system variables."""
+class HubData:
+    """Dataclass for hub entitites."""
 
     name: str
+
+
+@dataclass
+class SystemVariableData(HubData):
+    """Dataclass for system variables."""
+
     data_type: str | None = None
     unit: str | None = None
     value: bool | float | int | str | None = None
