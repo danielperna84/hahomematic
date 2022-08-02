@@ -47,6 +47,7 @@ from hahomematic.exceptions import (
     NoConnection,
 )
 from hahomematic.helpers import (
+    ProgramData,
     SystemVariableData,
     build_headers,
     build_xml_rpc_uri,
@@ -253,6 +254,10 @@ class Client(ABC):
         """Send ping to CCU to generate PONG event."""
 
     @abstractmethod
+    async def execute_program(self, pid: str) -> None:
+        """Execute a program on CCU / Homegear."""
+
+    @abstractmethod
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
 
@@ -265,12 +270,18 @@ class Client(ABC):
         """Get single system variable from CCU / Homegear."""
 
     @abstractmethod
-    async def get_all_system_variables(self) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
 
     @abstractmethod
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
+
+    @abstractmethod
+    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+        """Get all programs, if available."""
 
     @abstractmethod
     async def get_all_rooms(self) -> dict[str, set[str]]:
@@ -664,6 +675,10 @@ class ClientCCU(Client):
         self.last_updated = INIT_DATETIME
         return False
 
+    async def execute_program(self, pid: str) -> None:
+        """Execute a program on CCU."""
+        await self._json_rpc_client.execute_program(pid=pid)
+
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
         await self._json_rpc_client.set_system_variable(name=name, value=value)
@@ -676,13 +691,23 @@ class ClientCCU(Client):
         """Get single system variable from CCU / Homegear."""
         return await self._json_rpc_client.get_system_variable(name=name)
 
-    async def get_all_system_variables(self) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
-        return await self._json_rpc_client.get_all_system_variables()
+        return await self._json_rpc_client.get_all_system_variables(
+            include_internal=include_internal
+        )
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
         return await self._json_rpc_client.get_available_interfaces()
+
+    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+        """Get all programs, if available."""
+        return await self._json_rpc_client.get_all_programs(
+            include_internal=include_internal
+        )
 
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from CCU."""
@@ -776,6 +801,10 @@ class ClientHomegear(Client):
         self.last_updated = INIT_DATETIME
         return False
 
+    async def execute_program(self, pid: str) -> None:
+        """Execute a program on Homegear."""
+        return None
+
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
         try:
@@ -797,7 +826,9 @@ class ClientHomegear(Client):
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_system_variable: %s [%s]", hhe.name, hhe.args)
 
-    async def get_all_system_variables(self) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         variables: list[SystemVariableData] = []
         try:
@@ -811,6 +842,10 @@ class ClientHomegear(Client):
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
         return [IF_BIDCOS_RF_NAME]
+
+    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+        """Get all programs, if available."""
+        return []
 
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from Homegear."""

@@ -58,6 +58,7 @@ from hahomematic.exceptions import (
     NoConnection,
 )
 from hahomematic.helpers import (
+    ProgramData,
     SystemVariableData,
     check_or_create_directory,
     get_device_address,
@@ -662,10 +663,25 @@ class CentralUnit:
             )
             raise HaHomematicException from cer
 
-    async def get_all_system_variables(self) -> list[SystemVariableData]:
+    async def execute_program(self, pid: str) -> None:
+        """Execute a program on CCU / Homegear."""
+        if client := self.get_client():
+            await client.execute_program(pid=pid)
+
+    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+        """Get all programs, if available."""
+        if client := self.get_client():
+            return await client.get_all_programs(include_internal=include_internal)
+        return []
+
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         if client := self.get_client():
-            return await client.get_all_system_variables()
+            return await client.get_all_system_variables(
+                include_internal=include_internal
+            )
         return []
 
     async def get_system_variable(self, name: str) -> Any | None:
