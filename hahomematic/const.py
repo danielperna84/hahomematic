@@ -26,7 +26,7 @@ HH_EVENT_DELETE_DEVICES = "deleteDevices"
 HH_EVENT_DELETE_SYSVARS = "deleteSysvars"
 HH_EVENT_DEVICES_CREATED = "devicesCreated"
 HH_EVENT_ERROR = "error"
-HH_EVENT_SYSVARS_CREATED = "sysvarsCreated"
+HH_EVENT_HUB_ENTITY_CREATED = "hubEntityCreated"
 HH_EVENT_LIST_DEVICES = "listDevices"
 HH_EVENT_NEW_DEVICES = "newDevices"
 HH_EVENT_RE_ADDED_DEVICE = "readdedDevice"
@@ -84,7 +84,7 @@ BACKEND_CCU = "CCU"
 BACKEND_HOMEGEAR = "Homegear"
 BACKEND_PYDEVCCU = "PyDevCCU"
 
-SYSVAR_ADDRESS = "sysvar"
+HUB_ENTITY_ADDRESS = "hub_entity"
 HUB_ADDRESS = "hub"
 
 HM_ARG_ON_TIME = "on_time"
@@ -300,6 +300,7 @@ class HmPlatform(StrEnum):
     COVER = "cover"
     EVENT = "event"
     HUB_BINARY_SENSOR = "hub_binary_sensor"
+    HUB_BUTTON = "hub_button"
     HUB_NUMBER = "hub_number"
     HUB_SELECT = "hub_select"
     HUB_SENSOR = "hub_sensor"
@@ -353,8 +354,9 @@ AVAILABLE_HM_PLATFORMS = [
     HmPlatform.SWITCH,
 ]
 
-AVAILABLE_HM_SYSVAR_PLATFORMS = [
+AVAILABLE_HM_HUB_PLATFORMS = [
     HmPlatform.HUB_BINARY_SENSOR,
+    HmPlatform.HUB_BUTTON,
     HmPlatform.HUB_NUMBER,
     HmPlatform.HUB_SELECT,
     HmPlatform.HUB_SENSOR,
