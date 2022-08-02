@@ -859,9 +859,9 @@ class GenericHubEntity(CallbackEntity):
     def available(self) -> bool:
         """Return the availability of the device."""
 
+    @abstractmethod
     def get_name(self, data: HubData) -> str:
         """Return the name of the hub entity."""
-        return data.name
 
 
 class GenericSystemVariable(GenericHubEntity):
@@ -905,7 +905,7 @@ class GenericSystemVariable(GenericHubEntity):
         return None
 
     def get_name(self, data: HubData) -> str:
-        """Return the name of the hub entity."""
+        """Return the name of the sysvar entity."""
         return f"SV_{data.name}"
 
     def update_value(self, value: Any) -> None:

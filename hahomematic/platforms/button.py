@@ -11,7 +11,7 @@ import hahomematic.central_unit as hm_central
 from hahomematic.const import HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericHubEntity
-from hahomematic.helpers import ProgramData
+from hahomematic.helpers import HubData, ProgramData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +68,10 @@ class HmProgramButton(GenericHubEntity):
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.is_active
+
+    def get_name(self, data: HubData) -> str:
+        """Return the name of the program button entity."""
+        return f"P_{data.name}"
 
     def update_data(self, data: ProgramData) -> None:
         """Set variable value on CCU/Homegear."""
