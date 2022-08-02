@@ -26,6 +26,11 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     MAX_JSON_SESSION_AGE,
     PATH_JSON_RPC,
+    PROGRAM_ID,
+    PROGRAM_ISACTIVE,
+    PROGRAM_ISINTERNAL,
+    PROGRAM_LASTEXECUTETIME,
+    PROGRAM_NAME,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
@@ -35,6 +40,7 @@ from hahomematic.const import (
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_ID,
+    SYSVAR_ISINTERNAL,
     SYSVAR_MAX_VALUE,
     SYSVAR_MIN_VALUE,
     SYSVAR_NAME,
@@ -46,6 +52,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import (
+    ProgramData,
     SystemVariableData,
     get_tls_context,
     parse_ccu_sys_var,
@@ -349,6 +356,24 @@ class JsonRpcAioHttpClient:
         """Return if credentials are available."""
         return self._username is not None and self._password is not None
 
+    async def execute_program(self, pid: str) -> None:
+        """Execute a program on CCU / Homegear."""
+        _LOGGER.debug("execute_program: Executing a program via JSON-RPC")
+        try:
+            params = {
+                PROGRAM_ID: pid,
+            }
+            response = await self._post("Program.execute", params)
+
+            if json_result := response[ATTR_RESULT]:
+                res = json_result
+                _LOGGER.debug(
+                    "execute_program: Result while executing program: %s",
+                    str(res),
+                )
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("execute_program: %s [%s]", hhe.name, hhe.args)
+
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
         _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
@@ -418,7 +443,9 @@ class JsonRpcAioHttpClient:
 
         return var
 
-    async def get_all_system_variables(self) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         variables: list[SystemVariableData] = []
         _LOGGER.debug(
@@ -431,6 +458,9 @@ class JsonRpcAioHttpClient:
             if json_result := response[ATTR_RESULT]:
                 ext_markers = await self._get_system_variables_ext_markers()
                 for var in json_result:
+                    is_internal = var[SYSVAR_ISINTERNAL]
+                    if include_internal is False and is_internal is True:
+                        continue
                     var_id = var[SYSVAR_ID]
                     name = var[SYSVAR_NAME]
                     org_data_type = var[SYSVAR_TYPE]
@@ -602,6 +632,39 @@ class JsonRpcAioHttpClient:
             _LOGGER.warning("get_all_device_data: %s [%s]", hhe.name, hhe.args)
 
         return all_device_data
+
+    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+        """Get the all programs of the backend."""
+        all_programs: list[ProgramData] = []
+        _LOGGER.debug("get_all_programs: Getting all programs via JSON-RPC")
+        try:
+            response = await self._post(
+                method="Program.getAll",
+            )
+            if json_result := response[ATTR_RESULT]:
+                for prog in json_result:
+                    is_internal = prog[PROGRAM_ISINTERNAL]
+                    if include_internal is False and is_internal is True:
+                        continue
+                    pid = prog[PROGRAM_ID]
+                    name = prog[PROGRAM_NAME]
+                    is_active = prog[PROGRAM_ISACTIVE]
+                    last_execute_time = prog[PROGRAM_LASTEXECUTETIME]
+
+                    all_programs.append(
+                        ProgramData(
+                            pid=pid,
+                            name=name,
+                            is_active=is_active,
+                            is_internal=is_internal,
+                            last_execute_time=last_execute_time,
+                        )
+                    )
+
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_all_programs: %s [%s]", hhe.name, hhe.args)
+
+        return all_programs
 
     async def get_serial(self) -> str:
         """Get the serial of the backend."""

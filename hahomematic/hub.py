@@ -18,8 +18,9 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.entity import CallbackEntity, GenericSystemVariable
-from hahomematic.helpers import SystemVariableData, generate_unique_id
+from hahomematic.helpers import ProgramData, SystemVariableData, generate_unique_id
 from hahomematic.platforms.binary_sensor import HmSysvarBinarySensor
+from hahomematic.platforms.button import HmProgramButton
 from hahomematic.platforms.number import HmSysvarNumber
 from hahomematic.platforms.select import HmSysvarSelect
 from hahomematic.platforms.sensor import HmSysvarSensor
@@ -50,6 +51,7 @@ class HmHub(CallbackEntity):
         )
         self.name: Final[str] = central.instance_name
         self.syvar_entities: Final[dict[str, GenericSystemVariable]] = {}
+        self.program_entities: Final[dict[str, HmProgramButton]] = {}
         self._hub_attributes: Final[dict[str, Any]] = {}
         self.platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
         self.should_poll: Final[bool] = True
@@ -72,11 +74,16 @@ class HmHub(CallbackEntity):
         """Return the value of the entity."""
         return self._value
 
-    async def fetch_sysvar_data(self) -> None:
+    async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
         """fetch sysvar data for the hub."""
         if self._central.available:
-            await self._update_sysvar_entities()
+            await self._update_sysvar_entities(include_internal=include_internal)
             await self._update_hub_state()
+
+    async def fetch_program_data(self, include_internal: bool = False) -> None:
+        """fetch program data for the hub."""
+        if self._central.available:
+            await self._update_program_entities(include_internal=include_internal)
 
     async def _update_hub_state(self) -> None:
         """Retrieve latest service_messages."""
@@ -90,10 +97,52 @@ class HmHub(CallbackEntity):
             self._value = value
             self.update_entity()
 
-    async def _update_sysvar_entities(self) -> None:
+    async def _update_program_entities(self, include_internal: bool) -> None:
+        """Retrieve all program data and update program values."""
+        self._hub_attributes.clear()
+        programs = await self._central.get_all_programs(
+            include_internal=include_internal
+        )
+        if not programs:
+            _LOGGER.debug(
+                "_update_program_entities: No programs received for %s",
+                self._central.instance_name,
+            )
+            return
+        _LOGGER.debug(
+            "_update_entities: %i programs received for %s",
+            len(programs),
+            self._central.instance_name,
+        )
+
+        missing_program_ids = self._identify_missing_program_ids(programs=programs)
+        if missing_program_ids:
+            self._remove_program_entity(ids=missing_program_ids)
+
+        new_programs: list[HmProgramButton] = []
+
+        for program_data in programs:
+            entity: HmProgramButton | None = self.program_entities.get(program_data.pid)
+            if entity:
+                entity.update_data(data=program_data)
+            else:
+                new_programs.append(self._create_program(data=program_data))
+
+        if (
+            new_programs
+            and self._central.callback_system_event is not None
+            and callable(self._central.callback_system_event)
+        ):
+            self._central.callback_system_event(
+                HH_EVENT_HUB_ENTITY_CREATED, new_programs
+            )
+
+    async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
         """Retrieve all variable data and update hmvariable values."""
         self._hub_attributes.clear()
-        variables = await self._central.get_all_system_variables()
+        variables = await self._central.get_all_system_variables(
+            include_internal=include_internal
+        )
         if not variables:
             _LOGGER.debug(
                 "_update_entities: No sysvars received for %s",
@@ -141,6 +190,12 @@ class HmHub(CallbackEntity):
                 HH_EVENT_HUB_ENTITY_CREATED, new_sysvars
             )
 
+    def _create_program(self, data: ProgramData) -> HmProgramButton:
+        """Create program as entity."""
+        program_entity = HmProgramButton(central=self._central, data=data)
+        self.program_entities[data.pid] = program_entity
+        return program_entity
+
     def _create_system_variable(
         self, data: SystemVariableData
     ) -> GenericSystemVariable:
@@ -170,6 +225,15 @@ class HmHub(CallbackEntity):
                 return HmSysvarBinarySensor(central=self._central, data=data)
         return HmSysvarSensor(central=self._central, data=data)
 
+    def _remove_program_entity(self, ids: list[str]) -> None:
+        """Remove sysvar entity from hub."""
+        for pid in ids:
+            if pid in self.program_entities:
+                entity = self.program_entities[pid]
+                entity.remove_entity()
+                del self.program_entities[pid]
+        self.update_entity()
+
     def _remove_sysvar_entity(self, names: list[str]) -> None:
         """Remove sysvar entity from hub."""
         for name in names:
@@ -190,6 +254,15 @@ class HmHub(CallbackEntity):
             await self._central.set_system_variable(name=name, value=value)
         else:
             _LOGGER.warning("Variable %s not found on %s", name, self.name)
+
+    def _identify_missing_program_ids(self, programs: list[ProgramData]) -> list[str]:
+        """Identify missing programs."""
+        program_ids: list[str] = [x.pid for x in programs]
+        missing_programs: list[str] = []
+        for pid in self.program_entities:
+            if pid not in program_ids:
+                missing_programs.append(pid)
+        return missing_programs
 
     def _identify_missing_variable_names(
         self, variables: list[SystemVariableData]

@@ -417,6 +417,16 @@ class HubData:
 
 
 @dataclass
+class ProgramData(HubData):
+    """Dataclass for programs."""
+
+    pid: str
+    is_active: bool
+    is_internal: bool
+    last_execute_time: str
+
+
+@dataclass
 class SystemVariableData(HubData):
     """Dataclass for system variables."""
 
