@@ -577,7 +577,6 @@ def validate_entity_definition() -> Any:
 
 def make_custom_entity(
     device: hm_device.HmDevice,
-    device_address: str,
     custom_entity_class: type,
     device_enum: EntityDefinition,
     group_base_channels: list[int],
@@ -601,7 +600,6 @@ def make_custom_entity(
             entities.extend(
                 _create_entities(
                     device=device,
-                    device_address=device_address,
                     custom_entity_class=custom_entity_class,
                     device_enum=device_enum,
                     device_def=device_def,
@@ -615,7 +613,6 @@ def make_custom_entity(
 
 def _create_entities(
     device: hm_device.HmDevice,
-    device_address: str,
     custom_entity_class: type,
     device_enum: EntityDefinition,
     device_def: dict[str, Any],
@@ -625,16 +622,15 @@ def _create_entities(
     """Create custom entities."""
     entities: list[hm_entity.BaseEntity] = []
     unique_id = generate_unique_id(
-        central=device.central, address=f"{device_address}:{channel_no}"
+        central=device.central, address=f"{device.device_address}:{channel_no}"
     )
     if unique_id in device.central.hm_entities:
         _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_id)
         return entities
-    if f"{device_address}:{channel_no}" not in device.channels:
+    if f"{device.device_address}:{channel_no}" not in device.channels:
         return entities
     entity = custom_entity_class(
         device=device,
-        device_address=device_address,
         unique_id=unique_id,
         device_enum=device_enum,
         device_def=device_def,

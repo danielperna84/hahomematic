@@ -43,7 +43,6 @@ class BaseSiren(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -53,7 +52,6 @@ class BaseSiren(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -63,7 +61,7 @@ class BaseSiren(CustomEntity):
         _LOGGER.debug(
             "HMSiren.__init__(%s, %s, %s)",
             self.device.interface_id,
-            device_address,
+            self.device.device_address,
             unique_id,
         )
 
@@ -175,12 +173,11 @@ class CeRfSiren(BaseSiren):
 
 
 def make_ip_siren(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip siren entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeIpSiren,
         device_enum=EntityDefinition.IP_SIREN,
         group_base_channels=group_base_channels,
@@ -188,12 +185,11 @@ def make_ip_siren(
 
 
 def make_rf_siren(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic rf siren entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeRfSiren,
         device_enum=EntityDefinition.RF_SIREN,
         group_base_channels=group_base_channels,
