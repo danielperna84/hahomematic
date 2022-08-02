@@ -406,7 +406,7 @@ class HmDevice:
             for (device_func, group_base_channels) in get_device_funcs(
                 self.device_type, self.sub_type
             ):
-                device_func(self, self.device_address, group_base_channels)
+                device_func(self, group_base_channels)
 
     def _create_action_and_append_to_device(
         self,

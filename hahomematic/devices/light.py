@@ -56,7 +56,6 @@ class BaseHmLight(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -66,7 +65,6 @@ class BaseHmLight(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -76,7 +74,7 @@ class BaseHmLight(CustomEntity):
         _LOGGER.debug(
             "BaseHmLight.__init__(%s, %s, %s)",
             self.device.interface_id,
-            device_address,
+            self.device.device_address,
             unique_id,
         )
 
@@ -481,12 +479,11 @@ def _convert_color(color: tuple[float, float] | None) -> str:
 
 
 def make_ip_dimmer(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip dimmer entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.IP_DIMMER,
         group_base_channels=group_base_channels,
@@ -494,12 +491,11 @@ def make_ip_dimmer(
 
 
 def make_rf_dimmer(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic dimmer entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.RF_DIMMER,
         group_base_channels=group_base_channels,
@@ -507,12 +503,11 @@ def make_rf_dimmer(
 
 
 def make_rf_dimmer_color(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic dimmer with color entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeColorDimmer,
         device_enum=EntityDefinition.RF_DIMMER_COLOR,
         group_base_channels=group_base_channels,
@@ -520,12 +515,11 @@ def make_rf_dimmer_color(
 
 
 def make_rf_dimmer_color_temp(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic dimmer with color temperature entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeColorTempDimmer,
         device_enum=EntityDefinition.RF_DIMMER_COLOR_TEMP,
         group_base_channels=group_base_channels,
@@ -533,12 +527,11 @@ def make_rf_dimmer_color_temp(
 
 
 def make_rf_dimmer_with_virt_channel(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic dimmer entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL,
         group_base_channels=group_base_channels,
@@ -546,12 +539,11 @@ def make_rf_dimmer_with_virt_channel(
 
 
 def make_ip_fixed_color_light(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates fixed color light entities like HmIP-BSL."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeIpFixedColorLight,
         device_enum=EntityDefinition.IP_FIXED_COLOR_LIGHT,
         group_base_channels=group_base_channels,
@@ -559,12 +551,11 @@ def make_ip_fixed_color_light(
 
 
 def make_ip_simple_fixed_color_light(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates simple fixed color light entities like HmIPW-WRC6."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeIpFixedColorLight,
         device_enum=EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT,
         group_base_channels=group_base_channels,

@@ -62,7 +62,6 @@ from hahomematic.helpers import (
     convert_value,
     generate_unique_id,
     get_custom_entity_name,
-    get_device_address,
     get_device_channel,
     get_entity_name,
     get_event_name,
@@ -125,7 +124,6 @@ class BaseEntity(ABC):
         self,
         device: hm_device.HmDevice,
         unique_id: str,
-        device_address: str,
         channel_no: int,
         platform: HmPlatform,
     ):
@@ -238,7 +236,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            device_address=get_device_address(channel_address),
             channel_no=get_device_channel(channel_address),
             platform=platform,
         )
@@ -604,7 +601,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self,
         device: hm_device.HmDevice,
         unique_id: str,
-        device_address: str,
         device_enum: hm_entity_definition.EntityDefinition,
         device_def: dict[str, Any],
         entity_def: dict[int, set[str]],
@@ -622,7 +618,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
             self=self,
             device=device,
             unique_id=unique_id,
-            device_address=device_address,
             channel_no=channel_no,
             platform=platform,
         )

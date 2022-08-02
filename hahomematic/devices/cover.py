@@ -56,7 +56,6 @@ class CeCover(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -66,7 +65,6 @@ class CeCover(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -76,7 +74,7 @@ class CeCover(CustomEntity):
         _LOGGER.debug(
             "HmCover.__init__(%s, %s, %s)",
             self.device.interface_id,
-            device_address,
+            self.device.device_address,
             unique_id,
         )
 
@@ -239,7 +237,6 @@ class CeGarage(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -249,7 +246,6 @@ class CeGarage(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -259,7 +255,7 @@ class CeGarage(CustomEntity):
         _LOGGER.debug(
             "HmGarage.__init__(%s, %s, %s)",
             self.device.interface_id,
-            device_address,
+            self.device.device_address,
             unique_id,
         )
 
@@ -335,12 +331,11 @@ class CeGarage(CustomEntity):
 
 
 def make_ip_cover(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip cover entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeCover,
         device_enum=EntityDefinition.IP_COVER,
         group_base_channels=group_base_channels,
@@ -348,12 +343,11 @@ def make_ip_cover(
 
 
 def make_rf_cover(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic cover entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeCover,
         device_enum=EntityDefinition.RF_COVER,
         group_base_channels=group_base_channels,
@@ -361,12 +355,11 @@ def make_rf_cover(
 
 
 def make_ip_blind(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip cover entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeIpBlind,
         device_enum=EntityDefinition.IP_COVER,
         group_base_channels=group_base_channels,
@@ -374,12 +367,11 @@ def make_ip_blind(
 
 
 def make_ip_garage(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip garage entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeGarage,
         device_enum=EntityDefinition.IP_GARAGE,
         group_base_channels=group_base_channels,
@@ -387,12 +379,11 @@ def make_ip_garage(
 
 
 def make_rf_blind(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic classic cover entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeBlind,
         device_enum=EntityDefinition.RF_COVER,
         group_base_channels=group_base_channels,
