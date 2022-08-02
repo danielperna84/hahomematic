@@ -37,7 +37,6 @@ from hahomematic.const import (
     FLAG_SERVICE,
     FLAG_VISIBLE,
     HM_ENTITY_UNIT_REPLACE,
-    HUB_ENTITY_ADDRESS,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
@@ -45,6 +44,7 @@ from hahomematic.const import (
     OPERATION_WRITE,
     PARAM_CHANNEL_OPERATION_MODE,
     PARAMSET_KEY_VALUES,
+    SYSVAR_ADDRESS,
     TYPE_BOOL,
     HmCallSource,
     HmEntityUsage,
@@ -835,6 +835,7 @@ class GenericHubEntity(CallbackEntity):
     def __init__(
         self,
         central: hm_central.CentralUnit,
+        address: str,
         data: HubData,
         platform: HmPlatform,
     ):
@@ -846,7 +847,7 @@ class GenericHubEntity(CallbackEntity):
         self.platform: Final[HmPlatform] = platform
         self.unique_id: Final[str] = generate_unique_id(
             central=central,
-            address=HUB_ENTITY_ADDRESS,
+            address=address,
             parameter=slugify(data.name),
         )
         self.name: Final[str] = self.get_name(data=data)
@@ -876,7 +877,9 @@ class GenericSystemVariable(GenericHubEntity):
         """
         Initialize the entity.
         """
-        super().__init__(central=central, data=data, platform=platform)
+        super().__init__(
+            central=central, address=SYSVAR_ADDRESS, data=data, platform=platform
+        )
         self.ccu_var_name: Final[str] = data.name
         self.data_type: Final[str | None] = data.data_type
         self.value_list: Final[list[str] | None] = data.value_list

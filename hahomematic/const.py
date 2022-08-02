@@ -84,7 +84,8 @@ BACKEND_CCU = "CCU"
 BACKEND_HOMEGEAR = "Homegear"
 BACKEND_PYDEVCCU = "PyDevCCU"
 
-HUB_ENTITY_ADDRESS = "hub_entity"
+PROGRAM_ADDRESS = "program"
+SYSVAR_ADDRESS = "sysvar"
 HUB_ADDRESS = "hub"
 
 HM_ARG_ON_TIME = "on_time"

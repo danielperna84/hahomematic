@@ -8,7 +8,7 @@ import logging
 from typing import Any, Final
 
 import hahomematic.central_unit as hm_central
-from hahomematic.const import HmPlatform
+from hahomematic.const import PROGRAM_ADDRESS, HmPlatform
 import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericHubEntity
 from hahomematic.helpers import HubData, ProgramData
@@ -57,7 +57,12 @@ class HmProgramButton(GenericHubEntity):
         """
         Initialize the entity.
         """
-        super().__init__(central=central, data=data, platform=HmPlatform.HUB_BUTTON)
+        super().__init__(
+            central=central,
+            address=PROGRAM_ADDRESS,
+            data=data,
+            platform=HmPlatform.HUB_BUTTON,
+        )
         self.pid: Final[str] = data.pid
         self.ccu_program_name: Final[str] = data.name
         self.is_active: bool = data.is_active
