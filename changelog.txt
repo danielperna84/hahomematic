@@ -1,4 +1,4 @@
-Version 2022.8.1 (2022-08-02)
+Version 2022.8.2 (2022-08-02)
 - Remove obsolete methods
 - Remove obsolete device_address parameter
 - Rename sysvar to hub entity

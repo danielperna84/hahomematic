@@ -15,9 +15,10 @@ import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     HM_VIRTUAL_REMOTE_ADDRESSES,
     HUB_ADDRESS,
-    HUB_ENTITY_ADDRESS,
     INIT_DATETIME,
     MAX_CACHE_AGE,
+    PROGRAM_ADDRESS,
+    SYSVAR_ADDRESS,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
@@ -58,7 +59,7 @@ def generate_unique_id(
     if prefix:
         unique_id = f"{prefix}_{unique_id}"
     if (
-        address in (HUB_ADDRESS, HUB_ENTITY_ADDRESS)
+        address in (HUB_ADDRESS, PROGRAM_ADDRESS, SYSVAR_ADDRESS)
         or address.startswith("INT000")
         or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
     ):
