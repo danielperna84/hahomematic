@@ -4,8 +4,8 @@ Helper functions used within hahomematic
 from __future__ import annotations
 
 import base64
+from dataclasses import dataclass
 from datetime import datetime
-from distutils import util
 import logging
 import os
 import ssl
@@ -13,21 +13,26 @@ from typing import Any
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
-    ATTR_HM_ALARM,
-    ATTR_HM_LIST,
-    ATTR_HM_LOGIC,
-    ATTR_HM_NUMBER,
-    ATTR_TYPE,
-    ATTR_VALUE,
+    HM_VIRTUAL_REMOTE_ADDRESSES,
+    HUB_ADDRESS,
     INIT_DATETIME,
+    MAX_CACHE_AGE,
+    PROGRAM_ADDRESS,
+    SYSVAR_ADDRESS,
+    SYSVAR_HM_TYPE_FLOAT,
+    SYSVAR_HM_TYPE_INTEGER,
+    SYSVAR_TYPE_ALARM,
+    SYSVAR_TYPE_LIST,
+    SYSVAR_TYPE_LOGIC,
     TYPE_BOOL,
     TYPE_FLOAT,
     TYPE_INTEGER,
     TYPE_STRING,
     HmEntityUsage,
 )
+import hahomematic.device as hm_device
 import hahomematic.devices.entity_definition as hm_entity_definition
-from hahomematic.exceptions import BaseHomematicException
+from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,15 +42,14 @@ class ClientException(Exception):
 
 
 def generate_unique_id(
-    domain: str,
-    instance_name: str,
+    central: hm_central.CentralUnit,
     address: str,
     parameter: str | None = None,
     prefix: str | None = None,
 ) -> str:
     """
     Build unique id from address and parameter.
-    Instance_name is addionally used for heating groups.
+    Central id is addionally used for heating groups.
     Prefix is used for events and buttons.
     """
     unique_id = address.replace(":", "_").replace("-", "_")
@@ -54,9 +58,13 @@ def generate_unique_id(
 
     if prefix:
         unique_id = f"{prefix}_{unique_id}"
-    if address.startswith("INT000"):
-        return f"{domain}_{instance_name}_{unique_id}".lower()
-    return f"{domain}_{unique_id}".lower()
+    if (
+        address in (HUB_ADDRESS, PROGRAM_ADDRESS, SYSVAR_ADDRESS)
+        or address.startswith("INT000")
+        or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
+    ):
+        return f"{central.domain}_{central.central_id}_{unique_id}".lower()
+    return f"{central.domain}_{unique_id}".lower()
 
 
 def build_xml_rpc_uri(
@@ -99,128 +107,188 @@ def check_or_create_directory(directory: str) -> bool:
                 directory,
                 ose.strerror,
             )
-            raise BaseHomematicException from ose
+            raise HaHomematicException from ose
 
     return True
 
 
-def parse_ccu_sys_var(data: dict[str, Any]) -> Any:
+def parse_ccu_sys_var(data_type: str | None, raw_value: Any) -> Any:
     """Helper to parse type of system variables of CCU."""
     # pylint: disable=no-else-return
-    if data[ATTR_TYPE] == ATTR_HM_LOGIC:
-        return data[ATTR_VALUE] == "true"
-    if data[ATTR_TYPE] == ATTR_HM_ALARM:
-        return data[ATTR_VALUE] == "true"
-    elif data[ATTR_TYPE] == ATTR_HM_NUMBER:
-        return float(data[ATTR_VALUE])
-    elif data[ATTR_TYPE] == ATTR_HM_LIST:
-        return int(data[ATTR_VALUE])
-    return data[ATTR_VALUE]
+    if not data_type:
+        return raw_value
+    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
+        return raw_value == "true"
+    if data_type == SYSVAR_HM_TYPE_FLOAT:
+        return float(raw_value)
+    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
+        return int(raw_value)
+    return raw_value
+
+
+def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
+    """Helper to parse type of system variables."""
+    # pylint: disable=no-else-return
+    if not data_type:
+        return raw_value
+    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
+        return to_bool(raw_value)
+    if data_type == SYSVAR_HM_TYPE_FLOAT:
+        return float(raw_value)
+    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
+        return int(raw_value)
+    return raw_value
+
+
+def to_bool(value: Any) -> bool:
+    """Convert defined string values to bool."""
+    if isinstance(value, bool):
+        return value
+
+    if not isinstance(value, str):
+        raise ValueError("invalid literal for boolean. Not a string.")
+
+    valid = {
+        "y": True,
+        "yes": True,
+        "t": True,
+        "true": True,
+        "on": True,
+        "1": True,
+        "n": False,
+        "no": False,
+        "f": False,
+        "false": False,
+        "off": False,
+        "0": False,
+    }
+
+    lower_value = value.lower()
+    if lower_value in valid:
+        return valid[lower_value]
+
+    raise ValueError(f"invalid literal for boolean: {value}.")
 
 
 def get_entity_name(
     central: hm_central.CentralUnit,
-    channel_address: str,
+    device: hm_device.HmDevice,
+    channel_no: int,
     parameter: str,
-    unique_id: str,
-    device_type: str,
-) -> str:
+) -> EntityNameData:
     """generate name for entity"""
-    if entity_name := _get_base_name_from_channel_or_device(
+    channel_address = f"{device.device_address}:{channel_no}"
+    if channel_name := _get_base_name_from_channel_or_device(
         central=central,
-        channel_address=channel_address,
-        device_type=device_type,
+        device=device,
+        channel_no=channel_no,
     ):
-        if _check_channel_name_with_channel_no(name=entity_name):
-            d_name = entity_name.split(":")[0]
-            p_name = parameter.title().replace("_", " ")
-            c_name = ""
+        p_name = parameter.title().replace("_", " ")
+
+        if _check_channel_name_with_channel_no(name=channel_name):
+            c_name = channel_name.split(":")[0]
+            c_postfix = ""
             if central.paramset_descriptions.has_multiple_channels(
                 channel_address=channel_address, parameter=parameter
             ):
-                c_no = entity_name.split(":")[1]
-                c_name = "" if c_no == "0" else f" ch{c_no}"
-            entity_name = f"{d_name} {p_name}{c_name}"
+                c_postfix = "" if channel_no == 0 else f" ch{channel_no}"
+            entity_name = EntityNameData(
+                device_name=device.name,
+                channel_name=c_name,
+                parameter_name=f"{p_name}{c_postfix}",
+            )
         else:
-            d_name = entity_name
-            p_name = parameter.title().replace("_", " ")
-            entity_name = f"{d_name} {p_name}"
+            entity_name = EntityNameData(
+                device_name=device.name,
+                channel_name=channel_name,
+                parameter_name=p_name,
+            )
         return entity_name
 
     _LOGGER.debug(
         "get_entity_name: Using unique_id for %s %s %s",
-        device_type,
+        device.device_type,
         channel_address,
         parameter,
     )
-    return unique_id
+    return EntityNameData.empty()
 
 
 def get_event_name(
     central: hm_central.CentralUnit,
-    channel_address: str,
+    device: hm_device.HmDevice,
+    channel_no: int,
     parameter: str,
-    unique_id: str,
-    device_type: str,
-) -> str:
+) -> EntityNameData:
     """generate name for event"""
-    if event_name := _get_base_name_from_channel_or_device(
+    channel_address = f"{device.device_address}:{channel_no}"
+    if channel_name := _get_base_name_from_channel_or_device(
         central=central,
-        channel_address=channel_address,
-        device_type=device_type,
+        device=device,
+        channel_no=channel_no,
     ):
-        if _check_channel_name_with_channel_no(name=event_name):
-            d_name = event_name.split(":")[0]
-            p_name = parameter.title().replace("_", " ")
-            c_no = event_name.split(":")[1]
-            c_name = "" if c_no == "0" else f" Channel {c_no}"
-            event_name = f"{d_name}{c_name} {p_name}"
+        p_name = parameter.title().replace("_", " ")
+        if _check_channel_name_with_channel_no(name=channel_name):
+            d_name = channel_name.split(":")[0]
+            c_name = "" if channel_no == 0 else f" Channel {channel_no}"
+            event_name = EntityNameData(
+                device_name=device.name,
+                channel_name=d_name,
+                parameter_name=f"{c_name} {p_name}",
+            )
         else:
-            d_name = event_name
-            p_name = parameter.title().replace("_", " ")
-            event_name = f"{d_name} {p_name}"
+            event_name = EntityNameData(
+                device_name=device.name,
+                channel_name=channel_name,
+                parameter_name=p_name,
+            )
         return event_name
 
     _LOGGER.debug(
         "Helper.get_event_name: Using unique_id for %s %s %s",
-        device_type,
+        device.device_type,
         channel_address,
         parameter,
     )
-    return unique_id
+    return EntityNameData.empty()
 
 
 def get_custom_entity_name(
     central: hm_central.CentralUnit,
-    device_address: str,
-    unique_id: str,
+    device: hm_device.HmDevice,
     channel_no: int,
-    device_type: str,
     is_only_primary_channel: bool,
     usage: HmEntityUsage,
-) -> str:
+) -> EntityNameData:
     """Rename name for custom entity"""
-    if custom_entity_name := _get_base_name_from_channel_or_device(
+    if channel_name := _get_base_name_from_channel_or_device(
         central=central,
-        channel_address=f"{device_address}:{channel_no}",
-        device_type=device_type,
+        device=device,
+        channel_no=channel_no,
     ):
         if is_only_primary_channel and _check_channel_name_with_channel_no(
-            name=custom_entity_name
+            name=channel_name
         ):
-            return custom_entity_name.split(":")[0]
-        if _check_channel_name_with_channel_no(name=custom_entity_name):
-            marker = " ch" if usage == HmEntityUsage.CE_PRIMARY else " vch"
-            return custom_entity_name.replace(":", marker)
-        return custom_entity_name
+            return EntityNameData(
+                device_name=device.name, channel_name=channel_name.split(":")[0]
+            )
+        if _check_channel_name_with_channel_no(name=channel_name):
+            c_name = channel_name.split(":")[0]
+            p_name = channel_name.split(":")[1]
+            marker = "ch" if usage == HmEntityUsage.CE_PRIMARY else "vch"
+            p_name = f"{marker}{p_name}"
+            return EntityNameData(
+                device_name=device.name, channel_name=c_name, parameter_name=p_name
+            )
+        return EntityNameData(device_name=device.name, channel_name=channel_name)
 
     _LOGGER.debug(
         "Helper.get_custom_entity_name: Using unique_id for %s %s %s",
-        device_type,
-        device_address,
+        device.device_type,
+        device.device_address,
         channel_no,
     )
-    return unique_id
+    return EntityNameData.empty()
 
 
 def _check_channel_name_with_channel_no(name: str) -> bool:
@@ -269,18 +337,15 @@ def check_channel_is_only_primary_channel(
 
 def _get_base_name_from_channel_or_device(
     central: hm_central.CentralUnit,
-    channel_address: str,
-    device_type: str,
+    device: hm_device.HmDevice,
+    channel_no: int,
 ) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""
-    default_channel_name = f"{device_type} {channel_address}"
+    channel_address = f"{device.device_address}:{channel_no}"
+    default_channel_name = f"{device.device_type} {channel_address}"
     name = central.device_details.get_name(channel_address)
     if name is None or name == default_channel_name:
-        channel_no = get_device_channel(channel_address)
-        if device_name := central.device_details.get_name(
-            get_device_address(channel_address)
-        ):
-            name = f"{device_name}:{channel_no}"
+        name = f"{device.name}:{channel_no}"
     return name
 
 
@@ -316,12 +381,14 @@ def get_channel_no(address: str) -> int | None:
     return int(address.split(":")[1])
 
 
-def updated_within_seconds(last_update: datetime, age_seconds: int = 120) -> bool:
+def updated_within_seconds(
+    last_update: datetime, max_age_seconds: int = MAX_CACHE_AGE
+) -> bool:
     """Entity has been updated within X minutes."""
     if last_update == INIT_DATETIME:
         return False
     delta = datetime.now() - last_update
-    if delta.seconds < age_seconds:
+    if delta.seconds < max_age_seconds:
         return True
     return False
 
@@ -332,7 +399,7 @@ def convert_value(value: Any, target_type: str) -> Any:
         return None
     if target_type == TYPE_BOOL:
         if isinstance(value, str):
-            return bool(util.strtobool(value))
+            return to_bool(value)
         return bool(value)
     if target_type == TYPE_FLOAT:
         return float(value)
@@ -341,3 +408,77 @@ def convert_value(value: Any, target_type: str) -> Any:
     if target_type == TYPE_STRING:
         return str(value)
     return value
+
+
+@dataclass
+class HubData:
+    """Dataclass for hub entitites."""
+
+    name: str
+
+
+@dataclass
+class ProgramData(HubData):
+    """Dataclass for programs."""
+
+    pid: str
+    is_active: bool
+    is_internal: bool
+    last_execute_time: str
+
+
+@dataclass
+class SystemVariableData(HubData):
+    """Dataclass for system variables."""
+
+    data_type: str | None = None
+    unit: str | None = None
+    value: bool | float | int | str | None = None
+    value_list: list[str] | None = None
+    max_value: float | int | None = None
+    min_value: float | int | None = None
+    extended_sysvar: bool = False
+
+
+class EntityNameData:
+    """Dataclass for entity name parts"""
+
+    def __init__(
+        self, device_name: str, channel_name: str, parameter_name: str | None = None
+    ):
+        """Init the EntityNameData class."""
+        self._device_name = device_name
+        self._channel_name = channel_name
+        self._parameter_name = parameter_name
+
+    @staticmethod
+    def empty() -> EntityNameData:
+        """Return an empty EntityNameData."""
+        return EntityNameData(device_name="", channel_name="")
+
+    @property
+    def entity_name(self) -> str | None:
+        """Return the name of the entity only name."""
+        if (
+            self._device_name
+            and self._name
+            and self._name.startswith(self._device_name)
+        ):
+            return self._name.replace(self._device_name, "").strip()
+        return self._name
+
+    @property
+    def full_name(self) -> str | None:
+        """Return the full name of the entity."""
+        if self.entity_name:
+            return f"{self._device_name} {self.entity_name}".strip()
+        return self._device_name
+
+    @property
+    def _name(self) -> str | None:
+        """Return the name of the entity."""
+        if self._channel_name and self._parameter_name:
+            return f"{self._channel_name} {self._parameter_name}".strip()
+        if self._channel_name:
+            return self._channel_name.strip()
+        return None

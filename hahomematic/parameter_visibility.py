@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Final
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
@@ -17,7 +18,6 @@ from hahomematic.const import (
     PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
 )
-import hahomematic.device as hm_device
 from hahomematic.helpers import check_or_create_directory
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,15 +25,22 @@ _LOGGER = logging.getLogger(__name__)
 # {device_type: channel_no}
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[str, tuple[set[int], str]] = {
     "HmIPW-DRBL4": ({1, 5, 9, 13}, PARAM_CHANNEL_OPERATION_MODE),
-    "HmIP-DRBLI4": ({9, 13, 17, 21}, PARAM_CHANNEL_OPERATION_MODE),
-}
-
-# Parameters within the paramsets for which we create entities.
-_UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
-    "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
-    "SD": ["SMOKE_DETECTOR_ALARM_STATUS"],  # HmIP-SWSD
-    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],  # HM-Sec-Win*
-    "HM-Sec-Key": ["DIRECTION", "ERROR"],  # HM-Sec-Key*
+    "HmIP-DRBLI4": (
+        {1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21},
+        PARAM_CHANNEL_OPERATION_MODE,
+    ),
+    "HmIP-DRSI1": ({1}, PARAM_CHANNEL_OPERATION_MODE),
+    "HmIP-DRSI4": ({1, 2, 3, 4}, PARAM_CHANNEL_OPERATION_MODE),
+    "HmIP-DRDI3": ({1, 2, 3}, PARAM_CHANNEL_OPERATION_MODE),
+    "HmIP-DSD-PCB": ({1}, PARAM_CHANNEL_OPERATION_MODE),
+    "HmIP-FCI1": ({1}, PARAM_CHANNEL_OPERATION_MODE),
+    "HmIP-FCI6": (set(range(1, 7)), PARAM_CHANNEL_OPERATION_MODE),
+    "HmIPW-FIO6": (set(range(1, 7)), PARAM_CHANNEL_OPERATION_MODE),
+    "HmIP-FSI16": ({1}, PARAM_CHANNEL_OPERATION_MODE),
+    "HmIP-MIO16-PCB": ({13, 14, 15, 16}, PARAM_CHANNEL_OPERATION_MODE),
+    "HmIP-MOD-RC8": (set(range(1, 9)), PARAM_CHANNEL_OPERATION_MODE),
+    "HmIPW-DRI16": (set(range(1, 17)), PARAM_CHANNEL_OPERATION_MODE),
+    "HmIPW-DRI32": (set(range(1, 33)), PARAM_CHANNEL_OPERATION_MODE),
 }
 
 HIDDEN_PARAMETERS: set[str] = {
@@ -70,7 +77,6 @@ _IGNORED_PARAMETERS: set[str] = {
     "LEVEL_COMBINED",
     "LEVEL_REAL",
     "OLD_LEVEL",
-    "ON_TIME",
     "PARTY_SET_POINT_TEMPERATURE",
     "PARTY_TIME_END",
     "PARTY_TIME_START",
@@ -116,9 +122,50 @@ _IGNORED_PARAMETERS_WILDCARDS_START: set[str] = {
     "WEEK_PROGRAM",
 }
 
+
+# Parameters within the paramsets for which we create entities.
+_UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
+    "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
+    "SD": ["SMOKE_DETECTOR_ALARM_STATUS"],  # HmIP-SWSD
+    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],  # HM-Sec-Win*
+    "HM-Sec-Key": ["DIRECTION", "ERROR"],  # HM-Sec-Key*
+    "HmIP-PCBS-BAT": [
+        "OPERATING_VOLTAGE",
+        "LOW_BAT",
+    ],  # To override ignore for HmIP-PCBS
+}
+
 # Parameters by device within the VALUES paramset for which we don't create entities.
 _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
-    "LOWBAT": ["HM-LC-Sw4-DR"],
+    "CURRENT_ILLUMINATION": [
+        "HmIP-SMI",
+        "HmIP-SMO",
+        "HmIP-SPI",
+    ],
+    "LOWBAT": [
+        "HM-LC-Sw1-FM",
+        "HM-LC-Sw1PBU-FM",
+        "HM-LC-Sw1-Pl-DN-R1",
+        "HM-LC-Sw1-PCB",
+        "HM-LC-Sw4-DR",
+        "HM-SwI-3-FM",
+    ],
+    "LOW_BAT": ["HmIP-BWTH", "HmIP-PCBS"],
+    "OPERATING_VOLTAGE": [
+        "ELV-SH-BS2",
+        "HmIP-BDT",
+        "HmIP-BSL",
+        "HmIP-BSM",
+        "HmIP-BWTH",
+        "HmIP-DR",
+        "HmIP-FDT",
+        "HmIP-FSM",
+        "HmIP-MOD-OC8",
+        "HmIP-PCBS",
+        "HmIP-PDT",
+        "HmIP-PS",
+        "HmIP-SFD",
+    ],
 }
 
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
@@ -131,8 +178,8 @@ class ParameterVisibilityCache:
         self,
         central: hm_central.CentralUnit,
     ):
-        self._central = central
-        self._storage_folder = self._central.central_config.storage_folder
+        self._central: Final[hm_central.CentralUnit] = central
+        self._storage_folder: Final[str] = self._central.central_config.storage_folder
 
         # paramset_key, parameter
         self._un_ignore_parameters_general: dict[str, set[str]] = {
@@ -210,18 +257,20 @@ class ParameterVisibilityCache:
 
     def ignore_parameter(
         self,
-        device: hm_device.HmDevice,
+        device_type: str,
+        sub_type: str | None,
         device_channel: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
         """Check if parameter can be ignored."""
-        device_type_l = device.device_type.lower()
-        sub_type_l = device.sub_type.lower() if device.sub_type else device.sub_type
+        device_type_l = device_type.lower()
+        sub_type_l = sub_type.lower() if sub_type else None
 
         if paramset_key == PARAMSET_KEY_VALUES:
             if self.parameter_is_un_ignored(
-                device=device,
+                device_type=device_type,
+                sub_type=sub_type,
                 device_channel=device_channel,
                 paramset_key=paramset_key,
                 parameter=parameter,
@@ -247,22 +296,23 @@ class ParameterVisibilityCache:
                     return True
         if paramset_key == PARAMSET_KEY_MASTER:
             if parameter not in self._un_ignore_parameters_by_device_paramset_key.get(
-                device.device_type.lower(), {}
+                device_type_l, {}
             ).get(device_channel, {}).get(PARAMSET_KEY_MASTER, []):
                 return True
         return False
 
     def parameter_is_un_ignored(
         self,
-        device: hm_device.HmDevice,
+        device_type: str,
+        sub_type: str | None,
         device_channel: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
         """Return if parameter is on un_ignore list"""
 
-        device_type_l = device.device_type.lower()
-        sub_type_l = device.sub_type.lower() if device.sub_type else device.sub_type
+        device_type_l = device_type.lower()
+        sub_type_l = sub_type.lower() if sub_type else None
 
         if parameter in self._un_ignore_parameters_general[paramset_key]:
             return True
@@ -272,10 +322,11 @@ class ParameterVisibilityCache:
         ).get(device_channel, {}).get(paramset_key, set()):
             return True
 
-        if parameter in self._un_ignore_parameters_by_device_paramset_key.get(
-            sub_type_l, {}
-        ).get(device_channel, {}).get(paramset_key, set()):
-            return True
+        if sub_type_l:
+            if parameter in self._un_ignore_parameters_by_device_paramset_key.get(
+                sub_type_l, {}
+            ).get(device_channel, {}).get(paramset_key, set()):
+                return True
 
         if sub_type_l and sub_type_l in self._un_ignore_parameters_by_device_lower:
             un_ignore_parameters = self._un_ignore_parameters_by_device_lower[
@@ -286,10 +337,10 @@ class ParameterVisibilityCache:
 
         if device_type_l.startswith(tuple(self._un_ignore_parameters_by_device_lower)):
             for (
-                device_type,
+                device_t,
                 un_ignore_parameters,
             ) in self._un_ignore_parameters_by_device_lower.items():
-                if device_type_l.startswith(device_type):
+                if device_type_l.startswith(device_t):
                     if parameter in un_ignore_parameters:
                         return True
         return False

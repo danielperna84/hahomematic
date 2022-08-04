@@ -17,3 +17,5 @@
 build
 
 unignore
+venv
+

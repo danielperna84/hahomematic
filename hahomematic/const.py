@@ -6,14 +6,12 @@ from datetime import datetime
 from hahomematic.backport import StrEnum
 
 DEFAULT_ENCODING = "UTF-8"
-MANUFACTURER = "eQ-3"
 INIT_DATETIME = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
 IP_LOCALHOST_V4 = "127.0.0.1"
 IP_LOCALHOST_V6 = "::1"
 IP_ANY_V4 = "0.0.0.0"
 IP_ANY_V6 = "::"
 PORT_ANY = 0
-IDENTIFIERS_SEPARATOR = "@"
 
 PATH_JSON_RPC = "/api/homematic.cgi"
 
@@ -25,9 +23,10 @@ PARAMSET_KEY_MASTER = "MASTER"
 PARAMSET_KEY_VALUES = "VALUES"
 
 HH_EVENT_DELETE_DEVICES = "deleteDevices"
+HH_EVENT_DELETE_SYSVARS = "deleteSysvars"
 HH_EVENT_DEVICES_CREATED = "devicesCreated"
 HH_EVENT_ERROR = "error"
-HH_EVENT_HUB_CREATED = "hubCreated"
+HH_EVENT_HUB_ENTITY_CREATED = "hubEntityCreated"
 HH_EVENT_LIST_DEVICES = "listDevices"
 HH_EVENT_NEW_DEVICES = "newDevices"
 HH_EVENT_RE_ADDED_DEVICE = "readdedDevice"
@@ -52,7 +51,19 @@ EVENT_PRESS_LONG_START = "PRESS_LONG_START"
 EVENT_STICKY_UN_REACH = "STICKY_UNREACH"
 EVENT_UN_REACH = "UNREACH"
 
+EVENT_SEQUENCE_OK = "SEQUENCE_OK"
+
 PARAM_CHANNEL_OPERATION_MODE = "CHANNEL_OPERATION_MODE"
+
+CONFIGURABLE_CHANNEL: set[str] = {"MULTI_MODE_INPUT_TRANSMITTER", "KEY_TRANSCEIVER"}
+
+CHANNEL_OPERATION_MODE_VISIBILITY = {
+    "STATE": {"BINARY_BEHAVIOR"},
+    "PRESS_SHORT": {"KEY_BEHAVIOR", "SWITCH_BEHAVIOR"},
+    "PRESS_LONG": {"KEY_BEHAVIOR", "SWITCH_BEHAVIOR"},
+    "PRESS_LONG_RELEASE": {"KEY_BEHAVIOR", "SWITCH_BEHAVIOR"},
+    "PRESS_LONG_START": {"KEY_BEHAVIOR", "SWITCH_BEHAVIOR"},
+}
 
 CLICK_EVENTS: set[str] = {
     EVENT_PRESS,
@@ -63,11 +74,21 @@ CLICK_EVENTS: set[str] = {
     EVENT_PRESS_LONG_START,
 }
 
+IMPULSE_EVENTS: set[str] = {
+    EVENT_SEQUENCE_OK,
+}
+
 BUTTON_ACTIONS: set[str] = {"RESET_MOTION", "RESET_PRESENCE"}
 
 BACKEND_CCU = "CCU"
 BACKEND_HOMEGEAR = "Homegear"
 BACKEND_PYDEVCCU = "PyDevCCU"
+
+PROGRAM_ADDRESS = "program"
+SYSVAR_ADDRESS = "sysvar"
+HUB_ADDRESS = "hub"
+
+HM_ARG_ON_TIME = "on_time"
 
 PROXY_INIT_FAILED = 0
 PROXY_INIT_SUCCESS = 1
@@ -86,7 +107,6 @@ ATTR_ADDRESS = "address"
 ATTR_CALLBACK_HOST = "callback_host"
 ATTR_CALLBACK_PORT = "callback_port"
 ATTR_CHANNELS = "channels"
-ATTR_ENTITY_TYPE = "entity_type"
 ATTR_ERROR = "error"
 ATTR_HOST = "host"
 ATTR_INTERFACE = "interface"
@@ -109,7 +129,31 @@ ATTR_VALUE = "value"
 ATTR_VALUE_KEY = "valueKey"
 ATTR_VERIFY_TLS = "verify_tls"
 
-ATTR_HM_ALARM = "ALARM"
+PROGRAM_ID = "id"
+PROGRAM_NAME = "name"
+PROGRAM_ISACTIVE = "isActive"
+PROGRAM_ISINTERNAL = "isInternal"
+PROGRAM_LASTEXECUTETIME = "lastExecuteTime"
+
+SYSVAR_HASEXTMARKER = "hasExtMarker"
+SYSVAR_ID = "id"
+SYSVAR_ISINTERNAL = "isInternal"
+SYSVAR_MAX_VALUE = "maxValue"
+SYSVAR_MIN_VALUE = "minValue"
+SYSVAR_NAME = "name"
+SYSVAR_TYPE = "type"
+SYSVAR_UNIT = "unit"
+SYSVAR_VALUE = "value"
+SYSVAR_VALUE_LIST = "valueList"
+
+SYSVAR_TYPE_ALARM = "ALARM"
+SYSVAR_TYPE_LOGIC = "LOGIC"
+SYSVAR_TYPE_LIST = "LIST"
+SYSVAR_TYPE_NUMBER = "NUMBER"
+SYSVAR_TYPE_STRING = "STRING"
+SYSVAR_HM_TYPE_FLOAT = "FLOAT"
+SYSVAR_HM_TYPE_INTEGER = "INTEGER"
+
 ATTR_HM_ADDRESS = "ADDRESS"
 ATTR_HM_CHILDREN = "CHILDREN"
 ATTR_HM_DEFAULT = "DEFAULT"
@@ -121,10 +165,7 @@ ATTR_HM_PARENT = "PARENT"
 ATTR_HM_PARENT_TYPE = "PARENT_TYPE"
 ATTR_HM_TYPE = "TYPE"
 ATTR_HM_SUBTYPE = "SUBTYPE"
-ATTR_HM_LIST = "LIST"
-ATTR_HM_LOGIC = "LOGIC"
 ATTR_HM_NAME = "NAME"
-ATTR_HM_NUMBER = "NUMBER"
 ATTR_HM_UNIT = "UNIT"
 ATTR_HM_MAX = "MAX"
 ATTR_HM_MIN = "MIN"
@@ -134,20 +175,26 @@ ATTR_HM_VALUE = "VALUE"  # Float or integer, depending on TYPE
 # Members for ENUM
 ATTR_HM_VALUE_LIST = "VALUE_LIST"
 
+MAX_CACHE_AGE = 60
+MAX_JSON_SESSION_AGE = 90
+
 REGA_SCRIPT_PATH = "rega_scripts"
 REGA_SCRIPT_FETCH_ALL_DEVICE_DATA = "fetch_all_device_data.fn"
+REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER = "get_system_variables_ext_marker.fn"
+REGA_SCRIPT_GET_SERIAL = "get_serial.fn"
+REGA_SCRIPT_SET_SYSTEM_VARIABLE = "set_system_variable.fn"
 
 OPERATION_NONE = 0
 OPERATION_READ = 1
 OPERATION_WRITE = 2
 OPERATION_EVENT = 4
 
-TYPE_FLOAT = "FLOAT"
-TYPE_INTEGER = "INTEGER"
+TYPE_ACTION = "ACTION"  # Usually buttons, send Boolean to trigger
 TYPE_BOOL = "BOOL"
 TYPE_ENUM = "ENUM"
+TYPE_FLOAT = "FLOAT"
+TYPE_INTEGER = "INTEGER"
 TYPE_STRING = "STRING"
-TYPE_ACTION = "ACTION"  # Usually buttons, send Boolean to trigger
 
 FLAG_VISIBLE = 1
 FLAG_INTERAL = 2
@@ -188,12 +235,15 @@ IF_DEFAULT_ALLOCATION = {
     IF_BIDCOS_RF_TLS_PORT: IF_BIDCOS_RF_NAME,
 }
 
-DEFAULT_TIMEOUT = 30
-DEFAULT_INIT_TIMEOUT = 90
 DEFAULT_TLS = False
 DEFAULT_VERIFY_TLS = False
+# default timeout for a connection
+DEFAULT_TIMEOUT = 60
+# check if connection is available via rpc ping every:
 DEFAULT_CONNECTION_CHECKER_INTERVAL = 30
+# wait with reconnect after a first ping was successful
 DEFAULT_RECONNECT_WAIT = 120
+NO_CACHE_ENTRY = "NO_CACHE_ENTRY"
 
 HM_ENTITY_UNIT_REPLACE: dict[str, str] = {
     '"': "",
@@ -202,14 +252,38 @@ HM_ENTITY_UNIT_REPLACE: dict[str, str] = {
     "degree": "°C",
 }
 
+RELEVANT_INIT_PARAMETERS: set[str] = {
+    EVENT_CONFIG_PENDING,
+    EVENT_STICKY_UN_REACH,
+    EVENT_UN_REACH,
+}
+
 # virtual remotes device_types
-HM_VIRTUAL_REMOTE_HM = "HM-RCV-50"
-HM_VIRTUAL_REMOTE_HMW = "HMW-RCV-50"
-HM_VIRTUAL_REMOTE_HMIP = "HmIP-RCV-50"
-HM_VIRTUAL_REMOTES = [
-    HM_VIRTUAL_REMOTE_HM,
-    HM_VIRTUAL_REMOTE_HMW,
-    HM_VIRTUAL_REMOTE_HMIP,
+HM_VIRTUAL_REMOTE_HM_TYPE = "HM-RCV-50"
+HM_VIRTUAL_REMOTE_HMW_TYPE = "HMW-RCV-50"
+HM_VIRTUAL_REMOTE_HMIP_TYPE = "HmIP-RCV-50"
+HM_VIRTUAL_REMOTE_TYPES = [
+    HM_VIRTUAL_REMOTE_HM_TYPE,
+    HM_VIRTUAL_REMOTE_HMW_TYPE,
+    HM_VIRTUAL_REMOTE_HMIP_TYPE,
+]
+
+HM_VIRTUAL_REMOTE_HM_ADDRESS = "BidCoS-RF"
+HM_VIRTUAL_REMOTE_HMW_ADDRESS = "HMW-RCV-50"  # unknown
+HM_VIRTUAL_REMOTE_HMIP_ADDRESS = "HmIP-RCV-1"
+HM_VIRTUAL_REMOTE_ADDRESSES = [
+    HM_VIRTUAL_REMOTE_HM_ADDRESS,
+    HM_VIRTUAL_REMOTE_HMW_ADDRESS,
+    HM_VIRTUAL_REMOTE_HMIP_ADDRESS,
+]
+
+HM_VIRTUAL_REMOTE_HM_ADDRESS = "BidCoS-RF"
+HM_VIRTUAL_REMOTE_HMW_ADDRESS = "HMW-RCV-50"  # unknown
+HM_VIRTUAL_REMOTE_HMIP_ADDRESS = "HmIP-RCV-1"
+HM_VIRTUAL_REMOTE_ADDRESSES = [
+    HM_VIRTUAL_REMOTE_HM_ADDRESS,
+    HM_VIRTUAL_REMOTE_HMW_ADDRESS,
+    HM_VIRTUAL_REMOTE_HMIP_ADDRESS,
 ]
 
 
@@ -218,9 +292,9 @@ class HmEntityUsage(StrEnum):
 
     CE_PRIMARY = "ce_primary"
     CE_SECONDARY = "ce_secondary"
-    CE_SENSOR = "ce_sensor"
+    CE_VISIBLE = "ce_visible"
     ENTITY_NO_CREATE = "entity_no_create"
-    ENTITY = "ENTITY"
+    ENTITY = "entity"
     EVENT = "event"
 
 
@@ -233,8 +307,12 @@ class HmPlatform(StrEnum):
     CLIMATE = "climate"
     COVER = "cover"
     EVENT = "event"
-    HUB_SENSOR = "hub_sensor"
     HUB_BINARY_SENSOR = "hub_binary_sensor"
+    HUB_BUTTON = "hub_button"
+    HUB_NUMBER = "hub_number"
+    HUB_SELECT = "hub_select"
+    HUB_SENSOR = "hub_sensor"
+    HUB_SWITCH = "hub_switch"
     LIGHT = "light"
     LOCK = "lock"
     NUMBER = "number"
@@ -245,19 +323,22 @@ class HmPlatform(StrEnum):
     TEXT = "text"
 
 
-class HmEntityType(StrEnum):
-    """Enum with hahomematic entity types."""
-
-    GENERIC = "generic"
-    CUSTOM = "custom"
-
-
 class HmEventType(StrEnum):
     """Enum with hahomematic event types."""
 
     KEYPRESS = "homematic.keypress"
     DEVICE = "homematic.device"
     INTERFACE = "homematic.interface"
+    IMPULSE = "homematic.impulse"
+
+
+class HmCallSource(StrEnum):
+    """Enum with sources for calls."""
+
+    MANUAL = "manual"
+    HA_INIT = "ha_init"
+    HM_INIT = "hm_init"
+    SCHEDULED = "schedueld"
 
 
 class HmInterfaceEventType(StrEnum):
@@ -279,4 +360,13 @@ AVAILABLE_HM_PLATFORMS = [
     HmPlatform.SENSOR,
     HmPlatform.SIREN,
     HmPlatform.SWITCH,
+]
+
+AVAILABLE_HM_HUB_PLATFORMS = [
+    HmPlatform.HUB_BINARY_SENSOR,
+    HmPlatform.HUB_BUTTON,
+    HmPlatform.HUB_NUMBER,
+    HmPlatform.HUB_SELECT,
+    HmPlatform.HUB_SENSOR,
+    HmPlatform.HUB_SWITCH,
 ]

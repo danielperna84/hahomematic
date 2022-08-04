@@ -5,22 +5,27 @@ about: Create a report to help us improve.
 ---
 
 DONT'T DELETE THIS.
+
 Please answer all questions as good as possible.
+
+Language: english/german
 
 Make sure you have read the documentation at https://github.com/danielperna84/custom_homematic#custom_homematic.
 
-Make sure you are running the latest version of hahomematic or it's custom_component (and Home Assistant) before reporting an issue.
+Make sure you have read the release notes at https://github.com/danielperna84/custom_homematic/releases. 
+
+Make sure you are running the latest version of the custom_component (and Home Assistant) before reporting an issue.
 
 
 **custom_component/hahomematic version (if applicable):**
-0.x.x
+1.x.x
 
 **Home Assistant version (if applicable):**
 2022.x.x
 
 **CCU version:**
-- Model (CCU2/3, Raspi3/4, NUC, ProxmoxVE, ...):
-- OS (Original, RaspberryMatic, debmatic/...):
+- Model (CCU2/3, Raspi3/4, NUC, ProxmoxVE, HA-Addon ...):
+- OS (Original, RaspberryMatic, debmatic ...):
 - Version: 
 
 **Problem-relevant configuration:**
@@ -28,7 +33,7 @@ Make sure you are running the latest version of hahomematic or it's custom_compo
 Do you use tls?
 Do you use callback?
 Do you use username and password?
-Which interfaces do you use?
+Which interfaces do you use (hmip/bidcos/wired)?
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -40,7 +45,19 @@ Steps to reproduce the behavior:
 3. Scroll down to '....'
 4. See error
 
-**Relevant HA log entries**
+**Screenshots (if applicable)**
+- CCU firewall
+- integrations view
+- device view
+- enity view
+
+**Relevant HA log entries (full log)**
+```
+
+
+```
+
+**Diagnostic Information (available on every device)**
 ```
 
 
@@ -48,9 +65,6 @@ Steps to reproduce the behavior:
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
-
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
 
 **Additional context**
 Add any other context about the problem here.

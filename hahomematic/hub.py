@@ -1,17 +1,30 @@
 """Module for the hub"""
 from __future__ import annotations
 
-from abc import ABC
-from collections.abc import Callable
-from datetime import datetime
 import logging
-from typing import Any
-
-from slugify import slugify
+from typing import Any, Final
 
 import hahomematic.central_unit as hm_central
-from hahomematic.const import BACKEND_CCU, INIT_DATETIME, HmEntityUsage, HmPlatform
-from hahomematic.helpers import generate_unique_id
+from hahomematic.const import (
+    BACKEND_CCU,
+    HH_EVENT_HUB_ENTITY_CREATED,
+    HUB_ADDRESS,
+    SYSVAR_HM_TYPE_FLOAT,
+    SYSVAR_HM_TYPE_INTEGER,
+    SYSVAR_TYPE_ALARM,
+    SYSVAR_TYPE_LIST,
+    SYSVAR_TYPE_LOGIC,
+    HmEntityUsage,
+    HmPlatform,
+)
+from hahomematic.entity import CallbackEntity, GenericSystemVariable
+from hahomematic.helpers import ProgramData, SystemVariableData, generate_unique_id
+from hahomematic.platforms.binary_sensor import HmSysvarBinarySensor
+from hahomematic.platforms.button import HmProgramButton
+from hahomematic.platforms.number import HmSysvarNumber
+from hahomematic.platforms.select import HmSysvarSelect
+from hahomematic.platforms.sensor import HmSysvarSensor
+from hahomematic.platforms.switch import HmSysvarSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,35 +37,27 @@ EXCLUDED = [
 ]
 
 SERVICE_MESSAGES = "Servicemeldungen"
-SYSVAR_ADDRESS = "sysvar"
-HUB_ADDRESS = "hub"
 
 
-class BaseHubEntity(ABC):
-    """
-    Base class for hub entities.
-    """
+class HmHub(CallbackEntity):
+    """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(
-        self,
-        central: hm_central.CentralUnit,
-        unique_id: str,
-        name: str,
-        value: Any | None = None,
-    ):
-        """
-        Initialize the entity.
-        """
-        self._central = central
-        self.unique_id = unique_id
-        self.name = name
-        self._value = value
-        self.last_update: datetime = INIT_DATETIME
-        self._update_callbacks: list[Callable] = []
-        self._remove_callbacks: list[Callable] = []
-        self.create_in_ha: bool = True
-        self.should_poll = False
-        self.usage = HmEntityUsage.ENTITY
+    def __init__(self, central: hm_central.CentralUnit):
+        """Initialize HomeMatic hub."""
+        CallbackEntity.__init__(self)
+        self._central: Final[hm_central.CentralUnit] = central
+        self.unique_id: Final[str] = generate_unique_id(
+            central=central, address=HUB_ADDRESS
+        )
+        self.name: Final[str] = central.instance_name
+        self.syvar_entities: Final[dict[str, GenericSystemVariable]] = {}
+        self.program_entities: Final[dict[str, HmProgramButton]] = {}
+        self._hub_attributes: Final[dict[str, Any]] = {}
+        self.platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
+        self.should_poll: Final[bool] = True
+        self._value: int | None = None
+        self.create_in_ha: Final[bool] = True
+        self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
 
     @property
     def available(self) -> bool:
@@ -60,270 +65,218 @@ class BaseHubEntity(ABC):
         return self._central.available
 
     @property
-    def device_info(self) -> dict[str, Any]:
-        """Return central specific attributes."""
-        return self._central.device_info
-
-    @property
     def attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the base entity."""
-        return {}
+        """Return the state attributes."""
+        return self._hub_attributes.copy()
 
     @property
-    def platform(self) -> HmPlatform:
-        """Return the platform."""
-        return HmPlatform.HUB_SENSOR
-
-    @property
-    def value(self) -> Any:
+    def value(self) -> int | None:
         """Return the value of the entity."""
         return self._value
 
-    @property
-    def unit(self) -> str | None:
-        """Return the unit of the entity."""
-        if isinstance(self._value, (bool, str)):
-            return None
-        if isinstance(self._value, (int, float)):
-            return "#"
-        return None
-
-    # pylint: disable=no-self-use
-    async def load_data(self) -> None:
-        """Do not load data for the hub here."""
-        return
-
-    # pylint: disable=no-self-use
-    async def fetch_data(self) -> None:
-        """fetch data for the hub."""
-        return
-
-    def register_update_callback(self, update_callback: Callable) -> None:
-        """register update callback"""
-        if callable(update_callback) and update_callback not in self._update_callbacks:
-            self._update_callbacks.append(update_callback)
-
-    def unregister_update_callback(self, update_callback: Callable) -> None:
-        """remove update callback"""
-        if update_callback in self._update_callbacks:
-            self._update_callbacks.remove(update_callback)
-
-    def update_entity(self, *args: Any) -> None:
-        """
-        Do what is needed when the state of the entity has been updated.
-        """
-        self._set_last_update()
-        for _callback in self._update_callbacks:
-            _callback(self.unique_id)
-
-    def register_remove_callback(self, remove_callback: Callable) -> None:
-        """register the remove callback"""
-        if callable(remove_callback):
-            self._remove_callbacks.append(remove_callback)
-
-    def unregister_remove_callback(self, remove_callback: Callable) -> None:
-        """remove the remove callback"""
-        if remove_callback in self._remove_callbacks:
-            self._remove_callbacks.remove(remove_callback)
-
-    def remove_entity(self) -> None:
-        """
-        Do what is needed when the entity has been removed.
-        """
-        self._set_last_update()
-        for _callback in self._remove_callbacks:
-            _callback(self.unique_id)
-
-    def _set_last_update(self) -> None:
-        self.last_update = datetime.now()
-
-
-class HmSystemVariable(BaseHubEntity):
-    """Class for a homematic system variable."""
-
-    def __init__(self, central: hm_central.CentralUnit, name: str, value: Any):
-        self._hub: HmHub | HmDummyHub | None = central.hub
-        unique_id = generate_unique_id(
-            domain=central.domain,
-            instance_name="",
-            address=SYSVAR_ADDRESS,
-            parameter=slugify(name),
-            prefix=central.serial,
-        )
-        super().__init__(
-            central=central,
-            unique_id=unique_id,
-            name=f"{central.instance_name}_SV_{name}",
-            value=value,
-        )
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return device specific attributes."""
-        if self._hub:
-            return self._hub.device_info
-        return {}
-
-    @property
-    def platform(self) -> HmPlatform:
-        """Return the platform."""
-        if isinstance(self.value, bool):
-            return HmPlatform.HUB_BINARY_SENSOR
-        return HmPlatform.HUB_SENSOR
-
-    async def set_value(self, value: Any) -> None:
-        """Set variable value on CCU/Homegear."""
-        old_value = self._value
-        if isinstance(old_value, bool):
-            value = bool(value)
-        elif isinstance(old_value, float):
-            value = float(value)
-        elif isinstance(old_value, int):
-            value = int(value)
-        elif isinstance(old_value, str):
-            value = str(value)
-
-        if self._value != value:
-            self._value = value
-            self.update_entity()
-
-
-class HmHub(BaseHubEntity):
-    """The HomeMatic hub. (CCU/HomeGear)."""
-
-    def __init__(self, central: hm_central.CentralUnit):
-        """Initialize HomeMatic hub."""
-        unique_id: str = generate_unique_id(
-            domain=central.domain,
-            instance_name=central.instance_name,
-            address=HUB_ADDRESS,
-        )
-        name: str = central.instance_name
-        super().__init__(central, unique_id, name)
-        self.hub_entities: dict[str, HmSystemVariable] = {}
-        self._variables: dict[str, Any] = {}
-        self.should_poll = True
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return self._variables.copy()
-
-    @property
-    def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
-        """Return the system variables by platform"""
-        sysvars: dict[HmPlatform, list[HmSystemVariable]] = {}
-        for entity in self.hub_entities.values():
-            if entity.platform not in sysvars:
-                sysvars[entity.platform] = []
-            sysvars[entity.platform].append(entity)
-
-        return sysvars
-
-    async def fetch_data(self) -> None:
-        """fetch data for the hub."""
+    async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
+        """fetch sysvar data for the hub."""
         if self._central.available:
-            await self._update_entities()
+            await self._update_sysvar_entities(include_internal=include_internal)
             await self._update_hub_state()
+
+    async def fetch_program_data(self, include_internal: bool = False) -> None:
+        """fetch program data for the hub."""
+        if self._central.available:
+            await self._update_program_entities(include_internal=include_internal)
 
     async def _update_hub_state(self) -> None:
         """Retrieve latest service_messages."""
-        service_messages = await self._central.get_system_variable(SERVICE_MESSAGES)
-        value = 0 if service_messages is None else int(service_messages)
+        value = 0
+        if self._central.model == BACKEND_CCU:
+            service_messages = await self._central.get_system_variable(SERVICE_MESSAGES)
+            if service_messages is not None and isinstance(service_messages, float):
+                value = int(service_messages)
 
         if self._value != value:
             self._value = value
             self.update_entity()
 
-    async def _update_entities(self) -> None:
-        """Retrieve all variable data and update hmvariable values."""
-        self._variables.clear()
-        variables = await self._central.get_all_system_variables()
-        if not variables:
+    async def _update_program_entities(self, include_internal: bool) -> None:
+        """Retrieve all program data and update program values."""
+        self._hub_attributes.clear()
+        programs = await self._central.get_all_programs(
+            include_internal=include_internal
+        )
+        if not programs:
+            _LOGGER.debug(
+                "_update_program_entities: No programs received for %s",
+                self._central.instance_name,
+            )
             return
+        _LOGGER.debug(
+            "_update_entities: %i programs received for %s",
+            len(programs),
+            self._central.instance_name,
+        )
+
+        missing_program_ids = self._identify_missing_program_ids(programs=programs)
+        if missing_program_ids:
+            self._remove_program_entity(ids=missing_program_ids)
+
+        new_programs: list[HmProgramButton] = []
+
+        for program_data in programs:
+            entity: HmProgramButton | None = self.program_entities.get(program_data.pid)
+            if entity:
+                entity.update_data(data=program_data)
+            else:
+                new_programs.append(self._create_program(data=program_data))
+
+        if (
+            new_programs
+            and self._central.callback_system_event is not None
+            and callable(self._central.callback_system_event)
+        ):
+            self._central.callback_system_event(
+                HH_EVENT_HUB_ENTITY_CREATED, new_programs
+            )
+
+    async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
+        """Retrieve all variable data and update hmvariable values."""
+        self._hub_attributes.clear()
+        variables = await self._central.get_all_system_variables(
+            include_internal=include_internal
+        )
+        if not variables:
+            _LOGGER.debug(
+                "_update_entities: No sysvars received for %s",
+                self._central.instance_name,
+            )
+            return
+        _LOGGER.debug(
+            "_update_entities: %i sysvars received for %s",
+            len(variables),
+            self._central.instance_name,
+        )
 
         # remove some variables in case of CCU Backend
         # - OldValue(s) are for internal calculations
         if self._central.model is BACKEND_CCU:
             variables = _clean_variables(variables)
 
-        for name, value in variables.items():
+        missing_variable_names = self._identify_missing_variable_names(
+            variables=variables
+        )
+        if missing_variable_names:
+            self._remove_sysvar_entity(names=missing_variable_names)
+
+        new_sysvars: list[GenericSystemVariable] = []
+
+        for sysvar in variables:
+            name = sysvar.name
+            value = sysvar.value
             if _is_excluded(name, EXCLUDED_FROM_SENSOR):
-                self._variables[name] = value
+                self._hub_attributes[name] = value
                 continue
 
-            entity: HmSystemVariable | None = self.hub_entities.get(name)
+            entity: GenericSystemVariable | None = self.syvar_entities.get(name)
             if entity:
-                await entity.set_value(value)
+                entity.update_value(value)
             else:
-                self._create_system_variable(name, value)
+                new_sysvars.append(self._create_system_variable(data=sysvar))
 
-        # check if hub_entities can be deletes
-        del_entities = []
-        for entity_name in self.hub_entities:
-            if entity_name not in variables.keys():
-                del_entities.append(entity_name)
+        if (
+            new_sysvars
+            and self._central.callback_system_event is not None
+            and callable(self._central.callback_system_event)
+        ):
+            self._central.callback_system_event(
+                HH_EVENT_HUB_ENTITY_CREATED, new_sysvars
+            )
 
-        # remove entity if necessary
-        for to_delete in del_entities:
-            del self.hub_entities[to_delete]
+    def _create_program(self, data: ProgramData) -> HmProgramButton:
+        """Create program as entity."""
+        program_entity = HmProgramButton(central=self._central, data=data)
+        self.program_entities[data.pid] = program_entity
+        return program_entity
+
+    def _create_system_variable(
+        self, data: SystemVariableData
+    ) -> GenericSystemVariable:
+        """Create system variable as entity."""
+        sysvar_entity = self._create_sysvar_entity(data=data)
+        self.syvar_entities[data.name] = sysvar_entity
+        return sysvar_entity
+
+    def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
+        """Create sysvar entity."""
+        data_type = data.data_type
+        extended_sysvar = data.extended_sysvar
+        if data_type:
+            if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
+                if extended_sysvar:
+                    return HmSysvarSwitch(central=self._central, data=data)
+                return HmSysvarBinarySensor(central=self._central, data=data)
+            if data_type == SYSVAR_TYPE_LIST and extended_sysvar:
+                return HmSysvarSelect(central=self._central, data=data)
+            if (
+                data_type in (SYSVAR_HM_TYPE_FLOAT, SYSVAR_HM_TYPE_INTEGER)
+                and extended_sysvar
+            ):
+                return HmSysvarNumber(central=self._central, data=data)
+        else:
+            if isinstance(self.value, bool):
+                return HmSysvarBinarySensor(central=self._central, data=data)
+        return HmSysvarSensor(central=self._central, data=data)
+
+    def _remove_program_entity(self, ids: list[str]) -> None:
+        """Remove sysvar entity from hub."""
+        for pid in ids:
+            if pid in self.program_entities:
+                entity = self.program_entities[pid]
+                entity.remove_entity()
+                del self.program_entities[pid]
         self.update_entity()
 
-    def _create_system_variable(self, name: str, value: Any) -> None:
-        """Create system variable as entity."""
-        self.hub_entities[name] = HmSystemVariable(
-            central=self._central,
-            name=name,
-            value=value,
-        )
+    def _remove_sysvar_entity(self, names: list[str]) -> None:
+        """Remove sysvar entity from hub."""
+        for name in names:
+            if name in self._hub_attributes:
+                del self._hub_attributes[name]
+
+            if name in self.syvar_entities:
+                entity = self.syvar_entities[name]
+                entity.remove_entity()
+                del self.syvar_entities[name]
+        self.update_entity()
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        if name not in self.hub_entities:
+        if entity := self.syvar_entities.get(name):
+            await entity.send_variable(value=value)
+        elif name in self.attributes:
+            await self._central.set_system_variable(name=name, value=value)
+        else:
             _LOGGER.warning("Variable %s not found on %s", name, self.name)
-            return
 
-        await self._central.set_system_variable(name, value)
+    def _identify_missing_program_ids(self, programs: list[ProgramData]) -> list[str]:
+        """Identify missing programs."""
+        program_ids: list[str] = [x.pid for x in programs]
+        missing_programs: list[str] = []
+        for pid in self.program_entities:
+            if pid not in program_ids:
+                missing_programs.append(pid)
+        return missing_programs
 
-
-class HmDummyHub(BaseHubEntity):
-    """The HomeMatic hub. (CCU/HomeGear)."""
-
-    def __init__(self, central: hm_central.CentralUnit):
-        """Initialize HomeMatic hub."""
-        unique_id: str = generate_unique_id(
-            domain=central.domain,
-            instance_name=central.instance_name,
-            address=central.instance_name,
-            prefix="hub",
-        )
-        name: str = central.instance_name
-        super().__init__(central, unique_id, name)
-        self.hub_entities: dict[str, BaseHubEntity] = {}
-
-    @property
-    def device_info(self) -> dict[str, Any]:
-        """Return central specific attributes."""
-        return self._central.device_info
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {}
-
-    @property
-    def hub_entities_by_platform(self) -> dict[HmPlatform, list[HmSystemVariable]]:
-        """Return the system variables by platform"""
-        return {}
-
-    async def fetch_data(self) -> None:
-        """do not fetch data for the hub."""
-        return
-
-    # pylint: disable=unnecessary-pass
-    async def set_system_variable(self, name: str, value: Any) -> None:
-        """Do not set variable value on CCU/Homegear."""
-        pass
+    def _identify_missing_variable_names(
+        self, variables: list[SystemVariableData]
+    ) -> list[str]:
+        """Identify missing variables."""
+        variable_names: list[str] = [x.name for x in variables]
+        missing_variables: list[str] = []
+        for name in self._hub_attributes:
+            if name not in variable_names:
+                missing_variables.append(name)
+        for name in self.syvar_entities:
+            if name not in variable_names:
+                missing_variables.append(name)
+        return missing_variables
 
 
 def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
@@ -334,10 +287,11 @@ def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
     return False
 
 
-def _clean_variables(variables: dict[str, Any]) -> dict[str, Any]:
-    cleaned_variables: dict[str, Any] = {}
-    for name, value in variables.items():
-        if _is_excluded(name, EXCLUDED):
+def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:
+    "Clean variables by removing excluded."
+    cleaned_variables: list[SystemVariableData] = []
+    for sysvar in variables:
+        if _is_excluded(sysvar.name, EXCLUDED):
             continue
-        cleaned_variables[name] = value
+        cleaned_variables.append(sysvar)
     return cleaned_variables

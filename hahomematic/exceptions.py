@@ -1,7 +1,7 @@
 """Module for HaHomematicExceptions."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Final
 
 
 class BaseHomematicException(Exception):
@@ -10,7 +10,7 @@ class BaseHomematicException(Exception):
     def __init__(self, name: str, *args: Any) -> None:
         """Init the HaHomematicException."""
         super().__init__(*args)
-        self.name = name
+        self.name: Final[str] = name
 
 
 class ProxyException(BaseHomematicException):

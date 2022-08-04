@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 import threading
-from typing import Any
+from typing import Any, Final
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 import hahomematic.central_unit as hm_central
@@ -84,7 +84,6 @@ class RPCFunctions:
                 )
 
     @callback_system_event(HH_EVENT_ERROR)
-    # pylint: disable=no-self-use
     def error(self, interface_id: str, error_code: str, msg: str) -> None:
         """
         When some error occurs the CCU / Homegear will send its error message here.
@@ -134,7 +133,6 @@ class RPCFunctions:
             central.create_task(central.delete_devices(interface_id, addresses))
 
     @callback_system_event(HH_EVENT_UPDATE_DEVICE)
-    # pylint: disable=no-self-use
     def updateDevice(self, interface_id: str, address: str, hint: int) -> None:
         """
         Update a device.
@@ -149,7 +147,6 @@ class RPCFunctions:
         )
 
     @callback_system_event(HH_EVENT_REPLACE_DEVICE)
-    # pylint: disable=no-self-use
     def replaceDevice(
         self, interface_id: str, old_device_address: str, new_device_address: str
     ) -> None:
@@ -164,7 +161,6 @@ class RPCFunctions:
         )
 
     @callback_system_event(HH_EVENT_RE_ADDED_DEVICE)
-    # pylint: disable=no-self-use
     def readdedDevice(self, interface_id: str, addresses: list[str]) -> None:
         """
         Readded device. Probably irrelevant for us.
@@ -223,26 +219,27 @@ class XmlRpcServer(threading.Thread):
         _LOGGER.debug("__init__")
         threading.Thread.__init__(self)
 
-        self.local_ip: str = local_ip
-        self.local_port: int = local_port
+        self.local_ip: Final[str] = local_ip
 
-        _rpc_functions = RPCFunctions(self)
+        _rpc_functions: Final[RPCFunctions] = RPCFunctions(self)
         _LOGGER.debug("__init__: Setting up server")
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
-            (self.local_ip, self.local_port),
+            (self.local_ip, local_port),
             requestHandler=RequestHandler,
             logRequests=False,
             allow_none=True,
         )
 
-        self.local_port = self._simple_xml_rpc_server.socket.getsockname()[1]
+        self.local_port: Final[int] = self._simple_xml_rpc_server.socket.getsockname()[
+            1
+        ]
         self._simple_xml_rpc_server.register_introspection_functions()
         self._simple_xml_rpc_server.register_multicall_functions()
         _LOGGER.debug("__init__: Registering RPC functions")
         self._simple_xml_rpc_server.register_instance(
             _rpc_functions, allow_dotted_names=True
         )
-        self._centrals: dict[str, hm_central.CentralUnit] = {}
+        self._centrals: Final[dict[str, hm_central.CentralUnit]] = {}
 
     def run(self) -> None:
         """

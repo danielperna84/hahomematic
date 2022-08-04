@@ -4,38 +4,59 @@ Implementation of an async json-rpc client.
 from __future__ import annotations
 
 import asyncio
-from copy import deepcopy
 from datetime import datetime
 import json
 import logging
 import os
 from pathlib import Path
+import re
 import ssl
-from typing import Any
+from typing import Any, Final
 
 from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnector
 
 from hahomematic import config
 from hahomematic.const import (
-    ATTR_ADDRESS,
     ATTR_ERROR,
-    ATTR_INTERFACE,
     ATTR_NAME,
-    ATTR_PARAMSET_KEY,
     ATTR_PASSWORD,
     ATTR_RESULT,
     ATTR_SESSION_ID,
     ATTR_USERNAME,
-    ATTR_VALUE,
-    ATTR_VALUE_KEY,
     DEFAULT_ENCODING,
-    PARAMSET_KEY_VALUES,
+    MAX_JSON_SESSION_AGE,
     PATH_JSON_RPC,
+    PROGRAM_ID,
+    PROGRAM_ISACTIVE,
+    PROGRAM_ISINTERNAL,
+    PROGRAM_LASTEXECUTETIME,
+    PROGRAM_NAME,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
+    REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
+    REGA_SCRIPT_SET_SYSTEM_VARIABLE,
+    REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER,
+    SYSVAR_HASEXTMARKER,
+    SYSVAR_HM_TYPE_FLOAT,
+    SYSVAR_HM_TYPE_INTEGER,
+    SYSVAR_ID,
+    SYSVAR_ISINTERNAL,
+    SYSVAR_MAX_VALUE,
+    SYSVAR_MIN_VALUE,
+    SYSVAR_NAME,
+    SYSVAR_TYPE,
+    SYSVAR_TYPE_NUMBER,
+    SYSVAR_UNIT,
+    SYSVAR_VALUE,
+    SYSVAR_VALUE_LIST,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
-from hahomematic.helpers import convert_value, get_tls_context, parse_ccu_sys_var
+from hahomematic.helpers import (
+    ProgramData,
+    SystemVariableData,
+    get_tls_context,
+    parse_ccu_sys_var,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,18 +75,19 @@ class JsonRpcAioHttpClient:
         verify_tls: bool = False,
     ):
         """Session setup."""
-        if client_session:
-            self._client_session = client_session
-        else:
-            conn = TCPConnector(limit=3)
-            self._client_session = ClientSession(connector=conn, loop=loop)
+
+        self._client_session: Final[ClientSession] = (
+            client_session
+            if client_session
+            else ClientSession(connector=TCPConnector(limit=3), loop=loop)
+        )
         self._session_id: str | None = None
         self._last_session_id_refresh: datetime | None = None
-        self._username: str = username
-        self._password: str | None = password
-        self._tls: bool = tls
-        self._tls_context: ssl.SSLContext = get_tls_context(verify_tls)
-        self._url = f"{device_url}{PATH_JSON_RPC}"
+        self._username: Final[str] = username
+        self._password: Final[str] = password
+        self._tls: Final[bool] = tls
+        self._tls_context: Final[ssl.SSLContext] = get_tls_context(verify_tls)
+        self._url: Final[str] = f"{device_url}{PATH_JSON_RPC}"
 
     @property
     def is_activated(self) -> bool:
@@ -108,12 +130,14 @@ class JsonRpcAioHttpClient:
             )
             return None
 
-    def _updated_within_seconds(self, age_seconds: int = 90) -> bool:
+    def _updated_within_seconds(
+        self, max_age_seconds: int = MAX_JSON_SESSION_AGE
+    ) -> bool:
         """Check if session id has been updated within 90 seconds."""
         if self._last_session_id_refresh is None:
             return False
         delta = datetime.now() - self._last_session_id_refresh
-        if delta.seconds < age_seconds:
+        if delta.seconds < max_age_seconds:
             return True
         return False
 
@@ -191,6 +215,7 @@ class JsonRpcAioHttpClient:
     async def _post_script(
         self,
         script_name: str,
+        extra_params: dict[str, str] | None = None,
         keep_session: bool = True,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST_SCRIPT function."""
@@ -204,9 +229,14 @@ class JsonRpcAioHttpClient:
             _LOGGER.warning("_post_script: Error while logging in via JSON-RPC.")
             return {"error": "Unable to open session.", "result": {}}
 
-        source_path = Path(__file__).resolve()
-        script_file = os.path.join(source_path.parent, REGA_SCRIPT_PATH, script_name)
+        script_file = os.path.join(
+            Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name
+        )
         script = Path(script_file).read_text(encoding=DEFAULT_ENCODING)
+
+        if extra_params:
+            for variable, value in extra_params.items():
+                script = script.replace(f"##{variable}##", value)
 
         method = "ReGa.runScript"
         response = await self._do_post(
@@ -214,6 +244,8 @@ class JsonRpcAioHttpClient:
             method=method,
             extra_params={"script": script},
         )
+        if not response[ATTR_ERROR]:
+            response[ATTR_RESULT] = json.loads(response[ATTR_RESULT])
         _LOGGER.debug("_post_script: Method: %s [%s]", method, script_name)
 
         if not keep_session:
@@ -324,19 +356,48 @@ class JsonRpcAioHttpClient:
         """Return if credentials are available."""
         return self._username is not None and self._password is not None
 
+    async def execute_program(self, pid: str) -> None:
+        """Execute a program on CCU / Homegear."""
+        _LOGGER.debug("execute_program: Executing a program via JSON-RPC")
+        try:
+            params = {
+                PROGRAM_ID: pid,
+            }
+            response = await self._post("Program.execute", params)
+
+            if json_result := response[ATTR_RESULT]:
+                res = json_result
+                _LOGGER.debug(
+                    "execute_program: Result while executing program: %s",
+                    str(res),
+                )
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("execute_program: %s [%s]", hhe.name, hhe.args)
+
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set a system variable on CCU / Homegear."""
         _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
         try:
             params = {
-                ATTR_NAME: name,
-                ATTR_VALUE: value,
+                SYSVAR_NAME: name,
+                SYSVAR_VALUE: value,
             }
-            if value is True or value is False:
-                params[ATTR_VALUE] = int(value)
+            if isinstance(value, bool):
+                params[SYSVAR_VALUE] = int(value)
                 response = await self._post("SysVar.setBool", params)
+            elif isinstance(value, str):
+                if re.findall("<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});", value):
+                    _LOGGER.warning(
+                        "set_system_variable: value (%s) contains html tags. This is not allowed.",
+                        value,
+                    )
+                    return
+                response = await self._post_script(
+                    script_name=REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
+                )
             else:
                 response = await self._post("SysVar.setFloat", params)
+
             if json_result := response[ATTR_RESULT]:
                 res = json_result
                 _LOGGER.debug(
@@ -350,7 +411,7 @@ class JsonRpcAioHttpClient:
         """Delete a system variable from CCU / Homegear."""
         _LOGGER.debug("delete_system_variable: Getting System variable via JSON-RPC")
         try:
-            params = {ATTR_NAME: name}
+            params = {SYSVAR_NAME: name}
             response = await self._post(
                 "SysVar.deleteSysVarByName",
                 params,
@@ -366,7 +427,7 @@ class JsonRpcAioHttpClient:
         var = None
         _LOGGER.debug("get_system_variable: Getting System variable via JSON-RPC")
         try:
-            params = {ATTR_NAME: name}
+            params = {SYSVAR_NAME: name}
             response = await self._post(
                 "SysVar.getValueByName",
                 params,
@@ -382,9 +443,11 @@ class JsonRpcAioHttpClient:
 
         return var
 
-    async def get_all_system_variables(self) -> dict[str, Any]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
-        variables: dict[str, Any] = {}
+        variables: list[SystemVariableData] = []
         _LOGGER.debug(
             "get_all_system_variables: Getting all system variables via JSON-RPC"
         )
@@ -393,11 +456,54 @@ class JsonRpcAioHttpClient:
                 "SysVar.getAll",
             )
             if json_result := response[ATTR_RESULT]:
+                ext_markers = await self._get_system_variables_ext_markers()
                 for var in json_result:
-                    name = var[ATTR_NAME]
+                    is_internal = var[SYSVAR_ISINTERNAL]
+                    if include_internal is False and is_internal is True:
+                        continue
+                    var_id = var[SYSVAR_ID]
+                    name = var[SYSVAR_NAME]
+                    org_data_type = var[SYSVAR_TYPE]
+                    raw_value = var[SYSVAR_VALUE]
+                    if org_data_type == SYSVAR_TYPE_NUMBER:
+                        data_type = (
+                            SYSVAR_HM_TYPE_FLOAT
+                            if "." in raw_value
+                            else SYSVAR_HM_TYPE_INTEGER
+                        )
+                    else:
+                        data_type = org_data_type
+                    extended_sysvar = ext_markers.get(var_id, False)
+                    unit = var[SYSVAR_UNIT]
+                    value_list: list[str] | None = None
+                    if val_list := var.get(SYSVAR_VALUE_LIST):
+                        value_list = val_list.split(";")
                     try:
-                        value = parse_ccu_sys_var(var)
-                        variables[name] = value
+                        value = parse_ccu_sys_var(
+                            data_type=data_type, raw_value=raw_value
+                        )
+                        max_value = None
+                        if raw_max_value := var.get(SYSVAR_MAX_VALUE):
+                            max_value = parse_ccu_sys_var(
+                                data_type=data_type, raw_value=raw_max_value
+                            )
+                        min_value = None
+                        if raw_min_value := var.get(SYSVAR_MIN_VALUE):
+                            min_value = parse_ccu_sys_var(
+                                data_type=data_type, raw_value=raw_min_value
+                            )
+                        variables.append(
+                            SystemVariableData(
+                                name=name,
+                                data_type=data_type,
+                                unit=unit,
+                                value=value,
+                                value_list=value_list,
+                                max_value=max_value,
+                                min_value=min_value,
+                                extended_sysvar=extended_sysvar,
+                            )
+                        )
                     except ValueError as verr:
                         _LOGGER.error(
                             "get_all_system_variables: ValueError [%s] Failed to parse SysVar %s ",
@@ -410,89 +516,30 @@ class JsonRpcAioHttpClient:
 
         return variables
 
-    async def get_value(
-        self,
-        interface: str,
-        channel_address: str,
-        parameter: str,
-        paramset_key: str = PARAMSET_KEY_VALUES,
-    ) -> Any:
-        """Return a cached value from CCU."""
-        value = None
-        _LOGGER.debug("get_value: Getting value via JSON-RPC")
-        try:
-            params = {
-                ATTR_INTERFACE: interface,
-                ATTR_ADDRESS: channel_address,
-                ATTR_VALUE_KEY: parameter,
-            }
-            method = (
-                "Interface.getValue"
-                if paramset_key == PARAMSET_KEY_VALUES
-                else "Interface.getMasterValue"
-            )
-            response = await self._post(
-                method=method,
-                extra_params=params,
-            )
-            if json_result := response[ATTR_RESULT]:
-                # This does not yet support strings
-                value = json_result
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("get_value: %s [%s]", hhe.name, hhe.args)
-
-        return value
-
-    async def get_paramset(
-        self, interface: str, channel_address: str, paramset_key: str
-    ) -> Any:
-        """Return a cached paramset from CCU."""
-        value = None
-        _LOGGER.debug("get_paramset: Getting value via JSON-RPC")
-        try:
-            params = {
-                ATTR_INTERFACE: interface,
-                ATTR_ADDRESS: channel_address,
-                ATTR_PARAMSET_KEY: paramset_key,
-            }
-            response = await self._post(
-                "Interface.getParamset",
-                params,
-            )
-            if json_result := response[ATTR_RESULT]:
-                # This does not yet support strings
-                value = json_result
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("get_paramset: %s [%s]", hhe.name, hhe.args)
-
-        return value
-
-    async def get_paramset_description(
-        self, interface: str, address: str, paramset_key: str
-    ) -> dict[str, Any]:
-        """Get paramset description from CCU."""
+    async def _get_system_variables_ext_markers(self) -> dict[str, Any]:
+        """Get all system variables from CCU / Homegear."""
+        ext_markers: dict[str, Any] = {}
         _LOGGER.debug(
-            "get_paramset_description: Getting paramset description via JSON-RPC."
+            "get_system_variables_ext_markers: Getting system variables ext markersvia JSON-RPC"
         )
         try:
-            params = {
-                ATTR_INTERFACE: interface,
-                ATTR_ADDRESS: address,
-                ATTR_PARAMSET_KEY: paramset_key,
-            }
-            response = await self._post("Interface.getParamsetDescription", params)
+            response = await self._post_script(
+                script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER
+            )
             if json_result := response[ATTR_RESULT]:
-                _LOGGER.debug("get_paramset_description: Getting paramset description.")
-                return _convert_from_json_paramset_description(json_result)
+                for data in json_result:
+                    ext_markers[data[SYSVAR_ID]] = data[SYSVAR_HASEXTMARKER]
 
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_paramset_description: %s, %s", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "get_system_variables_ext_markers: %s [%s]", hhe.name, hhe.args
+            )
 
-        return {}
+        return ext_markers
 
-    async def get_all_channel_ids_room(self) -> dict[str, str]:
+    async def get_all_channel_ids_room(self) -> dict[str, set[str]]:
         """Get all channel_ids per room from CCU / Homegear."""
-        channel_ids_room: dict[str, str] = {}
+        channel_ids_room: dict[str, set[str]] = {}
         _LOGGER.debug("get_all_channel_ids_per_room: Getting all rooms via JSON-RPC")
         try:
             response = await self._post(
@@ -500,13 +547,43 @@ class JsonRpcAioHttpClient:
             )
             if json_result := response[ATTR_RESULT]:
                 for room in json_result:
-                    channel_ids_room[room["id"]] = room["name"]
+                    if room["id"] not in channel_ids_room:
+                        channel_ids_room[room["id"]] = set()
+                    channel_ids_room[room["id"]].add(room["name"])
                     for channel_id in room["channelIds"]:
-                        channel_ids_room[channel_id] = room["name"]
+                        if channel_id not in channel_ids_room:
+                            channel_ids_room[channel_id] = set()
+                        channel_ids_room[channel_id].add(room["name"])
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_all_channel_ids_per_room: %s [%s]", hhe.name, hhe.args)
 
         return channel_ids_room
+
+    async def get_all_channel_ids_function(self) -> dict[str, set[str]]:
+        """Get all channel_ids per function from CCU / Homegear."""
+        channel_ids_function: dict[str, set[str]] = {}
+        _LOGGER.debug(
+            "get_all_channel_ids_per_function: Getting all functions via JSON-RPC"
+        )
+        try:
+            response = await self._post(
+                "Subsection.getAll",
+            )
+            if json_result := response[ATTR_RESULT]:
+                for function in json_result:
+                    if function["id"] not in channel_ids_function:
+                        channel_ids_function[function["id"]] = set()
+                    channel_ids_function[function["id"]].add(function["name"])
+                    for channel_id in function["channelIds"]:
+                        if channel_id not in channel_ids_function:
+                            channel_ids_function[channel_id] = set()
+                        channel_ids_function[channel_id].add(function["name"])
+        except BaseHomematicException as hhe:
+            _LOGGER.warning(
+                "get_all_channel_ids_per_function: %s [%s]", hhe.name, hhe.args
+            )
+
+        return channel_ids_function
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
@@ -529,7 +606,6 @@ class JsonRpcAioHttpClient:
     async def get_device_details(self) -> list[dict[str, Any]]:
         """Get the device details of the backend."""
         device_details = []
-
         _LOGGER.debug("get_device_details: Getting the device details via JSON-RPC")
         try:
             response = await self._post(
@@ -544,51 +620,66 @@ class JsonRpcAioHttpClient:
 
     async def get_all_device_data(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Get the all device data of the backend."""
-        all_device_data: dict[str, Any] = {}
-
+        all_device_data: dict[str, dict[str, dict[str, Any]]] = {}
         _LOGGER.debug("get_all_device_data: Getting all device data via JSON-RPC")
         try:
             response = await self._post_script(
                 script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA
             )
             if json_result := response[ATTR_RESULT]:
-                all_device_data = json.loads(json_result)
+                all_device_data = _convert_to_values_cache(json_result)
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_all_device_data: %s [%s]", hhe.name, hhe.args)
 
-        return _convert_to_values_cache(all_device_data)
+        return all_device_data
+
+    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+        """Get the all programs of the backend."""
+        all_programs: list[ProgramData] = []
+        _LOGGER.debug("get_all_programs: Getting all programs via JSON-RPC")
+        try:
+            response = await self._post(
+                method="Program.getAll",
+            )
+            if json_result := response[ATTR_RESULT]:
+                for prog in json_result:
+                    is_internal = prog[PROGRAM_ISINTERNAL]
+                    if include_internal is False and is_internal is True:
+                        continue
+                    pid = prog[PROGRAM_ID]
+                    name = prog[PROGRAM_NAME]
+                    is_active = prog[PROGRAM_ISACTIVE]
+                    last_execute_time = prog[PROGRAM_LASTEXECUTETIME]
+
+                    all_programs.append(
+                        ProgramData(
+                            pid=pid,
+                            name=name,
+                            is_active=is_active,
+                            is_internal=is_internal,
+                            last_execute_time=last_execute_time,
+                        )
+                    )
+
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("get_all_programs: %s [%s]", hhe.name, hhe.args)
+
+        return all_programs
 
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
         serial = "unknown"
-
         _LOGGER.debug("get_serial: Getting the backend serial via JSON-RPC")
         try:
-            response = await self._post(
-                method="CCU.getSerial",
-            )
+            response = await self._post_script(script_name=REGA_SCRIPT_GET_SERIAL)
             if json_result := response[ATTR_RESULT]:
-                serial = json_result
+                serial = json_result["serial"]
+                if len(serial) > 10:
+                    serial = serial[-10:]
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_serial: %s [%s]", hhe.name, hhe.args)
 
         return serial
-
-    async def get_version(self) -> str:
-        """Get the version of the backend."""
-        version = "unknown"
-
-        _LOGGER.debug("get_version: Getting the backend version via JSON-RPC")
-        try:
-            response = await self._post(
-                method="CCU.getVersion",
-            )
-            if json_result := response[ATTR_RESULT]:
-                version = json_result
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("get_version: %s [%s]", hhe.name, hhe.args)
-
-        return version
 
 
 def _get_params(
@@ -601,30 +692,6 @@ def _get_params(
     if extra_params:
         params.update(extra_params)
     return params
-
-
-def _convert_from_json_paramset_description(
-    json_paramset_descriptions: list[dict[str, Any]]
-) -> dict[str, Any]:
-    """Fix types of values."""
-    convert_to_int = ["FLAGS", "OPERATIONS", "TAB_ORDER"]
-    convert_to_target_type = ["DEFAULT", "MAX", "MIN"]
-    convert_to_list = ["VALUE_LIST"]
-    new_psds: dict[str, Any] = {}
-    for json_paramset_description in json_paramset_descriptions:
-        new_psd = deepcopy(json_paramset_description)
-        hm_name = new_psd.pop("NAME")
-        hm_type = new_psd["TYPE"]
-        for key, value in new_psd.items():
-            if key in convert_to_int:
-                new_psd[key] = int(value)
-            elif key in convert_to_target_type:
-                new_psd[key] = convert_value(value=value, target_type=hm_type)
-            elif key in convert_to_list:
-                new_psd[key] = value.split(" ")
-        new_psds[hm_name] = new_psd
-
-    return new_psds
 
 
 def _convert_to_values_cache(

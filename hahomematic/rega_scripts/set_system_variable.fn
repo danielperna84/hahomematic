@@ -1,0 +1,15 @@
+!# set_system_variable
+!#
+!#  Erstellt durch @baxxy13 2022-04-11
+!#
+!#  Dieses Script schreibt eine Systemvariable vom Typ Zeichenkette.
+!#
+
+string sv_name = "##name##";
+string sv_value = "##value##";
+object target_sv = dom.GetObject(ID_SYSTEM_VARIABLES).Get(sv_name);
+if (target_sv) {
+    if (target_sv.ValueTypeStr() == "String") {
+       Write(target_sv.State(sv_value));
+    }
+}

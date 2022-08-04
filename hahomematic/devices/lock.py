@@ -21,6 +21,8 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
+from hahomematic.platforms.binary_sensor import HmBinarySensor
+from hahomematic.platforms.sensor import HmSensor
 from hahomematic.platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +46,6 @@ class BaseLock(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -54,7 +55,6 @@ class BaseLock(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -63,95 +63,86 @@ class BaseLock(CustomEntity):
         )
         _LOGGER.debug(
             "HMLock.__init__(%s, %s, %s)",
-            self._device.interface_id,
-            device_address,
+            self.device.interface_id,
+            self.device.device_address,
             unique_id,
         )
 
     @property
+    @abstractmethod
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return True
 
     @property
+    @abstractmethod
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return False
 
     @property
+    @abstractmethod
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
-        return None
 
     @property
+    @abstractmethod
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
-        return None
 
     @abstractmethod
     async def lock(self) -> None:
         """Lock the lock."""
-        ...
 
     @abstractmethod
     async def unlock(self) -> None:
         """Unlock the lock."""
-        ...
 
     @abstractmethod
     async def open(self) -> None:
         """Open the lock."""
-        ...
 
 
 class CeIpLock(BaseLock):
     """Class for homematic ip lock entities."""
 
-    @property
-    def _lock_state(self) -> str | None:
-        """Return the lock state of the device."""
-        return self._get_entity_value(field_name=FIELD_LOCK_STATE)
-
-    @property
-    def _e_lock_target_level(self) -> HmAction:
-        """Return the lock target level entity of the device."""
-        return self._get_entity(
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_lock_state: HmSensor = self._get_entity(
+            field_name=FIELD_LOCK_STATE, entity_type=HmSensor
+        )
+        self._e_lock_target_level: HmAction = self._get_entity(
             field_name=FIELD_LOCK_TARGET_LEVEL, entity_type=HmAction
         )
-
-    @property
-    def _direction(self) -> str | None:
-        """Return the direction entity of the lock."""
-        return self._get_entity_value(field_name=FIELD_DIRECTION)
-
-    @property
-    def _error(self) -> bool | None:
-        """Return the error entity of the device."""
-        return self._get_entity_value(field_name=FIELD_ERROR)
+        self._e_direction: HmSensor = self._get_entity(
+            field_name=FIELD_DIRECTION, entity_type=HmSensor
+        )
+        self._e_error: HmBinarySensor = self._get_entity(
+            field_name=FIELD_ERROR, entity_type=HmBinarySensor
+        )
 
     @property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._lock_state == LOCK_STATE_LOCKED
+        return self._e_lock_state.value == LOCK_STATE_LOCKED
 
     @property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
-        if self._direction is not None:
-            return self._direction == HM_LOCKING
+        if self._e_direction.value is not None:
+            return str(self._e_direction.value) == HM_LOCKING
         return None
 
     @property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
-        if self._direction is not None:
-            return self._direction == HM_UNLOCKING
+        if self._e_direction.value is not None:
+            return str(self._e_direction.value) == HM_UNLOCKING
         return None
 
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._error is not None and self._error is True
+        return self._e_error.value is not None and self._e_error.value is True
 
     async def lock(self) -> None:
         """Lock the lock."""
@@ -169,25 +160,21 @@ class CeIpLock(BaseLock):
 class CeRfLock(BaseLock):
     """Class for classic homematic lock entities."""
 
-    @property
-    def _e_state(self) -> HmSwitch:
-        """Return the state entity of the device."""
-        return self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
-
-    @property
-    def _e_open(self) -> HmAction:
-        """Return the open entity of the device."""
-        return self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
-
-    @property
-    def _direction(self) -> str | None:
-        """Return the direction entity of the lock."""
-        return self._get_entity_value(field_name=FIELD_DIRECTION)
-
-    @property
-    def _error(self) -> str | None:
-        """Return the error entity of the device."""
-        return self._get_entity_value(field_name=FIELD_ERROR)
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_state: HmSwitch = self._get_entity(
+            field_name=FIELD_STATE, entity_type=HmSwitch
+        )
+        self._e_open: HmAction = self._get_entity(
+            field_name=FIELD_OPEN, entity_type=HmAction
+        )
+        self._e_direction: HmSensor = self._get_entity(
+            field_name=FIELD_DIRECTION, entity_type=HmSensor
+        )
+        self._e_error: HmSensor = self._get_entity(
+            field_name=FIELD_ERROR, entity_type=HmSensor
+        )
 
     @property
     def is_locked(self) -> bool:
@@ -197,21 +184,21 @@ class CeRfLock(BaseLock):
     @property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
-        if self._direction is not None:
-            return self._direction == HM_LOCKING
+        if self._e_direction.value is not None:
+            return str(self._e_direction.value) == HM_LOCKING
         return None
 
     @property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
-        if self._direction is not None:
-            return self._direction == HM_UNLOCKING
+        if self._e_direction.value is not None:
+            return str(self._e_direction.value) == HM_UNLOCKING
         return None
 
     @property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._error is not None and self._error != "NO_ERROR"
+        return self._e_error.value is not None and self._e_error.value != "NO_ERROR"
 
     async def lock(self) -> None:
         """Lock the lock."""
@@ -227,12 +214,11 @@ class CeRfLock(BaseLock):
 
 
 def make_ip_lock(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip lock entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeIpLock,
         device_enum=EntityDefinition.IP_LOCK,
         group_base_channels=group_base_channels,
@@ -240,12 +226,11 @@ def make_ip_lock(
 
 
 def make_rf_lock(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic rf lock entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeRfLock,
         device_enum=EntityDefinition.RF_LOCK,
         group_base_channels=group_base_channels,

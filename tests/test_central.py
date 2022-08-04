@@ -1,4 +1,6 @@
 """Test the HaHomematic central."""
+import json
+
 from conftest import (
     get_hm_custom_entity,
     get_hm_device,
@@ -8,9 +10,12 @@ from conftest import (
 )
 import pytest
 
+from hahomematic.entity import GenericEntity
 from hahomematic.const import HmEntityUsage
 from hahomematic.devices.climate import CeRfThermostat
 from hahomematic.devices.lock import LOCK_TARGET_LEVEL_OPEN
+from hahomematic.platforms.switch import HmSwitch as HmSwitchPlatform
+from hahomematic.devices.switch import HmSwitch as CESwitch
 
 
 @pytest.mark.asyncio
@@ -19,7 +24,7 @@ async def test_central(central, loop) -> None:
     assert central
     assert central.instance_name == "ccu-dev"
     assert central.model == "PyDevCCU"
-    assert central.get_client_by_interface_id("ccu-dev-hm").model == "PyDevCCU"
+    assert central.get_client_by_interface_id("ccu-dev-BidCos-RF").model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
 
     data = {}
@@ -76,19 +81,43 @@ async def test_central(central, loop) -> None:
             counter = usage_types[entity.usage]
             usage_types[entity.usage] = counter + 1
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 1862
+    switches: dict[str, set[int]] = {}
+
+    for entity in central.hm_entities.values():
+        #if isinstance(entity, HmSwitchPlatform):
+        if hasattr(entity, "parameter") and entity.parameter == "ON_TIME":
+            device_type = entity.device_type[:8]
+            if device_type.lower().startswith("hmip"):
+                continue
+
+            channel_no = entity.channel_no
+            if device_type not in switches:
+                switches[device_type] = set()
+            switches[device_type].add(channel_no)
+
+    entity_type_operations: dict[str, dict[str, set[int]]] = {}
+    for entity in central.hm_entities.values():
+        if isinstance(entity, GenericEntity):
+            if entity.platform not in entity_type_operations:
+                entity_type_operations[entity.platform] = {}
+
+            if entity._type not in entity_type_operations[entity.platform]:
+                entity_type_operations[entity.platform][entity._type] = set()
+            entity_type_operations[entity.platform][entity._type].add(entity._operations)
+
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2217
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
-    assert usage_types[HmEntityUsage.ENTITY] == 2441
-    assert usage_types[HmEntityUsage.CE_SENSOR] == 63
+    assert usage_types[HmEntityUsage.ENTITY] == 3519
+    assert usage_types[HmEntityUsage.CE_VISIBLE] == 89
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
     assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 4659
+    assert len(central.hm_entities) == 6118
     assert len(data) == 362
-    assert len(custom_entities) == 296
+    assert len(custom_entities) == 293
     assert len(ce_channels) == 103
     assert len(entity_types) == 6
-    assert len(parameters) == 179
+    assert len(parameters) == 180
 
 
 @pytest.mark.asyncio

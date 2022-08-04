@@ -1,4 +1,226 @@
-Version 1.0.0 (2022-03-29)
+Version 2022.8.2 (2022-08-02)
+- Remove obsolete methods
+- Remove obsolete device_address parameter
+- Rename sysvar to hub entity
+- Add program buttons
+
+Version 2022.8.0 (2022-08-01)
+- Fix pylint, mypy issues due to newer versions
+- Remove properties of final members
+- Add types to Final
+- Init entity fields in init method
+- Remove device_info from model
+- Remove attributes from model
+
+Version 2022.7.14 (2022-07-28)
+- Add HmIP-BS2 to custom entities
+- Remove force and add call_source for getValue
+
+Version 2022.7.13 (2022-07-22)
+- Cleanup API
+- Limit init cache time usage
+- Avoid repetitive calls to CCU within max_age_seconds
+
+Version 2022.7.12 (2022-07-21)
+- Add ELV-SH-BS2 to custom entities
+- Code Cleanup
+- Rearrange validity check
+- Cleanup entity code
+
+Version 2022.7.11 (2022-07-19)
+- Raise interval for alive checks
+
+Version 2022.7.10 (2022-07-19)
+- Use entities instead of values inside custom entities
+- Fix _check_connection for Homegear/CCU
+
+Version 2022.7.9 (2022-07-17)
+- Remove state_uncertain from default attributes
+
+Version 2022.7.8 (2022-07-13)
+- Fix entity update
+
+Version 2022.7.7 (2022-07-12)
+- Fix naming of custom entity
+
+Version 2022.7.6 (2022-07-12)
+- Fix last_state handling for custom entities
+
+Version 2022.7.5 (2022-07-11)
+- Rename value_uncertain to state_uncertain
+- Add state_uncertain to custom entity
+
+Version 2022.7.4 (2022-07-11)
+- Set value_uncertain to True if no data could be loaded from CCU
+
+Version 2022.7.3 (2022-07-10)
+- Set default value for hub entity to None
+
+Version 2022.7.2 (2022-07-10)
+- Align enity naming to HA entity name
+- Ensure entity value refresh after reconnect
+- Ignore further parameters by device
+
+Version 2022.7.1 (2022-07-07)
+- Better distinguish between NO_CACHE_ENTRY and None
+
+Version 2022.7.0 (2022-07-07)
+- Switch to calendar versioning for hahomematic
+
+Version 1.9.4 (2022-07-03)
+- Load MASTER data on initial load
+
+Version 1.9.3 (2022-07-02)
+- Fix export of device definitions
+
+Version 1.9.2 (2022-07-01)
+- Use CHANNEL_OPERATION_MODE for devices with MULTI_MODE_INPUT_TRANSMITTER, KEY_TRANSCEIVER channels
+- Readd HmIPW-FIO6 to custom device handling
+
+Version 1.9.1 (2022-06-29)
+- Remove HmIPW-FIO6 from custom device handling
+
+Version 1.9.0 (2022-06-09)
+- Refactor entity name creation
+- Cleanup entity selection
+- Add button to virtual remote
+
+Version 1.8.6 (2022-06-07)
+ - Code cleanup
+
+Version 1.8.5 (2022-06-06)
+ - Remove sysvars if deleted from CCU
+ - Add check for sysvar type in sensor
+ - Remove unused sysvar attributes
+ - Refactor EntityDefinition
+
+Version 1.8.4 (2022-06-04)
+- Refactor all sysvar script
+- Use ext_marker script in combination with SysVar.getAll
+
+Version 1.8.3 (2022-06-04)
+- Refactor sysvar creation eventing
+
+Version 1.8.2 (2022-06-03)
+- Fix build
+
+Version 1.8.1 (2022-06-03)
+- Use marker in sysvar description for extended sysvars
+
+Version 1.8.0 (2022-06-02)
+- Enable additional sysvar entity types
+
+Version 1.7.3 (2022-06-01)
+- Add more debug logging
+
+Version 1.7.2 (2022-06-01)
+- Better differentiate between float and int for sysvars
+- Switch from # as unit placeholder for sysvars to ' '
+- Move sysvar length check to sensor
+
+Version 1.7.1 (2022-05-31)
+- Rename parameter channel_address to address for put/get_paramset
+
+Version 1.7.0 (2022-05-31)
+- Refactor system variables
+- Add more types for sysvar entities
+
+Version 1.6.2 (2022-05-30)
+- Add more options for boolean conversions
+
+Version 1.6.1 (2022-05-29)
+- Fix entity definition for HMIP-HEATING
+
+Version 1.6.0 (2022-05-29)
+- Add impulse event
+- Add LEVEL and STATE to HmIP-Heating group to display hvac_action
+- Add device_type as model to attributes
+
+Version 1.5.4 (2022-05-24)
+- Add function attribute only if set
+
+Version 1.5.3 (2022-05-24)
+- Rename subsection to function
+
+Version 1.5.2 (2022-05-24)
+- Add subsection to attributes
+- Use parser for internal sysvars
+
+Version 1.5.0 (2022-05-23)
+- Add option to replace too technical parameter name by friendly parameter name
+- Ignore more parameters by device
+- Use dataclass for sysvars
+- Limit sysvar length to 255 chars due to HA limitations
+
+Version 1.4.0 (2022-05-16)
+- Block parameters by device_type that should not create entities in HA
+- Fix remove instance on shutdown
+
+Version 1.3.1 (2022-05-13)
+- Increase connection timeout(30s->60s) and reconnect interval(90s->120s) to better support slower hardware
+
+Version 1.3.0 (2022-05-06)
+- Use unit for vars, if available
+- Remove special handling for pydevccu
+- Remove set boost mode to false, when preset is none for bidcos climate entities
+
+Version 1.2.2 (2022-05-02)
+- Fix light channel for multi dimmer
+
+Version 1.2.1 (2022-04-27)
+- Fix callback alive check
+- Reconnect clients based on outstanding xml callback events
+
+Version 1.2.0 (2022-04-26)
+- Cleanup build
+
+Version 1.1.5 (2022-04-25)
+- Reorg light attributes
+- Add on_time to light and switch
+
+Version 1.1.4 (2022-04-21)
+- Use min as default if default is unset for parameter_data
+
+Version 1.1.3 (2022-04-20)
+- Add CeColorDimmer
+- Fix interface_event
+
+Version 1.1.2 (2022-04-12)
+- Add extra_params to _post_script
+- Add set_system_variable with string value
+- Disallow html tags in string system variable
+
+Version 1.1.1 (2022-04-11)
+- Read version and serial in get_client
+
+Version 1.1.0 (2022-04-09)
+- Add BATTERY_STATE to DEFAULT_ENTITIES
+- Migrate device_info to dataclass
+- Add rega script (provided by @baxxy13) to get serial from CCU
+- Add method to clean up cache dirs
+
+Version 1.0.6 (2022-04-06)
+- Revert to XmlRPC getValue and getParamset for CCU
+
+Version 1.0.5 (2022-04-05)
+- Limit hub_state to ccu only
+
+Version 1.0.4 (2022-03-30)
+- Use max version of interfaces for backend version
+- Remove device as parameter from parameter_availability
+- Add XmlRPC.listDevice to Client
+- Add start_direct for starts without waiting for events (only for temporary usage)
+
+Version 1.0.3 (2022-03-30)
+- Revert to XmlRPC getVersion for CCU
+
+Version 1.0.2 (2022-03-29)
+- Revert to XmlRPC getParamsetDescription for CCU
+
+Version 1.0.1 (2022-03-29)
+- Add central_id for uniqueness of heating groups, sysvars and hub
+
+Version 1.0.0 (2022-03-28)
 - Simplify json usage
 - Move json methods to json client
 - Make json client independent from central config

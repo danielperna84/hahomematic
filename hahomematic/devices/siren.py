@@ -19,6 +19,7 @@ from hahomematic.devices.entity_definition import (
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
+from hahomematic.platforms.binary_sensor import HmBinarySensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,6 @@ class BaseSiren(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        device_address: str,
         unique_id: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
@@ -52,7 +52,6 @@ class BaseSiren(CustomEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            device_address=device_address,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -61,70 +60,63 @@ class BaseSiren(CustomEntity):
         )
         _LOGGER.debug(
             "HMSiren.__init__(%s, %s, %s)",
-            self._device.interface_id,
-            device_address,
+            self.device.interface_id,
+            self.device.device_address,
             unique_id,
         )
 
     @property
+    @abstractmethod
     def is_on(self) -> bool:
         """Return true if siren is on."""
-        return False
 
     @property
+    @abstractmethod
     def available_tones(self) -> list[str] | None:
         """Return a list of available tones."""
-        return None
 
     @property
+    @abstractmethod
     def available_lights(self) -> list[str] | None:
         """Return a list of available lights."""
-        return None
 
     @abstractmethod
     async def turn_on(
         self, acoustic_alarm: str, optical_alarm: str, duration: int
     ) -> None:
         """Turn the device on."""
-        ...
 
     @abstractmethod
     async def turn_off(self) -> None:
         """Turn the device off."""
-        ...
 
 
 class CeIpSiren(BaseSiren):
     """Class for homematic ip siren entities."""
 
-    @property
-    def _acoustic_alarm_active(self) -> bool:
-        """Return if the acoustic alarm is active the siren."""
-        return self._get_entity_value(field_name=FIELD_ACOUSTIC_ALARM_ACTIVE) is True
-
-    @property
-    def _e_acoustic_alarm_selection(self) -> HmAction:
-        """Return the available accoustic alarms entity of the siren."""
-        return self._get_entity(
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_acoustic_alarm_active: HmBinarySensor = self._get_entity(
+            field_name=FIELD_ACOUSTIC_ALARM_ACTIVE, entity_type=HmBinarySensor
+        )
+        self._e_acoustic_alarm_selection: HmAction = self._get_entity(
             field_name=FIELD_ACOUSTIC_ALARM_SELECTION, entity_type=HmAction
         )
-
-    @property
-    def _optical_alarm_active(self) -> bool:
-        """Return if the optical alarm is active the siren."""
-        return self._get_entity_value(field_name=FIELD_OPTICAL_ALARM_ACTIVE) is True
-
-    @property
-    def _e_optical_alarm_selection(self) -> HmAction:
-        """Return the available optical alarms entity of the siren."""
-        return self._get_entity(
+        self._e_optical_alarm_active: HmBinarySensor = self._get_entity(
+            field_name=FIELD_OPTICAL_ALARM_ACTIVE, entity_type=HmBinarySensor
+        )
+        self._e_optical_alarm_selection: HmAction = self._get_entity(
             field_name=FIELD_OPTICAL_ALARM_SELECTION, entity_type=HmAction
         )
 
     @property
     def is_on(self) -> bool:
         """Return true if siren is on."""
-        return self._acoustic_alarm_active is True or self._optical_alarm_active is True
+        return (
+            self._e_acoustic_alarm_active.value is True
+            or self._e_optical_alarm_active.value is True
+        )
 
     @property
     def available_tones(self) -> list[str] | None:
@@ -144,7 +136,7 @@ class CeIpSiren(BaseSiren):
     ) -> None:
         """Turn the device on."""
         await self._client.put_paramset(
-            channel_address=f"{self.device_address}:3",
+            address=f"{self.device_address}:3",
             paramset_key="VALUES",
             value={
                 HMIP_ACOUSTIC_ALARM_SELECTION: acoustic_alarm,
@@ -157,7 +149,7 @@ class CeIpSiren(BaseSiren):
     async def turn_off(self) -> None:
         """Turn the device off."""
         await self._client.put_paramset(
-            channel_address=f"{self.device_address}:3",
+            address=f"{self.device_address}:3",
             paramset_key="VALUES",
             value={
                 HMIP_ACOUSTIC_ALARM_SELECTION: DISABLE_ACOUSTIC_SIGNAL,
@@ -175,20 +167,17 @@ class CeRfSiren(BaseSiren):
         self, acoustic_alarm: str, optical_alarm: str, duration: int
     ) -> None:
         """Turn the device on."""
-        ...
 
     async def turn_off(self) -> None:
         """Turn the device off."""
-        ...
 
 
 def make_ip_siren(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic ip siren entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeIpSiren,
         device_enum=EntityDefinition.IP_SIREN,
         group_base_channels=group_base_channels,
@@ -196,12 +185,11 @@ def make_ip_siren(
 
 
 def make_rf_siren(
-    device: hm_device.HmDevice, device_address: str, group_base_channels: list[int]
+    device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
     """Creates homematic rf siren entities."""
     return make_custom_entity(
         device=device,
-        device_address=device_address,
         custom_entity_class=CeRfSiren,
         device_enum=EntityDefinition.RF_SIREN,
         group_base_channels=group_base_channels,
