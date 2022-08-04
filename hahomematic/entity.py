@@ -210,7 +210,7 @@ class BaseEntity(ABC):
         """
         Provide some useful information.
         """
-        return f"address: {self.channel_address}, type: {self.device.device_type}, name: {self.name}"
+        return f"address: {self.channel_address}, type: {self.device.device_type}, name: {self.entity_name_data.full_name}"
 
 
 class BaseParameterEntity(Generic[ParameterT], BaseEntity):
