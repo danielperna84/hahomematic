@@ -651,8 +651,8 @@ class ValueCache:
             try:
                 value = await self._client.get_value(
                     channel_address=channel_address,
-                    parameter=parameter,
                     paramset_key=paramset_key,
+                    parameter=parameter,
                     call_source=call_source,
                 )
             except BaseHomematicException as bhe:

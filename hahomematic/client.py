@@ -340,8 +340,8 @@ class Client(ABC):
     async def get_value(
         self,
         channel_address: str,
+        paramset_key: str,
         parameter: str,
-        paramset_key: str = PARAMSET_KEY_VALUES,
         call_source: HmCallSource = HmCallSource.MANUAL,
     ) -> Any:
         """Return a value from CCU."""
