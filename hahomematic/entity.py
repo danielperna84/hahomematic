@@ -420,12 +420,11 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
     @property
     def channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
-        if self._channel_type in CONFIGURABLE_CHANNEL:
-            cop: GenericEntity | None = self.device.entities.get(
-                (self.channel_address, PARAM_CHANNEL_OPERATION_MODE)
-            )
-            if cop:
-                return str(cop.value) if cop.value else None
+        cop: GenericEntity | None = self.device.entities.get(
+            (self.channel_address, PARAM_CHANNEL_OPERATION_MODE)
+        )
+        if cop and cop.value:
+            return str(cop.value)
         return None
 
     @property
@@ -1189,6 +1188,7 @@ class NoneTypeEntity:
     value: Any = None
     value_list: list[Any] = []
     visible: Any = None
+    channel_operation_mode: str | None = None
 
     def send_value(self, value: Any) -> None:
         """Dummy method."""

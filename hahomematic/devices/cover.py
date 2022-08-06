@@ -10,7 +10,6 @@ import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
-    FIELD_CHANNEL_OPERATION_MODE,
     FIELD_DIRECTION,
     FIELD_DOOR_COMMAND,
     FIELD_DOOR_STATE,
@@ -26,6 +25,7 @@ from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
 from hahomematic.platforms.number import HmFloat
 from hahomematic.platforms.sensor import HmSensor
+from hahomematic.platforms.select import HmSelect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,9 +90,6 @@ class CeCover(CustomEntity):
         self._e_stop: HmAction = self._get_entity(
             field_name=FIELD_STOP, entity_type=HmAction
         )
-        self._e_channel_operation_mode: HmAction = self._get_entity(
-            field_name=FIELD_CHANNEL_OPERATION_MODE, entity_type=HmAction
-        )
         self._e_channel_level: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
         )
@@ -114,8 +111,8 @@ class CeCover(CustomEntity):
     @property
     def channel_operation_mode(self) -> str | None:
         """Return channel_operation_mode of cover."""
-        if self._e_channel_operation_mode:
-            return self._e_channel_operation_mode.value
+        if self._e_channel_level:
+            return self._e_channel_level.channel_operation_mode
         return None
 
     async def set_cover_position(self, position: float) -> None:
