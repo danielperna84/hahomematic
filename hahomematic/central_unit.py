@@ -72,7 +72,7 @@ import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
-sema_add_devices = asyncio.BoundedSemaphore(1)
+sema_add_devices = asyncio.BoundedSemaphore()
 
 
 class CentralUnit:
@@ -783,6 +783,7 @@ class CentralUnit:
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
         await self.device_details.clear()
+        await self.device_data.clear()
 
 
 class ConnectionChecker(threading.Thread):
@@ -1479,19 +1480,6 @@ class ParamsetDescriptionCache(BasePersistentCache):
         result = await super().save()
         self._init_address_parameter_list()
         return result
-
-
-def _remove_dummy_service_message(
-    service_messages: list[list[tuple[str, str, Any]]]
-) -> list[list[tuple[str, str, Any]]]:
-    """Remove dummy SM, that hmip server always sends."""
-    new_service_messages: list[list[tuple[str, str, Any]]] = []
-    for client_messages in service_messages:
-        if "0001D3C98DD4B6:3" not in [
-            client_message[0] for client_message in client_messages
-        ]:
-            new_service_messages.append(client_messages)
-    return new_service_messages
 
 
 def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
