@@ -1,3 +1,6 @@
+Version 2022.8.3 (2022-08-03)
+- Remove CHANNEL_OPERATION_MODE from cover ce
+
 Version 2022.8.2 (2022-08-02)
 - Remove obsolete methods
 - Remove obsolete device_address parameter
