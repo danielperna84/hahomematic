@@ -568,7 +568,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
 
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
-        await self._client.set_value_by_paramset_key(
+        await self._client.set_value(
             channel_address=self.channel_address,
             paramset_key=self.paramset_key,
             parameter=self.parameter,
@@ -1039,6 +1039,7 @@ class BaseEvent(BaseParameterEntity[bool]):
         try:
             await self._client.set_value(
                 channel_address=self.channel_address,
+                paramset_key=self.paramset_key,
                 parameter=self.parameter,
                 value=value,
             )

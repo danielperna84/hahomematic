@@ -42,6 +42,7 @@ from hahomematic.const import (
     IF_PRIMARY,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
+    PARAMSET_KEY_VALUES,
     PROXY_INIT_SUCCESS,
     HmCallSource,
     HmEventType,
@@ -722,6 +723,7 @@ class CentralUnit:
         channel_address: str,
         parameter: str,
         value: Any,
+        paramset_key: str = PARAMSET_KEY_VALUES,
         rx_mode: str | None = None,
     ) -> None:
         """Set a single value on paramset VALUES."""
@@ -729,6 +731,7 @@ class CentralUnit:
         if client := self.get_client_by_interface_id(interface_id=interface_id):
             await client.set_value(
                 channel_address=channel_address,
+                paramset_key=paramset_key,
                 parameter=parameter,
                 value=value,
                 rx_mode=rx_mode,

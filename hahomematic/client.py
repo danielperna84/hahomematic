@@ -371,7 +371,7 @@ class Client(ABC):
             )
             raise HaHomematicException from hhe
 
-    async def set_value(
+    async def _set_value(
         self,
         channel_address: str,
         parameter: str,
@@ -384,10 +384,10 @@ class Client(ABC):
                 await self._proxy.setValue(channel_address, parameter, value, rx_mode)
             else:
                 await self._proxy.setValue(channel_address, parameter, value)
-            _LOGGER.debug("set_value: %s, %s, %s", channel_address, parameter, value)
+            _LOGGER.debug("_set_value: %s, %s, %s", channel_address, parameter, value)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "set_value failed with %s [%s]: %s, %s, %s",
+                "_set_value failed with %s [%s]: %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 channel_address,
@@ -395,7 +395,7 @@ class Client(ABC):
                 value,
             )
 
-    async def set_value_by_paramset_key(
+    async def set_value(
         self,
         channel_address: str,
         paramset_key: str,
@@ -405,7 +405,7 @@ class Client(ABC):
     ) -> None:
         """Set single value on paramset VALUES."""
         if paramset_key == PARAMSET_KEY_VALUES:
-            await self.set_value(
+            await self._set_value(
                 channel_address=channel_address,
                 parameter=parameter,
                 value=value,
