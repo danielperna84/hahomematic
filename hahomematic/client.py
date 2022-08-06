@@ -299,14 +299,6 @@ class Client(ABC):
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
 
-    async def get_service_messages(self) -> Any:
-        """Get service messages from CCU / Homegear."""
-        try:
-            return await self._proxy.getServiceMessages()
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("get_service_messages: %s [%s]", hhe.name, hhe.args)
-        return None
-
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
         try:
