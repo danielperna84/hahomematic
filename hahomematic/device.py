@@ -568,7 +568,7 @@ class HmDevice:
                 paramset_key=paramset_key,
                 parameter=parameter,
                 parameter_data=parameter_data,
-            )  # type: ignore[call-arg]
+            )
             _LOGGER.debug(
                 "create_entity_and_append_to_device: %s: %s %s",
                 entity.platform,

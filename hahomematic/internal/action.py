@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform
-import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,24 +16,7 @@ class HmAction(GenericEntity[None]):
     This is an internal default platform that gets automatically generated.
     """
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            platform=HmPlatform.ACTION,
-        )
+    _attr_platform = HmPlatform.ACTION
 
     async def send_value(self, value: Any) -> None:
         """Set the value of the entity."""

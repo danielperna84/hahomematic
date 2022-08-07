@@ -7,11 +7,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import hahomematic.central_unit as hm_central
 from hahomematic.const import SYSVAR_TYPE_LIST, HmPlatform
-import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericSystemVariable
-from hahomematic.helpers import SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,24 +19,7 @@ class HmSensor(GenericEntity[Any]):
     This is a default platform that gets automatically generated.
     """
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            platform=HmPlatform.SENSOR,
-        )
+    _attr_platform = HmPlatform.SENSOR
 
     @property
     def value(self) -> Any | None:
@@ -90,9 +70,7 @@ class HmSysvarSensor(GenericSystemVariable):
     Implementation of a sysvar sensor.
     """
 
-    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
-        """Initialize the entity."""
-        super().__init__(central=central, data=data, platform=HmPlatform.HUB_SENSOR)
+    _attr_platform = HmPlatform.HUB_SENSOR
 
     @property
     def value(self) -> Any | None:
