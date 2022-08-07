@@ -25,7 +25,6 @@ from hahomematic.entity import CustomEntity
 from hahomematic.internal.action import HmAction
 from hahomematic.platforms.number import HmFloat
 from hahomematic.platforms.sensor import HmSensor
-from hahomematic.platforms.select import HmSelect
 
 _LOGGER = logging.getLogger(__name__)
 
