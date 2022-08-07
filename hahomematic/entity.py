@@ -121,7 +121,7 @@ class CallbackEntity(ABC):
 class BaseEntity(ABC):
     """Base class for regular entities."""
 
-    _attr_platform: HmPlatform | None
+    _attr_platform: HmPlatform
 
     def __init__(
         self,
@@ -169,7 +169,7 @@ class BaseEntity(ABC):
         return None
 
     @property
-    def platform(self) -> HmPlatform | None:
+    def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return self._attr_platform
 
@@ -828,7 +828,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
 class GenericHubEntity(CallbackEntity):
     """Class for a homematic system variable."""
 
-    _attr_platform: str | None
+    _attr_platform: HmPlatform
 
     def __init__(
         self,
@@ -860,7 +860,7 @@ class GenericHubEntity(CallbackEntity):
         """Return the name of the hub entity."""
 
     @property
-    def platform(self) -> HmPlatform | None:
+    def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return self._attr_platform
 
