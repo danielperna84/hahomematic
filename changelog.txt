@@ -1,5 +1,5 @@
 Version 2022.8.4 (2022-08-08)
--
+- Add platform as field and remove obsolete constructors
 
 Version 2022.8.3 (2022-08-07)
 - Remove CHANNEL_OPERATION_MODE from cover ce
