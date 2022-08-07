@@ -18,7 +18,11 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.entity import CallbackEntity, GenericSystemVariable
-from hahomematic.helpers import ProgramData, SystemVariableData, generate_unique_id
+from hahomematic.helpers import (
+    ProgramData,
+    SystemVariableData,
+    generate_unique_identifier,
+)
 from hahomematic.platforms.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.button import HmProgramButton
 from hahomematic.platforms.number import HmSysvarNumber
@@ -46,7 +50,7 @@ class HmHub(CallbackEntity):
         """Initialize HomeMatic hub."""
         CallbackEntity.__init__(self)
         self._central: Final[hm_central.CentralUnit] = central
-        self.unique_id: Final[str] = generate_unique_id(
+        self.unique_identifier: Final[str] = generate_unique_identifier(
             central=central, address=HUB_ADDRESS
         )
         self.name: Final[str] = central.instance_name
@@ -54,7 +58,6 @@ class HmHub(CallbackEntity):
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
         self._hub_attributes: Final[dict[str, Any]] = {}
         self.platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
-        self.should_poll: Final[bool] = True
         self._value: int | None = None
         self.create_in_ha: Final[bool] = True
         self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY

@@ -72,7 +72,6 @@ async def central(
     }
 
     central_unit = await CentralConfig(
-        domain="homematicip_local",
         name="ccu-dev",
         loop=loop,
         xml_rpc_server=register_xml_rpc_server(),

@@ -20,7 +20,7 @@ class HmText(GenericEntity[str]):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         channel_address: str,
         paramset_key: str,
         parameter: str,
@@ -28,7 +28,7 @@ class HmText(GenericEntity[str]):
     ):
         super().__init__(
             device=device,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             channel_address=channel_address,
             paramset_key=paramset_key,
             parameter=parameter,

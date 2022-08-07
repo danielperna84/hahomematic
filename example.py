@@ -73,7 +73,6 @@ class Example:
             ),
         }
         self.central = await CentralConfig(
-            domain="homematicip_local",
             name="ccu-dev",
             loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),

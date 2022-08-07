@@ -84,7 +84,6 @@ class CentralUnit:
         self.central_config: Final[CentralConfig] = central_config
         self.central_id: Final[str] = self.central_config.central_id
         self.central_url: Final[str] = self.central_config.central_url
-        self.domain: Final[str] = self.central_config.domain
         self.instance_name: Final[str] = self.central_config.name
         self._loop: asyncio.AbstractEventLoop = self.central_config.loop
         self._xml_rpc_server: Final[
@@ -117,7 +116,7 @@ class CentralUnit:
 
         # {{channel_address, parameter}, event_handle}
         self.entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
-        # {unique_id, entity}
+        # {unique_identifier, entity}
         self.hm_entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
         self.hm_devices: Final[dict[str, HmDevice]] = {}
@@ -866,7 +865,6 @@ class CentralConfig:
         self,
         loop: asyncio.AbstractEventLoop,
         xml_rpc_server: xml_rpc.XmlRpcServer,
-        domain: str,
         storage_folder: str,
         name: str,
         host: str,
@@ -883,7 +881,6 @@ class CentralConfig:
     ):
         self.loop: Final[asyncio.AbstractEventLoop] = loop
         self.xml_rpc_server: Final[xml_rpc.XmlRpcServer] = xml_rpc_server
-        self.domain: Final[str] = domain
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
         self.host: Final[str] = host

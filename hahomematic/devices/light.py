@@ -56,7 +56,7 @@ class BaseHmLight(CustomEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         device_enum: EntityDefinition,
         device_def: dict[str, Any],
         entity_def: dict[int, set[str]],
@@ -64,7 +64,7 @@ class BaseHmLight(CustomEntity):
     ):
         super().__init__(
             device=device,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             device_enum=device_enum,
             device_def=device_def,
             entity_def=entity_def,
@@ -75,7 +75,7 @@ class BaseHmLight(CustomEntity):
             "BaseHmLight.__init__(%s, %s, %s)",
             self.device.interface_id,
             self.device.device_address,
-            unique_id,
+            unique_identifier,
         )
 
     def _init_entity_fields(self) -> None:
