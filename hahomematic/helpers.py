@@ -63,8 +63,8 @@ def generate_unique_id(
         or address.startswith("INT000")
         or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
     ):
-        return f"{central.domain}_{central.central_id}_{unique_id}".lower()
-    return f"{central.domain}_{unique_id}".lower()
+        return f"{central.central_id}_{unique_id}".lower()
+    return f"{unique_id}".lower()
 
 
 def build_xml_rpc_uri(
