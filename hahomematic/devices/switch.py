@@ -25,31 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class CeSwitch(CustomEntity):
     """Class for homematic switch entities."""
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        device_enum: EntityDefinition,
-        device_def: dict[str, Any],
-        entity_def: dict[int, set[str]],
-        channel_no: int,
-    ):
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            device_enum=device_enum,
-            device_def=device_def,
-            entity_def=entity_def,
-            platform=HmPlatform.SWITCH,
-            channel_no=channel_no,
-        )
-
-        _LOGGER.debug(
-            "BaseHmSwitch.__init__(%s, %s, %s)",
-            self.device.interface_id,
-            self.device.device_address,
-            unique_identifier,
-        )
+    _attr_platform = HmPlatform.SWITCH
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""

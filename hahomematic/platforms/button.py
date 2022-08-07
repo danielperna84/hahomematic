@@ -5,11 +5,10 @@ button platform (https://www.home-assistant.io/integrations/button/).
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import Final
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import PROGRAM_ADDRESS, HmPlatform
-import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericHubEntity
 from hahomematic.helpers import HubData, ProgramData
 
@@ -22,24 +21,7 @@ class HmButton(GenericEntity[None]):
     This is a default platform that gets automatically generated.
     """
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            platform=HmPlatform.BUTTON,
-        )
+    _attr_platform = HmPlatform.BUTTON
 
     async def press(self) -> None:
         """Handle the button press."""
@@ -48,6 +30,8 @@ class HmButton(GenericEntity[None]):
 
 class HmProgramButton(GenericHubEntity):
     """Class for a homematic program button."""
+
+    _attr_platform = HmPlatform.HUB_BUTTON
 
     def __init__(
         self,
@@ -61,7 +45,6 @@ class HmProgramButton(GenericHubEntity):
             central=central,
             address=PROGRAM_ADDRESS,
             data=data,
-            platform=HmPlatform.HUB_BUTTON,
         )
         self.pid: Final[str] = data.pid
         self.ccu_program_name: Final[str] = data.name

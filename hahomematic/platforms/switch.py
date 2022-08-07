@@ -7,11 +7,8 @@ from __future__ import annotations
 import logging
 from typing import Any, cast
 
-import hahomematic.central_unit as hm_central
 from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
-import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericSystemVariable
-from hahomematic.helpers import SystemVariableData
 
 PARAM_ON_TIME = "ON_TIME"
 _LOGGER = logging.getLogger(__name__)
@@ -23,24 +20,7 @@ class HmSwitch(GenericEntity[bool]):
     This is a default platform that gets automatically generated.
     """
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            platform=HmPlatform.SWITCH,
-        )
+    _attr_platform = HmPlatform.SWITCH
 
     @property
     def value(self) -> bool | None:
@@ -75,6 +55,4 @@ class HmSysvarSwitch(GenericSystemVariable):
     Implementation of a sysvar switch entity.
     """
 
-    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
-        """Initialize the entity."""
-        super().__init__(central=central, data=data, platform=HmPlatform.HUB_SWITCH)
+    _attr_platform = HmPlatform.HUB_SWITCH

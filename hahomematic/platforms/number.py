@@ -5,13 +5,9 @@ number platform (https://www.home-assistant.io/integrations/number/).
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-import hahomematic.central_unit as hm_central
 from hahomematic.const import ATTR_HM_VALUE, HmPlatform
-import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericSystemVariable, ParameterT
-from hahomematic.helpers import SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,24 +18,7 @@ class BaseNumber(GenericEntity[ParameterT]):
     This is a default platform that gets automatically generated.
     """
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            platform=HmPlatform.NUMBER,
-        )
+    _attr_platform = HmPlatform.NUMBER
 
 
 class HmFloat(BaseNumber[float]):
@@ -93,9 +72,7 @@ class HmSysvarNumber(GenericSystemVariable):
     Implementation of a sysvar number.
     """
 
-    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
-        """Initialize the entity."""
-        super().__init__(central=central, data=data, platform=HmPlatform.HUB_NUMBER)
+    _attr_platform = HmPlatform.HUB_NUMBER
 
     async def send_variable(self, value: float) -> None:
         """Set the value of the entity."""

@@ -5,13 +5,10 @@ select platform (https://www.home-assistant.io/integrations/select/).
 from __future__ import annotations
 
 import logging
-from typing import Any, Union
+from typing import Union
 
-import hahomematic.central_unit as hm_central
 from hahomematic.const import HmPlatform
-import hahomematic.device as hm_device
 from hahomematic.entity import GenericEntity, GenericSystemVariable
-from hahomematic.helpers import SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,24 +20,7 @@ class HmSelect(GenericEntity[Union[int, str]]):
     This is a default platform that gets automatically generated.
     """
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            platform=HmPlatform.SELECT,
-        )
+    _attr_platform = HmPlatform.SENSOR
 
     @property
     def value(self) -> str | None:
@@ -63,9 +43,7 @@ class HmSysvarSelect(GenericSystemVariable):
     Implementation of a sysvar select entity.
     """
 
-    def __init__(self, central: hm_central.CentralUnit, data: SystemVariableData):
-        """Initialize the entity."""
-        super().__init__(central=central, data=data, platform=HmPlatform.HUB_SELECT)
+    _attr_platform = HmPlatform.HUB_SELECT
 
     @property
     def value(self) -> str | None:

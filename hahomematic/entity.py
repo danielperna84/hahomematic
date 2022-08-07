@@ -121,12 +121,13 @@ class CallbackEntity(ABC):
 class BaseEntity(ABC):
     """Base class for regular entities."""
 
+    _attr_platform: HmPlatform
+
     def __init__(
         self,
         device: hm_device.HmDevice,
         unique_identifier: str,
         channel_no: int,
-        platform: HmPlatform,
     ):
         """
         Initialize the entity.
@@ -134,7 +135,6 @@ class BaseEntity(ABC):
         self.device: Final[hm_device.HmDevice] = device
         self.unique_identifier: Final[str] = unique_identifier
         self.channel_no: Final[int] = channel_no
-        self.platform: Final[HmPlatform] = platform
         self.channel_address: Final[
             str
         ] = f"{self.device.device_address}:{self.channel_no}"
@@ -167,6 +167,11 @@ class BaseEntity(ABC):
     def force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
         return None
+
+    @property
+    def platform(self) -> HmPlatform:
+        """Return, the platform of the entity."""
+        return self._attr_platform
 
     @property
     def usage(self) -> HmEntityUsage:
@@ -225,7 +230,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         paramset_key: str,
         parameter: str,
         parameter_data: dict[str, Any],
-        platform: HmPlatform,
     ):
         """
         Initialize the entity.
@@ -237,7 +241,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             device=device,
             unique_identifier=unique_identifier,
             channel_no=get_device_channel(channel_address),
-            platform=platform,
         )
         self._assign_parameter_data(parameter_data=parameter_data)
 
@@ -383,7 +386,6 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         paramset_key: str,
         parameter: str,
         parameter_data: dict[str, Any],
-        platform: HmPlatform,
     ):
         """
         Initialize the entity.
@@ -396,7 +398,6 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             paramset_key=paramset_key,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=platform,
         )
         CallbackEntity.__init__(self)
         self._value: ParameterT | None = None
@@ -602,7 +603,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
         device_enum: hm_entity_definition.EntityDefinition,
         device_def: dict[str, Any],
         entity_def: dict[int, set[str]],
-        platform: HmPlatform,
         channel_no: int,
     ):
         """
@@ -617,7 +617,6 @@ class CustomEntity(BaseEntity, CallbackEntity):
             device=device,
             unique_identifier=unique_identifier,
             channel_no=channel_no,
-            platform=platform,
         )
         CallbackEntity.__init__(self)
         self.data_entities: dict[str, GenericEntity] = {}
@@ -829,19 +828,19 @@ class CustomEntity(BaseEntity, CallbackEntity):
 class GenericHubEntity(CallbackEntity):
     """Class for a homematic system variable."""
 
+    _attr_platform: HmPlatform
+
     def __init__(
         self,
         central: hm_central.CentralUnit,
         address: str,
         data: HubData,
-        platform: HmPlatform,
     ):
         """
         Initialize the entity.
         """
         CallbackEntity.__init__(self)
         self.central: Final[hm_central.CentralUnit] = central
-        self.platform: Final[HmPlatform] = platform
         self.unique_identifier: Final[str] = generate_unique_identifier(
             central=central,
             address=address,
@@ -860,6 +859,11 @@ class GenericHubEntity(CallbackEntity):
     def get_name(self, data: HubData) -> str:
         """Return the name of the hub entity."""
 
+    @property
+    def platform(self) -> HmPlatform:
+        """Return, the platform of the entity."""
+        return self._attr_platform
+
 
 class GenericSystemVariable(GenericHubEntity):
     """Class for a homematic system variable."""
@@ -868,14 +872,11 @@ class GenericSystemVariable(GenericHubEntity):
         self,
         central: hm_central.CentralUnit,
         data: SystemVariableData,
-        platform: HmPlatform,
     ):
         """
         Initialize the entity.
         """
-        super().__init__(
-            central=central, address=SYSVAR_ADDRESS, data=data, platform=platform
-        )
+        super().__init__(central=central, address=SYSVAR_ADDRESS, data=data)
         self.ccu_var_name: Final[str] = data.name
         self.data_type: Final[str | None] = data.data_type
         self.value_list: Final[list[str] | None] = data.value_list
@@ -937,6 +938,8 @@ class GenericSystemVariable(GenericHubEntity):
 class BaseEvent(BaseParameterEntity[bool]):
     """Base class for action events"""
 
+    _attr_platform = HmPlatform.EVENT
+
     def __init__(
         self,
         device: hm_device.HmDevice,
@@ -956,7 +959,6 @@ class BaseEvent(BaseParameterEntity[bool]):
             paramset_key=PARAMSET_KEY_VALUES,
             parameter=parameter,
             parameter_data=parameter_data,
-            platform=HmPlatform.EVENT,
         )
 
         self.event_type: Final[HmEventType] = event_type
