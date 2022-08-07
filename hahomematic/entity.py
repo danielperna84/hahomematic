@@ -152,7 +152,6 @@ class BaseEntity(ABC):
         self.sub_type: Final[str] = self.device.sub_type
         self._usage: HmEntityUsage = self._generate_entity_usage()
 
-        self.should_poll = False
         self._client: Final[hm_client.Client] = self._central.clients[
             self._interface_id
         ]
@@ -400,7 +399,6 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             platform=platform,
         )
         CallbackEntity.__init__(self)
-        self.should_poll = self.paramset_key != PARAMSET_KEY_VALUES
         self._value: ParameterT | None = None
         self._last_update: datetime = INIT_DATETIME
         self._state_uncertain: bool = True
@@ -851,7 +849,6 @@ class GenericHubEntity(CallbackEntity):
         )
         self.name: Final[str] = self.get_name(data=data)
         self.create_in_ha: bool = True
-        self.should_poll = False
         self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
 
     @property

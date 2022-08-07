@@ -58,7 +58,6 @@ class HmHub(CallbackEntity):
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
         self._hub_attributes: Final[dict[str, Any]] = {}
         self.platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
-        self.should_poll: Final[bool] = True
         self._value: int | None = None
         self.create_in_ha: Final[bool] = True
         self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
