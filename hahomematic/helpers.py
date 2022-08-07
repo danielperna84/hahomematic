@@ -41,7 +41,7 @@ class ClientException(Exception):
     """hahomematic Client exception."""
 
 
-def generate_unique_id(
+def generate_unique_identifier(
     central: hm_central.CentralUnit,
     address: str,
     parameter: str | None = None,
@@ -52,19 +52,19 @@ def generate_unique_id(
     Central id is addionally used for heating groups.
     Prefix is used for events and buttons.
     """
-    unique_id = address.replace(":", "_").replace("-", "_")
+    unique_identifier = address.replace(":", "_").replace("-", "_")
     if parameter:
-        unique_id = f"{unique_id}_{parameter}"
+        unique_identifier = f"{unique_identifier}_{parameter}"
 
     if prefix:
-        unique_id = f"{prefix}_{unique_id}"
+        unique_identifier = f"{prefix}_{unique_identifier}"
     if (
         address in (HUB_ADDRESS, PROGRAM_ADDRESS, SYSVAR_ADDRESS)
         or address.startswith("INT000")
         or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
     ):
-        return f"{central.central_id}_{unique_id}".lower()
-    return f"{unique_id}".lower()
+        return f"{central.central_id}_{unique_identifier}".lower()
+    return f"{unique_identifier}".lower()
 
 
 def build_xml_rpc_uri(
@@ -206,7 +206,7 @@ def get_entity_name(
         return entity_name
 
     _LOGGER.debug(
-        "get_entity_name: Using unique_id for %s %s %s",
+        "get_entity_name: Using unique_identifier for %s %s %s",
         device.device_type,
         channel_address,
         parameter,
@@ -245,7 +245,7 @@ def get_event_name(
         return event_name
 
     _LOGGER.debug(
-        "Helper.get_event_name: Using unique_id for %s %s %s",
+        "Helper.get_event_name: Using unique_identifier for %s %s %s",
         device.device_type,
         channel_address,
         parameter,
@@ -283,7 +283,7 @@ def get_custom_entity_name(
         return EntityNameData(device_name=device.name, channel_name=channel_name)
 
     _LOGGER.debug(
-        "Helper.get_custom_entity_name: Using unique_id for %s %s %s",
+        "Helper.get_custom_entity_name: Using unique_identifier for %s %s %s",
         device.device_type,
         device.device_address,
         channel_no,

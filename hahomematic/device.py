@@ -54,7 +54,7 @@ from hahomematic.entity import (
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
-    generate_unique_id,
+    generate_unique_identifier,
     get_channel_no,
     get_device_channel,
     get_device_name,
@@ -172,7 +172,7 @@ class HmDevice:
             self.entities[(hm_entity.channel_address, hm_entity.parameter)] = hm_entity
             self.register_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, CustomEntity):
-            self.custom_entities[hm_entity.unique_id] = hm_entity
+            self.custom_entities[hm_entity.unique_identifier] = hm_entity
 
     def remove_hm_entity(self, hm_entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
@@ -180,7 +180,7 @@ class HmDevice:
             del self.entities[(hm_entity.channel_address, hm_entity.parameter)]
             self.unregister_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, CustomEntity):
-            del self.custom_entities[hm_entity.unique_id]
+            del self.custom_entities[hm_entity.unique_identifier]
 
     def add_hm_action_event(self, hm_event: BaseEvent) -> None:
         """Add a hm entity to a device."""
@@ -199,15 +199,15 @@ class HmDevice:
 
         entities = list(self.entities.values())
         for entity in entities:
-            if entity.unique_id in self.central.hm_entities:
-                del self.central.hm_entities[entity.unique_id]
+            if entity.unique_identifier in self.central.hm_entities:
+                del self.central.hm_entities[entity.unique_identifier]
             self.remove_hm_entity(entity)
         self.entities.clear()
 
         custom_entities = list(self.custom_entities.values())
         for custom_entity in custom_entities:
-            if custom_entity.unique_id in self.central.hm_entities:
-                del self.central.hm_entities[custom_entity.unique_id]
+            if custom_entity.unique_identifier in self.central.hm_entities:
+                del self.central.hm_entities[custom_entity.unique_identifier]
             self.remove_hm_entity(custom_entity)
         self.custom_entities.clear()
 
@@ -416,7 +416,7 @@ class HmDevice:
         parameter_data: dict[str, Any],
     ) -> None:
         """Create the actions associated to this device"""
-        unique_id = generate_unique_id(
+        unique_identifier = generate_unique_identifier(
             central=self.central,
             address=channel_address,
             parameter=parameter,
@@ -431,7 +431,7 @@ class HmDevice:
 
         if action := HmAction(
             device=self,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             channel_address=channel_address,
             paramset_key=paramset_key,
             parameter=parameter,
@@ -446,7 +446,7 @@ class HmDevice:
         if (channel_address, parameter) not in self.central.entity_event_subscriptions:
             self.central.entity_event_subscriptions[(channel_address, parameter)] = []
 
-        unique_id = generate_unique_id(
+        unique_identifier = generate_unique_identifier(
             central=self.central,
             address=channel_address,
             parameter=parameter,
@@ -468,7 +468,7 @@ class HmDevice:
         if action_event_t:
             action_event = action_event_t(
                 device=self,
-                unique_id=unique_id,
+                unique_identifier=unique_identifier,
                 channel_address=channel_address,
                 parameter=parameter,
                 parameter_data=parameter_data,
@@ -502,13 +502,13 @@ class HmDevice:
         if (channel_address, parameter) not in self.central.entity_event_subscriptions:
             self.central.entity_event_subscriptions[(channel_address, parameter)] = []
 
-        unique_id = generate_unique_id(
+        unique_identifier = generate_unique_identifier(
             central=self.central, address=channel_address, parameter=parameter
         )
-        if unique_id in self.central.hm_entities:
+        if unique_identifier in self.central.hm_entities:
             _LOGGER.debug(
                 "create_entity_and_append_to_device: Skipping %s (already exists)",
-                unique_id,
+                unique_identifier,
             )
             return None
         _LOGGER.debug(
@@ -563,7 +563,7 @@ class HmDevice:
         if entity_t:
             entity = entity_t(
                 device=self,
-                unique_id=unique_id,
+                unique_identifier=unique_identifier,
                 channel_address=channel_address,
                 paramset_key=paramset_key,
                 parameter=parameter,

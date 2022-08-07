@@ -116,7 +116,7 @@ class CentralUnit:
 
         # {{channel_address, parameter}, event_handle}
         self.entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
-        # {unique_id, entity}
+        # {unique_identifier, entity}
         self.hm_entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
         self.hm_devices: Final[dict[str, HmDevice]] = {}

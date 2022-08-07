@@ -61,7 +61,7 @@ from hahomematic.helpers import (
     SystemVariableData,
     check_channel_is_only_primary_channel,
     convert_value,
-    generate_unique_id,
+    generate_unique_identifier,
     get_custom_entity_name,
     get_device_channel,
     get_entity_name,
@@ -124,7 +124,7 @@ class BaseEntity(ABC):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         channel_no: int,
         platform: HmPlatform,
     ):
@@ -132,7 +132,7 @@ class BaseEntity(ABC):
         Initialize the entity.
         """
         self.device: Final[hm_device.HmDevice] = device
-        self.unique_id: Final[str] = unique_id
+        self.unique_identifier: Final[str] = unique_identifier
         self.channel_no: Final[int] = channel_no
         self.platform: Final[HmPlatform] = platform
         self.channel_address: Final[
@@ -188,7 +188,7 @@ class BaseEntity(ABC):
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
         self.device.add_hm_entity(self)
-        self._central.hm_entities[self.unique_id] = self
+        self._central.hm_entities[self.unique_identifier] = self
 
     async def load_entity_value(self, call_source: HmCallSource) -> None:
         """Init the entity data."""
@@ -221,7 +221,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         channel_address: str,
         paramset_key: str,
         parameter: str,
@@ -236,7 +236,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self.parameter: Final[str] = parameter
         super().__init__(
             device=device,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             channel_no=get_device_channel(channel_address),
             platform=platform,
         )
@@ -379,7 +379,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         channel_address: str,
         paramset_key: str,
         parameter: str,
@@ -392,7 +392,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         BaseParameterEntity.__init__(
             self=self,
             device=device,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             channel_address=channel_address,
             paramset_key=paramset_key,
             parameter=parameter,
@@ -512,7 +512,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             EVENT_STICKY_UN_REACH,
         ):
             if self.parameter in (EVENT_UN_REACH, EVENT_STICKY_UN_REACH):
-                self.device.update_device(self.unique_id)
+                self.device.update_device(self.unique_identifier)
 
             if self.parameter == EVENT_CONFIG_PENDING:
                 if value is False and old_value is True:
@@ -600,7 +600,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         device_enum: hm_entity_definition.EntityDefinition,
         device_def: dict[str, Any],
         entity_def: dict[int, set[str]],
@@ -617,7 +617,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         BaseEntity.__init__(
             self=self,
             device=device,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             channel_no=channel_no,
             platform=platform,
         )
@@ -844,7 +844,7 @@ class GenericHubEntity(CallbackEntity):
         CallbackEntity.__init__(self)
         self.central: Final[hm_central.CentralUnit] = central
         self.platform: Final[HmPlatform] = platform
-        self.unique_id: Final[str] = generate_unique_id(
+        self.unique_identifier: Final[str] = generate_unique_identifier(
             central=central,
             address=address,
             parameter=slugify(data.name),
@@ -943,7 +943,7 @@ class BaseEvent(BaseParameterEntity[bool]):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         channel_address: str,
         parameter: str,
         parameter_data: dict[str, Any],
@@ -954,7 +954,7 @@ class BaseEvent(BaseParameterEntity[bool]):
         """
         super().__init__(
             device=device,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             channel_address=channel_address,
             paramset_key=PARAMSET_KEY_VALUES,
             parameter=parameter,
@@ -1085,7 +1085,7 @@ class ClickEvent(BaseEvent):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         channel_address: str,
         parameter: str,
         parameter_data: dict[str, Any],
@@ -1095,7 +1095,7 @@ class ClickEvent(BaseEvent):
         """
         super().__init__(
             device=device,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             channel_address=channel_address,
             parameter=parameter,
             parameter_data=parameter_data,
@@ -1130,7 +1130,7 @@ class ImpulseEvent(BaseEvent):
     def __init__(
         self,
         device: hm_device.HmDevice,
-        unique_id: str,
+        unique_identifier: str,
         channel_address: str,
         parameter: str,
         parameter_data: dict[str, Any],
@@ -1140,7 +1140,7 @@ class ImpulseEvent(BaseEvent):
         """
         super().__init__(
             device=device,
-            unique_id=unique_id,
+            unique_identifier=unique_identifier,
             channel_address=channel_address,
             parameter=parameter,
             parameter_data=parameter_data,

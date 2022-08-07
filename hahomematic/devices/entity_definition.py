@@ -12,7 +12,7 @@ from voluptuous import Invalid, Optional, Required, Schema
 from hahomematic.backport import StrEnum
 import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
-from hahomematic.helpers import generate_unique_id
+from hahomematic.helpers import generate_unique_identifier
 
 ED_DEFAULT_ENTITIES = "default_entities"
 ED_INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
@@ -619,17 +619,19 @@ def _create_entities(
 ) -> list[hm_entity.BaseEntity]:
     """Create custom entities."""
     entities: list[hm_entity.BaseEntity] = []
-    unique_id = generate_unique_id(
+    unique_identifier = generate_unique_identifier(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
-    if unique_id in device.central.hm_entities:
-        _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_id)
+    if unique_identifier in device.central.hm_entities:
+        _LOGGER.debug(
+            "make_custom_entity: Skipping %s (already exists)", unique_identifier
+        )
         return entities
     if f"{device.device_address}:{channel_no}" not in device.channels:
         return entities
     entity = custom_entity_class(
         device=device,
-        unique_id=unique_id,
+        unique_identifier=unique_identifier,
         device_enum=device_enum,
         device_def=device_def,
         entity_def=entity_def,
