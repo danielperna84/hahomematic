@@ -34,7 +34,7 @@ class DeviceExporter:
     ):
         self._client: Final[hm_client.Client] = client
         self._central: Final[hm_central.CentralUnit] = client.central
-        self._storage_folder: Final[str] = self._central.central_config.storage_folder
+        self._storage_folder: Final[str] = self._central.config.storage_folder
         self._interface_id: Final[str] = interface_id
         self._device_address: Final[str] = device_address
         self._random_id: Final[str] = "VCU%i" % random.randint(1000000, 9999999)

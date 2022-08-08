@@ -224,7 +224,7 @@ class XmlRpcServer(threading.Thread):
         _rpc_functions: Final[RPCFunctions] = RPCFunctions(self)
         _LOGGER.debug("__init__: Setting up server")
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
-            (self.local_ip, local_port),
+            (local_ip, local_port),
             requestHandler=RequestHandler,
             logRequests=False,
             allow_none=True,
@@ -262,13 +262,13 @@ class XmlRpcServer(threading.Thread):
 
     def register_central(self, central: hm_central.CentralUnit) -> None:
         """Register a central in the XmlRPC-Server"""
-        if not self._centrals.get(central.instance_name):
-            self._centrals[central.instance_name] = central
+        if not self._centrals.get(central.name):
+            self._centrals[central.name] = central
 
     def un_register_central(self, central: hm_central.CentralUnit) -> None:
         """Unregister a central from XmlRPC-Server"""
-        if self._centrals.get(central.instance_name):
-            del self._centrals[central.instance_name]
+        if self._centrals.get(central.name):
+            del self._centrals[central.name]
 
     def get_central(self, interface_id: str) -> hm_central.CentralUnit | None:
         """Return a central by interface_id"""

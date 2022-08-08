@@ -86,20 +86,18 @@ class HmDevice:
         """
         self.central: Final[hm_central.CentralUnit] = central
         self.interface_id: Final[str] = interface_id
-        self.interface: Final[str] = self.central.device_details.get_interface(
+        self.interface: Final[str] = central.device_details.get_interface(
             device_address
         )
-        self.client: Final[hm_client.Client] = self.central.clients[self.interface_id]
+        self.client: Final[hm_client.Client] = central.clients[interface_id]
         self.device_address: Final[str] = device_address
         self.channels: Final[
             dict[str, hm_central.Channel]
-        ] = self.central.device_descriptions.get_channels(
-            self.interface_id, self.device_address
-        )
+        ] = central.device_descriptions.get_channels(interface_id, device_address)
         _LOGGER.debug(
             "__init__: Initializing device: %s, %s",
-            self.interface_id,
-            self.device_address,
+            interface_id,
+            device_address,
         )
         self.entities: dict[tuple[str, str], GenericEntity] = {}
         self.custom_entities: dict[str, CustomEntity] = {}
@@ -109,15 +107,15 @@ class HmDevice:
         self._update_callbacks: list[Callable] = []
         self.device_type: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
-                interface_id=self.interface_id,
-                device_address=self.device_address,
+                interface_id=interface_id,
+                device_address=device_address,
                 parameter=ATTR_HM_TYPE,
             )
         )
         self.sub_type: Final[str] = str(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=self.interface_id,
-                device_address=self.device_address,
+            central.device_descriptions.get_device_parameter(
+                interface_id=interface_id,
+                device_address=device_address,
                 parameter=ATTR_HM_SUBTYPE,
             )
         )
@@ -127,20 +125,20 @@ class HmDevice:
         )
         self.firmware: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
-                interface_id=self.interface_id,
-                device_address=self.device_address,
+                interface_id=interface_id,
+                device_address=device_address,
                 parameter=ATTR_HM_FIRMWARE,
             )
         )
 
         self.name: Final[str] = get_device_name(
-            central=self.central,
+            central=central,
             device_address=device_address,
             device_type=self.device_type,
         )
         self.value_cache: Final[ValueCache] = ValueCache(device=self)
-        self.room: str | None = self.central.device_details.get_room(
-            device_address=self.device_address
+        self.room: str | None = central.device_details.get_room(
+            device_address=device_address
         )
 
         _LOGGER.debug(
@@ -420,7 +418,7 @@ class HmDevice:
             central=self.central,
             address=channel_address,
             parameter=parameter,
-            prefix=f"button_{self.central.instance_name}",
+            prefix=f"button_{self.central.name}",
         )
         _LOGGER.debug(
             "create_action_and_append_to_device: Creating action for %s, %s, %s",
@@ -450,7 +448,7 @@ class HmDevice:
             central=self.central,
             address=channel_address,
             parameter=parameter,
-            prefix=f"event_{self.central.instance_name}",
+            prefix=f"event_{self.central.name}",
         )
 
         _LOGGER.debug(
@@ -472,7 +470,7 @@ class HmDevice:
                 channel_address=channel_address,
                 parameter=parameter,
                 parameter_data=parameter_data,
-            )  # type: ignore[call-arg]
+            )
             action_event.add_to_collections()
 
     def _create_entity_and_append_to_device(
@@ -587,7 +585,6 @@ class ValueCache:
 
     def __init__(self, device: HmDevice):
         self._device: Final[HmDevice] = device
-        self._client: Final[hm_client.Client] = device.client
         # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
         self._value_cache: Final[dict[str, dict[str, dict[str, CacheEntry]]]] = {}
 
@@ -649,7 +646,7 @@ class ValueCache:
 
             value: Any = self._NO_VALUE_CACHE_ENTRY
             try:
-                value = await self._client.get_value(
+                value = await self._device.client.get_value(
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                     parameter=parameter,
@@ -684,8 +681,8 @@ class ValueCache:
         """Load data from caches."""
         # Try to get data from central cache
         if (
-            global_value := self._client.central.device_data.get_device_data(
-                interface=self._client.interface,
+            global_value := self._device.central.device_data.get_device_data(
+                interface=self._device.interface,
                 channel_address=channel_address,
                 parameter=parameter,
                 max_age_seconds=max_age_seconds,

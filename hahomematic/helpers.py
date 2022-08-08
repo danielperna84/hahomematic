@@ -63,7 +63,7 @@ def generate_unique_identifier(
         or address.startswith("INT000")
         or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
     ):
-        return f"{central.central_id}_{unique_identifier}".lower()
+        return f"{central.config.central_id}_{unique_identifier}".lower()
     return f"{unique_identifier}".lower()
 
 
