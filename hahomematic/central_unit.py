@@ -81,19 +81,14 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig):
         _LOGGER.debug("__init__")
-        self.central_config: Final[CentralConfig] = central_config
-        self.central_id: Final[str] = self.central_config.central_id
-        self.central_url: Final[str] = self.central_config.central_url
-        self.instance_name: Final[str] = self.central_config.name
-        self._loop: asyncio.AbstractEventLoop = self.central_config.loop
+        self.config: Final[CentralConfig] = central_config
+        self.name: Final[str] = central_config.name
+        self._loop: asyncio.AbstractEventLoop = central_config.loop
         self._xml_rpc_server: Final[
             xml_rpc.XmlRpcServer
-        ] = self.central_config.xml_rpc_server
+        ] = central_config.xml_rpc_server
         self._xml_rpc_server.register_central(self)
         self.local_port: Final[int] = self._xml_rpc_server.local_port
-        self._interface_configs: Final[
-            set[hm_client.InterfaceConfig]
-        ] = self.central_config.interface_configs
         self._model: str | None = None
 
         # Caches for CCU data
@@ -132,9 +127,9 @@ class CentralUnit:
 
         self.json_rpc_client: Final[
             JsonRpcAioHttpClient
-        ] = self.central_config.get_json_rpc_client()
+        ] = central_config.get_json_rpc_client()
 
-        hm_data.INSTANCES[self.instance_name] = self
+        hm_data.INSTANCES[self.name] = self
         self._connection_checker: Final[ConnectionChecker] = ConnectionChecker(self)
         self._hub: HmHub | None = None
         self._version: str | None = None
@@ -179,7 +174,7 @@ class CentralUnit:
     def serial(self) -> str | None:
         """Return the serial of the backend."""
         if client := self.get_client():
-            return client.serial
+            return client.config.serial
         return None
 
     @property
@@ -188,8 +183,8 @@ class CentralUnit:
         if self._version is None:
             versions: list[str] = []
             for client in self.clients.values():
-                if client.version:
-                    versions.append(client.version)
+                if client.config.version:
+                    versions.append(client.config.version)
             self._version = max(versions) if versions else None
         return self._version
 
@@ -222,8 +217,8 @@ class CentralUnit:
         xml_rpc.un_register_xml_rpc_server()
 
         _LOGGER.info("stop: Removing instance")
-        if self.instance_name in hm_data.INSTANCES:
-            del hm_data.INSTANCES[self.instance_name]
+        if self.name in hm_data.INSTANCES:
+            del hm_data.INSTANCES[self.name]
 
     async def restart_clients(self) -> None:
         """Restart clients"""
@@ -253,20 +248,20 @@ class CentralUnit:
         if len(self.clients) > 0:
             _LOGGER.info(
                 "create_clients: Clients for %s are already created.",
-                self.instance_name,
+                self.name,
             )
             return False
-        if len(self._interface_configs) == 0:
+        if len(self.config.interface_configs) == 0:
             _LOGGER.info(
                 "create_clients: No Interfaces for %s defined.",
-                self.instance_name,
+                self.name,
             )
             return False
 
         local_ip = await self._identify_callback_ip(
-            list(self._interface_configs)[0].port
+            list(self.config.interface_configs)[0].port
         )
-        for interface_config in self._interface_configs:
+        for interface_config in self.config.interface_configs:
             try:
                 if client := await hm_client.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
@@ -283,13 +278,13 @@ class CentralUnit:
                     _LOGGER.debug(
                         "create_clients: Adding client %s to %s.",
                         client.interface_id,
-                        self.instance_name,
+                        self.name,
                     )
                     self.clients[client.interface_id] = client
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface_id=hm_client.get_interface_id(
-                        instance_name=self.instance_name,
+                        instance_name=self.name,
                         interface=interface_config.interface,
                     ),
                     interface_event_type=HmInterfaceEventType.PROXY,
@@ -359,7 +354,7 @@ class CentralUnit:
         while callback_ip is None:
             if (
                 callback_ip := await self.async_add_executor_job(
-                    get_local_ip, self.central_config.host
+                    get_local_ip, self.config.host
                 )
             ) is None:
                 _LOGGER.warning("Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL)
@@ -373,7 +368,7 @@ class CentralUnit:
             self._hub = HmHub(central=self)
             _LOGGER.info(
                 "init_hub: Starting hub for %s",
-                self.instance_name,
+                self.name,
             )
 
         await self._hub.fetch_sysvar_data()
@@ -382,7 +377,7 @@ class CentralUnit:
         """Start the connection checker."""
         _LOGGER.info(
             "start_connection_checker: Starting connection_checker for %s",
-            self.instance_name,
+            self.name,
         )
         self._connection_checker.start()
 
@@ -391,19 +386,19 @@ class CentralUnit:
         self._connection_checker.stop()
         _LOGGER.info(
             "stop_connection_checker: Stopped connection_checker for %s",
-            self.instance_name,
+            self.name,
         )
 
     async def validate_config_and_get_serial(self) -> str | None:
         """Validate the central configuration."""
-        if len(self._interface_configs) == 0:
+        if len(self.config.interface_configs) == 0:
             raise NoClients("validate_config: No clients defined.")
 
         local_ip = await self._identify_callback_ip(
-            list(self._interface_configs)[0].port
+            list(self.config.interface_configs)[0].port
         )
         serial: str | None = None
-        for interface_config in self._interface_configs:
+        for interface_config in self.config.interface_configs:
             client = await hm_client.create_client(
                 central=self, interface_config=interface_config, local_ip=local_ip
             )
@@ -419,7 +414,7 @@ class CentralUnit:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hm_client.Client | None = None
         for client in self.clients.values():
-            if client.interface in IF_PRIMARY and client.available:
+            if client.config.interface in IF_PRIMARY and client.available:
                 return client
         return client
 
@@ -435,9 +430,7 @@ class CentralUnit:
             await self.device_details.load()
             await self.device_data.load()
         except json.decoder.JSONDecodeError:
-            _LOGGER.warning(
-                "load_caches: Failed to load caches for %s.", self.instance_name
-            )
+            _LOGGER.warning("load_caches: Failed to load caches for %s.", self.name)
             await self.clear_all()
 
     async def _create_devices(self) -> None:
@@ -447,11 +440,9 @@ class CentralUnit:
 
         if not self.clients:
             raise Exception(
-                f"create_devices: No clients initialized. Not starting central {self.instance_name}."
+                f"create_devices: No clients initialized. Not starting central {self.name}."
             )
-        _LOGGER.debug(
-            "create_devices: Starting to create devices for %s.", self.instance_name
-        )
+        _LOGGER.debug("create_devices: Starting to create devices for %s.", self.name)
 
         new_devices = set[HmDevice]()
         for interface_id, client in self.clients.items():
@@ -510,9 +501,7 @@ class CentralUnit:
                         interface_id,
                         device_address,
                     )
-        _LOGGER.debug(
-            "create_devices: Finished creating devices for %s.", self.instance_name
-        )
+        _LOGGER.debug("create_devices: Finished creating devices for %s.", self.name)
 
         if (
             len(new_devices) > 0
@@ -631,7 +620,7 @@ class CentralUnit:
         except CancelledError:
             _LOGGER.debug(
                 "create_task: task cancelled for %s.",
-                self.instance_name,
+                self.name,
             )
             return None
 
@@ -646,7 +635,7 @@ class CentralUnit:
         except CancelledError:
             _LOGGER.debug(
                 "run_coroutine: coroutine interrupted for %s.",
-                self.instance_name,
+                self.name,
             )
             return None
 
@@ -659,7 +648,7 @@ class CentralUnit:
         except CancelledError as cer:
             _LOGGER.debug(
                 "async_add_executor_job: task cancelled for %s.",
-                self.instance_name,
+                self.name,
             )
             raise HaHomematicException from cer
 
@@ -805,7 +794,7 @@ class ConnectionChecker(threading.Thread):
         """
         _LOGGER.info(
             "run: Init connection checker to server %s",
-            self._central.instance_name,
+            self._central.name,
         )
 
         self._central.run_coroutine(self._check_connection())
@@ -821,13 +810,13 @@ class ConnectionChecker(threading.Thread):
         while self._active:
             _LOGGER.debug(
                 "check_connection: Checking connection to server %s",
-                self._central.instance_name,
+                self._central.name,
             )
             try:
                 if len(self._central.clients) == 0:
                     _LOGGER.warning(
                         "check_connection: No clients exist. Trying to create clients for server %s",
-                        self._central.instance_name,
+                        self._central.name,
                     )
                     await self._central.restart_clients()
                 else:
@@ -948,13 +937,13 @@ class DeviceDetailsCache:
 
     async def load(self) -> None:
         """Fetch names from backend."""
-        _LOGGER.debug("load: Loading names for %s", self._central.instance_name)
+        _LOGGER.debug("load: Loading names for %s", self._central.name)
         if client := self._central.get_client():
             await client.fetch_device_details()
-        _LOGGER.debug("load: Loading rooms for %s", self._central.instance_name)
+        _LOGGER.debug("load: Loading rooms for %s", self._central.name)
         self._channel_rooms = await self._get_all_rooms()
         self._identify_device_room()
-        _LOGGER.debug("load: Loading functions for %s", self._central.instance_name)
+        _LOGGER.debug("load: Loading functions for %s", self._central.name)
         self._functions = await self._get_all_functions()
 
     def add_name(self, address: str, name: str) -> None:
@@ -1032,9 +1021,10 @@ class DeviceDataCache:
     """Cache for device/channel initial data."""
 
     def __init__(self, central: CentralUnit):
+        """Init the device data cache."""
+        self._central: Final[CentralUnit] = central
         # { interface, {channel_address, {parameter, CacheEntry}}}
         self._central_values_cache: dict[str, dict[str, dict[str, Any]]] = {}
-        self._central: Final[CentralUnit] = central
         self._last_updated = INIT_DATETIME
 
     @property
@@ -1044,7 +1034,7 @@ class DeviceDataCache:
 
     async def load(self) -> None:
         """Fetch device data from backend."""
-        _LOGGER.debug("load: device data for %s", self._central.instance_name)
+        _LOGGER.debug("load: device data for %s", self._central.name)
         if client := self._central.get_client():
             await client.fetch_all_device_data()
 
@@ -1096,10 +1086,8 @@ class BasePersistentCache(ABC):
         cache_dict: dict[str, Any],
     ):
         self._central: Final[CentralUnit] = central
-        self._cache_dir: Final[
-            str
-        ] = f"{self._central.central_config.storage_folder}/cache"
-        self._filename: Final[str] = f"{self._central.instance_name}_{filename}"
+        self._cache_dir: Final[str] = f"{central.config.storage_folder}/cache"
+        self._filename: Final[str] = f"{central.name}_{filename}"
         self._cache_dict: Final[dict[str, Any]] = cache_dict
 
     async def save(self) -> int:

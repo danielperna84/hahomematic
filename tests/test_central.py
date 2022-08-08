@@ -22,7 +22,7 @@ from hahomematic.devices.switch import HmSwitch as CESwitch
 async def test_central(central, loop) -> None:
     """Test the central."""
     assert central
-    assert central.instance_name == "ccu-dev"
+    assert central.name == "ccu-dev"
     assert central.model == "PyDevCCU"
     assert central.get_client_by_interface_id("ccu-dev-BidCos-RF").model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"

@@ -135,25 +135,15 @@ class BaseEntity(ABC):
         self.device: Final[hm_device.HmDevice] = device
         self.unique_identifier: Final[str] = unique_identifier
         self.channel_no: Final[int] = channel_no
-        self.channel_address: Final[
-            str
-        ] = f"{self.device.device_address}:{self.channel_no}"
-        self.device_address: Final[str] = self.device.device_address
-        self._central: Final[hm_central.CentralUnit] = self.device.central
-        self._interface_id: Final[str] = self.device.interface_id
-        self._channel_type: Final[str] = str(
-            self.device.channels[self.channel_address].type
-        )
+        self.channel_address: Final[str] = f"{device.device_address}:{channel_no}"
+        self._central: Final[hm_central.CentralUnit] = device.central
+        self._channel_type: Final[str] = str(device.channels[self.channel_address].type)
         self.function: Final[
             str | None
         ] = self._central.device_details.get_function_text(address=self.channel_address)
-
-        self.device_type: Final[str] = self.device.device_type
-        self.sub_type: Final[str] = self.device.sub_type
         self._usage: HmEntityUsage = self._generate_entity_usage()
-
-        self._client: Final[hm_client.Client] = self._central.clients[
-            self._interface_id
+        self._client: Final[hm_client.Client] = device.central.clients[
+            device.interface_id
         ]
         self.entity_name_data: Final[EntityNameData] = self._generate_entity_name_data()
         self.name: Final[str | None] = self.entity_name_data.entity_name
@@ -405,16 +395,11 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         self._state_uncertain: bool = True
 
         # Subscribe for all events of this device
-        if (
-            self.channel_address,
-            self.parameter,
-        ) not in self._central.entity_event_subscriptions:
-            self._central.entity_event_subscriptions[
-                (self.channel_address, self.parameter)
-            ] = []
-        self._central.entity_event_subscriptions[
-            (self.channel_address, self.parameter)
-        ].append(self.event)
+        if (channel_address, parameter) not in self._central.entity_event_subscriptions:
+            self._central.entity_event_subscriptions[(channel_address, parameter)] = []
+        self._central.entity_event_subscriptions[(channel_address, parameter)].append(
+            self.event
+        )
 
     @property
     def channel_operation_mode(self) -> str | None:
@@ -480,11 +465,11 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             value,
             self._value,
         )
-        if interface_id != self._interface_id:
+        if interface_id != self.device.interface_id:
             _LOGGER.warning(
                 "event: Incorrect interface_id: %s - should be: %s",
                 interface_id,
-                self._interface_id,
+                self.device.interface_id,
             )
             return
         if channel_address != self.channel_address:
@@ -577,8 +562,8 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
     def _get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         return {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.device_address,
+            ATTR_INTERFACE_ID: self.device.interface_id,
+            ATTR_ADDRESS: self.device.device_address,
             ATTR_PARAMETER: self.parameter,
             ATTR_VALUE: value,
         }
@@ -747,14 +732,14 @@ class CustomEntity(BaseEntity, CallbackEntity):
         # add extra entities for the device type
         self._mark_entity(
             field_desc=hm_entity_definition.get_additional_entities_by_device_type(
-                self.device_type
+                self.device.device_type
             )
         )
 
         # add custom un_ignore entities
         self._mark_entity_by_custom_un_ignore_parameters(
             un_ignore_params_by_paramset_key=self._central.parameter_visibility.get_un_ignore_parameters(
-                device_type=self.device_type, device_channel=self.channel_no
+                device_type=self.device.device_type, device_channel=self.channel_no
             )
         )
 
@@ -763,7 +748,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         fields = self._device_desc.get(field_dict_name, {})
         for channel_no, channel in fields.items():
             for (field_name, parameter) in channel.items():
-                channel_address = f"{self.device_address}:{channel_no}"
+                channel_address = f"{self.device.device_address}:{channel_no}"
                 if entity := self.device.get_hm_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
@@ -776,7 +761,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         if not field_desc:
             return None
         for channel_no, parameters in field_desc.items():
-            channel_address = f"{self.device_address}:{channel_no}"
+            channel_address = f"{self.device.device_address}:{channel_no}"
             for parameter in parameters:
                 entity = self.device.get_hm_entity(
                     channel_address=channel_address, parameter=parameter
@@ -939,6 +924,7 @@ class BaseEvent(BaseParameterEntity[bool]):
     """Base class for action events"""
 
     _attr_platform = HmPlatform.EVENT
+    _attr_event_type: HmEventType
 
     def __init__(
         self,
@@ -947,7 +933,6 @@ class BaseEvent(BaseParameterEntity[bool]):
         channel_address: str,
         parameter: str,
         parameter_data: dict[str, Any],
-        event_type: HmEventType,
     ):
         """
         Initialize the event handler.
@@ -961,21 +946,23 @@ class BaseEvent(BaseParameterEntity[bool]):
             parameter_data=parameter_data,
         )
 
-        self.event_type: Final[HmEventType] = event_type
         self._last_update: datetime = INIT_DATETIME
         self._value: Any | None = None
 
         # Subscribe for all action events of this device
         if (
-            self.channel_address,
-            self.parameter,
+            channel_address,
+            parameter,
         ) not in self._central.entity_event_subscriptions:
-            self._central.entity_event_subscriptions[
-                (self.channel_address, self.parameter)
-            ] = []
-        self._central.entity_event_subscriptions[
-            (self.channel_address, self.parameter)
-        ].append(self.event)
+            self._central.entity_event_subscriptions[(channel_address, parameter)] = []
+        self._central.entity_event_subscriptions[(channel_address, parameter)].append(
+            self.event
+        )
+
+    @property
+    def event_type(self) -> HmEventType:
+        """Return the event_type of the event."""
+        return self._attr_event_type
 
     def event(
         self, interface_id: str, channel_address: str, parameter: str, value: Any
@@ -990,11 +977,11 @@ class BaseEvent(BaseParameterEntity[bool]):
             parameter,
             value,
         )
-        if interface_id != self._interface_id:
+        if interface_id != self.device.interface_id:
             _LOGGER.warning(
                 "event: Incorrect interface_id: %s - should be: %s",
                 interface_id,
-                self._interface_id,
+                self.device.interface_id,
             )
             return
         if channel_address != self.channel_address:
@@ -1081,31 +1068,13 @@ class ClickEvent(BaseEvent):
     class for handling click events.
     """
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        """
-        Initialize the event handler.
-        """
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            event_type=HmEventType.KEYPRESS,
-        )
+    _attr_event_type = HmEventType.KEYPRESS
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         return {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.device_address,
+            ATTR_INTERFACE_ID: self.device.interface_id,
+            ATTR_ADDRESS: self.device.device_address,
             ATTR_TYPE: self.parameter.lower(),
             ATTR_SUBTYPE: self.channel_no,
         }
@@ -1126,31 +1095,13 @@ class ImpulseEvent(BaseEvent):
     class for handling impulse events.
     """
 
-    def __init__(
-        self,
-        device: hm_device.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        """
-        Initialize the event handler.
-        """
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            parameter=parameter,
-            parameter_data=parameter_data,
-            event_type=HmEventType.IMPULSE,
-        )
+    _attr_event_type = HmEventType.IMPULSE
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         return {
-            ATTR_INTERFACE_ID: self._interface_id,
-            ATTR_ADDRESS: self.device_address,
+            ATTR_INTERFACE_ID: self.device.interface_id,
+            ATTR_ADDRESS: self.device.device_address,
             ATTR_TYPE: self.parameter.lower(),
             ATTR_SUBTYPE: self.channel_no,
         }

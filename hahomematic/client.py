@@ -70,23 +70,18 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self._client_config: Final[_ClientConfig] = client_config
-        self.central: Final[hm_central.CentralUnit] = self._client_config.central
-        self.interface: Final[str] = self._client_config.interface
+        self.config: Final[_ClientConfig] = client_config
+        self.central: Final[hm_central.CentralUnit] = client_config.central
         # This is the actual interface_id used for init
         self.interface_id: Final[str] = get_interface_id(
-            instance_name=self.central.instance_name, interface=self.interface
+            instance_name=self.central.name, interface=client_config.interface
         )
-        self._has_credentials: Final[bool] = self._client_config.has_credentials
-        self.init_url: Final[str] = self._client_config.init_url
         # for all device related interaction
-        self._proxy: Final[XmlRpcProxy] = self._client_config.xml_rpc_proxy
-        self._proxy_read: Final[XmlRpcProxy] = self._client_config.xml_rpc_proxy_read
+        self._proxy: Final[XmlRpcProxy] = client_config.xml_rpc_proxy
+        self._proxy_read: Final[XmlRpcProxy] = client_config.xml_rpc_proxy_read
         self._json_rpc_client: Final[
             JsonRpcAioHttpClient
         ] = self.central.json_rpc_client
-        self.serial: Final[str | None] = self._client_config.serial
-        self.version: Final[str] = self._client_config.version
 
         self._is_callback_alive: bool = True
         self._available: bool = True
@@ -109,9 +104,9 @@ class Client(ABC):
         """
         try:
             _LOGGER.debug(
-                "proxy_init: init('%s', '%s')", self.init_url, self.interface_id
+                "proxy_init: init('%s', '%s')", self.config.init_url, self.interface_id
             )
-            await self._proxy.init(self.init_url, self.interface_id)
+            await self._proxy.init(self.config.init_url, self.interface_id)
             self._mark_all_devices_availability(available=True)
             _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
         except BaseHomematicException as hhe:
@@ -133,18 +128,18 @@ class Client(ABC):
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)",
-                self.interface,
+                self.interface_id,
             )
             return PROXY_DE_INIT_SKIPPED
         try:
-            _LOGGER.debug("proxy_de_init: init('%s')", self.init_url)
-            await self._proxy.init(self.init_url)
+            _LOGGER.debug("proxy_de_init: init('%s')", self.config.init_url)
+            await self._proxy.init(self.config.init_url)
         except BaseHomematicException as hhe:
             _LOGGER.error(
                 "proxy_de_init: %s [%s] Failed to de-initialize proxy for %s",
                 hhe.name,
                 hhe.args,
-                self.interface,
+                self.interface_id,
             )
             return PROXY_DE_INIT_FAILED
 
@@ -749,10 +744,10 @@ class ClientHomegear(Client):
     @property
     def model(self) -> str:
         """Return the model of the backend."""
-        if self.version:
+        if self.config.version:
             return (
                 BACKEND_PYDEVCCU
-                if BACKEND_PYDEVCCU.lower() in self.version
+                if BACKEND_PYDEVCCU.lower() in self.config.version
                 else BACKEND_HOMEGEAR
             )
         return BACKEND_CCU
@@ -868,51 +863,45 @@ class _ClientConfig:
         self.central: Final[hm_central.CentralUnit] = central
         self.interface_config: Final[InterfaceConfig] = interface_config
         self.interface: Final[str] = interface_config.interface
-        self._central_config: Final[
-            hm_central.CentralConfig
-        ] = self.central.central_config
         self._callback_host: Final[str] = (
-            self._central_config.callback_host
-            if self._central_config.callback_host
-            else local_ip
+            central.config.callback_host if central.config.callback_host else local_ip
         )
         self._callback_port: Final[int] = (
-            self._central_config.callback_port
-            if self._central_config.callback_port
-            else self.central.local_port
+            central.config.callback_port
+            if central.config.callback_port
+            else central.local_port
         )
         self.has_credentials: Final[bool] = (
-            self._central_config.username is not None
-            and self._central_config.password is not None
+            central.config.username is not None and central.config.password is not None
         )
         self.init_url: Final[
             str
         ] = f"http://{self._callback_host}:{self._callback_port}"
         self.xml_rpc_uri: Final[str] = build_xml_rpc_uri(
-            host=self._central_config.host,
+            host=central.config.host,
             port=interface_config.port,
             path=interface_config.path,
-            tls=self._central_config.tls,
+            tls=central.config.tls,
         )
         self.xml_rpc_headers: Final[list[tuple[str, str]]] = build_headers(
-            username=self._central_config.username,
-            password=self._central_config.password,
+            username=central.config.username,
+            password=central.config.password,
         )
         self.xml_rpc_proxy: Final[XmlRpcProxy] = XmlRpcProxy(
-            self.central.loop,
+            central.loop,
             max_workers=1,
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
-            tls=self._central_config.tls,
-            verify_tls=self._central_config.verify_tls,
+            tls=central.config.tls,
+            verify_tls=central.config.verify_tls,
         )
         self.xml_rpc_proxy_read: Final[XmlRpcProxy] = XmlRpcProxy(
-            self.central.loop,
+            central.loop,
             max_workers=1,
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
-            tls=self._central_config.tls,
-            verify_tls=self._central_config.verify_tls,
+            tls=central.config.tls,
+            verify_tls=central.config.verify_tls,
         )
         self.version: str = "0"
         self.serial: str = "0"

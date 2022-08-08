@@ -53,7 +53,7 @@ class HmHub(CallbackEntity):
         self.unique_identifier: Final[str] = generate_unique_identifier(
             central=central, address=HUB_ADDRESS
         )
-        self.name: Final[str] = central.instance_name
+        self.name: Final[str] = central.name
         self.syvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
         self._hub_attributes: Final[dict[str, Any]] = {}
@@ -109,13 +109,13 @@ class HmHub(CallbackEntity):
         if not programs:
             _LOGGER.debug(
                 "_update_program_entities: No programs received for %s",
-                self._central.instance_name,
+                self._central.name,
             )
             return
         _LOGGER.debug(
             "_update_entities: %i programs received for %s",
             len(programs),
-            self._central.instance_name,
+            self._central.name,
         )
 
         missing_program_ids = self._identify_missing_program_ids(programs=programs)
@@ -149,13 +149,13 @@ class HmHub(CallbackEntity):
         if not variables:
             _LOGGER.debug(
                 "_update_entities: No sysvars received for %s",
-                self._central.instance_name,
+                self._central.name,
             )
             return
         _LOGGER.debug(
             "_update_entities: %i sysvars received for %s",
             len(variables),
-            self._central.instance_name,
+            self._central.name,
         )
 
         # remove some variables in case of CCU Backend
