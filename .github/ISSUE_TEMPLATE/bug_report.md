@@ -17,7 +17,10 @@ Make sure you have read the release notes at https://github.com/danielperna84/cu
 Make sure you are running the latest version of the custom_component (and Home Assistant) before reporting an issue.
 
 
-**custom_component/hahomematic version (if applicable):**
+**custom_component version (if applicable):**
+1.x.x
+
+**known last working custom_component version (if applicable):**
 1.x.x
 
 **Home Assistant version (if applicable):**
