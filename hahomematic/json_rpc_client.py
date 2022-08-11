@@ -88,6 +88,7 @@ class JsonRpcAioHttpClient:
         self._tls: Final[bool] = tls
         self._tls_context: Final[ssl.SSLContext] = get_tls_context(verify_tls)
         self._url: Final[str] = f"{device_url}{PATH_JSON_RPC}"
+        self._script_cache: dict[str, str] = {}
 
     @property
     def is_activated(self) -> bool:
@@ -229,10 +230,14 @@ class JsonRpcAioHttpClient:
             _LOGGER.warning("_post_script: Error while logging in via JSON-RPC.")
             return {"error": "Unable to open session.", "result": {}}
 
-        script_file = os.path.join(
-            Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name
-        )
-        script = Path(script_file).read_text(encoding=DEFAULT_ENCODING)
+        if (script := self._get_script(script_name=script_name)) is None:
+            _LOGGER.warning(
+                "_post_script: Script file for %s does not exist.", script_name
+            )
+            return {
+                "error": f"Script file for {script_name} does not exist.",
+                "result": {},
+            }
 
         if extra_params:
             for variable, value in extra_params.items():
@@ -254,6 +259,19 @@ class JsonRpcAioHttpClient:
         if (error := response["error"]) is not None:
             raise HaHomematicException(f"_post_script: error: {error}")
         return response
+
+    def _get_script(self, script_name: str) -> str | None:
+        """Return a script from the script cache. Load if requires."""
+        if script_name in self._script_cache:
+            return self._script_cache[script_name]
+
+        script_file = os.path.join(
+            Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name
+        )
+        if script := Path(script_file).read_text(encoding=DEFAULT_ENCODING):
+            self._script_cache[script_name] = script
+            return script
+        return None
 
     async def _do_post(
         self,
