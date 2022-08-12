@@ -40,6 +40,8 @@ HM_ARG_EFFECT = "effect"
 HM_ARG_HS_COLOR = "hs_color"
 HM_ARG_RAMP_TIME = "ramp_time"
 
+HM_EFFECT_OFF = "Off"
+
 HM_MAX_MIREDS: int = 500
 HM_MIN_MIREDS: int = 153
 
@@ -140,8 +142,9 @@ class BaseHmLight(CustomEntity):
         if HM_ARG_BRIGHTNESS in kwargs:
             brightness: int = int(cast(int, kwargs[HM_ARG_BRIGHTNESS]))
             brightness = max(10, brightness)
-            level = brightness / 255.0
-            await self._e_level.send_value(level)
+            if brightness != self.brightness:
+                level = brightness / 255.0
+                await self._e_level.send_value(level)
 
     async def turn_off(self) -> None:
         """Turn the light off."""
@@ -190,7 +193,7 @@ class CeColorDimmer(CeDimmer):
     """Class for homematic dimmer with color entities."""
 
     _effect_list: list[str] = [
-        "Off",
+        HM_EFFECT_OFF,
         "Slow color change",
         "Medium color change",
         "Fast color change",
@@ -249,12 +252,15 @@ class CeColorDimmer(CeDimmer):
         """Turn the light on."""
         if HM_ARG_HS_COLOR in kwargs:
             # disable effect
-            await self._e_effect.send_value(0)
+            if self.effect != HM_EFFECT_OFF:
+                await self._e_effect.send_value(0)
             hue, saturation = kwargs[HM_ARG_HS_COLOR]
-            if saturation < 0.1:  # Special case (white)
+            hm_hue = hue / 360
+            hm_saturation = saturation / 100
+            if hm_saturation < 0.1:  # Special case (white)
                 hm_color = 200
             else:
-                hm_color = int(round(max(min(hue, 1), 0) * 199))
+                hm_color = int(round(max(min(hm_hue, 1), 0) * 199))
 
             await self._e_color.send_value(hm_color)
 
