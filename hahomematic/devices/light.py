@@ -223,7 +223,7 @@ class CeColorDimmer(CeDimmer):
                 return 0.0, 0.0
 
             # For all other colors we assume saturation of 1
-            return hm_color / 200, 1
+            return hm_color / 200 * 360, 100
         return 0.0, 0.0
 
     @property
