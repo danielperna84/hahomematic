@@ -213,18 +213,15 @@ class XmlRpcServer(threading.Thread):
 
     def __init__(
         self,
-        local_ip: str = IP_ANY_V4,
         local_port: int = PORT_ANY,
     ):
         _LOGGER.debug("__init__")
         threading.Thread.__init__(self)
 
-        self.local_ip: Final[str] = local_ip
-
         _rpc_functions: Final[RPCFunctions] = RPCFunctions(self)
         _LOGGER.debug("__init__: Setting up server")
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
-            (local_ip, local_port),
+            (IP_ANY_V4, local_port),
             requestHandler=RequestHandler,
             logRequests=False,
             allow_none=True,
@@ -246,9 +243,7 @@ class XmlRpcServer(threading.Thread):
         Run the XmlRPC-Server thread.
         """
         _LOGGER.info(
-            "run: Starting XmlRPC-Server at http://%s:%i",
-            self.local_ip,
-            self.local_port,
+            "run: Starting XmlRPC-Server at http://IP_ANY_V4:%i", self.local_port
         )
         self._simple_xml_rpc_server.serve_forever()
 
@@ -295,12 +290,10 @@ def _set_xml_rpc_server(xml_rpc_server: XmlRpcServer | None) -> None:
     _XML_RPC_SERVER = xml_rpc_server
 
 
-def register_xml_rpc_server(
-    local_ip: str = IP_ANY_V4, local_port: int = PORT_ANY
-) -> XmlRpcServer:
+def register_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
     """Register the xml rpc server."""
     if (xml_rpc := get_xml_rpc_server()) is None:
-        xml_rpc = XmlRpcServer(local_ip, local_port)
+        xml_rpc = XmlRpcServer(local_port)
         xml_rpc.start()
         _LOGGER.info("register_xml_rpc_server: Registering XmlRPC-Server.")
         _set_xml_rpc_server(xml_rpc)
