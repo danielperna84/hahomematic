@@ -478,7 +478,7 @@ class EntityNameData:
         return self._name
 
     @property
-    def full_name(self) -> str | None:
+    def full_name(self) -> str:
         """Return the full name of the entity."""
         if self.entity_name:
             return f"{self._device_name} {self.entity_name}".strip()
