@@ -261,6 +261,11 @@ class XmlRpcServer(threading.Thread):
         self._simple_xml_rpc_server.server_close()
         _LOGGER.info("stop: Server XmlRPC-Server")
 
+    @property
+    def started(self) -> bool:
+        """return if thread is active."""
+        return self._started.is_set() is True  # type: ignore[attr-defined]
+
     def register_central(self, central: hm_central.CentralUnit) -> None:
         """Register a central in the XmlRPC-Server"""
         if not self._centrals.get(central.name):
@@ -290,7 +295,7 @@ class XmlRpcServer(threading.Thread):
 def register_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
     """Register the xml rpc server."""
     xml_rpc = XmlRpcServer(local_port=local_port)
-    if not xml_rpc.is_alive():
+    if not xml_rpc.started:
         xml_rpc.start()
         _LOGGER.info("register_xml_rpc_server: Starting XmlRPC-Server.")
     return xml_rpc
