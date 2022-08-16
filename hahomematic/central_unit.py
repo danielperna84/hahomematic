@@ -214,7 +214,7 @@ class CentralUnit:
         # un-register this instance from XmlRPC-Server
         self._xml_rpc_server.un_register_central(central=self)
         # un-register and stop XmlRPC-Server, if possible
-        xml_rpc.un_register_xml_rpc_server()
+        xml_rpc.un_register_xml_rpc_server(local_port=self.local_port)
 
         _LOGGER.info("stop: Removing instance")
         if self.name in hm_data.INSTANCES:
