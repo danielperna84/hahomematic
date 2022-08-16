@@ -48,7 +48,6 @@ from hahomematic.const import (
     HmEventType,
     HmInterfaceEventType,
 )
-import hahomematic.data as hm_data
 from hahomematic.decorators import callback_system_event
 from hahomematic.device import HmDevice
 from hahomematic.entity import BaseEntity, CustomEntity, GenericEntity
@@ -74,6 +73,9 @@ import hahomematic.xml_rpc_server as xml_rpc
 _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 sema_add_devices = asyncio.BoundedSemaphore()
+
+# {instance_name, central_unit}
+CENTRAL_INSTANCES: dict[str, CentralUnit] = {}
 
 
 class CentralUnit:
@@ -129,7 +131,7 @@ class CentralUnit:
             JsonRpcAioHttpClient
         ] = central_config.get_json_rpc_client()
 
-        hm_data.INSTANCES[self.name] = self
+        CENTRAL_INSTANCES[self.name] = self
         self._connection_checker: Final[ConnectionChecker] = ConnectionChecker(self)
         self._hub: HmHub | None = None
         self._version: str | None = None
@@ -217,8 +219,8 @@ class CentralUnit:
         xml_rpc.un_register_xml_rpc_server(local_port=self.local_port)
 
         _LOGGER.info("stop: Removing instance")
-        if self.name in hm_data.INSTANCES:
-            del hm_data.INSTANCES[self.name]
+        if self.name in CENTRAL_INSTANCES:
+            del CENTRAL_INSTANCES[self.name]
 
     async def restart_clients(self) -> None:
         """Restart clients"""
