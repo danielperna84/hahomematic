@@ -292,7 +292,7 @@ def register_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
     xml_rpc = XmlRpcServer(local_port=local_port)
     if not xml_rpc.is_alive():
         xml_rpc.start()
-    _LOGGER.info("register_xml_rpc_server: Registering XmlRPC-Server.")
+        _LOGGER.info("register_xml_rpc_server: Starting XmlRPC-Server.")
     return xml_rpc
 
 

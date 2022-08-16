@@ -4,10 +4,12 @@ Helper functions used within hahomematic
 from __future__ import annotations
 
 import base64
+from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
+import socket
 import ssl
 from typing import Any
 
@@ -408,6 +410,14 @@ def convert_value(value: Any, target_type: str) -> Any:
     if target_type == TYPE_STRING:
         return str(value)
     return value
+
+
+def find_free_port() -> int:
+    """Find a free port for XmlRpc server default port."""
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        sock.bind(("", 0))
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return int(sock.getsockname()[1])
 
 
 @dataclass
