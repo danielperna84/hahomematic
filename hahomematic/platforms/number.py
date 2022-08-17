@@ -36,7 +36,7 @@ class HmFloat(BaseNumber[float]):
                 await super().send_value(value)
         else:
             _LOGGER.warning(
-                "number.float: Invalid value: %s (min: %s, max: %s, special: %s)",
+                "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
                 value,
                 self._min,
                 self._max,
@@ -59,7 +59,7 @@ class HmInteger(BaseNumber[int]):
                 await super().send_value(value)
         else:
             _LOGGER.warning(
-                "number.int: Invalid value: %s (min: %s, max: %s, special: %s)",
+                "number.int failed: Invalid value: %s (min: %s, max: %s, special: %s)",
                 value,
                 self._min,
                 self._max,
@@ -81,7 +81,7 @@ class HmSysvarNumber(GenericSystemVariable):
                 await super().send_variable(value)
             else:
                 _LOGGER.warning(
-                    "sysvar.number: Invalid value: %s (min: %s, max: %s)",
+                    "sysvar.number failed: Invalid value: %s (min: %s, max: %s)",
                     value,
                     self.min,
                     self.max,

@@ -316,7 +316,7 @@ class HmDevice:
         for channel_address in self.channels:
             if (device_channel := get_channel_no(channel_address)) is None:
                 _LOGGER.warning(
-                    "create_entities: Wrong format of channel_address %s.",
+                    "create_entities failed: Wrong format of channel_address %s.",
                     channel_address,
                 )
                 continue
@@ -544,7 +544,7 @@ class HmDevice:
                     entity_t = HmText
                 else:
                     _LOGGER.warning(
-                        "create_entity_and_append_to_device: unsupported actor: %s %s %s",
+                        "create_entity_and_append_to_device failed: unsupported actor: %s %s %s",
                         channel_address,
                         parameter,
                         parameter_data[ATTR_HM_TYPE],

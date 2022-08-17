@@ -467,21 +467,21 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         )
         if interface_id != self.device.interface_id:
             _LOGGER.warning(
-                "event: Incorrect interface_id: %s - should be: %s",
+                "event failed: Incorrect interface_id: %s - should be: %s",
                 interface_id,
                 self.device.interface_id,
             )
             return
         if channel_address != self.channel_address:
             _LOGGER.warning(
-                "event: Incorrect address: %s - should be: %s",
+                "event failed: Incorrect address: %s - should be: %s",
                 channel_address,
                 self.channel_address,
             )
             return
         if parameter != self.parameter:
             _LOGGER.warning(
-                "event: Incorrect parameter: %s - should be: %s",
+                "event failed: Incorrect parameter: %s - should be: %s",
                 parameter,
                 self.parameter,
             )
@@ -979,21 +979,21 @@ class BaseEvent(BaseParameterEntity[bool]):
         )
         if interface_id != self.device.interface_id:
             _LOGGER.warning(
-                "event: Incorrect interface_id: %s - should be: %s",
+                "event failed: Incorrect interface_id: %s - should be: %s",
                 interface_id,
                 self.device.interface_id,
             )
             return
         if channel_address != self.channel_address:
             _LOGGER.warning(
-                "event: Incorrect address: %s - should be: %s",
+                "event failed: Incorrect address: %s - should be: %s",
                 channel_address,
                 self.channel_address,
             )
             return
         if parameter != self.parameter:
             _LOGGER.warning(
-                "event: Incorrect parameter: %s - should be: %s",
+                "event failed: Incorrect parameter: %s - should be: %s",
                 parameter,
                 self.parameter,
             )
@@ -1031,7 +1031,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             )
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "action_event: %s [%s] Failed to send value for: %s, %s, %s",
+                "action_event failed: %s [%s] Unable to send value for: %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 self.channel_address,

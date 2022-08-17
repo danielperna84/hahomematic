@@ -357,7 +357,7 @@ class ParameterVisibilityCache:
                 data = line.split("@")
                 if len(data) != 2:
                     _LOGGER.warning(
-                        "add_line_to_cache: Could not add line '%s' to un ignore cache. Only one @ expected.",
+                        "add_line_to_cache failed: Could not add line '%s' to un ignore cache. Only one @ expected.",
                         line,
                     )
                     return
@@ -365,7 +365,7 @@ class ParameterVisibilityCache:
                 device_data = data[1].split(":")
                 if len(device_data) != 3:
                     _LOGGER.warning(
-                        "add_line_to_cache: Could not add line '%s' to un ignore cache. 4 arguments expected: e.g. TEMPERATURE@HmIP-BWTH:1:VALUES.",
+                        "add_line_to_cache failed: Could not add line '%s' to un ignore cache. 4 arguments expected: e.g. TEMPERATURE@HmIP-BWTH:1:VALUES.",
                         line,
                     )
                     return
@@ -408,7 +408,7 @@ class ParameterVisibilityCache:
                 data = line.split(":")
                 if len(data) != 2:
                     _LOGGER.warning(
-                        "add_line_to_cache: Could not add line '%s' to un ignore cache. 2 arguments expected: e.g. TEMPERATURE:VALUES.",
+                        "add_line_to_cache failed: Could not add line '%s' to un ignore cache. 2 arguments expected: e.g. TEMPERATURE:VALUES.",
                         line,
                     )
                     return
@@ -421,7 +421,7 @@ class ParameterVisibilityCache:
                 self._un_ignore_parameters_general[PARAMSET_KEY_VALUES].add(line)
         except Exception:
             _LOGGER.warning(
-                "add_line_to_cache: Could not add line '%s' to un ignore cache.", line
+                "add_line_to_cache failed: Could not add line '%s' to un ignore cache.", line
             )
 
     def is_relevant_paramset(
@@ -478,7 +478,7 @@ class ParameterVisibilityCache:
                         self._add_line_to_cache(line)
             except Exception as ex:
                 _LOGGER.warning(
-                    "load: Could not read unignore file %s",
+                    "load failed: Could not read unignore file %s",
                     ex.args,
                 )
 

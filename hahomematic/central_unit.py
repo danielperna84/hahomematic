@@ -218,7 +218,7 @@ class CentralUnit:
         # un-register and stop XmlRPC-Server, if possible
         xml_rpc.un_register_xml_rpc_server(local_port=self.local_port)
 
-        _LOGGER.info("stop: Removing instance")
+        _LOGGER.debug("stop: Removing instance")
         if self.name in CENTRAL_INSTANCES:
             del CENTRAL_INSTANCES[self.name]
 
@@ -239,7 +239,7 @@ class CentralUnit:
         """Stop clients."""
         await self._de_init_clients()
         for client in self.clients.values():
-            _LOGGER.info("stop_client: Stopping %s.", client.interface_id)
+            _LOGGER.debug("stop_client: Stopping %s.", client.interface_id)
             client.stop()
         _LOGGER.debug("stop_clients: Clearing existing clients.")
         self.clients.clear()
@@ -248,14 +248,14 @@ class CentralUnit:
         """Create clients for the central unit. Start connection checker afterwards"""
 
         if len(self.clients) > 0:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "create_clients: Clients for %s are already created.",
                 self.name,
             )
             return False
         if len(self.config.interface_configs) == 0:
-            _LOGGER.info(
-                "create_clients: No Interfaces for %s defined.",
+            _LOGGER.warning(
+                "create_clients failed: No Interfaces for %s defined.",
                 self.name,
             )
             return False
@@ -273,7 +273,7 @@ class CentralUnit:
                         not in await client.get_available_interfaces()
                     ):
                         _LOGGER.warning(
-                            "_create_clients: Interface: %s is not available for backend.",
+                            "_create_clients failed: Interface: %s is not available for backend.",
                             interface_config.interface,
                         )
                         continue
@@ -293,7 +293,7 @@ class CentralUnit:
                     available=False,
                 )
                 _LOGGER.warning(
-                    "create_clients: Failed to create client for central [%s]. Check logs.",
+                    "create_clients failed: Unable to create client for central [%s]. Check logs.",
                     ex.args,
                 )
         return len(self.clients) > 0
@@ -302,7 +302,7 @@ class CentralUnit:
         """Init clients of control unit, and start connection checker."""
         for client in self.clients.values():
             if PROXY_INIT_SUCCESS == await client.proxy_init():
-                _LOGGER.info(
+                _LOGGER.debug(
                     "init_clients: client for %s initialized", client.interface_id
                 )
 
@@ -310,7 +310,7 @@ class CentralUnit:
         """De-init clients"""
         for name, client in self.clients.items():
             if await client.proxy_de_init():
-                _LOGGER.info("stop: Proxy de-initialized: %s", name)
+                _LOGGER.debug("stop: Proxy de-initialized: %s", name)
 
     def fire_interface_event(
         self,
@@ -368,7 +368,7 @@ class CentralUnit:
         """Init the hub."""
         if not self._hub:
             self._hub = HmHub(central=self)
-            _LOGGER.info(
+            _LOGGER.debug(
                 "init_hub: Starting hub for %s",
                 self.name,
             )
@@ -377,7 +377,7 @@ class CentralUnit:
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
-        _LOGGER.info(
+        _LOGGER.debug(
             "start_connection_checker: Starting connection_checker for %s",
             self.name,
         )
@@ -386,7 +386,7 @@ class CentralUnit:
     def _stop_connection_checker(self) -> None:
         """Start the connection checker."""
         self._connection_checker.stop()
-        _LOGGER.info(
+        _LOGGER.debug(
             "stop_connection_checker: Stopped connection_checker for %s",
             self.name,
         )
@@ -432,7 +432,7 @@ class CentralUnit:
             await self.device_details.load()
             await self.device_data.load()
         except json.decoder.JSONDecodeError:
-            _LOGGER.warning("load_caches: Failed to load caches for %s.", self.name)
+            _LOGGER.warning("load_caches failed: Unable to load caches for %s.", self.name)
             await self.clear_all()
 
     async def _create_devices(self) -> None:
@@ -560,7 +560,7 @@ class CentralUnit:
                     hm_device.remove_from_collections()
                     del self.hm_devices[address]
             except KeyError:
-                _LOGGER.warning("delete_devices: Failed to delete: %s", address)
+                _LOGGER.warning("delete_devices failed: Unable to delete: %s", address)
         await self.paramset_descriptions.save()
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
@@ -584,7 +584,7 @@ class CentralUnit:
 
         if interface_id not in self.clients:
             _LOGGER.warning(
-                "add_new_devices: Missing client for interface_id %s.",
+                "add_new_devices failed: Missing client for interface_id %s.",
                 interface_id,
             )
             return None
@@ -794,7 +794,7 @@ class ConnectionChecker(threading.Thread):
         """
         Run the central thread.
         """
-        _LOGGER.info(
+        _LOGGER.debug(
             "run: Init connection checker to server %s",
             self._central.name,
         )
@@ -817,7 +817,7 @@ class ConnectionChecker(threading.Thread):
             try:
                 if len(self._central.clients) == 0:
                     _LOGGER.warning(
-                        "check_connection: No clients exist. Trying to create clients for server %s",
+                        "check_connection failed: No clients exist. Trying to create clients for server %s",
                         self._central.name,
                     )
                     await self._central.restart_clients()
@@ -1212,7 +1212,7 @@ class DeviceDescriptionCache(BasePersistentCache):
                 if self._dev_descriptions.get(interface_id, {}).get(address, {}):
                     del self._dev_descriptions[interface_id][address]
             except KeyError:
-                _LOGGER.warning("cleanup: Failed to delete: %s", address)
+                _LOGGER.warning("cleanup failed: Unable to delete: %s", address)
         await self.save()
 
     def get_addresses(self, interface_id: str) -> dict[str, list[str]]:

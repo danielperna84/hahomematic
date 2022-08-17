@@ -75,7 +75,7 @@ class RPCFunctions:
                 )
             except Exception as ex:
                 _LOGGER.warning(
-                    "event: Failed to call callback for: %s, %s, %s, %s",
+                    "event failed: Unable to call callback for: %s, %s, %s, %s",
                     interface_id,
                     channel_address,
                     parameter,
@@ -88,7 +88,7 @@ class RPCFunctions:
         When some error occurs the CCU / Homegear will send its error message here.
         """
         _LOGGER.warning(
-            "error: interface_id = %s, error_code = %i, message = %s",
+            "error failed: interface_id = %s, error_code = %i, message = %s",
             interface_id,
             int(error_code),
             str(msg),
@@ -240,7 +240,7 @@ class XmlRpcServer(threading.Thread):
     def __new__(cls, local_port: int) -> XmlRpcServer:
         """Create new XmlRPC server."""
         if (xml_rpc := cls._instances.get(local_port)) is None:
-            _LOGGER.info("Creating XmlRpc server")
+            _LOGGER.debug("Creating XmlRpc server")
             xml_rpc = super(XmlRpcServer, cls).__new__(cls)
             if local_port == PORT_ANY:
                 local_port = find_free_port()
@@ -253,18 +253,18 @@ class XmlRpcServer(threading.Thread):
         """
         Run the XmlRPC-Server thread.
         """
-        _LOGGER.info(
+        _LOGGER.debug(
             "run: Starting XmlRPC-Server at http://%s:%i", IP_ANY_V4, self.local_port
         )
         self._simple_xml_rpc_server.serve_forever()
 
     def stop(self) -> None:
         """Stops the XmlRPC-Server."""
-        _LOGGER.info("stop: Shutting down XmlRPC-Server")
+        _LOGGER.debug("stop: Shutting down XmlRPC-Server")
         self._simple_xml_rpc_server.shutdown()
         _LOGGER.debug("stop: Stopping XmlRPC-Server")
         self._simple_xml_rpc_server.server_close()
-        _LOGGER.info("stop: XmlRPC-Server stopped")
+        _LOGGER.debug("stop: XmlRPC-Server stopped")
         if self.local_port in self._instances:
             del self._instances[self.local_port]
 
@@ -304,20 +304,20 @@ def register_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
     xml_rpc = XmlRpcServer(local_port=local_port)
     if not xml_rpc.started:
         xml_rpc.start()
-        _LOGGER.info("register_xml_rpc_server: Starting XmlRPC-Server.")
+        _LOGGER.debug("register_xml_rpc_server: Starting XmlRPC-Server.")
     return xml_rpc
 
 
 def un_register_xml_rpc_server(local_port: int = PORT_ANY) -> bool:
     """Unregister the xml rpc server."""
     xml_rpc = XmlRpcServer(local_port=local_port)
-    _LOGGER.info("stop: Trying to shut down XmlRPC-Server")
+    _LOGGER.debug("stop: Trying to shut down XmlRPC-Server")
     if xml_rpc and xml_rpc.no_central_registered:
         xml_rpc.stop()
-        _LOGGER.info("stop: XmlRPC-Server stopped")
+        _LOGGER.debug("stop: XmlRPC-Server stopped")
         return True
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "stop: shared XmlRPC-Server NOT stopped. There is still another central instance registered."
     )
     return False
