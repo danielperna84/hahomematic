@@ -468,11 +468,6 @@ class CentralUnit:
                 # Do we check for duplicates here? For now, we do.
                 device: HmDevice | None = None
                 if device_address in self.hm_devices:
-                    _LOGGER.debug(
-                        "create_devices: Skipping device %s on %s, already exists.",
-                        device_address,
-                        interface_id,
-                    )
                     continue
                 try:
                     device = HmDevice(
