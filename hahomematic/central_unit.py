@@ -478,7 +478,7 @@ class CentralUnit:
 
                 except Exception as err:
                     _LOGGER.error(
-                        "create_devices: %s [%s] Failed to create device: %s, %s",
+                        "create_devices failed: %s [%s] Unable to create device: %s, %s",
                         type(err).__name__,
                         err.args,
                         interface_id,
@@ -492,7 +492,7 @@ class CentralUnit:
                         self.hm_devices[device_address] = device
                 except Exception as err:
                     _LOGGER.error(
-                        "create_devices: %s [%s] Failed to create entities: %s, %s",
+                        "create_devices failed: %s [%s] Unable to create entities: %s, %s",
                         type(err).__name__,
                         err.args,
                         interface_id,
@@ -602,7 +602,7 @@ class CentralUnit:
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:
                     _LOGGER.error(
-                        "add_new_devices: %s [%s]", type(err).__name__, err.args
+                        "add_new_devices failed: %s [%s]", type(err).__name__, err.args
                     )
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
@@ -837,10 +837,10 @@ class ConnectionChecker(threading.Thread):
                             # refresh entity data
                             await self._central.device_data.refesh_entity_data()
             except NoConnection as nex:
-                _LOGGER.error("check_connection: no connection: %s", nex.args)
+                _LOGGER.error("check_connection failed: no connection: %s", nex.args)
                 continue
             except Exception as err:
-                _LOGGER.error("check_connection: %s [%s]", type(err).__name__, err.args)
+                _LOGGER.error("check_connection failed: %s [%s]", type(err).__name__, err.args)
             await asyncio.sleep(connection_checker_interval)
 
 

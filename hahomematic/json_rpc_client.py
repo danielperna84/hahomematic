@@ -126,7 +126,7 @@ class JsonRpcAioHttpClient:
             return await self._do_login()
         except ClientError as cer:
             _LOGGER.error(
-                "_do_renew_login: ClientError [%s] while renewing JSON-RPC session",
+                "_do_renew_login failed: ClientError [%s] while renewing JSON-RPC session",
                 cer.args,
             )
             return None
@@ -319,7 +319,7 @@ class JsonRpcAioHttpClient:
                     return await response.json(encoding="utf-8")
                 except ValueError as ver:
                     _LOGGER.error(
-                        "_do_post: ValueError [%s] Failed to parse JSON. Trying workaround",
+                        "_do_post failed: ValueError [%s] Unable to parse JSON. Trying workaround",
                         ver.args,
                     )
                     # Workaround for bug in CCU
@@ -330,16 +330,16 @@ class JsonRpcAioHttpClient:
                 _LOGGER.warning("_do_post failed: Status: %i", response.status)
                 return {"error": response.status, "result": {}}
         except ClientConnectorError as err:
-            _LOGGER.error("_do_post: ClientConnectorError")
+            _LOGGER.error("_do_post failed: ClientConnectorError")
             return {"error": str(err), "result": {}}
         except ClientError as cce:
-            _LOGGER.error("_do_post: ClientError")
+            _LOGGER.error("_do_post failed: ClientError")
             return {"error": str(cce), "result": {}}
         except TypeError as ter:
-            _LOGGER.error("_do_post: TypeError")
+            _LOGGER.error("_do_post failed: TypeError")
             return {"error": str(ter), "result": {}}
         except OSError as oer:
-            _LOGGER.error("_do_post: OSError")
+            _LOGGER.error("_do_post failed: OSError")
             return {"error": str(oer), "result": {}}
         except Exception as ex:
             raise HaHomematicException from ex
@@ -366,7 +366,7 @@ class JsonRpcAioHttpClient:
                 _LOGGER.warning("_do_logout failed: Logout error: %s", response[ATTR_RESULT])
         except ClientError as cer:
             _LOGGER.error(
-                "logout: ClientError [%s] while logging in via JSON-RPC", cer.args
+                "logout failed: ClientError [%s] while logging in via JSON-RPC", cer.args
             )
         return
 
@@ -524,7 +524,7 @@ class JsonRpcAioHttpClient:
                         )
                     except ValueError as verr:
                         _LOGGER.error(
-                            "get_all_system_variables: ValueError [%s] Failed to parse SysVar %s ",
+                            "get_all_system_variables failed: ValueError [%s] Failed to parse SysVar %s ",
                             verr.args,
                             name,
                         )

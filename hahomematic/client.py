@@ -111,7 +111,7 @@ class Client(ABC):
             _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
         except BaseHomematicException as hhe:
             _LOGGER.error(
-                "proxy_init: %s [%s] Failed to initialize proxy for %s",
+                "proxy_init failed: %s [%s] Unable to initialize proxy for %s",
                 hhe.name,
                 hhe.args,
                 self.interface_id,
@@ -136,7 +136,7 @@ class Client(ABC):
             await self._proxy.init(self.config.init_url)
         except BaseHomematicException as hhe:
             _LOGGER.error(
-                "proxy_de_init: %s [%s] Failed to de-initialize proxy for %s",
+                "proxy_de_init failed: %s [%s] Unable to de-initialize proxy for %s",
                 hhe.name,
                 hhe.args,
                 self.interface_id,
@@ -658,7 +658,7 @@ class ClientCCU(Client):
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.error("ping: failed for %s [%s]", hhe.name, hhe.args)
+            _LOGGER.error("ping failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
