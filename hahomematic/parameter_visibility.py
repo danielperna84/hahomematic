@@ -421,7 +421,8 @@ class ParameterVisibilityCache:
                 self._un_ignore_parameters_general[PARAMSET_KEY_VALUES].add(line)
         except Exception:
             _LOGGER.warning(
-                "add_line_to_cache failed: Could not add line '%s' to un ignore cache.", line
+                "add_line_to_cache failed: Could not add line '%s' to un ignore cache.",
+                line,
             )
 
     def is_relevant_paramset(

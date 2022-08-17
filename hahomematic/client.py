@@ -804,7 +804,9 @@ class ClientHomegear(Client):
         try:
             await self._proxy.deleteSystemVariable(name)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("delete_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "delete_system_variable failed: %s [%s]", hhe.name, hhe.args
+            )
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
@@ -823,7 +825,9 @@ class ClientHomegear(Client):
                 for name, value in hg_variables.items():
                     variables.append(SystemVariableData(name=name, value=value))
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_all_system_variables failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "get_all_system_variables failed: %s [%s]", hhe.name, hhe.args
+            )
         return variables
 
     async def get_available_interfaces(self) -> list[str]:

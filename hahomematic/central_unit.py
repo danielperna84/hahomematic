@@ -432,7 +432,9 @@ class CentralUnit:
             await self.device_details.load()
             await self.device_data.load()
         except json.decoder.JSONDecodeError:
-            _LOGGER.warning("load_caches failed: Unable to load caches for %s.", self.name)
+            _LOGGER.warning(
+                "load_caches failed: Unable to load caches for %s.", self.name
+            )
             await self.clear_all()
 
     async def _create_devices(self) -> None:
@@ -840,7 +842,9 @@ class ConnectionChecker(threading.Thread):
                 _LOGGER.error("check_connection failed: no connection: %s", nex.args)
                 continue
             except Exception as err:
-                _LOGGER.error("check_connection failed: %s [%s]", type(err).__name__, err.args)
+                _LOGGER.error(
+                    "check_connection failed: %s [%s]", type(err).__name__, err.args
+                )
             await asyncio.sleep(connection_checker_interval)
 
 

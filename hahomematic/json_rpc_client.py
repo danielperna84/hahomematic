@@ -177,7 +177,9 @@ class JsonRpcAioHttpClient:
             return session_id
         except BaseHomematicException as hhe:
             _LOGGER.error(
-                "_do_login failed: %s [%s] while logging in via JSON-RPC", hhe.name, hhe.args
+                "_do_login failed: %s [%s] while logging in via JSON-RPC",
+                hhe.name,
+                hhe.args,
             )
             return None
 
@@ -363,10 +365,13 @@ class JsonRpcAioHttpClient:
             )
             _LOGGER.debug("_do_logout: Method: %s [%s]", method, session_id)
             if response[ATTR_ERROR]:
-                _LOGGER.warning("_do_logout failed: Logout error: %s", response[ATTR_RESULT])
+                _LOGGER.warning(
+                    "_do_logout failed: Logout error: %s", response[ATTR_RESULT]
+                )
         except ClientError as cer:
             _LOGGER.error(
-                "logout failed: ClientError [%s] while logging in via JSON-RPC", cer.args
+                "logout failed: ClientError [%s] while logging in via JSON-RPC",
+                cer.args,
             )
         return
 
@@ -438,7 +443,9 @@ class JsonRpcAioHttpClient:
                 deleted = json_result
                 _LOGGER.debug("delete_system_variable: Deleted: %s", str(deleted))
         except BaseHomematicException as hhe:
-            _LOGGER.warning("delete_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "delete_system_variable failed: %s [%s]", hhe.name, hhe.args
+            )
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
@@ -530,7 +537,9 @@ class JsonRpcAioHttpClient:
                         )
 
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_all_system_variables failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "get_all_system_variables failed: %s [%s]", hhe.name, hhe.args
+            )
 
         return variables
 
@@ -573,7 +582,9 @@ class JsonRpcAioHttpClient:
                             channel_ids_room[channel_id] = set()
                         channel_ids_room[channel_id].add(room["name"])
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_all_channel_ids_per_room failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "get_all_channel_ids_per_room failed: %s [%s]", hhe.name, hhe.args
+            )
 
         return channel_ids_room
 
@@ -617,7 +628,9 @@ class JsonRpcAioHttpClient:
                 for interface in json_result:
                     interfaces.append(interface[ATTR_NAME])
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_available_interfaces failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "get_available_interfaces failed: %s [%s]", hhe.name, hhe.args
+            )
 
         return interfaces
 
