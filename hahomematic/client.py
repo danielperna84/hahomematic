@@ -966,3 +966,11 @@ async def create_client(
 def get_interface_id(instance_name: str, interface: str) -> str:
     """Return the interface id."""
     return f"{instance_name}-{interface}"
+
+
+def get_client_by_interface_id(interface_id: str) -> Client | None:
+    """Return client by interface_id"""
+    for central in hm_central.CENTRAL_INSTANCES.values():
+        if client := central.get_client_by_interface_id(interface_id=interface_id):
+            return client
+    return None

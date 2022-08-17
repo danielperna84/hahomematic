@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 import threading
-from typing import Any
+from typing import Any, Final
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 import hahomematic.central_unit as hm_central
@@ -22,6 +22,7 @@ from hahomematic.const import (
     PORT_ANY,
 )
 from hahomematic.decorators import callback_event, callback_system_event
+from hahomematic.helpers import find_free_port
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,39 +210,43 @@ class XmlRpcServer(threading.Thread):
     XML-RPC server thread to handle messages from CCU / Homegear.
     """
 
-    _instances: dict[int, XmlRpcServer] = {}
+    _initialized: bool = False
+    _instances: Final[dict[int, XmlRpcServer]] = {}
 
     def __init__(
         self,
         local_port: int = PORT_ANY,
     ):
         """Init XmlRPC server."""
-        if len(self._simple_xml_rpc_server.funcs) == 0:
-            _LOGGER.debug("__init__: Register functions")
-            self._simple_xml_rpc_server.register_introspection_functions()
-            self._simple_xml_rpc_server.register_multicall_functions()
-        if self._simple_xml_rpc_server.instance is None:
-            _LOGGER.debug("__init__: Create thread")
-            threading.Thread.__init__(self)
-            _LOGGER.debug("__init__: Registering RPC instance")
-            self._simple_xml_rpc_server.register_instance(
-                RPCFunctions(self), allow_dotted_names=True
-            )
+        if self._initialized:
+            return
+        self._initialized = True
+        threading.Thread.__init__(self)
+        self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
+            (IP_ANY_V4, self.local_port),
+            requestHandler=RequestHandler,
+            logRequests=False,
+            allow_none=True,
+        )
+        _LOGGER.debug("__init__: Register functions")
+        self._simple_xml_rpc_server.register_introspection_functions()
+        self._simple_xml_rpc_server.register_multicall_functions()
+        _LOGGER.debug("__init__: Registering RPC instance")
+        self._simple_xml_rpc_server.register_instance(
+            RPCFunctions(self), allow_dotted_names=True
+        )
+        self._centrals: Final[dict[str, hm_central.CentralUnit]] = {}
 
     def __new__(cls, local_port: int) -> XmlRpcServer:
         """Create new XmlRPC server."""
         if (xml_rpc := cls._instances.get(local_port)) is None:
             _LOGGER.info("Creating XmlRpc server")
             xml_rpc = super(XmlRpcServer, cls).__new__(cls)
-            cls._simple_xml_rpc_server = HaHomematicXMLRPCServer(
-                (IP_ANY_V4, local_port),
-                requestHandler=RequestHandler,
-                logRequests=False,
-                allow_none=True,
-            )
-            cls.local_port: int = cls._simple_xml_rpc_server.socket.getsockname()[1]
-            cls._centrals: dict[str, hm_central.CentralUnit] = {}
-            cls._instances[cls.local_port] = xml_rpc
+            if local_port == PORT_ANY:
+                local_port = find_free_port()
+
+            cls.local_port: int = local_port
+            cls._instances[local_port] = xml_rpc
         return xml_rpc
 
     def run(self) -> None:
@@ -259,7 +264,9 @@ class XmlRpcServer(threading.Thread):
         self._simple_xml_rpc_server.shutdown()
         _LOGGER.debug("stop: Stopping XmlRPC-Server")
         self._simple_xml_rpc_server.server_close()
-        _LOGGER.info("stop: Server XmlRPC-Server")
+        _LOGGER.info("stop: XmlRPC-Server stopped")
+        if self.local_port in self._instances:
+            del self._instances[self.local_port]
 
     @property
     def started(self) -> bool:
