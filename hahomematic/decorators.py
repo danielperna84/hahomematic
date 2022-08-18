@@ -47,7 +47,7 @@ def callback_system_event(name: str) -> Callable:
                 client = hm_client.get_client_by_interface_id(interface_id=interface_id)
             except Exception as err:
                 _LOGGER.warning(
-                    "exec_callback_system_event: Failed to reduce args for callback_system_event."
+                    "exec_callback_system_event failed: Unable to reduce args for callback_system_event."
                 )
                 raise HaHomematicException(
                     "args-exception callback_system_event"
@@ -92,7 +92,7 @@ def callback_event(func: Callable) -> Callable:
             client = hm_client.get_client_by_interface_id(interface_id=interface_id)
         except Exception as err:
             _LOGGER.warning(
-                "exec_callback_entity_event: Failed to reduce args for callback_event."
+                "exec_callback_entity_event failed: Unable to reduce args for callback_event."
             )
             raise HaHomematicException("args-exception callback_event") from err
         if client:
