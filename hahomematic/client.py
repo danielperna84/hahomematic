@@ -337,7 +337,7 @@ class Client(ABC):
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        call_source: HmCallSource = HmCallSource.MANUAL,
+        call_source: HmCallSource = HmCallSource.MANUAL_OR_SCHEDULED,
     ) -> Any:
         """Return a value from CCU."""
         try:

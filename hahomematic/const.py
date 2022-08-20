@@ -335,10 +335,9 @@ class HmEventType(StrEnum):
 class HmCallSource(StrEnum):
     """Enum with sources for calls."""
 
-    MANUAL = "manual"
+    MANUAL_OR_SCHEDULED = "manual_or_scheduled"
     HA_INIT = "ha_init"
     HM_INIT = "hm_init"
-    SCHEDULED = "schedueld"
 
 
 class HmInterfaceEventType(StrEnum):
