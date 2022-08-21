@@ -1,6 +1,7 @@
 """Module for the hub"""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, Final
 
@@ -189,6 +190,7 @@ class HmHub(CallbackEntity):
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
+            await asyncio.sleep(5)
             self._central.callback_system_event(
                 HH_EVENT_HUB_ENTITY_CREATED, new_sysvars
             )
