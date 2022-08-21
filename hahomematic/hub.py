@@ -1,6 +1,7 @@
 """Module for the hub"""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, Final
 
@@ -54,7 +55,7 @@ class HmHub(CallbackEntity):
             central=central, address=HUB_ADDRESS
         )
         self.name: Final[str] = central.name
-        self.syvar_entities: Final[dict[str, GenericSystemVariable]] = {}
+        self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
         self._hub_attributes: Final[dict[str, Any]] = {}
         self.platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
@@ -167,7 +168,7 @@ class HmHub(CallbackEntity):
             variables=variables
         )
         if missing_variable_names:
-            self._remove_sysvar_entity(names=missing_variable_names)
+            self._remove_sysvar_entity(del_entities=missing_variable_names)
 
         new_sysvars: list[GenericSystemVariable] = []
 
@@ -178,7 +179,7 @@ class HmHub(CallbackEntity):
                 self._hub_attributes[name] = value
                 continue
 
-            entity: GenericSystemVariable | None = self.syvar_entities.get(name)
+            entity: GenericSystemVariable | None = self.sysvar_entities.get(name)
             if entity:
                 entity.update_value(value)
             else:
@@ -189,6 +190,7 @@ class HmHub(CallbackEntity):
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
+            await asyncio.sleep(5)
             self._central.callback_system_event(
                 HH_EVENT_HUB_ENTITY_CREATED, new_sysvars
             )
@@ -204,7 +206,7 @@ class HmHub(CallbackEntity):
     ) -> GenericSystemVariable:
         """Create system variable as entity."""
         sysvar_entity = self._create_sysvar_entity(data=data)
-        self.syvar_entities[data.name] = sysvar_entity
+        self.sysvar_entities[data.name] = sysvar_entity
         return sysvar_entity
 
     def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
@@ -237,21 +239,21 @@ class HmHub(CallbackEntity):
                 del self.program_entities[pid]
         self.update_entity()
 
-    def _remove_sysvar_entity(self, names: list[str]) -> None:
+    def _remove_sysvar_entity(self, del_entities: set[str]) -> None:
         """Remove sysvar entity from hub."""
-        for name in names:
+        for name in del_entities:
             if name in self._hub_attributes:
                 del self._hub_attributes[name]
 
-            if name in self.syvar_entities:
-                entity = self.syvar_entities[name]
+            if name in self.sysvar_entities:
+                entity = self.sysvar_entities[name]
                 entity.remove_entity()
-                del self.syvar_entities[name]
+                del self.sysvar_entities[name]
         self.update_entity()
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        if entity := self.syvar_entities.get(name):
+        if entity := self.sysvar_entities.get(name):
             await entity.send_variable(value=value)
         elif name in self.attributes:
             await self._central.set_system_variable(name=name, value=value)
@@ -269,16 +271,19 @@ class HmHub(CallbackEntity):
 
     def _identify_missing_variable_names(
         self, variables: list[SystemVariableData]
-    ) -> list[str]:
+    ) -> set[str]:
         """Identify missing variables."""
-        variable_names: list[str] = [x.name for x in variables]
-        missing_variables: list[str] = []
+        variable_names: dict[str, bool] = {x.name: x.extended_sysvar for x in variables}
+        missing_variables: set[str] = set()
         for name in self._hub_attributes:
-            if name not in variable_names:
-                missing_variables.append(name)
-        for name in self.syvar_entities:
-            if name not in variable_names:
-                missing_variables.append(name)
+            if name not in variable_names.keys():
+                missing_variables.add(name)
+        for sysvar_entity in self.sysvar_entities.values():
+            ccu_name = sysvar_entity.ccu_var_name
+            if ccu_name not in variable_names.keys() or (
+                sysvar_entity.is_extended is not variable_names.get(ccu_name)
+            ):
+                missing_variables.add(ccu_name)
         return missing_variables
 
 

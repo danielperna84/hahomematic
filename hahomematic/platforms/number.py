@@ -73,6 +73,7 @@ class HmSysvarNumber(GenericSystemVariable):
     """
 
     _attr_platform = HmPlatform.HUB_NUMBER
+    _attr_is_extended = True
 
     async def send_variable(self, value: float) -> None:
         """Set the value of the entity."""

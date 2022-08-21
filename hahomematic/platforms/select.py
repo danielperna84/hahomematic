@@ -44,6 +44,7 @@ class HmSysvarSelect(GenericSystemVariable):
     """
 
     _attr_platform = HmPlatform.HUB_SELECT
+    _attr_is_extended = True
 
     @property
     def value(self) -> str | None:

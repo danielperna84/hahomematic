@@ -1,5 +1,6 @@
 Version 2022.8.11 (2022-08-18)
 - Adjust logging (level and message)
+- Delete sysvar if type changes
 
 Version 2022.8.10 (2022-08-16)
 - Improve readability of XmlRpc server
