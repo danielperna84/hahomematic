@@ -853,6 +853,8 @@ class GenericHubEntity(CallbackEntity):
 class GenericSystemVariable(GenericHubEntity):
     """Class for a homematic system variable."""
 
+    _attr_is_extended = False
+
     def __init__(
         self,
         central: hm_central.CentralUnit,
@@ -888,6 +890,11 @@ class GenericSystemVariable(GenericHubEntity):
         if isinstance(self._value, (int, float)):
             return " "
         return None
+
+    @property
+    def is_extended(self) -> bool:
+        """Return if the entity is an extended type."""
+        return self._attr_is_extended
 
     def get_name(self, data: HubData) -> str:
         """Return the name of the sysvar entity."""

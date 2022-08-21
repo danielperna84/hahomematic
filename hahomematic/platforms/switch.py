@@ -56,3 +56,4 @@ class HmSysvarSwitch(GenericSystemVariable):
     """
 
     _attr_platform = HmPlatform.HUB_SWITCH
+    _attr_is_extended = True
