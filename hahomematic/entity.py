@@ -15,6 +15,7 @@ import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_ADDRESS,
+    ATTR_DEVICE_TYPE,
     ATTR_HM_DEFAULT,
     ATTR_HM_FLAGS,
     ATTR_HM_MAX,
@@ -26,6 +27,7 @@ from hahomematic.const import (
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
+    ATTR_PLATFORM,
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -564,7 +566,9 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         return {
             ATTR_INTERFACE_ID: self.device.interface_id,
             ATTR_ADDRESS: self.device.device_address,
+            ATTR_DEVICE_TYPE: self.device.device_type,
             ATTR_PARAMETER: self.parameter,
+            ATTR_PLATFORM: self.platform,
             ATTR_VALUE: value,
         }
 
