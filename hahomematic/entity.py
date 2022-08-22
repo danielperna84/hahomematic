@@ -568,7 +568,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             ATTR_ADDRESS: self.device.device_address,
             ATTR_DEVICE_TYPE: self.device.device_type,
             ATTR_PARAMETER: self.parameter,
-            ATTR_PLATFORM: self.platform,
+            ATTR_PLATFORM: self.platform.value,
             ATTR_VALUE: value,
         }
 
