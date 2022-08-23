@@ -1,6 +1,6 @@
 # unignore
 
-_Hahomematic_ maintains a [list] (https://github.com/danielperna84/hahomematic/wiki/Ignored-Parameters) of parameters that should be ignored when entities are created for _Home-Assistant_.
+_Hahomematic_ maintains a [list](https://github.com/danielperna84/hahomematic/wiki/Ignored-Parameters) of parameters that should be ignored when entities are created for _Home-Assistant_.
 These parameters are filtered out to provide a better user experience for the majority of the users.
 
 But there is also a group of users that wants to do more... _things_.
