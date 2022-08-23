@@ -27,7 +27,6 @@ from hahomematic.const import (
     ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
-    ATTR_PLATFORM,
     ATTR_SUBTYPE,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -323,6 +322,46 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             )
         )
 
+    def _check_event_parameters(
+        self,
+        interface_id: str,
+        channel_address: str,
+        parameter: str,
+        value: Any,
+        old_value: Any = None,
+    ) -> bool:
+        """Check the parameters of an event."""
+        _LOGGER.debug(
+            "event: %s, %s, %s, new: %s, old: %s",
+            interface_id,
+            channel_address,
+            parameter,
+            value,
+            old_value,
+        )
+        if interface_id != self.device.interface_id:
+            _LOGGER.warning(
+                "event failed: Incorrect interface_id: %s - should be: %s",
+                interface_id,
+                self.device.interface_id,
+            )
+            return False
+        if channel_address != self.channel_address:
+            _LOGGER.warning(
+                "event failed: Incorrect address: %s - should be: %s",
+                channel_address,
+                self.channel_address,
+            )
+            return False
+        if parameter != self.parameter:
+            _LOGGER.warning(
+                "event failed: Incorrect parameter: %s - should be: %s",
+                parameter,
+                self.parameter,
+            )
+            return False
+        return True
+
     def _convert_value(self, value: ParameterT) -> ParameterT:
         """Convert to value to ParameterT"""
         if value is None:
@@ -459,34 +498,13 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         if self._value == value:
             return
 
-        _LOGGER.debug(
-            "event: %s, %s, %s, new: %s, old: %s",
-            interface_id,
-            channel_address,
-            parameter,
-            value,
-            self._value,
-        )
-        if interface_id != self.device.interface_id:
-            _LOGGER.warning(
-                "event failed: Incorrect interface_id: %s - should be: %s",
-                interface_id,
-                self.device.interface_id,
-            )
-            return
-        if channel_address != self.channel_address:
-            _LOGGER.warning(
-                "event failed: Incorrect address: %s - should be: %s",
-                channel_address,
-                self.channel_address,
-            )
-            return
-        if parameter != self.parameter:
-            _LOGGER.warning(
-                "event failed: Incorrect parameter: %s - should be: %s",
-                parameter,
-                self.parameter,
-            )
+        if not self._check_event_parameters(
+            interface_id=interface_id,
+            channel_address=channel_address,
+            parameter=parameter,
+            value=value,
+            old_value=old_value,
+        ):
             return
 
         self.update_value(value=value)
@@ -980,33 +998,12 @@ class BaseEvent(BaseParameterEntity[bool]):
         """
         Handle event for which this handler has subscribed.
         """
-        _LOGGER.debug(
-            "event: %s, %s, %s, %s",
-            interface_id,
-            channel_address,
-            parameter,
-            value,
-        )
-        if interface_id != self.device.interface_id:
-            _LOGGER.warning(
-                "event failed: Incorrect interface_id: %s - should be: %s",
-                interface_id,
-                self.device.interface_id,
-            )
-            return
-        if channel_address != self.channel_address:
-            _LOGGER.warning(
-                "event failed: Incorrect address: %s - should be: %s",
-                channel_address,
-                self.channel_address,
-            )
-            return
-        if parameter != self.parameter:
-            _LOGGER.warning(
-                "event failed: Incorrect parameter: %s - should be: %s",
-                parameter,
-                self.parameter,
-            )
+        if not self._check_event_parameters(
+            interface_id=interface_id,
+            channel_address=channel_address,
+            parameter=parameter,
+            value=value,
+        ):
             return
 
         # fire an event
@@ -1016,6 +1013,26 @@ class BaseEvent(BaseParameterEntity[bool]):
     def value(self) -> Any:
         """Return the value."""
         return self._value
+
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
+        """Get the event_data."""
+        return {
+            ATTR_INTERFACE_ID: self.device.interface_id,
+            ATTR_ADDRESS: self.device.device_address,
+            ATTR_TYPE: self.parameter.lower(),
+            ATTR_SUBTYPE: self.channel_no,
+            ATTR_VALUE: value,
+        }
+
+    def fire_event(self, value: Any) -> None:
+        """
+        Do what is needed to fire an event.
+        """
+        if callable(self._central.callback_ha_event):
+            self._central.callback_ha_event(
+                self.event_type,
+                self.get_event_data(value=value),
+            )
 
     def _generate_entity_name_data(self) -> EntityNameData:
         """Create the name for the entity."""
@@ -1056,16 +1073,6 @@ class BaseEvent(BaseParameterEntity[bool]):
     def _set_last_update(self) -> None:
         self._last_update = datetime.now()
 
-    @abstractmethod
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-
-    @abstractmethod
-    def fire_event(self, value: Any) -> None:
-        """
-        Do what is needed to fire an event.
-        """
-
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
         del self._central.entity_event_subscriptions[
@@ -1080,25 +1087,6 @@ class ClickEvent(BaseEvent):
 
     _attr_event_type = HmEventType.KEYPRESS
 
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        return {
-            ATTR_INTERFACE_ID: self.device.interface_id,
-            ATTR_ADDRESS: self.device.device_address,
-            ATTR_TYPE: self.parameter.lower(),
-            ATTR_SUBTYPE: self.channel_no,
-        }
-
-    def fire_event(self, value: Any) -> None:
-        """
-        Do what is needed to fire an event.
-        """
-        if callable(self._central.callback_ha_event):
-            self._central.callback_ha_event(
-                self.event_type,
-                self.get_event_data(),
-            )
-
 
 class ImpulseEvent(BaseEvent):
     """
@@ -1106,25 +1094,6 @@ class ImpulseEvent(BaseEvent):
     """
 
     _attr_event_type = HmEventType.IMPULSE
-
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        return {
-            ATTR_INTERFACE_ID: self.device.interface_id,
-            ATTR_ADDRESS: self.device.device_address,
-            ATTR_TYPE: self.parameter.lower(),
-            ATTR_SUBTYPE: self.channel_no,
-        }
-
-    def fire_event(self, value: Any) -> None:
-        """
-        Do what is needed to fire an event.
-        """
-        if callable(self._central.callback_ha_event):
-            self._central.callback_ha_event(
-                self.event_type,
-                self.get_event_data(),
-            )
 
 
 def fix_unit(unit: str | None) -> str | None:

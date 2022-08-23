@@ -263,7 +263,7 @@ class JsonRpcAioHttpClient:
         return response
 
     def _get_script(self, script_name: str) -> str | None:
-        """Return a script from the script cache. Load if requires."""
+        """Return a script from the script cache. Load if required."""
         if script_name in self._script_cache:
             return self._script_cache[script_name]
 

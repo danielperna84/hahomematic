@@ -296,7 +296,7 @@ def _is_excluded(variable: str, exclude_list: list[str]) -> bool:
 
 
 def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:
-    "Clean variables by removing excluded."
+    """Clean variables by removing excluded."""
     cleaned_variables: list[SystemVariableData] = []
     for sysvar in variables:
         if _is_excluded(sysvar.name, EXCLUDED):
