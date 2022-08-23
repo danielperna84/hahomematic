@@ -339,6 +339,14 @@ class HmInterfaceEventType(StrEnum):
     CALLBACK = "callback"
 
 
+class HmForcedDeviceAvailability(StrEnum):
+    """Enum with hahomematic event types."""
+
+    FORCE_FALSE = "forced_not_available"
+    FORCE_TRUE = "forced_available"
+    NOT_SET = "not_set"
+
+
 AVAILABLE_HM_PLATFORMS = [
     HmPlatform.BINARY_SENSOR,
     HmPlatform.BUTTON,
