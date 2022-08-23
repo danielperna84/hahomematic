@@ -37,6 +37,7 @@ from hahomematic.const import (
     PROXY_INIT_FAILED,
     PROXY_INIT_SUCCESS,
     HmCallSource,
+    HmForcedDeviceAvailability,
     HmInterfaceEventType,
 )
 from hahomematic.device import HmDevice
@@ -107,7 +108,9 @@ class Client(ABC):
                 "proxy_init: init('%s', '%s')", self.config.init_url, self.interface_id
             )
             await self._proxy.init(self.config.init_url, self.interface_id)
-            self._mark_all_devices_availability(available=True)
+            self._mark_all_devices_forced_availability(
+                forced_availability=HmForcedDeviceAvailability.NOT_SET
+            )
             _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
         except BaseHomematicException as hhe:
             _LOGGER.error(
@@ -152,12 +155,17 @@ class Client(ABC):
             return await self.proxy_init()
         return PROXY_DE_INIT_FAILED
 
-    def _mark_all_devices_availability(self, available: bool) -> None:
+    def _mark_all_devices_forced_availability(
+        self, forced_availability: HmForcedDeviceAvailability
+    ) -> None:
         """Mark device's availability state for this interface."""
+        available = forced_availability != HmForcedDeviceAvailability.FORCE_FALSE
         if self._available != available:
             for hm_device in self.central.hm_devices.values():
                 if hm_device.interface_id == self.interface_id:
-                    hm_device.set_availability(value=available)
+                    hm_device.set_forced_availability(
+                        forced_availability=forced_availability
+                    )
             self._available = available
             _LOGGER.warning(
                 "mark_all_devices_availability: marked all devices %s for %s",
@@ -207,7 +215,9 @@ class Client(ABC):
         """
         is_connected = await self._check_connection()
         if not is_connected:
-            self._mark_all_devices_availability(available=False)
+            self._mark_all_devices_forced_availability(
+                forced_availability=HmForcedDeviceAvailability.FORCE_FALSE
+            )
             return False
 
         if (datetime.now() - self.last_updated).total_seconds() < CHECK_INTERVAL:

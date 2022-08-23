@@ -41,6 +41,7 @@ from hahomematic.const import (
     TYPE_INTEGER,
     TYPE_STRING,
     HmCallSource,
+    HmForcedDeviceAvailability,
 )
 from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
@@ -103,7 +104,9 @@ class HmDevice:
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
         self._last_update: datetime = INIT_DATETIME
-        self._available: bool = True
+        self._forced_availability: HmForcedDeviceAvailability = (
+            HmForcedDeviceAvailability.NOT_SET
+        )
         self._update_callbacks: list[Callable] = []
         self.device_type: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
@@ -255,8 +258,8 @@ class HmDevice:
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
-        if self._available is False:
-            return False
+        if self._forced_availability != HmForcedDeviceAvailability.NOT_SET:
+            return self._forced_availability == HmForcedDeviceAvailability.FORCE_TRUE
         un_reach = self._e_unreach
         if un_reach is None:
             un_reach = self._e_sticky_un_reach
@@ -274,10 +277,12 @@ class HmDevice:
             return self._e_config_pending.value is True
         return False
 
-    def set_availability(self, value: bool) -> None:
+    def set_forced_availability(
+        self, forced_availability: HmForcedDeviceAvailability
+    ) -> None:
         """Set the availability of the device."""
-        if not self._available == value:
-            self._available = value
+        if not self._forced_availability == forced_availability:
+            self._forced_availability = forced_availability
             for entity in self.entities.values():
                 entity.update_entity()
 

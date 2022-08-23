@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 
 from hahomematic.backport import StrEnum
 
@@ -337,6 +338,14 @@ class HmInterfaceEventType(StrEnum):
 
     PROXY = "proxy"
     CALLBACK = "callback"
+
+
+class HmForcedDeviceAvailability(Enum):
+    """Enum with hahomematic event types."""
+
+    FORCE_FALSE = False
+    FORCE_TRUE = True
+    NOT_SET = None
 
 
 AVAILABLE_HM_PLATFORMS = [
