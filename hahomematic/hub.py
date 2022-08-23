@@ -15,6 +15,7 @@ from hahomematic.const import (
     SYSVAR_TYPE_ALARM,
     SYSVAR_TYPE_LIST,
     SYSVAR_TYPE_LOGIC,
+    SYSVAR_TYPE_STRING,
     HmEntityUsage,
     HmPlatform,
 )
@@ -279,6 +280,8 @@ class HmHub(CallbackEntity):
             if name not in variable_names.keys():
                 missing_variables.add(name)
         for sysvar_entity in self.sysvar_entities.values():
+            if sysvar_entity.data_type == SYSVAR_TYPE_STRING:
+                continue
             ccu_name = sysvar_entity.ccu_var_name
             if ccu_name not in variable_names.keys() or (
                 sysvar_entity.is_extended is not variable_names.get(ccu_name)
