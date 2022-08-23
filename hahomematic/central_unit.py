@@ -336,7 +336,7 @@ class CentralUnit:
         """Identify local IP used for callbacks."""
 
         # Do not add: pylint disable=no-member
-        # This is only an issue on MacOS
+        # This is only an issue on macOS
         def get_local_ip(host: str) -> str | None:
             """Get local_ip from socket."""
             try:
