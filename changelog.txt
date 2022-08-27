@@ -1,3 +1,6 @@
+Version 2022.8.15 (2022-08-27)
+- Fix select entity detection
+
 Version 2022.8.14 (2022-08-23)
 - Exclude STRING sysvar from extended check
 

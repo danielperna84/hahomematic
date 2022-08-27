@@ -20,7 +20,7 @@ class HmSelect(GenericEntity[Union[int, str]]):
     This is a default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.SENSOR
+    _attr_platform = HmPlatform.SELECT
 
     @property
     def value(self) -> str | None:
