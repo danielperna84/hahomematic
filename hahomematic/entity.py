@@ -327,17 +327,13 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         interface_id: str,
         channel_address: str,
         parameter: str,
-        value: Any,
-        old_value: Any = None,
     ) -> bool:
         """Check the parameters of an event."""
         _LOGGER.debug(
-            "event: %s, %s, %s, new: %s, old: %s",
+            "event: %s, %s, %s",
             interface_id,
             channel_address,
             parameter,
-            value,
-            old_value,
         )
         if interface_id != self.device.interface_id:
             _LOGGER.warning(
@@ -502,8 +498,6 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             interface_id=interface_id,
             channel_address=channel_address,
             parameter=parameter,
-            value=value,
-            old_value=old_value,
         ):
             return
 
@@ -1002,7 +996,6 @@ class BaseEvent(BaseParameterEntity[bool]):
             interface_id=interface_id,
             channel_address=channel_address,
             parameter=parameter,
-            value=value,
         ):
             return
 
@@ -1016,13 +1009,17 @@ class BaseEvent(BaseParameterEntity[bool]):
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
-        return {
+        event_data = {
             ATTR_INTERFACE_ID: self.device.interface_id,
             ATTR_ADDRESS: self.device.device_address,
             ATTR_TYPE: self.parameter.lower(),
             ATTR_SUBTYPE: self.channel_no,
-            ATTR_VALUE: value,
         }
+
+        if value is not None:
+            event_data[ATTR_VALUE] = value
+
+        return event_data
 
     def fire_event(self, value: Any) -> None:
         """
