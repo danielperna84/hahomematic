@@ -221,6 +221,10 @@ class XmlRpcServer(threading.Thread):
         if self._initialized:
             return
         self._initialized = True
+        if local_port == PORT_ANY:
+            local_port = find_free_port()
+        self.local_port: int = local_port
+        self._instances[self.local_port] = self
         threading.Thread.__init__(self)
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
             (IP_ANY_V4, self.local_port),
@@ -242,11 +246,6 @@ class XmlRpcServer(threading.Thread):
         if (xml_rpc := cls._instances.get(local_port)) is None:
             _LOGGER.debug("Creating XmlRpc server")
             xml_rpc = super(XmlRpcServer, cls).__new__(cls)
-            if local_port == PORT_ANY:
-                local_port = find_free_port()
-
-            cls.local_port: int = local_port
-            cls._instances[local_port] = xml_rpc
         return xml_rpc
 
     def run(self) -> None:
@@ -295,9 +294,6 @@ class XmlRpcServer(threading.Thread):
         """Return if no central is registered."""
         return len(self._centrals) == 0
 
-    def instance(self) -> XmlRpcServer:
-        """Return the instance to a requested port"""
-
 
 def register_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
     """Register the xml rpc server."""
@@ -306,18 +302,3 @@ def register_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
         xml_rpc.start()
         _LOGGER.debug("register_xml_rpc_server: Starting XmlRPC-Server.")
     return xml_rpc
-
-
-def un_register_xml_rpc_server(local_port: int = PORT_ANY) -> bool:
-    """Unregister the xml rpc server."""
-    xml_rpc = XmlRpcServer(local_port=local_port)
-    _LOGGER.debug("stop: Trying to shut down XmlRPC-Server")
-    if xml_rpc and xml_rpc.no_central_registered:
-        xml_rpc.stop()
-        _LOGGER.debug("stop: XmlRPC-Server stopped")
-        return True
-
-    _LOGGER.debug(
-        "stop: shared XmlRPC-Server NOT stopped. There is still another central instance registered."
-    )
-    return False
