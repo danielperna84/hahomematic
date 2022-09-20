@@ -291,10 +291,7 @@ class CentralUnit:
                     self.clients[client.interface_id] = client
             except BaseHomematicException as ex:
                 self.fire_interface_event(
-                    interface_id=hm_client.get_interface_id(
-                        instance_name=self.name,
-                        interface=interface_config.interface,
-                    ),
+                    interface_id=interface_config.interface_id,
                     interface_event_type=HmInterfaceEventType.PROXY,
                     available=False,
                 )
@@ -788,7 +785,7 @@ class ConnectionChecker(threading.Thread):
     """
 
     def __init__(self, central: CentralUnit):
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name=f"ConnectionChecker for {central.name}")
         self._central: Final[CentralUnit] = central
         self._active = True
         self._central_is_connected = True

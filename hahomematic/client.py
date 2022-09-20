@@ -74,9 +74,7 @@ class Client(ABC):
         self.config: Final[_ClientConfig] = client_config
         self.central: Final[hm_central.CentralUnit] = client_config.central
         # This is the actual interface_id used for init
-        self.interface_id: Final[str] = get_interface_id(
-            instance_name=self.central.name, interface=client_config.interface
-        )
+        self.interface_id: Final[str] = client_config.interface_id
         # for all device related interaction
         self._proxy: Final[XmlRpcProxy] = client_config.xml_rpc_proxy
         self._proxy_read: Final[XmlRpcProxy] = client_config.xml_rpc_proxy_read
@@ -199,6 +197,7 @@ class Client(ABC):
     def stop(self) -> None:
         """Stop depending services."""
         self._proxy.stop()
+        self._proxy_read.stop()
 
     @abstractmethod
     async def fetch_all_device_data(self) -> None:
@@ -877,6 +876,7 @@ class _ClientConfig:
         self.central: Final[hm_central.CentralUnit] = central
         self.interface_config: Final[InterfaceConfig] = interface_config
         self.interface: Final[str] = interface_config.interface
+        self.interface_id: Final[str] = interface_config.interface_id
         self._callback_host: Final[str] = (
             central.config.callback_host if central.config.callback_host else local_ip
         )
@@ -904,6 +904,7 @@ class _ClientConfig:
         self.xml_rpc_proxy: Final[XmlRpcProxy] = XmlRpcProxy(
             central.loop,
             max_workers=1,
+            thread_name_prefix=f"XmlRpcProxy for {self.interface_id}",
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
             tls=central.config.tls,
@@ -912,6 +913,7 @@ class _ClientConfig:
         self.xml_rpc_proxy_read: Final[XmlRpcProxy] = XmlRpcProxy(
             central.loop,
             max_workers=1,
+            thread_name_prefix=f"XmlRpcProxyRead for {self.interface_id}",
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
             tls=central.config.tls,
@@ -948,11 +950,13 @@ class InterfaceConfig:
 
     def __init__(
         self,
+        central_name: str,
         interface: str,
         port: int,
         path: str | None = None,
     ):
         self.interface: Final[str] = interface
+        self.interface_id = f"{central_name}-{interface}"
         self.port: Final[int] = port
         self.path: Final[str | None] = path
         self.validate()
@@ -975,11 +979,6 @@ async def create_client(
     return await _ClientConfig(
         central=central, interface_config=interface_config, local_ip=local_ip
     ).get_client()
-
-
-def get_interface_id(instance_name: str, interface: str) -> str:
-    """Return the interface id."""
-    return f"{instance_name}-{interface}"
 
 
 def get_client_by_interface_id(interface_id: str) -> Client | None:
