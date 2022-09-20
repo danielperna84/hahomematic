@@ -225,7 +225,7 @@ class XmlRpcServer(threading.Thread):
             local_port = find_free_port()
         self.local_port: int = local_port
         self._instances[self.local_port] = self
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name=f"XmlRpcServer on port {self.local_port}")
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
             (IP_ANY_V4, self.local_port),
             requestHandler=RequestHandler,

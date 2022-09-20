@@ -57,23 +57,27 @@ class Example:
         )
 
     async def example_run(self):
+        central_name = "ccu-dev"
         interface_configs = {
             InterfaceConfig(
+                central_name=central_name,
                 interface="HmIP-Rf",
                 port=2010,
             ),
             InterfaceConfig(
+                central_name=central_name,
                 interface="BidCos-RF",
                 port=2001,
             ),
             InterfaceConfig(
+                central_name=central_name,
                 interface="VirtualDevices",
                 port=9292,
                 path="/groups",
             ),
         }
         self.central = await CentralConfig(
-            name="ccu-dev",
+            name=central_name,
             loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
             host=CCU_HOST,

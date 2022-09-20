@@ -1,5 +1,7 @@
 Version 2022.9.1 (2022-09-20)
 - Improve XmlServer shutdown
+- Add name to threads and executors
+- Improve ThreadPoolExecutor shutdown
 
 Version 2022.9.0 (2022-09-02)
 - Exclude value from event_data if None
