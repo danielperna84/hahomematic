@@ -16,6 +16,8 @@ Make sure you have read the release notes at https://github.com/danielperna84/cu
 
 Make sure you are running the latest version of the custom_component (and Home Assistant) before reporting an issue.
 
+ENSURE that your Backend (CCU/Homegear/...) is working as expected and connected devices are controllable.
+
 
 **custom_component version (if applicable):**
 1.x.x
