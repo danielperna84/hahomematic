@@ -8,7 +8,7 @@ from typing import Any, Final
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     BACKEND_CCU,
-    HH_EVENT_HUB_ENTITY_CREATED,
+    HH_EVENT_HUB_CREATED,
     HUB_ADDRESS,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
@@ -139,7 +139,7 @@ class HmHub(CallbackEntity):
             and callable(self._central.callback_system_event)
         ):
             self._central.callback_system_event(
-                HH_EVENT_HUB_ENTITY_CREATED, new_programs
+                HH_EVENT_HUB_CREATED, new_programs
             )
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
@@ -193,7 +193,7 @@ class HmHub(CallbackEntity):
         ):
             await asyncio.sleep(5)
             self._central.callback_system_event(
-                HH_EVENT_HUB_ENTITY_CREATED, new_sysvars
+                HH_EVENT_HUB_CREATED, new_sysvars
             )
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:
