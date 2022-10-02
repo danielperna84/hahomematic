@@ -299,6 +299,7 @@ class HmPlatform(StrEnum):
     CLIMATE = "climate"
     COVER = "cover"
     EVENT = "event"
+    HUB = "hub"
     HUB_BINARY_SENSOR = "hub_binary_sensor"
     HUB_BUTTON = "hub_button"
     HUB_NUMBER = "hub_number"
