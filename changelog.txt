@@ -1,5 +1,6 @@
 Version 2022.10.0 (2022-10-01)
 - Rename hub event
+- Remove "Servicemeldungen" from sysvars. It's alread included in the hub_entity (sensor.{instance_name})
 
 Version 2022.9.1 (2022-09-20)
 - Improve XmlServer shutdown

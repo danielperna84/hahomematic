@@ -38,11 +38,12 @@ EXCLUDED_FROM_SENSOR = [
     "pcCCUID",
 ]
 
+SERVICE_MESSAGES = "Servicemeldungen"
+
 EXCLUDED = [
     "OldVal",
+    SERVICE_MESSAGES,
 ]
-
-SERVICE_MESSAGES = "Servicemeldungen"
 
 
 class HmHub(CallbackEntity):
@@ -138,9 +139,7 @@ class HmHub(CallbackEntity):
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
-            self._central.callback_system_event(
-                HH_EVENT_HUB_CREATED, new_programs
-            )
+            self._central.callback_system_event(HH_EVENT_HUB_CREATED, new_programs)
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
         """Retrieve all variable data and update hmvariable values."""
@@ -192,9 +191,7 @@ class HmHub(CallbackEntity):
             and callable(self._central.callback_system_event)
         ):
             await asyncio.sleep(5)
-            self._central.callback_system_event(
-                HH_EVENT_HUB_CREATED, new_sysvars
-            )
+            self._central.callback_system_event(HH_EVENT_HUB_CREATED, new_sysvars)
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:
         """Create program as entity."""
