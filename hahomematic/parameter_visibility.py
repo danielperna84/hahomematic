@@ -163,6 +163,7 @@ _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
         "HmIP-MOD-OC8",
         "HmIP-PCBS",
         "HmIP-PDT",
+        "HmIP-PMFS",
         "HmIP-PS",
         "HmIP-SFD",
     ],
