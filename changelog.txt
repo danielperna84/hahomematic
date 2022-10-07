@@ -1,5 +1,6 @@
 Version 2022.10.1 (2022-10-05)
 - Ignore OPERATING_VOLTAGE for HmIP-PMFS
+- Add ALPHA-IP-RBG
 
 Version 2022.10.0 (2022-10-01)
 - Rename hub event
