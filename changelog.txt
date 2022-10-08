@@ -1,3 +1,8 @@
+Version 2022.10.2 (2022-10-08)
+- Make connection checker more resilent:
+ - Reduce connection checker interval to 15s
+ - Connection is not connected, if three consecutive checks fail.
+
 Version 2022.10.1 (2022-10-05)
 - Ignore OPERATING_VOLTAGE for HmIP-PMFS
 - Add ALPHA-IP-RBG
