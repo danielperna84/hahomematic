@@ -85,6 +85,7 @@ class Client(ABC):
         self._is_callback_alive: bool = True
         self._available: bool = True
         self.last_updated: datetime = INIT_DATETIME
+        self._connection_error_count: int = 0
 
     @property
     def available(self) -> bool:
@@ -210,10 +211,15 @@ class Client(ABC):
     async def is_connected(self) -> bool:
         """
         Perform actions required for connectivity check.
+        Connection is not connected, if three consecutive checks fail.
         Return connectivity state.
         """
-        is_connected = await self._check_connection()
-        if not is_connected:
+        if await self._check_connection_availability() is True:
+            self._connection_error_count = 0
+        else:
+            self._connection_error_count += 1
+
+        if self._connection_error_count > 3:
             self._mark_all_devices_forced_availability(
                 forced_availability=HmForcedDeviceAvailability.FORCE_FALSE
             )
@@ -254,7 +260,7 @@ class Client(ABC):
         return True
 
     @abstractmethod
-    async def _check_connection(self) -> bool:
+    async def _check_connection_availability(self) -> bool:
         """Send ping to CCU to generate PONG event."""
 
     @abstractmethod
@@ -660,7 +666,7 @@ class ClientCCU(Client):
                 "fetch_all_device_data: Unable to get all device data via JSON-RPC RegaScript."
             )
 
-    async def _check_connection(self) -> bool:
+    async def _check_connection_availability(self) -> bool:
         """Check if _proxy is still initialized."""
         try:
             await self._proxy.ping(self.interface_id)
@@ -786,7 +792,7 @@ class ClientHomegear(Client):
                     address,
                 )
 
-    async def _check_connection(self) -> bool:
+    async def _check_connection_availability(self) -> bool:
         """Check if proxy is still initialized."""
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
