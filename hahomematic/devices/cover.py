@@ -360,12 +360,12 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HM-LC-Bl1PBU-FM": (make_rf_cover, [1]),
     "HM-LC-JaX": (make_rf_blind, [1]),
     "HM-LC-Ja1PBU-FM": (make_rf_blind, [1]),
-    "ZEL STG RM FEP 230V": (make_rf_blind, [1]),
-    "263 146": (make_rf_blind, [1]),
-    "263 147": (make_rf_blind, [1]),
-    "HM-LC-BlX": (make_rf_blind, [1]),
-    "HM-Sec-Win": (make_rf_blind, [1]),
-    "HMW-LC-Bl1": (make_rf_blind, [3]),
+    "ZEL STG RM FEP 230V": (make_rf_cover, [1]),
+    "263 146": (make_rf_cover, [1]),
+    "263 147": (make_rf_cover, [1]),
+    "HM-LC-BlX": (make_rf_cover, [1]),
+    "HM-Sec-Win": (make_rf_cover, [1]),
+    "HMW-LC-Bl1": (make_rf_cover, [3]),
 }
 
 BLACKLISTED_DEVICES: list[str] = []
