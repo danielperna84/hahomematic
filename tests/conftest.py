@@ -66,6 +66,7 @@ async def central(
 
     interface_configs = {
         InterfaceConfig(
+            central_name="Test",
             interface="BidCos-RF",
             port=2001,
         )

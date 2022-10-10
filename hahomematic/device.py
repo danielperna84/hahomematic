@@ -63,6 +63,7 @@ from hahomematic.helpers import (
 )
 from hahomematic.internal.action import HmAction
 from hahomematic.internal.text import HmText
+from hahomematic.parameter_visibility import ALLOW_INTERNAL_PARAMETERS
 from hahomematic.platforms.binary_sensor import HmBinarySensor
 from hahomematic.platforms.button import HmButton
 from hahomematic.platforms.number import HmFloat, HmInteger
@@ -375,6 +376,7 @@ class HmDevice:
                         and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
                     ) or (
                         parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL
+                        and parameter not in ALLOW_INTERNAL_PARAMETERS
                         and not self.central.parameter_visibility.parameter_is_un_ignored(
                             device_type=self.device_type,
                             sub_type=self.sub_type,
