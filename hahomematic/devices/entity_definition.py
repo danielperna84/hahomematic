@@ -369,7 +369,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_DIRECTION: "DIRECTION",
                     FIELD_LEVEL: "LEVEL",
-                    FIELD_LEVEL_2: "LEVEL_2",
+                    FIELD_LEVEL_2: "LEVEL_SLATS",
                     FIELD_STOP: "STOP",
                 },
             },
