@@ -43,6 +43,10 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[str, tuple[set[int], str]] = {
     "HmIPW-DRI32": (set(range(1, 33)), PARAM_CHANNEL_OPERATION_MODE),
 }
 
+ALLOW_INTERNAL_PARAMETERS: set[str] = {
+    "DIRECTION",
+}
+
 HIDDEN_PARAMETERS: set[str] = {
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
