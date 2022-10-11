@@ -299,6 +299,7 @@ class CeRfThermostat(BaseClimateEntity):
         elif hvac_mode == HmHvacMode.HEAT:
             await self._e_manu_mode.send_value(self.current_temperature)
         elif hvac_mode == HmHvacMode.OFF:
+            await self._e_manu_mode.send_value(self.current_temperature)
             await self.set_temperature(temperature=self.min_temp)
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
