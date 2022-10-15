@@ -26,10 +26,6 @@ from hahomematic.const import (
     ATTR_INTERFACE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
-    DATA_LOAD_SUCCESS,
-    DATA_NO_LOAD,
-    DATA_NO_SAVE,
-    DATA_SAVE_SUCCESS,
     DEFAULT_ENCODING,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
@@ -45,6 +41,7 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     PROXY_INIT_SUCCESS,
     HmCallSource,
+    HmDataOperationResult,
     HmEventType,
     HmInterfaceEventType,
 )
@@ -1094,34 +1091,34 @@ class BasePersistentCache(ABC):
         self._filename: Final[str] = f"{central.name}_{filename}"
         self._cache_dict: Final[dict[str, Any]] = cache_dict
 
-    async def save(self) -> int:
+    async def save(self) -> HmDataOperationResult:
         """
         Save current name data in NAMES to disk.
         """
 
-        def _save() -> int:
+        def _save() -> HmDataOperationResult:
             if not check_or_create_directory(self._cache_dir):
-                return DATA_NO_SAVE
+                return HmDataOperationResult.NO_SAVE
             with open(
                 file=os.path.join(self._cache_dir, self._filename),
                 mode="w",
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
                 json.dump(self._cache_dict, fptr)
-            return DATA_SAVE_SUCCESS
+            return HmDataOperationResult.SAVE_SUCCESS
 
         return await self._central.async_add_executor_job(_save)
 
-    async def load(self) -> int:
+    async def load(self) -> HmDataOperationResult:
         """
         Load file from disk into dict.
         """
 
-        def _load() -> int:
+        def _load() -> HmDataOperationResult:
             if not check_or_create_directory(self._cache_dir):
-                return DATA_NO_LOAD
+                return HmDataOperationResult.NO_LOAD
             if not os.path.exists(os.path.join(self._cache_dir, self._filename)):
-                return DATA_NO_LOAD
+                return HmDataOperationResult.NO_LOAD
             with open(
                 file=os.path.join(self._cache_dir, self._filename),
                 mode="r",
@@ -1129,7 +1126,7 @@ class BasePersistentCache(ABC):
             ) as fptr:
                 self._cache_dict.clear()
                 self._cache_dict.update(json.load(fptr))
-            return DATA_LOAD_SUCCESS
+            return HmDataOperationResult.LOAD_SUCCESS
 
         return await self._central.async_add_executor_job(_load)
 
@@ -1304,7 +1301,7 @@ class DeviceDescriptionCache(BasePersistentCache):
             device_address = get_device_address(address)
             self._addresses[interface_id][device_address].append(address)
 
-    async def load(self) -> int:
+    async def load(self) -> HmDataOperationResult:
         """
         Load device data from disk into _device_description_cache.
         """
@@ -1457,7 +1454,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
                             (device_address, parameter)
                         ].append(get_device_channel(channel_address))
 
-    async def load(self) -> int:
+    async def load(self) -> HmDataOperationResult:
         """
         Load paramset descriptions from disk into paramset cache.
         """
@@ -1465,7 +1462,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         self._init_address_parameter_list()
         return result
 
-    async def save(self) -> int:
+    async def save(self) -> HmDataOperationResult:
         """
         Save current paramset descriptions to disk.
         """
