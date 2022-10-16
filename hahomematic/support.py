@@ -15,9 +15,8 @@ from hahomematic.const import (
     ATTR_HM_CHILDREN,
     ATTR_HM_PARENT,
     ATTR_HM_TYPE,
-    DATA_NO_SAVE,
-    DATA_SAVE_SUCCESS,
     DEFAULT_ENCODING,
+    HmDataOperationResult,
 )
 from hahomematic.helpers import check_or_create_directory
 
@@ -100,19 +99,19 @@ class DeviceExporter:
         address_parts[0] = self._random_id
         return ":".join(address_parts)
 
-    async def _save(self, file_dir: str, filename: str, data: Any) -> int:
+    async def _save(self, file_dir: str, filename: str, data: Any) -> HmDataOperationResult:
         """Save file to disk."""
 
-        def _save() -> int:
+        def _save() -> HmDataOperationResult:
             if not check_or_create_directory(file_dir):
-                return DATA_NO_SAVE
+                return HmDataOperationResult.NO_SAVE
             with open(
                 file=os.path.join(file_dir, filename),
                 mode="w",
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
                 json.dump(data, fptr, indent=2)
-            return DATA_SAVE_SUCCESS
+            return HmDataOperationResult.SAVE_SUCCESS
 
         return await self._central.async_add_executor_job(_save)
 

@@ -161,12 +161,12 @@ class BaseClimateEntity(CustomEntity):
     @property
     def hvac_mode(self) -> HmHvacMode:
         """Return hvac operation mode."""
-        return HmHvacMode.AUTO
+        return HmHvacMode.HEAT
 
     @property
     def hvac_modes(self) -> list[HmHvacMode]:
         """Return the list of available hvac operation modes."""
-        return [HmHvacMode.AUTO]
+        return [HmHvacMode.HEAT]
 
     @property
     def supports_preset(self) -> bool:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import IntEnum
 
 from hahomematic.backport import StrEnum
 
@@ -95,13 +96,6 @@ PROXY_INIT_SUCCESS = 1
 PROXY_DE_INIT_FAILED = 4
 PROXY_DE_INIT_SUCCESS = 8
 PROXY_DE_INIT_SKIPPED = 16
-
-DATA_LOAD_SUCCESS = 10
-DATA_LOAD_FAIL = 100
-DATA_NO_LOAD = 99
-DATA_SAVE_SUCCESS = 10
-DATA_SAVE_FAIL = 100
-DATA_NO_SAVE = 99
 
 ATTR_ADDRESS = "address"
 ATTR_CALLBACK_HOST = "callback_host"
@@ -277,6 +271,17 @@ HM_VIRTUAL_REMOTE_ADDRESSES = [
     HM_VIRTUAL_REMOTE_HMW_ADDRESS,
     HM_VIRTUAL_REMOTE_HMIP_ADDRESS,
 ]
+
+
+class HmDataOperationResult(IntEnum):
+    """Enum with data operation results."""
+
+    LOAD_FAIL = 0
+    LOAD_SUCCESS = 1
+    SAVE_FAIL = 10
+    SAVE_SUCCESS = 11
+    NO_LOAD = 20
+    NO_SAVE = 21
 
 
 class HmEntityUsage(StrEnum):

@@ -1,3 +1,8 @@
+Version 2022.10.6 (2022-10-15)
+- Replace data_* by HmDataOperationResult
+- Use HmHvacMode HEAT instead of AUTO for simple thermostats
+- Add HUMIDITY and ACTUAL_TEMPERATURE to heating groups
+
 Version 2022.10.5 (2022-10-11)
 - Set Hm Thermostat to manual mode before switching off
 
