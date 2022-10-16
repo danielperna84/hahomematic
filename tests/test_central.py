@@ -24,7 +24,7 @@ async def test_central(central, loop) -> None:
     assert central
     assert central.name == "ccu-dev"
     assert central.model == "PyDevCCU"
-    assert central.get_client_by_interface_id("ccu-dev-BidCos-RF").model == "PyDevCCU"
+    assert central.get_client_by_interface_id("Test-BidCos-RF").model == "PyDevCCU"
     assert central.get_client().model == "PyDevCCU"
 
     data = {}
@@ -41,9 +41,9 @@ async def test_central(central, loop) -> None:
 
     ce_channels = {}
     for custom_entity in custom_entities:
-        if custom_entity.device_type not in ce_channels:
-            ce_channels[custom_entity.device_type] = []
-        ce_channels[custom_entity.device_type].append(custom_entity.channel_no)
+        if custom_entity.device.device_type not in ce_channels:
+            ce_channels[custom_entity.device.device_type] = []
+        ce_channels[custom_entity.device.device_type].append(custom_entity.channel_no)
 
     entity_types = {}
     for entity in central.hm_entities.values():
@@ -69,7 +69,7 @@ async def test_central(central, loop) -> None:
     lowbats = set()
     for entity in central.hm_entities.values():
         if hasattr(entity, "parameter") and entity.parameter == "LOWBAT":
-            lowbats.add(entity.device_type)
+            lowbats.add(entity.device.device_type)
     lowbats_sorted = sorted(lowbats)
     print(lowbats_sorted)
 
@@ -86,7 +86,7 @@ async def test_central(central, loop) -> None:
     for entity in central.hm_entities.values():
         #if isinstance(entity, HmSwitchPlatform):
         if hasattr(entity, "parameter") and entity.parameter == "ON_TIME":
-            device_type = entity.device_type[:8]
+            device_type = entity.device.device_type[:8]
             if device_type.lower().startswith("hmip"):
                 continue
 
@@ -105,14 +105,14 @@ async def test_central(central, loop) -> None:
                 entity_type_operations[entity.platform][entity._type] = set()
             entity_type_operations[entity.platform][entity._type].add(entity._operations)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2217
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2316
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
-    assert usage_types[HmEntityUsage.ENTITY] == 3519
-    assert usage_types[HmEntityUsage.CE_VISIBLE] == 89
+    assert usage_types[HmEntityUsage.ENTITY] == 3518
+    assert usage_types[HmEntityUsage.CE_VISIBLE] == 93
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
     assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 6118
+    assert len(central.hm_entities) == 6220
     assert len(data) == 362
     assert len(custom_entities) == 293
     assert len(ce_channels) == 103
