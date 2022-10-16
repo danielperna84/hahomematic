@@ -490,11 +490,18 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_BOOST_MODE: "BOOST_MODE",
                     FIELD_COMFORT_MODE: "COMFORT_MODE",
                     FIELD_CONTROL_MODE: "CONTROL_MODE",
-                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
                     FIELD_LOWERING_MODE: "LOWERING_MODE",
                     FIELD_MANU_MODE: "MANU_MODE",
-                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
+                },
+                ED_VISIBLE_REPEATABLE_FIELDS: {
+                    FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
+                    FIELD_TEMPERATURE: "ACTUAL_TEMPERATURE",
+                },
+                ED_FIELDS: {
+                    0: {
+                        FIELD_VALVE_STATE: "VALVE_STATE",
+                    },
                 },
             },
             ED_INCLUDE_DEFAULT_ENTITIES: False,
