@@ -913,7 +913,9 @@ class GenericSystemVariable(GenericHubEntity):
 
     def get_name(self, data: HubData) -> str:
         """Return the name of the sysvar entity."""
-        return f"SV_{data.name}"
+        if data.name.lower().startswith(tuple({"v_", "sv_"})):
+            return data.name.title()
+        return f"Sv_{data.name}".title()
 
     def update_value(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""

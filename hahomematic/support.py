@@ -99,7 +99,9 @@ class DeviceExporter:
         address_parts[0] = self._random_id
         return ":".join(address_parts)
 
-    async def _save(self, file_dir: str, filename: str, data: Any) -> HmDataOperationResult:
+    async def _save(
+        self, file_dir: str, filename: str, data: Any
+    ) -> HmDataOperationResult:
         """Save file to disk."""
 
         def _save() -> HmDataOperationResult:
