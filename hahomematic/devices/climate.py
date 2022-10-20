@@ -24,6 +24,8 @@ from hahomematic.devices.entity_definition import (
     FIELD_SETPOINT,
     FIELD_STATE,
     FIELD_TEMPERATURE,
+    FIELD_TEMPERATURE_MAXIMUM,
+    FIELD_TEMPERATURE_MINIMUM,
     FIELD_VALVE_STATE,
     EntityDefinition,
     make_custom_entity,
@@ -107,6 +109,12 @@ class BaseClimateEntity(CustomEntity):
         self._e_temperature: HmSensor = self._get_entity(
             field_name=FIELD_TEMPERATURE, entity_type=HmSensor
         )
+        self._e_temperature_maximum: HmSensor = self._get_entity(
+            field_name=FIELD_TEMPERATURE_MAXIMUM, entity_type=HmSensor
+        )
+        self._e_temperature_minimum: HmSensor = self._get_entity(
+            field_name=FIELD_TEMPERATURE_MINIMUM, entity_type=HmSensor
+        )
 
     @property
     def temperature_unit(self) -> str:
@@ -116,11 +124,15 @@ class BaseClimateEntity(CustomEntity):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
+        if self._e_temperature_minimum and self._e_temperature_minimum.value:
+            return float(self._e_temperature_minimum.value)
         return self._e_setpoint.min
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
+        if self._e_temperature_maximum and self._e_temperature_maximum.value:
+            return float(self._e_temperature_maximum.value)
         return self._e_setpoint.max
 
     @property

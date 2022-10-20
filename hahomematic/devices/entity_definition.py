@@ -80,6 +80,8 @@ FIELD_SWITCH_MAIN = "switch_main"
 FIELD_SWITCH_V1 = "vswitch_1"
 FIELD_SWITCH_V2 = "vswitch_2"
 FIELD_TEMPERATURE = "temperature"
+FIELD_TEMPERATURE_MAXIMUM = "temperature_maximum"
+FIELD_TEMPERATURE_MINIMUM = "temperature_minimum"
 FIELD_VALVE_STATE = "valve_state"
 FIELD_VOLTAGE = "voltage"
 
@@ -323,6 +325,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_PARTY_MODE: "PARTY_MODE",
                     FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
                     FIELD_SET_POINT_MODE: "SET_POINT_MODE",
+                    FIELD_TEMPERATURE_MAXIMUM: "TEMPERATURE_MAXIMUM",
+                    FIELD_TEMPERATURE_MINIMUM: "TEMPERATURE_MINIMUM",
                 },
                 ED_VISIBLE_REPEATABLE_FIELDS: {
                     FIELD_HUMIDITY: "HUMIDITY",
@@ -349,6 +353,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_PARTY_MODE: "PARTY_MODE",
                     FIELD_SETPOINT: "SET_POINT_TEMPERATURE",
                     FIELD_SET_POINT_MODE: "SET_POINT_MODE",
+                    FIELD_TEMPERATURE_MAXIMUM: "TEMPERATURE_MAXIMUM",
+                    FIELD_TEMPERATURE_MINIMUM: "TEMPERATURE_MINIMUM",
                 },
                 ED_VISIBLE_REPEATABLE_FIELDS: {
                     FIELD_HUMIDITY: "HUMIDITY",
@@ -470,6 +476,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_LOWERING_MODE: "LOWERING_MODE",
                     FIELD_MANU_MODE: "MANU_MODE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
+                    FIELD_TEMPERATURE_MAXIMUM: "TEMPERATURE_MAXIMUM",
+                    FIELD_TEMPERATURE_MINIMUM: "TEMPERATURE_MINIMUM",
                 },
                 ED_VISIBLE_REPEATABLE_FIELDS: {
                     FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
@@ -493,6 +501,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                     FIELD_LOWERING_MODE: "LOWERING_MODE",
                     FIELD_MANU_MODE: "MANU_MODE",
                     FIELD_SETPOINT: "SET_TEMPERATURE",
+                    FIELD_TEMPERATURE_MAXIMUM: "TEMPERATURE_MAXIMUM",
+                    FIELD_TEMPERATURE_MINIMUM: "TEMPERATURE_MINIMUM",
                 },
                 ED_VISIBLE_REPEATABLE_FIELDS: {
                     FIELD_HUMIDITY: "ACTUAL_HUMIDITY",
