@@ -3,6 +3,7 @@ Version 2022.10.7 (2022-10-8)
   - accepted sysvar prefixes: V_, Sv_
   - accepted program prefixes: P_, Prg_
 - Read min/max temperature for climate devices
+- Min set temperature for thermostats is now 5.0 degree. 4.5. degree is only off
 
 Version 2022.10.6 (2022-10-15)
 - Replace data_* by HmDataOperationResult

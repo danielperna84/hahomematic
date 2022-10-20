@@ -47,6 +47,8 @@ HM_MODE_MANU = "MANU-MODE"
 HM_MODE_AWAY = "PARTY-MODE"
 HM_MODE_BOOST = "BOOST-MODE"
 
+HM_OFF_TEMPERATURE = 4.5
+
 HMIP_MODE_AUTO = 0
 HMIP_MODE_MANU = 1
 HMIP_MODE_AWAY = 2
@@ -125,8 +127,14 @@ class BaseClimateEntity(CustomEntity):
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if self._e_temperature_minimum and self._e_temperature_minimum.value:
-            return float(self._e_temperature_minimum.value)
-        return self._e_setpoint.min
+            min_temp = float(self._e_temperature_minimum.value)
+        else:
+            min_temp = self._e_setpoint.min
+
+        if min_temp == HM_OFF_TEMPERATURE:
+            return min_temp + 0.5
+        return min_temp
+
 
     @property
     def max_temp(self) -> float:
@@ -260,7 +268,7 @@ class CeRfThermostat(BaseClimateEntity):
     @property
     def hvac_mode(self) -> HmHvacMode:
         """Return hvac operation mode."""
-        if self.target_temperature and self.target_temperature <= self.min_temp:
+        if self.target_temperature and self.target_temperature <= HM_OFF_TEMPERATURE:
             return HmHvacMode.OFF
         if self._e_control_mode.value == HM_MODE_MANU:
             return HmHvacMode.HEAT
@@ -312,7 +320,7 @@ class CeRfThermostat(BaseClimateEntity):
             await self._e_manu_mode.send_value(self.current_temperature)
         elif hvac_mode == HmHvacMode.OFF:
             await self._e_manu_mode.send_value(self.current_temperature)
-            await self.set_temperature(temperature=self.min_temp)
+            await self.set_temperature(temperature=HM_OFF_TEMPERATURE)
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
             await self.set_preset_mode(HmPresetMode.NONE)
@@ -381,7 +389,7 @@ class CeIpThermostat(BaseClimateEntity):
     @property
     def hvac_mode(self) -> HmHvacMode:
         """Return hvac operation mode."""
-        if self.target_temperature and self.target_temperature <= self.min_temp:
+        if self.target_temperature and self.target_temperature <= HM_OFF_TEMPERATURE:
             return HmHvacMode.OFF
         if self._e_set_point_mode.value == HMIP_MODE_MANU:
             return HmHvacMode.HEAT if self._is_heating_mode else HmHvacMode.COOL
@@ -434,7 +442,7 @@ class CeIpThermostat(BaseClimateEntity):
             await self._e_control_mode.send_value(HMIP_MODE_MANU)
         elif hvac_mode == HmHvacMode.OFF:
             await self._e_control_mode.send_value(HMIP_MODE_MANU)
-            await self.set_temperature(temperature=self.min_temp)
+            await self.set_temperature(temperature=HM_OFF_TEMPERATURE)
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
             await self.set_preset_mode(HmPresetMode.NONE)
