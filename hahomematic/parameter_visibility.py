@@ -321,22 +321,32 @@ class ParameterVisibilityCache:
                 if accept_channel != device_channel:
                     return True
         if paramset_key == PARAMSET_KEY_MASTER:
+            if (
+                parameter
+                in self._custom_un_ignore_parameters_by_device_paramset_key.get(
+                    device_type_l, {}
+                )
+                .get(device_channel, {})
+                .get(PARAMSET_KEY_MASTER, [])
+            ):
+                return False
+
             dt_short = list(
                 filter(
                     device_type_l.startswith,
                     self._un_ignore_parameters_by_device_paramset_key,
                 )
             )
-            if dt_short:
-                if (
-                    parameter
-                    not in self._un_ignore_parameters_by_device_paramset_key.get(
-                        dt_short[0], {}
-                    )
-                    .get(device_channel, {})
-                    .get(PARAMSET_KEY_MASTER, [])
-                ):
-                    return True
+            if (
+                dt_short
+                and parameter
+                not in self._un_ignore_parameters_by_device_paramset_key.get(
+                    dt_short[0], {}
+                )
+                .get(device_channel, {})
+                .get(PARAMSET_KEY_MASTER, [])
+            ):
+                return True
 
         return False
 
@@ -354,6 +364,12 @@ class ParameterVisibilityCache:
         sub_type_l = sub_type.lower() if sub_type else None
 
         if parameter in self._un_ignore_parameters_general[paramset_key]:
+            return True
+
+        # also check if parameter is in custom_un_ignore
+        if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
+            device_type_l, {}
+        ).get(device_channel, {}).get(paramset_key, set()):
             return True
 
         dt_short = list(
@@ -390,12 +406,6 @@ class ParameterVisibilityCache:
                 if device_type_l.startswith(device_t):
                     if parameter in un_ignore_parameters:
                         return True
-
-        # also check if parameter is in custom_un_ignore
-        if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
-            device_type_l, {}
-        ).get(device_channel, {}).get(paramset_key, set()):
-            return True
 
         return False
 
