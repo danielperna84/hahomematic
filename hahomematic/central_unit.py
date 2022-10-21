@@ -69,7 +69,6 @@ import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
-sema_add_devices = asyncio.BoundedSemaphore()
 
 # {instance_name, central_unit}
 CENTRAL_INSTANCES: dict[str, CentralUnit] = {}
@@ -80,6 +79,7 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig):
         _LOGGER.debug("__init__")
+        self._sema_add_devices = asyncio.Semaphore()
         self.config: Final[CentralConfig] = central_config
         self.name: Final[str] = central_config.name
         self._loop: asyncio.AbstractEventLoop = central_config.loop
@@ -586,7 +586,7 @@ class CentralUnit:
             )
             return None
 
-        async with sema_add_devices:
+        async with self._sema_add_devices:
             # We need this list to avoid adding duplicates.
             known_addresses = [
                 dev_desc[ATTR_HM_ADDRESS]

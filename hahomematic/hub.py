@@ -52,6 +52,8 @@ class HmHub(CallbackEntity):
     def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
         CallbackEntity.__init__(self)
+        self._sema_fetch_sysvars = asyncio.Semaphore()
+        self._sema_fetch_programs = asyncio.Semaphore()
         self._central: Final[hm_central.CentralUnit] = central
         self.unique_identifier: Final[str] = generate_unique_identifier(
             central=central, address=HUB_ADDRESS
@@ -82,14 +84,16 @@ class HmHub(CallbackEntity):
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
         """fetch sysvar data for the hub."""
-        if self._central.available:
-            await self._update_sysvar_entities(include_internal=include_internal)
-            await self._update_hub_state()
+        async with self._sema_fetch_sysvars:
+            if self._central.available:
+                await self._update_sysvar_entities(include_internal=include_internal)
+                await self._update_hub_state()
 
     async def fetch_program_data(self, include_internal: bool = False) -> None:
         """fetch program data for the hub."""
-        if self._central.available:
-            await self._update_program_entities(include_internal=include_internal)
+        async with self._sema_fetch_programs:
+            if self._central.available:
+                await self._update_program_entities(include_internal=include_internal)
 
     async def _update_hub_state(self) -> None:
         """Retrieve latest service_messages."""

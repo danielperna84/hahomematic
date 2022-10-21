@@ -135,7 +135,6 @@ class BaseClimateEntity(CustomEntity):
             return min_temp + 0.5
         return min_temp
 
-
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
