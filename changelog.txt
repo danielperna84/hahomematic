@@ -1,3 +1,6 @@
+Version 2022.10.9 (2022-10-23)
+- Fix don't hide unignored parameters
+
 Version 2022.10.8 (2022-10-21)
 - Add semaphore to fetch sysvar and programs from backend
 
