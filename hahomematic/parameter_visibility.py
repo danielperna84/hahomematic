@@ -59,7 +59,7 @@ ALLOW_INTERNAL_PARAMETERS: set[str] = {
     "DIRECTION",
 }
 
-HIDDEN_PARAMETERS: set[str] = {
+_HIDDEN_PARAMETERS: set[str] = {
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
     EVENT_STICKY_UN_REACH,
@@ -493,6 +493,23 @@ class ParameterVisibilityCache:
                 "add_line_to_cache failed: Could not add line '%s' to un ignore cache.",
                 line,
             )
+
+    def parameter_is_hidden(
+        self,
+        device_type: str,
+        sub_type: str | None,
+        device_channel: int,
+        paramset_key: str,
+        parameter: str,
+    ) -> bool:
+        """Return if parameter should be hidden"""
+        return parameter in _HIDDEN_PARAMETERS and not self.parameter_is_un_ignored(
+            device_type=device_type,
+            sub_type=sub_type,
+            device_channel=device_channel,
+            paramset_key=paramset_key,
+            parameter=parameter,
+        )
 
     def is_relevant_paramset(
         self,
