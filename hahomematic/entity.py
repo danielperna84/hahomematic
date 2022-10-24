@@ -39,6 +39,7 @@ from hahomematic.const import (
     FLAG_VISIBLE,
     HM_ENTITY_UNIT_REPLACE,
     INIT_DATETIME,
+    MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
     OPERATION_READ,
@@ -184,7 +185,9 @@ class BaseEntity(ABC):
         self.device.add_hm_entity(self)
         self._central.hm_entities[self.unique_identifier] = self
 
-    async def load_entity_value(self, call_source: HmCallSource) -> None:
+    async def load_entity_value(
+        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
+    ) -> None:
         """Init the entity data."""
         return None
 
@@ -531,11 +534,12 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
                 )
 
     async def load_entity_value(
-        self,
-        call_source: HmCallSource,
+        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Init the entity data."""
-        if updated_within_seconds(last_update=self._last_update):
+        if updated_within_seconds(
+            last_update=self._last_update, max_age_seconds=max_age_seconds
+        ):
             return None
 
         # Check, if entity is readable
@@ -701,11 +705,15 @@ class CustomEntity(BaseEntity, CallbackEntity):
             rx_mode=rx_mode,
         )
 
-    async def load_entity_value(self, call_source: HmCallSource) -> None:
+    async def load_entity_value(
+        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
+    ) -> None:
         """Init the entity values."""
         for entity in self.data_entities.values():
             if entity:
-                await entity.load_entity_value(call_source=call_source)
+                await entity.load_entity_value(
+                    call_source=call_source, max_age_seconds=max_age_seconds
+                )
         self.update_entity()
 
     def _init_entities(self) -> None:

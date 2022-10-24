@@ -37,6 +37,7 @@ from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
     INIT_DATETIME,
+    MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     PARAMSET_KEY_VALUES,
     PROXY_INIT_SUCCESS,
@@ -1039,13 +1040,22 @@ class DeviceDataCache:
         if client := self._central.get_client():
             await client.fetch_all_device_data()
 
-    async def refesh_entity_data(self) -> None:
+    async def refesh_entity_data(
+        self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
+    ) -> None:
         """Refresh entity data."""
         for hm_entity in self._central.hm_entities.values():
             if (
                 isinstance(hm_entity, GenericEntity) and hm_entity.is_readable
             ) or isinstance(hm_entity, CustomEntity):
-                await hm_entity.load_entity_value(call_source=HmCallSource.HM_INIT)
+                if paramset_key is None or (
+                    isinstance(hm_entity, GenericEntity)
+                    and hm_entity.paramset_key == paramset_key
+                ):
+                    await hm_entity.load_entity_value(
+                        call_source=HmCallSource.HM_INIT,
+                        max_age_seconds=max_age_seconds,
+                    )
 
     def add_device_data(
         self, device_data: dict[str, dict[str, dict[str, Any]]]
