@@ -70,7 +70,6 @@ from hahomematic.helpers import (
     parse_sys_var,
     updated_within_seconds,
 )
-from hahomematic.parameter_visibility import HIDDEN_PARAMETERS
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=consider-alternative-union-syntax
@@ -395,15 +394,12 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
         usage = super()._generate_entity_usage()
-        if (
-            self.parameter in HIDDEN_PARAMETERS
-            and not self._central.parameter_visibility.parameter_is_un_ignored(
-                device_type=self.device.device_type,
-                sub_type=self.device.sub_type,
-                device_channel=self.channel_no,
-                paramset_key=self.paramset_key,
-                parameter=self.parameter,
-            )
+        if self._central.parameter_visibility.parameter_is_hidden(
+            device_type=self.device.device_type,
+            sub_type=self.device.sub_type,
+            device_channel=self.channel_no,
+            paramset_key=self.paramset_key,
+            parameter=self.parameter,
         ):
             usage = HmEntityUsage.ENTITY_NO_CREATE
         return usage
