@@ -83,7 +83,7 @@ class CentralUnit:
         self._sema_add_devices = asyncio.Semaphore()
         self.config: Final[CentralConfig] = central_config
         self.name: Final[str] = central_config.name
-        self._loop: asyncio.AbstractEventLoop = central_config.loop
+        self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._xml_rpc_server: Final[
             xml_rpc.XmlRpcServer
         ] = central_config.xml_rpc_server
@@ -154,13 +154,6 @@ class CentralUnit:
             if not client.is_callback_alive():
                 return False
         return True
-
-    @property
-    def loop(self) -> asyncio.AbstractEventLoop:
-        """Return the loop for async operations."""
-        if not self._loop:
-            self._loop = asyncio.get_running_loop()
-        return self._loop
 
     @property
     def model(self) -> str | None:
@@ -616,7 +609,7 @@ class CentralUnit:
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
         try:
-            self.loop.call_soon_threadsafe(self._async_create_task, target)
+            self._loop.call_soon_threadsafe(self._async_create_task, target)
         except CancelledError:
             _LOGGER.debug(
                 "create_task: task cancelled for %s.",
@@ -625,13 +618,13 @@ class CentralUnit:
             return None
 
     def _async_create_task(self, target: Coroutine) -> asyncio.Task:
-        """Create a task from within the event loop. This method must be run in the event loop."""
-        return self.loop.create_task(target)
+        """Create a task from within the event_loop. This method must be run in the event_loop."""
+        return self._loop.create_task(target)
 
     def run_coroutine(self, coro: Coroutine) -> Any:
         """call coroutine from sync"""
         try:
-            return asyncio.run_coroutine_threadsafe(coro, self.loop).result()
+            return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
         except CancelledError:
             _LOGGER.debug(
                 "run_coroutine: coroutine interrupted for %s.",
@@ -642,9 +635,9 @@ class CentralUnit:
     async def async_add_executor_job(
         self, executor_func: Callable[..., T], *args: Any
     ) -> T:
-        """Add an executor job from within the event loop."""
+        """Add an executor job from within the event_loop."""
         try:
-            return await self.loop.run_in_executor(None, executor_func, *args)
+            return await self._loop.run_in_executor(None, executor_func, *args)
         except CancelledError as cer:
             _LOGGER.debug(
                 "async_add_executor_job: task cancelled for %s.",
@@ -854,7 +847,6 @@ class CentralConfig:
 
     def __init__(
         self,
-        loop: asyncio.AbstractEventLoop,
         xml_rpc_server: xml_rpc.XmlRpcServer,
         storage_folder: str,
         name: str,
@@ -870,7 +862,6 @@ class CentralConfig:
         callback_port: int | None = None,
         json_port: int | None = None,
     ):
-        self.loop: Final[asyncio.AbstractEventLoop] = loop
         self.xml_rpc_server: Final[xml_rpc.XmlRpcServer] = xml_rpc_server
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
@@ -914,7 +905,6 @@ class CentralConfig:
     def get_json_rpc_client(self) -> JsonRpcAioHttpClient:
         """Return the json rpc client."""
         return JsonRpcAioHttpClient(
-            loop=self.loop,
             username=self.username,
             password=self.password,
             device_url=self.central_url,

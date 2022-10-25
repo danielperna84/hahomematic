@@ -28,7 +28,6 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
 
     def __init__(
         self,
-        loop: asyncio.AbstractEventLoop,
         max_workers: int,
         thread_name_prefix: str,
         *args: Any,
@@ -37,7 +36,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """
         Initialize new proxy for server and get local ip
         """
-        self._loop: Final[asyncio.AbstractEventLoop] = loop
+        self._loop: Final[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
         self._proxy_executor: Final[ThreadPoolExecutor] = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix=thread_name_prefix
         )
@@ -52,7 +51,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
     async def _async_add_proxy_executor_job(
         self, func: Callable, *args: Any
     ) -> Awaitable:
-        """Add an executor job from within the event loop for all device related interaction."""
+        """Add an executor job from within the event_loop for all device related interaction."""
         return await self._loop.run_in_executor(self._proxy_executor, func, *args)
 
     async def __async_request(self, *args, **kwargs):  # type: ignore[no-untyped-def]

@@ -66,7 +66,6 @@ class JsonRpcAioHttpClient:
 
     def __init__(
         self,
-        loop: asyncio.AbstractEventLoop,
         username: str,
         password: str,
         device_url: str,
@@ -79,7 +78,9 @@ class JsonRpcAioHttpClient:
         self._client_session: Final[ClientSession] = (
             client_session
             if client_session
-            else ClientSession(connector=TCPConnector(limit=3), loop=loop)
+            else ClientSession(
+                connector=TCPConnector(limit=3), loop=asyncio.get_running_loop()
+            )
         )
         self._session_id: str | None = None
         self._last_session_id_refresh: datetime | None = None

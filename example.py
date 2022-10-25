@@ -78,7 +78,6 @@ class Example:
         }
         self.central = await CentralConfig(
             name=central_name,
-            loop=asyncio.get_running_loop(),
             xml_rpc_server=register_xml_rpc_server(),
             host=CCU_HOST,
             username=CCU_USERNAME,
