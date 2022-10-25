@@ -908,7 +908,6 @@ class _ClientConfig:
             password=central.config.password,
         )
         self.xml_rpc_proxy: Final[XmlRpcProxy] = XmlRpcProxy(
-            central.loop,
             max_workers=1,
             thread_name_prefix=f"XmlRpcProxy for {self.interface_id}",
             uri=self.xml_rpc_uri,
@@ -917,7 +916,6 @@ class _ClientConfig:
             verify_tls=central.config.verify_tls,
         )
         self.xml_rpc_proxy_read: Final[XmlRpcProxy] = XmlRpcProxy(
-            central.loop,
             max_workers=1,
             thread_name_prefix=f"XmlRpcProxyRead for {self.interface_id}",
             uri=self.xml_rpc_uri,

@@ -1,5 +1,6 @@
 Version 2022.10.10 (2022-10-25)
 - Use min_temp if target_temp < min_temp
+- Remove event_loop from signatures
 
 Version 2022.10.9 (2022-10-23)
 - Fix don't hide unignored parameters
