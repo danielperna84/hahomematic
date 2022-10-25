@@ -1,5 +1,6 @@
 """
 CentralUnit module.
+This is the python representation of a CCU.
 """
 from __future__ import annotations
 
@@ -834,7 +835,7 @@ class ConnectionChecker(threading.Thread):
                             # refresh cache
                             await self._central.device_data.load()
                             # refresh entity data
-                            await self._central.device_data.refesh_entity_data()
+                            await self._central.device_data.refresh_entity_data()
             except NoConnection as nex:
                 _LOGGER.error("check_connection failed: no connection: %s", nex.args)
                 continue
@@ -1033,7 +1034,7 @@ class DeviceDataCache:
         if client := self._central.get_client():
             await client.fetch_all_device_data()
 
-    async def refesh_entity_data(
+    async def refresh_entity_data(
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
@@ -1421,10 +1422,15 @@ class ParamsetDescriptionCache(BasePersistentCache):
     ) -> dict[str, list[str]]:
         """Get device channels by paramset_key."""
         device_channels_by_paramset_key: dict[str, list[str]] = {}
-        interface_psds = self._paramset_descriptions_cache[interface_id]
-        for channel_address, psds in interface_psds.items():
+        interface_paramset_descriptions = self._paramset_descriptions_cache[
+            interface_id
+        ]
+        for (
+            channel_address,
+            paramset_descriptions,
+        ) in interface_paramset_descriptions.items():
             if channel_address.startswith(device_address):
-                for paramset_key in psds:
+                for paramset_key in paramset_descriptions:
                     if paramset_key not in device_channels_by_paramset_key:
                         device_channels_by_paramset_key[paramset_key] = []
                     device_channels_by_paramset_key[paramset_key].append(

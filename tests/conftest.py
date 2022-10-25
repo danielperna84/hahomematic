@@ -13,7 +13,6 @@ from hahomematic.client import InterfaceConfig
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity
 from hahomematic.helpers import get_device_address
-from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
 CCU_HOST = "127.0.0.1"
@@ -21,6 +20,7 @@ CCU_USERNAME = "user"
 CCU_PASSWORD = "pass"
 GOT_DEVICES = False
 # content of conftest.py
+
 def pytest_configure(config):
     import sys
 
@@ -74,14 +74,13 @@ async def central(
 
     central_unit = await CentralConfig(
         name="ccu-dev",
-        loop=loop,
-        xml_rpc_server=register_xml_rpc_server(),
         host=CCU_HOST,
         username=CCU_USERNAME,
         password=CCU_PASSWORD,
         central_id="test1234",
         storage_folder="homematicip_local",
         interface_configs=interface_configs,
+        default_callback_port=54321,
     ).get_central()
     central_unit.callback_system_event = systemcallback
     await central_unit.start()
