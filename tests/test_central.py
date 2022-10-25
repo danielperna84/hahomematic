@@ -13,9 +13,6 @@ import pytest
 from hahomematic.entity import GenericEntity
 from hahomematic.const import HmEntityUsage
 from hahomematic.devices.climate import CeRfThermostat
-from hahomematic.devices.lock import LOCK_TARGET_LEVEL_OPEN
-from hahomematic.platforms.switch import HmSwitch as HmSwitchPlatform
-from hahomematic.devices.switch import HmSwitch as CESwitch
 
 
 @pytest.mark.asyncio
@@ -73,7 +70,7 @@ async def test_central(central, loop) -> None:
     lowbats_sorted = sorted(lowbats)
     print(lowbats_sorted)
 
-    usage_types: dict[HmEntityUsage,int] = {}
+    usage_types: dict[HmEntityUsage, int] = {}
     for entity in central.hm_entities.values():
         if hasattr(entity, "usage"):
             if entity.usage not in usage_types:
@@ -84,7 +81,7 @@ async def test_central(central, loop) -> None:
     switches: dict[str, set[int]] = {}
 
     for entity in central.hm_entities.values():
-        #if isinstance(entity, HmSwitchPlatform):
+        # if isinstance(entity, HmSwitchPlatform):
         if hasattr(entity, "parameter") and entity.parameter == "ON_TIME":
             device_type = entity.device.device_type[:8]
             if device_type.lower().startswith("hmip"):
@@ -105,19 +102,19 @@ async def test_central(central, loop) -> None:
                 entity_type_operations[entity.platform][entity._type] = set()
             entity_type_operations[entity.platform][entity._type].add(entity._operations)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2316
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2340
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
     assert usage_types[HmEntityUsage.ENTITY] == 3518
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 93
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
     assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 6220
+    assert len(central.hm_entities) == 6244
     assert len(data) == 362
     assert len(custom_entities) == 293
     assert len(ce_channels) == 103
     assert len(entity_types) == 6
-    assert len(parameters) == 180
+    assert len(parameters) == 182
 
 
 @pytest.mark.asyncio
