@@ -86,7 +86,10 @@ class CentralUnit:
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._xml_rpc_server: Final[
             xml_rpc.XmlRpcServer
-        ] = central_config.xml_rpc_server
+        ] = xml_rpc.register_xml_rpc_server(
+            local_port=central_config.callback_port
+            or central_config.default_callback_port
+        )
         self._xml_rpc_server.register_central(self)
         self.local_port: Final[int] = self._xml_rpc_server.local_port
         self._model: str | None = None
@@ -847,7 +850,6 @@ class CentralConfig:
 
     def __init__(
         self,
-        xml_rpc_server: xml_rpc.XmlRpcServer,
         storage_folder: str,
         name: str,
         host: str,
@@ -855,6 +857,7 @@ class CentralConfig:
         password: str,
         central_id: str,
         interface_configs: set[hm_client.InterfaceConfig],
+        default_callback_port: int,
         client_session: ClientSession | None = None,
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
@@ -862,7 +865,6 @@ class CentralConfig:
         callback_port: int | None = None,
         json_port: int | None = None,
     ):
-        self.xml_rpc_server: Final[xml_rpc.XmlRpcServer] = xml_rpc_server
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
         self.host: Final[str] = host
@@ -872,6 +874,7 @@ class CentralConfig:
         self.interface_configs: Final[
             set[hm_client.InterfaceConfig]
         ] = interface_configs
+        self.default_callback_port: Final[int] = default_callback_port
         self.client_session: Final[ClientSession | None] = client_session
         self.tls: Final[bool] = tls
         self.verify_tls: Final[bool] = verify_tls
