@@ -260,7 +260,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 
     @property
     def hmtype(self) -> str:
-        """Return the homematic type."""
+        """Return the HomeMatic type."""
         return self._type
 
     @property
@@ -839,7 +839,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
 
 class GenericHubEntity(CallbackEntity):
-    """Class for a homematic system variable."""
+    """Class for a HomeMatic system variable."""
 
     _attr_platform: HmPlatform
 
@@ -879,7 +879,7 @@ class GenericHubEntity(CallbackEntity):
 
 
 class GenericSystemVariable(GenericHubEntity):
-    """Class for a homematic system variable."""
+    """Class for a HomeMatic system variable."""
 
     _attr_is_extended = False
 

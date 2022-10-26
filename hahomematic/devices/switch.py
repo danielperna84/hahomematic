@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class CeSwitch(CustomEntity):
-    """Class for homematic switch entities."""
+    """Class for HomeMatic switch entities."""
 
     _attr_platform = HmPlatform.SWITCH
 
@@ -70,7 +70,7 @@ class CeSwitch(CustomEntity):
 def make_ip_switch(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic ip switch entities."""
+    """Creates HomematicIP switch entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeSwitch,
@@ -82,7 +82,7 @@ def make_ip_switch(
 def make_rf_switch(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic ip switch entities."""
+    """Creates HomematicIP switch entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeSwitch,

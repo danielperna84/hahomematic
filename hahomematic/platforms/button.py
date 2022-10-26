@@ -29,7 +29,7 @@ class HmButton(GenericEntity[None]):
 
 
 class HmProgramButton(GenericHubEntity):
-    """Class for a homematic program button."""
+    """Class for a HomeMatic program button."""
 
     _attr_platform = HmPlatform.HUB_BUTTON
 

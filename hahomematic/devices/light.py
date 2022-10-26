@@ -53,7 +53,7 @@ TIME_UNIT_HOURS = 2
 
 
 class BaseHmLight(CustomEntity):
-    """Base class for homematic light entities."""
+    """Base class for HomeMatic light entities."""
 
     _attr_platform = HmPlatform.LIGHT
 
@@ -162,7 +162,7 @@ class BaseHmLight(CustomEntity):
 
 
 class CeDimmer(BaseHmLight):
-    """Class for homematic dimmer entities."""
+    """Class for HomeMatic dimmer entities."""
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -190,7 +190,7 @@ class CeDimmer(BaseHmLight):
 
 
 class CeColorDimmer(CeDimmer):
-    """Class for homematic dimmer with color entities."""
+    """Class for HomeMatic dimmer with color entities."""
 
     _effect_list: list[str] = [
         HM_EFFECT_OFF,
@@ -274,7 +274,7 @@ class CeColorDimmer(CeDimmer):
 
 
 class CeColorTempDimmer(CeDimmer):
-    """Class for homematic dimmer with color temperature entities."""
+    """Class for HomeMatic dimmer with color temperature entities."""
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -309,7 +309,7 @@ class CeColorTempDimmer(CeDimmer):
 
 
 class CeIpFixedColorLight(BaseHmLight):
-    """Class for homematic HmIP-BSL, HmIPW-WRC6 light entities."""
+    """Class for HomematicIP HmIP-BSL, HmIPW-WRC6 light entities."""
 
     _color_switcher: dict[str, tuple[float, float]] = {
         "WHITE": (0.0, 0.0),
@@ -464,7 +464,7 @@ def _convert_color(color: tuple[float, float] | None) -> str:
 def make_ip_dimmer(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic ip dimmer entities."""
+    """Creates HomematicIP dimmer entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
@@ -476,7 +476,7 @@ def make_ip_dimmer(
 def make_rf_dimmer(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic classic dimmer entities."""
+    """Creates HomeMatic classic dimmer entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
@@ -488,7 +488,7 @@ def make_rf_dimmer(
 def make_rf_dimmer_color(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic classic dimmer with color entities."""
+    """Creates HomeMatic classic dimmer with color entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeColorDimmer,
@@ -500,7 +500,7 @@ def make_rf_dimmer_color(
 def make_rf_dimmer_color_temp(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic classic dimmer with color temperature entities."""
+    """Creates HomeMatic classic dimmer with color temperature entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeColorTempDimmer,
@@ -512,7 +512,7 @@ def make_rf_dimmer_color_temp(
 def make_rf_dimmer_with_virt_channel(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic classic dimmer entities."""
+    """Creates HomeMatic classic dimmer entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,

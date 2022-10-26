@@ -41,7 +41,7 @@ HM_LOCKING = "DOWN"
 
 
 class BaseLock(CustomEntity):
-    """Class for homematic ip lock entities."""
+    """Class for HomematicIP lock entities."""
 
     _attr_platform = HmPlatform.LOCK
 
@@ -79,7 +79,7 @@ class BaseLock(CustomEntity):
 
 
 class CeIpLock(BaseLock):
-    """Class for homematic ip lock entities."""
+    """Class for HomematicIP lock entities."""
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -135,7 +135,7 @@ class CeIpLock(BaseLock):
 
 
 class CeRfLock(BaseLock):
-    """Class for classic homematic lock entities."""
+    """Class for classic HomeMatic lock entities."""
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -193,7 +193,7 @@ class CeRfLock(BaseLock):
 def make_ip_lock(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic ip lock entities."""
+    """Creates HomematicIP lock entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpLock,
@@ -205,7 +205,7 @@ def make_ip_lock(
 def make_rf_lock(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic rf lock entities."""
+    """Creates HomeMatic rf lock entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeRfLock,

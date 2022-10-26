@@ -50,7 +50,7 @@ GARAGE_DOOR_STATE_POSITION_UNKNOWN = "POSITION_UNKNOWN"
 
 
 class CeCover(CustomEntity):
-    """Class for homematic cover entities."""
+    """Class for HomeMatic cover entities."""
 
     _attr_platform = HmPlatform.COVER
 
@@ -136,7 +136,7 @@ class CeCover(CustomEntity):
 
 
 class CeBlind(CeCover):
-    """Class for homematic blind entities."""
+    """Class for HomeMatic blind entities."""
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -186,7 +186,7 @@ class CeBlind(CeCover):
 
 
 class CeIpBlind(CeBlind):
-    """Class for homematic ip blind entities."""
+    """Class for HomematicIP blind entities."""
 
     async def open_cover(self) -> None:
         """Open the cover and open the tilt."""
@@ -205,7 +205,7 @@ class CeIpBlind(CeBlind):
 
 
 class CeGarage(CustomEntity):
-    """Class for homematic garage entities."""
+    """Class for HomeMatic garage entities."""
 
     _attr_platform = HmPlatform.COVER
 
@@ -283,7 +283,7 @@ class CeGarage(CustomEntity):
 def make_ip_cover(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic ip cover entities."""
+    """Creates HomematicIP cover entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeCover,
@@ -295,7 +295,7 @@ def make_ip_cover(
 def make_rf_cover(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic classic cover entities."""
+    """Creates HomeMatic classic cover entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeCover,
@@ -307,7 +307,7 @@ def make_rf_cover(
 def make_ip_blind(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic ip cover entities."""
+    """Creates HomematicIP cover entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpBlind,
@@ -319,7 +319,7 @@ def make_ip_blind(
 def make_ip_garage(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic ip garage entities."""
+    """Creates HomematicIP garage entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeGarage,
@@ -331,7 +331,7 @@ def make_ip_garage(
 def make_rf_blind(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic classic cover entities."""
+    """Creates HomeMatic classic cover entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeBlind,

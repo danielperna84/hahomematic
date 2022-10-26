@@ -38,7 +38,7 @@ DEFAULT_DURATION_VALUE = 60
 
 
 class BaseSiren(CustomEntity):
-    """Class for homematic siren entities."""
+    """Class for HomeMatic siren entities."""
 
     _attr_platform = HmPlatform.SIREN
 
@@ -69,7 +69,7 @@ class BaseSiren(CustomEntity):
 
 
 class CeIpSiren(BaseSiren):
-    """Class for homematic ip siren entities."""
+    """Class for HomematicIP siren entities."""
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -138,7 +138,7 @@ class CeIpSiren(BaseSiren):
 
 
 class CeRfSiren(BaseSiren):
-    """Class for classic homematic siren entities."""
+    """Class for classic HomeMatic siren entities."""
 
     async def turn_on(
         self, acoustic_alarm: str, optical_alarm: str, duration: int
@@ -152,7 +152,7 @@ class CeRfSiren(BaseSiren):
 def make_ip_siren(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic ip siren entities."""
+    """Creates HomematicIP siren entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpSiren,
@@ -164,7 +164,7 @@ def make_ip_siren(
 def make_rf_siren(
     device: hm_device.HmDevice, group_base_channels: list[int]
 ) -> list[hm_entity.BaseEntity]:
-    """Creates homematic rf siren entities."""
+    """Creates HomeMatic rf siren entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeRfSiren,

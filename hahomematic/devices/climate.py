@@ -343,7 +343,7 @@ class CeRfThermostat(BaseClimateEntity):
 
 
 class CeIpThermostat(BaseClimateEntity):
-    """homematic IP thermostat like HmIP-eTRV-B."""
+    """HomematicIP thermostat like HmIP-eTRV-B."""
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
