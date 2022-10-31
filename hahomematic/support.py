@@ -11,11 +11,11 @@ from typing import Any, Final
 import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
 from hahomematic.const import (
-    ATTR_HM_ADDRESS,
-    ATTR_HM_CHILDREN,
-    ATTR_HM_PARENT,
-    ATTR_HM_TYPE,
     DEFAULT_ENCODING,
+    HM_ADDRESS,
+    HM_CHILDREN,
+    HM_PARENT,
+    HM_TYPE,
     HmDataOperationResult,
 )
 from hahomematic.helpers import check_or_create_directory
@@ -50,7 +50,7 @@ class DeviceExporter:
         ] = await self._client.get_all_paramset_descriptions(
             list(device_descriptions.values())
         )
-        device_type = device_descriptions[self._device_address][ATTR_HM_TYPE]
+        device_type = device_descriptions[self._device_address][HM_TYPE]
         filename = f"{device_type}.json"
 
         # anonymize device_descriptions
@@ -59,17 +59,17 @@ class DeviceExporter:
             if device_description == {}:
                 continue
             new_device_description = copy(device_description)
-            new_device_description[ATTR_HM_ADDRESS] = self._anonymize_address(
-                address=new_device_description[ATTR_HM_ADDRESS]
+            new_device_description[HM_ADDRESS] = self._anonymize_address(
+                address=new_device_description[HM_ADDRESS]
             )
-            if new_device_description.get(ATTR_HM_PARENT):
-                new_device_description[ATTR_HM_PARENT] = new_device_description[
-                    ATTR_HM_ADDRESS
+            if new_device_description.get(HM_PARENT):
+                new_device_description[HM_PARENT] = new_device_description[
+                    HM_ADDRESS
                 ].split(":")[0]
-            elif new_device_description.get(ATTR_HM_CHILDREN):
-                new_device_description[ATTR_HM_CHILDREN] = [
+            elif new_device_description.get(HM_CHILDREN):
+                new_device_description[HM_CHILDREN] = [
                     self._anonymize_address(a)
-                    for a in new_device_description[ATTR_HM_CHILDREN]
+                    for a in new_device_description[HM_CHILDREN]
                 ]
             anonymize_device_descriptions.append(new_device_description)
 

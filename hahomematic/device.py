@@ -13,17 +13,17 @@ from typing import Any, Final
 import hahomematic.central_unit as hm_central
 import hahomematic.client as hm_client
 from hahomematic.const import (
-    ATTR_HM_FIRMWARE,
-    ATTR_HM_FLAGS,
-    ATTR_HM_OPERATIONS,
-    ATTR_HM_SUBTYPE,
-    ATTR_HM_TYPE,
     BUTTON_ACTIONS,
     CLICK_EVENTS,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
     FLAG_INTERAL,
+    HM_FIRMWARE,
+    HM_FLAGS,
+    HM_OPERATIONS,
+    HM_SUBTYPE,
+    HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
     IMPULSE_EVENTS,
     INIT_DATETIME,
@@ -113,14 +113,14 @@ class HmDevice:
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=ATTR_HM_TYPE,
+                parameter=HM_TYPE,
             )
         )
         self.sub_type: Final[str] = str(
             central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=ATTR_HM_SUBTYPE,
+                parameter=HM_SUBTYPE,
             )
         )
         # marker if device will be created as custom entity
@@ -131,7 +131,7 @@ class HmDevice:
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=ATTR_HM_FIRMWARE,
+                parameter=HM_FIRMWARE,
             )
         )
 
@@ -355,7 +355,7 @@ class HmDevice:
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                 ).items():
-                    if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT and (
+                    if parameter_data[HM_OPERATIONS] & OPERATION_EVENT and (
                         parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS
                     ):
                         self._create_event_and_append_to_device(
@@ -372,10 +372,10 @@ class HmDevice:
                             )
 
                     if (
-                        not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT
-                        and not parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE
+                        not parameter_data[HM_OPERATIONS] & OPERATION_EVENT
+                        and not parameter_data[HM_OPERATIONS] & OPERATION_WRITE
                     ) or (
-                        parameter_data[ATTR_HM_FLAGS] & FLAG_INTERAL
+                        parameter_data[HM_FLAGS] & FLAG_INTERAL
                         and parameter not in ALLOW_INTERNAL_PARAMETERS
                         and not self.central.parameter_visibility.parameter_is_un_ignored(
                             device_type=self.device_type,
@@ -465,7 +465,7 @@ class HmDevice:
             self.interface_id,
         )
         action_event_t: type[BaseEvent] | None = None
-        if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_EVENT:
+        if parameter_data[HM_OPERATIONS] & OPERATION_EVENT:
             if parameter in CLICK_EVENTS:
                 action_event_t = ClickEvent
             if parameter in IMPULSE_EVENTS:
@@ -523,9 +523,9 @@ class HmDevice:
             self.interface_id,
         )
         entity_t: type[GenericEntity] | None = None
-        if parameter_data[ATTR_HM_OPERATIONS] & OPERATION_WRITE:
-            if parameter_data[ATTR_HM_TYPE] == TYPE_ACTION:
-                if parameter_data[ATTR_HM_OPERATIONS] == OPERATION_WRITE:
+        if parameter_data[HM_OPERATIONS] & OPERATION_WRITE:
+            if parameter_data[HM_TYPE] == TYPE_ACTION:
+                if parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
                     if parameter in BUTTON_ACTIONS:
                         entity_t = HmButton
                     else:
@@ -536,17 +536,17 @@ class HmDevice:
                     else:
                         entity_t = HmSwitch
             else:
-                if parameter_data[ATTR_HM_OPERATIONS] == OPERATION_WRITE:
+                if parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
                     entity_t = HmAction
-                elif parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
+                elif parameter_data[HM_TYPE] == TYPE_BOOL:
                     entity_t = HmSwitch
-                elif parameter_data[ATTR_HM_TYPE] == TYPE_ENUM:
+                elif parameter_data[HM_TYPE] == TYPE_ENUM:
                     entity_t = HmSelect
-                elif parameter_data[ATTR_HM_TYPE] == TYPE_FLOAT:
+                elif parameter_data[HM_TYPE] == TYPE_FLOAT:
                     entity_t = HmFloat
-                elif parameter_data[ATTR_HM_TYPE] == TYPE_INTEGER:
+                elif parameter_data[HM_TYPE] == TYPE_INTEGER:
                     entity_t = HmInteger
-                elif parameter_data[ATTR_HM_TYPE] == TYPE_STRING:
+                elif parameter_data[HM_TYPE] == TYPE_STRING:
                     # There is currently no entity platform in HA for this.
                     entity_t = HmText
                 else:
@@ -554,13 +554,13 @@ class HmDevice:
                         "create_entity_and_append_to_device failed: unsupported actor: %s %s %s",
                         channel_address,
                         parameter,
-                        parameter_data[ATTR_HM_TYPE],
+                        parameter_data[HM_TYPE],
                     )
         else:
             if parameter not in CLICK_EVENTS:
                 # Also check, if sensor could be a binary_sensor due to value_list.
                 if _is_binary_sensor(parameter_data):
-                    parameter_data[ATTR_HM_TYPE] = TYPE_BOOL
+                    parameter_data[HM_TYPE] = TYPE_BOOL
                     entity_t = HmBinarySensor
                 else:
                     entity_t = HmSensor
@@ -728,7 +728,7 @@ class CacheEntry:
 
 def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
-    if parameter_data[ATTR_HM_TYPE] == TYPE_BOOL:
+    if parameter_data[HM_TYPE] == TYPE_BOOL:
         return True
     value_list = parameter_data.get("VALUE_LIST")
     if value_list == ["CLOSED", "OPEN"]:

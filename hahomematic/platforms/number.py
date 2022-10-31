@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic.const import ATTR_HM_VALUE, HmPlatform
+from hahomematic.const import HM_VALUE, HmPlatform
 from hahomematic.entity import GenericEntity, GenericSystemVariable, ParameterT
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ class HmFloat(BaseNumber[float]):
         if value is not None and self._min <= float(value) <= self._max:
             await super().send_value(value)
         elif self._special:
-            if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
+            if [sv for sv in self._special.values() if value == sv[HM_VALUE]]:
                 await super().send_value(value)
         else:
             _LOGGER.warning(
@@ -55,7 +55,7 @@ class HmInteger(BaseNumber[int]):
         if value is not None and self._min <= int(value) <= self._max:
             await super().send_value(value)
         elif self._special:
-            if [sv for sv in self._special.values() if value == sv[ATTR_HM_VALUE]]:
+            if [sv for sv in self._special.values() if value == sv[HM_VALUE]]:
                 await super().send_value(value)
         else:
             _LOGGER.warning(

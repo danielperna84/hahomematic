@@ -22,8 +22,6 @@ from aiohttp import ClientSession
 from hahomematic import config
 import hahomematic.client as hm_client
 from hahomematic.const import (
-    ATTR_HM_ADDRESS,
-    ATTR_HM_TYPE,
     ATTR_INTERFACE_ID,
     ATTR_TYPE,
     ATTR_VALUE,
@@ -35,6 +33,8 @@ from hahomematic.const import (
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_DEVICES_CREATED,
     HH_EVENT_NEW_DEVICES,
+    HM_ADDRESS,
+    HM_TYPE,
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
     INIT_DATETIME,
@@ -587,7 +587,7 @@ class CentralUnit:
         async with self._sema_add_devices:
             # We need this list to avoid adding duplicates.
             known_addresses = [
-                dev_desc[ATTR_HM_ADDRESS]
+                dev_desc[HM_ADDRESS]
                 for dev_desc in self.device_descriptions.get_raw_device_descriptions(
                     interface_id
                 )
@@ -595,7 +595,7 @@ class CentralUnit:
             client = self.clients[interface_id]
             for dev_desc in dev_descriptions:
                 try:
-                    if dev_desc[ATTR_HM_ADDRESS] not in known_addresses:
+                    if dev_desc[HM_ADDRESS] not in known_addresses:
                         self.device_descriptions.add_device_description(
                             interface_id, dev_desc
                         )
@@ -1202,7 +1202,7 @@ class DeviceDescriptionCache(BasePersistentCache):
             device_descriptions=[
                 device
                 for device in self.get_raw_device_descriptions(interface_id)
-                if device[ATTR_HM_ADDRESS] not in deleted_addresses
+                if device[HM_ADDRESS] not in deleted_addresses
             ],
         )
 
@@ -1234,7 +1234,7 @@ class DeviceDescriptionCache(BasePersistentCache):
                 self.get_device_parameter(
                     interface_id=interface_id,
                     device_address=channel_address,
-                    parameter=ATTR_HM_TYPE,
+                    parameter=HM_TYPE,
                 )
             )
             channels[channel_address] = Channel(type=channel_name)
@@ -1297,7 +1297,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         if interface_id not in self._dev_descriptions:
             self._dev_descriptions[interface_id] = {}
 
-        address = device_description[ATTR_HM_ADDRESS]
+        address = device_description[HM_ADDRESS]
         self._dev_descriptions[interface_id][address] = device_description
         if ":" not in address and address not in self._addresses[interface_id]:
             self._addresses[interface_id][address] = []
