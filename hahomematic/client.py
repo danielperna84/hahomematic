@@ -13,11 +13,6 @@ from hahomematic.config import CHECK_INTERVAL
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
-    ATTR_HM_ADDRESS,
-    ATTR_HM_NAME,
-    ATTR_HM_PARAMSETS,
-    ATTR_HM_PARENT_TYPE,
-    ATTR_HM_TYPE,
     ATTR_ID,
     ATTR_INTERFACE,
     ATTR_NAME,
@@ -25,6 +20,11 @@ from hahomematic.const import (
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
+    HM_ADDRESS,
+    HM_NAME,
+    HM_PARAMSETS,
+    HM_PARENT_TYPE,
+    HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
     IF_BIDCOS_RF_NAME,
     IF_NAMES,
@@ -537,19 +537,19 @@ class Client(ABC):
         if not device_description:
             return {}
         paramsets: dict[str, dict[str, Any]] = {}
-        address = device_description[ATTR_HM_ADDRESS]
+        address = device_description[HM_ADDRESS]
         sub_type = device_description.get(ATTR_SUBTYPE)
         paramsets[address] = {}
         _LOGGER.debug("get_paramset_descriptions for %s", address)
-        for paramset_key in device_description.get(ATTR_HM_PARAMSETS, []):
+        for paramset_key in device_description.get(HM_PARAMSETS, []):
             if (device_channel := get_channel_no(address)) is None:
                 # No paramsets at root device
                 continue
 
             device_type = (
-                device_description[ATTR_HM_TYPE]
+                device_description[HM_TYPE]
                 if device_channel is None
-                else device_description[ATTR_HM_PARENT_TYPE]
+                else device_description[HM_PARENT_TYPE]
             )
             if (
                 only_relevant
@@ -782,7 +782,7 @@ class ClientHomegear(Client):
             try:
                 self.central.device_details.add_name(
                     address,
-                    await self._proxy_read.getMetadata(address, ATTR_HM_NAME),
+                    await self._proxy_read.getMetadata(address, HM_NAME),
                 )
             except BaseHomematicException as hhe:
                 _LOGGER.warning(

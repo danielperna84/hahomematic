@@ -16,15 +16,6 @@ import hahomematic.client as hm_client
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_DEVICE_TYPE,
-    ATTR_HM_DEFAULT,
-    ATTR_HM_FLAGS,
-    ATTR_HM_MAX,
-    ATTR_HM_MIN,
-    ATTR_HM_OPERATIONS,
-    ATTR_HM_SPECIAL,
-    ATTR_HM_TYPE,
-    ATTR_HM_UNIT,
-    ATTR_HM_VALUE_LIST,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
     ATTR_SUBTYPE,
@@ -37,7 +28,16 @@ from hahomematic.const import (
     EVENT_UN_REACH,
     FLAG_SERVICE,
     FLAG_VISIBLE,
+    HM_DEFAULT,
     HM_ENTITY_UNIT_REPLACE,
+    HM_FLAGS,
+    HM_MAX,
+    HM_MIN,
+    HM_OPERATIONS,
+    HM_SPECIAL,
+    HM_TYPE,
+    HM_UNIT,
+    HM_VALUE_LIST,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
@@ -239,19 +239,19 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
         """Assign parameter data to instance variables."""
-        self._type: str = parameter_data[ATTR_HM_TYPE]
-        self._value_list: list[str] | None = parameter_data.get(ATTR_HM_VALUE_LIST)
-        self._max: ParameterT = self._convert_value(parameter_data[ATTR_HM_MAX])
-        self._min: ParameterT = self._convert_value(parameter_data[ATTR_HM_MIN])
+        self._type: str = parameter_data[HM_TYPE]
+        self._value_list: list[str] | None = parameter_data.get(HM_VALUE_LIST)
+        self._max: ParameterT = self._convert_value(parameter_data[HM_MAX])
+        self._min: ParameterT = self._convert_value(parameter_data[HM_MIN])
         self._default: ParameterT = self._convert_value(
-            parameter_data.get(ATTR_HM_DEFAULT, self._min)
+            parameter_data.get(HM_DEFAULT, self._min)
         )
-        flags: int = parameter_data[ATTR_HM_FLAGS]
+        flags: int = parameter_data[HM_FLAGS]
         self._visible: bool = flags & FLAG_VISIBLE == FLAG_VISIBLE
         self._service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
-        self._operations: int = parameter_data[ATTR_HM_OPERATIONS]
-        self._special: dict[str, Any] | None = parameter_data.get(ATTR_HM_SPECIAL)
-        self._unit: str | None = parameter_data.get(ATTR_HM_UNIT)
+        self._operations: int = parameter_data[HM_OPERATIONS]
+        self._special: dict[str, Any] | None = parameter_data.get(HM_SPECIAL)
+        self._unit: str | None = parameter_data.get(HM_UNIT)
 
     @property
     def default(self) -> ParameterT:
