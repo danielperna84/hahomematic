@@ -19,6 +19,7 @@ from hahomematic.const import (
     HmEntityUsage,
     HmPlatform,
 )
+from hahomematic.decorators import config_property, value_property
 from hahomematic.entity import CallbackEntity, GenericSystemVariable
 from hahomematic.helpers import (
     ProgramData,
@@ -55,19 +56,19 @@ class HmHub(CallbackEntity):
         self._sema_fetch_sysvars = asyncio.Semaphore()
         self._sema_fetch_programs = asyncio.Semaphore()
         self._central: Final[hm_central.CentralUnit] = central
-        self.unique_identifier: Final[str] = generate_unique_identifier(
+        self._unique_identifier: Final[str] = generate_unique_identifier(
             central=central, address=HUB_ADDRESS
         )
-        self.name: Final[str] = central.name
+        self._name: Final[str] = central.name
         self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
         self._hub_attributes: Final[dict[str, Any]] = {}
-        self.platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
+        self._platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
         self._value: int | None = None
-        self.create_in_ha: Final[bool] = True
-        self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
+        self._create_in_ha: Final[bool] = True
+        self._usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
 
-    @property
+    @value_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self._central.available
@@ -77,7 +78,32 @@ class HmHub(CallbackEntity):
         """Return the state attributes."""
         return self._hub_attributes.copy()
 
-    @property
+    @config_property
+    def create_in_ha(self) -> bool:
+        """Return, if the entity should be created in HA."""
+        return self._create_in_ha
+
+    @config_property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
+
+    @config_property
+    def platform(self) -> HmPlatform:
+        """Return the platform of the entity."""
+        return self._platform
+
+    @config_property
+    def unique_identifier(self) -> str:
+        """Return the unique_identifier of the entity."""
+        return self._unique_identifier
+
+    @config_property
+    def usage(self) -> HmEntityUsage:
+        """Return the usage of the entity."""
+        return self._usage
+
+    @value_property
     def value(self) -> int | None:
         """Return the value of the entity."""
         return self._value

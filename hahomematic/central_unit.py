@@ -47,7 +47,11 @@ from hahomematic.const import (
     HmEventType,
     HmInterfaceEventType,
 )
-from hahomematic.decorators import callback_system_event
+from hahomematic.decorators import (
+    callback_system_event,
+    config_property,
+    value_property,
+)
 from hahomematic.device import HmDevice
 from hahomematic.entity import BaseEntity, CustomEntity, GenericEntity
 from hahomematic.exceptions import (
@@ -138,7 +142,7 @@ class CentralUnit:
         self._hub: HmHub | None = None
         self._version: str | None = None
 
-    @property
+    @value_property
     def available(self) -> bool:
         """Return the availability of the central_unit."""
         for client in self.clients.values():
@@ -151,7 +155,7 @@ class CentralUnit:
         """Return the Hub"""
         return self._hub
 
-    @property
+    @value_property
     def is_alive(self) -> bool:
         """Return if XmlRPC-Server is alive."""
         for client in self.clients.values():
@@ -159,7 +163,7 @@ class CentralUnit:
                 return False
         return True
 
-    @property
+    @config_property
     def model(self) -> str | None:
         """Return the model of the backend."""
         if not self._model:
@@ -167,14 +171,14 @@ class CentralUnit:
                 self._model = client.model
         return self._model
 
-    @property
+    @config_property
     def serial(self) -> str | None:
         """Return the serial of the backend."""
         if client := self.get_client():
             return client.config.serial
         return None
 
-    @property
+    @config_property
     def version(self) -> str | None:
         """Return the version of the backend."""
         if self._version is None:
