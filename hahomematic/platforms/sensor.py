@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from hahomematic.const import SYSVAR_TYPE_LIST, HmPlatform
+from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericSystemVariable
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class HmSensor(GenericEntity[Any]):
 
     _attr_platform = HmPlatform.SENSOR
 
-    @property
+    @value_property
     def value(self) -> Any | None:
         """Return the value."""
         if self._value is not None and self._value_list is not None:
@@ -72,7 +73,7 @@ class HmSysvarSensor(GenericSystemVariable):
 
     _attr_platform = HmPlatform.HUB_SENSOR
 
-    @property
+    @value_property
     def value(self) -> Any | None:
         """Return the value."""
         if (

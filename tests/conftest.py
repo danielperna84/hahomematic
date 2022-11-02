@@ -21,6 +21,7 @@ CCU_PASSWORD = "pass"
 GOT_DEVICES = False
 # content of conftest.py
 
+
 def pytest_configure(config):
     import sys
 
@@ -102,7 +103,9 @@ async def get_value_from_generic_entity(
         central_unit=central_unit, address=address, parameter=parameter
     )
     assert hm_entity
-    await hm_entity.load_entity_value(call_source=const.HmCallSource.MANUAL_OR_SCHEDULED)
+    await hm_entity.load_entity_value(
+        call_source=const.HmCallSource.MANUAL_OR_SCHEDULED
+    )
     return hm_entity.value
 
 
@@ -132,7 +135,9 @@ async def get_hm_custom_entity(
     for custom_entity in hm_device.custom_entities.values():
         if custom_entity.channel_no == channel_no:
             if do_load:
-                await custom_entity.load_entity_value(call_source=const.HmCallSource.MANUAL_OR_SCHEDULED)
+                await custom_entity.load_entity_value(
+                    call_source=const.HmCallSource.MANUAL_OR_SCHEDULED
+                )
             return custom_entity
     return None
 

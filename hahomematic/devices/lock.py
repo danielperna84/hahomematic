@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform
+from hahomematic.decorators import value_property
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_DIRECTION,
@@ -45,22 +46,22 @@ class BaseLock(CustomEntity):
 
     _attr_platform = HmPlatform.LOCK
 
-    @property
+    @value_property
     @abstractmethod
     def is_locked(self) -> bool:
         """Return true if lock is on."""
 
-    @property
+    @value_property
     @abstractmethod
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
 
-    @property
+    @value_property
     @abstractmethod
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
 
-    @property
+    @value_property
     @abstractmethod
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
@@ -97,26 +98,26 @@ class CeIpLock(BaseLock):
             field_name=FIELD_ERROR, entity_type=HmBinarySensor
         )
 
-    @property
+    @value_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._e_lock_state.value == LOCK_STATE_LOCKED
 
-    @property
+    @value_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == HM_LOCKING
         return None
 
-    @property
+    @value_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == HM_UNLOCKING
         return None
 
-    @property
+    @value_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value is True
@@ -153,26 +154,26 @@ class CeRfLock(BaseLock):
             field_name=FIELD_ERROR, entity_type=HmSensor
         )
 
-    @property
+    @value_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._e_state.value is not True
 
-    @property
+    @value_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == HM_LOCKING
         return None
 
-    @property
+    @value_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == HM_UNLOCKING
         return None
 
-    @property
+    @value_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value != "NO_ERROR"

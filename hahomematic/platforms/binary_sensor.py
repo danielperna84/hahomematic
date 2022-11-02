@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 
 from hahomematic.const import HmPlatform
+from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericSystemVariable
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,8 +21,8 @@ class HmBinarySensor(GenericEntity[bool]):
 
     _attr_platform = HmPlatform.BINARY_SENSOR
 
-    @property
-    def value(self) -> bool | None:
+    @value_property
+    def value(self) -> bool | None:  # type: ignore[override]
         """Return the value of the entity."""
         if self._value is not None:
             return self._value
@@ -35,7 +36,7 @@ class HmSysvarBinarySensor(GenericSystemVariable):
 
     _attr_platform = HmPlatform.HUB_BINARY_SENSOR
 
-    @property
+    @value_property
     def value(self) -> bool | None:
         """Return the value of the entity."""
         if self._value is not None:

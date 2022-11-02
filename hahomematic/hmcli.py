@@ -101,7 +101,7 @@ def main() -> None:
             sys.exit(0)
         elif args.paramset_key == PARAMSET_KEY_MASTER and args.value is None:
             paramset: dict[str, Any] | None
-            if paramset := proxy.getParamset(args.address, args.paramset_key):  # type: ignore
+            if paramset := proxy.getParamset(args.address, args.paramset_key):  # type: ignore[assignment]
                 if param_value := paramset.get(args.parameter):
                     if args.json:
                         print(json.dumps({args.parameter: param_value}))

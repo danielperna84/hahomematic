@@ -6,6 +6,7 @@ import logging
 from typing import Any, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, HmPlatform
+from hahomematic.decorators import value_property
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_COLOR,
@@ -70,57 +71,57 @@ class BaseHmLight(CustomEntity):
             field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction
         )
 
-    @property
+    @value_property
     @abstractmethod
     def is_on(self) -> bool | None:
         """Return true if light is on."""
 
-    @property
+    @value_property
     @abstractmethod
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
 
-    @property
+    @value_property
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between 153..500."""
         return None
 
-    @property
+    @value_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return None
 
-    @property
+    @value_property
     def supports_brightness(self) -> bool:
         """Flag if light supports brightness."""
         return isinstance(self._e_level, HmFloat)
 
-    @property
+    @value_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
         return False
 
-    @property
+    @value_property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
         return False
 
-    @property
+    @value_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return False
 
-    @property
+    @value_property
     def supports_transition(self) -> bool:
         """Flag if light supports transition."""
         return isinstance(self._e_ramp_time_value, HmAction)
 
-    @property
+    @value_property
     def effect(self) -> str | None:
         """Return the current effect."""
         return None
 
-    @property
+    @value_property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return None
@@ -171,17 +172,17 @@ class CeDimmer(BaseHmLight):
             field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
         )
 
-    @property
-    def is_on(self) -> bool:
+    @value_property
+    def is_on(self) -> bool | None:
         """Return true if dimmer is on."""
         return self._e_level.value is not None and self._e_level.value > 0.0
 
-    @property
-    def brightness(self) -> int:
+    @value_property
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return int((self._e_level.value or 0.0) * 255)
 
-    @property
+    @value_property
     def channel_brightness(self) -> int | None:
         """Return the channel_brightness of this light between 0..255."""
         if self._e_channel_level.value:
@@ -212,8 +213,8 @@ class CeColorDimmer(CeDimmer):
             field_name=FIELD_PROGRAM, entity_type=HmInteger
         )
 
-    @property
-    def hs_color(self) -> tuple[float, float]:
+    @value_property
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if self._e_color.value:
             hm_color = self._e_color.value
@@ -226,24 +227,24 @@ class CeColorDimmer(CeDimmer):
             return hm_color / 200 * 360, 100
         return 0.0, 0.0
 
-    @property
+    @value_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color temperature."""
         return True
 
-    @property
+    @value_property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
         return True
 
-    @property
+    @value_property
     def effect(self) -> str | None:
         """Return the current effect."""
         if self._e_effect is not None and self._e_effect.value is not None:
             return self._effect_list[int(self._e_effect.value)]
         return None
 
-    @property
+    @value_property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return self._effect_list
@@ -283,15 +284,15 @@ class CeColorTempDimmer(CeDimmer):
             field_name=FIELD_COLOR_LEVEL, entity_type=HmFloat
         )
 
-    @property
-    def color_temp(self) -> int:
+    @value_property
+    def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between 153..500."""
         return int(
             HM_MAX_MIREDS
             - (HM_MAX_MIREDS - HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
         )
 
-    @property
+    @value_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
         return True
@@ -321,7 +322,7 @@ class CeIpFixedColorLight(BaseHmLight):
         "PURPLE": (300.0, 100.0),
     }
 
-    @property
+    @value_property
     def color_name(self) -> str | None:
         """Return the name of the color"""
         return self._e_color.value
@@ -353,13 +354,13 @@ class CeIpFixedColorLight(BaseHmLight):
             field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction
         )
 
-    @property
-    def is_on(self) -> bool:
+    @value_property
+    def is_on(self) -> bool | None:
         """Return true if dimmer is on."""
         return self._e_level.value is not None and self._e_level.value > 0.0
 
-    @property
-    def brightness(self) -> int:
+    @value_property
+    def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return int((self._e_level.value or 0.0) * 255)
 
@@ -370,8 +371,8 @@ class CeIpFixedColorLight(BaseHmLight):
             return int(self._e_channel_level.value * 255)
         return None
 
-    @property
-    def hs_color(self) -> tuple[float, float]:
+    @value_property
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if self._e_color.value:
             return self._color_switcher.get(self._e_color.value, (0.0, 0.0))
@@ -384,7 +385,7 @@ class CeIpFixedColorLight(BaseHmLight):
             return self._color_switcher.get(self._e_channel_color.value, (0.0, 0.0))
         return None
 
-    @property
+    @value_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return True
