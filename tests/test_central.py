@@ -35,6 +35,14 @@ async def test_central(central, loop) -> None:
         for entity in device.entities.values():
             if entity.parameter not in data[device.device_type]:
                 data[device.device_type][entity.parameter] = f"{entity.hmtype}"
+        pub_value_props = get_public_attributes_for_value_property(
+            data_object=device
+        )
+        assert pub_value_props
+        pub_config_props = get_public_attributes_for_config_property(
+            data_object=device
+        )
+        assert pub_config_props
 
     custom_entities = []
     for device in central.hm_devices.values():
@@ -63,6 +71,14 @@ async def test_central(central, loop) -> None:
                 entity_types[entity.hmtype][type(entity).__name__] = []
 
             entity_types[entity.hmtype][type(entity).__name__].append(entity)
+        pub_value_props = get_public_attributes_for_value_property(
+            data_object=entity
+        )
+        assert pub_value_props
+        pub_config_props = get_public_attributes_for_config_property(
+            data_object=entity
+        )
+        assert pub_config_props
 
     parameters = []
     for entity in central.hm_entities.values():

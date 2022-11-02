@@ -43,6 +43,7 @@ from hahomematic.const import (
     HmCallSource,
     HmForcedDeviceAvailability,
 )
+from hahomematic.decorators import config_property, value_property
 from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
     BaseEntity,
@@ -87,12 +88,12 @@ class HmDevice:
         Initialize the device object.
         """
         self.central: Final[hm_central.CentralUnit] = central
-        self.interface_id: Final[str] = interface_id
-        self.interface: Final[str] = central.device_details.get_interface(
+        self._interface_id: Final[str] = interface_id
+        self._interface: Final[str] = central.device_details.get_interface(
             device_address
         )
         self.client: Final[hm_client.Client] = central.clients[interface_id]
-        self.device_address: Final[str] = device_address
+        self._device_address: Final[str] = device_address
         self.channels: Final[
             dict[str, hm_central.Channel]
         ] = central.device_descriptions.get_channels(interface_id, device_address)
@@ -109,14 +110,14 @@ class HmDevice:
             HmForcedDeviceAvailability.NOT_SET
         )
         self._update_callbacks: list[Callable] = []
-        self.device_type: Final[str] = str(
+        self._device_type: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
                 parameter=HM_TYPE,
             )
         )
-        self.sub_type: Final[str] = str(
+        self._sub_type: Final[str] = str(
             central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
@@ -124,10 +125,10 @@ class HmDevice:
             )
         )
         # marker if device will be created as custom entity
-        self.is_custom_entity: Final[bool] = entity_definition_exists(
-            self.device_type, self.sub_type
+        self._is_custom_entity: Final[bool] = entity_definition_exists(
+            self._device_type, self._sub_type
         )
-        self.firmware: Final[str] = str(
+        self._firmware: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
@@ -135,38 +136,83 @@ class HmDevice:
             )
         )
 
-        self.name: Final[str] = get_device_name(
+        self._name: Final[str] = get_device_name(
             central=central,
             device_address=device_address,
-            device_type=self.device_type,
+            device_type=self._device_type,
         )
         self.value_cache: Final[ValueCache] = ValueCache(device=self)
-        self.room: str | None = central.device_details.get_room(
+        self._room: str | None = central.device_details.get_room(
             device_address=device_address
         )
 
         _LOGGER.debug(
             "__init__: Initialized device: %s, %s, %s, %s",
-            self.interface_id,
-            self.device_address,
-            self.device_type,
-            self.name,
+            self._interface_id,
+            self._device_address,
+            self._device_type,
+            self._name,
         )
+
+    @config_property
+    def device_address(self) -> str:
+        """Return the device_address of the device."""
+        return self._device_address
+
+    @config_property
+    def device_type(self) -> str:
+        """Return the device_type of the device."""
+        return self._device_type
+
+    @config_property
+    def firmware(self) -> str:
+        """Return the firmware of the device."""
+        return self._firmware
+
+    @config_property
+    def interface(self) -> str:
+        """Return the interface of the device."""
+        return self._interface
+
+    @config_property
+    def interface_id(self) -> str:
+        """Return the interface_id of the device."""
+        return self._interface_id
+
+    @config_property
+    def is_custom_entity(self) -> bool:
+        """Return if custom_entity definition is available for the device."""
+        return self._is_custom_entity
+
+    @config_property
+    def name(self) -> str:
+        """Return the name of the device."""
+        return self._name
+
+    @config_property
+    def room(self) -> str | None:
+        """Return the room of the device."""
+        return self._room
+
+    @config_property
+    def sub_type(self) -> str:
+        """Return the sub_type of the device."""
+        return self._sub_type
 
     @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity"""
-        return self.entities.get((f"{self.device_address}:0", EVENT_UN_REACH))
+        return self.entities.get((f"{self._device_address}:0", EVENT_UN_REACH))
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity"""
-        return self.entities.get((f"{self.device_address}:0", EVENT_STICKY_UN_REACH))
+        return self.entities.get((f"{self._device_address}:0", EVENT_STICKY_UN_REACH))
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity"""
-        return self.entities.get((f"{self.device_address}:0", EVENT_CONFIG_PENDING))
+        return self.entities.get((f"{self._device_address}:0", EVENT_CONFIG_PENDING))
 
     def add_hm_entity(self, hm_entity: BaseEntity) -> None:
         """Add a hm entity to a device."""
@@ -237,8 +283,8 @@ class HmDevice:
         """Export the device definition for current device."""
         await hm_support.save_device_definition(
             client=self.client,
-            interface_id=self.interface_id,
-            device_address=self.device_address,
+            interface_id=self._interface_id,
+            device_address=self._device_address,
         )
 
     def _set_last_update(self) -> None:
@@ -254,9 +300,9 @@ class HmDevice:
         """
         Provide some useful information.
         """
-        return f"address: {self.device_address}, type: {self.device_type}, name: {self.name}, entities: {self.entities}"
+        return f"address: {self._device_address}, type: {self._device_type}, name: {self._name}, entities: {self.entities}"
 
-    @property
+    @value_property
     def available(self) -> bool:
         """Return the availability of the device."""
         if self._forced_availability != HmForcedDeviceAvailability.NOT_SET:
@@ -293,7 +339,7 @@ class HmDevice:
             paramset_key,
             channel_addresses,
         ) in self.central.paramset_descriptions.get_device_channels_by_paramset(
-            interface_id=self.interface_id, device_address=self.device_address
+            interface_id=self._interface_id, device_address=self._device_address
         ).items():
             for channel_address in channel_addresses:
                 await self.client.fetch_paramset_description(
@@ -312,7 +358,7 @@ class HmDevice:
             await self.value_cache.init_base_entities()
         _LOGGER.debug(
             "init_data: Skipping load_data, missing entities for %s.",
-            self.device_address,
+            self._device_address,
         )
 
     def create_entities_and_append_to_device(self) -> None:
@@ -328,7 +374,7 @@ class HmDevice:
                 continue
 
             if not self.central.paramset_descriptions.get_by_interface_channel_address(
-                interface_id=self.interface_id, channel_address=channel_address
+                interface_id=self._interface_id, channel_address=channel_address
             ):
                 _LOGGER.debug(
                     "create_entities: Skipping channel %s, missing paramsets.",
@@ -338,11 +384,11 @@ class HmDevice:
             for (
                 paramset_key
             ) in self.central.paramset_descriptions.get_by_interface_channel_address(
-                interface_id=self.interface_id, channel_address=channel_address
+                interface_id=self._interface_id, channel_address=channel_address
             ):
                 if not self.central.parameter_visibility.is_relevant_paramset(
-                    device_type=self.device_type,
-                    sub_type=self.sub_type,
+                    device_type=self._device_type,
+                    sub_type=self._sub_type,
                     device_channel=device_channel,
                     paramset_key=paramset_key,
                 ):
@@ -351,7 +397,7 @@ class HmDevice:
                     parameter,
                     parameter_data,
                 ) in self.central.paramset_descriptions.get_by_interface_channel_address_paramset_key(
-                    interface_id=self.interface_id,
+                    interface_id=self._interface_id,
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                 ).items():
@@ -363,7 +409,7 @@ class HmDevice:
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
-                        if self.device_type in HM_VIRTUAL_REMOTE_TYPES:
+                        if self._device_type in HM_VIRTUAL_REMOTE_TYPES:
                             self._create_action_and_append_to_device(
                                 channel_address=channel_address,
                                 paramset_key=paramset_key,
@@ -378,8 +424,8 @@ class HmDevice:
                         parameter_data[HM_FLAGS] & FLAG_INTERAL
                         and parameter not in ALLOW_INTERNAL_PARAMETERS
                         and not self.central.parameter_visibility.parameter_is_un_ignored(
-                            device_type=self.device_type,
-                            sub_type=self.sub_type,
+                            device_type=self._device_type,
+                            sub_type=self._sub_type,
                             device_channel=device_channel,
                             paramset_key=paramset_key,
                             parameter=parameter,
@@ -399,17 +445,17 @@ class HmDevice:
                         )
 
         # create custom entities
-        if self.is_custom_entity:
+        if self._is_custom_entity:
             _LOGGER.debug(
                 "create_entities: Handling custom entity integration: %s, %s, %s",
-                self.interface_id,
-                self.device_address,
-                self.device_type,
+                self._interface_id,
+                self._device_address,
+                self._device_type,
             )
 
             # Call the custom creation function.
             for (device_func, group_base_channels) in get_device_funcs(
-                self.device_type, self.sub_type
+                self._device_type, self._sub_type
             ):
                 device_func(self, group_base_channels)
 
@@ -431,7 +477,7 @@ class HmDevice:
             "create_action_and_append_to_device: Creating action for %s, %s, %s",
             channel_address,
             parameter,
-            self.interface_id,
+            self._interface_id,
         )
 
         if action := HmAction(
@@ -462,7 +508,7 @@ class HmDevice:
             "create_event_and_append_to_device: Creating event for %s, %s, %s",
             channel_address,
             parameter,
-            self.interface_id,
+            self._interface_id,
         )
         action_event_t: type[BaseEvent] | None = None
         if parameter_data[HM_OPERATIONS] & OPERATION_EVENT:
@@ -492,8 +538,8 @@ class HmDevice:
         platform should be used, and creates the required entities.
         """
         if self.central.parameter_visibility.ignore_parameter(
-            device_type=self.device_type,
-            sub_type=self.sub_type,
+            device_type=self._device_type,
+            sub_type=self._sub_type,
             device_channel=get_device_channel(channel_address),
             paramset_key=paramset_key,
             parameter=parameter,
@@ -520,7 +566,7 @@ class HmDevice:
             "create_entity_and_append_to_device: Creating entity for %s, %s, %s",
             channel_address,
             parameter,
-            self.interface_id,
+            self._interface_id,
         )
         entity_t: type[GenericEntity] | None = None
         if parameter_data[HM_OPERATIONS] & OPERATION_WRITE:
