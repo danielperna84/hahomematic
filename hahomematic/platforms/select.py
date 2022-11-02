@@ -8,6 +8,7 @@ import logging
 from typing import Union
 
 from hahomematic.const import HmPlatform
+from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericSystemVariable
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,8 +23,8 @@ class HmSelect(GenericEntity[Union[int, str]]):
 
     _attr_platform = HmPlatform.SELECT
 
-    @property
-    def value(self) -> str | None:
+    @value_property
+    def value(self) -> str | None:  # type: ignore[override]
         """Get the value of the entity."""
         if self._value is not None and self._value_list is not None:
             return self._value_list[int(self._value)]
@@ -46,7 +47,7 @@ class HmSysvarSelect(GenericSystemVariable):
     _attr_platform = HmPlatform.HUB_SELECT
     _attr_is_extended = True
 
-    @property
+    @value_property
     def value(self) -> str | None:
         """Get the value of the entity."""
         if self._value is not None and self.value_list is not None:

@@ -5,6 +5,7 @@ import logging
 from typing import Any, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, HmPlatform
+from hahomematic.decorators import value_property
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_STATE,
@@ -45,7 +46,7 @@ class CeSwitch(CustomEntity):
         """Return the current channel value of the switch."""
         return self._e_channel_state.value
 
-    @property
+    @value_property
     def value(self) -> bool | None:
         """Return the current value of the switch."""
         return self._e_state.value

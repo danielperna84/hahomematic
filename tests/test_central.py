@@ -1,5 +1,5 @@
 """Test the HaHomematic central."""
-import json
+from __future__ import annotations
 
 from conftest import (
     get_hm_custom_entity,
@@ -13,6 +13,10 @@ import pytest
 from hahomematic.entity import GenericEntity
 from hahomematic.const import HmEntityUsage
 from hahomematic.devices.climate import CeRfThermostat
+from hahomematic.decorators import (
+    get_public_attributes_for_value_property,
+    get_public_attributes_for_config_property,
+)
 
 
 @pytest.mark.asyncio
@@ -41,6 +45,14 @@ async def test_central(central, loop) -> None:
         if custom_entity.device.device_type not in ce_channels:
             ce_channels[custom_entity.device.device_type] = []
         ce_channels[custom_entity.device.device_type].append(custom_entity.channel_no)
+        pub_value_props = get_public_attributes_for_value_property(
+            data_object=custom_entity
+        )
+        assert pub_value_props
+        pub_config_props = get_public_attributes_for_config_property(
+            data_object=custom_entity
+        )
+        assert pub_config_props
 
     entity_types = {}
     for entity in central.hm_entities.values():
@@ -100,7 +112,9 @@ async def test_central(central, loop) -> None:
 
             if entity._type not in entity_type_operations[entity.platform]:
                 entity_type_operations[entity.platform][entity._type] = set()
-            entity_type_operations[entity.platform][entity._type].add(entity._operations)
+            entity_type_operations[entity.platform][entity._type].add(
+                entity._operations
+            )
 
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2340
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
@@ -138,7 +152,9 @@ async def test_action_on_lock(central, pydev_ccu, loop) -> None:
     """Test callback."""
     assert central
     assert pydev_ccu
-    lock = await get_hm_custom_entity(central_unit=central, address="VCU9724704", channel_no=1, do_load=True)
+    lock = await get_hm_custom_entity(
+        central_unit=central, address="VCU9724704", channel_no=1, do_load=True
+    )
     assert lock
     assert lock.is_locked is False
     await lock.lock()

@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform
+from hahomematic.decorators import value_property
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_CHANNEL_LEVEL,
@@ -77,14 +78,14 @@ class CeCover(CustomEntity):
             return float(self._e_channel_level.value)
         return self._e_level.value if self._e_level.value is not None else HM_CLOSED
 
-    @property
+    @value_property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if self.channel_level is not None:
             return int(self.channel_level * 100)
         return None
 
-    @property
+    @value_property
     def channel_operation_mode(self) -> str | None:
         """Return channel_operation_mode of cover."""
         if self._e_channel_level:
@@ -101,21 +102,21 @@ class CeCover(CustomEntity):
         """Move the cover to a specific position. Value range is 0.0 to 1.0."""
         await self._e_level.send_value(level)
 
-    @property
+    @value_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.channel_level is not None:
             return self.channel_level == HM_CLOSED
         return None
 
-    @property
+    @value_property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == HM_OPENING
         return None
 
-    @property
+    @value_property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._e_direction.value is not None:
@@ -155,7 +156,7 @@ class CeBlind(CeCover):
             return float(self._e_channel_level_2.value)
         return self._e_level_2.value if self._e_level_2.value is not None else HM_CLOSED
 
-    @property
+    @value_property
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if self.channel_tilt_level is not None:
@@ -222,7 +223,7 @@ class CeGarage(CustomEntity):
             field_name=FIELD_SECTION, entity_type=HmSensor
         )
 
-    @property
+    @value_property
     def current_cover_position(self) -> int | None:
         """Return current position of the garage door ."""
         if self._e_door_state.value == GARAGE_DOOR_STATE_OPEN:
@@ -242,21 +243,21 @@ class CeGarage(CustomEntity):
         elif 0.0 <= position <= 10.0:
             await self.close_cover()
 
-    @property
+    @value_property
     def is_closed(self) -> bool | None:
         """Return if the garage door is closed."""
         if self._e_door_state.value is not None:
             return str(self._e_door_state.value) == GARAGE_DOOR_STATE_CLOSED
         return None
 
-    @property
+    @value_property
     def is_opening(self) -> bool | None:
         """Return if the garage door is opening."""
         if self._e_section.value is not None:
             return int(self._e_section.value) == GARAGE_DOOR_SECTION_OPENING
         return None
 
-    @property
+    @value_property
     def is_closing(self) -> bool | None:
         """Return if the garage door is closing."""
         if self._e_section.value is not None:

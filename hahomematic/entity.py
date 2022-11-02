@@ -53,6 +53,7 @@ from hahomematic.const import (
     HmEventType,
     HmPlatform,
 )
+from hahomematic.decorators import config_property, value_property
 import hahomematic.device as hm_device
 import hahomematic.devices as hm_custom_entity
 import hahomematic.devices.entity_definition as hm_entity_definition
@@ -149,22 +150,22 @@ class BaseEntity(ABC):
         self.entity_name_data: Final[EntityNameData] = self._generate_entity_name_data()
         self.name: Final[str | None] = self.entity_name_data.entity_name
 
-    @property
+    @value_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.device.available
 
-    @property
+    @config_property
     def force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
         return None
 
-    @property
+    @config_property
     def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return self._attr_platform
 
-    @property
+    @config_property
     def usage(self) -> HmEntityUsage:
         """Return the entity usage."""
         if self.force_enabled is None:
@@ -175,8 +176,7 @@ class BaseEntity(ABC):
             return HmEntityUsage.EVENT
         return HmEntityUsage.ENTITY_NO_CREATE
 
-    @usage.setter
-    def usage(self, usage: HmEntityUsage) -> None:
+    def set_usage(self, usage: HmEntityUsage) -> None:
         """Set the entity usage."""
         self._usage = usage
 
@@ -253,62 +253,57 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self._special: dict[str, Any] | None = parameter_data.get(HM_SPECIAL)
         self._unit: str | None = parameter_data.get(HM_UNIT)
 
-    @property
+    @config_property
     def default(self) -> ParameterT:
         """Return default value."""
         return self._default
 
-    @property
+    @config_property
     def hmtype(self) -> str:
         """Return the HomeMatic type."""
         return self._type
 
-    @property
+    @config_property
     def max(self) -> ParameterT:
         """Return max value."""
         return self._max
 
-    @property
+    @config_property
     def min(self) -> ParameterT:
         """Return min value."""
         return self._min
 
-    @property
+    @config_property
     def multiplier(self) -> int:
         """Return multiplier value."""
         return 100 if self._unit and self._unit == "100%" else 1
 
-    @property
-    def operations(self) -> int:
-        """Return the operations mode of the entity."""
-        return self._operations
-
-    @property
+    @config_property
     def is_readable(self) -> bool:
         """Return, if entity is readable."""
         return bool(self._operations & OPERATION_READ)
 
-    @property
+    @config_property
     def is_writeable(self) -> bool:
         """Return, if entity is writeable."""
         return bool(self._operations & OPERATION_WRITE)
 
-    @property
+    @config_property
     def supports_events(self) -> bool:
         """Return, if entity is supports events."""
         return bool(self._operations & OPERATION_EVENT)
 
-    @property
+    @config_property
     def unit(self) -> str | None:
         """Return unit value."""
         return fix_unit(self._unit)
 
-    @property
+    @value_property
     def value_list(self) -> list[str] | None:
         """Return the value_list."""
         return self._value_list
 
-    @property
+    @config_property
     def visible(self) -> bool:
         """Return the if entity is visible in ccu."""
         return self._visible
@@ -446,7 +441,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             self.event
         )
 
-    @property
+    @config_property
     def channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
         cop: GenericEntity | None = self.device.entities.get(
@@ -456,7 +451,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             return str(cop.value)
         return None
 
-    @property
+    @config_property
     def force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
         if self.channel_operation_mode is None:
@@ -470,22 +465,22 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             return True
         return False
 
-    @property
+    @value_property
     def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
         return self._last_update > INIT_DATETIME
 
-    @property
+    @value_property
     def last_update(self) -> datetime:
         """Return the last updated datetime value"""
         return self._last_update
 
-    @property
+    @value_property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
         return self._state_uncertain
 
-    @property
+    @value_property
     def value(self) -> ParameterT | None:
         """Return the value of the entity."""
         return self._value
@@ -636,7 +631,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
 
-    @property
+    @value_property
     def last_update(self) -> datetime:
         """Return the latest last_update timestamp."""
         latest_update: datetime = INIT_DATETIME
@@ -646,7 +641,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                     latest_update = entity_last_update
         return latest_update
 
-    @property
+    @value_property
     def is_valid(self) -> bool:
         """Return if the state is valid."""
         for hm_entity in self._readable_entities:
@@ -654,7 +649,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 return False
         return True
 
-    @property
+    @value_property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
         for hm_entity in self._readable_entities:
@@ -781,7 +776,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                     channel_address=channel_address, parameter=parameter
                 ):
                     if is_visible:
-                        entity.usage = HmEntityUsage.CE_VISIBLE
+                        entity.set_usage(HmEntityUsage.CE_VISIBLE)
                     self._add_entity(field_name=field_name, entity=entity)
 
     def _mark_entity(self, field_desc: dict[int, set[str]]) -> None:
@@ -795,7 +790,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                     channel_address=channel_address, parameter=parameter
                 )
                 if entity:
-                    entity.usage = HmEntityUsage.ENTITY
+                    entity.set_usage(HmEntityUsage.ENTITY)
 
     def _mark_entity_by_custom_un_ignore_parameters(
         self, un_ignore_params_by_paramset_key: dict[str, set[str]]
@@ -809,7 +804,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                     entity.paramset_key == paramset_key
                     and entity.parameter in un_ignore_params
                 ):
-                    entity.usage = HmEntityUsage.ENTITY
+                    entity.set_usage(HmEntityUsage.ENTITY)
 
     def _add_entity(
         self, field_name: str, entity: GenericEntity | None, is_visible: bool = False
@@ -819,7 +814,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             return None
 
         if is_visible:
-            entity.usage = HmEntityUsage.CE_VISIBLE
+            entity.set_usage(HmEntityUsage.CE_VISIBLE)
 
         entity.register_update_callback(self.update_entity)
         self.data_entities[field_name] = entity
@@ -834,8 +829,10 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """get entity"""
         if entity := self.data_entities.get(field_name):
-            return cast(entity_type, entity)  # type: ignore
-        return cast(entity_type, NoneTypeEntity())  # type: ignore
+            return cast(entity_type, entity)  # type: ignore[redundant-cast, valid-type]
+        return cast(  # type:ignore[redundant-cast]
+            entity_type, NoneTypeEntity()  # type:ignore[valid-type]
+        )
 
 
 class GenericHubEntity(CallbackEntity):
@@ -863,7 +860,7 @@ class GenericHubEntity(CallbackEntity):
         self.create_in_ha: bool = True
         self.usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
 
-    @property
+    @value_property
     @abstractmethod
     def available(self) -> bool:
         """Return the availability of the device."""
@@ -872,7 +869,7 @@ class GenericHubEntity(CallbackEntity):
     def get_name(self, data: HubData) -> str:
         """Return the name of the hub entity."""
 
-    @property
+    @config_property
     def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return self._attr_platform
@@ -900,17 +897,17 @@ class GenericSystemVariable(GenericHubEntity):
         self._unit: Final[str | None] = data.unit
         self._value: bool | float | int | str | None = data.value
 
-    @property
+    @value_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.central.available
 
-    @property
+    @value_property
     def value(self) -> Any | None:
         """Return the value."""
         return self._value
 
-    @property
+    @config_property
     def unit(self) -> str | None:
         """Return the unit of the entity."""
         if self._unit:
@@ -919,7 +916,7 @@ class GenericSystemVariable(GenericHubEntity):
             return " "
         return None
 
-    @property
+    @config_property
     def is_extended(self) -> bool:
         """Return if the entity is an extended type."""
         return self._attr_is_extended
@@ -996,7 +993,7 @@ class BaseEvent(BaseParameterEntity[bool]):
             self.event
         )
 
-    @property
+    @config_property
     def event_type(self) -> HmEventType:
         """Return the event_type of the event."""
         return self._attr_event_type
@@ -1017,7 +1014,7 @@ class BaseEvent(BaseParameterEntity[bool]):
         # fire an event
         self.fire_event(value)
 
-    @property
+    @value_property
     def value(self) -> Any:
         """Return the value."""
         return self._value

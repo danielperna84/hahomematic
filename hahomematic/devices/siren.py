@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import logging
-from typing import Any, cast
+from typing import Any
 
 from hahomematic.const import HmPlatform
+from hahomematic.decorators import value_property
 import hahomematic.device as hm_device
 from hahomematic.devices.entity_definition import (
     FIELD_ACOUSTIC_ALARM_ACTIVE,
@@ -42,17 +43,17 @@ class BaseSiren(CustomEntity):
 
     _attr_platform = HmPlatform.SIREN
 
-    @property
+    @value_property
     @abstractmethod
     def is_on(self) -> bool:
         """Return true if siren is on."""
 
-    @property
+    @value_property
     @abstractmethod
     def available_tones(self) -> list[str] | None:
         """Return a list of available tones."""
 
-    @property
+    @value_property
     @abstractmethod
     def available_lights(self) -> list[str] | None:
         """Return a list of available lights."""
@@ -87,7 +88,7 @@ class CeIpSiren(BaseSiren):
             field_name=FIELD_OPTICAL_ALARM_SELECTION, entity_type=HmAction
         )
 
-    @property
+    @value_property
     def is_on(self) -> bool:
         """Return true if siren is on."""
         return (
@@ -95,15 +96,15 @@ class CeIpSiren(BaseSiren):
             or self._e_optical_alarm_active.value is True
         )
 
-    @property
+    @value_property
     def available_tones(self) -> list[str] | None:
         """Return a list of available tones."""
-        return cast(list[str], self._e_acoustic_alarm_selection.value_list)
+        return self._e_acoustic_alarm_selection.value_list
 
-    @property
+    @value_property
     def available_lights(self) -> list[str] | None:
         """Return a list of available lights."""
-        return cast(list[str], self._e_optical_alarm_selection.value_list)
+        return self._e_optical_alarm_selection.value_list
 
     async def turn_on(
         self,

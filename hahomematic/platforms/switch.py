@@ -8,6 +8,7 @@ import logging
 from typing import Any, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
+from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericSystemVariable
 
 PARAM_ON_TIME = "ON_TIME"
@@ -22,8 +23,8 @@ class HmSwitch(GenericEntity[bool]):
 
     _attr_platform = HmPlatform.SWITCH
 
-    @property
-    def value(self) -> bool | None:
+    @value_property
+    def value(self) -> bool | None:  # type: ignore[override]
         """Get the value of the entity."""
         if self._type == TYPE_ACTION:
             return False
