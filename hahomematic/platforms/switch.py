@@ -26,9 +26,9 @@ class HmSwitch(GenericEntity[bool]):
     @value_property
     def value(self) -> bool | None:  # type: ignore[override]
         """Get the value of the entity."""
-        if self._type == TYPE_ACTION:
+        if self._attr_type == TYPE_ACTION:
             return False
-        return self._value
+        return self._attr_value
 
     async def turn_on(self, **kwargs: dict[str, Any] | None) -> None:
         """Turn the switch on."""
@@ -44,8 +44,8 @@ class HmSwitch(GenericEntity[bool]):
     async def set_on_time_value(self, on_time: float) -> None:
         """Set the on time value in seconds."""
         await self._client.set_value(
-            channel_address=self._channel_address,
-            paramset_key=self._paramset_key,
+            channel_address=self._attr_channel_address,
+            paramset_key=self._attr_paramset_key,
             parameter=PARAM_ON_TIME,
             value=float(on_time),
         )

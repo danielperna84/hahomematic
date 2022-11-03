@@ -83,14 +83,14 @@ class Client(ABC):
         ] = self.central.json_rpc_client
 
         self._is_callback_alive: bool = True
-        self._available: bool = True
+        self._attr_available: bool = True
         self.last_updated: datetime = INIT_DATETIME
         self._connection_error_count: int = 0
 
     @property
     def available(self) -> bool:
         """Return the availability of the client."""
-        return self._available
+        return self._attr_available
 
     @property
     def model(self) -> str:
@@ -159,13 +159,13 @@ class Client(ABC):
     ) -> None:
         """Mark device's availability state for this interface."""
         available = forced_availability != HmForcedDeviceAvailability.FORCE_FALSE
-        if self._available != available:
+        if self._attr_available != available:
             for hm_device in self.central.hm_devices.values():
                 if hm_device.interface_id == self.interface_id:
                     hm_device.set_forced_availability(
                         forced_availability=forced_availability
                     )
-            self._available = available
+            self._attr_available = available
             _LOGGER.warning(
                 "mark_all_devices_availability: marked all devices %s for %s",
                 "available" if available else "unavailable",

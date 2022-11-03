@@ -26,17 +26,17 @@ class HmSelect(GenericEntity[Union[int, str]]):
     @value_property
     def value(self) -> str | None:  # type: ignore[override]
         """Get the value of the entity."""
-        if self._value is not None and self._value_list is not None:
-            return self._value_list[int(self._value)]
-        return str(self._default)
+        if self._attr_value is not None and self._attr_value_list is not None:
+            return self._attr_value_list[int(self._attr_value)]
+        return str(self._attr_default)
 
     async def send_value(self, value: int | str) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
         if isinstance(value, int):
             await super().send_value(value)
-        elif self._value_list:
-            await super().send_value(self._value_list.index(value))
+        elif self._attr_value_list:
+            await super().send_value(self._attr_value_list.index(value))
 
 
 class HmSysvarSelect(GenericSystemVariable):
@@ -50,8 +50,8 @@ class HmSysvarSelect(GenericSystemVariable):
     @value_property
     def value(self) -> str | None:
         """Get the value of the entity."""
-        if self._value is not None and self.value_list is not None:
-            return self.value_list[int(self._value)]
+        if self._attr_value is not None and self.value_list is not None:
+            return self.value_list[int(self._attr_value)]
         return None
 
     async def send_variable(self, value: int | str) -> None:

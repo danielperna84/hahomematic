@@ -126,10 +126,10 @@ async def test_central(central, loop) -> None:
             if entity.platform not in entity_type_operations:
                 entity_type_operations[entity.platform] = {}
 
-            if entity._type not in entity_type_operations[entity.platform]:
-                entity_type_operations[entity.platform][entity._type] = set()
-            entity_type_operations[entity.platform][entity._type].add(
-                entity._operations
+            if entity.hmtype not in entity_type_operations[entity.platform]:
+                entity_type_operations[entity.platform][entity.hmtype] = set()
+            entity_type_operations[entity.platform][entity.hmtype].add(
+                entity._attr_operations
             )
 
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2340

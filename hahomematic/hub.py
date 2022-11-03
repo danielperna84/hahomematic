@@ -56,17 +56,17 @@ class HmHub(CallbackEntity):
         self._sema_fetch_sysvars = asyncio.Semaphore()
         self._sema_fetch_programs = asyncio.Semaphore()
         self._central: Final[hm_central.CentralUnit] = central
-        self._unique_identifier: Final[str] = generate_unique_identifier(
+        self._attr_unique_identifier: Final[str] = generate_unique_identifier(
             central=central, address=HUB_ADDRESS
         )
-        self._name: Final[str] = central.name
+        self._attr_name: Final[str] = central.name
         self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
-        self._hub_attributes: Final[dict[str, Any]] = {}
-        self._platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
-        self._value: int | None = None
-        self._create_in_ha: Final[bool] = True
-        self._usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
+        self._attr_hub_attributes: Final[dict[str, Any]] = {}
+        self._attr_platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
+        self._attr_value: int | None = None
+        self._attr_create_in_ha: Final[bool] = True
+        self._attr_usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
 
     @value_property
     def available(self) -> bool:
@@ -76,37 +76,37 @@ class HmHub(CallbackEntity):
     @property
     def attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return self._hub_attributes.copy()
+        return self._attr_hub_attributes.copy()
 
     @config_property
     def create_in_ha(self) -> bool:
         """Return, if the entity should be created in HA."""
-        return self._create_in_ha
+        return self._attr_create_in_ha
 
     @config_property
     def name(self) -> str:
         """Return the name of the entity."""
-        return self._name
+        return self._attr_name
 
     @config_property
     def platform(self) -> HmPlatform:
         """Return the platform of the entity."""
-        return self._platform
+        return self._attr_platform
 
     @config_property
     def unique_identifier(self) -> str:
         """Return the unique_identifier of the entity."""
-        return self._unique_identifier
+        return self._attr_unique_identifier
 
     @config_property
     def usage(self) -> HmEntityUsage:
         """Return the usage of the entity."""
-        return self._usage
+        return self._attr_usage
 
     @value_property
     def value(self) -> int | None:
         """Return the value of the entity."""
-        return self._value
+        return self._attr_value
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
         """fetch sysvar data for the hub."""
@@ -129,13 +129,13 @@ class HmHub(CallbackEntity):
             if service_messages is not None and isinstance(service_messages, float):
                 value = int(service_messages)
 
-        if self._value != value:
-            self._value = value
+        if self._attr_value != value:
+            self._attr_value = value
             self.update_entity()
 
     async def _update_program_entities(self, include_internal: bool) -> None:
         """Retrieve all program data and update program values."""
-        self._hub_attributes.clear()
+        self._attr_hub_attributes.clear()
         programs = await self._central.get_all_programs(
             include_internal=include_internal
         )
@@ -173,7 +173,7 @@ class HmHub(CallbackEntity):
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
         """Retrieve all variable data and update hmvariable values."""
-        self._hub_attributes.clear()
+        self._attr_hub_attributes.clear()
         variables = await self._central.get_all_system_variables(
             include_internal=include_internal
         )
@@ -206,7 +206,7 @@ class HmHub(CallbackEntity):
             name = sysvar.name
             value = sysvar.value
             if _is_excluded(name, EXCLUDED_FROM_SENSOR):
-                self._hub_attributes[name] = value
+                self._attr_hub_attributes[name] = value
                 continue
 
             entity: GenericSystemVariable | None = self.sysvar_entities.get(name)
@@ -270,8 +270,8 @@ class HmHub(CallbackEntity):
     def _remove_sysvar_entity(self, del_entities: set[str]) -> None:
         """Remove sysvar entity from hub."""
         for name in del_entities:
-            if name in self._hub_attributes:
-                del self._hub_attributes[name]
+            if name in self._attr_hub_attributes:
+                del self._attr_hub_attributes[name]
 
             if name in self.sysvar_entities:
                 entity = self.sysvar_entities[name]
@@ -303,7 +303,7 @@ class HmHub(CallbackEntity):
         """Identify missing variables."""
         variable_names: dict[str, bool] = {x.name: x.extended_sysvar for x in variables}
         missing_variables: set[str] = set()
-        for name in self._hub_attributes:
+        for name in self._attr_hub_attributes:
             if name not in variable_names.keys():
                 missing_variables.add(name)
         for sysvar_entity in self.sysvar_entities.values():
