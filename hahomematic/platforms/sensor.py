@@ -25,11 +25,11 @@ class HmSensor(GenericEntity[Any]):
     @value_property
     def value(self) -> Any | None:
         """Return the value."""
-        if self._value is not None and self._value_list is not None:
-            return self._value_list[int(self._value)]
+        if self._attr_value is not None and self._attr_value_list is not None:
+            return self._attr_value_list[int(self._attr_value)]
         if convert_func := self._get_converter_func():
-            return convert_func(self._value)
-        return self._value
+            return convert_func(self._attr_value)
+        return self._attr_value
 
     def _get_converter_func(self) -> Any:
         """Return a converter based on sensor."""
@@ -78,11 +78,11 @@ class HmSysvarSensor(GenericSystemVariable):
         """Return the value."""
         if (
             self.data_type == SYSVAR_TYPE_LIST
-            and self._value is not None
+            and self._attr_value is not None
             and self.value_list is not None
         ):
-            return self.value_list[int(self._value)]
-        return _check_length_and_warn(name=self.ccu_var_name, value=self._value)
+            return self.value_list[int(self._attr_value)]
+        return _check_length_and_warn(name=self.ccu_var_name, value=self._attr_value)
 
 
 CONVERTERS_BY_DEVICE_PARAM: dict[tuple[str, str], Any] = {

@@ -24,9 +24,9 @@ class HmBinarySensor(GenericEntity[bool]):
     @value_property
     def value(self) -> bool | None:  # type: ignore[override]
         """Return the value of the entity."""
-        if self._value is not None:
-            return self._value
-        return self._default
+        if self._attr_value is not None:
+            return self._attr_value
+        return self._attr_default
 
 
 class HmSysvarBinarySensor(GenericSystemVariable):
@@ -39,6 +39,6 @@ class HmSysvarBinarySensor(GenericSystemVariable):
     @value_property
     def value(self) -> bool | None:
         """Return the value of the entity."""
-        if self._value is not None:
-            return bool(self._value)
+        if self._attr_value is not None:
+            return bool(self._attr_value)
         return None

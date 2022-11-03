@@ -29,18 +29,18 @@ class HmFloat(BaseNumber[float]):
 
     async def send_value(self, value: float) -> None:
         """Set the value of the entity."""
-        if value is not None and self._min <= float(value) <= self._max:
+        if value is not None and self._attr_min <= float(value) <= self._attr_max:
             await super().send_value(value)
-        elif self._special:
-            if [sv for sv in self._special.values() if value == sv[HM_VALUE]]:
+        elif self._attr_special:
+            if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
                 await super().send_value(value)
         else:
             _LOGGER.warning(
                 "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
                 value,
-                self._min,
-                self._max,
-                self._special,
+                self._attr_min,
+                self._attr_max,
+                self._attr_special,
             )
 
 
@@ -52,18 +52,18 @@ class HmInteger(BaseNumber[int]):
 
     async def send_value(self, value: int) -> None:
         """Set the value of the entity."""
-        if value is not None and self._min <= int(value) <= self._max:
+        if value is not None and self._attr_min <= int(value) <= self._attr_max:
             await super().send_value(value)
-        elif self._special:
-            if [sv for sv in self._special.values() if value == sv[HM_VALUE]]:
+        elif self._attr_special:
+            if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
                 await super().send_value(value)
         else:
             _LOGGER.warning(
                 "number.int failed: Invalid value: %s (min: %s, max: %s, special: %s)",
                 value,
-                self._min,
-                self._max,
-                self._special,
+                self._attr_min,
+                self._attr_max,
+                self._attr_special,
             )
 
 

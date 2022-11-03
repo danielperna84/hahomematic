@@ -97,7 +97,7 @@ class CentralUnit:
         )
         self._xml_rpc_server.register_central(self)
         self.local_port: Final[int] = self._xml_rpc_server.local_port
-        self._model: str | None = None
+        self._attr_model: str | None = None
 
         # Caches for CCU data
         self.device_data: Final[DeviceDataCache] = DeviceDataCache(central=self)
@@ -140,7 +140,7 @@ class CentralUnit:
         CENTRAL_INSTANCES[self.name] = self
         self._connection_checker: Final[ConnectionChecker] = ConnectionChecker(self)
         self._hub: HmHub | None = None
-        self._version: str | None = None
+        self._attr_version: str | None = None
 
     @value_property
     def available(self) -> bool:
@@ -166,10 +166,10 @@ class CentralUnit:
     @config_property
     def model(self) -> str | None:
         """Return the model of the backend."""
-        if not self._model:
+        if not self._attr_model:
             if client := self.get_client():
-                self._model = client.model
-        return self._model
+                self._attr_model = client.model
+        return self._attr_model
 
     @config_property
     def serial(self) -> str | None:
@@ -181,13 +181,13 @@ class CentralUnit:
     @config_property
     def version(self) -> str | None:
         """Return the version of the backend."""
-        if self._version is None:
+        if self._attr_version is None:
             versions: list[str] = []
             for client in self.clients.values():
                 if client.config.version:
                     versions.append(client.config.version)
-            self._version = max(versions) if versions else None
-        return self._version
+            self._attr_version = max(versions) if versions else None
+        return self._attr_version
 
     async def start(self) -> None:
         """Start processing of the central unit."""
