@@ -179,7 +179,7 @@ class HmDevice:
         """Return the interface_id of the device."""
         return self._attr_interface_id
 
-    @config_property
+    @property
     def is_custom_entity(self) -> bool:
         """Return if custom_entity definition is available for the device."""
         return self._attr_is_custom_entity

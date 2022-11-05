@@ -286,7 +286,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return default value."""
         return self._attr_default
 
-    @config_property
+    @property
     def hmtype(self) -> str:
         """Return the HomeMatic type."""
         return self._attr_type
@@ -316,17 +316,17 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return paramset_key name."""
         return self._attr_paramset_key
 
-    @config_property
+    @property
     def is_readable(self) -> bool:
         """Return, if entity is readable."""
         return bool(self._attr_operations & OPERATION_READ)
 
-    @config_property
+    @property
     def is_writeable(self) -> bool:
         """Return, if entity is writeable."""
         return bool(self._attr_operations & OPERATION_WRITE)
 
-    @config_property
+    @property
     def supports_events(self) -> bool:
         """Return, if entity is supports events."""
         return bool(self._attr_operations & OPERATION_EVENT)
@@ -341,7 +341,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return the value_list."""
         return self._attr_value_list
 
-    @config_property
+    @property
     def visible(self) -> bool:
         """Return the if entity is visible in ccu."""
         return self._attr_visible
@@ -993,7 +993,7 @@ class GenericSystemVariable(GenericHubEntity):
             return " "
         return None
 
-    @config_property
+    @property
     def is_extended(self) -> bool:
         """Return if the entity is an extended type."""
         return self._attr_is_extended
