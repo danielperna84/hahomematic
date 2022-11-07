@@ -158,8 +158,8 @@ class BaseEntity(ABC):
         """Return the availability of the device."""
         return self.device.available
 
-    @config_property
-    def force_enabled(self) -> bool | None:
+    @property
+    def _force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
         return None
 
@@ -196,11 +196,11 @@ class BaseEntity(ABC):
     @config_property
     def usage(self) -> HmEntityUsage:
         """Return the entity usage."""
-        if self.force_enabled is None:
+        if self._force_enabled is None:
             return self._attr_usage
-        if isinstance(self, GenericEntity) and self.force_enabled is True:
+        if isinstance(self, GenericEntity) and self._force_enabled is True:
             return HmEntityUsage.ENTITY
-        if isinstance(self, BaseEvent) and self.force_enabled is True:
+        if isinstance(self, BaseEvent) and self._force_enabled is True:
             return HmEntityUsage.EVENT
         return HmEntityUsage.ENTITY_NO_CREATE
 
@@ -286,7 +286,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return default value."""
         return self._attr_default
 
-    @config_property
+    @property
     def hmtype(self) -> str:
         """Return the HomeMatic type."""
         return self._attr_type
@@ -316,17 +316,17 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return paramset_key name."""
         return self._attr_paramset_key
 
-    @config_property
+    @property
     def is_readable(self) -> bool:
         """Return, if entity is readable."""
         return bool(self._attr_operations & OPERATION_READ)
 
-    @config_property
+    @property
     def is_writeable(self) -> bool:
         """Return, if entity is writeable."""
         return bool(self._attr_operations & OPERATION_WRITE)
 
-    @config_property
+    @property
     def supports_events(self) -> bool:
         """Return, if entity is supports events."""
         return bool(self._attr_operations & OPERATION_EVENT)
@@ -341,7 +341,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return the value_list."""
         return self._attr_value_list
 
-    @config_property
+    @property
     def visible(self) -> bool:
         """Return the if entity is visible in ccu."""
         return self._attr_visible
@@ -493,8 +493,8 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             return str(cop.value)
         return None
 
-    @config_property
-    def force_enabled(self) -> bool | None:
+    @property
+    def _force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
         if self.channel_operation_mode is None:
             return None
@@ -993,7 +993,7 @@ class GenericSystemVariable(GenericHubEntity):
             return " "
         return None
 
-    @config_property
+    @property
     def is_extended(self) -> bool:
         """Return if the entity is an extended type."""
         return self._attr_is_extended
