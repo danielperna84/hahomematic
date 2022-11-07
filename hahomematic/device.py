@@ -125,7 +125,7 @@ class HmDevice:
             )
         )
         # marker if device will be created as custom entity
-        self._attr_is_custom_entity: Final[bool] = entity_definition_exists(
+        self._has_custom_entity_definition: Final[bool] = entity_definition_exists(
             self._attr_device_type, self._attr_sub_type
         )
         self._attr_firmware: Final[str] = str(
@@ -182,7 +182,7 @@ class HmDevice:
     @property
     def is_custom_entity(self) -> bool:
         """Return if custom_entity definition is available for the device."""
-        return self._attr_is_custom_entity
+        return self._has_custom_entity_definition
 
     @config_property
     def name(self) -> str:
@@ -450,7 +450,7 @@ class HmDevice:
                         )
 
         # create custom entities
-        if self._attr_is_custom_entity:
+        if self._has_custom_entity_definition:
             _LOGGER.debug(
                 "create_entities: Handling custom entity integration: %s, %s, %s",
                 self._attr_interface_id,
