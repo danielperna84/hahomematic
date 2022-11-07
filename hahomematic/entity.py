@@ -158,8 +158,8 @@ class BaseEntity(ABC):
         """Return the availability of the device."""
         return self.device.available
 
-    @config_property
-    def force_enabled(self) -> bool | None:
+    @property
+    def _force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
         return None
 
@@ -196,11 +196,11 @@ class BaseEntity(ABC):
     @config_property
     def usage(self) -> HmEntityUsage:
         """Return the entity usage."""
-        if self.force_enabled is None:
+        if self._force_enabled is None:
             return self._attr_usage
-        if isinstance(self, GenericEntity) and self.force_enabled is True:
+        if isinstance(self, GenericEntity) and self._force_enabled is True:
             return HmEntityUsage.ENTITY
-        if isinstance(self, BaseEvent) and self.force_enabled is True:
+        if isinstance(self, BaseEvent) and self._force_enabled is True:
             return HmEntityUsage.EVENT
         return HmEntityUsage.ENTITY_NO_CREATE
 
@@ -493,8 +493,8 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             return str(cop.value)
         return None
 
-    @config_property
-    def force_enabled(self) -> bool | None:
+    @property
+    def _force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
         if self.channel_operation_mode is None:
             return None
