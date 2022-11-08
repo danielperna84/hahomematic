@@ -2,6 +2,7 @@ Version 2022.11.1 (2022-11-03)
 - Rename protected attributes to _attr*
 - Code cleanup
 - Add option to wrap entities to a different platform
+  - Wrap LEVEL of HmIP-TRV*, HmIP-HEATING to sensor
 
 Version 2022.11.0 (2022-11-02)
 - Rename ATTR_HM_* to HM*
