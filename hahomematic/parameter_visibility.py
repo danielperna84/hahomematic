@@ -19,8 +19,10 @@ from hahomematic.const import (
     PARAM_TEMPERATURE_MINIMUM,
     PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
+    HmPlatform,
 )
-from hahomematic.helpers import check_or_create_directory
+import hahomematic.entity as hm_entity
+from hahomematic.helpers import check_or_create_directory, device_in_list
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -189,6 +191,9 @@ _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
 }
 
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
+
+_WRAP_ENTITY: dict[str | frozenset[str], dict[str, HmPlatform]] = {
+}
 
 
 class ParameterVisibilityCache:
@@ -536,6 +541,26 @@ class ParameterVisibilityCache:
                 ):
                     return True
         return False
+
+    def wrap_entity(self, wrapped_entity: hm_entity.GenericEntity) -> HmPlatform | None:
+        """Check if parameter of a device should be wrapped to a different platform."""
+
+        for devices, wrapper_def in _WRAP_ENTITY.items():
+            if device_in_list(
+                devices=devices,
+                device_type=wrapped_entity.device.device_type,
+                do_wildcard_search=True,
+            ) or (
+                wrapped_entity.device.sub_type
+                and device_in_list(
+                    devices=devices,
+                    device_type=wrapped_entity.device.sub_type,
+                    do_wildcard_search=False,
+                )
+            ):
+                if wrapped_entity.parameter in wrapper_def:
+                    return wrapper_def[wrapped_entity.parameter]
+        return None
 
     async def load(self) -> None:
         """Load custom un ignore parameters from disk."""

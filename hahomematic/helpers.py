@@ -4,6 +4,7 @@ Helper functions used within hahomematic
 from __future__ import annotations
 
 import base64
+from collections.abc import Collection
 from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime
@@ -418,6 +419,25 @@ def find_free_port() -> int:
         sock.bind(("", 0))
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return int(sock.getsockname()[1])
+
+
+def device_in_list(
+    devices: str | Collection[str], device_type: str, do_wildcard_search: bool
+) -> bool:
+    """Return if device is in a collection."""
+    if isinstance(devices, str):
+        if do_wildcard_search:
+            return device_type.lower().startswith(devices.lower())
+        return device_type.lower() == devices.lower()
+    if isinstance(devices, Collection):
+        for device in devices:
+            if do_wildcard_search:
+                if device_type.lower().startswith(device.lower()):
+                    return True
+            else:
+                if device_type.lower() == device.lower():
+                    return True
+    return False
 
 
 @dataclass

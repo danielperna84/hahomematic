@@ -57,7 +57,7 @@ from hahomematic.decorators import config_property, value_property
 import hahomematic.device as hm_device
 import hahomematic.devices as hm_custom_entity
 import hahomematic.devices.entity_definition as hm_entity_definition
-from hahomematic.exceptions import BaseHomematicException
+from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import (
     EntityNameData,
     HubData,
@@ -472,6 +472,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
         self._attr_value: ParameterT | None = None
         self._attr_last_update: datetime = INIT_DATETIME
         self._attr_state_uncertain: bool = True
+        self.wrapped: bool = False
 
         # Subscribe for all events of this device
         if (
@@ -632,6 +633,43 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
     def _set_last_update(self) -> None:
         """Set last_update to current datetime."""
         self._attr_last_update = datetime.now()
+
+
+class WrapperEntity(CallbackEntity):
+    """
+    Base class for entities that switch type of generic entities.
+    """
+
+    _wrapped_entity: GenericEntity
+
+    def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform):
+        """
+        Initialize the entity.
+        """
+        if wrapped_entity.platform == new_platform:
+            raise HaHomematicException(
+                "Cannot create wrapped entity. platform must not be equivalent."
+            )
+
+        CallbackEntity.__init__(self)
+        self._wrapped_entity = wrapped_entity
+        self.platform = new_platform
+        self.usage = HmEntityUsage.ENTITY
+        self.unique_identifier = f"{wrapped_entity.unique_identifier}_{new_platform}"
+        # use callbacks from wrapped entity
+        self._update_callbacks = wrapped_entity._update_callbacks
+        self._remove_callbacks = wrapped_entity._remove_callbacks
+        # hide wrapped entity from HA
+        wrapped_entity.set_usage(HmEntityUsage.ENTITY_NO_CREATE)
+        wrapped_entity.wrapped = True
+
+    def __getattr__(self, *args: Any) -> Any:
+        return getattr(self._wrapped_entity, *args)
+
+    def add_to_collections(self) -> None:
+        """add entity to central_unit collections"""
+        self.device.add_hm_entity(self)
+        self._central.hm_entities[self.unique_identifier] = self
 
 
 _EntityT = TypeVar("_EntityT", bound=GenericEntity)
@@ -817,7 +855,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                 if entity := self.device.get_hm_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
-                    if is_visible:
+                    if is_visible and entity.wrapped is False:
                         entity.set_usage(HmEntityUsage.CE_VISIBLE)
                     self._add_entity(field_name=field_name, entity=entity)
 

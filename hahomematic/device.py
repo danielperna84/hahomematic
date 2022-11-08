@@ -53,6 +53,7 @@ from hahomematic.entity import (
     CustomEntity,
     GenericEntity,
     ImpulseEvent,
+    WrapperEntity,
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import (
@@ -103,6 +104,7 @@ class HmDevice:
             device_address,
         )
         self.entities: dict[tuple[str, str], GenericEntity] = {}
+        self.wrapper_entities: dict[tuple[str, str], WrapperEntity] = {}
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
         self._attr_last_update: datetime = INIT_DATETIME
@@ -218,10 +220,15 @@ class HmDevice:
             (f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING)
         )
 
-    def add_hm_entity(self, hm_entity: BaseEntity) -> None:
+    def add_hm_entity(self, hm_entity: BaseEntity | WrapperEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
             self.entities[(hm_entity.channel_address, hm_entity.parameter)] = hm_entity
+            self.register_update_callback(hm_entity.update_entity)
+        if isinstance(hm_entity, WrapperEntity):
+            self.wrapper_entities[
+                (hm_entity.channel_address, hm_entity.parameter)
+            ] = hm_entity
             self.register_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, CustomEntity):
             self.custom_entities[hm_entity.unique_identifier] = hm_entity
@@ -230,6 +237,9 @@ class HmDevice:
         """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
             del self.entities[(hm_entity.channel_address, hm_entity.parameter)]
+            self.unregister_update_callback(hm_entity.update_entity)
+        if isinstance(hm_entity, WrapperEntity):
+            del self.wrapper_entities[(hm_entity.channel_address, hm_entity.parameter)]
             self.unregister_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, CustomEntity):
             del self.custom_entities[hm_entity.unique_identifier]
@@ -632,6 +642,13 @@ class HmDevice:
                 parameter,
             )
             entity.add_to_collections()
+            if new_platform := self.central.parameter_visibility.wrap_entity(
+                wrapped_entity=entity
+            ):
+                wrapper_entity = WrapperEntity(
+                    wrapped_entity=entity, new_platform=new_platform
+                )
+                wrapper_entity.add_to_collections()
 
 
 class ValueCache:
