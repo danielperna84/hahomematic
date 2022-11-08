@@ -193,6 +193,7 @@ _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
 
 _WRAP_ENTITY: dict[str | frozenset[str], dict[str, HmPlatform]] = {
+    frozenset({"HmIP-eTRV", "HmIP-HEATING"}): {"LEVEL": HmPlatform.SENSOR},
 }
 
 
