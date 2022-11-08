@@ -78,13 +78,13 @@ class Example:
         }
         self.central = await CentralConfig(
             name=central_name,
-            xml_rpc_server=register_xml_rpc_server(),
             host=CCU_HOST,
             username=CCU_USERNAME,
             password=CCU_PASSWORD,
             central_id="1234",
             storage_folder="homematicip_local",
             interface_configs=interface_configs,
+            default_callback_port=54321,
         ).get_central()
 
         # For testing we set a short INIT_TIMEOUT
