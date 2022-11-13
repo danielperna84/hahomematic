@@ -421,23 +421,81 @@ def find_free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def device_in_list(
-    devices: str | Collection[str], device_type: str, do_wildcard_search: bool
+def contains_device(
+    search_elements: str | Collection[str],
+    device_type: str,
+    sub_type: str | None,
 ) -> bool:
     """Return if device is in a collection."""
-    if isinstance(devices, str):
+    if element_matches_key(search_elements=search_elements, compare_with=device_type):
+        return True
+    if element_matches_key(
+        search_elements=search_elements,
+        compare_with=sub_type,
+        do_wildcard_search=False,
+    ):
+        return True
+    return False
+
+
+def element_matches_key(
+    search_elements: str | Collection[str],
+    compare_with: str | None,
+    do_wildcard_search: bool = True,
+) -> bool:
+    """Return if collection element is key."""
+    if compare_with is None:
+        return False
+
+    if isinstance(search_elements, str):
         if do_wildcard_search:
-            return device_type.lower().startswith(devices.lower())
-        return device_type.lower() == devices.lower()
-    if isinstance(devices, Collection):
-        for device in devices:
+            return compare_with.lower().startswith(search_elements.lower())
+        return compare_with.lower() == search_elements.lower()
+    if isinstance(search_elements, Collection):
+        for element in search_elements:
             if do_wildcard_search:
-                if device_type.lower().startswith(device.lower()):
+                if compare_with.lower().startswith(element.lower()):
                     return True
             else:
-                if device_type.lower() == device.lower():
+                if compare_with.lower() == element.lower():
                     return True
     return False
+
+
+def get_value_from_dict_by_device_type(
+    search_elements: dict[str, Any],
+    device_type: str,
+    sub_type: str | None,
+) -> Any | None:
+    """Return the search_element matches type."""
+    if value := get_value_from_dict_by_wildcard_key(
+        search_elements=search_elements, compare_with=device_type
+    ):
+        return value
+    if value := get_value_from_dict_by_wildcard_key(
+        search_elements=search_elements, compare_with=sub_type, do_wildcard_search=False
+    ):
+        return value
+    return None
+
+
+def get_value_from_dict_by_wildcard_key(
+    search_elements: dict[str, Any],
+    compare_with: str | None,
+    do_wildcard_search: bool = True,
+) -> Any | None:
+    """Return the dict value by wildcard type."""
+    if compare_with is None:
+        return None
+
+    for key, value in search_elements.items():
+        if do_wildcard_search:
+            if key.lower().startswith(compare_with.lower()):
+                return value
+        else:
+            if key.lower() == compare_with.lower():
+                return value
+    return None
 
 
 @dataclass

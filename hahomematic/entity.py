@@ -835,7 +835,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         # add extra entities for the device type
         self._mark_entity(
             field_desc=hm_entity_definition.get_additional_entities_by_device_type(
-                self.device.device_type
+                device_type=self.device.device_type, sub_type=self.device.sub_type
             )
         )
 
