@@ -22,7 +22,11 @@ from hahomematic.const import (
     HmPlatform,
 )
 import hahomematic.entity as hm_entity
-from hahomematic.helpers import check_or_create_directory, device_in_list
+from hahomematic.helpers import (
+    check_or_create_directory,
+    contains_device,
+    get_value_from_dict_by_device_type,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -313,11 +317,13 @@ class ParameterVisibilityCache:
                 parameter in _IGNORED_PARAMETERS
                 or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
                 or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
-                or device_type_l.startswith(
-                    tuple(self._ignore_parameters_by_device_lower.get(parameter, []))
+                or contains_device(
+                    search_elements=self._ignore_parameters_by_device_lower.get(
+                        parameter, []
+                    ),
+                    device_type=device_type_l,
+                    sub_type=sub_type_l,
                 )
-                or sub_type_l
-                in self._ignore_parameters_by_device_lower.get(parameter, [])
             ):
                 return True
 
@@ -397,21 +403,13 @@ class ParameterVisibilityCache:
             ).get(device_channel, {}).get(paramset_key, set()):
                 return True
 
-        if sub_type_l and sub_type_l in self._un_ignore_parameters_by_device_lower:
-            un_ignore_parameters = self._un_ignore_parameters_by_device_lower[
-                sub_type_l
-            ]
+        if un_ignore_parameters := get_value_from_dict_by_device_type(
+            search_elements=self._un_ignore_parameters_by_device_lower,
+            device_type=device_type_l,
+            sub_type=sub_type_l,
+        ):
             if parameter in un_ignore_parameters:
                 return True
-
-        if device_type_l.startswith(tuple(self._un_ignore_parameters_by_device_lower)):
-            for (
-                device_t,
-                un_ignore_parameters,
-            ) in self._un_ignore_parameters_by_device_lower.items():
-                if device_type_l.startswith(device_t):
-                    if parameter in un_ignore_parameters:
-                        return True
 
         return False
 
@@ -525,9 +523,6 @@ class ParameterVisibilityCache:
         device_channel: int,
     ) -> bool:
         """Return if a paramset is relevant."""
-        device_type_l = device_type.lower()
-        sub_type_l = sub_type.lower() if sub_type else None
-
         if paramset_key == PARAMSET_KEY_VALUES:
             return True
         if device_channel is not None and paramset_key == PARAMSET_KEY_MASTER:
@@ -535,10 +530,10 @@ class ParameterVisibilityCache:
                 d_type,
                 channel_nos,
             ) in self._relevant_master_paramsets_by_device.items():
-                if device_channel in channel_nos and (
-                    device_type_l == d_type.lower()
-                    or (sub_type_l and sub_type_l == d_type.lower())
-                    or device_type_l.startswith(d_type.lower())
+                if device_channel in channel_nos and contains_device(
+                    search_elements=d_type,
+                    device_type=device_type,
+                    sub_type=sub_type,
                 ):
                     return True
         return False
@@ -547,17 +542,10 @@ class ParameterVisibilityCache:
         """Check if parameter of a device should be wrapped to a different platform."""
 
         for devices, wrapper_def in _WRAP_ENTITY.items():
-            if device_in_list(
-                devices=devices,
+            if contains_device(
+                search_elements=devices,
                 device_type=wrapped_entity.device.device_type,
-                do_wildcard_search=True,
-            ) or (
-                wrapped_entity.device.sub_type
-                and device_in_list(
-                    devices=devices,
-                    device_type=wrapped_entity.device.sub_type,
-                    do_wildcard_search=False,
-                )
+                sub_type=wrapped_entity.device.sub_type,
             ):
                 if wrapped_entity.parameter in wrapper_def:
                     return wrapper_def[wrapped_entity.parameter]

@@ -5,6 +5,7 @@ from collections.abc import Callable
 from typing import Any
 
 from hahomematic.devices import climate, cover, light, lock, siren, switch
+from hahomematic.helpers import contains_device
 
 _ALL_DEVICES = [
     cover.DEVICES,
@@ -32,8 +33,8 @@ def get_device_funcs(
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
     for platform_blacklisted_devices in _BLACKLISTED_DEVICES:
-        if _is_blacklisted_device_by_platform(
-            blacklisted_devices=platform_blacklisted_devices,
+        if contains_device(
+            search_elements=platform_blacklisted_devices,
             device_type=device_type,
             sub_type=sub_type,
         ):
@@ -64,20 +65,6 @@ def _get_device_func_by_platform(
             return func
 
     return None
-
-
-def _is_blacklisted_device_by_platform(
-    blacklisted_devices: list[str], device_type: str, sub_type: str
-) -> bool:
-    """Return the function to create custom entities"""
-    for blacklisted_device in blacklisted_devices:
-        if (
-            device_type.lower() == blacklisted_device.lower()
-            or (sub_type and sub_type.lower() == blacklisted_device.lower())
-            or device_type.lower().startswith(blacklisted_device.lower())
-        ):
-            return True
-    return False
 
 
 def is_multi_channel_device(device_type: str, sub_type: str) -> bool:
