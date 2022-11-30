@@ -1,5 +1,7 @@
 Version 2022.11.2 (2022-11-13)
 - Generalize some collection helpers
+Version 2022.12.0 (2022-12-01)
+- Add transition to light turn_off
 
 Version 2022.11.1 (2022-11-03)
 - Rename protected attributes to _attr*
