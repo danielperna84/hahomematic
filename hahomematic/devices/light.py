@@ -139,16 +139,18 @@ class BaseHmLight(CustomEntity):
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
             await self.set_on_time_value(on_time=on_time)
 
-        # Minimum brightness is 10, otherwise the LED is disabled
         if HM_ARG_BRIGHTNESS in kwargs:
             brightness: int = int(cast(int, kwargs[HM_ARG_BRIGHTNESS]))
-            brightness = max(10, brightness)
             if brightness != self.brightness:
                 level = brightness / 255.0
                 await self._e_level.send_value(level)
 
-    async def turn_off(self) -> None:
+    async def turn_off(self, **kwargs: dict[str, Any] | None) -> None:
         """Turn the light off."""
+        if HM_ARG_RAMP_TIME in kwargs:
+            ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
+            await self.set_ramp_time_value(ramp_time=ramp_time)
+
         await self._e_level.send_value(HM_DIMMER_OFF)
 
     async def set_on_time_value(self, on_time: float) -> None:
