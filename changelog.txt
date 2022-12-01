@@ -1,5 +1,6 @@
 Version 2022.12.1 (2022-12-01)
 - Improve naming of modules
+- Add new platform for text sysvars
 
 Version 2022.12.0 (2022-12-01)
 - Add transition to light turn_off
