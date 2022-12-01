@@ -27,6 +27,7 @@ from hahomematic.generic_platforms.number import HmSysvarNumber
 from hahomematic.generic_platforms.select import HmSysvarSelect
 from hahomematic.generic_platforms.sensor import HmSysvarSensor
 from hahomematic.generic_platforms.switch import HmSysvarSwitch
+from hahomematic.generic_platforms.text import HmSysvarText
 from hahomematic.helpers import (
     ProgramData,
     SystemVariableData,
@@ -253,6 +254,8 @@ class HmHub(CallbackEntity):
                 and extended_sysvar
             ):
                 return HmSysvarNumber(central=self._central, data=data)
+            if data_type == SYSVAR_TYPE_STRING and extended_sysvar:
+                return HmSysvarText(central=self._central, data=data)
         else:
             if isinstance(self.value, bool):
                 return HmSysvarBinarySensor(central=self._central, data=data)

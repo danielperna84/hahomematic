@@ -316,6 +316,7 @@ class HmPlatform(StrEnum):
     HUB_SELECT = "hub_select"
     HUB_SENSOR = "hub_sensor"
     HUB_SWITCH = "hub_switch"
+    HUB_TEXT = "hub_text"
     LIGHT = "light"
     LOCK = "lock"
     NUMBER = "number"
@@ -370,6 +371,7 @@ AVAILABLE_HM_PLATFORMS = [
     HmPlatform.SENSOR,
     HmPlatform.SIREN,
     HmPlatform.SWITCH,
+    HmPlatform.TEXT,
 ]
 
 AVAILABLE_HM_HUB_PLATFORMS = [
@@ -379,4 +381,5 @@ AVAILABLE_HM_HUB_PLATFORMS = [
     HmPlatform.HUB_SELECT,
     HmPlatform.HUB_SENSOR,
     HmPlatform.HUB_SWITCH,
+    HmPlatform.HUB_TEXT,
 ]
