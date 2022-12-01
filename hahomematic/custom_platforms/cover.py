@@ -6,9 +6,7 @@ import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform
-from hahomematic.decorators import value_property
-import hahomematic.device as hm_device
-from hahomematic.devices.entity_definition import (
+from hahomematic.custom_platforms.entity_definition import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
     FIELD_DIRECTION,
@@ -21,11 +19,13 @@ from hahomematic.devices.entity_definition import (
     EntityDefinition,
     make_custom_entity,
 )
+from hahomematic.decorators import value_property
+import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
-from hahomematic.internal.action import HmAction
-from hahomematic.platforms.number import HmFloat
-from hahomematic.platforms.sensor import HmSensor
+from hahomematic.generic_platforms.action import HmAction
+from hahomematic.generic_platforms.number import HmFloat
+from hahomematic.generic_platforms.sensor import HmSensor
 
 _LOGGER = logging.getLogger(__name__)
 

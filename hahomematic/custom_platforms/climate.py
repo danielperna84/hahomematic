@@ -7,9 +7,7 @@ from typing import Any
 
 from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
-from hahomematic.decorators import value_property
-import hahomematic.device as hm_device
-from hahomematic.devices.entity_definition import (
+from hahomematic.custom_platforms.entity_definition import (
     FIELD_ACTIVE_PROFILE,
     FIELD_AUTO_MODE,
     FIELD_BOOST_MODE,
@@ -31,14 +29,16 @@ from hahomematic.devices.entity_definition import (
     EntityDefinition,
     make_custom_entity,
 )
+from hahomematic.decorators import value_property
+import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
-from hahomematic.internal.action import HmAction
-from hahomematic.platforms.binary_sensor import HmBinarySensor
-from hahomematic.platforms.number import HmFloat, HmInteger
-from hahomematic.platforms.select import HmSelect
-from hahomematic.platforms.sensor import HmSensor
-from hahomematic.platforms.switch import HmSwitch
+from hahomematic.generic_platforms.action import HmAction
+from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
+from hahomematic.generic_platforms.number import HmFloat, HmInteger
+from hahomematic.generic_platforms.select import HmSelect
+from hahomematic.generic_platforms.sensor import HmSensor
+from hahomematic.generic_platforms.switch import HmSwitch
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -53,10 +53,10 @@ from hahomematic.const import (
     HmEventType,
     HmPlatform,
 )
+import hahomematic.custom_platforms as hm_custom_entity
+import hahomematic.custom_platforms.entity_definition as hm_entity_definition
 from hahomematic.decorators import config_property, value_property
 import hahomematic.device as hm_device
-import hahomematic.devices as hm_custom_entity
-import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import (
     EntityNameData,
