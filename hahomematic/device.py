@@ -43,8 +43,8 @@ from hahomematic.const import (
     HmCallSource,
     HmForcedDeviceAvailability,
 )
+from hahomematic.custom_platforms import entity_definition_exists, get_device_funcs
 from hahomematic.decorators import config_property, value_property
-from hahomematic.devices import entity_definition_exists, get_device_funcs
 from hahomematic.entity import (
     BaseEntity,
     BaseEvent,
@@ -56,6 +56,14 @@ from hahomematic.entity import (
     WrapperEntity,
 )
 from hahomematic.exceptions import BaseHomematicException
+from hahomematic.generic_platforms.action import HmAction
+from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
+from hahomematic.generic_platforms.button import HmButton
+from hahomematic.generic_platforms.number import HmFloat, HmInteger
+from hahomematic.generic_platforms.select import HmSelect
+from hahomematic.generic_platforms.sensor import HmSensor
+from hahomematic.generic_platforms.switch import HmSwitch
+from hahomematic.generic_platforms.text import HmText
 from hahomematic.helpers import (
     generate_unique_identifier,
     get_channel_no,
@@ -63,15 +71,7 @@ from hahomematic.helpers import (
     get_device_name,
     updated_within_seconds,
 )
-from hahomematic.internal.action import HmAction
-from hahomematic.internal.text import HmText
 from hahomematic.parameter_visibility import ALLOW_INTERNAL_PARAMETERS
-from hahomematic.platforms.binary_sensor import HmBinarySensor
-from hahomematic.platforms.button import HmButton
-from hahomematic.platforms.number import HmFloat, HmInteger
-from hahomematic.platforms.select import HmSelect
-from hahomematic.platforms.sensor import HmSensor
-from hahomematic.platforms.switch import HmSwitch
 import hahomematic.support as hm_support
 
 _LOGGER = logging.getLogger(__name__)

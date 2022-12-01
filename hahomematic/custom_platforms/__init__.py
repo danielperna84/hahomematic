@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from hahomematic.devices import climate, cover, light, lock, siren, switch
+from hahomematic.custom_platforms import climate, cover, light, lock, siren, switch
 from hahomematic.helpers import contains_device
 
 _ALL_DEVICES = [

@@ -12,7 +12,7 @@ import pytest
 
 from hahomematic.entity import GenericEntity
 from hahomematic.const import HmEntityUsage
-from hahomematic.devices.climate import CeRfThermostat
+from hahomematic.custom_platforms.climate import CeRfThermostat
 from hahomematic.decorators import (
     get_public_attributes_for_value_property,
     get_public_attributes_for_config_property,

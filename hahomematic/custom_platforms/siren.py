@@ -7,9 +7,7 @@ import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform
-from hahomematic.decorators import value_property
-import hahomematic.device as hm_device
-from hahomematic.devices.entity_definition import (
+from hahomematic.custom_platforms.entity_definition import (
     FIELD_ACOUSTIC_ALARM_ACTIVE,
     FIELD_ACOUSTIC_ALARM_SELECTION,
     FIELD_OPTICAL_ALARM_ACTIVE,
@@ -17,10 +15,12 @@ from hahomematic.devices.entity_definition import (
     EntityDefinition,
     make_custom_entity,
 )
+from hahomematic.decorators import value_property
+import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
-from hahomematic.internal.action import HmAction
-from hahomematic.platforms.binary_sensor import HmBinarySensor
+from hahomematic.generic_platforms.action import HmAction
+from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 
 _LOGGER = logging.getLogger(__name__)
 

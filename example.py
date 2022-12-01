@@ -7,7 +7,7 @@ import time
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig
 from hahomematic.client import InterfaceConfig
-from hahomematic.devices.entity_definition import validate_entity_definition
+from hahomematic.custom_platforms.entity_definition import validate_entity_definition
 from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)

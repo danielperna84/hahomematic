@@ -33,8 +33,8 @@ from hahomematic.const import (
     TYPE_STRING,
     HmEntityUsage,
 )
+import hahomematic.custom_platforms.entity_definition as hm_entity_definition
 import hahomematic.device as hm_device
-import hahomematic.devices.entity_definition as hm_entity_definition
 from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)

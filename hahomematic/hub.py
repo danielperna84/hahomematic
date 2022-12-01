@@ -21,17 +21,17 @@ from hahomematic.const import (
 )
 from hahomematic.decorators import config_property, value_property
 from hahomematic.entity import CallbackEntity, GenericSystemVariable
+from hahomematic.generic_platforms.binary_sensor import HmSysvarBinarySensor
+from hahomematic.generic_platforms.button import HmProgramButton
+from hahomematic.generic_platforms.number import HmSysvarNumber
+from hahomematic.generic_platforms.select import HmSysvarSelect
+from hahomematic.generic_platforms.sensor import HmSysvarSensor
+from hahomematic.generic_platforms.switch import HmSysvarSwitch
 from hahomematic.helpers import (
     ProgramData,
     SystemVariableData,
     generate_unique_identifier,
 )
-from hahomematic.platforms.binary_sensor import HmSysvarBinarySensor
-from hahomematic.platforms.button import HmProgramButton
-from hahomematic.platforms.number import HmSysvarNumber
-from hahomematic.platforms.select import HmSysvarSelect
-from hahomematic.platforms.sensor import HmSysvarSensor
-from hahomematic.platforms.switch import HmSysvarSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
