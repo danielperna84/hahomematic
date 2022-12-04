@@ -909,8 +909,8 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """get entity"""
         if entity := self.data_entities.get(field_name):
-            return cast(entity_type, entity)  # type: ignore[redundant-cast, valid-type]
-        return cast(  # type:ignore[redundant-cast]
+            return cast(entity_type, entity)  # type: ignore[valid-type]
+        return cast(
             entity_type, NoneTypeEntity()  # type:ignore[valid-type]
         )
 
