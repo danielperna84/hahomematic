@@ -565,6 +565,7 @@ DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIPW-DRD3": (make_ip_dimmer, [1, 5, 9]),
     "HmIP-DRDI3": (make_ip_dimmer, [4, 8, 12]),
     "HmIP-SCTH230": (make_ip_dimmer, [11]),
+    "HM-LC-AO-SM": (make_rf_dimmer_with_virt_channel, [1]),
     "HM-LC-Dim1L-CV-2": (make_rf_dimmer_with_virt_channel, [1]),
     "HM-LC-Dim1L-CV": (make_rf_dimmer_with_virt_channel, [1]),
     "HM-LC-Dim1L-Pl-2": (make_rf_dimmer, [1]),
