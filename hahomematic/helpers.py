@@ -17,7 +17,6 @@ from typing import Any
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     HM_VIRTUAL_REMOTE_ADDRESSES,
-    HUB_ADDRESS,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     PROGRAM_ADDRESS,
@@ -62,7 +61,7 @@ def generate_unique_identifier(
     if prefix:
         unique_identifier = f"{prefix}_{unique_identifier}"
     if (
-        address in (HUB_ADDRESS, PROGRAM_ADDRESS, SYSVAR_ADDRESS)
+        address in (PROGRAM_ADDRESS, SYSVAR_ADDRESS)
         or address.startswith("INT000")
         or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
     ):

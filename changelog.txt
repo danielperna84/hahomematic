@@ -1,5 +1,7 @@
 Version 2022.12.2 (2022-12-09)
 - Add HM-LC-AO-SM as light
+- Remove hub from HmPlatform
+- Hub is no longer an entity
 
 Version 2022.12.1 (2022-12-01)
 - Improve naming of modules
