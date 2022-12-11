@@ -9,18 +9,14 @@ import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     BACKEND_CCU,
     HH_EVENT_HUB_CREATED,
-    HUB_ADDRESS,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
     SYSVAR_TYPE_LIST,
     SYSVAR_TYPE_LOGIC,
     SYSVAR_TYPE_STRING,
-    HmEntityUsage,
-    HmPlatform,
 )
-from hahomematic.decorators import config_property, value_property
-from hahomematic.entity import CallbackEntity, GenericSystemVariable
+from hahomematic.entity import GenericSystemVariable
 from hahomematic.generic_platforms.binary_sensor import HmSysvarBinarySensor
 from hahomematic.generic_platforms.button import HmProgramButton
 from hahomematic.generic_platforms.number import HmSysvarNumber
@@ -28,11 +24,7 @@ from hahomematic.generic_platforms.select import HmSysvarSelect
 from hahomematic.generic_platforms.sensor import HmSysvarSensor
 from hahomematic.generic_platforms.switch import HmSysvarSwitch
 from hahomematic.generic_platforms.text import HmSysvarText
-from hahomematic.helpers import (
-    ProgramData,
-    SystemVariableData,
-    generate_unique_identifier,
-)
+from hahomematic.helpers import ProgramData, SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,81 +32,27 @@ EXCLUDED_FROM_SENSOR = [
     "pcCCUID",
 ]
 
-SERVICE_MESSAGES = "Servicemeldungen"
-
 EXCLUDED = [
     "OldVal",
-    SERVICE_MESSAGES,
 ]
 
 
-class HmHub(CallbackEntity):
+class HmHub:
     """The HomeMatic hub. (CCU/HomeGear)."""
 
     def __init__(self, central: hm_central.CentralUnit):
         """Initialize HomeMatic hub."""
-        CallbackEntity.__init__(self)
         self._sema_fetch_sysvars = asyncio.Semaphore()
         self._sema_fetch_programs = asyncio.Semaphore()
         self._central: Final[hm_central.CentralUnit] = central
-        self._attr_unique_identifier: Final[str] = generate_unique_identifier(
-            central=central, address=HUB_ADDRESS
-        )
-        self._attr_name: Final[str] = central.name
         self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
-        self._attr_hub_attributes: Final[dict[str, Any]] = {}
-        self._attr_platform: Final[HmPlatform] = HmPlatform.HUB_SENSOR
-        self._attr_value: int | None = None
-        self._attr_create_in_ha: Final[bool] = True
-        self._attr_usage: Final[HmEntityUsage] = HmEntityUsage.ENTITY
-
-    @value_property
-    def available(self) -> bool:
-        """Return the availability of the device."""
-        return self._central.available
-
-    @property
-    def attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return self._attr_hub_attributes.copy()
-
-    @config_property
-    def create_in_ha(self) -> bool:
-        """Return, if the entity should be created in HA."""
-        return self._attr_create_in_ha
-
-    @config_property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._attr_name
-
-    @config_property
-    def platform(self) -> HmPlatform:
-        """Return the platform of the entity."""
-        return self._attr_platform
-
-    @config_property
-    def unique_identifier(self) -> str:
-        """Return the unique_identifier of the entity."""
-        return self._attr_unique_identifier
-
-    @config_property
-    def usage(self) -> HmEntityUsage:
-        """Return the usage of the entity."""
-        return self._attr_usage
-
-    @value_property
-    def value(self) -> int | None:
-        """Return the value of the entity."""
-        return self._attr_value
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
         """fetch sysvar data for the hub."""
         async with self._sema_fetch_sysvars:
             if self._central.available:
                 await self._update_sysvar_entities(include_internal=include_internal)
-                await self._update_hub_state()
 
     async def fetch_program_data(self, include_internal: bool = False) -> None:
         """fetch program data for the hub."""
@@ -122,21 +60,9 @@ class HmHub(CallbackEntity):
             if self._central.available:
                 await self._update_program_entities(include_internal=include_internal)
 
-    async def _update_hub_state(self) -> None:
-        """Retrieve latest service_messages."""
-        value = 0
-        if self._central.model == BACKEND_CCU:
-            service_messages = await self._central.get_system_variable(SERVICE_MESSAGES)
-            if service_messages is not None and isinstance(service_messages, float):
-                value = int(service_messages)
-
-        if self._attr_value != value:
-            self._attr_value = value
-            self.update_entity()
-
     async def _update_program_entities(self, include_internal: bool) -> None:
         """Retrieve all program data and update program values."""
-        self._attr_hub_attributes.clear()
+
         programs = await self._central.get_all_programs(
             include_internal=include_internal
         )
@@ -174,7 +100,6 @@ class HmHub(CallbackEntity):
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
         """Retrieve all variable data and update hmvariable values."""
-        self._attr_hub_attributes.clear()
         variables = await self._central.get_all_system_variables(
             include_internal=include_internal
         )
@@ -207,7 +132,6 @@ class HmHub(CallbackEntity):
             name = sysvar.name
             value = sysvar.value
             if _is_excluded(name, EXCLUDED_FROM_SENSOR):
-                self._attr_hub_attributes[name] = value
                 continue
 
             entity: GenericSystemVariable | None = self.sysvar_entities.get(name)
@@ -256,9 +180,7 @@ class HmHub(CallbackEntity):
                 return HmSysvarNumber(central=self._central, data=data)
             if data_type == SYSVAR_TYPE_STRING and extended_sysvar:
                 return HmSysvarText(central=self._central, data=data)
-        else:
-            if isinstance(self.value, bool):
-                return HmSysvarBinarySensor(central=self._central, data=data)
+
         return HmSysvarSensor(central=self._central, data=data)
 
     def _remove_program_entity(self, ids: list[str]) -> None:
@@ -268,28 +190,21 @@ class HmHub(CallbackEntity):
                 entity = self.program_entities[pid]
                 entity.remove_entity()
                 del self.program_entities[pid]
-        self.update_entity()
 
     def _remove_sysvar_entity(self, del_entities: set[str]) -> None:
         """Remove sysvar entity from hub."""
         for name in del_entities:
-            if name in self._attr_hub_attributes:
-                del self._attr_hub_attributes[name]
-
             if name in self.sysvar_entities:
                 entity = self.sysvar_entities[name]
                 entity.remove_entity()
                 del self.sysvar_entities[name]
-        self.update_entity()
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         if entity := self.sysvar_entities.get(name):
             await entity.send_variable(value=value)
-        elif name in self.attributes:
-            await self._central.set_system_variable(name=name, value=value)
         else:
-            _LOGGER.warning("Variable %s not found on %s", name, self.name)
+            _LOGGER.warning("Variable %s not found on %s", name, self._central.name)
 
     def _identify_missing_program_ids(self, programs: list[ProgramData]) -> list[str]:
         """Identify missing programs."""
@@ -306,9 +221,6 @@ class HmHub(CallbackEntity):
         """Identify missing variables."""
         variable_names: dict[str, bool] = {x.name: x.extended_sysvar for x in variables}
         missing_variables: set[str] = set()
-        for name in self._attr_hub_attributes:
-            if name not in variable_names.keys():
-                missing_variables.add(name)
         for sysvar_entity in self.sysvar_entities.values():
             if sysvar_entity.data_type == SYSVAR_TYPE_STRING:
                 continue
