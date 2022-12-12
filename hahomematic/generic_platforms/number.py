@@ -27,9 +27,11 @@ class HmFloat(BaseNumber[float]):
     This is a default platform that gets automatically generated.
     """
 
-    async def send_value(self, value: float) -> None:
+    async def send_value(self, value: float, do_validate: bool = True) -> None:
         """Set the value of the entity."""
-        if value is not None and self._attr_min <= float(value) <= self._attr_max:
+        if value is not None and (
+            (self._attr_min <= float(value) <= self._attr_max) or do_validate is False
+        ):
             await super().send_value(value)
         elif self._attr_special:
             if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
@@ -50,9 +52,11 @@ class HmInteger(BaseNumber[int]):
     This is a default platform that gets automatically generated.
     """
 
-    async def send_value(self, value: int) -> None:
+    async def send_value(self, value: int, do_validate: bool = True) -> None:
         """Set the value of the entity."""
-        if value is not None and self._attr_min <= int(value) <= self._attr_max:
+        if value is not None and (
+            (self._attr_min <= int(value) <= self._attr_max) or do_validate is False
+        ):
             await super().send_value(value)
         elif self._attr_special:
             if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:

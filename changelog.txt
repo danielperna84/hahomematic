@@ -1,5 +1,5 @@
 Version 2022.12.3 (2022-12-12)
-- Add separate off_temperature for HM heating group HM-CC-VG-1
+- Disable temperature validation for setting to off for HM heating group HM-CC-VG-1
 
 Version 2022.12.2 (2022-12-09)
 - Add HM-LC-AO-SM as light
