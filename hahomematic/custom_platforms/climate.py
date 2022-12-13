@@ -298,13 +298,6 @@ class CeRfThermostat(BaseClimateEntity):
             return HmPresetMode.BOOST
         if self._e_control_mode.value == HM_MODE_AWAY:
             return HmPresetMode.AWAY
-        # This mode (PRESET_AWY) generally is available, but
-        # we can't set it from the Home Assistant UI natively.
-        # We could create 2 input_datetime entities and reference them
-        # and number.xxx_4_party_temperature when setting the preset.
-        # More info on format: https://homematic-forum.de/forum/viewtopic.php?t=34673#p330200
-        # Example-payload (21.5° from 2021-03-16T01:00-2021-03-17T23:00):
-        # "21.5,60,16,3,21,1380,17,3,21"
         return HmPresetMode.NONE
 
     @value_property
@@ -509,7 +502,7 @@ class CeIpThermostat(BaseClimateEntity):
         await self.put_paramset(
             paramset_key="VALUES",
             value={
-                "CONTROL_MODE": HMIP_MODE_AUTO,
+                "CONTROL_MODE": HMIP_MODE_AWAY,
                 "PARTY_TIME_START": PARTY_INIT_DATE,
                 "PARTY_TIME_END": PARTY_INIT_DATE,
             },
