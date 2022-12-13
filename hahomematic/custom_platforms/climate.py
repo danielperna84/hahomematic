@@ -509,7 +509,7 @@ class CeIpThermostat(BaseClimateEntity):
         await self.put_paramset(
             paramset_key="VALUES",
             value={
-                "CONTROL_MODE": HMIP_MODE_AUTO,
+                "CONTROL_MODE": HMIP_MODE_AWAY,
                 "PARTY_TIME_START": PARTY_INIT_DATE,
                 "PARTY_TIME_END": PARTY_INIT_DATE,
             },
