@@ -8,7 +8,7 @@ DONT'T DELETE THIS.
 
 Please answer all questions as good as possible.
 
-Language: english/german
+Language: as you like -> english/DEUTSCH 
 
 Make sure you have read the documentation at https://github.com/danielperna84/custom_homematic#custom_homematic.
 
@@ -25,10 +25,11 @@ ENSURE that your Backend (CCU/Homegear/...) is working as expected and connected
 **known last working custom_component version (if applicable):**
 1.x.x
 
-**Home Assistant version (if applicable):**
-2022.x.x
+**Home Assistant:**
+- Version: 2022.x.x
+- Installation method (HAOS, supervised, core, venv, Docker): 
 
-**CCU version:**
+**CCU:**
 - Model (CCU2/3, Raspi3/4, NUC, ProxmoxVE, HA-Addon ...):
 - OS (Original, RaspberryMatic, debmatic ...):
 - Version: 
@@ -51,12 +52,13 @@ Steps to reproduce the behavior:
 4. See error
 
 **Screenshots (if applicable)**
-- CCU firewall
-- integrations view
-- device view
-- enity view
+- CCU firewall in CCU
+- device config in CCU
+- integrations view in HA
+- device view in HA
+- enity view in HA
 
-**Relevant HA log entries (full log)**
+**Relevant HA log entries (press full log) VERY IMPORTANT**
 ```
 
 
