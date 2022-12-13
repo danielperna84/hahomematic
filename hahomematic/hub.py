@@ -28,12 +28,9 @@ from hahomematic.helpers import ProgramData, SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
-EXCLUDED_FROM_SENSOR = [
-    "pcCCUID",
-]
-
 EXCLUDED = [
     "OldVal",
+    "pcCCUID",
 ]
 
 
@@ -131,8 +128,6 @@ class HmHub:
         for sysvar in variables:
             name = sysvar.name
             value = sysvar.value
-            if _is_excluded(name, EXCLUDED_FROM_SENSOR):
-                continue
 
             entity: GenericSystemVariable | None = self.sysvar_entities.get(name)
             if entity:
