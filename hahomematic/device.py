@@ -128,7 +128,7 @@ class HmDevice:
         )
         # marker if device will be created as custom entity
         self._has_custom_entity_definition: Final[bool] = entity_definition_exists(
-            self._attr_device_type, self._attr_sub_type
+            self._attr_device_type
         )
         self._attr_firmware: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
@@ -403,7 +403,6 @@ class HmDevice:
             ):
                 if not self.central.parameter_visibility.is_relevant_paramset(
                     device_type=self._attr_device_type,
-                    sub_type=self._attr_sub_type,
                     device_channel=device_channel,
                     paramset_key=paramset_key,
                 ):
@@ -440,7 +439,6 @@ class HmDevice:
                         and parameter not in ALLOW_INTERNAL_PARAMETERS
                         and not self.central.parameter_visibility.parameter_is_un_ignored(
                             device_type=self._attr_device_type,
-                            sub_type=self._attr_sub_type,
                             device_channel=device_channel,
                             paramset_key=paramset_key,
                             parameter=parameter,
@@ -470,7 +468,7 @@ class HmDevice:
 
             # Call the custom creation function.
             for (device_func, group_base_channels) in get_device_funcs(
-                self._attr_device_type, self._attr_sub_type
+                self._attr_device_type
             ):
                 device_func(self, group_base_channels)
 
@@ -554,7 +552,6 @@ class HmDevice:
         """
         if self.central.parameter_visibility.ignore_parameter(
             device_type=self._attr_device_type,
-            sub_type=self._attr_sub_type,
             device_channel=get_device_channel(channel_address),
             paramset_key=paramset_key,
             parameter=parameter,

@@ -594,7 +594,6 @@ def make_ip_thermostat_group(
 
 
 # Case for device model is not relevant
-# device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
     "ALPHA-IP-RBG": (make_ip_thermostat, [1]),
     "BC-RT-TRX-CyG": (make_thermostat, [1]),

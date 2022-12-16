@@ -175,7 +175,6 @@ def make_rf_siren(
 
 
 # Case for device model is not relevant
-# device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-ASIR": (make_ip_siren, [0]),
 }

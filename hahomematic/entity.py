@@ -433,7 +433,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         usage = super()._generate_entity_usage()
         if self._central.parameter_visibility.parameter_is_hidden(
             device_type=self.device.device_type,
-            sub_type=self.device.sub_type,
             device_channel=self.channel_no,
             paramset_key=self._attr_paramset_key,
             parameter=self._attr_parameter,
@@ -745,7 +744,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _generate_entity_name_data(self) -> EntityNameData:
         """Create the name for the entity."""
         device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
-            device_type=self.device.device_type, sub_type=self.device.sub_type
+            device_type=self.device.device_type
         )
         is_only_primary_channel = check_channel_is_only_primary_channel(
             current_channel=self.channel_no,
@@ -835,7 +834,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         # add extra entities for the device type
         self._mark_entity(
             field_desc=hm_entity_definition.get_additional_entities_by_device_type(
-                device_type=self.device.device_type, sub_type=self.device.sub_type
+                device_type=self.device.device_type
             )
         )
 

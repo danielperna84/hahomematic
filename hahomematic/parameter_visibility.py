@@ -149,10 +149,10 @@ _IGNORED_PARAMETERS_WILDCARDS_START: set[str] = {
 
 # Parameters within the paramsets for which we create entities.
 _UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
-    "DLD": ["ERROR_JAMMED"],  # HmIP-DLD
-    "SD": ["SMOKE_DETECTOR_ALARM_STATUS"],  # HmIP-SWSD
-    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],  # HM-Sec-Win*
-    "HM-Sec-Key": ["DIRECTION", "ERROR"],  # HM-Sec-Key*
+    "HmIP-DLD": ["ERROR_JAMMED"],
+    "HmIP-SWSD": ["SMOKE_DETECTOR_ALARM_STATUS"],
+    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],
+    "HM-Sec-Key": ["DIRECTION", "ERROR"],
     "HmIP-PCBS-BAT": [
         "OPERATING_VOLTAGE",
         "LOW_BAT",
@@ -294,19 +294,16 @@ class ParameterVisibilityCache:
     def ignore_parameter(
         self,
         device_type: str,
-        sub_type: str | None,
         device_channel: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
         """Check if parameter can be ignored."""
         device_type_l = device_type.lower()
-        sub_type_l = sub_type.lower() if sub_type else None
 
         if paramset_key == PARAMSET_KEY_VALUES:
             if self.parameter_is_un_ignored(
                 device_type=device_type,
-                sub_type=sub_type,
                 device_channel=device_channel,
                 paramset_key=paramset_key,
                 parameter=parameter,
@@ -322,7 +319,6 @@ class ParameterVisibilityCache:
                         parameter, []
                     ),
                     device_type=device_type_l,
-                    sub_type=sub_type_l,
                 )
             ):
                 return True
@@ -365,7 +361,6 @@ class ParameterVisibilityCache:
     def parameter_is_un_ignored(
         self,
         device_type: str,
-        sub_type: str | None,
         device_channel: int,
         paramset_key: str,
         parameter: str,
@@ -373,7 +368,6 @@ class ParameterVisibilityCache:
         """Return if parameter is on un_ignore list"""
 
         device_type_l = device_type.lower()
-        sub_type_l = sub_type.lower() if sub_type else None
 
         if parameter in self._un_ignore_parameters_general[paramset_key]:
             return True
@@ -397,16 +391,9 @@ class ParameterVisibilityCache:
             ).get(device_channel, {}).get(paramset_key, set()):
                 return True
 
-        if sub_type_l:
-            if parameter in self._un_ignore_parameters_by_device_paramset_key.get(
-                sub_type_l, {}
-            ).get(device_channel, {}).get(paramset_key, set()):
-                return True
-
         if un_ignore_parameters := get_value_from_dict_by_device_type(
             search_elements=self._un_ignore_parameters_by_device_lower,
             device_type=device_type_l,
-            sub_type=sub_type_l,
         ):
             if parameter in un_ignore_parameters:
                 return True
@@ -501,7 +488,6 @@ class ParameterVisibilityCache:
     def parameter_is_hidden(
         self,
         device_type: str,
-        sub_type: str | None,
         device_channel: int,
         paramset_key: str,
         parameter: str,
@@ -509,7 +495,6 @@ class ParameterVisibilityCache:
         """Return if parameter should be hidden"""
         return parameter in _HIDDEN_PARAMETERS and not self.parameter_is_un_ignored(
             device_type=device_type,
-            sub_type=sub_type,
             device_channel=device_channel,
             paramset_key=paramset_key,
             parameter=parameter,
@@ -518,7 +503,6 @@ class ParameterVisibilityCache:
     def is_relevant_paramset(
         self,
         device_type: str,
-        sub_type: str | None,
         paramset_key: str,
         device_channel: int,
     ) -> bool:
@@ -533,7 +517,6 @@ class ParameterVisibilityCache:
                 if device_channel in channel_nos and contains_device(
                     search_elements=d_type,
                     device_type=device_type,
-                    sub_type=sub_type,
                 ):
                     return True
         return False
@@ -545,7 +528,6 @@ class ParameterVisibilityCache:
             if contains_device(
                 search_elements=devices,
                 device_type=wrapped_entity.device.device_type,
-                sub_type=wrapped_entity.device.sub_type,
             ):
                 if wrapped_entity.parameter in wrapper_def:
                     return wrapper_def[wrapped_entity.parameter]
