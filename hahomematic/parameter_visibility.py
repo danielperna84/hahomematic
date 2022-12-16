@@ -24,8 +24,8 @@ from hahomematic.const import (
 import hahomematic.entity as hm_entity
 from hahomematic.helpers import (
     check_or_create_directory,
-    contains_device,
-    get_value_from_dict_by_device_type,
+    element_matches_key,
+    get_value_from_dict_by_wildcard_key,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -314,11 +314,11 @@ class ParameterVisibilityCache:
                 parameter in _IGNORED_PARAMETERS
                 or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
                 or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
-                or contains_device(
+                or element_matches_key(
                     search_elements=self._ignore_parameters_by_device_lower.get(
                         parameter, []
                     ),
-                    device_type=device_type_l,
+                    compare_with=device_type_l,
                 )
             ):
                 return True
@@ -391,9 +391,9 @@ class ParameterVisibilityCache:
             ).get(device_channel, {}).get(paramset_key, set()):
                 return True
 
-        if un_ignore_parameters := get_value_from_dict_by_device_type(
+        if un_ignore_parameters := get_value_from_dict_by_wildcard_key(
             search_elements=self._un_ignore_parameters_by_device_lower,
-            device_type=device_type_l,
+            compare_with=device_type_l,
         ):
             if parameter in un_ignore_parameters:
                 return True
@@ -514,9 +514,9 @@ class ParameterVisibilityCache:
                 d_type,
                 channel_nos,
             ) in self._relevant_master_paramsets_by_device.items():
-                if device_channel in channel_nos and contains_device(
+                if device_channel in channel_nos and element_matches_key(
                     search_elements=d_type,
-                    device_type=device_type,
+                    compare_with=device_type,
                 ):
                     return True
         return False
@@ -525,9 +525,9 @@ class ParameterVisibilityCache:
         """Check if parameter of a device should be wrapped to a different platform."""
 
         for devices, wrapper_def in _WRAP_ENTITY.items():
-            if contains_device(
+            if element_matches_key(
                 search_elements=devices,
-                device_type=wrapped_entity.device.device_type,
+                compare_with=wrapped_entity.device.device_type,
             ):
                 if wrapped_entity.parameter in wrapper_def:
                     return wrapper_def[wrapped_entity.parameter]

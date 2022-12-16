@@ -12,7 +12,7 @@ from voluptuous import Invalid, Optional, Required, Schema
 from hahomematic.backport import StrEnum
 import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
-from hahomematic.helpers import contains_device, generate_unique_identifier
+from hahomematic.helpers import element_matches_key, generate_unique_identifier
 
 ED_DEFAULT_ENTITIES = "default_entities"
 ED_INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
@@ -672,7 +672,7 @@ def get_additional_entities_by_device_type(device_type: str) -> dict[int, set[st
     for data in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].items():
         d_type: str = str(data[0])
         additional_entities: dict[int, set[str]] = data[1]
-        if contains_device(search_elements=d_type, device_type=device_type):
+        if element_matches_key(search_elements=d_type, compare_with=device_type):
             return deepcopy(additional_entities)
     return {}
 
