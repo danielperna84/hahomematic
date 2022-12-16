@@ -26,9 +26,7 @@ _BLACKLISTED_DEVICES = [
 ]
 
 
-def get_device_funcs(
-    device_type: str, sub_type: str
-) -> list[tuple[Callable, list[int]]]:
+def get_device_funcs(device_type: str) -> list[tuple[Callable, list[int]]]:
     """Return the function to create custom entities"""
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
@@ -36,7 +34,6 @@ def get_device_funcs(
         if contains_device(
             search_elements=platform_blacklisted_devices,
             device_type=device_type,
-            sub_type=sub_type,
         ):
             return []
 
@@ -44,21 +41,17 @@ def get_device_funcs(
         if func := _get_device_func_by_platform(
             platform_devices=platform_devices,
             device_type=device_type,
-            sub_type=sub_type,
         ):
             funcs.append(func)
     return funcs
 
 
 def _get_device_func_by_platform(
-    platform_devices: dict[str, tuple[Any, list[int]]], device_type: str, sub_type: str
+    platform_devices: dict[str, tuple[Any, list[int]]], device_type: str
 ) -> tuple[Callable, list[int]] | None:
     """Return the function to create custom entities"""
     for name, func in platform_devices.items():
         if device_type.lower() == name.lower():
-            return func
-    for name, func in platform_devices.items():
-        if sub_type and sub_type.lower() == name.lower():
             return func
     for name, func in platform_devices.items():
         if device_type.lower().startswith(name.lower()):
@@ -67,16 +60,16 @@ def _get_device_func_by_platform(
     return None
 
 
-def is_multi_channel_device(device_type: str, sub_type: str) -> bool:
+def is_multi_channel_device(device_type: str) -> bool:
     """Return true, if device has multiple channels"""
     channels = []
-    funcs = get_device_funcs(device_type=device_type, sub_type=sub_type)
+    funcs = get_device_funcs(device_type=device_type)
     for func in funcs:
         channels.extend(func[1])
 
     return len(channels) > 1
 
 
-def entity_definition_exists(device_type: str, sub_type: str) -> bool:
+def entity_definition_exists(device_type: str) -> bool:
     """Check if device desc exits."""
-    return len(get_device_funcs(device_type, sub_type)) > 0
+    return len(get_device_funcs(device_type)) > 0

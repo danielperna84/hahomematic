@@ -16,7 +16,6 @@ from hahomematic.const import (
     ATTR_ID,
     ATTR_INTERFACE,
     ATTR_NAME,
-    ATTR_SUBTYPE,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_PYDEVCCU,
@@ -538,7 +537,6 @@ class Client(ABC):
             return {}
         paramsets: dict[str, dict[str, Any]] = {}
         address = device_description[HM_ADDRESS]
-        sub_type = device_description.get(ATTR_SUBTYPE)
         paramsets[address] = {}
         _LOGGER.debug("get_paramset_descriptions for %s", address)
         for paramset_key in device_description.get(HM_PARAMSETS, []):
@@ -556,7 +554,6 @@ class Client(ABC):
                 and device_channel
                 and not self.central.parameter_visibility.is_relevant_paramset(
                     device_type=device_type,
-                    sub_type=sub_type,
                     device_channel=device_channel,
                     paramset_key=paramset_key,
                 )

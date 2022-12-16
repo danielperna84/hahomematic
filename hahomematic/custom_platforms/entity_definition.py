@@ -667,16 +667,12 @@ def get_default_entities() -> dict[int, set[str]]:
     return deepcopy(entity_definition[ED_DEFAULT_ENTITIES])  # type: ignore[arg-type]
 
 
-def get_additional_entities_by_device_type(
-    device_type: str, sub_type: str | None
-) -> dict[int, set[str]]:
+def get_additional_entities_by_device_type(device_type: str) -> dict[int, set[str]]:
     """Return the additional entities."""
     for data in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].items():
         d_type: str = str(data[0])
         additional_entities: dict[int, set[str]] = data[1]
-        if contains_device(
-            search_elements=d_type, device_type=device_type, sub_type=sub_type
-        ):
+        if contains_device(search_elements=d_type, device_type=device_type):
             return deepcopy(additional_entities)
     return {}
 

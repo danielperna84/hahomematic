@@ -423,16 +423,9 @@ def find_free_port() -> int:
 def contains_device(
     search_elements: str | Collection[str],
     device_type: str,
-    sub_type: str | None,
 ) -> bool:
     """Return if device is in a collection."""
     if element_matches_key(search_elements=search_elements, compare_with=device_type):
-        return True
-    if element_matches_key(
-        search_elements=search_elements,
-        compare_with=sub_type,
-        do_wildcard_search=False,
-    ):
         return True
     return False
 
@@ -464,15 +457,10 @@ def element_matches_key(
 def get_value_from_dict_by_device_type(
     search_elements: dict[str, Any],
     device_type: str,
-    sub_type: str | None,
 ) -> Any | None:
     """Return the search_element matches type."""
     if value := get_value_from_dict_by_wildcard_key(
         search_elements=search_elements, compare_with=device_type
-    ):
-        return value
-    if value := get_value_from_dict_by_wildcard_key(
-        search_elements=search_elements, compare_with=sub_type, do_wildcard_search=False
     ):
         return value
     return None

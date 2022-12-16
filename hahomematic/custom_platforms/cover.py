@@ -342,7 +342,6 @@ def make_rf_blind(
 
 
 # Case for device model is not relevant
-# device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-BROLL": (make_ip_cover, [3]),
     "HmIP-FROLL": (make_ip_cover, [3]),

@@ -549,7 +549,6 @@ def make_ip_simple_fixed_color_light(
 
 
 # Case for device model is not relevant
-# device_type and sub_type(IP-only) can be used here
 DEVICES: dict[str, tuple[Any, list[int]]] = {
     "HmIP-BSL": (make_ip_fixed_color_light, [7, 11]),
     "HmIPW-WRC6": (make_ip_simple_fixed_color_light, [7, 8, 9, 10, 11, 12]),
