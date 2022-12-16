@@ -5,7 +5,7 @@ from collections.abc import Callable
 from typing import Any
 
 from hahomematic.custom_platforms import climate, cover, light, lock, siren, switch
-from hahomematic.helpers import contains_device
+from hahomematic.helpers import element_matches_key
 
 _ALL_DEVICES = [
     cover.DEVICES,
@@ -31,9 +31,9 @@ def get_device_funcs(device_type: str) -> list[tuple[Callable, list[int]]]:
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
     for platform_blacklisted_devices in _BLACKLISTED_DEVICES:
-        if contains_device(
+        if element_matches_key(
             search_elements=platform_blacklisted_devices,
-            device_type=device_type,
+            compare_with=device_type,
         ):
             return []
 

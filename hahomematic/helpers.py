@@ -420,16 +420,6 @@ def find_free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def contains_device(
-    search_elements: str | Collection[str],
-    device_type: str,
-) -> bool:
-    """Return if device is in a collection."""
-    if element_matches_key(search_elements=search_elements, compare_with=device_type):
-        return True
-    return False
-
-
 def element_matches_key(
     search_elements: str | Collection[str],
     compare_with: str | None,
@@ -452,18 +442,6 @@ def element_matches_key(
                 if compare_with.lower() == element.lower():
                     return True
     return False
-
-
-def get_value_from_dict_by_device_type(
-    search_elements: dict[str, Any],
-    device_type: str,
-) -> Any | None:
-    """Return the search_element matches type."""
-    if value := get_value_from_dict_by_wildcard_key(
-        search_elements=search_elements, compare_with=device_type
-    ):
-        return value
-    return None
 
 
 def get_value_from_dict_by_wildcard_key(
