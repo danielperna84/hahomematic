@@ -62,7 +62,7 @@ from hahomematic.helpers import (
     EntityNameData,
     HubData,
     SystemVariableData,
-    check_channel_is_only_primary_channel,
+    check_channel_is_the_only_primary_channel,
     convert_value,
     generate_unique_identifier,
     get_custom_entity_name,
@@ -407,8 +407,9 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
                 return convert_value(  # type: ignore[no-any-return]
                     value=self._attr_value_list.index(value),
                     target_type=self._attr_type,
+                    value_list=self.value_list,
                 )
-            return convert_value(value=value, target_type=self._attr_type)  # type: ignore[no-any-return]
+            return convert_value(value=value, target_type=self._attr_type, value_list=self.value_list)  # type: ignore[no-any-return]
         except ValueError:
             _LOGGER.debug(
                 "_convert_value: conversion failed for %s, %s, %s, value: [%s]",
@@ -746,7 +747,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
             device_type=self.device.device_type
         )
-        is_only_primary_channel = check_channel_is_only_primary_channel(
+        is_only_primary_channel = check_channel_is_the_only_primary_channel(
             current_channel=self.channel_no,
             device_def=self._device_desc,
             device_has_multiple_channels=device_has_multiple_channels,

@@ -69,6 +69,7 @@ from hahomematic.helpers import (
     get_channel_no,
     get_device_channel,
     get_device_name,
+    is_binary_sensor,
     updated_within_seconds,
 )
 from hahomematic.parameter_visibility import ALLOW_INTERNAL_PARAMETERS
@@ -605,7 +606,6 @@ class HmDevice:
                 elif parameter_data[HM_TYPE] == TYPE_INTEGER:
                     entity_t = HmInteger
                 elif parameter_data[HM_TYPE] == TYPE_STRING:
-                    # There is currently no entity platform in HA for this.
                     entity_t = HmText
                 else:
                     _LOGGER.warning(
@@ -617,7 +617,7 @@ class HmDevice:
         else:
             if parameter not in CLICK_EVENTS:
                 # Also check, if sensor could be a binary_sensor due to value_list.
-                if _is_binary_sensor(parameter_data):
+                if is_binary_sensor(parameter_data):
                     parameter_data[HM_TYPE] = TYPE_BOOL
                     entity_t = HmBinarySensor
                 else:
@@ -789,17 +789,3 @@ class CacheEntry:
     def empty() -> CacheEntry:
         """Return empty cache entry."""
         return CacheEntry(value=NO_CACHE_ENTRY, last_update=datetime.min)
-
-
-def _is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
-    """Check, if the sensor is a binary_sensor."""
-    if parameter_data[HM_TYPE] == TYPE_BOOL:
-        return True
-    value_list = parameter_data.get("VALUE_LIST")
-    if value_list == ["CLOSED", "OPEN"]:
-        return True
-    if value_list == ["DRY", "RAIN"]:
-        return True
-    if value_list == ["STABLE", "NOT_STABLE"]:
-        return True
-    return False
