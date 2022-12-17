@@ -16,6 +16,7 @@ from typing import Any
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
+    BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
     HM_TYPE,
     HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,
@@ -51,7 +52,7 @@ def generate_unique_identifier(
     prefix: str | None = None,
 ) -> str:
     """
-    Build unique id from address and parameter.
+    Build unique identifier from address and parameter.
     Central id is addionally used for heating groups.
     Prefix is used for events and buttons.
     """
@@ -396,7 +397,9 @@ def updated_within_seconds(
     return False
 
 
-def convert_value(value: Any, target_type: str, value_list: list[str] | None) -> Any:
+def convert_value(
+    value: Any, target_type: str, value_list: tuple[str, ...] | None
+) -> Any:
     """Convert a value to target_type"""
     if value is None:
         return None
@@ -416,29 +419,19 @@ def convert_value(value: Any, target_type: str, value_list: list[str] | None) ->
     return value
 
 
-# dict with binary_sensor relevant value lists and the corresponding TRUE value
-binary_sensor_true_value_dict_for_value_list: dict[frozenset[str], str] = {
-    frozenset(["CLOSED", "OPEN"]): "OPEN",
-    frozenset(["DRY", "RAIN"]): "RAIN",
-    frozenset(["STABLE", "NOT_STABLE"]): "NOT_STABLE",
-}
-
-
 def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
     if parameter_data[HM_TYPE] == TYPE_BOOL:
         return True
     if value_list := parameter_data.get("VALUE_LIST"):
-        return frozenset(value_list) in binary_sensor_true_value_dict_for_value_list
+        return tuple(value_list) in BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
     return False
 
 
-def _get_binary_sensor_value(value: int, value_list: list[str]) -> bool:
+def _get_binary_sensor_value(value: int, value_list: tuple[str, ...]) -> bool:
     """Return, the value of a binary_sensor."""
     str_value = value_list[value]
-    if true_value := binary_sensor_true_value_dict_for_value_list.get(
-        frozenset(value_list)
-    ):
+    if true_value := BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST.get(value_list):
         return str_value == true_value
     return False
 

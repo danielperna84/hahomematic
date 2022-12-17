@@ -277,6 +277,14 @@ HM_VIRTUAL_REMOTE_ADDRESSES = [
 ]
 
 
+# dict with binary_sensor relevant value lists and the corresponding TRUE value
+BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: dict[tuple[str, ...], str] = {
+    ("CLOSED", "OPEN"): "OPEN",
+    ("DRY", "RAIN"): "RAIN",
+    ("STABLE", "NOT_STABLE"): "NOT_STABLE",
+}
+
+
 class HmDataOperationResult(IntEnum):
     """Enum with data operation results."""
 

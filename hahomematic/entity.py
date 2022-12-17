@@ -268,7 +268,9 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
         """Assign parameter data to instance variables."""
         self._attr_type: str = parameter_data[HM_TYPE]
-        self._attr_value_list: list[str] | None = parameter_data.get(HM_VALUE_LIST)
+        self._attr_value_list: tuple[str, ...] | None = None
+        if HM_VALUE_LIST in parameter_data:
+            self._attr_value_list = tuple(parameter_data[HM_VALUE_LIST])
         self._attr_max: ParameterT = self._convert_value(parameter_data[HM_MAX])
         self._attr_min: ParameterT = self._convert_value(parameter_data[HM_MIN])
         self._attr_default: ParameterT = self._convert_value(
@@ -337,7 +339,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         return fix_unit(self._attr_unit)
 
     @value_property
-    def value_list(self) -> list[str] | None:
+    def value_list(self) -> tuple[str, ...] | None:
         """Return the value_list."""
         return self._attr_value_list
 
