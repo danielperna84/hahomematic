@@ -409,7 +409,9 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
                     target_type=self._attr_type,
                     value_list=self.value_list,
                 )
-            return convert_value(value=value, target_type=self._attr_type, value_list=self.value_list)  # type: ignore[no-any-return]
+            return convert_value(  # type: ignore[no-any-return]
+                value=value, target_type=self._attr_type, value_list=self.value_list
+            )
         except ValueError:
             _LOGGER.debug(
                 "_convert_value: conversion failed for %s, %s, %s, value: [%s]",

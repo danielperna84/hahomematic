@@ -151,7 +151,7 @@ def to_bool(value: Any) -> bool:
     if not isinstance(value, str):
         raise ValueError("invalid literal for boolean. Not a string.")
 
-    valid = {
+    valid: dict[str, bool] = {
         "y": True,
         "yes": True,
         "t": True,
@@ -397,11 +397,12 @@ def updated_within_seconds(
 
 
 def convert_value(value: Any, target_type: str, value_list: list[str] | None) -> Any:
-    """Convert to value to target_type"""
+    """Convert a value to target_type"""
     if value is None:
         return None
     if target_type == TYPE_BOOL:
         if value_list:
+            # relevant for ENUMs retyped to a BOOL
             return _get_binary_sensor_value(value=value, value_list=value_list)
         if isinstance(value, str):
             return to_bool(value)
@@ -413,6 +414,7 @@ def convert_value(value: Any, target_type: str, value_list: list[str] | None) ->
     if target_type == TYPE_STRING:
         return str(value)
     return value
+
 
 # dict with binary_sensor relevant value lists and the corresponding TRUE value
 binary_sensor_true_value_dict_for_value_list: dict[frozenset[str], str] = {
