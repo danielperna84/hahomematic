@@ -16,6 +16,7 @@ from typing import Any
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
+    HM_TYPE,
     HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,
     MAX_CACHE_AGE,
@@ -150,7 +151,7 @@ def to_bool(value: Any) -> bool:
     if not isinstance(value, str):
         raise ValueError("invalid literal for boolean. Not a string.")
 
-    valid = {
+    valid: dict[str, bool] = {
         "y": True,
         "yes": True,
         "t": True,
@@ -178,7 +179,7 @@ def get_entity_name(
     channel_no: int,
     parameter: str,
 ) -> EntityNameData:
-    """generate name for entity"""
+    """get name for entity"""
     channel_address = f"{device.device_address}:{channel_no}"
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
@@ -222,7 +223,7 @@ def get_event_name(
     channel_no: int,
     parameter: str,
 ) -> EntityNameData:
-    """generate name for event"""
+    """get name for event"""
     channel_address = f"{device.device_address}:{channel_no}"
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
@@ -262,7 +263,7 @@ def get_custom_entity_name(
     is_only_primary_channel: bool,
     usage: HmEntityUsage,
 ) -> EntityNameData:
-    """Rename name for custom entity"""
+    """Get name for custom entity"""
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
         device=device,
@@ -317,17 +318,17 @@ def get_device_name(
         device_type,
         device_address,
     )
-    return get_generated_device_name(
+    return get_generic_device_name(
         device_address=device_address, device_type=device_type
     )
 
 
-def get_generated_device_name(device_address: str, device_type: str) -> str:
+def get_generic_device_name(device_address: str, device_type: str) -> str:
     """Return auto-generated device name."""
     return f"{device_type}_{device_address}"
 
 
-def check_channel_is_only_primary_channel(
+def check_channel_is_the_only_primary_channel(
     current_channel: int, device_def: dict[str, Any], device_has_multiple_channels: bool
 ) -> bool:
     """Check if this channel is the only primary channel."""
@@ -395,11 +396,14 @@ def updated_within_seconds(
     return False
 
 
-def convert_value(value: Any, target_type: str) -> Any:
-    """Convert to value to target_type"""
+def convert_value(value: Any, target_type: str, value_list: list[str] | None) -> Any:
+    """Convert a value to target_type"""
     if value is None:
         return None
     if target_type == TYPE_BOOL:
+        if value_list:
+            # relevant for ENUMs retyped to a BOOL
+            return _get_binary_sensor_value(value=value, value_list=value_list)
         if isinstance(value, str):
             return to_bool(value)
         return bool(value)
@@ -410,6 +414,33 @@ def convert_value(value: Any, target_type: str) -> Any:
     if target_type == TYPE_STRING:
         return str(value)
     return value
+
+
+# dict with binary_sensor relevant value lists and the corresponding TRUE value
+binary_sensor_true_value_dict_for_value_list: dict[frozenset[str], str] = {
+    frozenset(["CLOSED", "OPEN"]): "OPEN",
+    frozenset(["DRY", "RAIN"]): "RAIN",
+    frozenset(["STABLE", "NOT_STABLE"]): "NOT_STABLE",
+}
+
+
+def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
+    """Check, if the sensor is a binary_sensor."""
+    if parameter_data[HM_TYPE] == TYPE_BOOL:
+        return True
+    if value_list := parameter_data.get("VALUE_LIST"):
+        return frozenset(value_list) in binary_sensor_true_value_dict_for_value_list
+    return False
+
+
+def _get_binary_sensor_value(value: int, value_list: list[str]) -> bool:
+    """Return, the value of a binary_sensor."""
+    str_value = value_list[value]
+    if true_value := binary_sensor_true_value_dict_for_value_list.get(
+        frozenset(value_list)
+    ):
+        return str_value == true_value
+    return False
 
 
 def find_free_port() -> int:

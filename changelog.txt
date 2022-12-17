@@ -1,6 +1,7 @@
-Version 2022.12.5 (2022-12-16)
+Version 2022.12.5 (2022-12-17)
 - Remove sub_type from model to simplify code
 - Remove obsolete methods
+- Refactor binary_sensor check
 
 Version 2022.12.4 (2022-12-13)
 - Fix disable away_mode in climate. Now goes back to the origin control_mode.
