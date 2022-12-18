@@ -7,26 +7,26 @@ from typing import Any
 from hahomematic.custom_platforms import climate, cover, light, lock, siren, switch
 from hahomematic.helpers import element_matches_key
 
-_ALL_DEVICES = [
+_ALL_DEVICES = (
     cover.DEVICES,
     climate.DEVICES,
     light.DEVICES,
     lock.DEVICES,
     siren.DEVICES,
     switch.DEVICES,
-]
+)
 
-_BLACKLISTED_DEVICES = [
+_BLACKLISTED_DEVICES = (
     cover.BLACKLISTED_DEVICES,
     climate.BLACKLISTED_DEVICES,
     light.BLACKLISTED_DEVICES,
     lock.BLACKLISTED_DEVICES,
     siren.BLACKLISTED_DEVICES,
     switch.BLACKLISTED_DEVICES,
-]
+)
 
 
-def get_device_funcs(device_type: str) -> list[tuple[Callable, list[int]]]:
+def get_device_funcs(device_type: str) -> list[tuple[Callable, tuple[int, ...]]]:
     """Return the function to create custom entities"""
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
@@ -47,8 +47,8 @@ def get_device_funcs(device_type: str) -> list[tuple[Callable, list[int]]]:
 
 
 def _get_device_func_by_platform(
-    platform_devices: dict[str, tuple[Any, list[int]]], device_type: str
-) -> tuple[Callable, list[int]] | None:
+    platform_devices: dict[str, tuple[Any, tuple[int, ...]]], device_type: str
+) -> tuple[Callable, tuple[int, ...]] | None:
     """Return the function to create custom entities"""
     for name, func in platform_devices.items():
         if device_type.lower() == name.lower():
@@ -62,7 +62,7 @@ def _get_device_func_by_platform(
 
 def is_multi_channel_device(device_type: str) -> bool:
     """Return true, if device has multiple channels"""
-    channels = []
+    channels: list[int] = []
     funcs = get_device_funcs(device_type=device_type)
     for func in funcs:
         channels.extend(func[1])

@@ -151,8 +151,8 @@ class CeRfSiren(BaseSiren):
 
 
 def make_ip_siren(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomematicIP siren entities."""
     return make_custom_entity(
         device=device,
@@ -163,8 +163,8 @@ def make_ip_siren(
 
 
 def make_rf_siren(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomeMatic rf siren entities."""
     return make_custom_entity(
         device=device,
@@ -175,8 +175,8 @@ def make_rf_siren(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, list[int]]] = {
-    "HmIP-ASIR": (make_ip_siren, [0]),
+DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
+    "HmIP-ASIR": (make_ip_siren, (0,)),
 }
 
-BLACKLISTED_DEVICES: list[str] = []
+BLACKLISTED_DEVICES: tuple[str, ...] = ()

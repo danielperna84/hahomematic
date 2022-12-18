@@ -162,7 +162,7 @@ SCHEMA_DEVICE_DESCRIPTION = Schema(
 
 entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
     ED_DEFAULT_ENTITIES: {
-        0: {
+        0: (
             "DUTY_CYCLE",
             "DUTYCYCLE",
             "LOW_BAT",
@@ -171,13 +171,9 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             "RSSI_DEVICE",
             "RSSI_PEER",
             "SABOTAGE",
-        },
-        2: {
-            "BATTERY_STATE",
-        },
-        4: {
-            "BATTERY_STATE",
-        },
+        ),
+        2: ("BATTERY_STATE",),
+        4: ("BATTERY_STATE",),
     },
     ED_DEVICE_DEFINITIONS: {
         EntityDefinition.IP_COVER: {
@@ -200,7 +196,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         EntityDefinition.IP_DIMMER: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
-                ED_SECONDARY_CHANNELS: [2, 3],
+                ED_SECONDARY_CHANNELS: (2, 3),
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_ON_TIME_VALUE: "ON_TIME",
@@ -225,15 +221,13 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
-                1: {
-                    "STATE",
-                },
+                1: ("STATE",),
             },
         },
         EntityDefinition.IP_FIXED_COLOR_LIGHT: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
-                ED_SECONDARY_CHANNELS: [2, 3],
+                ED_SECONDARY_CHANNELS: (2, 3),
                 ED_REPEATABLE_FIELDS: {
                     FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
@@ -266,7 +260,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         EntityDefinition.IP_SWITCH: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
-                ED_SECONDARY_CHANNELS: [2, 3],
+                ED_SECONDARY_CHANNELS: (2, 3),
                 ED_REPEATABLE_FIELDS: {
                     FIELD_STATE: "STATE",
                     FIELD_ON_TIME_VALUE: "ON_TIME",
@@ -278,14 +272,14 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
-                4: {
+                4: (
                     "CURRENT",
                     "ENERGY_COUNTER",
                     "FREQUENCY",
                     "POWER",
                     "ACTUAL_TEMPERATURE",
                     "VOLTAGE",
-                },
+                ),
             },
         },
         EntityDefinition.IP_LOCK: {
@@ -428,7 +422,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
         EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
-                ED_SECONDARY_CHANNELS: [1, 2],
+                ED_SECONDARY_CHANNELS: (1, 2),
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_ON_TIME_VALUE: "ON_TIME",
@@ -456,13 +450,13 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
                 },
             },
             ED_ADDITIONAL_ENTITIES: {
-                1: {
+                1: (
                     "CURRENT",
                     "ENERGY_COUNTER",
                     "FREQUENCY",
                     "POWER",
                     "VOLTAGE",
-                },
+                ),
             },
         },
         EntityDefinition.RF_THERMOSTAT: {
@@ -533,49 +527,41 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
     },
     ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE: {
         "HmIP-SCTH230": {
-            1: {
-                "CONCENTRATION",
-            },
-            4: {
+            1: ("CONCENTRATION",),
+            4: (
                 "HUMIDITY",
                 "ACTUAL_TEMPERATURE",
-            },
+            ),
         },
         "HmIP-DLD": {
-            0: {
-                "ERROR_JAMMED",
-            },
+            0: ("ERROR_JAMMED",),
         },
         # HM-Sec-Win*
         "HM-Sec-Win": {
-            1: {
+            1: (
                 "DIRECTION",
                 "WORKING",
                 "ERROR",
-            },
-            2: {
+            ),
+            2: (
                 "LEVEL",
                 "STATUS",
-            },
+            ),
         },
         # HM-Sec-Key*
         "HM-Sec-Key": {
-            1: {
+            1: (
                 "DIRECTION",
                 "ERROR",
-            },
+            ),
         },
         # HmIPW-DR*
         "HmIPW-DR": {
-            0: {
-                "ACTUAL_TEMPERATURE",
-            },
+            0: ("ACTUAL_TEMPERATURE",),
         },
         # HmIP-DR*
         "HmIP-DR": {
-            0: {
-                "ACTUAL_TEMPERATURE",
-            },
+            0: ("ACTUAL_TEMPERATURE",),
         },
     },
 }
@@ -596,15 +582,15 @@ def make_custom_entity(
     device: hm_device.HmDevice,
     custom_entity_class: type,
     device_enum: EntityDefinition,
-    group_base_channels: list[int],
-) -> list[hm_entity.BaseEntity]:
+    group_base_channels: tuple[int, ...],
+) -> tuple[hm_entity.BaseEntity, ...]:
     """
     Creates custom_entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
     entities: list[hm_entity.BaseEntity] = []
     if not group_base_channels:
-        group_base_channels = [0]
+        group_base_channels = (0,)
 
     entity_def = _get_device_entities(device_enum, group_base_channels[0])
 
@@ -625,7 +611,7 @@ def make_custom_entity(
                 )
             )
 
-    return entities
+    return tuple(entities)
 
 
 def _create_entities(
@@ -633,9 +619,9 @@ def _create_entities(
     custom_entity_class: type,
     device_enum: EntityDefinition,
     device_def: dict[str, Any],
-    entity_def: dict[int, set[str]],
+    entity_def: dict[int, tuple[str, ...]],
     channel_no: int | None = None,
-) -> list[hm_entity.BaseEntity]:
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Create custom entities."""
     entities: list[hm_entity.BaseEntity] = []
     unique_identifier = generate_unique_identifier(
@@ -645,9 +631,9 @@ def _create_entities(
         _LOGGER.debug(
             "make_custom_entity: Skipping %s (already exists)", unique_identifier
         )
-        return entities
+        return tuple(entities)
     if f"{device.device_address}:{channel_no}" not in device.channels:
-        return entities
+        return tuple(entities)
     entity = custom_entity_class(
         device=device,
         unique_identifier=unique_identifier,
@@ -659,19 +645,21 @@ def _create_entities(
     if len(entity.data_entities) > 0:
         entity.add_to_collections()
         entities.append(entity)
-    return entities
+    return tuple(entities)
 
 
-def get_default_entities() -> dict[int, set[str]]:
+def get_default_entities() -> dict[int, tuple[str, ...]]:
     """Return the default entities."""
     return deepcopy(entity_definition[ED_DEFAULT_ENTITIES])  # type: ignore[arg-type]
 
 
-def get_additional_entities_by_device_type(device_type: str) -> dict[int, set[str]]:
+def get_additional_entities_by_device_type(
+    device_type: str,
+) -> dict[int, tuple[str, ...]]:
     """Return the additional entities."""
     for data in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].items():
         d_type: str = str(data[0])
-        additional_entities: dict[int, set[str]] = data[1]
+        additional_entities: dict[int, tuple[str, ...]] = data[1]
         if element_matches_key(search_elements=d_type, compare_with=device_type):
             return deepcopy(additional_entities)
     return {}
@@ -736,14 +724,14 @@ def _rebase_entity_dict(
 
 def _get_device_entities(
     device_enum: EntityDefinition, base_channel_no: int
-) -> dict[int, set[str]]:
+) -> dict[int, tuple[str, ...]]:
     """Return the device entities."""
     additional_entities = (
         entity_definition[ED_DEVICE_DEFINITIONS]
         .get(device_enum, {})
         .get(ED_ADDITIONAL_ENTITIES, {})
     )
-    new_entities: dict[int, set[str]] = {}
+    new_entities: dict[int, tuple[str, ...]] = {}
     if additional_entities:
         for channel_no, field in deepcopy(additional_entities).items():
             new_entities[channel_no + base_channel_no] = field

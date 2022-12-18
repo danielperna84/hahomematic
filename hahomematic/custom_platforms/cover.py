@@ -282,8 +282,8 @@ class CeGarage(CustomEntity):
 
 
 def make_ip_cover(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomematicIP cover entities."""
     return make_custom_entity(
         device=device,
@@ -294,8 +294,8 @@ def make_ip_cover(
 
 
 def make_rf_cover(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomeMatic classic cover entities."""
     return make_custom_entity(
         device=device,
@@ -306,8 +306,8 @@ def make_rf_cover(
 
 
 def make_ip_blind(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomematicIP cover entities."""
     return make_custom_entity(
         device=device,
@@ -318,8 +318,8 @@ def make_ip_blind(
 
 
 def make_ip_garage(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomematicIP garage entities."""
     return make_custom_entity(
         device=device,
@@ -330,8 +330,8 @@ def make_ip_garage(
 
 
 def make_rf_blind(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomeMatic classic cover entities."""
     return make_custom_entity(
         device=device,
@@ -342,30 +342,30 @@ def make_rf_blind(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, list[int]]] = {
-    "HmIP-BROLL": (make_ip_cover, [3]),
-    "HmIP-FROLL": (make_ip_cover, [3]),
-    "HmIP-BBL": (make_ip_blind, [3]),
-    "HmIP-FBL": (make_ip_blind, [3]),
-    "HmIP-HDM": (make_ip_blind, [0]),  # 0 is correct, HDM1 has no status channel.
-    "HmIP-DRBLI4": (make_ip_blind, [9, 13, 17, 21]),
-    "HmIPW-DRBL4": (make_ip_blind, [1, 5, 9, 13]),
-    "HmIP-MOD-HO": (make_ip_garage, [1]),
-    "HmIP-MOD-TM": (make_ip_garage, [1]),
-    "HM-LC-Bl1-FM-2": (make_rf_cover, [1]),
-    "HM-LC-Bl1-FM": (make_rf_cover, [1]),
-    "HM-LC-Bl1-PB-FM": (make_rf_cover, [1]),
-    "HM-LC-Bl1-SM-2": (make_rf_cover, [1]),
-    "HM-LC-Bl1-SM": (make_rf_cover, [1]),
-    "HM-LC-Bl1PBU-FM": (make_rf_cover, [1]),
-    "HM-LC-JaX": (make_rf_blind, [1]),
-    "HM-LC-Ja1PBU-FM": (make_rf_blind, [1]),
-    "ZEL STG RM FEP 230V": (make_rf_cover, [1]),
-    "263 146": (make_rf_cover, [1]),
-    "263 147": (make_rf_cover, [1]),
-    "HM-LC-BlX": (make_rf_cover, [1]),
-    "HM-Sec-Win": (make_rf_cover, [1]),
-    "HMW-LC-Bl1": (make_rf_cover, [3]),
+DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
+    "HmIP-BROLL": (make_ip_cover, (3,)),
+    "HmIP-FROLL": (make_ip_cover, (3,)),
+    "HmIP-BBL": (make_ip_blind, (3,)),
+    "HmIP-FBL": (make_ip_blind, (3,)),
+    "HmIP-HDM": (make_ip_blind, (0,)),  # 0 is correct, HDM1 has no status channel.
+    "HmIP-DRBLI4": (make_ip_blind, (9, 13, 17, 21)),
+    "HmIPW-DRBL4": (make_ip_blind, (1, 5, 9, 13)),
+    "HmIP-MOD-HO": (make_ip_garage, (1,)),
+    "HmIP-MOD-TM": (make_ip_garage, (1,)),
+    "HM-LC-Bl1-FM-2": (make_rf_cover, (1,)),
+    "HM-LC-Bl1-FM": (make_rf_cover, (1,)),
+    "HM-LC-Bl1-PB-FM": (make_rf_cover, (1,)),
+    "HM-LC-Bl1-SM-2": (make_rf_cover, (1,)),
+    "HM-LC-Bl1-SM": (make_rf_cover, (1,)),
+    "HM-LC-Bl1PBU-FM": (make_rf_cover, (1,)),
+    "HM-LC-JaX": (make_rf_blind, (1,)),
+    "HM-LC-Ja1PBU-FM": (make_rf_blind, (1,)),
+    "ZEL STG RM FEP 230V": (make_rf_cover, (1,)),
+    "263 146": (make_rf_cover, (1,)),
+    "263 147": (make_rf_cover, (1,)),
+    "HM-LC-BlX": (make_rf_cover, (1,)),
+    "HM-Sec-Win": (make_rf_cover, (1,)),
+    "HMW-LC-Bl1": (make_rf_cover, (3,)),
 }
 
-BLACKLISTED_DEVICES: list[str] = []
+BLACKLISTED_DEVICES: tuple[str, ...] = ()

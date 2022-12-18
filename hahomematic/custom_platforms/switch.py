@@ -69,8 +69,8 @@ class CeSwitch(CustomEntity):
 
 
 def make_ip_switch(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomematicIP switch entities."""
     return make_custom_entity(
         device=device,
@@ -81,8 +81,8 @@ def make_ip_switch(
 
 
 def make_rf_switch(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomematicIP switch entities."""
     return make_custom_entity(
         device=device,
@@ -93,31 +93,31 @@ def make_rf_switch(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, list[int]]] = {
-    "ELV-SH-BS2": (make_ip_switch, [3, 7]),
-    "HmIP-BS2": (make_ip_switch, [3, 7]),
-    "HmIP-BSM": (make_ip_switch, [3]),
-    "HmIP-FSM": (make_ip_switch, [1]),
-    "HmIP-FSI": (make_ip_switch, [2]),
-    "HmIP-PS": (make_ip_switch, [2]),
-    "HmIP-BSL": (make_ip_switch, [3]),
-    "HmIP-DRSI1": (make_ip_switch, [2]),
-    "HmIP-DRSI4": (make_ip_switch, [5, 9, 13, 17]),
-    "HmIPW-DRS": (make_ip_switch, [1, 5, 9, 13, 17, 21, 25, 29]),
-    "HmIP-MOD-OC8": (make_ip_switch, [9, 13, 17, 21, 25, 29, 33, 37]),
-    "HmIP-PCBS": (make_ip_switch, [2]),
-    "HmIP-PCBS2": (make_ip_switch, [3, 7]),
-    "HmIP-PCBS-BAT": (make_ip_switch, [2]),
-    "HmIP-SCTH230": (make_ip_switch, [7]),
-    "HmIP-USBSM": (make_ip_switch, [2]),
-    "HmIP-WGC": (make_ip_switch, [2]),
-    "HmIP-WHS2": (make_ip_switch, [1, 5]),
-    "HmIPW-FIO6": (make_ip_switch, [7, 11, 15, 19, 23, 27]),
-    # "HM-LC-Sw": (make_rf_switch, [1, 2, 3, 4]),
-    # "HM-ES-PM": (make_rf_switch, [1]),
+DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
+    "ELV-SH-BS2": (make_ip_switch, (3, 7)),
+    "HmIP-BS2": (make_ip_switch, (3, 7)),
+    "HmIP-BSM": (make_ip_switch, (3,)),
+    "HmIP-FSM": (make_ip_switch, (1,)),
+    "HmIP-FSI": (make_ip_switch, (2,)),
+    "HmIP-PS": (make_ip_switch, (2,)),
+    "HmIP-BSL": (make_ip_switch, (3,)),
+    "HmIP-DRSI1": (make_ip_switch, (2,)),
+    "HmIP-DRSI4": (make_ip_switch, (5, 9, 13, 17)),
+    "HmIPW-DRS": (make_ip_switch, (1, 5, 9, 13, 17, 21, 25, 29)),
+    "HmIP-MOD-OC8": (make_ip_switch, (9, 13, 17, 21, 25, 29, 33, 37)),
+    "HmIP-PCBS": (make_ip_switch, (2,)),
+    "HmIP-PCBS2": (make_ip_switch, (3, 7)),
+    "HmIP-PCBS-BAT": (make_ip_switch, (2,)),
+    "HmIP-SCTH230": (make_ip_switch, (7,)),
+    "HmIP-USBSM": (make_ip_switch, (2,)),
+    "HmIP-WGC": (make_ip_switch, (2,)),
+    "HmIP-WHS2": (make_ip_switch, (1, 5)),
+    "HmIPW-FIO6": (make_ip_switch, (7, 11, 15, 19, 23, 27)),
+    # "HM-LC-Sw": (make_rf_switch, (1, 2, 3, 4)),
+    # "HM-ES-PM": (make_rf_switch, (1,))),
 }
 
 # HmIP-MIO16-PCB : Don't add it. Too much functionality. Device is better supported without custom entities.
 # HmIP-MIOB : Don't add it. Too much functionality. Device is better supported without custom entities.
 
-BLACKLISTED_DEVICES: list[str] = []
+BLACKLISTED_DEVICES: tuple[str, ...] = ()
