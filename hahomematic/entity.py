@@ -690,7 +690,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         unique_identifier: str,
         device_enum: hm_entity_definition.EntityDefinition,
         device_def: dict[str, Any],
-        entity_def: dict[int, set[str]],
+        entity_def: dict[int, tuple[str, ...]],
         channel_no: int,
     ):
         """
@@ -699,7 +699,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         self._device_enum: Final[hm_entity_definition.EntityDefinition] = device_enum
         # required for name in BaseEntity
         self._device_desc: Final[dict[str, Any]] = device_def
-        self._entity_def: Final[dict[int, set[str]]] = entity_def
+        self._entity_def: Final[dict[int, tuple[str, ...]]] = entity_def
         BaseEntity.__init__(
             self=self,
             device=device,
@@ -863,7 +863,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                         entity.set_usage(HmEntityUsage.CE_VISIBLE)
                     self._add_entity(field_name=field_name, entity=entity)
 
-    def _mark_entity(self, field_desc: dict[int, set[str]]) -> None:
+    def _mark_entity(self, field_desc: dict[int, tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
         if not field_desc:
             return None
@@ -877,7 +877,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
                     entity.set_usage(HmEntityUsage.ENTITY)
 
     def _mark_entity_by_custom_un_ignore_parameters(
-        self, un_ignore_params_by_paramset_key: dict[str, set[str]]
+        self, un_ignore_params_by_paramset_key: dict[str, tuple[str, ...]]
     ) -> None:
         """Mark entities to be created in HA."""
         if not un_ignore_params_by_paramset_key:
@@ -995,7 +995,9 @@ class GenericSystemVariable(GenericHubEntity):
         super().__init__(central=central, address=SYSVAR_ADDRESS, data=data)
         self.ccu_var_name: Final[str] = data.name
         self.data_type: Final[str | None] = data.data_type
-        self._attr_value_list: Final[list[str] | None] = data.value_list
+        self._attr_value_list: Final[tuple[str, ...] | None] = (
+            tuple(data.value_list) if data.value_list else None
+        )
         self._attr_max: Final[float | int | None] = data.max_value
         self._attr_min: Final[float | int | None] = data.min_value
         self._attr_unit: Final[str | None] = data.unit
@@ -1012,7 +1014,7 @@ class GenericSystemVariable(GenericHubEntity):
         return self._attr_value
 
     @value_property
-    def value_list(self) -> list[str] | None:
+    def value_list(self) -> tuple[str, ...] | None:
         """Return the value_list."""
         return self._attr_value_list
 

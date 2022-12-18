@@ -534,8 +534,8 @@ class CeIpThermostat(BaseClimateEntity):
 
 
 def make_simple_thermostat(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates SimpleRfThermostat entities."""
     return make_custom_entity(
         device=device,
@@ -546,8 +546,8 @@ def make_simple_thermostat(
 
 
 def make_thermostat(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates RfThermostat entities."""
     return make_custom_entity(
         device=device,
@@ -558,8 +558,8 @@ def make_thermostat(
 
 
 def make_thermostat_group(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates RfThermostat group entities."""
     return make_custom_entity(
         device=device,
@@ -570,8 +570,8 @@ def make_thermostat_group(
 
 
 def make_ip_thermostat(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates IPThermostat entities."""
     return make_custom_entity(
         device=device,
@@ -582,8 +582,8 @@ def make_ip_thermostat(
 
 
 def make_ip_thermostat_group(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates IPThermostat group entities."""
     return make_custom_entity(
         device=device,
@@ -594,24 +594,24 @@ def make_ip_thermostat_group(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, list[int]]] = {
-    "ALPHA-IP-RBG": (make_ip_thermostat, [1]),
-    "BC-RT-TRX-CyG": (make_thermostat, [1]),
-    "BC-RT-TRX-CyN": (make_thermostat, [1]),
-    "BC-TC-C-WM": (make_thermostat, [1]),
-    "HM-CC-RT-DN": (make_thermostat, [4]),
-    "HM-CC-TC": (make_simple_thermostat, [1]),
-    "HM-CC-VG-1": (make_thermostat_group, [1]),
-    "HM-TC-IT-WM-W-EU": (make_thermostat, [2]),
-    "HmIP-BWTH": (make_ip_thermostat, [1]),
-    "HmIP-eTRV": (make_ip_thermostat, [1]),
-    "HmIP-HEATING": (make_ip_thermostat_group, [1]),
-    "HmIP-STH": (make_ip_thermostat, [1]),
-    "HmIP-WTH": (make_ip_thermostat, [1]),
-    "HmIPW-STH": (make_ip_thermostat, [1]),
-    "HmIPW-WTH": (make_ip_thermostat, [1]),
-    "Thermostat AA": (make_ip_thermostat, [1]),
-    "ZEL STG RM FWT": (make_simple_thermostat, [1]),
+DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
+    "ALPHA-IP-RBG": (make_ip_thermostat, (1,)),
+    "BC-RT-TRX-CyG": (make_thermostat, (1,)),
+    "BC-RT-TRX-CyN": (make_thermostat, (1,)),
+    "BC-TC-C-WM": (make_thermostat, (1,)),
+    "HM-CC-RT-DN": (make_thermostat, (4,)),
+    "HM-CC-TC": (make_simple_thermostat, (1,)),
+    "HM-CC-VG-1": (make_thermostat_group, (1,)),
+    "HM-TC-IT-WM-W-EU": (make_thermostat, (2,)),
+    "HmIP-BWTH": (make_ip_thermostat, (1,)),
+    "HmIP-eTRV": (make_ip_thermostat, (1,)),
+    "HmIP-HEATING": (make_ip_thermostat_group, (1,)),
+    "HmIP-STH": (make_ip_thermostat, (1,)),
+    "HmIP-WTH": (make_ip_thermostat, (1,)),
+    "HmIPW-STH": (make_ip_thermostat, (1,)),
+    "HmIPW-WTH": (make_ip_thermostat, (1,)),
+    "Thermostat AA": (make_ip_thermostat, (1,)),
+    "ZEL STG RM FWT": (make_simple_thermostat, (1,)),
 }
 
-BLACKLISTED_DEVICES: list[str] = ["HmIP-STHO"]
+BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)

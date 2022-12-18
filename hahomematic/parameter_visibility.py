@@ -31,41 +31,39 @@ from hahomematic.helpers import (
 _LOGGER = logging.getLogger(__name__)
 
 # {device_type: channel_no}
-_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[str, tuple[set[int], list[str]]] = {
-    "HmIPW-DRBL4": ({1, 5, 9, 13}, [PARAM_CHANNEL_OPERATION_MODE]),
+_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[str, tuple[set[int], tuple[str, ...]]] = {
+    "HmIPW-DRBL4": ({1, 5, 9, 13}, (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DRBLI4": (
         {1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21},
-        [PARAM_CHANNEL_OPERATION_MODE],
+        (PARAM_CHANNEL_OPERATION_MODE,),
     ),
-    "HmIP-DRSI1": ({1}, [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIP-DRSI4": ({1, 2, 3, 4}, [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIP-DRDI3": ({1, 2, 3}, [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIP-DSD-PCB": ({1}, [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIP-FCI1": ({1}, [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIP-FCI6": (set(range(1, 7)), [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIPW-FIO6": (set(range(1, 7)), [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIP-FSI16": ({1}, [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIP-MIO16-PCB": ({13, 14, 15, 16}, [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIP-MOD-RC8": (set(range(1, 9)), [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIPW-DRI16": (set(range(1, 17)), [PARAM_CHANNEL_OPERATION_MODE]),
-    "HmIPW-DRI32": (set(range(1, 33)), [PARAM_CHANNEL_OPERATION_MODE]),
-    "ALPHA-IP-RBG": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HM-CC-RT-DN": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HM-CC-VG-1": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HmIP-BWTH": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HmIP-eTRV": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HmIP-HEATING": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HmIP-STH": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HmIP-WTH": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HmIPW-STH": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
-    "HmIPW-WTH": ({1}, [PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM]),
+    "HmIP-DRSI1": ({1}, (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIP-DRSI4": ({1, 2, 3, 4}, (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIP-DRDI3": ({1, 2, 3}, (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIP-DSD-PCB": ({1}, (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIP-FCI1": ({1}, (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIP-FCI6": (set(range(1, 7)), (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIPW-FIO6": (set(range(1, 7)), (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIP-FSI16": ({1}, (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIP-MIO16-PCB": ({13, 14, 15, 16}, (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIP-MOD-RC8": (set(range(1, 9)), (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIPW-DRI16": (set(range(1, 17)), (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIPW-DRI32": (set(range(1, 33)), (PARAM_CHANNEL_OPERATION_MODE,)),
+    "ALPHA-IP-RBG": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HM-CC-RT-DN": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HM-CC-VG-1": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-BWTH": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-eTRV": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-HEATING": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-STH": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-WTH": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HmIPW-STH": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HmIPW-WTH": ({1}, (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
 }
 
-ALLOW_INTERNAL_PARAMETERS: set[str] = {
-    "DIRECTION",
-}
+ALLOW_INTERNAL_PARAMETERS = ("DIRECTION",)
 
-_HIDDEN_PARAMETERS: set[str] = {
+_HIDDEN_PARAMETERS: tuple[str, ...] = (
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
     EVENT_STICKY_UN_REACH,
@@ -76,10 +74,10 @@ _HIDDEN_PARAMETERS: set[str] = {
     PARAM_TEMPERATURE_MINIMUM,
     "ACTIVITY_STATE",
     "DIRECTION",
-}
+)
 
 # Parameters within the VALUES paramset for which we don't create entities.
-_IGNORED_PARAMETERS: set[str] = {
+_IGNORED_PARAMETERS: tuple[str, ...] = (
     "AES_KEY",
     "BOOST_TIME",
     "BOOT",
@@ -119,10 +117,10 @@ _IGNORED_PARAMETERS: set[str] = {
     "TEMPERATURE_OUT_OF_RANGE",
     "TIME_OF_OPERATION",
     "WOCHENPROGRAMM",
-}
+)
 
 # Ignore Parameter that end with
-_IGNORED_PARAMETERS_WILDCARDS_END: set[str] = {
+_IGNORED_PARAMETERS_WILDCARDS_END: tuple[str, ...] = (
     "OVERFLOW",
     "OVERHEAT",
     "OVERRUN",
@@ -131,10 +129,10 @@ _IGNORED_PARAMETERS_WILDCARDS_END: set[str] = {
     "STATUS",
     "SUBMIT",
     "WORKING",
-}
+)
 
 # Ignore Parameter that start with
-_IGNORED_PARAMETERS_WILDCARDS_START: set[str] = {
+_IGNORED_PARAMETERS_WILDCARDS_START: tuple[str, ...] = (
     "ADJUSTING",
     "ERR_TTM",
     "ERROR",
@@ -144,38 +142,38 @@ _IGNORED_PARAMETERS_WILDCARDS_START: set[str] = {
     "PARTY_STOP",
     "STATUS_FLAG",
     "WEEK_PROGRAM",
-}
+)
 
 
 # Parameters within the paramsets for which we create entities.
-_UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
-    "HmIP-DLD": ["ERROR_JAMMED"],
-    "HmIP-SWSD": ["SMOKE_DETECTOR_ALARM_STATUS"],
-    "HM-Sec-Win": ["DIRECTION", "WORKING", "ERROR", "STATUS"],
-    "HM-Sec-Key": ["DIRECTION", "ERROR"],
-    "HmIP-PCBS-BAT": [
+_UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, tuple[str, ...]] = {
+    "HmIP-DLD": ("ERROR_JAMMED",),
+    "HmIP-SWSD": ("SMOKE_DETECTOR_ALARM_STATUS",),
+    "HM-Sec-Win": ("DIRECTION", "WORKING", "ERROR", "STATUS"),
+    "HM-Sec-Key": ("DIRECTION", "ERROR"),
+    "HmIP-PCBS-BAT": (
         "OPERATING_VOLTAGE",
         "LOW_BAT",
-    ],  # To override ignore for HmIP-PCBS
+    ),  # To override ignore for HmIP-PCBS
 }
 
 # Parameters by device within the VALUES paramset for which we don't create entities.
-_IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
-    "CURRENT_ILLUMINATION": [
+_IGNORE_PARAMETERS_BY_DEVICE: dict[str, tuple[str, ...]] = {
+    "CURRENT_ILLUMINATION": (
         "HmIP-SMI",
         "HmIP-SMO",
         "HmIP-SPI",
-    ],
-    "LOWBAT": [
+    ),
+    "LOWBAT": (
         "HM-LC-Sw1-FM",
         "HM-LC-Sw1PBU-FM",
         "HM-LC-Sw1-Pl-DN-R1",
         "HM-LC-Sw1-PCB",
         "HM-LC-Sw4-DR",
         "HM-SwI-3-FM",
-    ],
-    "LOW_BAT": ["HmIP-BWTH", "HmIP-PCBS"],
-    "OPERATING_VOLTAGE": [
+    ),
+    "LOW_BAT": ("HmIP-BWTH", "HmIP-PCBS"),
+    "OPERATING_VOLTAGE": (
         "ELV-SH-BS2",
         "HmIP-BS2",
         "HmIP-BDT",
@@ -191,13 +189,13 @@ _IGNORE_PARAMETERS_BY_DEVICE: dict[str, list[str]] = {
         "HmIP-PMFS",
         "HmIP-PS",
         "HmIP-SFD",
-    ],
+    ),
 }
 
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
 
-_WRAP_ENTITY: dict[str | frozenset[str], dict[str, HmPlatform]] = {
-    frozenset({"HmIP-eTRV", "HmIP-HEATING"}): {"LEVEL": HmPlatform.SENSOR},
+_WRAP_ENTITY: dict[str | tuple[str, ...], dict[str, HmPlatform]] = {
+    ("HmIP-eTRV", "HmIP-HEATING"): {"LEVEL": HmPlatform.SENSOR},
 }
 
 
@@ -216,12 +214,12 @@ class ParameterVisibilityCache:
             PARAMSET_KEY_MASTER: set(),
             PARAMSET_KEY_VALUES: set(),
         }
-        self._ignore_parameters_by_device_lower: dict[str, list[str]] = {
-            parameter: [device_type.lower() for device_type in device_types]
+        self._ignore_parameters_by_device_lower: dict[str, tuple[str, ...]] = {
+            parameter: tuple(device_type.lower() for device_type in device_types)
             for parameter, device_types in _IGNORE_PARAMETERS_BY_DEVICE.items()
         }
 
-        self._un_ignore_parameters_by_device_lower: dict[str, list[str]] = {
+        self._un_ignore_parameters_by_device_lower: dict[str, tuple[str, ...]] = {
             device_type.lower(): parameters
             for device_type, parameters in _UN_IGNORE_PARAMETERS_BY_DEVICE.items()
         }
@@ -271,7 +269,7 @@ class ParameterVisibilityCache:
 
     def get_un_ignore_parameters(
         self, device_type: str, device_channel: int
-    ) -> dict[str, set[str]]:
+    ) -> dict[str, tuple[str, ...]]:
         """Return un_ignore_parameters"""
         device_type_l = device_type.lower()
         un_ignore_parameters: dict[str, set[str]] = {}
@@ -289,7 +287,10 @@ class ParameterVisibilityCache:
                 un_ignore_parameters[paramset_key] = set()
             un_ignore_parameters[paramset_key].update(un_ignore_params)
 
-        return un_ignore_parameters
+        return {
+            paramset_key: tuple(parameters)
+            for paramset_key, parameters in un_ignore_parameters.items()
+        }
 
     def ignore_parameter(
         self,

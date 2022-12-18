@@ -465,8 +465,8 @@ def _convert_color(color: tuple[float, float] | None) -> str:
 
 
 def make_ip_dimmer(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomematicIP dimmer entities."""
     return make_custom_entity(
         device=device,
@@ -477,8 +477,8 @@ def make_ip_dimmer(
 
 
 def make_rf_dimmer(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomeMatic classic dimmer entities."""
     return make_custom_entity(
         device=device,
@@ -489,8 +489,8 @@ def make_rf_dimmer(
 
 
 def make_rf_dimmer_color(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomeMatic classic dimmer with color entities."""
     return make_custom_entity(
         device=device,
@@ -501,8 +501,8 @@ def make_rf_dimmer_color(
 
 
 def make_rf_dimmer_color_temp(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomeMatic classic dimmer with color temperature entities."""
     return make_custom_entity(
         device=device,
@@ -513,8 +513,8 @@ def make_rf_dimmer_color_temp(
 
 
 def make_rf_dimmer_with_virt_channel(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomeMatic classic dimmer entities."""
     return make_custom_entity(
         device=device,
@@ -525,8 +525,8 @@ def make_rf_dimmer_with_virt_channel(
 
 
 def make_ip_fixed_color_light(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates fixed color light entities like HmIP-BSL."""
     return make_custom_entity(
         device=device,
@@ -537,8 +537,8 @@ def make_ip_fixed_color_light(
 
 
 def make_ip_simple_fixed_color_light(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates simple fixed color light entities like HmIPW-WRC6."""
     return make_custom_entity(
         device=device,
@@ -549,48 +549,48 @@ def make_ip_simple_fixed_color_light(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, list[int]]] = {
-    "HmIP-BSL": (make_ip_fixed_color_light, [7, 11]),
-    "HmIPW-WRC6": (make_ip_simple_fixed_color_light, [7, 8, 9, 10, 11, 12]),
-    "HmIP-BDT": (make_ip_dimmer, [3]),
-    "HmIP-FDT": (make_ip_dimmer, [1]),
-    "HmIP-PDT": (make_ip_dimmer, [2]),
-    "HMW-LC-Dim1L-DR": (make_rf_dimmer, [3]),
-    "HM-DW-WM": (make_rf_dimmer, [1, 2, 3, 4]),
-    "HSS-DX": (make_rf_dimmer, [1]),
-    "263 132": (make_rf_dimmer, [1]),
-    "263 133": (make_rf_dimmer_with_virt_channel, [1]),
-    "263 134": (make_rf_dimmer, [1]),
-    "HmIPW-DRD3": (make_ip_dimmer, [1, 5, 9]),
-    "HmIP-DRDI3": (make_ip_dimmer, [4, 8, 12]),
-    "HmIP-SCTH230": (make_ip_dimmer, [11]),
-    "HM-LC-AO-SM": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1L-CV-2": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1L-CV": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1L-Pl-2": (make_rf_dimmer, [1]),
-    "HM-LC-Dim1L-Pl-3": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1L-Pl": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1PWM-CV-2": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1PWM-CV": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1T-CV-2": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1T-CV": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1T-DR": (make_rf_dimmer, [1, 2, 3]),
-    "HM-LC-Dim1T-FM-2": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1T-FM-LF": (make_rf_dimmer, [1]),
-    "HM-LC-Dim1T-FM": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1T-Pl-2": (make_rf_dimmer, [1]),
-    "HM-LC-Dim1T-Pl-3": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1T-Pl": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1TPBU-FM-2": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim1TPBU-FM": (make_rf_dimmer_with_virt_channel, [1]),
-    "HM-LC-Dim2L-CV": (make_rf_dimmer, [1, 2]),
-    "HM-LC-Dim2L-SM-2": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
-    "HM-LC-Dim2L-SM": (make_rf_dimmer, [1, 2]),
-    "HM-LC-Dim2T-SM-2": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
-    "HM-LC-Dim2T-SM": (make_rf_dimmer, [1, 2]),
-    "HM-LC-DW-WM": (make_rf_dimmer_color_temp, [1, 3, 5]),
-    "HM-LC-RGBW-WM": (make_rf_dimmer_color, [1]),
-    "OLIGO.smart.iq.HM": (make_rf_dimmer, [1, 2, 3, 4, 5, 6]),
+DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
+    "HmIP-BSL": (make_ip_fixed_color_light, (7, 11)),
+    "HmIPW-WRC6": (make_ip_simple_fixed_color_light, (7, 8, 9, 10, 11, 12)),
+    "HmIP-BDT": (make_ip_dimmer, (3,)),
+    "HmIP-FDT": (make_ip_dimmer, (1,)),
+    "HmIP-PDT": (make_ip_dimmer, (2,)),
+    "HMW-LC-Dim1L-DR": (make_rf_dimmer, (3,)),
+    "HM-DW-WM": (make_rf_dimmer, (1, 2, 3, 4)),
+    "HSS-DX": (make_rf_dimmer, (1,)),
+    "263 132": (make_rf_dimmer, (1,)),
+    "263 133": (make_rf_dimmer_with_virt_channel, (1,)),
+    "263 134": (make_rf_dimmer, (1,)),
+    "HmIPW-DRD3": (make_ip_dimmer, (1, 5, 9)),
+    "HmIP-DRDI3": (make_ip_dimmer, (4, 8, 12)),
+    "HmIP-SCTH230": (make_ip_dimmer, (11,)),
+    "HM-LC-AO-SM": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1L-CV-2": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1L-CV": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1L-Pl-2": (make_rf_dimmer, (1,)),
+    "HM-LC-Dim1L-Pl-3": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1L-Pl": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1PWM-CV-2": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1PWM-CV": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1T-CV-2": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1T-CV": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1T-DR": (make_rf_dimmer, (1, 2, 3)),
+    "HM-LC-Dim1T-FM-2": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1T-FM-LF": (make_rf_dimmer, (1,)),
+    "HM-LC-Dim1T-FM": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1T-Pl-2": (make_rf_dimmer, (1,)),
+    "HM-LC-Dim1T-Pl-3": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1T-Pl": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1TPBU-FM-2": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim1TPBU-FM": (make_rf_dimmer_with_virt_channel, (1,)),
+    "HM-LC-Dim2L-CV": (make_rf_dimmer, (1, 2)),
+    "HM-LC-Dim2L-SM-2": (make_rf_dimmer, (1, 2, 3, 4, 5, 6)),
+    "HM-LC-Dim2L-SM": (make_rf_dimmer, (1, 2)),
+    "HM-LC-Dim2T-SM-2": (make_rf_dimmer, (1, 2, 3, 4, 5, 6)),
+    "HM-LC-Dim2T-SM": (make_rf_dimmer, (1, 2)),
+    "HM-LC-DW-WM": (make_rf_dimmer_color_temp, (1, 3, 5)),
+    "HM-LC-RGBW-WM": (make_rf_dimmer_color, (1,)),
+    "OLIGO.smart.iq.HM": (make_rf_dimmer, (1, 2, 3, 4, 5, 6)),
 }
 
-BLACKLISTED_DEVICES: list[str] = []
+BLACKLISTED_DEVICES: tuple[str, ...] = ()

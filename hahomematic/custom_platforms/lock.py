@@ -192,8 +192,8 @@ class CeRfLock(BaseLock):
 
 
 def make_ip_lock(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomematicIP lock entities."""
     return make_custom_entity(
         device=device,
@@ -204,8 +204,8 @@ def make_ip_lock(
 
 
 def make_rf_lock(
-    device: hm_device.HmDevice, group_base_channels: list[int]
-) -> list[hm_entity.BaseEntity]:
+    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hm_entity.BaseEntity, ...]:
     """Creates HomeMatic rf lock entities."""
     return make_custom_entity(
         device=device,
@@ -216,9 +216,9 @@ def make_rf_lock(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, list[int]]] = {
-    "HmIP-DLD": (make_ip_lock, [0]),
-    "HM-Sec-Key": (make_rf_lock, [1]),
+DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
+    "HmIP-DLD": (make_ip_lock, (0,)),
+    "HM-Sec-Key": (make_rf_lock, (1,)),
 }
 
-BLACKLISTED_DEVICES: list[str] = []
+BLACKLISTED_DEVICES: tuple[str, ...] = ()
