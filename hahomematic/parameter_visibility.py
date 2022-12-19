@@ -31,7 +31,9 @@ from hahomematic.helpers import (
 _LOGGER = logging.getLogger(__name__)
 
 # {device_type: channel_no}
-_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[str, tuple[tuple[int, ...], tuple[str, ...]]] = {
+_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[
+    str, tuple[tuple[int, ...], tuple[str, ...]]
+] = {
     "HmIPW-DRBL4": ((1, 5, 9, 13), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DRBLI4": (
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
