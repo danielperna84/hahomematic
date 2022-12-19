@@ -200,9 +200,10 @@ class CentralUnit:
         await self.parameter_visibility.load()
         await self._create_clients()
         for client in self.clients.values():
-            dev_descriptions = await client.get_all_device_descriptions()
+            device_descriptions = await client.get_all_device_descriptions()
             await self._add_new_devices(
-                interface_id=client.interface_id, dev_descriptions=dev_descriptions
+                interface_id=client.interface_id,
+                device_descriptions=device_descriptions,
             )
 
     async def stop(self) -> None:
@@ -564,21 +565,21 @@ class CentralUnit:
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
-        self, interface_id: str, dev_descriptions: list[dict[str, Any]]
+        self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
         """Add new devices to central unit."""
         await self._add_new_devices(
-            interface_id=interface_id, dev_descriptions=dev_descriptions
+            interface_id=interface_id, device_descriptions=device_descriptions
         )
 
     async def _add_new_devices(
-        self, interface_id: str, dev_descriptions: list[dict[str, Any]]
+        self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
         """Add new devices to central unit."""
         _LOGGER.debug(
-            "add_new_devices: interface_id = %s, dev_descriptions = %s",
+            "add_new_devices: interface_id = %s, device_descriptions = %s",
             interface_id,
-            len(dev_descriptions),
+            len(device_descriptions),
         )
 
         if interface_id not in self.clients:
@@ -597,7 +598,7 @@ class CentralUnit:
                 )
             ]
             client = self.clients[interface_id]
-            for dev_desc in dev_descriptions:
+            for dev_desc in device_descriptions:
                 try:
                     if dev_desc[HM_ADDRESS] not in known_addresses:
                         self.device_descriptions.add_device_description(
@@ -1167,7 +1168,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         # {interface_id, {device_address, [channel_address]}}
         self._addresses: dict[str, dict[str, list[str]]] = {}
         # {interface_id, {address, device_descriptions}}
-        self._dev_descriptions: dict[str, dict[str, dict[str, Any]]] = {}
+        self._device_descriptions: dict[str, dict[str, dict[str, Any]]] = {}
 
     def _add_device_descriptions(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
@@ -1216,8 +1217,8 @@ class DeviceDescriptionCache(BasePersistentCache):
                     address, []
                 ):
                     del self._addresses[interface_id][address]
-                if self._dev_descriptions.get(interface_id, {}).get(address, {}):
-                    del self._dev_descriptions[interface_id][address]
+                if self._device_descriptions.get(interface_id, {}).get(address, {}):
+                    del self._device_descriptions[interface_id][address]
             except KeyError:
                 _LOGGER.warning("cleanup failed: Unable to delete: %s", address)
         await self.save()
@@ -1247,24 +1248,24 @@ class DeviceDescriptionCache(BasePersistentCache):
 
     def get_device_descriptions(self, interface_id: str) -> dict[str, dict[str, Any]]:
         """Return the devices by interface"""
-        return self._dev_descriptions.get(interface_id, {})
+        return self._device_descriptions.get(interface_id, {})
 
     def get_device(self, interface_id: str, device_address: str) -> dict[str, Any]:
         """Return the device dict by interface and device_address"""
-        return self._dev_descriptions.get(interface_id, {}).get(device_address, {})
+        return self._device_descriptions.get(interface_id, {}).get(device_address, {})
 
     def get_device_with_channels(
         self, interface_id: str, device_address: str
     ) -> dict[str, Any]:
         """Return the device dict by interface and device_address"""
         data: dict[str, Any] = {
-            device_address: self._dev_descriptions.get(interface_id, {}).get(
+            device_address: self._device_descriptions.get(interface_id, {}).get(
                 device_address, {}
             )
         }
         children = data[device_address]["CHILDREN"]
         for channel_address in children:
-            data[channel_address] = self._dev_descriptions.get(interface_id, {}).get(
+            data[channel_address] = self._device_descriptions.get(interface_id, {}).get(
                 channel_address, {}
             )
         return data
@@ -1274,7 +1275,7 @@ class DeviceDescriptionCache(BasePersistentCache):
     ) -> Any | None:
         """Return the device parameter by interface and device_address"""
         return (
-            self._dev_descriptions.get(interface_id, {})
+            self._device_descriptions.get(interface_id, {})
             .get(device_address, {})
             .get(parameter)
         )
@@ -1298,11 +1299,11 @@ class DeviceDescriptionCache(BasePersistentCache):
         """
         if interface_id not in self._addresses:
             self._addresses[interface_id] = {}
-        if interface_id not in self._dev_descriptions:
-            self._dev_descriptions[interface_id] = {}
+        if interface_id not in self._device_descriptions:
+            self._device_descriptions[interface_id] = {}
 
         address = device_description[HM_ADDRESS]
-        self._dev_descriptions[interface_id][address] = device_description
+        self._device_descriptions[interface_id][address] = device_description
         if ":" not in address and address not in self._addresses[interface_id]:
             self._addresses[interface_id][address] = []
         if ":" in address:

@@ -110,7 +110,7 @@ class RPCFunctions:
         )
 
     def newDevices(
-        self, interface_id: str, dev_descriptions: list[dict[str, Any]]
+        self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
         """
         The CCU / Homegear informs us about newly added devices.
@@ -119,7 +119,9 @@ class RPCFunctions:
 
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.create_task(central.add_new_devices(interface_id, dev_descriptions))
+            central.create_task(
+                central.add_new_devices(interface_id, device_descriptions)
+            )
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
         """

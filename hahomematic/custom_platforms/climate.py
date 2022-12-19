@@ -527,8 +527,9 @@ class CeIpThermostat(BaseClimateEntity):
     def _profiles(self) -> dict[HmPresetMode, int]:
         """Return the profile groups."""
         profiles: dict[HmPresetMode, int] = {}
-        for i in range(self._e_active_profile.min, self._e_active_profile.max + 1):
-            profiles[HmPresetMode(f"{HM_PRESET_MODE_PREFIX}{i}")] = i
+        if self._e_active_profile.min and self._e_active_profile.max:
+            for i in range(self._e_active_profile.min, self._e_active_profile.max + 1):
+                profiles[HmPresetMode(f"{HM_PRESET_MODE_PREFIX}{i}")] = i
 
         return profiles
 
