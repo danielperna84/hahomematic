@@ -178,6 +178,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, vol.Any]] = {
         EntityDefinition.IP_COVER: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
+                ED_SECONDARY_CHANNELS: (2, 3),
                 ED_REPEATABLE_FIELDS: {
                     FIELD_LEVEL: "LEVEL",
                     FIELD_LEVEL_2: "LEVEL_2",
