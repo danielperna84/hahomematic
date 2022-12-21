@@ -572,9 +572,7 @@ def validate_entity_definition() -> Any:
     try:
         return SCHEMA_DEVICE_DESCRIPTION(entity_definition)
     except Invalid as err:
-        _LOGGER.error(
-            "The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg
-        )
+        _LOGGER.error("The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg)
         return None
 
 
@@ -628,9 +626,7 @@ def _create_entities(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
     if unique_identifier in device.central.hm_entities:
-        _LOGGER.debug(
-            "make_custom_entity: Skipping %s (already exists)", unique_identifier
-        )
+        _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_identifier)
         return tuple(entities)
     if f"{device.device_address}:{channel_no}" not in device.channels:
         return tuple(entities)
@@ -681,9 +677,7 @@ def _get_device(device_enum: EntityDefinition) -> dict[str, Any] | None:
     return None
 
 
-def _get_device_group(
-    device_enum: EntityDefinition, base_channel_no: int
-) -> dict[str, Any]:
+def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> dict[str, Any]:
     """Return the device group."""
     device = _get_device(device_enum)
     group: dict[str, Any] = {}

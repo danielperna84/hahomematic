@@ -85,17 +85,13 @@ class HmDevice:
     Object to hold information about a device and associated entities.
     """
 
-    def __init__(
-        self, central: hm_central.CentralUnit, interface_id: str, device_address: str
-    ):
+    def __init__(self, central: hm_central.CentralUnit, interface_id: str, device_address: str):
         """
         Initialize the device object.
         """
         self.central: Final[hm_central.CentralUnit] = central
         self._attr_interface_id: Final[str] = interface_id
-        self._attr_interface: Final[str] = central.device_details.get_interface(
-            device_address
-        )
+        self._attr_interface: Final[str] = central.device_details.get_interface(device_address)
         self.client: Final[hm_client.Client] = central.clients[interface_id]
         self._attr_device_address: Final[str] = device_address
         self.channels: Final[
@@ -111,9 +107,7 @@ class HmDevice:
         self.custom_entities: dict[str, CustomEntity] = {}
         self.action_events: dict[tuple[str, str], BaseEvent] = {}
         self._attr_last_update: datetime = INIT_DATETIME
-        self._forced_availability: HmForcedDeviceAvailability = (
-            HmForcedDeviceAvailability.NOT_SET
-        )
+        self._forced_availability: HmForcedDeviceAvailability = HmForcedDeviceAvailability.NOT_SET
         self._update_callbacks: list[Callable] = []
         self._attr_device_type: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
@@ -147,9 +141,7 @@ class HmDevice:
             device_type=self._attr_device_type,
         )
         self.value_cache: Final[ValueCache] = ValueCache(device=self)
-        self._attr_room: str | None = central.device_details.get_room(
-            device_address=device_address
-        )
+        self._attr_room: str | None = central.device_details.get_room(device_address=device_address)
 
         _LOGGER.debug(
             "__init__: Initialized device: %s, %s, %s, %s",
@@ -212,16 +204,12 @@ class HmDevice:
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity"""
-        return self.entities.get(
-            (f"{self._attr_device_address}:0", EVENT_STICKY_UN_REACH)
-        )
+        return self.entities.get((f"{self._attr_device_address}:0", EVENT_STICKY_UN_REACH))
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity"""
-        return self.entities.get(
-            (f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING)
-        )
+        return self.entities.get((f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING))
 
     def add_hm_entity(self, hm_entity: BaseEntity | WrapperEntity) -> None:
         """Add a hm entity to a device."""
@@ -229,9 +217,7 @@ class HmDevice:
             self.entities[(hm_entity.channel_address, hm_entity.parameter)] = hm_entity
             self.register_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, WrapperEntity):
-            self.wrapper_entities[
-                (hm_entity.channel_address, hm_entity.parameter)
-            ] = hm_entity
+            self.wrapper_entities[(hm_entity.channel_address, hm_entity.parameter)] = hm_entity
             self.register_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, CustomEntity):
             self.custom_entities[hm_entity.unique_identifier] = hm_entity
@@ -307,9 +293,7 @@ class HmDevice:
     def _set_last_update(self) -> None:
         self._attr_last_update = datetime.now()
 
-    def get_hm_entity(
-        self, channel_address: str, parameter: str
-    ) -> GenericEntity | None:
+    def get_hm_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Return a hm_entity from device."""
         return self.entities.get((channel_address, parameter))
 
@@ -317,7 +301,10 @@ class HmDevice:
         """
         Provide some useful information.
         """
-        return f"address: {self._attr_device_address}, type: {self._attr_device_type}, name: {self._attr_name}, entities: {self.entities}"
+        return (
+            f"address: {self._attr_device_address}, type: {self._attr_device_type}, "
+            f"name: {self._attr_name}, entities: {self.entities}"
+        )
 
     @value_property
     def available(self) -> bool:
@@ -334,16 +321,11 @@ class HmDevice:
     @property
     def config_pending(self) -> bool:
         """Return if a config change of the device is pending."""
-        if (
-            self._e_config_pending is not None
-            and self._e_config_pending.value is not None
-        ):
+        if self._e_config_pending is not None and self._e_config_pending.value is not None:
             return self._e_config_pending.value is True
         return False
 
-    def set_forced_availability(
-        self, forced_availability: HmForcedDeviceAvailability
-    ) -> None:
+    def set_forced_availability(self, forced_availability: HmForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
         if not self._forced_availability == forced_availability:
             self._forced_availability = forced_availability
@@ -399,9 +381,7 @@ class HmDevice:
                     channel_address,
                 )
                 continue
-            for (
-                paramset_key
-            ) in self.central.paramset_descriptions.get_by_interface_channel_address(
+            for paramset_key in self.central.paramset_descriptions.get_by_interface_channel_address(
                 interface_id=self._attr_interface_id, channel_address=channel_address
             ):
                 if not self.central.parameter_visibility.is_relevant_paramset(
@@ -413,7 +393,7 @@ class HmDevice:
                 for (
                     parameter,
                     parameter_data,
-                ) in self.central.paramset_descriptions.get_by_interface_channel_address_paramset_key(
+                ) in self.central.paramset_descriptions.get_by_interface_channel_address_paramset_key(  # noqa: E501
                     interface_id=self._attr_interface_id,
                     channel_address=channel_address,
                     paramset_key=paramset_key,
@@ -472,9 +452,7 @@ class HmDevice:
             )
 
             # Call the custom creation function.
-            for (device_func, group_base_channels) in get_device_funcs(
-                self._attr_device_type
-            ):
+            for (device_func, group_base_channels) in get_device_funcs(self._attr_device_type):
                 device_func(self, group_base_channels)
 
     def _create_action_and_append_to_device(
@@ -621,9 +599,7 @@ class HmDevice:
                         parameter_data[HM_TYPE],
                     )
         else:
-            if parameter not in CLICK_EVENTS and not parameter.startswith(
-                DEVICE_ERROR_EVENTS
-            ):
+            if parameter not in CLICK_EVENTS and not parameter.startswith(DEVICE_ERROR_EVENTS):
                 # Also check, if sensor could be a binary_sensor due to value_list.
                 if is_binary_sensor(parameter_data):
                     parameter_data[HM_TYPE] = TYPE_BOOL
@@ -647,12 +623,8 @@ class HmDevice:
                 parameter,
             )
             entity.add_to_collections()
-            if new_platform := self.central.parameter_visibility.wrap_entity(
-                wrapped_entity=entity
-            ):
-                wrapper_entity = WrapperEntity(
-                    wrapped_entity=entity, new_platform=new_platform
-                )
+            if new_platform := self.central.parameter_visibility.wrap_entity(wrapped_entity=entity):
+                wrapper_entity = WrapperEntity(wrapped_entity=entity, new_platform=new_platform)
                 wrapper_entity.add_to_collections()
 
 
@@ -719,9 +691,7 @@ class ValueCache:
                 )
             ) != NO_CACHE_ENTRY:
                 return (
-                    NO_CACHE_ENTRY
-                    if cached_value == self._NO_VALUE_CACHE_ENTRY
-                    else cached_value
+                    NO_CACHE_ENTRY if cached_value == self._NO_VALUE_CACHE_ENTRY else cached_value
                 )
 
             value: Any = self._NO_VALUE_CACHE_ENTRY
@@ -746,9 +716,9 @@ class ValueCache:
                 self._attr_value_cache[paramset_key][channel_address] = {}
             # write value to cache even if an exception has occurred
             # to avoid repetitive calls to CCU within max_age_seconds
-            self._attr_value_cache[paramset_key][channel_address][
-                parameter
-            ] = CacheEntry(value=value, last_update=datetime.now())
+            self._attr_value_cache[paramset_key][channel_address][parameter] = CacheEntry(
+                value=value, last_update=datetime.now()
+            )
             return NO_CACHE_ENTRY if value == self._NO_VALUE_CACHE_ENTRY else value
 
     def _get_value_from_cache(
