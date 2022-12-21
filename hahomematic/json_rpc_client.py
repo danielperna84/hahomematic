@@ -78,9 +78,7 @@ class JsonRpcAioHttpClient:
         self._client_session: Final[ClientSession] = (
             client_session
             if client_session
-            else ClientSession(
-                connector=TCPConnector(limit=3), loop=asyncio.get_running_loop()
-            )
+            else ClientSession(connector=TCPConnector(limit=3), loop=asyncio.get_running_loop())
         )
         self._session_id: str | None = None
         self._last_session_id_refresh: datetime | None = None
@@ -120,9 +118,7 @@ class JsonRpcAioHttpClient:
             if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
                 if response[ATTR_RESULT] is True:
                     self._last_session_id_refresh = datetime.now()
-                    _LOGGER.debug(
-                        "_do_renew_login: Method: %s [%s]", method, session_id
-                    )
+                    _LOGGER.debug("_do_renew_login: Method: %s [%s]", method, session_id)
                     return session_id
             return await self._do_login()
         except ClientError as cer:
@@ -132,9 +128,7 @@ class JsonRpcAioHttpClient:
             )
             return None
 
-    def _updated_within_seconds(
-        self, max_age_seconds: int = MAX_JSON_SESSION_AGE
-    ) -> bool:
+    def _updated_within_seconds(self, max_age_seconds: int = MAX_JSON_SESSION_AGE) -> bool:
         """Check if session id has been updated within 90 seconds."""
         if self._last_session_id_refresh is None:
             return False
@@ -234,9 +228,7 @@ class JsonRpcAioHttpClient:
             return {"error": "Unable to open session.", "result": {}}
 
         if (script := self._get_script(script_name=script_name)) is None:
-            _LOGGER.warning(
-                "_post_script failed: Script file for %s does not exist.", script_name
-            )
+            _LOGGER.warning("_post_script failed: Script file for %s does not exist.", script_name)
             return {
                 "error": f"Script file for {script_name} does not exist.",
                 "result": {},
@@ -268,9 +260,7 @@ class JsonRpcAioHttpClient:
         if script_name in self._script_cache:
             return self._script_cache[script_name]
 
-        script_file = os.path.join(
-            Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name
-        )
+        script_file = os.path.join(Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name)
         if script := Path(script_file).read_text(encoding=DEFAULT_ENCODING):
             self._script_cache[script_name] = script
             return script
@@ -326,9 +316,7 @@ class JsonRpcAioHttpClient:
                         ver.args,
                     )
                     # Workaround for bug in CCU
-                    return json.loads(
-                        (await response.json(encoding="utf-8")).replace("\\", "")
-                    )
+                    return json.loads((await response.json(encoding="utf-8")).replace("\\", ""))
             else:
                 _LOGGER.warning("_do_post failed: Status: %i", response.status)
                 return {"error": response.status, "result": {}}
@@ -366,9 +354,7 @@ class JsonRpcAioHttpClient:
             )
             _LOGGER.debug("_do_logout: Method: %s [%s]", method, session_id)
             if response[ATTR_ERROR]:
-                _LOGGER.warning(
-                    "_do_logout failed: Logout error: %s", response[ATTR_RESULT]
-                )
+                _LOGGER.warning("_do_logout failed: Logout error: %s", response[ATTR_RESULT])
         except ClientError as cer:
             _LOGGER.error(
                 "logout failed: ClientError [%s] while logging in via JSON-RPC",
@@ -412,7 +398,8 @@ class JsonRpcAioHttpClient:
             elif isinstance(value, str):
                 if re.findall("<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});", value):
                     _LOGGER.warning(
-                        "set_system_variable failed: value (%s) contains html tags. This is not allowed.",
+                        "set_system_variable failed: "
+                        "Value (%s) contains html tags. This is not allowed.",
                         value,
                     )
                     return
@@ -444,9 +431,7 @@ class JsonRpcAioHttpClient:
                 deleted = json_result
                 _LOGGER.debug("delete_system_variable: Deleted: %s", str(deleted))
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "delete_system_variable failed: %s [%s]", hhe.name, hhe.args
-            )
+            _LOGGER.warning("delete_system_variable failed: %s [%s]", hhe.name, hhe.args)
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
@@ -469,14 +454,10 @@ class JsonRpcAioHttpClient:
 
         return var
 
-    async def get_all_system_variables(
-        self, include_internal: bool
-    ) -> list[SystemVariableData]:
+    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         variables: list[SystemVariableData] = []
-        _LOGGER.debug(
-            "get_all_system_variables: Getting all system variables via JSON-RPC"
-        )
+        _LOGGER.debug("get_all_system_variables: Getting all system variables via JSON-RPC")
         try:
             response = await self._post(
                 "SysVar.getAll",
@@ -493,9 +474,7 @@ class JsonRpcAioHttpClient:
                     raw_value = var[SYSVAR_VALUE]
                     if org_data_type == SYSVAR_TYPE_NUMBER:
                         data_type = (
-                            SYSVAR_HM_TYPE_FLOAT
-                            if "." in raw_value
-                            else SYSVAR_HM_TYPE_INTEGER
+                            SYSVAR_HM_TYPE_FLOAT if "." in raw_value else SYSVAR_HM_TYPE_INTEGER
                         )
                     else:
                         data_type = org_data_type
@@ -505,9 +484,7 @@ class JsonRpcAioHttpClient:
                     if val_list := var.get(SYSVAR_VALUE_LIST):
                         value_list = val_list.split(";")
                     try:
-                        value = parse_ccu_sys_var(
-                            data_type=data_type, raw_value=raw_value
-                        )
+                        value = parse_ccu_sys_var(data_type=data_type, raw_value=raw_value)
                         max_value = None
                         if raw_max_value := var.get(SYSVAR_MAX_VALUE):
                             max_value = parse_ccu_sys_var(
@@ -532,15 +509,14 @@ class JsonRpcAioHttpClient:
                         )
                     except ValueError as verr:
                         _LOGGER.error(
-                            "get_all_system_variables failed: ValueError [%s] Failed to parse SysVar %s ",
+                            "get_all_system_variables failed: "
+                            "ValueError [%s] Failed to parse SysVar %s ",
                             verr.args,
                             name,
                         )
 
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "get_all_system_variables failed: %s [%s]", hhe.name, hhe.args
-            )
+            _LOGGER.warning("get_all_system_variables failed: %s [%s]", hhe.name, hhe.args)
 
         return variables
 
@@ -551,17 +527,13 @@ class JsonRpcAioHttpClient:
             "get_system_variables_ext_markers: Getting system variables ext markersvia JSON-RPC"
         )
         try:
-            response = await self._post_script(
-                script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER
-            )
+            response = await self._post_script(script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER)
             if json_result := response[ATTR_RESULT]:
                 for data in json_result:
                     ext_markers[data[SYSVAR_ID]] = data[SYSVAR_HASEXTMARKER]
 
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "get_system_variables_ext_markers failed: %s [%s]", hhe.name, hhe.args
-            )
+            _LOGGER.warning("get_system_variables_ext_markers failed: %s [%s]", hhe.name, hhe.args)
 
         return ext_markers
 
@@ -583,18 +555,14 @@ class JsonRpcAioHttpClient:
                             channel_ids_room[channel_id] = set()
                         channel_ids_room[channel_id].add(room["name"])
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "get_all_channel_ids_per_room failed: %s [%s]", hhe.name, hhe.args
-            )
+            _LOGGER.warning("get_all_channel_ids_per_room failed: %s [%s]", hhe.name, hhe.args)
 
         return channel_ids_room
 
     async def get_all_channel_ids_function(self) -> dict[str, set[str]]:
         """Get all channel_ids per function from CCU / Homegear."""
         channel_ids_function: dict[str, set[str]] = {}
-        _LOGGER.debug(
-            "get_all_channel_ids_per_function: Getting all functions via JSON-RPC"
-        )
+        _LOGGER.debug("get_all_channel_ids_per_function: Getting all functions via JSON-RPC")
         try:
             response = await self._post(
                 "Subsection.getAll",
@@ -609,18 +577,14 @@ class JsonRpcAioHttpClient:
                             channel_ids_function[channel_id] = set()
                         channel_ids_function[channel_id].add(function["name"])
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "get_all_channel_ids_per_function failed: %s [%s]", hhe.name, hhe.args
-            )
+            _LOGGER.warning("get_all_channel_ids_per_function failed: %s [%s]", hhe.name, hhe.args)
 
         return channel_ids_function
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
         interfaces: list[str] = []
-        _LOGGER.debug(
-            "get_available_interfaces: Getting all available interfaces via JSON-RPC"
-        )
+        _LOGGER.debug("get_available_interfaces: Getting all available interfaces via JSON-RPC")
         try:
             response = await self._post(
                 "Interface.listInterfaces",
@@ -629,9 +593,7 @@ class JsonRpcAioHttpClient:
                 for interface in json_result:
                     interfaces.append(interface[ATTR_NAME])
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "get_available_interfaces failed: %s [%s]", hhe.name, hhe.args
-            )
+            _LOGGER.warning("get_available_interfaces failed: %s [%s]", hhe.name, hhe.args)
 
         return interfaces
 
@@ -655,9 +617,7 @@ class JsonRpcAioHttpClient:
         all_device_data: dict[str, dict[str, dict[str, Any]]] = {}
         _LOGGER.debug("get_all_device_data: Getting all device data via JSON-RPC")
         try:
-            response = await self._post_script(
-                script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA
-            )
+            response = await self._post_script(script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA)
             if json_result := response[ATTR_RESULT]:
                 all_device_data = _convert_to_values_cache(json_result)
         except BaseHomematicException as hhe:

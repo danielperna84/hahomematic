@@ -31,9 +31,7 @@ class CeSwitch(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_state: HmSwitch = self._get_entity(
-            field_name=FIELD_STATE, entity_type=HmSwitch
-        )
+        self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
         self._e_on_time_value: HmAction = self._get_entity(
             field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
         )
@@ -117,7 +115,8 @@ DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
     # "HM-ES-PM": (make_rf_switch, (1,))),
 }
 
-# HmIP-MIO16-PCB : Don't add it. Too much functionality. Device is better supported without custom entities.
-# HmIP-MIOB : Don't add it. Too much functionality. Device is better supported without custom entities.
+# Devices are better supported without custom entities:
+# HmIP-MIO16-PCB : Don't add it. Too much functionality.
+# HmIP-MIOB : Don't add it. Too much functionality.
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()

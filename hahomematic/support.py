@@ -28,9 +28,7 @@ PARAMSET_DESCRIPTIONS_DIR = "export_paramset_descriptions"
 class DeviceExporter:
     """Export Devices from Cache."""
 
-    def __init__(
-        self, client: hm_client.Client, interface_id: str, device_address: str
-    ):
+    def __init__(self, client: hm_client.Client, interface_id: str, device_address: str):
         self._client: Final[hm_client.Client] = client
         self._central: Final[hm_central.CentralUnit] = client.central
         self._storage_folder: Final[str] = self._central.config.storage_folder
@@ -45,9 +43,7 @@ class DeviceExporter:
         ] = self._central.device_descriptions.get_device_with_channels(
             interface_id=self._interface_id, device_address=self._device_address
         )
-        paramset_descriptions: dict[
-            str, Any
-        ] = await self._client.get_all_paramset_descriptions(
+        paramset_descriptions: dict[str, Any] = await self._client.get_all_paramset_descriptions(
             list(device_descriptions.values())
         )
         device_type = device_descriptions[self._device_address][HM_TYPE]
@@ -63,13 +59,10 @@ class DeviceExporter:
                 address=new_device_description[HM_ADDRESS]
             )
             if new_device_description.get(HM_PARENT):
-                new_device_description[HM_PARENT] = new_device_description[
-                    HM_ADDRESS
-                ].split(":")[0]
+                new_device_description[HM_PARENT] = new_device_description[HM_ADDRESS].split(":")[0]
             elif new_device_description.get(HM_CHILDREN):
                 new_device_description[HM_CHILDREN] = [
-                    self._anonymize_address(a)
-                    for a in new_device_description[HM_CHILDREN]
+                    self._anonymize_address(a) for a in new_device_description[HM_CHILDREN]
                 ]
             anonymize_device_descriptions.append(new_device_description)
 
@@ -99,9 +92,7 @@ class DeviceExporter:
         address_parts[0] = self._random_id
         return ":".join(address_parts)
 
-    async def _save(
-        self, file_dir: str, filename: str, data: Any
-    ) -> HmDataOperationResult:
+    async def _save(self, file_dir: str, filename: str, data: Any) -> HmDataOperationResult:
         """Save file to disk."""
 
         def _save() -> HmDataOperationResult:

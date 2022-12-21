@@ -24,22 +24,12 @@ def main() -> None:
         type=str,
         help="Hostname / IP address to connect to.",
     )
-    parser.add_argument(
-        "--port", "-p", required=True, type=int, help="Port to connect to."
-    )
+    parser.add_argument("--port", "-p", required=True, type=int, help="Port to connect to.")
     parser.add_argument("--path", type=str, help="Path, used for heating groups.")
-    parser.add_argument(
-        "--username", "-U", nargs="?", help="Username required for access."
-    )
-    parser.add_argument(
-        "--password", "-P", nargs="?", help="Password required for access."
-    )
-    parser.add_argument(
-        "--tls", "-t", action="store_true", help="Enable TLS encryption."
-    )
-    parser.add_argument(
-        "--verify", "-v", action="store_true", help="Verify TLS encryption."
-    )
+    parser.add_argument("--username", "-U", nargs="?", help="Username required for access.")
+    parser.add_argument("--password", "-P", nargs="?", help="Password required for access.")
+    parser.add_argument("--tls", "-t", action="store_true", help="Enable TLS encryption.")
+    parser.add_argument("--verify", "-v", action="store_true", help="Verify TLS encryption.")
     parser.add_argument("--json", "-j", action="store_true", help="Output as JSON.")
     parser.add_argument(
         "--address",
@@ -54,9 +44,7 @@ def main() -> None:
         choices=[PARAMSET_KEY_VALUES, PARAMSET_KEY_MASTER],
         help="Paramset of HomeMatic device. Default: VALUES",
     )
-    parser.add_argument(
-        "--parameter", required=True, help="Parameter of HomeMatic device."
-    )
+    parser.add_argument("--parameter", required=True, help="Parameter of HomeMatic device.")
     parser.add_argument(
         "--value", type=str, help="Value to set for parameter. Use 0/1 for boolean."
     )
@@ -101,7 +89,7 @@ def main() -> None:
             sys.exit(0)
         elif args.paramset_key == PARAMSET_KEY_MASTER and args.value is None:
             paramset: dict[str, Any] | None
-            if paramset := proxy.getParamset(args.address, args.paramset_key):  # type: ignore[assignment]
+            if paramset := proxy.getParamset(args.address, args.paramset_key):  # type: ignore[assignment] # noqa: E501
                 if param_value := paramset.get(args.parameter):
                     if args.json:
                         print(json.dumps({args.parameter: param_value}))

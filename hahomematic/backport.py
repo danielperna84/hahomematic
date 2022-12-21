@@ -21,7 +21,7 @@ class StrEnum(str, Enum):
         return str(self.value)
 
     @staticmethod
-    def _generate_next_value_(  # pylint: disable=arguments-differ # https://github.com/PyCQA/pylint/issues/5371
+    def _generate_next_value_(  # pylint: disable=arguments-differ
         name: str, start: int, count: int, last_values: list[Any]
     ) -> Any:
         """

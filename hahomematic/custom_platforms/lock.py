@@ -141,18 +141,12 @@ class CeRfLock(BaseLock):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_state: HmSwitch = self._get_entity(
-            field_name=FIELD_STATE, entity_type=HmSwitch
-        )
-        self._e_open: HmAction = self._get_entity(
-            field_name=FIELD_OPEN, entity_type=HmAction
-        )
+        self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
+        self._e_open: HmAction = self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
         self._e_direction: HmSensor = self._get_entity(
             field_name=FIELD_DIRECTION, entity_type=HmSensor
         )
-        self._e_error: HmSensor = self._get_entity(
-            field_name=FIELD_ERROR, entity_type=HmSensor
-        )
+        self._e_error: HmSensor = self._get_entity(field_name=FIELD_ERROR, entity_type=HmSensor)
 
     @value_property
     def is_locked(self) -> bool:
