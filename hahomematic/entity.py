@@ -1232,7 +1232,7 @@ class DeviceErrorEvent(BaseEvent):
 
         event_data = super().get_event_data(value=value)
         event_data[ATTR_DEVICE_TYPE] = self.device.device_type
-        event_data[ATTR_PARAMETER] = self._attr_parameter.lower()
+        event_data[ATTR_PARAMETER] = self._attr_parameter
 
         return event_data
 
