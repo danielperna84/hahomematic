@@ -65,10 +65,10 @@ CONFIGURABLE_CHANNEL: tuple[str, ...] = (
 
 CHANNEL_OPERATION_MODE_VISIBILITY: dict[str, tuple[str, ...]] = {
     "STATE": ("BINARY_BEHAVIOR",),
-    "PRESS_SHORT": ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    "PRESS_LONG": ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    "PRESS_LONG_RELEASE": ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    "PRESS_LONG_START": ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    EVENT_PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    EVENT_PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    EVENT_PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    EVENT_PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
 }
 
 CLICK_EVENTS: tuple[str, ...] = (
@@ -79,6 +79,8 @@ CLICK_EVENTS: tuple[str, ...] = (
     EVENT_PRESS_LONG_RELEASE,
     EVENT_PRESS_LONG_START,
 )
+
+DEVICE_ERROR_EVENTS: tuple[str, ...] = ("ERROR_", "SENSOR_ERROR")
 
 IMPULSE_EVENTS: tuple[str, ...] = (EVENT_SEQUENCE_OK,)
 
@@ -337,10 +339,11 @@ class HmPlatform(StrEnum):
 class HmEventType(StrEnum):
     """Enum with hahomematic event types."""
 
-    KEYPRESS = "homematic.keypress"
-    DEVICE = "homematic.device"
-    INTERFACE = "homematic.interface"
+    DEVICE_AVAILABILITY = "homematic.device_availability"
+    DEVICE_ERROR = "homematic.device_error"
     IMPULSE = "homematic.impulse"
+    INTERFACE = "homematic.interface"
+    KEYPRESS = "homematic.keypress"
 
 
 class HmCallSource(StrEnum):

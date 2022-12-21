@@ -553,25 +553,21 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
 
         self.update_value(value=value)
 
-        # send device events, if value has changed
+        # reload paramset_descriptions, if value has changed
+        if self._attr_parameter == EVENT_CONFIG_PENDING:
+            if value is False and old_value is True:
+                self._central.create_task(self.device.reload_paramset_descriptions())
+
+        # send device availability events
         if self._attr_parameter in (
-            EVENT_CONFIG_PENDING,
             EVENT_UN_REACH,
             EVENT_STICKY_UN_REACH,
         ):
-            if self._attr_parameter in (EVENT_UN_REACH, EVENT_STICKY_UN_REACH):
-                self.device.update_device(self._attr_unique_identifier)
-
-            if self._attr_parameter == EVENT_CONFIG_PENDING:
-                if value is False and old_value is True:
-                    self._central.create_task(
-                        self.device.reload_paramset_descriptions()
-                    )
-                return None
+            self.device.update_device(self._attr_unique_identifier)
 
             if callable(self._central.callback_ha_event):
                 self._central.callback_ha_event(
-                    HmEventType.DEVICE,
+                    HmEventType.DEVICE_AVAILABILITY,
                     self._get_event_data(value),
                 )
 
@@ -1145,8 +1141,6 @@ class BaseEvent(BaseParameterEntity[bool]):
         event_data = {
             ATTR_INTERFACE_ID: self.device.interface_id,
             ATTR_ADDRESS: self.device.device_address,
-            ATTR_TYPE: self._attr_parameter.lower(),
-            ATTR_SUBTYPE: self.channel_no,
         }
 
         if value is not None:
@@ -1217,6 +1211,31 @@ class ClickEvent(BaseEvent):
 
     _attr_event_type = HmEventType.KEYPRESS
 
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
+        """Get the event_data."""
+        event_data = super().get_event_data(value=value)
+        event_data[ATTR_TYPE] = self._attr_parameter.lower()
+        event_data[ATTR_SUBTYPE] = self.channel_no
+
+        return event_data
+
+
+class DeviceErrorEvent(BaseEvent):
+    """
+    class for handling device error events.
+    """
+
+    _attr_event_type = HmEventType.DEVICE_ERROR
+
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
+        """Get the event_data."""
+
+        event_data = super().get_event_data(value=value)
+        event_data[ATTR_DEVICE_TYPE] = self.device.device_type
+        event_data[ATTR_PARAMETER] = self._attr_parameter.lower()
+
+        return event_data
+
 
 class ImpulseEvent(BaseEvent):
     """
@@ -1224,6 +1243,14 @@ class ImpulseEvent(BaseEvent):
     """
 
     _attr_event_type = HmEventType.IMPULSE
+
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
+        """Get the event_data."""
+        event_data = super().get_event_data(value=value)
+        event_data[ATTR_TYPE] = self._attr_parameter.lower()
+        event_data[ATTR_SUBTYPE] = self.channel_no
+
+        return event_data
 
 
 def fix_unit(unit: str | None) -> str | None:

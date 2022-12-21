@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hahomematic.const import HmPlatform, HmEntityUsage
+from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
@@ -74,7 +74,10 @@ class CeCover(CustomEntity):
     @property
     def channel_level(self) -> float | None:
         """Return the channel level of the cover."""
-        if self._e_channel_level.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
+        if (
+            self._e_channel_level.value is not None
+            and self.usage == HmEntityUsage.CE_PRIMARY
+        ):
             return float(self._e_channel_level.value)
         return self._e_level.value if self._e_level.value is not None else HM_CLOSED
 
@@ -152,7 +155,10 @@ class CeBlind(CeCover):
     @property
     def channel_tilt_level(self) -> float | None:
         """Return the channel level of the tilt."""
-        if self._e_channel_level_2.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
+        if (
+            self._e_channel_level_2.value is not None
+            and self.usage == HmEntityUsage.CE_PRIMARY
+        ):
             return float(self._e_channel_level_2.value)
         return self._e_level_2.value if self._e_level_2.value is not None else HM_CLOSED
 

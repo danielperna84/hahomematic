@@ -15,6 +15,7 @@ import hahomematic.client as hm_client
 from hahomematic.const import (
     BUTTON_ACTIONS,
     CLICK_EVENTS,
+    DEVICE_ERROR_EVENTS,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
@@ -51,6 +52,7 @@ from hahomematic.entity import (
     CallbackEntity,
     ClickEvent,
     CustomEntity,
+    DeviceErrorEvent,
     GenericEntity,
     ImpulseEvent,
     WrapperEntity,
@@ -417,7 +419,9 @@ class HmDevice:
                     paramset_key=paramset_key,
                 ).items():
                     if parameter_data[HM_OPERATIONS] & OPERATION_EVENT and (
-                        parameter in CLICK_EVENTS or parameter in IMPULSE_EVENTS
+                        parameter in CLICK_EVENTS
+                        or parameter.startswith(DEVICE_ERROR_EVENTS)
+                        or parameter in IMPULSE_EVENTS
                     ):
                         self._create_event_and_append_to_device(
                             channel_address=channel_address,
@@ -528,6 +532,8 @@ class HmDevice:
         if parameter_data[HM_OPERATIONS] & OPERATION_EVENT:
             if parameter in CLICK_EVENTS:
                 action_event_t = ClickEvent
+            if parameter.startswith(DEVICE_ERROR_EVENTS):
+                action_event_t = DeviceErrorEvent
             if parameter in IMPULSE_EVENTS:
                 action_event_t = ImpulseEvent
         if action_event_t:
@@ -615,7 +621,9 @@ class HmDevice:
                         parameter_data[HM_TYPE],
                     )
         else:
-            if parameter not in CLICK_EVENTS:
+            if parameter not in CLICK_EVENTS and not parameter.startswith(
+                DEVICE_ERROR_EVENTS
+            ):
                 # Also check, if sensor could be a binary_sensor due to value_list.
                 if is_binary_sensor(parameter_data):
                     parameter_data[HM_TYPE] = TYPE_BOOL

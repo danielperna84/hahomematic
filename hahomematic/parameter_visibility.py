@@ -110,7 +110,6 @@ _IGNORED_PARAMETERS: tuple[str, ...] = (
     "RELOCK_DELAY",
     "SECTION",
     "SELF_CALIBRATION",
-    "SENSOR_ERROR",
     "SET_SYMBOL_FOR_HEATING_PHASE",
     "SMOKE_DETECTOR_COMMAND",
     "STATE_UNCERTAIN",
@@ -124,26 +123,24 @@ _IGNORED_PARAMETERS: tuple[str, ...] = (
 # Ignore Parameter that end with
 _IGNORED_PARAMETERS_WILDCARDS_END: tuple[str, ...] = (
     "OVERFLOW",
-    "OVERHEAT",
     "OVERRUN",
     "REPORTING",
     "RESULT",
     "STATUS",
     "SUBMIT",
-    "WORKING",
 )
 
 # Ignore Parameter that start with
 _IGNORED_PARAMETERS_WILDCARDS_START: tuple[str, ...] = (
     "ADJUSTING",
     "ERR_TTM",
-    "ERROR",
     "IDENTIFICATION_MODE_KEY_VISUAL",
     "IDENTIFY_",
     "PARTY_START",
     "PARTY_STOP",
     "STATUS_FLAG",
     "WEEK_PROGRAM",
+    "WORKING",
 )
 
 
