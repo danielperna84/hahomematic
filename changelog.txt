@@ -1,5 +1,6 @@
 Version 2022.12.8 (2022-12-22)
-- Reformat code / check with flake 8
+- Reformat code / check with flake8
+- Refactor entity inheritance
 
 Version 2022.12.7 (2022-12-21)
 - Send ERROR_* parameters as homematic.device_error event

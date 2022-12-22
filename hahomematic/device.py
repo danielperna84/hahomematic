@@ -184,7 +184,7 @@ class HmDevice:
         return self._attr_interface_id
 
     @property
-    def is_custom_entity(self) -> bool:
+    def has_custom_entity_definition(self) -> bool:
         """Return if custom_entity definition is available for the device."""
         return self._has_custom_entity_definition
 
@@ -251,16 +251,20 @@ class HmDevice:
             del self.custom_entities[hm_entity.unique_identifier]
 
     def add_event(self, hm_event: BaseEvent) -> None:
-        """Add a hm entity to a device."""
+        """Add a event to a device."""
         self.events[(hm_event.channel_address, hm_event.parameter)] = hm_event
+
+    def remove_event(self, hm_event: BaseEvent) -> None:
+        """Remove event of a device."""
+        del self.events[(hm_event.channel_address, hm_event.parameter)]
 
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions."""
-        for entity in self.generic_entities.values():
-            if isinstance(entity, GenericEntity):
-                entity.remove_event_subscriptions()
-        for action_event in self.events.values():
-            action_event.remove_event_subscriptions()
+        for generic_entity in self.generic_entities.values():
+            if isinstance(generic_entity, GenericEntity):
+                generic_entity.remove_event_subscriptions()
+        for event in self.events.values():
+            event.remove_event_subscriptions()
 
     def remove_from_collections(self) -> None:
         """Remove entities from collections and central."""
@@ -310,7 +314,7 @@ class HmDevice:
     def _set_last_update(self) -> None:
         self._attr_last_update = datetime.now()
 
-    def get_hm_entity(
+    def get_generic_entity(
         self, channel_address: str, parameter: str
     ) -> GenericEntity | None:
         """Return a hm_entity from device."""
@@ -534,23 +538,23 @@ class HmDevice:
             parameter,
             self._attr_interface_id,
         )
-        action_event_t: type[BaseEvent] | None = None
+        event_t: type[BaseEvent] | None = None
         if parameter_data[HM_OPERATIONS] & OPERATION_EVENT:
             if parameter in CLICK_EVENTS:
-                action_event_t = ClickEvent
+                event_t = ClickEvent
             if parameter.startswith(DEVICE_ERROR_EVENTS):
-                action_event_t = DeviceErrorEvent
+                event_t = DeviceErrorEvent
             if parameter in IMPULSE_EVENTS:
-                action_event_t = ImpulseEvent
-        if action_event_t:
-            action_event = action_event_t(
+                event_t = ImpulseEvent
+        if event_t:
+            event = event_t(
                 device=self,
                 unique_identifier=unique_identifier,
                 channel_address=channel_address,
                 parameter=parameter,
                 parameter_data=parameter_data,
             )
-            action_event.add_to_collections()
+            event.add_to_collections()
 
     def _create_entity_and_append_to_device(
         self,
