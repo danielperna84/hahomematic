@@ -32,7 +32,7 @@ async def test_central(central, loop) -> None:
     for device in central.hm_devices.values():
         if device.device_type not in data:
             data[device.device_type] = {}
-        for entity in device.entities.values():
+        for entity in device.generic_entities.values():
             if entity.parameter not in data[device.device_type]:
                 data[device.device_type][entity.parameter] = f"{entity.hmtype}"
         pub_value_props = get_public_attributes_for_value_property(

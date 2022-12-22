@@ -120,7 +120,7 @@ class CallbackEntity(ABC):
             _callback(*args)
 
 
-class BaseEntity(ABC):
+class BaseEntity(CallbackEntity):
     """Base class for regular entities."""
 
     _attr_platform: HmPlatform
@@ -134,6 +134,7 @@ class BaseEntity(ABC):
         """
         Initialize the entity.
         """
+        super().__init__()
         self.device: Final[hm_device.HmDevice] = device
         self._attr_unique_identifier: Final[str] = unique_identifier
         self._attr_channel_no: Final[int] = channel_no
@@ -210,7 +211,7 @@ class BaseEntity(ABC):
 
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
-        self.device.add_hm_entity(self)
+        self.device.add_entity(self)
         self._central.hm_entities[self._attr_unique_identifier] = self
 
     async def load_entity_value(
@@ -494,7 +495,7 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
     @config_property
     def channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
-        cop: GenericEntity | None = self.device.entities.get(
+        cop: GenericEntity | None = self.device.generic_entities.get(
             (self._attr_channel_address, PARAM_CHANNEL_OPERATION_MODE)
         )
         if cop and cop.value:
@@ -674,14 +675,14 @@ class WrapperEntity(CallbackEntity):
 
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
-        self.device.add_hm_entity(self)
+        self.device.add_entity(self)
         self._central.hm_entities[self.unique_identifier] = self
 
 
 _EntityT = TypeVar("_EntityT", bound=GenericEntity)
 
 
-class CustomEntity(BaseEntity, CallbackEntity):
+class CustomEntity(BaseEntity):
     """
     Base class for custom entities.
     """
@@ -708,7 +709,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
             unique_identifier=unique_identifier,
             channel_no=channel_no,
         )
-        CallbackEntity.__init__(self)
+
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
         self._init_entity_fields()
@@ -885,7 +886,7 @@ class CustomEntity(BaseEntity, CallbackEntity):
         if not un_ignore_params_by_paramset_key:
             return None
         for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
-            for entity in self.device.entities.values():
+            for entity in self.device.generic_entities.values():
                 if (
                     entity.paramset_key == paramset_key
                     and entity.parameter in un_ignore_params
@@ -1198,7 +1199,7 @@ class BaseEvent(BaseParameterEntity[bool]):
 
     def add_to_collections(self) -> None:
         """Add entity to central_unit collections."""
-        self.device.add_hm_action_event(self)
+        self.device.add_event(self)
 
     def _set_last_update(self) -> None:
         self._attr_last_update = datetime.now()

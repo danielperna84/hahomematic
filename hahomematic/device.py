@@ -47,7 +47,6 @@ from hahomematic.const import (
 from hahomematic.custom_platforms import entity_definition_exists, get_device_funcs
 from hahomematic.decorators import config_property, value_property
 from hahomematic.entity import (
-    BaseEntity,
     BaseEvent,
     CallbackEntity,
     ClickEvent,
@@ -106,10 +105,10 @@ class HmDevice:
             interface_id,
             device_address,
         )
-        self.entities: dict[tuple[str, str], GenericEntity] = {}
+        self.generic_entities: dict[tuple[str, str], GenericEntity] = {}
         self.wrapper_entities: dict[tuple[str, str], WrapperEntity] = {}
         self.custom_entities: dict[str, CustomEntity] = {}
-        self.action_events: dict[tuple[str, str], BaseEvent] = {}
+        self.events: dict[tuple[str, str], BaseEvent] = {}
         self._attr_last_update: datetime = INIT_DATETIME
         self._forced_availability: HmForcedDeviceAvailability = (
             HmForcedDeviceAvailability.NOT_SET
@@ -207,26 +206,30 @@ class HmDevice:
     @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity"""
-        return self.entities.get((f"{self._attr_device_address}:0", EVENT_UN_REACH))
+        return self.generic_entities.get(
+            (f"{self._attr_device_address}:0", EVENT_UN_REACH)
+        )
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity"""
-        return self.entities.get(
+        return self.generic_entities.get(
             (f"{self._attr_device_address}:0", EVENT_STICKY_UN_REACH)
         )
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity"""
-        return self.entities.get(
+        return self.generic_entities.get(
             (f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING)
         )
 
-    def add_hm_entity(self, hm_entity: BaseEntity | WrapperEntity) -> None:
+    def add_entity(self, hm_entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
-            self.entities[(hm_entity.channel_address, hm_entity.parameter)] = hm_entity
+            self.generic_entities[
+                (hm_entity.channel_address, hm_entity.parameter)
+            ] = hm_entity
             self.register_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, WrapperEntity):
             self.wrapper_entities[
@@ -236,10 +239,10 @@ class HmDevice:
         if isinstance(hm_entity, CustomEntity):
             self.custom_entities[hm_entity.unique_identifier] = hm_entity
 
-    def remove_hm_entity(self, hm_entity: CallbackEntity) -> None:
+    def remove_entity(self, hm_entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(hm_entity, GenericEntity):
-            del self.entities[(hm_entity.channel_address, hm_entity.parameter)]
+            del self.generic_entities[(hm_entity.channel_address, hm_entity.parameter)]
             self.unregister_update_callback(hm_entity.update_entity)
         if isinstance(hm_entity, WrapperEntity):
             del self.wrapper_entities[(hm_entity.channel_address, hm_entity.parameter)]
@@ -247,36 +250,36 @@ class HmDevice:
         if isinstance(hm_entity, CustomEntity):
             del self.custom_entities[hm_entity.unique_identifier]
 
-    def add_hm_action_event(self, hm_event: BaseEvent) -> None:
+    def add_event(self, hm_event: BaseEvent) -> None:
         """Add a hm entity to a device."""
-        self.action_events[(hm_event.channel_address, hm_event.parameter)] = hm_event
+        self.events[(hm_event.channel_address, hm_event.parameter)] = hm_event
 
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions."""
-        for entity in self.entities.values():
+        for entity in self.generic_entities.values():
             if isinstance(entity, GenericEntity):
                 entity.remove_event_subscriptions()
-        for action_event in self.action_events.values():
+        for action_event in self.events.values():
             action_event.remove_event_subscriptions()
 
     def remove_from_collections(self) -> None:
         """Remove entities from collections and central."""
 
-        entities = list(self.entities.values())
+        entities = list(self.generic_entities.values())
         for entity in entities:
             if entity.unique_identifier in self.central.hm_entities:
                 del self.central.hm_entities[entity.unique_identifier]
-            self.remove_hm_entity(entity)
-        self.entities.clear()
+            self.remove_entity(entity)
+        self.generic_entities.clear()
 
         custom_entities = list(self.custom_entities.values())
         for custom_entity in custom_entities:
             if custom_entity.unique_identifier in self.central.hm_entities:
                 del self.central.hm_entities[custom_entity.unique_identifier]
-            self.remove_hm_entity(custom_entity)
+            self.remove_entity(custom_entity)
         self.custom_entities.clear()
 
-        self.action_events.clear()
+        self.events.clear()
 
     def register_update_callback(self, update_callback: Callable) -> None:
         """Register update callback."""
@@ -311,7 +314,7 @@ class HmDevice:
         self, channel_address: str, parameter: str
     ) -> GenericEntity | None:
         """Return a hm_entity from device."""
-        return self.entities.get((channel_address, parameter))
+        return self.generic_entities.get((channel_address, parameter))
 
     def __str__(self) -> str:
         """
@@ -319,7 +322,7 @@ class HmDevice:
         """
         return (
             f"address: {self._attr_device_address}, type: {self._attr_device_type}, "
-            f"name: {self._attr_name}, entities: {self.entities}"
+            f"name: {self._attr_name}, entities: {self.generic_entities}"
         )
 
     @value_property
@@ -350,7 +353,7 @@ class HmDevice:
         """Set the availability of the device."""
         if not self._forced_availability == forced_availability:
             self._forced_availability = forced_availability
-            for entity in self.entities.values():
+            for entity in self.generic_entities.values():
                 entity.update_entity()
 
     async def reload_paramset_descriptions(self) -> None:
@@ -369,13 +372,13 @@ class HmDevice:
                     save_to_file=False,
                 )
         await self.central.paramset_descriptions.save()
-        for entity in self.entities.values():
+        for entity in self.generic_entities.values():
             entity.update_parameter_data()
         self.update_device()
 
     async def load_value_cache(self) -> None:
         """Init the parameter cache."""
-        if len(self.entities) > 0:
+        if len(self.generic_entities) > 0:
             await self.value_cache.init_base_entities()
         _LOGGER.debug(
             "init_data: Skipping load_data, missing entities for %s.",
@@ -694,7 +697,7 @@ class ValueCache:
     def _get_base_entities(self) -> set[GenericEntity]:
         """Get entities of channel 0 and master."""
         entities: list[GenericEntity] = []
-        for entity in self._attr_device.entities.values():
+        for entity in self._attr_device.generic_entities.values():
             if (
                 entity.channel_no == 0
                 and entity.paramset_key == PARAMSET_KEY_VALUES
