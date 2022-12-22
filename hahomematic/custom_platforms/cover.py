@@ -61,8 +61,12 @@ class CeCover(CustomEntity):
         self._e_direction: HmSensor = self._get_entity(
             field_name=FIELD_DIRECTION, entity_type=HmSensor
         )
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
-        self._e_stop: HmAction = self._get_entity(field_name=FIELD_STOP, entity_type=HmAction)
+        self._e_level: HmFloat = self._get_entity(
+            field_name=FIELD_LEVEL, entity_type=HmFloat
+        )
+        self._e_stop: HmAction = self._get_entity(
+            field_name=FIELD_STOP, entity_type=HmAction
+        )
         self._e_channel_level: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
         )
@@ -70,7 +74,10 @@ class CeCover(CustomEntity):
     @property
     def channel_level(self) -> float | None:
         """Return the channel level of the cover."""
-        if self._e_channel_level.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
+        if (
+            self._e_channel_level.value is not None
+            and self.usage == HmEntityUsage.CE_PRIMARY
+        ):
             return float(self._e_channel_level.value)
         return self._e_level.value if self._e_level.value is not None else HM_CLOSED
 
@@ -138,7 +145,9 @@ class CeBlind(CeCover):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_level_2: HmFloat = self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmFloat)
+        self._e_level_2: HmFloat = self._get_entity(
+            field_name=FIELD_LEVEL_2, entity_type=HmFloat
+        )
         self._e_channel_level_2: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_LEVEL_2, entity_type=HmSensor
         )
@@ -146,7 +155,10 @@ class CeBlind(CeCover):
     @property
     def channel_tilt_level(self) -> float | None:
         """Return the channel level of the tilt."""
-        if self._e_channel_level_2.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
+        if (
+            self._e_channel_level_2.value is not None
+            and self.usage == HmEntityUsage.CE_PRIMARY
+        ):
             return float(self._e_channel_level_2.value)
         return self._e_level_2.value if self._e_level_2.value is not None else HM_CLOSED
 
@@ -213,7 +225,9 @@ class CeGarage(CustomEntity):
         self._e_door_command: HmAction = self._get_entity(
             field_name=FIELD_DOOR_COMMAND, entity_type=HmAction
         )
-        self._e_section: HmSensor = self._get_entity(field_name=FIELD_SECTION, entity_type=HmSensor)
+        self._e_section: HmSensor = self._get_entity(
+            field_name=FIELD_SECTION, entity_type=HmSensor
+        )
 
     @value_property
     def current_cover_position(self) -> int | None:

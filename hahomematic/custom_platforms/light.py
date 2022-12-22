@@ -61,7 +61,9 @@ class BaseHmLight(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
+        self._e_level: HmFloat = self._get_entity(
+            field_name=FIELD_LEVEL, entity_type=HmFloat
+        )
         self._e_on_time_value: HmAction = self._get_entity(
             field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
         )
@@ -206,7 +208,9 @@ class CeColorDimmer(CeDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color: HmInteger = self._get_entity(field_name=FIELD_COLOR, entity_type=HmInteger)
+        self._e_color: HmInteger = self._get_entity(
+            field_name=FIELD_COLOR, entity_type=HmInteger
+        )
         self._e_effect: HmInteger = self._get_entity(
             field_name=FIELD_PROGRAM, entity_type=HmInteger
         )
@@ -218,7 +222,8 @@ class CeColorDimmer(CeDimmer):
             hm_color = self._e_color.value
             if hm_color >= 200:
                 # 200 is a special case (white), so we have a saturation of 0.
-                # Larger values are undefined. For the sake of robustness we return "white" anyway.
+                # Larger values are undefined.
+                # For the sake of robustness we return "white" anyway.
                 return 0.0, 0.0
 
             # For all other colors we assume saturation of 1
@@ -286,7 +291,8 @@ class CeColorTempDimmer(CeDimmer):
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between 153..500."""
         return int(
-            HM_MAX_MIREDS - (HM_MAX_MIREDS - HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
+            HM_MAX_MIREDS
+            - (HM_MAX_MIREDS - HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
         )
 
     @value_property
@@ -332,11 +338,15 @@ class CeIpFixedColorLight(BaseHmLight):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color: HmSelect = self._get_entity(field_name=FIELD_COLOR, entity_type=HmSelect)
+        self._e_color: HmSelect = self._get_entity(
+            field_name=FIELD_COLOR, entity_type=HmSelect
+        )
         self._e_channel_color: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_COLOR, entity_type=HmSensor
         )
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
+        self._e_level: HmFloat = self._get_entity(
+            field_name=FIELD_LEVEL, entity_type=HmFloat
+        )
         self._e_channel_level: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
         )

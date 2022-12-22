@@ -77,7 +77,9 @@ class Client(ABC):
         # for all device related interaction
         self._proxy: Final[XmlRpcProxy] = client_config.xml_rpc_proxy
         self._proxy_read: Final[XmlRpcProxy] = client_config.xml_rpc_proxy_read
-        self._json_rpc_client: Final[JsonRpcAioHttpClient] = self.central.json_rpc_client
+        self._json_rpc_client: Final[
+            JsonRpcAioHttpClient
+        ] = self.central.json_rpc_client
 
         self._is_callback_alive: bool = True
         self._attr_available: bool = True
@@ -100,7 +102,9 @@ class Client(ABC):
         where to send the events. For that we call the init-method.
         """
         try:
-            _LOGGER.debug("proxy_init: init('%s', '%s')", self.config.init_url, self.interface_id)
+            _LOGGER.debug(
+                "proxy_init: init('%s', '%s')", self.config.init_url, self.interface_id
+            )
             await self._proxy.init(self.config.init_url, self.interface_id)
             self._mark_all_devices_forced_availability(
                 forced_availability=HmForcedDeviceAvailability.NOT_SET
@@ -157,7 +161,9 @@ class Client(ABC):
         if self._attr_available != available:
             for hm_device in self.central.hm_devices.values():
                 if hm_device.interface_id == self.interface_id:
-                    hm_device.set_forced_availability(forced_availability=forced_availability)
+                    hm_device.set_forced_availability(
+                        forced_availability=forced_availability
+                    )
             self._attr_available = available
             _LOGGER.warning(
                 "mark_all_devices_availability: marked all devices %s for %s",
@@ -225,7 +231,9 @@ class Client(ABC):
     def is_callback_alive(self) -> bool:
         """Return if XmlRPC-Server is alive based on received events for this client."""
         if last_events_time := self.central.last_events.get(self.interface_id):
-            seconds_since_last_event = (datetime.now() - last_events_time).total_seconds()
+            seconds_since_last_event = (
+                datetime.now() - last_events_time
+            ).total_seconds()
             if seconds_since_last_event > CHECK_INTERVAL:
                 if self._is_callback_alive:
                     self.central.fire_interface_event(
@@ -235,7 +243,8 @@ class Client(ABC):
                     )
                     self._is_callback_alive = False
                 _LOGGER.warning(
-                    "is_callback_alive: Callback for %s has not received events for %i seconds')",
+                    "is_callback_alive: "
+                    "Callback for %s has not received events for %i seconds')",
                     self.interface_id,
                     seconds_since_last_event,
                 )
@@ -271,7 +280,9 @@ class Client(ABC):
         """Get single system variable from CCU / Homegear."""
 
     @abstractmethod
-    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
 
     @abstractmethod
@@ -346,7 +357,8 @@ class Client(ABC):
         """Return a value from CCU."""
         try:
             _LOGGER.debug(
-                "get_value: channel_address %s, parameter %s, paramset_key, %s, source:%s",
+                "get_value: channel_address %s, "
+                "parameter %s, paramset_key, %s, source:%s",
                 channel_address,
                 parameter,
                 paramset_key,
@@ -355,7 +367,8 @@ class Client(ABC):
             if paramset_key == PARAMSET_KEY_VALUES:
                 return await self._proxy_read.getValue(channel_address, parameter)
             paramset = (
-                await self._proxy_read.getParamset(channel_address, PARAMSET_KEY_MASTER) or {}
+                await self._proxy_read.getParamset(channel_address, PARAMSET_KEY_MASTER)
+                or {}
             )
             return paramset.get(parameter)
         except BaseHomematicException as hhe:
@@ -474,7 +487,9 @@ class Client(ABC):
         """
         Fetch a specific paramset and add it to the known ones.
         """
-        _LOGGER.debug("fetch_paramset_description: %s for %s", paramset_key, channel_address)
+        _LOGGER.debug(
+            "fetch_paramset_description: %s for %s", paramset_key, channel_address
+        )
 
         try:
             parameter_data = await self._get_paramset_description(
@@ -498,11 +513,15 @@ class Client(ABC):
         if save_to_file:
             await self.central.paramset_descriptions.save()
 
-    async def fetch_paramset_descriptions(self, device_description: dict[str, Any]) -> None:
+    async def fetch_paramset_descriptions(
+        self, device_description: dict[str, Any]
+    ) -> None:
         """
         Fetch paramsets for provided device description.
         """
-        data = await self.get_paramset_descriptions(device_description=device_description)
+        data = await self.get_paramset_descriptions(
+            device_description=device_description
+        )
         for address, paramsets in data.items():
             _LOGGER.debug("fetch_paramset_descriptions for %s", address)
             for paramset_key, paramset_description in paramsets.items():
@@ -582,7 +601,8 @@ class Client(ABC):
             interface_id=self.interface_id
         ):
             _LOGGER.warning(
-                "update_paramset_descriptions failed: Interface missing in central_unit cache. "
+                "update_paramset_descriptions failed: "
+                "Interface missing in central_unit cache. "
                 "Not updating paramsets for %s.",
                 device_address,
             )
@@ -591,7 +611,8 @@ class Client(ABC):
             interface_id=self.interface_id, device_address=device_address
         ):
             _LOGGER.warning(
-                "update_paramset_descriptions failed: Channel missing in central_unit.cache. "
+                "update_paramset_descriptions failed: "
+                "Channel missing in central_unit.cache. "
                 "Not updating paramsets for %s.",
                 device_address,
             )
@@ -635,7 +656,9 @@ class ClientCCU(Client):
                     device[ATTR_ADDRESS], device[ATTR_INTERFACE]
                 )
         else:
-            _LOGGER.debug("fetch_names_json: Unable to fetch device details via JSON-RPC.")
+            _LOGGER.debug(
+                "fetch_names_json: Unable to fetch device details via JSON-RPC."
+            )
 
     async def fetch_all_device_data(self) -> None:
         """fetch all device data from CCU."""
@@ -644,7 +667,8 @@ class ClientCCU(Client):
             self.central.device_data.add_device_data(device_data=device_data)
         else:
             _LOGGER.debug(
-                "fetch_all_device_data: Unable to get all device data via JSON-RPC RegaScript."
+                "fetch_all_device_data: "
+                "Unable to get all device data via JSON-RPC RegaScript."
             )
 
     async def _check_connection_availability(self) -> bool:
@@ -674,7 +698,9 @@ class ClientCCU(Client):
         """Get single system variable from CCU / Homegear."""
         return await self._json_rpc_client.get_system_variable(name=name)
 
-    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         return await self._json_rpc_client.get_all_system_variables(
             include_internal=include_internal
@@ -686,7 +712,9 @@ class ClientCCU(Client):
 
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get all programs, if available."""
-        return await self._json_rpc_client.get_all_programs(include_internal=include_internal)
+        return await self._json_rpc_client.get_all_programs(
+            include_internal=include_internal
+        )
 
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from CCU."""
@@ -704,7 +732,9 @@ class ClientCCU(Client):
         """Get all functions from CCU."""
         functions: dict[str, set[str]] = {}
         device_channel_ids = self.central.device_details.device_channel_ids
-        channel_ids_function = await self._json_rpc_client.get_all_channel_ids_function()
+        channel_ids_function = (
+            await self._json_rpc_client.get_all_channel_ids_function()
+        )
         for address, channel_id in device_channel_ids.items():
             if sections := channel_ids_function.get(channel_id):
                 if address not in functions:
@@ -794,7 +824,9 @@ class ClientHomegear(Client):
         try:
             await self._proxy.deleteSystemVariable(name)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("delete_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "delete_system_variable failed: %s [%s]", hhe.name, hhe.args
+            )
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
@@ -803,7 +835,9 @@ class ClientHomegear(Client):
         except BaseHomematicException as hhe:
             _LOGGER.warning("get_system_variable failed: %s [%s]", hhe.name, hhe.args)
 
-    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         variables: list[SystemVariableData] = []
         try:
@@ -811,7 +845,9 @@ class ClientHomegear(Client):
                 for name, value in hg_variables.items():
                     variables.append(SystemVariableData(name=name, value=value))
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_all_system_variables failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "get_all_system_variables failed: %s [%s]", hhe.name, hhe.args
+            )
         return variables
 
     async def get_available_interfaces(self) -> list[str]:
@@ -856,12 +892,16 @@ class _ClientConfig:
             central.config.callback_host if central.config.callback_host else local_ip
         )
         self._callback_port: Final[int] = (
-            central.config.callback_port if central.config.callback_port else central.local_port
+            central.config.callback_port
+            if central.config.callback_port
+            else central.local_port
         )
         self.has_credentials: Final[bool] = (
             central.config.username is not None and central.config.password is not None
         )
-        self.init_url: Final[str] = f"http://{self._callback_host}:{self._callback_port}"
+        self.init_url: Final[
+            str
+        ] = f"http://{self._callback_host}:{self._callback_port}"
         self.xml_rpc_uri: Final[str] = build_xml_rpc_uri(
             host=central.config.host,
             port=interface_config.port,
