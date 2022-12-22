@@ -34,7 +34,8 @@ HH_EVENT_RE_ADDED_DEVICE = "readdedDevice"
 HH_EVENT_REPLACE_DEVICE = "replaceDevice"
 HH_EVENT_UPDATE_DEVICE = "updateDevice"
 
-# When CONFIG_PENDING turns from True to False (ONLY then!) we should re fetch the paramsets.
+# When CONFIG_PENDING turns from True to False (ONLY then!)
+# we should re fetch the paramsets.
 # However, usually multiple of these events are fired, so we should only
 # act on the last one. This also only seems to fire on channel 0.
 EVENT_CONFIG_PENDING = "CONFIG_PENDING"

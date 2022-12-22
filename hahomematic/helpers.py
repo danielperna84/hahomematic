@@ -107,7 +107,8 @@ def check_or_create_directory(directory: str) -> bool:
             os.makedirs(directory)
         except OSError as ose:
             _LOGGER.error(
-                "check_or_create_directory failed: Unable to create directory %s ('%s')",
+                "check_or_create_directory failed: "
+                "Unable to create directory %s ('%s')",
                 directory,
                 ose.strerror,
             )
@@ -270,8 +271,12 @@ def get_custom_entity_name(
         device=device,
         channel_no=channel_no,
     ):
-        if is_only_primary_channel and _check_channel_name_with_channel_no(name=channel_name):
-            return EntityNameData(device_name=device.name, channel_name=channel_name.split(":")[0])
+        if is_only_primary_channel and _check_channel_name_with_channel_no(
+            name=channel_name
+        ):
+            return EntityNameData(
+                device_name=device.name, channel_name=channel_name.split(":")[0]
+            )
         if _check_channel_name_with_channel_no(name=channel_name):
             c_name = channel_name.split(":")[0]
             p_name = channel_name.split(":")[1]
@@ -303,7 +308,9 @@ def _check_channel_name_with_channel_no(name: str) -> bool:
     return False
 
 
-def get_device_name(central: hm_central.CentralUnit, device_address: str, device_type: str) -> str:
+def get_device_name(
+    central: hm_central.CentralUnit, device_address: str, device_type: str
+) -> str:
     """Return the cached name for a device, or an auto-generated."""
     if name := central.device_details.get_name(address=device_address):
         return name
@@ -313,7 +320,9 @@ def get_device_name(central: hm_central.CentralUnit, device_address: str, device
         device_type,
         device_address,
     )
-    return get_generic_device_name(device_address=device_address, device_type=device_type)
+    return get_generic_device_name(
+        device_address=device_address, device_type=device_type
+    )
 
 
 def get_generic_device_name(device_address: str, device_type: str) -> str:
@@ -377,7 +386,9 @@ def get_channel_no(address: str) -> int | None:
     return int(address.split(":")[1])
 
 
-def updated_within_seconds(last_update: datetime, max_age_seconds: int = MAX_CACHE_AGE) -> bool:
+def updated_within_seconds(
+    last_update: datetime, max_age_seconds: int = MAX_CACHE_AGE
+) -> bool:
     """Entity has been updated within X minutes."""
     if last_update == INIT_DATETIME:
         return False
@@ -387,7 +398,9 @@ def updated_within_seconds(last_update: datetime, max_age_seconds: int = MAX_CAC
     return False
 
 
-def convert_value(value: Any, target_type: str, value_list: tuple[str, ...] | None) -> Any:
+def convert_value(
+    value: Any, target_type: str, value_list: tuple[str, ...] | None
+) -> Any:
     """Convert a value to target_type"""
     if value is None:
         return None
@@ -508,7 +521,9 @@ class SystemVariableData(HubData):
 class EntityNameData:
     """Dataclass for entity name parts"""
 
-    def __init__(self, device_name: str, channel_name: str, parameter_name: str | None = None):
+    def __init__(
+        self, device_name: str, channel_name: str, parameter_name: str | None = None
+    ):
         """Init the EntityNameData class."""
         self._device_name = device_name
         self._channel_name = channel_name
@@ -522,7 +537,11 @@ class EntityNameData:
     @property
     def entity_name(self) -> str | None:
         """Return the name of the entity only name."""
-        if self._device_name and self._name and self._name.startswith(self._device_name):
+        if (
+            self._device_name
+            and self._name
+            and self._name.startswith(self._device_name)
+        ):
             return self._name.replace(self._device_name, "").strip()
         return self._name
 

@@ -31,7 +31,9 @@ from hahomematic.helpers import (
 _LOGGER = logging.getLogger(__name__)
 
 # {device_type: channel_no}
-_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[str, tuple[tuple[int, ...], tuple[str, ...]]] = {
+_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[
+    str, tuple[tuple[int, ...], tuple[str, ...]]
+] = {
     "HmIPW-DRBL4": ((1, 5, 9, 13), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DRBLI4": (
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
@@ -237,7 +239,10 @@ class ParameterVisibilityCache:
         self._init()
 
     def _init(self) -> None:
-        """Init relevant_master_paramsets_by_device and un_ignore_parameters_by_device from const"""
+        """
+        Init relevant_master_paramsets_by_device and
+        un_ignore_parameters_by_device from const.
+        """
         for (
             device_type,
             channels_parameter,
@@ -252,15 +257,17 @@ class ParameterVisibilityCache:
                 self._relevant_master_paramsets_by_device[device_type_l].add(channel_no)
                 if (
                     channel_no
-                    not in self._un_ignore_parameters_by_device_paramset_key[device_type_l]
+                    not in self._un_ignore_parameters_by_device_paramset_key[
+                        device_type_l
+                    ]
                 ):
-                    self._un_ignore_parameters_by_device_paramset_key[device_type_l][channel_no] = {
-                        PARAMSET_KEY_MASTER: set()
-                    }
+                    self._un_ignore_parameters_by_device_paramset_key[device_type_l][
+                        channel_no
+                    ] = {PARAMSET_KEY_MASTER: set()}
                 for parameter in parameters:
-                    self._un_ignore_parameters_by_device_paramset_key[device_type_l][channel_no][
-                        PARAMSET_KEY_MASTER
-                    ].add(parameter)
+                    self._un_ignore_parameters_by_device_paramset_key[device_type_l][
+                        channel_no
+                    ][PARAMSET_KEY_MASTER].add(parameter)
 
     def get_un_ignore_parameters(
         self, device_type: str, device_channel: int
@@ -269,9 +276,11 @@ class ParameterVisibilityCache:
         device_type_l = device_type.lower()
         un_ignore_parameters: dict[str, set[str]] = {}
         if device_type_l is not None and device_channel is not None:
-            un_ignore_parameters = self._custom_un_ignore_parameters_by_device_paramset_key.get(
-                device_type_l, {}
-            ).get(device_channel, {})
+            un_ignore_parameters = (
+                self._custom_un_ignore_parameters_by_device_paramset_key.get(
+                    device_type_l, {}
+                ).get(device_channel, {})
+            )
         for (
             paramset_key,
             un_ignore_params,
@@ -309,19 +318,28 @@ class ParameterVisibilityCache:
                 or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
                 or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
                 or element_matches_key(
-                    search_elements=self._ignore_parameters_by_device_lower.get(parameter, []),
+                    search_elements=self._ignore_parameters_by_device_lower.get(
+                        parameter, []
+                    ),
                     compare_with=device_type_l,
                 )
             ):
                 return True
 
-            if (accept_channel := _ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)) is not None:
+            if (
+                accept_channel := _ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
+            ) is not None:
                 if accept_channel != device_channel:
                     return True
         if paramset_key == PARAMSET_KEY_MASTER:
-            if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
-                device_type_l, {}
-            ).get(device_channel, {}).get(PARAMSET_KEY_MASTER, []):
+            if (
+                parameter
+                in self._custom_un_ignore_parameters_by_device_paramset_key.get(
+                    device_type_l, {}
+                )
+                .get(device_channel, {})
+                .get(PARAMSET_KEY_MASTER, [])
+            ):
                 return False
 
             dt_short = list(
@@ -330,9 +348,15 @@ class ParameterVisibilityCache:
                     self._un_ignore_parameters_by_device_paramset_key,
                 )
             )
-            if dt_short and parameter not in self._un_ignore_parameters_by_device_paramset_key.get(
-                dt_short[0], {}
-            ).get(device_channel, {}).get(PARAMSET_KEY_MASTER, []):
+            if (
+                dt_short
+                and parameter
+                not in self._un_ignore_parameters_by_device_paramset_key.get(
+                    dt_short[0], {}
+                )
+                .get(device_channel, {})
+                .get(PARAMSET_KEY_MASTER, [])
+            ):
                 return True
 
         return False
@@ -392,7 +416,8 @@ class ParameterVisibilityCache:
                 data = line.split("@")
                 if len(data) != 2:
                     _LOGGER.warning(
-                        "add_line_to_cache failed: Could not add line '%s' to un ignore cache. "
+                        "add_line_to_cache failed: "
+                        "Could not add line '%s' to un ignore cache. "
                         "Only one @ expected.",
                         line,
                     )
@@ -401,7 +426,8 @@ class ParameterVisibilityCache:
                 device_data = data[1].split(":")
                 if len(device_data) != 3:
                     _LOGGER.warning(
-                        "add_line_to_cache failed: Could not add line '%s' to un ignore cache. "
+                        "add_line_to_cache failed: "
+                        "Could not add line '%s' to un ignore cache. "
                         "4 arguments expected: e.g. TEMPERATURE@HmIP-BWTH:1:VALUES.",
                         line,
                     )
@@ -409,39 +435,49 @@ class ParameterVisibilityCache:
                 device_type = device_data[0].lower()
                 channel_no = int(device_data[1])
                 paramset_key = device_data[2]
-                if device_type not in self._custom_un_ignore_parameters_by_device_paramset_key:
-                    self._custom_un_ignore_parameters_by_device_paramset_key[device_type] = {}
                 if (
-                    channel_no
-                    not in self._custom_un_ignore_parameters_by_device_paramset_key[device_type]
+                    device_type
+                    not in self._custom_un_ignore_parameters_by_device_paramset_key
                 ):
-                    self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
-                        channel_no
+                    self._custom_un_ignore_parameters_by_device_paramset_key[
+                        device_type
                     ] = {}
                 if (
-                    paramset_key
-                    not in self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
-                        channel_no
+                    channel_no
+                    not in self._custom_un_ignore_parameters_by_device_paramset_key[
+                        device_type
                     ]
                 ):
-                    self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
-                        channel_no
-                    ][paramset_key] = set()
-                self._custom_un_ignore_parameters_by_device_paramset_key[device_type][channel_no][
+                    self._custom_un_ignore_parameters_by_device_paramset_key[
+                        device_type
+                    ][channel_no] = {}
+                if (
                     paramset_key
-                ].add(parameter)
+                    not in self._custom_un_ignore_parameters_by_device_paramset_key[
+                        device_type
+                    ][channel_no]
+                ):
+                    self._custom_un_ignore_parameters_by_device_paramset_key[
+                        device_type
+                    ][channel_no][paramset_key] = set()
+                self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
+                    channel_no
+                ][paramset_key].add(parameter)
 
                 if paramset_key == PARAMSET_KEY_MASTER:
                     if device_type not in self._relevant_master_paramsets_by_device:
                         self._relevant_master_paramsets_by_device[device_type] = set()
-                    self._relevant_master_paramsets_by_device[device_type].add(channel_no)
+                    self._relevant_master_paramsets_by_device[device_type].add(
+                        channel_no
+                    )
 
             elif ":" in line:
                 # add parameter:paramset_key
                 data = line.split(":")
                 if len(data) != 2:
                     _LOGGER.warning(
-                        "add_line_to_cache failed: Could not add line '%s' to un ignore cache. "
+                        "add_line_to_cache failed: "
+                        "Could not add line '%s' to un ignore cache. "
                         "2 arguments expected: e.g. TEMPERATURE:VALUES.",
                         line,
                     )

@@ -39,12 +39,15 @@ class RPCFunctions:
         self._xml_rpc_server: XmlRpcServer = xml_rpc_server
 
     @callback_event
-    def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
+    def event(
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
+    ) -> None:
         """
         If a device emits some sort event, we will handle it here.
         """
         _LOGGER.debug(
-            "event: interface_id = %s, channel_address = %s, parameter = %s, value = %s",
+            "event: interface_id = %s, channel_address = %s, "
+            "parameter = %s, value = %s",
             interface_id,
             channel_address,
             parameter,
@@ -59,7 +62,9 @@ class RPCFunctions:
             return
         if (channel_address, parameter) in central.entity_event_subscriptions:
             try:
-                for callback in central.entity_event_subscriptions[(channel_address, parameter)]:
+                for callback in central.entity_event_subscriptions[
+                    (channel_address, parameter)
+                ]:
                     callback(interface_id, channel_address, parameter, value)
             except RuntimeError as rte:
                 _LOGGER.debug(
@@ -101,9 +106,13 @@ class RPCFunctions:
             return []
         _LOGGER.debug("listDevices: interface_id = %s", interface_id)
 
-        return central.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
+        return central.device_descriptions.get_raw_device_descriptions(
+            interface_id=interface_id
+        )
 
-    def newDevices(self, interface_id: str, device_descriptions: list[dict[str, Any]]) -> None:
+    def newDevices(
+        self, interface_id: str, device_descriptions: list[dict[str, Any]]
+    ) -> None:
         """
         The CCU / Homegear informs us about newly added devices.
         We react on that and add those devices as well.
@@ -111,7 +120,9 @@ class RPCFunctions:
 
         central: hm_central.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.create_task(central.add_new_devices(interface_id, device_descriptions))
+            central.create_task(
+                central.add_new_devices(interface_id, device_descriptions)
+            )
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
         """
@@ -145,7 +156,8 @@ class RPCFunctions:
         Replace a device. Probably irrelevant for us.
         """
         _LOGGER.debug(
-            "replaceDevice: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
+            "replaceDevice: interface_id = %s, oldDeviceAddress = %s, "
+            "newDeviceAddress = %s",
             interface_id,
             old_device_address,
             new_device_address,
@@ -186,7 +198,8 @@ class HaHomematicXMLRPCServer(SimpleXMLRPCServer):
     installed in the server. Override the _dispatch method inherited
     from SimpleXMLRPCDispatcher to change this behavior.
 
-    This implementation adds an additional method (system_listMethods(self, interface_id: str).
+    This implementation adds an additional method:
+    system_listMethods(self, interface_id: str.
     """
 
     # pylint: disable=arguments-differ
@@ -228,7 +241,9 @@ class XmlRpcServer(threading.Thread):
         self._simple_xml_rpc_server.register_introspection_functions()
         self._simple_xml_rpc_server.register_multicall_functions()
         _LOGGER.debug("__init__: Registering RPC instance")
-        self._simple_xml_rpc_server.register_instance(RPCFunctions(self), allow_dotted_names=True)
+        self._simple_xml_rpc_server.register_instance(
+            RPCFunctions(self), allow_dotted_names=True
+        )
         self._centrals: Final[dict[str, hm_central.CentralUnit]] = {}
 
     def __new__(cls, local_port: int) -> XmlRpcServer:
@@ -242,7 +257,9 @@ class XmlRpcServer(threading.Thread):
         """
         Run the XmlRPC-Server thread.
         """
-        _LOGGER.debug("run: Starting XmlRPC-Server at http://%s:%i", IP_ANY_V4, self.local_port)
+        _LOGGER.debug(
+            "run: Starting XmlRPC-Server at http://%s:%i", IP_ANY_V4, self.local_port
+        )
         self._simple_xml_rpc_server.serve_forever()
 
     def stop(self) -> None:

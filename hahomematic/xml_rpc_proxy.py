@@ -48,8 +48,13 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             self, encoding=ATTR_ENCODING_ISO_8859_1, *args, **kwargs
         )
 
-    async def _async_add_proxy_executor_job(self, func: Callable, *args: Any) -> Awaitable:
-        """Add an executor job from within the event_loop for all device related interaction."""
+    async def _async_add_proxy_executor_job(
+        self, func: Callable, *args: Any
+    ) -> Awaitable:
+        """
+        Add an executor job from within the event_loop
+        for all device related interaction.
+        """
         return await self._loop.run_in_executor(self._proxy_executor, func, *args)
 
     async def __async_request(self, *args, **kwargs):  # type: ignore[no-untyped-def]

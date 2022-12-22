@@ -38,7 +38,8 @@ class HmFloat(BaseNumber[float]):
                 await super().send_value(value)
         else:
             _LOGGER.warning(
-                "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
+                "number.float failed: Invalid value: "
+                "%s (min: %s, max: %s, special: %s)",
                 value,
                 self._attr_min,
                 self._attr_max,

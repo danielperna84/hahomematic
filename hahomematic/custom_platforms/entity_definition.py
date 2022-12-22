@@ -572,7 +572,9 @@ def validate_entity_definition() -> Any:
     try:
         return SCHEMA_DEVICE_DESCRIPTION(entity_definition)
     except Invalid as err:
-        _LOGGER.error("The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg)
+        _LOGGER.error(
+            "The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg
+        )
         return None
 
 
@@ -626,7 +628,9 @@ def _create_entities(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
     if unique_identifier in device.central.hm_entities:
-        _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_identifier)
+        _LOGGER.debug(
+            "make_custom_entity: Skipping %s (already exists)", unique_identifier
+        )
         return tuple(entities)
     if f"{device.device_address}:{channel_no}" not in device.channels:
         return tuple(entities)
@@ -677,7 +681,9 @@ def _get_device(device_enum: EntityDefinition) -> dict[str, Any] | None:
     return None
 
 
-def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> dict[str, Any]:
+def _get_device_group(
+    device_enum: EntityDefinition, base_channel_no: int
+) -> dict[str, Any]:
     """Return the device group."""
     device = _get_device(device_enum)
     group: dict[str, Any] = {}
@@ -692,7 +698,8 @@ def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> di
     primary_channel = group[ED_PRIMARY_CHANNEL]
     group[ED_PRIMARY_CHANNEL] = primary_channel + base_channel_no
 
-    # Add base_channel_no to the secondary_channels to get the real secondary_channel numbers
+    # Add base_channel_no to the secondary_channels
+    # to get the real secondary_channel numbers
     if secondary_channel := group.get(ED_SECONDARY_CHANNELS):
         group[ED_SECONDARY_CHANNELS] = [x + base_channel_no for x in secondary_channel]
 

@@ -139,12 +139,18 @@ class BaseEntity(ABC):
         self._attr_channel_no: Final[int] = channel_no
         self._attr_channel_address: Final[str] = f"{device.device_address}:{channel_no}"
         self._central: Final[hm_central.CentralUnit] = device.central
-        self._channel_type: Final[str] = str(device.channels[self._attr_channel_address].type)
-        self._attr_function: Final[str | None] = self._central.device_details.get_function_text(
+        self._channel_type: Final[str] = str(
+            device.channels[self._attr_channel_address].type
+        )
+        self._attr_function: Final[
+            str | None
+        ] = self._central.device_details.get_function_text(
             address=self._attr_channel_address
         )
         self._attr_usage: HmEntityUsage = self._generate_entity_usage()
-        self._client: Final[hm_client.Client] = device.central.clients[device.interface_id]
+        self._client: Final[hm_client.Client] = device.central.clients[
+            device.interface_id
+        ]
         self.entity_name_data: Final[EntityNameData] = self._generate_entity_name_data()
 
     @value_property
@@ -220,7 +226,9 @@ class BaseEntity(ABC):
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
         return (
-            HmEntityUsage.ENTITY_NO_CREATE if self.device.is_custom_entity else HmEntityUsage.ENTITY
+            HmEntityUsage.ENTITY_NO_CREATE
+            if self.device.is_custom_entity
+            else HmEntityUsage.ENTITY
         )
 
     def __str__(self) -> str:
@@ -479,7 +487,9 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
             parameter,
         ) not in self._central.entity_event_subscriptions:
             self._central.entity_event_subscriptions[(channel_address, parameter)] = []
-        self._central.entity_event_subscriptions[(channel_address, parameter)].append(self.event)
+        self._central.entity_event_subscriptions[(channel_address, parameter)].append(
+            self.event
+        )
 
     @config_property
     def channel_operation_mode(self) -> str | None:
@@ -507,7 +517,10 @@ class GenericEntity(BaseParameterEntity[ParameterT], CallbackEntity):
 
     @value_property
     def is_valid(self) -> bool:
-        """Return, if the value of the entity is valid based on the last updated datetime."""
+        """
+        Return, if the value of the entity is valid based
+        on the last updated datetime.
+        """
         return self._attr_last_update > INIT_DATETIME
 
     @value_property
@@ -755,12 +768,16 @@ class CustomEntity(BaseEntity, CallbackEntity):
 
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
-        if secondary_channels := self._device_desc.get(hm_entity_definition.ED_SECONDARY_CHANNELS):
+        if secondary_channels := self._device_desc.get(
+            hm_entity_definition.ED_SECONDARY_CHANNELS
+        ):
             if self.channel_no in secondary_channels:
                 return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
 
-    async def put_paramset(self, paramset_key: str, value: Any, rx_mode: str | None = None) -> None:
+    async def put_paramset(
+        self, paramset_key: str, value: Any, rx_mode: str | None = None
+    ) -> None:
         """Set paramsets manually."""
         await self._client.put_paramset(
             address=self._attr_channel_address,
@@ -783,7 +800,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
 
-        repeating_fields = self._device_desc.get(hm_entity_definition.ED_REPEATABLE_FIELDS, {})
+        repeating_fields = self._device_desc.get(
+            hm_entity_definition.ED_REPEATABLE_FIELDS, {}
+        )
         # Add repeating fields
         for (field_name, parameter) in repeating_fields.items():
             entity = self.device.get_hm_entity(
@@ -814,7 +833,9 @@ class CustomEntity(BaseEntity, CallbackEntity):
         # Add default device entities
         self._mark_entity(field_desc=self._entity_def)
         # add default entities
-        if hm_entity_definition.get_include_default_entities(device_enum=self._device_enum):
+        if hm_entity_definition.get_include_default_entities(
+            device_enum=self._device_enum
+        ):
             self._mark_entity(field_desc=hm_entity_definition.get_default_entities())
 
         # add extra entities for the device type
@@ -865,7 +886,10 @@ class CustomEntity(BaseEntity, CallbackEntity):
             return None
         for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
             for entity in self.device.entities.values():
-                if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
+                if (
+                    entity.paramset_key == paramset_key
+                    and entity.parameter in un_ignore_params
+                ):
                     entity.set_usage(HmEntityUsage.ENTITY)
 
     def _add_entity(
@@ -1088,14 +1112,18 @@ class BaseEvent(BaseParameterEntity[bool]):
             parameter,
         ) not in self._central.entity_event_subscriptions:
             self._central.entity_event_subscriptions[(channel_address, parameter)] = []
-        self._central.entity_event_subscriptions[(channel_address, parameter)].append(self.event)
+        self._central.entity_event_subscriptions[(channel_address, parameter)].append(
+            self.event
+        )
 
     @config_property
     def event_type(self) -> HmEventType:
         """Return the event_type of the event."""
         return self._attr_event_type
 
-    def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
+    def event(
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
+    ) -> None:
         """
         Handle event for which this handler has subscribed.
         """
