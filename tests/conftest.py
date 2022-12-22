@@ -121,7 +121,7 @@ async def get_hm_generic_entity(
     """Return the hm generic_entity."""
     hm_device = get_hm_device(central_unit=central_unit, address=address)
     assert hm_device
-    hm_entity = hm_device.entities.get((address, parameter))
+    hm_entity = hm_device.generic_entities.get((address, parameter))
     assert hm_entity
     return hm_entity
 
