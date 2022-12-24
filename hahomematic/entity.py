@@ -996,6 +996,7 @@ class GenericHubEntity(CallbackEntity):
         """Return the name of the entity."""
         return self._attr_name
 
+
 class GenericSystemVariable(GenericHubEntity):
     """Class for a HomeMatic system variable."""
 
