@@ -1048,11 +1048,7 @@ class GenericSystemVariable(GenericHubEntity):
     @config_property
     def unit(self) -> str | None:
         """Return the unit of the entity."""
-        if self._attr_unit:
-            return self._attr_unit
-        if isinstance(self._attr_value, (int, float)):
-            return " "
-        return None
+        return self._attr_unit
 
     @property
     def is_extended(self) -> bool:
