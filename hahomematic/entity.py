@@ -118,6 +118,15 @@ class CallbackEntity(ABC):
         """Return the entity usage."""
         return HmEntityUsage.ENTITY
 
+    @config_property
+    def enabled_default(self) -> bool:
+        """Return, if entity should be enabled based on usage attribute."""
+        return self.usage in (
+            HmEntityUsage.CE_PRIMARY,
+            HmEntityUsage.ENTITY,
+            HmEntityUsage.EVENT,
+        )
+
     def register_update_callback(self, update_callback: Callable) -> None:
         """register update callback"""
         if callable(update_callback):
