@@ -1,5 +1,5 @@
 Version 2022.12.10 (2022-12-28)
-- Make constant assignement final
+- Make constant assignment final
 - Fix native device units
 
 Version 2022.12.9 (2022-12-25)
@@ -898,7 +898,7 @@ Version 0.0.12 (2021-11-27)
 - Cleanup constants
 - Use flags from parameter_data
 - Add wildcard start to exclude parameters that start with word
-- Fix channel assignement for dimmers
+- Fix channel assignment for dimmers
 - Fix entity name: add channel only if a parameter name exists is in multiple channels of the device.
 
 Version 0.0.11 (2021-11-26)
