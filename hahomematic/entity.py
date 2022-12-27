@@ -26,10 +26,11 @@ from hahomematic.const import (
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
+    FIX_UNIT_BY_PARAM,
+    FIX_UNIT_REPLACE,
     FLAG_SERVICE,
     FLAG_VISIBLE,
     HM_DEFAULT,
-    HM_ENTITY_UNIT_REPLACE,
     HM_FLAGS,
     HM_MAX,
     HM_MIN,
@@ -321,17 +322,23 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self._attr_service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
         self._attr_operations: int = parameter_data[HM_OPERATIONS]
         self._attr_special: dict[str, Any] | None = parameter_data.get(HM_SPECIAL)
-        self._attr_unit: str | None = parameter_data.get(HM_UNIT)
+        self._attr_raw_unit: str | None = parameter_data.get(HM_UNIT)
+        self._attr_unit: str | None = self._fix_unit(raw_unit=self._attr_raw_unit)
 
     @config_property
     def default(self) -> ParameterT:
         """Return default value."""
         return self._attr_default
 
-    @property
+    @config_property
     def hmtype(self) -> str:
         """Return the HomeMatic type."""
         return self._attr_type
+
+    @config_property
+    def is_unit_fixed(self) -> bool:
+        """Return if the unit is fixed."""
+        return self._attr_raw_unit != self._attr_unit
 
     @config_property
     def max(self) -> ParameterT:
@@ -346,7 +353,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     @config_property
     def multiplier(self) -> int:
         """Return multiplier value."""
-        return 100 if self._attr_unit and self._attr_unit == "100%" else 1
+        return 100 if self._attr_raw_unit and self._attr_raw_unit == "100%" else 1
 
     @config_property
     def parameter(self) -> str:
@@ -357,6 +364,11 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     def paramset_key(self) -> str:
         """Return paramset_key name."""
         return self._attr_paramset_key
+
+    @config_property
+    def raw_unit(self) -> str | None:
+        """Return raw unit value."""
+        return self._attr_raw_unit
 
     @property
     def is_readable(self) -> bool:
@@ -376,7 +388,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     @config_property
     def unit(self) -> str | None:
         """Return unit value."""
-        return fix_unit(self._attr_unit)
+        return self._attr_unit
 
     @value_property
     def value_list(self) -> tuple[str, ...] | None:
@@ -387,6 +399,17 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     def visible(self) -> bool:
         """Return the if entity is visible in ccu."""
         return self._attr_visible
+
+    def _fix_unit(self, raw_unit: str | None) -> str | None:
+        """replace given unit"""
+        if new_unit := FIX_UNIT_BY_PARAM.get(self._attr_parameter):
+            return new_unit
+        if not raw_unit:
+            return None
+        for (check, fix) in FIX_UNIT_REPLACE.items():
+            if check in raw_unit:
+                return fix
+        return raw_unit
 
     def update_parameter_data(self) -> None:
         """Update parameter data"""
@@ -1278,16 +1301,6 @@ class ImpulseEvent(BaseEvent):
         event_data[ATTR_SUBTYPE] = self.channel_no
 
         return event_data
-
-
-def fix_unit(unit: str | None) -> str | None:
-    """replace given unit"""
-    if not unit:
-        return None
-    for (check, fix) in HM_ENTITY_UNIT_REPLACE.items():
-        if check in unit:
-            return fix
-    return unit
 
 
 class NoneTypeEntity:
