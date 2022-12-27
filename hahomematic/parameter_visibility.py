@@ -31,8 +31,8 @@ from hahomematic.helpers import (
 _LOGGER = logging.getLogger(__name__)
 
 # {device_type: channel_no}
-_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[
-    str, tuple[tuple[int, ...], tuple[str, ...]]
+_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
+    dict[str, tuple[tuple[int, ...], tuple[str, ...]]]
 ] = {
     "HmIPW-DRBL4": ((1, 5, 9, 13), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DRBLI4": (
@@ -63,9 +63,9 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: dict[
     "HmIPW-WTH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
 }
 
-ALLOW_INTERNAL_PARAMETERS = ("DIRECTION",)
+ALLOW_INTERNAL_PARAMETERS: Final = ("DIRECTION",)
 
-_HIDDEN_PARAMETERS: tuple[str, ...] = (
+_HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
     EVENT_STICKY_UN_REACH,
@@ -79,7 +79,7 @@ _HIDDEN_PARAMETERS: tuple[str, ...] = (
 )
 
 # Parameters within the VALUES paramset for which we don't create entities.
-_IGNORED_PARAMETERS: tuple[str, ...] = (
+_IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "AES_KEY",
     "BOOST_TIME",
     "BOOT",
@@ -118,7 +118,7 @@ _IGNORED_PARAMETERS: tuple[str, ...] = (
 )
 
 # Ignore Parameter that end with
-_IGNORED_PARAMETERS_WILDCARDS_END: tuple[str, ...] = (
+_IGNORED_PARAMETERS_WILDCARDS_END: Final[tuple[str, ...]] = (
     "OVERFLOW",
     "OVERRUN",
     "REPORTING",
@@ -128,7 +128,7 @@ _IGNORED_PARAMETERS_WILDCARDS_END: tuple[str, ...] = (
 )
 
 # Ignore Parameter that start with
-_IGNORED_PARAMETERS_WILDCARDS_START: tuple[str, ...] = (
+_IGNORED_PARAMETERS_WILDCARDS_START: Final[tuple[str, ...]] = (
     "ADJUSTING",
     "ERR_TTM",
     "IDENTIFICATION_MODE_KEY_VISUAL",
@@ -142,7 +142,7 @@ _IGNORED_PARAMETERS_WILDCARDS_START: tuple[str, ...] = (
 
 
 # Parameters within the paramsets for which we create entities.
-_UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, tuple[str, ...]] = {
+_UN_IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
     "HmIP-DLD": ("ERROR_JAMMED",),
     "HmIP-SWSD": ("SMOKE_DETECTOR_ALARM_STATUS",),
     "HM-Sec-Win": ("DIRECTION", "WORKING", "ERROR", "STATUS"),
@@ -154,7 +154,7 @@ _UN_IGNORE_PARAMETERS_BY_DEVICE: dict[str, tuple[str, ...]] = {
 }
 
 # Parameters by device within the VALUES paramset for which we don't create entities.
-_IGNORE_PARAMETERS_BY_DEVICE: dict[str, tuple[str, ...]] = {
+_IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
     "CURRENT_ILLUMINATION": (
         "HmIP-SMI",
         "HmIP-SMO",
@@ -188,9 +188,9 @@ _IGNORE_PARAMETERS_BY_DEVICE: dict[str, tuple[str, ...]] = {
     ),
 }
 
-_ACCEPT_PARAMETER_ONLY_ON_CHANNEL: dict[str, int] = {"LOWBAT": 0}
+_ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {"LOWBAT": 0}
 
-_WRAP_ENTITY: dict[str | tuple[str, ...], dict[str, HmPlatform]] = {
+_WRAP_ENTITY: Final[dict[str | tuple[str, ...], dict[str, HmPlatform]]] = {
     ("HmIP-eTRV", "HmIP-HEATING"): {"LEVEL": HmPlatform.SENSOR},
 }
 

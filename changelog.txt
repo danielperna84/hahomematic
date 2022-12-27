@@ -1,3 +1,7 @@
+Version 2022.12.10 (2022-12-28)
+- Make constant assignement final
+- Fix native device units
+
 Version 2022.12.9 (2022-12-25)
 - Remove empty unit for numeric sysvars
 - Add enable_default to entity
