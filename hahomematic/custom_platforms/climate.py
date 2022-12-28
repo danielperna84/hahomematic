@@ -57,7 +57,7 @@ HMIP_MODE_AWAY = 2
 PARTY_INIT_DATE = "2000_01_01 00:00"
 PARTY_DATE_FORMAT = "%Y_%m_%d %H:%M"
 
-HM_PRESET_MODE_PREFIX = "Profile "
+HM_PRESET_MODE_PREFIX = "week_program_"
 TEMP_CELSIUS = "°C"
 
 
@@ -87,12 +87,12 @@ class HmPresetMode(StrEnum):
     BOOST = "boost"
     COMFORT = "comfort"
     ECO = "eco"
-    PROFILE_1 = "Profile 1"
-    PROFILE_2 = "Profile 2"
-    PROFILE_3 = "Profile 3"
-    PROFILE_4 = "Profile 4"
-    PROFILE_5 = "Profile 5"
-    PROFILE_6 = "Profile 6"
+    WEEK_PROGRAM_1 = "week_program_1"
+    WEEK_PROGRAM_2 = "week_program_2"
+    WEEK_PROGRAM_3 = "week_program_3"
+    WEEK_PROGRAM_4 = "week_program_4"
+    WEEK_PROGRAM_5 = "week_program_5"
+    WEEK_PROGRAM_6 = "week_program_6"
 
 
 class BaseClimateEntity(CustomEntity):
