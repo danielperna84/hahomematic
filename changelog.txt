@@ -1,4 +1,8 @@
-Version 2022.12.10 (2022-12-28)
+Version 2022.12.11 (2022-12-28)
+- Rename climate presets from 'Profile *' to 'week_program_*'
+- Add support for python 3.11
+
+Version 2022.12.10 (2022-12-27)
 - Make constant assignment final
 - Fix native device units
 
