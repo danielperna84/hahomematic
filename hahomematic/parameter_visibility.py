@@ -205,7 +205,7 @@ class ParameterVisibilityCache:
         self._central: Final[hm_central.CentralUnit] = central
         self._storage_folder: Final[str] = central.config.storage_folder
 
-        self._raw_un_ignore_list: Final[set[str] | None] = set(
+        self._raw_un_ignore_list: Final[set[str]] = set(
             central.config.un_ignore_list or set()
         )
         # paramset_key, parameter
