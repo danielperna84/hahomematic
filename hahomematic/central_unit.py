@@ -34,12 +34,15 @@ from hahomematic.const import (
     HH_EVENT_DEVICES_CREATED,
     HH_EVENT_NEW_DEVICES,
     HM_ADDRESS,
+    HM_OPERATIONS,
     HM_TYPE,
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
+    OPERATION_EVENT,
+    OPERATION_READ,
     PARAMSET_KEY_VALUES,
     PROXY_INIT_SUCCESS,
     HmCallSource,
@@ -677,11 +680,6 @@ class CentralUnit:
         if client := self.get_client():
             return await client.get_all_programs(include_internal=include_internal)
         return []
-
-    def get_all_ignored_parameters(self) -> list[str]:
-        """Get all ignored parameters."""
-        all_parameteters = self.paramset_descriptions.get_all_parameters()
-        return all_parameteters
 
     async def get_all_system_variables(
         self, include_internal: bool
@@ -1462,13 +1460,17 @@ class ParamsetDescriptionCache(BasePersistentCache):
             return len(set(channels)) > 1
         return False
 
-    def get_all_parameters(self) -> list[str]:
-        """Return all parameters"""
+    def get_all_readable_parameters(self) -> list[str]:
+        """Return all readable, eventing parameters from VALUES paramset."""
         parameters: set[str] = set()
-        for channel in self._raw_paramset_descriptions_persistant_cache.values():
-            for channel_address in channel:
-                for paramset in channel[channel_address].values():
-                    parameters.update(paramset)
+        for channels in self._raw_paramset_descriptions_persistant_cache.values():
+            for channel_address in channels:
+                for parameter, paramset in channels[channel_address][
+                    PARAMSET_KEY_VALUES
+                ].items():
+                    operations = paramset[HM_OPERATIONS]
+                    if operations & OPERATION_READ and operations & OPERATION_EVENT:
+                        parameters.add(parameter)
 
         return sorted(parameters)
 
