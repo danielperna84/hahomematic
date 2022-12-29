@@ -884,6 +884,7 @@ class CentralConfig:
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
+        un_ignore_list: list[str] | None = None,
     ):
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
@@ -901,6 +902,7 @@ class CentralConfig:
         self.callback_host: Final[str | None] = callback_host
         self.callback_port: Final[int | None] = callback_port
         self.json_port: Final[int | None] = json_port
+        self.un_ignore_list: Final[list[str] | None] = un_ignore_list
 
     @property
     def central_url(self) -> str:

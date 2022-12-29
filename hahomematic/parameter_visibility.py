@@ -205,6 +205,9 @@ class ParameterVisibilityCache:
         self._central: Final[hm_central.CentralUnit] = central
         self._storage_folder: Final[str] = central.config.storage_folder
 
+        self._raw_un_ignore_list: Final[set[str] | None] = set(
+            central.config.un_ignore_list or set()
+        )
         # paramset_key, parameter
         self._un_ignore_parameters_general: dict[str, set[str]] = {
             PARAMSET_KEY_MASTER: set(),
@@ -407,7 +410,6 @@ class ParameterVisibilityCache:
         un_ignore_parameters_by_device from file.
         """
         try:
-            line = line.strip()
             if "@" in line:
                 # add parameter@devicetype:channel_no:paramset_key
                 data = line.split("@")
@@ -564,8 +566,9 @@ class ParameterVisibilityCache:
                     mode="r",
                     encoding=DEFAULT_ENCODING,
                 ) as fptr:
-                    for line in fptr.readlines():
-                        self._add_line_to_cache(line)
+                    for file_line in fptr.readlines():
+                        if "#" not in file_line:
+                            self._raw_un_ignore_list.add(file_line.strip())
             except Exception as ex:
                 _LOGGER.warning(
                     "load failed: Could not read unignore file %s",
@@ -573,3 +576,7 @@ class ParameterVisibilityCache:
                 )
 
         await self._central.async_add_executor_job(_load)
+
+        for line in self._raw_un_ignore_list:
+            if "#" not in line:
+                self._add_line_to_cache(line)
