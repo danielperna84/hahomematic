@@ -1,3 +1,8 @@
+Version 2022.12.12 (2022-12-30)
+- Add un_ignore list to central config
+- Fix entity_definition schema
+- Rename cache_dict to persistant_cache
+
 Version 2022.12.11 (2022-12-28)
 - Rename climate presets from 'Profile *' to 'week_program_*'
 - Add support for python 3.11
