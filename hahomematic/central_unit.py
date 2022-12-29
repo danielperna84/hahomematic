@@ -1110,12 +1110,12 @@ class BasePersistentCache(ABC):
         self,
         central: CentralUnit,
         filename: str,
-        cache_dict: dict[str, Any],
+        persistant_cache: dict[str, Any],
     ):
         self._central: Final[CentralUnit] = central
         self._cache_dir: Final[str] = f"{central.config.storage_folder}/cache"
         self._filename: Final[str] = f"{central.name}_{filename}"
-        self._cache_dict: Final[dict[str, Any]] = cache_dict
+        self._persistant_cache: Final[dict[str, Any]] = persistant_cache
 
     async def save(self) -> HmDataOperationResult:
         """
@@ -1130,7 +1130,7 @@ class BasePersistentCache(ABC):
                 mode="w",
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
-                json.dump(self._cache_dict, fptr)
+                json.dump(self._persistant_cache, fptr)
             return HmDataOperationResult.SAVE_SUCCESS
 
         return await self._central.async_add_executor_job(_save)
@@ -1150,8 +1150,8 @@ class BasePersistentCache(ABC):
                 mode="r",
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
-                self._cache_dict.clear()
-                self._cache_dict.update(json.load(fptr))
+                self._persistant_cache.clear()
+                self._persistant_cache.update(json.load(fptr))
             return HmDataOperationResult.LOAD_SUCCESS
 
         return await self._central.async_add_executor_job(_load)
@@ -1165,7 +1165,7 @@ class BasePersistentCache(ABC):
             check_or_create_directory(self._cache_dir)
             if os.path.exists(os.path.join(self._cache_dir, self._filename)):
                 os.unlink(os.path.join(self._cache_dir, self._filename))
-            self._cache_dict.clear()
+            self._persistant_cache.clear()
 
         await self._central.async_add_executor_job(_clear)
 
@@ -1175,17 +1175,16 @@ class DeviceDescriptionCache(BasePersistentCache):
 
     def __init__(self, central: CentralUnit):
         # {interface_id, [device_descriptions]}
-        self._raw_device_descriptions: dict[str, list[dict[str, Any]]] = {}
+        self._raw_device_descriptions: Final[dict[str, list[dict[str, Any]]]] = {}
         super().__init__(
             central=central,
             filename=FILE_DEVICES,
-            cache_dict=self._raw_device_descriptions,
+            persistant_cache=self._raw_device_descriptions,
         )
-
         # {interface_id, {device_address, [channel_address]}}
-        self._addresses: dict[str, dict[str, list[str]]] = {}
+        self._addresses: Final[dict[str, dict[str, list[str]]]] = {}
         # {interface_id, {address, device_descriptions}}
-        self._device_descriptions: dict[str, dict[str, dict[str, Any]]] = {}
+        self._device_descriptions: Final[dict[str, dict[str, dict[str, Any]]]] = {}
 
     def _add_device_descriptions(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
@@ -1348,7 +1347,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         super().__init__(
             central=central,
             filename=FILE_PARAMSETS,
-            cache_dict=self._paramset_descriptions_cache,
+            persistant_cache=self._paramset_descriptions_cache,
         )
 
         # {(device_address, parameter), [channel_no]}
