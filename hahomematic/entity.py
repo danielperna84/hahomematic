@@ -55,7 +55,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 import hahomematic.custom_platforms as hm_custom_entity
-import hahomematic.custom_platforms.entity_definition as hm_entity_definition
+import hahomematic.custom_platforms.entity_definition as hm_ed
 from hahomematic.decorators import config_property, value_property
 import hahomematic.device as hm_device
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
@@ -188,9 +188,10 @@ class BaseEntity(CallbackEntity):
         ] = self._central.device_details.get_function_text(
             address=self._attr_channel_address
         )
-        self._client: Final[hm_client.Client] = device.central.clients[
-            device.interface_id
-        ]
+        self._client: Final[hm_client.Client] = device.central.get_client(
+            interface_id=device.interface_id
+        )
+
         self._attr_usage: HmEntityUsage = self._generate_entity_usage()
         entity_name_data: Final[EntityNameData] = self._generate_entity_name()
         self._attr_full_name: Final[str] = entity_name_data.full_name
@@ -249,7 +250,7 @@ class BaseEntity(CallbackEntity):
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
         self.device.add_entity(self)
-        self._central.hm_entities[self._attr_unique_identifier] = self
+        self._central.entities[self._attr_unique_identifier] = self
 
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
@@ -747,7 +748,7 @@ class WrapperEntity(CallbackEntity):
     def add_to_collections(self) -> None:
         """add entity to central_unit collections"""
         self.device.add_entity(self)
-        self._central.hm_entities[self.unique_identifier] = self
+        self._central.entities[self.unique_identifier] = self
 
 
 _EntityT = TypeVar("_EntityT", bound=GenericEntity)
@@ -762,7 +763,7 @@ class CustomEntity(BaseEntity):
         self,
         device: hm_device.HmDevice,
         unique_identifier: str,
-        device_enum: hm_entity_definition.EntityDefinition,
+        device_enum: hm_ed.EntityDefinition,
         device_def: dict[str, Any],
         entity_def: dict[int, tuple[str, ...]],
         channel_no: int,
@@ -770,7 +771,7 @@ class CustomEntity(BaseEntity):
         """
         Initialize the entity.
         """
-        self._device_enum: Final[hm_entity_definition.EntityDefinition] = device_enum
+        self._device_enum: Final[hm_ed.EntityDefinition] = device_enum
         # required for name in BaseEntity
         self._device_desc: Final[dict[str, Any]] = device_def
         self._entity_def: Final[dict[int, tuple[str, ...]]] = entity_def
@@ -792,8 +793,8 @@ class CustomEntity(BaseEntity):
     def last_update(self) -> datetime:
         """Return the latest last_update timestamp."""
         latest_update: datetime = INIT_DATETIME
-        for hm_entity in self._readable_entities:
-            if entity_last_update := hm_entity.last_update:
+        for entity in self._readable_entities:
+            if entity_last_update := entity.last_update:
                 if entity_last_update > latest_update:
                     latest_update = entity_last_update
         return latest_update
@@ -801,16 +802,16 @@ class CustomEntity(BaseEntity):
     @value_property
     def is_valid(self) -> bool:
         """Return if the state is valid."""
-        for hm_entity in self._readable_entities:
-            if hm_entity.is_valid is False:
+        for entity in self._readable_entities:
+            if entity.is_valid is False:
                 return False
         return True
 
     @value_property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
-        for hm_entity in self._readable_entities:
-            if hm_entity.state_uncertain:
+        for entity in self._readable_entities:
+            if entity.state_uncertain:
                 return True
         return False
 
@@ -839,9 +840,7 @@ class CustomEntity(BaseEntity):
 
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
-        if secondary_channels := self._device_desc.get(
-            hm_entity_definition.ED_SECONDARY_CHANNELS
-        ):
+        if secondary_channels := self._device_desc.get(hm_ed.ED_SECONDARY_CHANNELS):
             if self.channel_no in secondary_channels:
                 return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
@@ -871,9 +870,7 @@ class CustomEntity(BaseEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
 
-        repeating_fields = self._device_desc.get(
-            hm_entity_definition.ED_REPEATABLE_FIELDS, {}
-        )
+        repeating_fields = self._device_desc.get(hm_ed.ED_REPEATABLE_FIELDS, {})
         # Add repeating fields
         for (field_name, parameter) in repeating_fields.items():
             entity = self.device.get_generic_entity(
@@ -882,7 +879,7 @@ class CustomEntity(BaseEntity):
             self._add_entity(field_name=field_name, entity=entity)
 
         visible_repeating_fields = self._device_desc.get(
-            hm_entity_definition.ED_VISIBLE_REPEATABLE_FIELDS, {}
+            hm_ed.ED_VISIBLE_REPEATABLE_FIELDS, {}
         )
         # Add visible repeating fields
         for (field_name, parameter) in visible_repeating_fields.items():
@@ -893,25 +890,23 @@ class CustomEntity(BaseEntity):
 
         # Add device fields
         self._add_entities(
-            field_dict_name=hm_entity_definition.ED_FIELDS,
+            field_dict_name=hm_ed.ED_FIELDS,
         )
         # Add visible device fields
         self._add_entities(
-            field_dict_name=hm_entity_definition.ED_VISIBLE_FIELDS,
+            field_dict_name=hm_ed.ED_VISIBLE_FIELDS,
             is_visible=True,
         )
 
         # Add default device entities
         self._mark_entity(field_desc=self._entity_def)
         # add default entities
-        if hm_entity_definition.get_include_default_entities(
-            device_enum=self._device_enum
-        ):
-            self._mark_entity(field_desc=hm_entity_definition.get_default_entities())
+        if hm_ed.get_include_default_entities(device_enum=self._device_enum):
+            self._mark_entity(field_desc=hm_ed.get_default_entities())
 
         # add extra entities for the device type
         self._mark_entity(
-            field_desc=hm_entity_definition.get_additional_entities_by_device_type(
+            field_desc=hm_ed.get_additional_entities_by_device_type(
                 device_type=self.device.device_type
             )
         )
@@ -1115,9 +1110,10 @@ class GenericSystemVariable(GenericHubEntity):
 
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        await self.central.set_system_variable(
-            name=self.ccu_var_name, value=parse_sys_var(self.data_type, value)
-        )
+        if client := self.central.get_first_client():
+            await client.set_system_variable(
+                name=self.ccu_var_name, value=parse_sys_var(self.data_type, value)
+            )
         self.update_value(value=value)
 
 

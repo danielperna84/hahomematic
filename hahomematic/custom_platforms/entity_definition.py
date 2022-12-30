@@ -119,7 +119,7 @@ class EntityDefinition(StrEnum):
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
 
 
-SCHEMA_ED_ADDITIONAL_ENTITIES = Schema({Required(int): Schema({Optional(str)})})
+SCHEMA_ED_ADDITIONAL_ENTITIES = Schema({Required(int): Schema(tuple([Optional(str)]))})
 
 SCHEMA_ED_FIELD_DETAILS = Schema({Required(str): str})
 
@@ -128,7 +128,7 @@ SCHEMA_ED_FIELD = Schema({Required(int): SCHEMA_ED_FIELD_DETAILS})
 SCHEMA_ED_DEVICE_GROUP = Schema(
     {
         Required(ED_PRIMARY_CHANNEL): int,
-        Optional(ED_SECONDARY_CHANNELS): [int],
+        Optional(ED_SECONDARY_CHANNELS): tuple([int]),
         Optional(ED_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
         Optional(ED_VISIBLE_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
         Optional(ED_FIELDS): SCHEMA_ED_FIELD,
@@ -627,7 +627,7 @@ def _create_entities(
     unique_identifier = generate_unique_identifier(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
-    if unique_identifier in device.central.hm_entities:
+    if unique_identifier in device.central.entities:
         _LOGGER.debug(
             "make_custom_entity: Skipping %s (already exists)", unique_identifier
         )

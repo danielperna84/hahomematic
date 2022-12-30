@@ -112,7 +112,7 @@ async def get_value_from_generic_entity(
 def get_hm_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
     """Return the hm_device."""
     d_address = get_device_address(address=address)
-    return central_unit.hm_devices.get(d_address)
+    return central_unit.devices.get(d_address)
 
 
 async def get_hm_generic_entity(
