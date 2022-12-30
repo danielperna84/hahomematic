@@ -267,6 +267,7 @@ class CentralUnit:
         if await self._create_clients():
             await self._load_caches()
             await self._create_devices()
+            await self._init_hub()
             await self._init_clients()
 
     async def _stop_clients(self) -> None:
@@ -344,6 +345,10 @@ class CentralUnit:
         for name, client in self._clients.items():
             if await client.proxy_de_init():
                 _LOGGER.debug("stop: Proxy de-initialized: %s", name)
+
+    async def _init_hub(self) -> None:
+        """Init the hub."""
+        await self._hub.fetch_sysvar_data()
 
     def fire_interface_event(
         self,
@@ -766,8 +771,6 @@ class CentralUnit:
                 name,
                 self.name,
             )
-            if client := self.get_first_client():
-                await client.set_system_variable(name=name, value=value)
 
     # pylint: disable=invalid-name
     async def set_install_mode(
