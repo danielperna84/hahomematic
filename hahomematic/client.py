@@ -159,7 +159,7 @@ class Client(ABC):
         """Mark device's availability state for this interface."""
         available = forced_availability != HmForcedDeviceAvailability.FORCE_FALSE
         if self._attr_available != available:
-            for hm_device in self.central.hm_devices.values():
+            for hm_device in self.central.devices.values():
                 if hm_device.interface_id == self.interface_id:
                     hm_device.set_forced_availability(
                         forced_availability=forced_availability
@@ -749,7 +749,7 @@ class ClientCCU(Client):
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for device_type in HM_VIRTUAL_REMOTE_TYPES:
-            for hm_device in self.central.hm_devices.values():
+            for hm_device in self.central.devices.values():
                 if (
                     hm_device.interface_id == self.interface_id
                     and hm_device.device_type == device_type
@@ -993,6 +993,6 @@ async def create_client(
 def get_client_by_interface_id(interface_id: str) -> Client | None:
     """Return client by interface_id"""
     for central in hm_central.CENTRAL_INSTANCES.values():
-        if client := central.get_client_by_interface_id(interface_id=interface_id):
-            return client
+        if central.has_client(interface_id=interface_id):
+            return central.get_client(interface_id=interface_id)
     return None

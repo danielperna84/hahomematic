@@ -25,11 +25,11 @@ async def test_central(central, loop) -> None:
     assert central
     assert central.name == "ccu-dev"
     assert central.model == "PyDevCCU"
-    assert central.get_client_by_interface_id("Test-BidCos-RF").model == "PyDevCCU"
-    assert central.get_client().model == "PyDevCCU"
+    assert central.get_client("Test-BidCos-RF").model == "PyDevCCU"
+    assert central.get_first_client().model == "PyDevCCU"
 
     data = {}
-    for device in central.hm_devices.values():
+    for device in central.devices.values():
         if device.device_type not in data:
             data[device.device_type] = {}
         for entity in device.generic_entities.values():
@@ -45,7 +45,7 @@ async def test_central(central, loop) -> None:
         assert pub_config_props
 
     custom_entities = []
-    for device in central.hm_devices.values():
+    for device in central.devices.values():
         custom_entities.extend(device.custom_entities.values())
 
     ce_channels = {}
@@ -63,7 +63,7 @@ async def test_central(central, loop) -> None:
         assert pub_config_props
 
     entity_types = {}
-    for entity in central.hm_entities.values():
+    for entity in central.entities.values():
         if hasattr(entity, "hmtype"):
             if entity.hmtype not in entity_types:
                 entity_types[entity.hmtype] = {}
@@ -81,25 +81,25 @@ async def test_central(central, loop) -> None:
         assert pub_config_props
 
     parameters = []
-    for entity in central.hm_entities.values():
+    for entity in central.entities.values():
         if hasattr(entity, "parameter"):
             if entity.parameter not in parameters:
                 parameters.append(entity.parameter)
 
     units = set()
-    for entity in central.hm_entities.values():
+    for entity in central.entities.values():
         if hasattr(entity, "_unit"):
             units.add(entity._unit)
 
     lowbats = set()
-    for entity in central.hm_entities.values():
+    for entity in central.entities.values():
         if hasattr(entity, "parameter") and entity.parameter == "LOWBAT":
             lowbats.add(entity.device.device_type)
     lowbats_sorted = sorted(lowbats)
     print(lowbats_sorted)
 
     usage_types: dict[HmEntityUsage, int] = {}
-    for entity in central.hm_entities.values():
+    for entity in central.entities.values():
         if hasattr(entity, "usage"):
             if entity.usage not in usage_types:
                 usage_types[entity.usage] = 0
@@ -108,7 +108,7 @@ async def test_central(central, loop) -> None:
 
     switches: dict[str, set[int]] = {}
 
-    for entity in central.hm_entities.values():
+    for entity in central.entities.values():
         # if isinstance(entity, HmSwitchPlatform):
         if hasattr(entity, "parameter") and entity.parameter == "ON_TIME":
             device_type = entity.device.device_type[:8]
@@ -121,7 +121,7 @@ async def test_central(central, loop) -> None:
             switches[device_type].add(channel_no)
 
     entity_type_operations: dict[str, dict[str, set[int]]] = {}
-    for entity in central.hm_entities.values():
+    for entity in central.entities.values():
         if isinstance(entity, GenericEntity):
             if entity.platform not in entity_type_operations:
                 entity_type_operations[entity.platform] = {}
@@ -138,8 +138,8 @@ async def test_central(central, loop) -> None:
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 93
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
 
-    assert len(central.hm_devices) == 362
-    assert len(central.hm_entities) == 6244
+    assert len(central.devices) == 362
+    assert len(central.entities) == 6244
     assert len(data) == 362
     assert len(custom_entities) == 293
     assert len(ce_channels) == 103

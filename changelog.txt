@@ -2,6 +2,7 @@ Version 2022.12.12 (2022-12-30)
 - Add un_ignore list to central config
 - Fix entity_definition schema
 - Rename cache_dict to persistant_cache
+- Reduce access to internal complex objects for custom_component
 
 Version 2022.12.11 (2022-12-28)
 - Rename climate presets from 'Profile *' to 'week_program_*'

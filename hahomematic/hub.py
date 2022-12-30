@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Final
+from typing import Final
 
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
@@ -42,8 +42,6 @@ class HmHub:
         self._sema_fetch_sysvars = asyncio.Semaphore()
         self._sema_fetch_programs = asyncio.Semaphore()
         self._central: Final[hm_central.CentralUnit] = central
-        self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
-        self.program_entities: Final[dict[str, HmProgramButton]] = {}
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
         """fetch sysvar data for the hub."""
@@ -82,7 +80,9 @@ class HmHub:
         new_programs: list[HmProgramButton] = []
 
         for program_data in programs:
-            entity: HmProgramButton | None = self.program_entities.get(program_data.pid)
+            entity: HmProgramButton | None = self._central.program_entities.get(
+                program_data.pid
+            )
             if entity:
                 entity.update_data(data=program_data)
             else:
@@ -129,7 +129,9 @@ class HmHub:
             name = sysvar.name
             value = sysvar.value
 
-            entity: GenericSystemVariable | None = self.sysvar_entities.get(name)
+            entity: GenericSystemVariable | None = self._central.sysvar_entities.get(
+                name
+            )
             if entity:
                 entity.update_value(value)
             else:
@@ -146,7 +148,7 @@ class HmHub:
     def _create_program(self, data: ProgramData) -> HmProgramButton:
         """Create program as entity."""
         program_entity = HmProgramButton(central=self._central, data=data)
-        self.program_entities[data.pid] = program_entity
+        self._central.program_entities[data.pid] = program_entity
         return program_entity
 
     def _create_system_variable(
@@ -154,7 +156,7 @@ class HmHub:
     ) -> GenericSystemVariable:
         """Create system variable as entity."""
         sysvar_entity = self._create_sysvar_entity(data=data)
-        self.sysvar_entities[data.name] = sysvar_entity
+        self._central.sysvar_entities[data.name] = sysvar_entity
         return sysvar_entity
 
     def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
@@ -181,31 +183,24 @@ class HmHub:
     def _remove_program_entity(self, ids: list[str]) -> None:
         """Remove sysvar entity from hub."""
         for pid in ids:
-            if pid in self.program_entities:
-                entity = self.program_entities[pid]
+            if pid in self._central.program_entities:
+                entity = self._central.program_entities[pid]
                 entity.remove_entity()
-                del self.program_entities[pid]
+                del self._central.program_entities[pid]
 
     def _remove_sysvar_entity(self, del_entities: set[str]) -> None:
         """Remove sysvar entity from hub."""
         for name in del_entities:
-            if name in self.sysvar_entities:
-                entity = self.sysvar_entities[name]
+            if name in self._central.sysvar_entities:
+                entity = self._central.sysvar_entities[name]
                 entity.remove_entity()
-                del self.sysvar_entities[name]
-
-    async def set_system_variable(self, name: str, value: Any) -> None:
-        """Set variable value on CCU/Homegear."""
-        if entity := self.sysvar_entities.get(name):
-            await entity.send_variable(value=value)
-        else:
-            _LOGGER.warning("Variable %s not found on %s", name, self._central.name)
+                del self._central.sysvar_entities[name]
 
     def _identify_missing_program_ids(self, programs: list[ProgramData]) -> list[str]:
         """Identify missing programs."""
         program_ids: list[str] = [x.pid for x in programs]
         missing_programs: list[str] = []
-        for pid in self.program_entities:
+        for pid in self._central.program_entities:
             if pid not in program_ids:
                 missing_programs.append(pid)
         return missing_programs
@@ -216,7 +211,7 @@ class HmHub:
         """Identify missing variables."""
         variable_names: dict[str, bool] = {x.name: x.extended_sysvar for x in variables}
         missing_variables: set[str] = set()
-        for sysvar_entity in self.sysvar_entities.values():
+        for sysvar_entity in self._central.sysvar_entities.values():
             if sysvar_entity.data_type == SYSVAR_TYPE_STRING:
                 continue
             ccu_name = sysvar_entity.ccu_var_name

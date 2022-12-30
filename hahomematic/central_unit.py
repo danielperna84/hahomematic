@@ -47,8 +47,10 @@ from hahomematic.const import (
     PROXY_INIT_SUCCESS,
     HmCallSource,
     HmDataOperationResult,
+    HmEntityUsage,
     HmEventType,
     HmInterfaceEventType,
+    HmPlatform,
 )
 from hahomematic.decorators import (
     callback_system_event,
@@ -56,13 +58,19 @@ from hahomematic.decorators import (
     value_property,
 )
 from hahomematic.device import HmDevice
-from hahomematic.entity import BaseEntity, CustomEntity, GenericEntity
+from hahomematic.entity import (
+    BaseEntity,
+    CustomEntity,
+    GenericEntity,
+    GenericSystemVariable,
+)
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
     NoClients,
     NoConnection,
 )
+from hahomematic.generic_platforms.button import HmProgramButton
 from hahomematic.helpers import (
     ProgramData,
     SystemVariableData,
@@ -92,8 +100,9 @@ class CentralUnit:
     def __init__(self, central_config: CentralConfig):
         _LOGGER.debug("__init__")
         self._sema_add_devices = asyncio.Semaphore()
+        # Keep the config for the central #CU
         self.config: Final[CentralConfig] = central_config
-        self.name: Final[str] = central_config.name
+        self._attr_name: Final[str] = central_config.name
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._xml_rpc_server: Final[
             xml_rpc.XmlRpcServer
@@ -121,91 +130,104 @@ class CentralUnit:
         ] = ParameterVisibilityCache(central=self)
 
         # {interface_id, client}
-        self.clients: Final[dict[str, hm_client.Client]] = {}
+        self._clients: Final[dict[str, hm_client.Client]] = {}
 
         # {{channel_address, parameter}, event_handle}
         self.entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
-        # {unique_identifier, entity}
-        self.hm_entities: Final[dict[str, BaseEntity]] = {}
+        # {unique_identifier, entity} #CU
+        self.entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
-        self.hm_devices: Final[dict[str, HmDevice]] = {}
-
+        self.devices: Final[dict[str, HmDevice]] = {}
+        # {sysvar_name, sysvar_entity}  # CU
+        self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
+        # {sysvar_name, program_button}  # CU
+        self.program_entities: Final[dict[str, HmProgramButton]] = {}
+        # store last event received datetime by interface
         self.last_events: Final[dict[str, datetime]] = {}
-
-        # Signature: (name, *args)
+        # Signature: (name, *args) #CU
         self.callback_system_event: Callable | None = None
-        # Signature: (interface_id, channel_address, value_key, value)
+        # Signature: (interface_id, channel_address, value_key, value) #CU
         self.callback_entity_event: Callable | None = None
-        # Signature: (event_type, event_data)
+        # Signature: (event_type, event_data) #CU
         self.callback_ha_event: Callable | None = None
 
         self.json_rpc_client: Final[
             JsonRpcAioHttpClient
         ] = central_config.get_json_rpc_client()
 
-        CENTRAL_INSTANCES[self.name] = self
+        CENTRAL_INSTANCES[self._attr_name] = self
         self._connection_checker: Final[ConnectionChecker] = ConnectionChecker(self)
-        self._hub: HmHub | None = None
+        self._hub: HmHub = HmHub(central=self)
         self._attr_version: str | None = None
 
     @value_property
     def available(self) -> bool:
         """Return the availability of the central_unit."""
-        for client in self.clients.values():
+        for client in self._clients.values():
             if client.available is False:
                 return False
         return True
 
     @property
-    def hub(self) -> HmHub | None:
-        """Return the Hub"""
-        return self._hub
+    def central_url(self) -> str:
+        """Return the central_orl from config."""
+        return self.config.central_url
+
+    @property
+    def interface_ids(self) -> list[str]:
+        """Return all associated interfaces."""
+        return list(self._clients)
 
     @value_property
     def is_alive(self) -> bool:
         """Return if XmlRPC-Server is alive."""
-        for client in self.clients.values():
+        for client in self._clients.values():
             if not client.is_callback_alive():
                 return False
         return True
 
     @config_property
     def model(self) -> str | None:
-        """Return the model of the backend."""
+        """Return the model of the backend. #CU"""
         if not self._attr_model:
-            if client := self.get_client():
+            if client := self.get_first_client():
                 self._attr_model = client.model
         return self._attr_model
 
     @config_property
+    def name(self) -> str:
+        """Return the name of the backend. #CU"""
+        return self._attr_name
+
+    @config_property
     def serial(self) -> str | None:
         """Return the serial of the backend."""
-        if client := self.get_client():
+        if client := self.get_first_client():
             return client.config.serial
         return None
 
     @config_property
     def version(self) -> str | None:
-        """Return the version of the backend."""
+        """Return the version of the backend. #CU"""
         if self._attr_version is None:
             versions: list[str] = []
-            for client in self.clients.values():
+            for client in self._clients.values():
                 if client.config.version:
                     versions.append(client.config.version)
             self._attr_version = max(versions) if versions else None
         return self._attr_version
 
     async def start(self) -> None:
-        """Start processing of the central unit."""
+        """Start processing of the central unit. #CU"""
         await self.parameter_visibility.load()
         await self._start_clients()
         self._start_connection_checker()
 
     async def start_direct(self) -> None:
-        """Start the central unit for temporary usage."""
+        """Start the central unit for temporary usage. #CU"""
         await self.parameter_visibility.load()
         await self._create_clients()
-        for client in self.clients.values():
+        for client in self._clients.values():
             device_descriptions = await client.get_all_device_descriptions()
             await self._add_new_devices(
                 interface_id=client.interface_id,
@@ -213,7 +235,7 @@ class CentralUnit:
             )
 
     async def stop(self) -> None:
-        """Stop processing of the central unit."""
+        """Stop processing of the central unit. #CU"""
         self._stop_connection_checker()
         await self._stop_clients()
         if self.json_rpc_client.is_activated:
@@ -232,8 +254,8 @@ class CentralUnit:
             )
 
         _LOGGER.debug("stop: Removing instance")
-        if self.name in CENTRAL_INSTANCES:
-            del CENTRAL_INSTANCES[self.name]
+        if self._attr_name in CENTRAL_INSTANCES:
+            del CENTRAL_INSTANCES[self._attr_name]
 
     async def restart_clients(self) -> None:
         """Restart clients"""
@@ -245,31 +267,30 @@ class CentralUnit:
         if await self._create_clients():
             await self._load_caches()
             await self._create_devices()
-            await self._init_hub()
             await self._init_clients()
 
     async def _stop_clients(self) -> None:
         """Stop clients."""
         await self._de_init_clients()
-        for client in self.clients.values():
+        for client in self._clients.values():
             _LOGGER.debug("stop_client: Stopping %s.", client.interface_id)
             client.stop()
         _LOGGER.debug("stop_clients: Clearing existing clients.")
-        self.clients.clear()
+        self._clients.clear()
 
     async def _create_clients(self) -> bool:
         """Create clients for the central unit. Start connection checker afterwards"""
 
-        if len(self.clients) > 0:
+        if len(self._clients) > 0:
             _LOGGER.warning(
                 "create_clients: Clients for %s are already created.",
-                self.name,
+                self._attr_name,
             )
             return False
         if len(self.config.interface_configs) == 0:
             _LOGGER.warning(
                 "create_clients failed: No Interfaces for %s defined.",
-                self.name,
+                self._attr_name,
             )
             return False
 
@@ -294,9 +315,9 @@ class CentralUnit:
                     _LOGGER.debug(
                         "create_clients: Adding client %s to %s.",
                         client.interface_id,
-                        self.name,
+                        self._attr_name,
                     )
-                    self.clients[client.interface_id] = client
+                    self._clients[client.interface_id] = client
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
@@ -308,11 +329,11 @@ class CentralUnit:
                     "Unable to create client for central [%s]. Check logs.",
                     ex.args,
                 )
-        return len(self.clients) > 0
+        return len(self._clients) > 0
 
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
-        for client in self.clients.values():
+        for client in self._clients.values():
             if PROXY_INIT_SUCCESS == await client.proxy_init():
                 _LOGGER.debug(
                     "init_clients: client for %s initialized", client.interface_id
@@ -320,7 +341,7 @@ class CentralUnit:
 
     async def _de_init_clients(self) -> None:
         """De-init clients"""
-        for name, client in self.clients.items():
+        for name, client in self._clients.items():
             if await client.proxy_de_init():
                 _LOGGER.debug("stop: Proxy de-initialized: %s", name)
 
@@ -376,22 +397,11 @@ class CentralUnit:
 
         return callback_ip
 
-    async def _init_hub(self) -> None:
-        """Init the hub."""
-        if not self._hub:
-            self._hub = HmHub(central=self)
-            _LOGGER.debug(
-                "init_hub: Starting hub for %s",
-                self.name,
-            )
-
-        await self._hub.fetch_sysvar_data()
-
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
         _LOGGER.debug(
             "start_connection_checker: Starting connection_checker for %s",
-            self.name,
+            self._attr_name,
         )
         self._connection_checker.start()
 
@@ -400,11 +410,11 @@ class CentralUnit:
         self._connection_checker.stop()
         _LOGGER.debug(
             "stop_connection_checker: Stopped connection_checker for %s",
-            self.name,
+            self._attr_name,
         )
 
     async def validate_config_and_get_serial(self) -> str | None:
-        """Validate the central configuration."""
+        """Validate the central configuration. #CU"""
         if len(self.config.interface_configs) == 0:
             raise NoClients("validate_config: No clients defined.")
 
@@ -420,21 +430,50 @@ class CentralUnit:
                 serial = await client.get_serial()
         return serial
 
-    def get_client_by_interface_id(self, interface_id: str) -> hm_client.Client | None:
-        """Return a client by interface_id."""
-        return self.clients.get(interface_id)
+    def get_client(self, interface_id: str) -> hm_client.Client:
+        """Return a client by interface_id. #CU"""
+        return self._clients[interface_id]
 
-    def get_client(self) -> hm_client.Client | None:
+    def get_device(self, device_address: str) -> HmDevice | None:
+        """Return homematic device. #CU"""
+        return self.devices.get(device_address)
+
+    def get_entities_by_platform(self, platform: HmPlatform) -> list[BaseEntity]:
+        """Return all entities by platform."""
+        hm_entities = []
+        for entity in self.entities.values():
+            if (
+                entity.usage != HmEntityUsage.ENTITY_NO_CREATE
+                and entity.platform == platform
+            ):
+                hm_entities.append(entity)
+
+        return hm_entities
+
+    def get_first_client(self) -> hm_client.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hm_client.Client | None = None
-        for client in self.clients.values():
+        for client in self._clients.values():
             if client.config.interface in IF_PRIMARY and client.available:
                 return client
         return client
 
+    def get_virtual_remotes(self) -> list[HmDevice]:
+        """Get the virtual remote for the Client. #CU"""
+        virtual_remotes: list[HmDevice] = []
+        for client in self._clients.values():
+            if virtual_remote := client.get_virtual_remote():
+                virtual_remotes.append(virtual_remote)
+        return virtual_remotes
+
     def has_client(self, interface_id: str) -> bool:
         """Check if client exists in central."""
-        return self.clients.get(interface_id) is not None
+        return self._clients.get(interface_id) is not None
+
+    @property
+    def has_clients(self) -> bool:
+        """Check if clients exists in central."""
+        return len(self._clients) > 0
 
     async def _load_caches(self) -> None:
         """Load files to caches."""
@@ -445,7 +484,7 @@ class CentralUnit:
             await self.device_data.load()
         except json.decoder.JSONDecodeError:
             _LOGGER.warning(
-                "load_caches failed: Unable to load caches for %s.", self.name
+                "load_caches failed: Unable to load caches for %s.", self._attr_name
             )
             await self.clear_all()
 
@@ -454,15 +493,17 @@ class CentralUnit:
         Trigger creation of the objects that expose the functionality.
         """
 
-        if not self.clients:
+        if not self._clients:
             raise Exception(
                 f"create_devices: "
-                f"No clients initialized. Not starting central {self.name}."
+                f"No clients initialized. Not starting central {self._attr_name}."
             )
-        _LOGGER.debug("create_devices: Starting to create devices for %s.", self.name)
+        _LOGGER.debug(
+            "create_devices: Starting to create devices for %s.", self._attr_name
+        )
 
         new_devices = set[HmDevice]()
-        for interface_id, client in self.clients.items():
+        for interface_id, client in self._clients.items():
             if not client:
                 _LOGGER.debug(
                     "create_devices: Skipping interface %s, missing client.",
@@ -482,7 +523,7 @@ class CentralUnit:
             ):
                 # Do we check for duplicates here? For now, we do.
                 device: HmDevice | None = None
-                if device_address in self.hm_devices:
+                if device_address in self.devices:
                     continue
                 try:
                     device = HmDevice(
@@ -505,7 +546,7 @@ class CentralUnit:
                         device.create_entities_and_append_to_device()
                         await device.load_value_cache()
                         new_devices.add(device)
-                        self.hm_devices[device_address] = device
+                        self.devices[device_address] = device
                 except Exception as err:
                     _LOGGER.error(
                         "create_devices failed: "
@@ -515,7 +556,9 @@ class CentralUnit:
                         interface_id,
                         device_address,
                     )
-        _LOGGER.debug("create_devices: Finished creating devices for %s.", self.name)
+        _LOGGER.debug(
+            "create_devices: Finished creating devices for %s.", self._attr_name
+        )
 
         if (
             len(new_devices) > 0
@@ -526,14 +569,14 @@ class CentralUnit:
             self.callback_system_event(HH_EVENT_DEVICES_CREATED, new_devices)
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
-        """Delete devices from central_unit."""
+        """Delete devices from central_unit. #CU"""
         _LOGGER.debug(
             "delete_device: interface_id = %s, device_address = %s",
             interface_id,
             device_address,
         )
 
-        if (hm_device := self.hm_devices.get(device_address)) is None:
+        if (hm_device := self.devices.get(device_address)) is None:
             return
         addresses: list[str] = list(hm_device.channels.keys())
         addresses.append(device_address)
@@ -568,10 +611,10 @@ class CentralUnit:
                         interface_id=interface_id, channel_address=address
                     )
                 self.device_details.remove(address=address)
-                if hm_device := self.hm_devices.get(address):
+                if hm_device := self.devices.get(address):
                     hm_device.remove_event_subscriptions()
                     hm_device.remove_from_collections()
-                    del self.hm_devices[address]
+                    del self.devices[address]
             except KeyError:
                 _LOGGER.warning("delete_devices failed: Unable to delete: %s", address)
         await self.paramset_descriptions.save()
@@ -595,7 +638,7 @@ class CentralUnit:
             len(device_descriptions),
         )
 
-        if interface_id not in self.clients:
+        if interface_id not in self._clients:
             _LOGGER.warning(
                 "add_new_devices failed: Missing client for interface_id %s.",
                 interface_id,
@@ -610,7 +653,7 @@ class CentralUnit:
                     interface_id
                 )
             ]
-            client = self.clients[interface_id]
+            client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
                     if dev_desc[HM_ADDRESS] not in known_addresses:
@@ -635,7 +678,7 @@ class CentralUnit:
         except CancelledError:
             _LOGGER.debug(
                 "create_task: task cancelled for %s.",
-                self.name,
+                self._attr_name,
             )
             return None
 
@@ -653,7 +696,7 @@ class CentralUnit:
         except CancelledError:
             _LOGGER.debug(
                 "run_coroutine: coroutine interrupted for %s.",
-                self.name,
+                self._attr_name,
             )
             return None
 
@@ -666,18 +709,34 @@ class CentralUnit:
         except CancelledError as cer:
             _LOGGER.debug(
                 "async_add_executor_job: task cancelled for %s.",
-                self.name,
+                self._attr_name,
             )
             raise HaHomematicException from cer
 
     async def execute_program(self, pid: str) -> None:
         """Execute a program on CCU / Homegear."""
-        if client := self.get_client():
+        if client := self.get_first_client():
             await client.execute_program(pid=pid)
+
+    async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
+        """fetch sysvar data for the hub. #CU"""
+        await self._hub.fetch_sysvar_data(include_internal=include_internal)
+
+    async def fetch_program_data(self, include_internal: bool = False) -> None:
+        """fetch program data for the hub. #CU"""
+        await self._hub.fetch_program_data(include_internal=include_internal)
+
+    async def refresh_entity_data(
+        self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
+    ) -> None:
+        """Refresh entity data. #CU"""
+        await self.device_data.refresh_entity_data(
+            paramset_key=paramset_key, max_age_seconds=max_age_seconds
+        )
 
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get all programs, if available."""
-        if client := self.get_client():
+        if client := self.get_first_client():
             return await client.get_all_programs(include_internal=include_internal)
         return []
 
@@ -685,7 +744,7 @@ class CentralUnit:
         self, include_internal: bool
     ) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
-        if client := self.get_client():
+        if client := self.get_first_client():
             return await client.get_all_system_variables(
                 include_internal=include_internal
             )
@@ -693,14 +752,22 @@ class CentralUnit:
 
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""
-        if client := self.get_client():
+        if client := self.get_first_client():
             return await client.get_system_variable(name)
         return None
 
     async def set_system_variable(self, name: str, value: Any) -> None:
-        """Set a system variable on CCU / Homegear."""
-        if client := self.get_client():
-            await client.set_system_variable(name=name, value=value)
+        """Set variable value on CCU/Homegear.  #CU"""
+        if entity := self.sysvar_entities.get(name):
+            await entity.send_variable(value=value)
+        else:
+            _LOGGER.warning(
+                "Variable %s not found on %s. Sending directly to backend",
+                name,
+                self.name,
+            )
+            if client := self.get_first_client():
+                await client.set_system_variable(name=name, value=value)
 
     # pylint: disable=invalid-name
     async def set_install_mode(
@@ -711,17 +778,31 @@ class CentralUnit:
         mode: int = 1,
         device_address: str | None = None,
     ) -> None:
-        """Activate or deactivate install-mode on CCU / Homegear."""
-        if client := self.get_client_by_interface_id(interface_id=interface_id):
-            await client.set_install_mode(
-                on=on, t=t, mode=mode, device_address=device_address
+        """Activate or deactivate install-mode on CCU / Homegear. #CU"""
+        if self.has_client(interface_id=interface_id) is False:
+            _LOGGER.warning(
+                "set_install_mode: interface_id %s does not exist on %s",
+                interface_id,
+                self._attr_name,
             )
+            return None
+        await self.get_client(interface_id=interface_id).set_install_mode(
+            on=on, t=t, mode=mode, device_address=device_address
+        )
 
     async def get_install_mode(self, interface_id: str) -> int:
-        """Get remaining time in seconds install mode is active from CCU / Homegear."""
-        if client := self.get_client_by_interface_id(interface_id=interface_id):
-            return int(await client.get_install_mode())
-        return 0
+        """
+        Get remaining time in seconds install mode is active from CCU / Homegear.
+        #CU
+        """
+        if self.has_client(interface_id=interface_id) is False:
+            _LOGGER.warning(
+                "get_install_mode: interface_id %s does not exist on %s",
+                interface_id,
+                self._attr_name,
+            )
+            return 0
+        return int(await self.get_client(interface_id=interface_id).get_install_mode())
 
     async def set_value(
         self,
@@ -732,16 +813,21 @@ class CentralUnit:
         paramset_key: str = PARAMSET_KEY_VALUES,
         rx_mode: str | None = None,
     ) -> None:
-        """Set a single value on paramset VALUES."""
-
-        if client := self.get_client_by_interface_id(interface_id=interface_id):
-            await client.set_value(
-                channel_address=channel_address,
-                paramset_key=paramset_key,
-                parameter=parameter,
-                value=value,
-                rx_mode=rx_mode,
+        """Set a single value on paramset VALUES. #CU"""
+        if self.has_client(interface_id=interface_id) is False:
+            _LOGGER.warning(
+                "set_value: interface_id %s does not exist on %s",
+                interface_id,
+                self._attr_name,
             )
+            return None
+        await self.get_client(interface_id=interface_id).set_value(
+            channel_address=channel_address,
+            paramset_key=paramset_key,
+            parameter=parameter,
+            value=value,
+            rx_mode=rx_mode,
+        )
 
     async def put_paramset(
         self,
@@ -754,20 +840,26 @@ class CentralUnit:
         """
         Set paramsets manually.
         Address is usually the channel_address,
-        but for bidcos devices there is a master paramset at the device.
+        but for bidcos devices there is a master paramset at the device. #CU
         """
-
-        if client := self.get_client_by_interface_id(interface_id=interface_id):
-            await client.put_paramset(
-                address=address,
-                paramset_key=paramset_key,
-                value=value,
-                rx_mode=rx_mode,
+        if self.has_client(interface_id=interface_id) is False:
+            _LOGGER.warning(
+                "put_paramset: interface_id %s does not exist on %s",
+                interface_id,
+                self._attr_name,
             )
+            return None
+
+        await self.get_client(interface_id=interface_id).put_paramset(
+            address=address,
+            paramset_key=paramset_key,
+            value=value,
+            rx_mode=rx_mode,
+        )
 
     def _get_virtual_remote(self, device_address: str) -> HmDevice | None:
         """Get the virtual remote for the Client."""
-        for client in self.clients.values():
+        for client in self._clients.values():
             virtual_remote = client.get_virtual_remote()
             if virtual_remote and virtual_remote.device_address == device_address:
                 return virtual_remote
@@ -776,9 +868,9 @@ class CentralUnit:
     def get_generic_entity(
         self, channel_address: str, parameter: str
     ) -> GenericEntity | None:
-        """Get entity by channel_address and parameter."""
+        """Get entity by channel_address and parameter. #CU"""
         if ":" in channel_address:
-            if device := self.hm_devices.get(get_device_address(channel_address)):
+            if device := self.devices.get(get_device_address(channel_address)):
                 if entity := device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
@@ -787,7 +879,7 @@ class CentralUnit:
 
     async def clear_all(self) -> None:
         """
-        Clear all stored data.
+        Clear all stored data. #CU
         """
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
@@ -831,7 +923,7 @@ class ConnectionChecker(threading.Thread):
                 self._central.name,
             )
             try:
-                if len(self._central.clients) == 0:
+                if self._central.has_clients is False:
                     _LOGGER.warning(
                         "check_connection failed: No clients exist. "
                         "Trying to create clients for server %s",
@@ -840,11 +932,12 @@ class ConnectionChecker(threading.Thread):
                     await self._central.restart_clients()
                 else:
                     reconnects: list[Any] = []
-                    for client in self._central.clients.values():
+                    for interface_id in self._central.interface_ids:
                         # check:
                         #  - client is available
                         #  - client is connected
                         #  - interface callback is alive
+                        client = self._central.get_client(interface_id=interface_id)
                         if (
                             client.available is False
                             or not await client.is_connected()
@@ -909,7 +1002,7 @@ class CentralConfig:
 
     @property
     def central_url(self) -> str:
-        """Return the required url."""
+        """Return the required url. #CU"""
         url = "http://"
         if self.tls:
             url = "https://"
@@ -958,7 +1051,7 @@ class DeviceDetailsCache:
     async def load(self) -> None:
         """Fetch names from backend."""
         _LOGGER.debug("load: Loading names for %s", self._central.name)
-        if client := self._central.get_client():
+        if client := self._central.get_first_client():
             await client.fetch_device_details()
         _LOGGER.debug("load: Loading rooms for %s", self._central.name)
         self._channel_rooms = await self._get_all_rooms()
@@ -990,7 +1083,7 @@ class DeviceDetailsCache:
 
     async def _get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms, if available."""
-        if client := self._central.get_client():
+        if client := self._central.get_first_client():
             return await client.get_all_rooms()
         return {}
 
@@ -1000,7 +1093,7 @@ class DeviceDetailsCache:
 
     async def _get_all_functions(self) -> dict[str, set[str]]:
         """Get all functions, if available."""
-        if client := self._central.get_client():
+        if client := self._central.get_first_client():
             return await client.get_all_functions()
         return {}
 
@@ -1056,22 +1149,22 @@ class DeviceDataCache:
     async def load(self) -> None:
         """Fetch device data from backend."""
         _LOGGER.debug("load: device data for %s", self._central.name)
-        if client := self._central.get_client():
+        if client := self._central.get_first_client():
             await client.fetch_all_device_data()
 
     async def refresh_entity_data(
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
-        for hm_entity in self._central.hm_entities.values():
-            if (
-                isinstance(hm_entity, GenericEntity) and hm_entity.is_readable
-            ) or isinstance(hm_entity, CustomEntity):
+        for entity in self._central.entities.values():
+            if (isinstance(entity, GenericEntity) and entity.is_readable) or isinstance(
+                entity, CustomEntity
+            ):
                 if paramset_key is None or (
-                    isinstance(hm_entity, GenericEntity)
-                    and hm_entity.paramset_key == paramset_key
+                    isinstance(entity, GenericEntity)
+                    and entity.paramset_key == paramset_key
                 ):
-                    await hm_entity.load_entity_value(
+                    await entity.load_entity_value(
                         call_source=HmCallSource.HM_INIT,
                         max_age_seconds=max_age_seconds,
                     )
