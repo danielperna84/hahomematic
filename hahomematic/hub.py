@@ -57,10 +57,9 @@ class HmHub:
 
     async def _update_program_entities(self, include_internal: bool) -> None:
         """Retrieve all program data and update program values."""
-
-        programs = await self._central.get_all_programs(
-            include_internal=include_internal
-        )
+        programs: list[ProgramData] = []
+        if client := self._central.get_primary_client():
+            programs = await client.get_all_programs(include_internal=include_internal)
         if not programs:
             _LOGGER.debug(
                 "_update_program_entities: No programs received for %s",
@@ -97,9 +96,11 @@ class HmHub:
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
         """Retrieve all variable data and update hmvariable values."""
-        variables = await self._central.get_all_system_variables(
-            include_internal=include_internal
-        )
+        variables: list[SystemVariableData] = []
+        if client := self._central.get_primary_client():
+            variables = await client.get_all_system_variables(
+                include_internal=include_internal
+            )
         if not variables:
             _LOGGER.debug(
                 "_update_entities: No sysvars received for %s",

@@ -44,7 +44,7 @@ def callback_system_event(name: str) -> Callable:
                 # We don't want to pass the function itself
                 args = args[1:]
                 interface_id = args[0]
-                client = hm_client.get_client_by_interface_id(interface_id=interface_id)
+                client = hm_client.get_client(interface_id=interface_id)
             except Exception as err:
                 _LOGGER.warning(
                     "exec_callback_system_event failed: "
@@ -90,7 +90,7 @@ def callback_event(func: Callable) -> Callable:
             # We don't want to pass the function itself
             args = args[1:]
             interface_id = args[0]
-            client = hm_client.get_client_by_interface_id(interface_id=interface_id)
+            client = hm_client.get_client(interface_id=interface_id)
         except Exception as err:
             _LOGGER.warning(
                 "exec_callback_entity_event failed: "
