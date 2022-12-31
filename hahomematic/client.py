@@ -990,7 +990,7 @@ async def create_client(
     ).get_client()
 
 
-def get_client_by_interface_id(interface_id: str) -> Client | None:
+def get_client(interface_id: str) -> Client | None:
     """Return client by interface_id"""
     for central in hm_central.CENTRAL_INSTANCES.values():
         if central.has_client(interface_id=interface_id):

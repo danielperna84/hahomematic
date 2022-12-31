@@ -26,7 +26,7 @@ async def test_central(central, loop) -> None:
     assert central.name == "ccu-dev"
     assert central.model == "PyDevCCU"
     assert central.get_client("Test-BidCos-RF").model == "PyDevCCU"
-    assert central.get_first_client().model == "PyDevCCU"
+    assert central.get_primary_client().model == "PyDevCCU"
 
     data = {}
     for device in central.devices.values():
