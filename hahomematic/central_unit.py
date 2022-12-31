@@ -99,7 +99,7 @@ class CentralUnit:
     def __init__(self, central_config: CentralConfig):
         _LOGGER.debug("__init__")
         self._sema_add_devices = asyncio.Semaphore()
-        # Keep the config for the central #CU
+        # Keep the config for the central #CC
         self.config: Final[CentralConfig] = central_config
         self._attr_name: Final[str] = central_config.name
         self._attr_model: str | None = None
@@ -143,11 +143,11 @@ class CentralUnit:
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
         # store last event received datetime by interface
         self.last_events: Final[dict[str, datetime]] = {}
-        # Signature: (name, *args) #CU
+        # Signature: (name, *args) #CC
         self.callback_system_event: Callable | None = None
-        # Signature: (interface_id, channel_address, value_key, value) #CU
+        # Signature: (interface_id, channel_address, value_key, value) #CC
         self.callback_entity_event: Callable | None = None
-        # Signature: (event_type, event_data) #CU
+        # Signature: (event_type, event_data) #CC
         self.callback_ha_event: Callable | None = None
 
         self.json_rpc_client: Final[
@@ -169,7 +169,7 @@ class CentralUnit:
 
     @property
     def central_url(self) -> str:
-        """Return the central_orl from config. #CU"""
+        """Return the central_orl from config. #CC"""
         return self.config.central_url
 
     @property
@@ -187,7 +187,7 @@ class CentralUnit:
 
     @config_property
     def model(self) -> str | None:
-        """Return the model of the backend. #CU"""
+        """Return the model of the backend. #CC"""
         if not self._attr_model:
             if client := self.get_primary_client():
                 self._attr_model = client.model
@@ -195,7 +195,7 @@ class CentralUnit:
 
     @config_property
     def name(self) -> str:
-        """Return the name of the backend. #CU"""
+        """Return the name of the backend. #CC"""
         return self._attr_name
 
     @config_property
@@ -207,7 +207,7 @@ class CentralUnit:
 
     @config_property
     def version(self) -> str | None:
-        """Return the version of the backend. #CU"""
+        """Return the version of the backend. #CC"""
         if self._attr_version is None:
             versions: list[str] = []
             for client in self._clients.values():
@@ -217,13 +217,13 @@ class CentralUnit:
         return self._attr_version
 
     async def start(self) -> None:
-        """Start processing of the central unit. #CU"""
+        """Start processing of the central unit. #CC"""
         await self.parameter_visibility.load()
         await self._start_clients()
         self._start_connection_checker()
 
     async def start_direct(self) -> None:
-        """Start the central unit for temporary usage. #CU"""
+        """Start the central unit for temporary usage. #CC"""
         await self.parameter_visibility.load()
         await self._create_clients()
         for client in self._clients.values():
@@ -234,7 +234,7 @@ class CentralUnit:
             )
 
     async def stop(self) -> None:
-        """Stop processing of the central unit. #CU"""
+        """Stop processing of the central unit. #CC"""
         self._stop_connection_checker()
         await self._stop_clients()
         if self.json_rpc_client.is_activated:
@@ -418,7 +418,7 @@ class CentralUnit:
         )
 
     async def validate_config_and_get_serial(self) -> str | None:
-        """Validate the central configuration. #CU"""
+        """Validate the central configuration. #CC"""
         if len(self.config.interface_configs) == 0:
             raise NoClients("validate_config: No clients defined.")
 
@@ -435,7 +435,7 @@ class CentralUnit:
         return serial
 
     def get_client(self, interface_id: str) -> hm_client.Client:
-        """Return a client by interface_id. #CU"""
+        """Return a client by interface_id. #CC"""
         if self.has_client(interface_id=interface_id) is False:
             raise HaHomematicException(
                 f"get_client: interface_id {interface_id} does not exist on {self._attr_name}"
@@ -443,15 +443,18 @@ class CentralUnit:
         return self._clients[interface_id]
 
     def get_device(self, device_address: str) -> HmDevice | None:
-        """Return homematic device. #CU"""
+        """Return homematic device. #CC"""
         return self.devices.get(device_address)
 
-    def get_entities_by_platform(self, platform: HmPlatform) -> list[BaseEntity]:
-        """Return all entities by platform. #CU"""
+    def get_entities_by_platform(
+        self, platform: HmPlatform, existing_unique_ids: list[str] = []
+    ) -> list[BaseEntity]:
+        """Return all entities by platform. #CC"""
         hm_entities = []
         for entity in self.entities.values():
             if (
-                entity.usage != HmEntityUsage.ENTITY_NO_CREATE
+                entity.unique_identifier not in existing_unique_ids
+                and entity.usage != HmEntityUsage.ENTITY_NO_CREATE
                 and entity.platform == platform
             ):
                 hm_entities.append(entity)
@@ -466,10 +469,10 @@ class CentralUnit:
                 return client
         return client
 
-    def get_new_hub_entities(
-        self, platform: HmPlatform, existing_unique_ids: list[str]
+    def get_hub_entities_by_platform(
+        self, platform: HmPlatform, existing_unique_ids: list[str] = []
     ) -> list[GenericHubEntity]:
-        """Return the hub entities. #CU"""
+        """Return the hub entities by platform. #CC"""
         hub_entities: list[GenericHubEntity] = []
         for program_entity in self.program_entities.values():
             if (
@@ -487,7 +490,7 @@ class CentralUnit:
         return hub_entities
 
     def get_virtual_remotes(self) -> list[HmDevice]:
-        """Get the virtual remote for the Client. #CU"""
+        """Get the virtual remote for the Client. #CC"""
         virtual_remotes: list[HmDevice] = []
         for client in self._clients.values():
             if virtual_remote := client.get_virtual_remote():
@@ -495,12 +498,12 @@ class CentralUnit:
         return virtual_remotes
 
     def has_client(self, interface_id: str) -> bool:
-        """Check if client exists in central. #CU"""
+        """Check if client exists in central. #CC"""
         return self._clients.get(interface_id) is not None
 
     @property
     def has_clients(self) -> bool:
-        """Check if clients exists in central. #CU"""
+        """Check if clients exists in central. #CC"""
         return len(self._clients) > 0
 
     async def _load_caches(self) -> None:
@@ -597,7 +600,7 @@ class CentralUnit:
             self.callback_system_event(HH_EVENT_DEVICES_CREATED, new_devices)
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
-        """Delete devices from central_unit. #CU"""
+        """Delete devices from central_unit. #CC"""
         _LOGGER.debug(
             "delete_device: interface_id = %s, device_address = %s",
             interface_id,
@@ -747,17 +750,17 @@ class CentralUnit:
             await client.execute_program(pid=pid)
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
-        """fetch sysvar data for the hub. #CU"""
+        """fetch sysvar data for the hub. #CC"""
         await self._hub.fetch_sysvar_data(include_internal=include_internal)
 
     async def fetch_program_data(self, include_internal: bool = False) -> None:
-        """fetch program data for the hub. #CU"""
+        """fetch program data for the hub. #CC"""
         await self._hub.fetch_program_data(include_internal=include_internal)
 
     async def refresh_entity_data(
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
-        """Refresh entity data. #CU"""
+        """Refresh entity data. #CC"""
         await self.device_data.refresh_entity_data(
             paramset_key=paramset_key, max_age_seconds=max_age_seconds
         )
@@ -769,7 +772,7 @@ class CentralUnit:
         return None
 
     async def set_system_variable(self, name: str, value: Any) -> None:
-        """Set variable value on CCU/Homegear.  #CU"""
+        """Set variable value on CCU/Homegear.  #CC"""
         if entity := self.sysvar_entities.get(name):
             await entity.send_variable(value=value)
         else:
@@ -788,7 +791,7 @@ class CentralUnit:
         mode: int = 1,
         device_address: str | None = None,
     ) -> None:
-        """Activate or deactivate install-mode on CCU / Homegear. #CU"""
+        """Activate or deactivate install-mode on CCU / Homegear. #CC"""
         if self.has_client(interface_id=interface_id) is False:
             _LOGGER.warning(
                 "set_install_mode: interface_id %s does not exist on %s",
@@ -809,7 +812,7 @@ class CentralUnit:
         paramset_key: str = PARAMSET_KEY_VALUES,
         rx_mode: str | None = None,
     ) -> None:
-        """Set a single value on paramset VALUES. #CU"""
+        """Set a single value on paramset VALUES. #CC"""
         if self.has_client(interface_id=interface_id) is False:
             _LOGGER.warning(
                 "set_value: interface_id %s does not exist on %s",
@@ -836,7 +839,7 @@ class CentralUnit:
         """
         Set paramsets manually.
         Address is usually the channel_address,
-        but for bidcos devices there is a master paramset at the device. #CU
+        but for bidcos devices there is a master paramset at the device. #CC
         """
         if self.has_client(interface_id=interface_id) is False:
             _LOGGER.warning(
@@ -864,7 +867,7 @@ class CentralUnit:
     def get_generic_entity(
         self, channel_address: str, parameter: str
     ) -> GenericEntity | None:
-        """Get entity by channel_address and parameter. #CU"""
+        """Get entity by channel_address and parameter. #CC"""
         if ":" in channel_address:
             if device := self.devices.get(get_device_address(channel_address)):
                 if entity := device.get_generic_entity(
@@ -875,7 +878,7 @@ class CentralUnit:
 
     async def clear_all(self) -> None:
         """
-        Clear all stored data. #CU
+        Clear all stored data. #CC
         """
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
@@ -998,7 +1001,7 @@ class CentralConfig:
 
     @property
     def central_url(self) -> str:
-        """Return the required url. #CU"""
+        """Return the required url. #CC"""
         url = "http://"
         if self.tls:
             url = "https://"
