@@ -54,6 +54,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.decorators import (
+    callback_event,
     callback_system_event,
     config_property,
     value_property,
@@ -723,6 +724,51 @@ class CentralUnit:
             await self.device_details.load()
             await self.device_data.load()
             await self._create_devices()
+
+    @callback_event
+    def event(
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
+    ) -> None:
+        """
+        If a device emits some sort event, we will handle it here.
+        """
+        _LOGGER.debug(
+            "event: interface_id = %s, channel_address = %s, "
+            "parameter = %s, value = %s",
+            interface_id,
+            channel_address,
+            parameter,
+            str(value),
+        )
+        if self.has_client(interface_id=interface_id) is False:
+            return
+
+        self.last_events[interface_id] = datetime.now()
+        # No need to check the response of a XmlRPC-PING
+        if parameter == "PONG":
+            return
+        if (channel_address, parameter) in self.entity_event_subscriptions:
+            try:
+                for callback in self.entity_event_subscriptions[
+                    (channel_address, parameter)
+                ]:
+                    callback(interface_id, channel_address, parameter, value)
+            except RuntimeError as rte:
+                _LOGGER.debug(
+                    "event: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
+                    rte.args,
+                    interface_id,
+                    channel_address,
+                    parameter,
+                )
+            except Exception as ex:
+                _LOGGER.warning(
+                    "event failed: Unable to call callback for: %s, %s, %s, %s",
+                    interface_id,
+                    channel_address,
+                    parameter,
+                    ex.args,
+                )
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
