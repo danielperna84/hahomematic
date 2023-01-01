@@ -5,7 +5,6 @@ with the CCU or Homegear
 """
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import threading
 from typing import Any, Final
@@ -21,7 +20,7 @@ from hahomematic.const import (
     IP_ANY_V4,
     PORT_ANY,
 )
-from hahomematic.decorators import callback_event, callback_system_event
+from hahomematic.decorators import callback_system_event
 from hahomematic.helpers import find_free_port
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,50 +37,14 @@ class RPCFunctions:
         _LOGGER.debug("__init__")
         self._xml_rpc_server: XmlRpcServer = xml_rpc_server
 
-    @callback_event
     def event(
         self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
         """
         If a device emits some sort event, we will handle it here.
         """
-        _LOGGER.debug(
-            "event: interface_id = %s, channel_address = %s, "
-            "parameter = %s, value = %s",
-            interface_id,
-            channel_address,
-            parameter,
-            str(value),
-        )
-        central: hm_central.CentralUnit | None
-        if (central := self._xml_rpc_server.get_central(interface_id)) is None:
-            return
-        central.last_events[interface_id] = datetime.now()
-        # No need to check the response of a XmlRPC-PING
-        if parameter == "PONG":
-            return
-        if (channel_address, parameter) in central.entity_event_subscriptions:
-            try:
-                for callback in central.entity_event_subscriptions[
-                    (channel_address, parameter)
-                ]:
-                    callback(interface_id, channel_address, parameter, value)
-            except RuntimeError as rte:
-                _LOGGER.debug(
-                    "event: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
-                    rte.args,
-                    interface_id,
-                    channel_address,
-                    parameter,
-                )
-            except Exception as ex:
-                _LOGGER.warning(
-                    "event failed: Unable to call callback for: %s, %s, %s, %s",
-                    interface_id,
-                    channel_address,
-                    parameter,
-                    ex.args,
-                )
+        if central := self._xml_rpc_server.get_central(interface_id):
+            central.event(interface_id, channel_address, parameter, value)
 
     @callback_system_event(HH_EVENT_ERROR)
     def error(self, interface_id: str, error_code: str, msg: str) -> None:
