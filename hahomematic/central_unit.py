@@ -985,6 +985,7 @@ class CentralConfig:
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
         use_caches: bool = True,
+        load_un_ignore: bool = True,
     ):
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
@@ -1004,6 +1005,7 @@ class CentralConfig:
         self.json_port: Final[int | None] = json_port
         self.un_ignore_list: Final[list[str] | None] = un_ignore_list
         self.use_caches: Final[bool] = use_caches
+        self.load_un_ignore: Final[bool] = load_un_ignore
 
     @property
     def central_url(self) -> str:
