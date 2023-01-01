@@ -223,18 +223,28 @@ class CentralUnit:
         """Start processing of the central unit. #CC"""
         await self.parameter_visibility.load()
         await self._start_clients()
-        self._start_connection_checker()
+        if self.config.enable_server:
+            self._start_connection_checker()
+        else:
+            local_interface_id = f"{self.name}-{LOCAL_INTERFACE}"
+            if self.has_client(interface_id=local_interface_id):
+                client = self.get_client(interface_id=local_interface_id)
+                if device_descriptions := await client.get_all_device_descriptions():
+                    await self._add_new_devices(
+                        interface_id=client.interface_id,
+                        device_descriptions=device_descriptions,
+                    )
 
     async def start_direct(self) -> None:
         """Start the central unit for temporary usage. #CC"""
         await self.parameter_visibility.load()
         await self._create_clients()
         for client in self._clients.values():
-            device_descriptions = await client.get_all_device_descriptions()
-            await self._add_new_devices(
-                interface_id=client.interface_id,
-                device_descriptions=device_descriptions,
-            )
+            if device_descriptions := await client.get_all_device_descriptions():
+                await self._add_new_devices(
+                    interface_id=client.interface_id,
+                    device_descriptions=device_descriptions,
+                )
 
     async def stop(self) -> None:
         """Stop processing of the central unit. #CC"""

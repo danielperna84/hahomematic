@@ -4,7 +4,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 from datetime import datetime
+import json
 import logging
+import os
 from typing import Any, Final, cast
 
 from hahomematic import config
@@ -20,6 +22,7 @@ from hahomematic.const import (
     BACKEND_HOMEGEAR,
     BACKEND_LOCAL,
     BACKEND_PYDEVCCU,
+    DEFAULT_ENCODING,
     HM_ADDRESS,
     HM_NAME,
     HM_PARAMSETS,
@@ -54,6 +57,7 @@ from hahomematic.helpers import (
     SystemVariableData,
     build_headers,
     build_xml_rpc_uri,
+    check_or_create_directory,
     get_channel_no,
 )
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
@@ -885,6 +889,8 @@ class ClientLocal(Client):
     or JSON-RPC.
     """
 
+    _paramset_descriptions_cache: dict[str, Any] = {}
+
     @property
     def available(self) -> bool:
         """Return the availability of the client."""
@@ -956,7 +962,7 @@ class ClientLocal(Client):
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
-        return []
+        return [LOCAL_INTERFACE]
 
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get all programs, if available."""
@@ -980,9 +986,27 @@ class ClientLocal(Client):
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
-        # TODO: implement
-        # Only used by central_unit.start_direct
-        return None
+        ladt = self.config.interface_config.local_address_device_translation or {}
+        if not self.config.interface_config.local_path:
+            _LOGGER.warning(
+                "get_all_device_descriptions: missing local_path in config for %s.",
+                self.central.name,
+            )
+            return None
+        device_description_path = os.path.join(
+            self.config.interface_config.local_path, "device_descriptions"
+        )
+
+        device_descriptions: list[Any] = []
+        if local_device_descriptions := cast(
+            list[Any],
+            await self._load_all_json_files(
+                folder=device_description_path, include_list=list(ladt.values())
+            ),
+        ):
+            for device_description in local_device_descriptions:
+                device_descriptions.extend(device_description)
+        return device_descriptions
 
     # pylint: disable=invalid-name
     async def set_install_mode(
@@ -1029,8 +1053,25 @@ class ClientLocal(Client):
 
     async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
         """Get paramset description from CCU."""
-        # TODO: implement
-        return None
+        if not self.config.interface_config.local_path:
+            _LOGGER.warning(
+                "_get_paramset_description: missing local_path in config for %s.",
+                self.central.name,
+            )
+            return None
+
+        paramset_descriptions_path = os.path.join(
+            self.config.interface_config.local_path, "paramset_descriptions"
+        )
+        ladt = self.config.interface_config.local_address_device_translation or {}
+        if address not in self._paramset_descriptions_cache:
+            if file_name := ladt.get(address.split(":")[0]):
+                if data := await self._load_json_file(
+                    folder=paramset_descriptions_path, filename=file_name
+                ):
+                    self._paramset_descriptions_cache.update(data)
+
+        return self._paramset_descriptions_cache.get(address, {}).get(paramset_key)
 
     async def put_paramset(
         self,
@@ -1044,6 +1085,45 @@ class ClientLocal(Client):
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
+
+    async def _load_all_json_files(
+        self, folder: str, include_list: list[str] | None = None
+    ) -> list[Any] | None:
+        """
+        Load all json files from disk into dict.
+        """
+        if not check_or_create_directory(folder):
+            return None
+        if not include_list:
+            include_list = []
+        result: list[Any] = []
+        for filename in os.listdir(folder):
+            if include_list and filename not in include_list:
+                continue
+            if file_content := await self._load_json_file(
+                folder=folder, filename=filename
+            ):
+                result.append(file_content)
+        return result
+
+    async def _load_json_file(self, folder: str, filename: str) -> Any | None:
+        """
+        Load json file from disk into dict.
+        """
+
+        def _load() -> Any | None:
+            if not check_or_create_directory(folder):
+                return None
+            if filename and not os.path.exists(os.path.join(folder, filename)):
+                return None
+            with open(
+                file=os.path.join(folder, filename),
+                mode="r",
+                encoding=DEFAULT_ENCODING,
+            ) as fptr:
+                return json.load(fptr)
+
+        return await self.central.async_add_executor_job(_load)
 
 
 class _ClientConfig:
