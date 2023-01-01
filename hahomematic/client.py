@@ -18,6 +18,7 @@ from hahomematic.const import (
     ATTR_NAME,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
+    BACKEND_LOCAL,
     BACKEND_PYDEVCCU,
     HM_ADDRESS,
     HM_NAME,
@@ -28,6 +29,8 @@ from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
     IF_NAMES,
     INIT_DATETIME,
+    LOCAL_INTERFACE,
+    LOCAL_SERIAL,
     PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
     PROXY_DE_INIT_FAILED,
@@ -875,6 +878,174 @@ class ClientHomegear(Client):
         return None
 
 
+class ClientLocal(Client):
+    """
+    Local client object that emulates the XML-RPC proxy
+    and provides access to other data via XML-RPC
+    or JSON-RPC.
+    """
+
+    @property
+    def available(self) -> bool:
+        """Return the availability of the client."""
+        return True
+
+    @property
+    def model(self) -> str:
+        """Return the model of the backend."""
+        return BACKEND_LOCAL
+
+    async def proxy_init(self) -> int:
+        """
+        To receive events the proxy has to tell the CCU / Homegear
+        where to send the events. For that we call the init-method.
+        """
+        return PROXY_INIT_SUCCESS
+
+    async def proxy_de_init(self) -> int:
+        """
+        De-init to stop CCU from sending events for this remote.
+        """
+        return PROXY_DE_INIT_SUCCESS
+
+    def stop(self) -> None:
+        """Stop depending services."""
+
+    async def fetch_all_device_data(self) -> None:
+        """fetch all device data from CCU."""
+        # TODO: implement  # pylint: disable=fixme
+
+    async def fetch_device_details(self) -> None:
+        """Fetch names from backend."""
+        # TODO: implement  # pylint: disable=fixme
+
+    async def is_connected(self) -> bool:
+        """
+        Perform actions required for connectivity check.
+        Connection is not connected, if three consecutive checks fail.
+        Return connectivity state.
+        """
+        return True
+
+    def is_callback_alive(self) -> bool:
+        """Return if XmlRPC-Server is alive based on received events for this client."""
+        return True
+
+    async def _check_connection_availability(self) -> bool:
+        """Send ping to CCU to generate PONG event."""
+        return True
+
+    async def execute_program(self, pid: str) -> None:
+        """Execute a program on CCU / Homegear."""
+
+    async def set_system_variable(self, name: str, value: Any) -> None:
+        """Set a system variable on CCU / Homegear."""
+
+    async def delete_system_variable(self, name: str) -> None:
+        """Delete a system variable from CCU / Homegear."""
+
+    async def get_system_variable(self, name: str) -> str:
+        """Get single system variable from CCU / Homegear."""
+        return "Empty"
+
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> list[SystemVariableData]:
+        """Get all system variables from CCU / Homegear."""
+        return []
+
+    async def get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
+        return []
+
+    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+        """Get all programs, if available."""
+        return []
+
+    async def get_all_rooms(self) -> dict[str, set[str]]:
+        """Get all rooms, if available."""
+        return {}
+
+    async def get_all_functions(self) -> dict[str, set[str]]:
+        """Get all functions, if available."""
+        return {}
+
+    async def get_serial(self) -> str:
+        """Get the serial of the backend."""
+        return LOCAL_SERIAL
+
+    def get_virtual_remote(self) -> HmDevice | None:
+        """Get the virtual remote for the Client."""
+        return None
+
+    async def get_all_device_descriptions(self) -> Any:
+        """Get device descriptions from CCU / Homegear."""
+        # TODO: implement
+        # Only used by central_unit.start_direct
+        return None
+
+    # pylint: disable=invalid-name
+    async def set_install_mode(
+        self,
+        on: bool = True,
+        t: int = 60,
+        mode: int = 1,
+        device_address: str | None = None,
+    ) -> None:
+        """Activate or deactivate installmode on CCU / Homegear."""
+
+    async def get_install_mode(self) -> Any:
+        """Get remaining time in seconds install mode is active from CCU / Homegear."""
+        return 0
+
+    async def get_value(
+        self,
+        channel_address: str,
+        paramset_key: str,
+        parameter: str,
+        call_source: HmCallSource = HmCallSource.MANUAL_OR_SCHEDULED,
+    ) -> Any:
+        """Return a value from CCU."""
+        return None
+
+    async def set_value(
+        self,
+        channel_address: str,
+        paramset_key: str,
+        parameter: str,
+        value: Any,
+        rx_mode: str | None = None,
+    ) -> None:
+        """Set single value on paramset VALUES."""
+
+    async def get_paramset(self, address: str, paramset_key: str) -> Any:
+        """
+        Return a paramset from CCU.
+        Address is usually the channel_address,
+        but for bidcos devices there is a master paramset at the device.
+        """
+        # TODO: implement  # pylint: disable=fixme
+        return {}
+
+    async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
+        """Get paramset description from CCU."""
+        # TODO: implement
+        return None
+
+    async def put_paramset(
+        self,
+        address: str,
+        paramset_key: str,
+        value: Any,
+        rx_mode: str | None = None,
+    ) -> None:
+        """
+        Set paramsets manually.
+        Address is usually the channel_address,
+        but for bidcos devices there is a master paramset at the device.
+        """
+
+
 class _ClientConfig:
     """Config for a Client."""
 
@@ -905,7 +1076,7 @@ class _ClientConfig:
         self.xml_rpc_uri: Final[str] = build_xml_rpc_uri(
             host=central.config.host,
             port=interface_config.port,
-            path=interface_config.path,
+            path=interface_config.remote_path,
             tls=central.config.tls,
         )
         self.xml_rpc_headers: Final[list[tuple[str, str]]] = build_headers(
@@ -936,16 +1107,18 @@ class _ClientConfig:
 
         try:
             client: Client | None = None
+            if self.interface == LOCAL_INTERFACE:
+                return ClientLocal(client_config=self)
             methods = await self.xml_rpc_proxy.system.listMethods()
             if "getVersion" not in methods:
                 # BidCos-Wired does not support getVersion()
-                client = ClientCCU(self)
+                client = ClientCCU(client_config=self)
             elif version := await self.xml_rpc_proxy.getVersion():
                 self.version = cast(str, version)
                 if "Homegear" in version or "pydevccu" in version:
-                    client = ClientHomegear(self)
+                    client = ClientHomegear(client_config=self)
             if not client:
-                client = ClientCCU(self)
+                client = ClientCCU(client_config=self)
             self.serial = await client.get_serial()
             return client
         except AuthFailure as auf:
@@ -962,12 +1135,18 @@ class InterfaceConfig:
         central_name: str,
         interface: str,
         port: int,
-        path: str | None = None,
+        remote_path: str | None = None,
+        local_path: str | None = None,
+        local_address_device_translation: dict[str, str] | None = None,
     ):
         self.interface: Final[str] = interface
         self.interface_id = f"{central_name}-{interface}"
         self.port: Final[int] = port
-        self.path: Final[str | None] = path
+        self.remote_path: Final[str | None] = remote_path
+        self.local_path: Final[str | None] = local_path
+        self.local_address_device_translation: Final[
+            dict[str, str] | None
+        ] = local_address_device_translation
         self.validate()
 
     def validate(self) -> None:

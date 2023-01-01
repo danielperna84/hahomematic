@@ -73,7 +73,7 @@ class Example:
                 central_name=central_name,
                 interface="VirtualDevices",
                 port=9292,
-                path="/groups",
+                remote_path="/groups",
             ),
         }
         self.central = await CentralConfig(

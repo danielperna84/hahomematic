@@ -39,6 +39,7 @@ from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
     INIT_DATETIME,
+    LOCAL_INTERFACE,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
@@ -97,6 +98,7 @@ class CentralUnit:
     """
 
     def __init__(self, central_config: CentralConfig):
+        """Init the central unit."""
         _LOGGER.debug("__init__")
         self._sema_add_devices = asyncio.Semaphore()
         # Keep the config for the central #CC
@@ -104,14 +106,16 @@ class CentralUnit:
         self._attr_name: Final[str] = central_config.name
         self._attr_model: str | None = None
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._xml_rpc_server: Final[
-            xml_rpc.XmlRpcServer
-        ] = xml_rpc.register_xml_rpc_server(
-            local_port=central_config.callback_port
-            or central_config.default_callback_port
+        self._xml_rpc_server: xml_rpc.XmlRpcServer | None = None
+        if central_config.enable_server:
+            self._xml_rpc_server = xml_rpc.register_xml_rpc_server(
+                local_port=central_config.callback_port
+                or central_config.default_callback_port
+            )
+            self._xml_rpc_server.register_central(self)
+        self.local_port: Final[int] = (
+            self._xml_rpc_server.local_port if self._xml_rpc_server else 0
         )
-        self._xml_rpc_server.register_central(self)
-        self.local_port: Final[int] = self._xml_rpc_server.local_port
 
         # Caches for CCU data
         self.device_data: Final[DeviceDataCache] = DeviceDataCache(central=self)
@@ -239,11 +243,12 @@ class CentralUnit:
         if self.json_rpc_client.is_activated:
             await self.json_rpc_client.logout()
 
-        # un-register this instance from XmlRPC-Server
-        self._xml_rpc_server.un_register_central(central=self)
-        # un-register and stop XmlRPC-Server, if possible
-        if self._xml_rpc_server.no_central_registered:
-            self._xml_rpc_server.stop()
+        if self._xml_rpc_server:
+            # un-register this instance from XmlRPC-Server
+            self._xml_rpc_server.un_register_central(central=self)
+            # un-register and stop XmlRPC-Server, if possible
+            if self._xml_rpc_server.no_central_registered:
+                self._xml_rpc_server.stop()
             _LOGGER.debug("stop: XmlRPC-Server stopped")
         else:
             _LOGGER.debug(
@@ -437,7 +442,8 @@ class CentralUnit:
         """Return a client by interface_id. #CC"""
         if self.has_client(interface_id=interface_id) is False:
             raise HaHomematicException(
-                f"get_client: interface_id {interface_id} does not exist on {self._attr_name}"
+                f"get_client: interface_id {interface_id} "
+                f"does not exist on {self._attr_name}"
             )
         return self._clients[interface_id]
 
@@ -466,6 +472,8 @@ class CentralUnit:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hm_client.Client | None = None
         for client in self._clients.values():
+            if isinstance(client, hm_client.ClientLocal):
+                return client
             if client.config.interface in IF_PRIMARY and client.available:
                 return client
         return client
@@ -1004,8 +1012,8 @@ class CentralConfig:
         self.callback_port: Final[int | None] = callback_port
         self.json_port: Final[int | None] = json_port
         self.un_ignore_list: Final[list[str] | None] = un_ignore_list
-        self.use_caches: Final[bool] = use_caches
-        self.load_un_ignore: Final[bool] = load_un_ignore
+        self._use_caches: Final[bool] = use_caches
+        self._load_un_ignore: Final[bool] = load_un_ignore
 
     @property
     def central_url(self) -> str:
@@ -1017,6 +1025,28 @@ class CentralConfig:
         if self.json_port:
             url = f"{url}:{self.json_port}"
         return f"{url}"
+
+    @property
+    def enable_server(self) -> bool:
+        """Return if xmlrpc-server should be started."""
+        for interface_config in self.interface_configs:
+            if interface_config.interface == LOCAL_INTERFACE:
+                return False
+        return True
+
+    @property
+    def load_un_ignore(self) -> bool:
+        """Return if unignore should be loaded."""
+        if self.enable_server is False:
+            return False
+        return self._load_un_ignore
+
+    @property
+    def use_caches(self) -> bool:
+        """Return if caches should be used."""
+        if self.enable_server is False:
+            return False
+        return self._use_caches
 
     def check_config(self) -> bool:
         """Check config."""

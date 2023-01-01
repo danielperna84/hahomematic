@@ -89,8 +89,11 @@ IMPULSE_EVENTS: Final[tuple[str, ...]] = (EVENT_SEQUENCE_OK,)
 BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
 
 BACKEND_CCU: Final = "CCU"
+BACKEND_LOCAL: Final = "Local CCU"
 BACKEND_HOMEGEAR: Final = "Homegear"
 BACKEND_PYDEVCCU: Final = "PyDevCCU"
+LOCAL_SERIAL: Final = "0815_4711"
+LOCAL_INTERFACE = "Local"
 
 PROGRAM_ADDRESS: Final = "program"
 SYSVAR_ADDRESS: Final = "sysvar"
