@@ -544,6 +544,9 @@ class ParameterVisibilityCache:
 
     async def load(self) -> None:
         """Load custom un ignore parameters from disk."""
+        if self._central.config.load_un_ignore is False:
+            _LOGGER.debug("load: not loading unignore file for %s", self._central.name)
+            return
 
         def _load() -> None:
             if not check_or_create_directory(self._storage_folder):

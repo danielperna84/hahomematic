@@ -39,6 +39,7 @@ from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
     IF_PRIMARY,
     INIT_DATETIME,
+    LOCAL_INTERFACE,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
@@ -97,6 +98,7 @@ class CentralUnit:
     """
 
     def __init__(self, central_config: CentralConfig):
+        """Init the central unit."""
         _LOGGER.debug("__init__")
         self._sema_add_devices = asyncio.Semaphore()
         # Keep the config for the central #CC
@@ -104,14 +106,16 @@ class CentralUnit:
         self._attr_name: Final[str] = central_config.name
         self._attr_model: str | None = None
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._xml_rpc_server: Final[
-            xml_rpc.XmlRpcServer
-        ] = xml_rpc.register_xml_rpc_server(
-            local_port=central_config.callback_port
-            or central_config.default_callback_port
+        self._xml_rpc_server: xml_rpc.XmlRpcServer | None = None
+        if central_config.enable_server:
+            self._xml_rpc_server = xml_rpc.register_xml_rpc_server(
+                local_port=central_config.callback_port
+                or central_config.default_callback_port
+            )
+            self._xml_rpc_server.register_central(self)
+        self.local_port: Final[int] = (
+            self._xml_rpc_server.local_port if self._xml_rpc_server else 0
         )
-        self._xml_rpc_server.register_central(self)
-        self.local_port: Final[int] = self._xml_rpc_server.local_port
 
         # Caches for CCU data
         self.device_data: Final[DeviceDataCache] = DeviceDataCache(central=self)
@@ -130,7 +134,6 @@ class CentralUnit:
 
         # {interface_id, client}
         self._clients: Final[dict[str, hm_client.Client]] = {}
-
         # {{channel_address, parameter}, event_handle}
         self.entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
         # {unique_identifier, entity}
@@ -240,11 +243,12 @@ class CentralUnit:
         if self.json_rpc_client.is_activated:
             await self.json_rpc_client.logout()
 
-        # un-register this instance from XmlRPC-Server
-        self._xml_rpc_server.un_register_central(central=self)
-        # un-register and stop XmlRPC-Server, if possible
-        if self._xml_rpc_server.no_central_registered:
-            self._xml_rpc_server.stop()
+        if self._xml_rpc_server:
+            # un-register this instance from XmlRPC-Server
+            self._xml_rpc_server.un_register_central(central=self)
+            # un-register and stop XmlRPC-Server, if possible
+            if self._xml_rpc_server.no_central_registered:
+                self._xml_rpc_server.stop()
             _LOGGER.debug("stop: XmlRPC-Server stopped")
         else:
             _LOGGER.debug(
@@ -438,7 +442,8 @@ class CentralUnit:
         """Return a client by interface_id. #CC"""
         if self.has_client(interface_id=interface_id) is False:
             raise HaHomematicException(
-                f"get_client: interface_id {interface_id} does not exist on {self._attr_name}"
+                f"get_client: interface_id {interface_id} "
+                f"does not exist on {self._attr_name}"
             )
         return self._clients[interface_id]
 
@@ -447,9 +452,11 @@ class CentralUnit:
         return self.devices.get(device_address)
 
     def get_entities_by_platform(
-        self, platform: HmPlatform, existing_unique_ids: list[str] = []
+        self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
     ) -> list[BaseEntity]:
         """Return all entities by platform. #CC"""
+        if not existing_unique_ids:
+            existing_unique_ids = []
         hm_entities = []
         for entity in self.entities.values():
             if (
@@ -465,14 +472,18 @@ class CentralUnit:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hm_client.Client | None = None
         for client in self._clients.values():
+            if isinstance(client, hm_client.ClientLocal):
+                return client
             if client.config.interface in IF_PRIMARY and client.available:
                 return client
         return client
 
     def get_hub_entities_by_platform(
-        self, platform: HmPlatform, existing_unique_ids: list[str] = []
+        self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
     ) -> list[GenericHubEntity]:
         """Return the hub entities by platform. #CC"""
+        if not existing_unique_ids:
+            existing_unique_ids = []
         hub_entities: list[GenericHubEntity] = []
         for program_entity in self.program_entities.values():
             if (
@@ -696,6 +707,7 @@ class CentralUnit:
                     _LOGGER.error(
                         "add_new_devices failed: %s [%s]", type(err).__name__, err.args
                     )
+
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
             await self.device_details.load()
@@ -980,6 +992,8 @@ class CentralConfig:
         callback_port: int | None = None,
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
+        use_caches: bool = True,
+        load_un_ignore: bool = True,
     ):
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
@@ -998,6 +1012,8 @@ class CentralConfig:
         self.callback_port: Final[int | None] = callback_port
         self.json_port: Final[int | None] = json_port
         self.un_ignore_list: Final[list[str] | None] = un_ignore_list
+        self._use_caches: Final[bool] = use_caches
+        self._load_un_ignore: Final[bool] = load_un_ignore
 
     @property
     def central_url(self) -> str:
@@ -1009,6 +1025,28 @@ class CentralConfig:
         if self.json_port:
             url = f"{url}:{self.json_port}"
         return f"{url}"
+
+    @property
+    def enable_server(self) -> bool:
+        """Return if xmlrpc-server should be started."""
+        for interface_config in self.interface_configs:
+            if interface_config.interface == LOCAL_INTERFACE:
+                return False
+        return True
+
+    @property
+    def load_un_ignore(self) -> bool:
+        """Return if unignore should be loaded."""
+        if self.enable_server is False:
+            return False
+        return self._load_un_ignore
+
+    @property
+    def use_caches(self) -> bool:
+        """Return if caches should be used."""
+        if self.enable_server is False:
+            return False
+        return self._use_caches
 
     def check_config(self) -> bool:
         """Check config."""
@@ -1049,6 +1087,9 @@ class DeviceDetailsCache:
 
     async def load(self) -> None:
         """Fetch names from backend."""
+        if self._central.config.use_caches is False:
+            _LOGGER.debug("load: not caching names for %s", self._central.name)
+            return
         _LOGGER.debug("load: Loading names for %s", self._central.name)
         if client := self._central.get_primary_client():
             await client.fetch_device_details()
@@ -1147,6 +1188,9 @@ class DeviceDataCache:
 
     async def load(self) -> None:
         """Fetch device data from backend."""
+        if self._central.config.use_caches is False:
+            _LOGGER.debug("load: not caching device data for %s", self._central.name)
+            return
         _LOGGER.debug("load: device data for %s", self._central.name)
         if client := self._central.get_primary_client():
             await client.fetch_all_device_data()
@@ -1216,6 +1260,9 @@ class BasePersistentCache(ABC):
         """
         Save current name data in NAMES to disk.
         """
+        if self._central.config.use_caches is False:
+            _LOGGER.debug("save: not saving cache for %s", self._central.name)
+            return HmDataOperationResult.NO_SAVE
 
         def _save() -> HmDataOperationResult:
             if not check_or_create_directory(self._cache_dir):
@@ -1434,6 +1481,11 @@ class DeviceDescriptionCache(BasePersistentCache):
         """
         Load device data from disk into _device_description_cache.
         """
+        if self._central.config.use_caches is False:
+            _LOGGER.debug(
+                "load: not caching paramset descriptions for %s", self._central.name
+            )
+            return HmDataOperationResult.NO_LOAD
         result = await super().load()
         for (
             interface_id,
@@ -1618,6 +1670,11 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """
         Load paramset descriptions from disk into paramset cache.
         """
+        if self._central.config.use_caches is False:
+            _LOGGER.debug(
+                "load: not caching device descriptions for %s", self._central.name
+            )
+            return HmDataOperationResult.NO_LOAD
         result = await super().load()
         self._init_address_parameter_list()
         return result
