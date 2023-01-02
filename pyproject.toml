@@ -151,3 +151,4 @@ norecursedirs = [
     ".git",
     "testing_config",
 ]
+asyncio_mode = "auto"

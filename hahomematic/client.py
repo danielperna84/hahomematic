@@ -1260,7 +1260,7 @@ def get_client(interface_id: str) -> Client | None:
 class LocalRessources:
     """Dataclass with information for local client."""
 
+    address_device_translation: dict[str, str]
     package: str = "pydevccu"
-    device_description_dir: str = "device_descriptionså"
+    device_description_dir: str = "device_descriptions"
     paramset_description_dir: str = "paramset_descriptions"
-    address_device_translation: dict[str, str] = {}

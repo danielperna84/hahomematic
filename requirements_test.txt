@@ -9,7 +9,9 @@ coverage==6.4.4
 isort==5.10.1
 mypy==0.991
 pytest>=7.2.0
+pytest-timeout==2.1.0
 pytest-cov==3.0.0
+pytest-asyncio==0.20.2
 pytest-aiohttp==1.0.4
 pytest-rerunfailures==10.2
 types-python-slugify==6.1.0
