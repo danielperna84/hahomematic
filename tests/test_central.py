@@ -9,9 +9,11 @@ from conftest import (
     send_device_value_to_ccu,
 )
 import pytest
+import json
+import os
 
 from hahomematic.entity import GenericEntity
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import HmEntityUsage, DEFAULT_ENCODING
 from hahomematic.custom_platforms.climate import CeRfThermostat
 from hahomematic.decorators import (
     get_public_attributes_for_value_property,
@@ -131,20 +133,31 @@ async def test_central(central, loop) -> None:
             entity_type_operations[entity.platform][entity.hmtype].add(
                 entity._attr_operations
             )
+    addresses: dict[str, str] = {}
+    for address, device in central.devices.items():
+        if device.device_type.startswith("HmIP"):
+            addresses[address] = f"{device.device_type}.json"
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2340
-    assert usage_types[HmEntityUsage.CE_PRIMARY] == 167
-    assert usage_types[HmEntityUsage.ENTITY] == 3518
-    assert usage_types[HmEntityUsage.CE_VISIBLE] == 93
-    assert usage_types[HmEntityUsage.CE_SECONDARY] == 126
+    with open(
+        file=os.path.join(central.config.storage_folder, "hmip_device.json"),
+        mode="w",
+        encoding=DEFAULT_ENCODING,
+    ) as fptr:
+        json.dump(addresses, fptr)
+
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2398
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 168
+    assert usage_types[HmEntityUsage.ENTITY] == 3570
+    assert usage_types[HmEntityUsage.CE_VISIBLE] == 88
+    assert usage_types[HmEntityUsage.CE_SECONDARY] == 128
 
     assert len(central.devices) == 362
-    assert len(central.entities) == 6244
+    assert len(central.entities) == 6252
     assert len(data) == 362
-    assert len(custom_entities) == 293
-    assert len(ce_channels) == 103
+    assert len(custom_entities) == 296
+    assert len(ce_channels) == 104
     assert len(entity_types) == 6
-    assert len(parameters) == 182
+    assert len(parameters) == 184
 
 
 @pytest.mark.asyncio

@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from dataclasses import dataclass
 from datetime import datetime
+import importlib.resources
 import json
 import logging
 import os
@@ -57,7 +59,6 @@ from hahomematic.helpers import (
     SystemVariableData,
     build_headers,
     build_xml_rpc_uri,
-    check_or_create_directory,
     get_channel_no,
 )
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
@@ -986,22 +987,20 @@ class ClientLocal(Client):
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
-        ladt = self.config.interface_config.local_address_device_translation or {}
-        if not self.config.interface_config.local_path:
+        local_resources = self.config.interface_config.local_resources
+        if not local_resources:
             _LOGGER.warning(
-                "get_all_device_descriptions: missing local_path in config for %s.",
+                "get_all_device_descriptions: missing local_resources in config for %s.",
                 self.central.name,
             )
             return None
-        device_description_path = os.path.join(
-            self.config.interface_config.local_path, "device_descriptions"
-        )
-
         device_descriptions: list[Any] = []
         if local_device_descriptions := cast(
             list[Any],
             await self._load_all_json_files(
-                folder=device_description_path, include_list=list(ladt.values())
+                package=local_resources.package,
+                resource=local_resources.device_description_dir,
+                include_list=list(local_resources.address_device_translation.values()),
             ),
         ):
             for device_description in local_device_descriptions:
@@ -1053,21 +1052,22 @@ class ClientLocal(Client):
 
     async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
         """Get paramset description from CCU."""
-        if not self.config.interface_config.local_path:
+        local_resources = self.config.interface_config.local_resources
+        if not local_resources:
             _LOGGER.warning(
-                "_get_paramset_description: missing local_path in config for %s.",
+                "_get_paramset_description: missing local_resources in config for %s.",
                 self.central.name,
             )
             return None
 
-        paramset_descriptions_path = os.path.join(
-            self.config.interface_config.local_path, "paramset_descriptions"
-        )
-        ladt = self.config.interface_config.local_address_device_translation or {}
         if address not in self._paramset_descriptions_cache:
-            if file_name := ladt.get(address.split(":")[0]):
+            if file_name := local_resources.address_device_translation.get(
+                address.split(":")[0]
+            ):
                 if data := await self._load_json_file(
-                    folder=paramset_descriptions_path, filename=file_name
+                    package=local_resources.package,
+                    resource=local_resources.paramset_description_dir,
+                    filename=file_name,
                 ):
                     self._paramset_descriptions_cache.update(data)
 
@@ -1087,37 +1087,40 @@ class ClientLocal(Client):
         """
 
     async def _load_all_json_files(
-        self, folder: str, include_list: list[str] | None = None
+        self, package: str, resource: str, include_list: list[str] | None = None
     ) -> list[Any] | None:
         """
         Load all json files from disk into dict.
         """
-        if not check_or_create_directory(folder):
-            return None
+        # if not check_or_create_directory(folder):
+        #    return None
         if not include_list:
             include_list = []
         result: list[Any] = []
-        for filename in os.listdir(folder):
+        resource_path = os.path.join(
+            str(importlib.resources.files(package=package)), resource
+        )
+        for filename in os.listdir(resource_path):
             if include_list and filename not in include_list:
                 continue
             if file_content := await self._load_json_file(
-                folder=folder, filename=filename
+                package=package, resource=resource, filename=filename
             ):
                 result.append(file_content)
         return result
 
-    async def _load_json_file(self, folder: str, filename: str) -> Any | None:
+    async def _load_json_file(
+        self, package: str, resource: str, filename: str
+    ) -> Any | None:
         """
         Load json file from disk into dict.
         """
+        package_path = str(importlib.resources.files(package=package))
 
         def _load() -> Any | None:
-            if not check_or_create_directory(folder):
-                return None
-            if filename and not os.path.exists(os.path.join(folder, filename)):
-                return None
+
             with open(
-                file=os.path.join(folder, filename),
+                file=os.path.join(package_path, resource, filename),
                 mode="r",
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
@@ -1187,7 +1190,7 @@ class _ClientConfig:
 
         try:
             client: Client | None = None
-            if self.interface == LOCAL_INTERFACE:
+            if self.interface_config.local_resources:
                 return ClientLocal(client_config=self)
             methods = await self.xml_rpc_proxy.system.listMethods()
             if "getVersion" not in methods:
@@ -1216,24 +1219,20 @@ class InterfaceConfig:
         interface: str,
         port: int,
         remote_path: str | None = None,
-        local_path: str | None = None,
-        local_address_device_translation: dict[str, str] | None = None,
+        local_resources: LocalRessources | None = None,
     ):
-        self.interface: Final[str] = interface
-        self.interface_id = f"{central_name}-{interface}"
+        self.interface: Final[str] = LOCAL_INTERFACE if local_resources else interface
+        self.interface_id: Final[str] = f"{central_name}-{interface}"
         self.port: Final[int] = port
         self.remote_path: Final[str | None] = remote_path
-        self.local_path: Final[str | None] = local_path
-        self.local_address_device_translation: Final[
-            dict[str, str] | None
-        ] = local_address_device_translation
+        self.local_resources: Final[LocalRessources | None] = local_resources
         self.validate()
 
     def validate(self) -> None:
         """Validate the client_config."""
         if self.interface not in IF_NAMES:
             _LOGGER.warning(
-                "InterfaceConfig: Interface names must be within [%s] ",
+                "InterfaceConfig: Interface names must be within [%s] for production use",
                 ", ".join(IF_NAMES),
             )
 
@@ -1255,3 +1254,13 @@ def get_client(interface_id: str) -> Client | None:
         if central.has_client(interface_id=interface_id):
             return central.get_client(interface_id=interface_id)
     return None
+
+
+@dataclass
+class LocalRessources:
+    """Dataclass with information for local client."""
+
+    address_device_translation: dict[str, str]
+    package: str = "pydevccu"
+    device_description_dir: str = "device_descriptions"
+    paramset_description_dir: str = "paramset_descriptions"

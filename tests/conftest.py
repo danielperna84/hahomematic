@@ -34,7 +34,7 @@ def pytest_unconfigure(config):  # pragma: no cover
     del sys._called_from_test
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.yield_fixture(name="loop", scope="session")
 def loop() -> asyncio.AbstractEventLoop:
     """Yield running event_loop"""
     event_loop = asyncio.get_event_loop_policy().new_event_loop()
@@ -42,18 +42,17 @@ def loop() -> asyncio.AbstractEventLoop:
     event_loop.close()
 
 
-@pytest.fixture
+@pytest.fixture(name="ccu")
 def pydev_ccu() -> pydevccu.Server:
     """Defines the virtual ccu"""
-    ccu = pydevccu.Server()
+    ccu = pydevccu.Server(addr=("127.0.0.1", 2002))
     ccu.start()
     yield ccu
     ccu.stop()
 
-
-@pytest.fixture
-async def central(
-    loop: asyncio.AbstractEventLoop, pydev_ccu: pydevccu.Server
+@pytest.fixture(name="central")
+async def central_unit(
+    loop: asyncio.AbstractEventLoop, ccu: pydevccu.Server
 ) -> CentralUnit:
     """Yield central"""
     sleep_counter = 0
@@ -69,7 +68,7 @@ async def central(
         InterfaceConfig(
             central_name="Test",
             interface="BidCos-RF",
-            port=2001,
+            port=2002,
         )
     }
 
