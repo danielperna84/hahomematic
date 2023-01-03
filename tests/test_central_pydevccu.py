@@ -114,26 +114,25 @@ async def test_central(central_pydevccu, loop) -> None:
             )
     addresses: dict[str, str] = {}
     for address, device in central_pydevccu.devices.items():
-        if device.device_type.startswith("HmIP"):
-            addresses[address] = f"{device.device_type}.json"
+        addresses[address] = f"{device.device_type}.json"
 
     with open(
-        file=os.path.join(central_pydevccu.config.storage_folder, "hmip_device.json"),
+        file=os.path.join(central_pydevccu.config.storage_folder, "all_devices.json"),
         mode="w",
         encoding=DEFAULT_ENCODING,
     ) as fptr:
         json.dump(addresses, fptr)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2393
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2398
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 168
-    assert usage_types[HmEntityUsage.ENTITY] == 3566
+    assert usage_types[HmEntityUsage.ENTITY] == 3570
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 88
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 128
 
     assert len(central_pydevccu.devices) == 362
-    assert len(central_pydevccu.entities) == 6343
+    assert len(central_pydevccu.entities) == 6352
     assert len(data) == 362
     assert len(custom_entities) == 296
     assert len(ce_channels) == 104
     assert len(entity_types) == 6
-    assert len(parameters) == 182
+    assert len(parameters) == 184

@@ -82,6 +82,7 @@ async def central_unit(
         storage_folder="homematicip_local",
         interface_configs=interface_configs,
         default_callback_port=54321,
+        use_caches=False,
     ).get_central()
     central_unit.callback_system_event = systemcallback
     await central_unit.start()
