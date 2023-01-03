@@ -777,7 +777,7 @@ class CentralUnit:
         The CCU / Homegear asks for devices known to our XML-RPC server.
         We respond to that request using this method.
         """
-        _LOGGER.debug("listDevices: interface_id = %s", interface_id)
+        _LOGGER.debug("list_devices: interface_id = %s", interface_id)
 
         return self.device_descriptions.get_raw_device_descriptions(
             interface_id=interface_id
