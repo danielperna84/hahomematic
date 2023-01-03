@@ -33,6 +33,7 @@ class RPCFunctions:
     """
 
     def __init__(self, xml_rpc_server: XmlRpcServer):
+        """Init RPCFunctions."""
         _LOGGER.debug("__init__")
         self._xml_rpc_server: XmlRpcServer = xml_rpc_server
 
