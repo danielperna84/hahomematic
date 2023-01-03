@@ -1040,6 +1040,7 @@ class ClientLocal(Client):
         rx_mode: str | None = None,
     ) -> None:
         """Set single value on paramset VALUES."""
+        self.central.event(self.interface_id, channel_address, parameter, value)
 
     async def get_paramset(self, address: str, paramset_key: str) -> Any:
         """
@@ -1085,6 +1086,8 @@ class ClientLocal(Client):
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
+        for parameter in value:
+            self.central.event(self.interface_id, address, parameter, value[parameter])
 
     async def _load_all_json_files(
         self, package: str, resource: str, include_list: list[str] | None = None

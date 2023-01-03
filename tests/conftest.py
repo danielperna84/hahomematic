@@ -4,10 +4,12 @@ import asyncio
 import logging
 from typing import Any
 
+import const
+import helper
 import pydevccu
 import pytest
 
-from hahomematic import config, const
+from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import InterfaceConfig
 from hahomematic.device import HmDevice
@@ -15,9 +17,7 @@ from hahomematic.entity import CustomEntity, GenericEntity
 from hahomematic.helpers import get_device_address
 
 logging.basicConfig(level=logging.DEBUG)
-CCU_HOST = "127.0.0.1"
-CCU_USERNAME = "user"
-CCU_PASSWORD = "pass"
+
 GOT_DEVICES = False
 # content of conftest.py
 
@@ -45,12 +45,13 @@ def loop() -> asyncio.AbstractEventLoop:
 @pytest.fixture(name="ccu")
 def pydev_ccu() -> pydevccu.Server:
     """Defines the virtual ccu"""
-    ccu = pydevccu.Server(addr=("127.0.0.1", 2002))
+    ccu = pydevccu.Server(addr=("127.0.0.1", const.CCU_PORT))
     ccu.start()
     yield ccu
     ccu.stop()
 
-@pytest.fixture(name="central")
+
+@pytest.fixture(name="central_pydevccu")
 async def central_unit(
     loop: asyncio.AbstractEventLoop, ccu: pydevccu.Server
 ) -> CentralUnit:
@@ -66,17 +67,17 @@ async def central_unit(
 
     interface_configs = {
         InterfaceConfig(
-            central_name="Test",
+            central_name=const.CENTRAL_NAME,
             interface="BidCos-RF",
-            port=2002,
+            port=const.CCU_PORT,
         )
     }
 
     central_unit = await CentralConfig(
-        name="ccu-dev",
-        host=CCU_HOST,
-        username=CCU_USERNAME,
-        password=CCU_PASSWORD,
+        name=const.CENTRAL_NAME,
+        host=const.CCU_HOST,
+        username=const.CCU_USERNAME,
+        password=const.CCU_PASSWORD,
         central_id="test1234",
         storage_folder="homematicip_local",
         interface_configs=interface_configs,
@@ -94,6 +95,13 @@ async def central_unit(
     await central_unit.stop()
 
 
+@pytest.fixture(name="central_local_factory")
+async def central_unit_local_factory() -> helper.CentralUnitLocalFactory:
+    """Yield central"""
+
+    return helper.CentralUnitLocalFactory()
+
+
 async def get_value_from_generic_entity(
     central_unit: CentralUnit, address: str, parameter: str
 ) -> Any:
@@ -103,7 +111,7 @@ async def get_value_from_generic_entity(
     )
     assert hm_entity
     await hm_entity.load_entity_value(
-        call_source=const.HmCallSource.MANUAL_OR_SCHEDULED
+        call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
     )
     return hm_entity.value
 
@@ -135,7 +143,7 @@ async def get_hm_custom_entity(
         if custom_entity.channel_no == channel_no:
             if do_load:
                 await custom_entity.load_entity_value(
-                    call_source=const.HmCallSource.MANUAL_OR_SCHEDULED
+                    call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
                 )
             return custom_entity
     return None
