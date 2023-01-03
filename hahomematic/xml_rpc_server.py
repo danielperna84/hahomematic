@@ -13,7 +13,6 @@ from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 import hahomematic.central_unit as hm_central
 from hahomematic.const import (
     HH_EVENT_ERROR,
-    HH_EVENT_LIST_DEVICES,
     HH_EVENT_RE_ADDED_DEVICE,
     HH_EVENT_REPLACE_DEVICE,
     HH_EVENT_UPDATE_DEVICE,
@@ -34,6 +33,7 @@ class RPCFunctions:
     """
 
     def __init__(self, xml_rpc_server: XmlRpcServer):
+        """Init RPCFunctions."""
         _LOGGER.debug("__init__")
         self._xml_rpc_server: XmlRpcServer = xml_rpc_server
 
@@ -58,20 +58,14 @@ class RPCFunctions:
             str(msg),
         )
 
-    @callback_system_event(HH_EVENT_LIST_DEVICES)
     def listDevices(self, interface_id: str) -> list[dict[str, Any]]:
         """
         The CCU / Homegear asks for devices known to our XML-RPC server.
         We respond to that request using this method.
         """
-        central: hm_central.CentralUnit | None
-        if (central := self._xml_rpc_server.get_central(interface_id)) is None:
-            return []
-        _LOGGER.debug("listDevices: interface_id = %s", interface_id)
-
-        return central.device_descriptions.get_raw_device_descriptions(
-            interface_id=interface_id
-        )
+        if central := self._xml_rpc_server.get_central(interface_id):
+            return central.list_devices(interface_id)  # type: ignore[no-any-return]
+        return []
 
     def newDevices(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
