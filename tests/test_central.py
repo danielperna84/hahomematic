@@ -7,6 +7,7 @@ from conftest import (
     get_hm_generic_entity,
     get_value_from_generic_entity,
 )
+import const
 from const import LOCAL_INTERFACE_ID
 import helper
 import pytest
@@ -98,3 +99,14 @@ async def test_device_hm_heatgroup(
     assert new_value == 19.0
     assert custom_entity._e_setpoint.value == 19.0
     assert custom_entity.target_temperature == 19.0
+
+    await central.put_paramset(
+        const.LOCAL_INTERFACE_ID,
+        "INT0000001:1",
+        paramset_key="VALUES",
+        value={"SET_TEMPERATURE": 12.0},
+    )
+    new_value2 = await get_value_from_generic_entity(
+        central, "INT0000001:1", "SET_TEMPERATURE"
+    )
+    assert new_value2 == 12.0
