@@ -32,6 +32,7 @@ from hahomematic.const import (
     FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_DEVICES_CREATED,
+    HH_EVENT_LIST_DEVICES,
     HH_EVENT_NEW_DEVICES,
     HM_ADDRESS,
     HM_OPERATIONS,
@@ -769,6 +770,18 @@ class CentralUnit:
                     parameter,
                     ex.args,
                 )
+
+    @callback_system_event(HH_EVENT_LIST_DEVICES)
+    def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
+        """
+        The CCU / Homegear asks for devices known to our XML-RPC server.
+        We respond to that request using this method.
+        """
+        _LOGGER.debug("listDevices: interface_id = %s", interface_id)
+
+        return self.device_descriptions.get_raw_device_descriptions(
+            interface_id=interface_id
+        )
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
