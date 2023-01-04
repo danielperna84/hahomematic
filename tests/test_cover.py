@@ -15,7 +15,7 @@ TEST_DEVICES: dict[str, str] = {
     "VCU8537918": "HmIP-BROLL.json",
     "VCU1223813": "HmIP-FBL.json",
     "VCU0000045": "HM-LC-Bl1-FM.json",
-    "VCU6529515": "HmIP-MOD-HO.json",
+    "VCU3574044": "HmIP-MOD-HO.json",
     "VCU0000145": "HM-LC-JaX.json",
 }
 
@@ -113,20 +113,20 @@ async def test_cegarage(
     central = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     cover: CeGarage = cast(
-        CeGarage, await get_hm_custom_entity(central, "VCU6529515", 1)
+        CeGarage, await get_hm_custom_entity(central, "VCU3574044", 1)
     )
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position is None
     await cover.set_cover_position(81)
-    central.event(const.LOCAL_INTERFACE_ID, "VCU6529515:1", "DOOR_STATE", 1)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
     assert cover.current_cover_position == 100
     await cover.close_cover()
-    central.event(const.LOCAL_INTERFACE_ID, "VCU6529515:1", "DOOR_STATE", 0)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 0)
     assert cover.current_cover_position == 0
     await cover.set_cover_position(10)
-    central.event(const.LOCAL_INTERFACE_ID, "VCU6529515:1", "DOOR_STATE", 2)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 2)
     assert cover.current_cover_position == 10
     await cover.open_cover()
-    central.event(const.LOCAL_INTERFACE_ID, "VCU6529515:1", "DOOR_STATE", 1)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
     assert cover.current_cover_position == 100

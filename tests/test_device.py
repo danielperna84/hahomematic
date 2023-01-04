@@ -14,13 +14,4 @@ from hahomematic.generic_platforms.text import HmText
 TEST_DEVICES: dict[str, str] = {}
 
 
-@pytest.mark.asyncio
-async def test_empty(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
-    """Test HmText. There are currently no text entities"""
-    central = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
-
-
 # TODO: Add device related tests, available, unreach

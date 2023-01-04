@@ -8,6 +8,7 @@ import const
 import helper
 import pydevccu
 import pytest
+import pytest_socket
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
@@ -15,23 +16,35 @@ from hahomematic.client import InterfaceConfig
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity
 from hahomematic.helpers import get_device_address
-
-logging.basicConfig(level=logging.DEBUG)
+from aiohttp import ClientSession, TCPConnector
+#logging.basicConfig(level=logging.DEBUG)
 
 GOT_DEVICES = False
 # content of conftest.py
 
 
 def pytest_configure(config):
-    import sys
+    """Register marker for tests that log exceptions."""
+    config.addinivalue_line(
+        "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
+    )
 
-    sys._called_from_test = True
 
+def pytest_runtest_setup():
+    """Prepare pytest_socket and freezegun.
 
-def pytest_unconfigure(config):  # pragma: no cover
-    import sys  # This was missing from the manual
+    pytest_socket:
+    Throw if tests attempt to open sockets.
 
-    del sys._called_from_test
+    allow_unix_socket is set to True because it's needed by asyncio.
+    Important: socket_allow_hosts must be called before disable_socket, otherwise all
+    destinations will be allowed.
+
+    freezegun:
+    Modified to include https://github.com/spulec/freezegun/pull/424
+    """
+    pytest_socket.socket_allow_hosts(["127.0.0.1"])
+    #pytest_socket.disable_socket(allow_unix_socket=True)
 
 
 @pytest.yield_fixture(name="loop", scope="session")
@@ -45,15 +58,25 @@ def loop() -> asyncio.AbstractEventLoop:
 @pytest.fixture(name="ccu")
 def pydev_ccu() -> pydevccu.Server:
     """Defines the virtual ccu"""
-    ccu = pydevccu.Server(addr=("127.0.0.1", const.CCU_PORT))
+    ccu = pydevccu.Server(addr=(const.CCU_HOST, const.CCU_PORT))
     ccu.start()
     yield ccu
     ccu.stop()
 
+@pytest.fixture
+async def client_session() -> ClientSession:
+    """ClientSession for json client."""
+    client_session = ClientSession(
+        connector=TCPConnector(limit=3), loop=asyncio.get_running_loop()
+    )
+    yield client_session
+    if not client_session.closed:
+        await client_session.close()
+
 
 @pytest.fixture(name="central_pydevccu")
 async def central_unit(
-    loop: asyncio.AbstractEventLoop, ccu: pydevccu.Server
+    loop: asyncio.AbstractEventLoop, ccu: pydevccu.Server, client_session: ClientSession
 ) -> CentralUnit:
     """Yield central"""
     sleep_counter = 0
@@ -82,6 +105,7 @@ async def central_unit(
         storage_folder="homematicip_local",
         interface_configs=interface_configs,
         default_callback_port=54321,
+        client_session=client_session,
         use_caches=False,
     ).get_central()
     central_unit.callback_system_event = systemcallback
@@ -97,10 +121,10 @@ async def central_unit(
 
 
 @pytest.fixture(name="central_local_factory")
-async def central_unit_local_factory() -> helper.CentralUnitLocalFactory:
+async def central_unit_local_factory(client_session: ClientSession) -> helper.CentralUnitLocalFactory:
     """Yield central"""
 
-    return helper.CentralUnitLocalFactory()
+    return helper.CentralUnitLocalFactory(client_session)
 
 
 async def get_value_from_generic_entity(

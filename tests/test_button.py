@@ -31,5 +31,5 @@ async def test_hmbutton(
     assert button.value is None
     assert button.value_list is None
     assert button.hmtype == "ACTION"
-    assert button.send_value(1)
+    assert button.press()
     assert button.value is None
