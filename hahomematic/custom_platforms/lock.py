@@ -94,9 +94,6 @@ class CeIpLock(BaseLock):
         self._e_direction: HmSensor = self._get_entity(
             field_name=FIELD_DIRECTION, entity_type=HmSensor
         )
-        self._e_error: HmBinarySensor = self._get_entity(
-            field_name=FIELD_ERROR, entity_type=HmBinarySensor
-        )
 
     @value_property
     def is_locked(self) -> bool:
@@ -120,7 +117,7 @@ class CeIpLock(BaseLock):
     @value_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._e_error.value is not None and self._e_error.value is True
+        return False
 
     async def lock(self) -> None:
         """Lock the lock."""
