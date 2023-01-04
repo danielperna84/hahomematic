@@ -33,10 +33,20 @@ class HmSelect(GenericEntity[Union[int, str]]):
     async def send_value(self, value: int | str) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
-        if isinstance(value, int):
-            await super().send_value(value)
+        if isinstance(value, int) and self._attr_value_list:
+            if 0 <= value < len(self._attr_value_list):
+                await super().send_value(value)
+                return None
         elif self._attr_value_list:
-            await super().send_value(self._attr_value_list.index(value))
+            if value in self._attr_value_list:
+                await super().send_value(self._attr_value_list.index(value))
+                return None
+
+        _LOGGER.warning(
+            "Value not in value_list for %s/%s.",
+            self.name,
+            self.unique_identifier,
+        )
 
 
 class HmSysvarSelect(GenericSystemVariable):
@@ -50,14 +60,24 @@ class HmSysvarSelect(GenericSystemVariable):
     @value_property
     def value(self) -> str | None:
         """Get the value of the entity."""
-        if self._attr_value is not None and self.value_list is not None:
-            return self.value_list[int(self._attr_value)]
+        if self._attr_value is not None and self._attr_value_list is not None:
+            return self._attr_value_list[int(self._attr_value)]
         return None
 
     async def send_variable(self, value: int | str) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
-        if isinstance(value, int):
-            await super().send_variable(value)
-        elif self.value_list:
-            await super().send_variable(self.value_list.index(value))
+        if isinstance(value, int) and self._attr_value_list:
+            if 0 <= value < len(self._attr_value_list):
+                await super().send_variable(value)
+                return None
+        elif self._attr_value_list:
+            if value in self._attr_value_list:
+                await super().send_variable(self._attr_value_list.index(value))
+                return None
+
+        _LOGGER.warning(
+            "Value not in value_list for %s/%s.",
+            self.name,
+            self.unique_identifier,
+        )
