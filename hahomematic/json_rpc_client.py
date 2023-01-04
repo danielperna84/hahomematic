@@ -3,7 +3,6 @@ Implementation of an async json-rpc client.
 """
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 import json
 import logging
@@ -13,7 +12,7 @@ import re
 import ssl
 from typing import Any, Final
 
-from aiohttp import ClientConnectorError, ClientError, ClientSession, TCPConnector
+from aiohttp import ClientConnectorError, ClientError, ClientSession
 
 from hahomematic import config
 from hahomematic.const import (
@@ -74,14 +73,7 @@ class JsonRpcAioHttpClient:
         verify_tls: bool = False,
     ):
         """Session setup."""
-
-        self._client_session: Final[ClientSession] = (
-            client_session
-            if client_session
-            else ClientSession(
-                connector=TCPConnector(limit=3), loop=asyncio.get_running_loop()
-            )
-        )
+        self._client_session: Final[ClientSession | None] = client_session
         self._session_id: str | None = None
         self._last_session_id_refresh: datetime | None = None
         self._username: Final[str] = username
@@ -285,6 +277,10 @@ class JsonRpcAioHttpClient:
         use_default_params: bool = True,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST function."""
+        if not self._client_session:
+            no_session = "_do_post failed: ClientSession not initialized."
+            _LOGGER.warning(no_session)
+            return {"error": no_session, "result": {}}
         if not self._username:
             no_username = "_do_post failed: No username set."
             _LOGGER.warning(no_username)

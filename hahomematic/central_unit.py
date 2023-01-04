@@ -1054,7 +1054,7 @@ class CentralConfig:
         central_id: str,
         interface_configs: set[hm_client.InterfaceConfig],
         default_callback_port: int,
-        client_session: ClientSession | None = None,
+        client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
         callback_host: str | None = None,
@@ -1723,18 +1723,19 @@ class ParamsetDescriptionCache(BasePersistentCache):
                 device_address = get_device_address(channel_address)
 
                 for paramset in paramsets.values():
-                    if paramset:
-                        for parameter in paramset:
-                            if (
-                                device_address,
-                                parameter,
-                            ) not in self._address_parameter_cache:
-                                self._address_parameter_cache[
-                                    (device_address, parameter)
-                                ] = []
+                    if not paramset:
+                        continue
+                    for parameter in paramset:
+                        if (
+                            device_address,
+                            parameter,
+                        ) not in self._address_parameter_cache:
                             self._address_parameter_cache[
                                 (device_address, parameter)
-                            ].append(get_device_channel(channel_address))
+                            ] = []
+                        self._address_parameter_cache[
+                            (device_address, parameter)
+                        ].append(get_device_channel(channel_address))
 
     async def load(self) -> HmDataOperationResult:
         """
