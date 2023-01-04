@@ -9,7 +9,7 @@ from hahomematic.central_unit import CentralConfig
 from hahomematic.client import InterfaceConfig, LocalRessources
 from hahomematic.custom_platforms.entity_definition import validate_entity_definition
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
 CCU_HOST = "127.0.0.1"
@@ -474,13 +474,13 @@ class Example:
         await self.central.start()
 
         while not self.got_devices and self.SLEEPCOUNTER < 20:
-            print("Waiting for devices")
+            _LOGGER.info("Waiting for devices")
             self.SLEEPCOUNTER += 1
             await asyncio.sleep(1)
         await asyncio.sleep(5)
 
         for i in range(16):
-            _LOGGER.debug("Sleeping (%i)", i)
+            _LOGGER.info("Sleeping (%i)", i)
             await asyncio.sleep(2)
         # Stop the central_1 thread so Python can exit properly.
         await self.central.stop()

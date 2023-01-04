@@ -91,6 +91,7 @@ class Example:
             storage_folder="homematicip_local",
             interface_configs=interface_configs,
             default_callback_port=54321,
+            use_caches=False,
             client_session=ClientSession(
                 connector=TCPConnector(limit=3), loop=asyncio.get_running_loop()
             ),
@@ -108,13 +109,13 @@ class Example:
 
         await self.central.start()
         while not self.got_devices and self.SLEEPCOUNTER < 20:
-            print("Waiting for devices")
+            _LOGGER.info("Waiting for devices")
             self.SLEEPCOUNTER += 1
             await asyncio.sleep(1)
         await asyncio.sleep(5)
 
         for i in range(16):
-            _LOGGER.debug("Sleeping (%i)", i)
+            _LOGGER.info("Sleeping (%i)", i)
             await asyncio.sleep(2)
         # Stop the central_1 thread so Python can exit properly.
         await self.central.stop()
