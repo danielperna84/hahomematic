@@ -121,18 +121,18 @@ async def test_central(central_pydevccu, loop) -> None:
         mode="w",
         encoding=DEFAULT_ENCODING,
     ) as fptr:
-        json.dump(addresses, fptr)
+        json.dump(addresses, fptr, indent=2)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2398
-    assert usage_types[HmEntityUsage.CE_PRIMARY] == 168
-    assert usage_types[HmEntityUsage.ENTITY] == 3570
-    assert usage_types[HmEntityUsage.CE_VISIBLE] == 88
-    assert usage_types[HmEntityUsage.CE_SECONDARY] == 128
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2499
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
+    assert usage_types[HmEntityUsage.ENTITY] == 3633
+    assert usage_types[HmEntityUsage.CE_VISIBLE] == 96
+    assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 
-    assert len(central_pydevccu.devices) == 362
-    assert len(central_pydevccu.entities) == 6352
-    assert len(data) == 362
-    assert len(custom_entities) == 296
-    assert len(ce_channels) == 104
+    assert len(central_pydevccu.devices) == 372
+    assert len(central_pydevccu.entities) == 6535
+    assert len(data) == 372
+    assert len(custom_entities) == 307
+    assert len(ce_channels) == 110
     assert len(entity_types) == 6
-    assert len(parameters) == 184
+    assert len(parameters) == 188
