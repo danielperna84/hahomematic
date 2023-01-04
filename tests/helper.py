@@ -3,14 +3,14 @@ from __future__ import annotations
 
 import asyncio
 
+from aiohttp import ClientSession
 import const
 
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import InterfaceConfig, LocalRessources
-from aiohttp import ClientSession
+
 
 class CentralUnitLocalFactory:
-
     def __init__(self, client_session: ClientSession):
         self._client_session = client_session
 

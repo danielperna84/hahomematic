@@ -4,6 +4,7 @@ import asyncio
 import logging
 from typing import Any
 
+from aiohttp import ClientSession, TCPConnector
 import const
 import helper
 import pydevccu
@@ -16,8 +17,8 @@ from hahomematic.client import InterfaceConfig
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity
 from hahomematic.helpers import get_device_address
-from aiohttp import ClientSession, TCPConnector
-#logging.basicConfig(level=logging.DEBUG)
+
+# logging.basicConfig(level=logging.DEBUG)
 
 GOT_DEVICES = False
 # content of conftest.py
@@ -44,7 +45,7 @@ def pytest_runtest_setup():
     Modified to include https://github.com/spulec/freezegun/pull/424
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
-    #pytest_socket.disable_socket(allow_unix_socket=True)
+    # pytest_socket.disable_socket(allow_unix_socket=True)
 
 
 @pytest.yield_fixture(name="loop", scope="session")
@@ -62,6 +63,7 @@ def pydev_ccu() -> pydevccu.Server:
     ccu.start()
     yield ccu
     ccu.stop()
+
 
 @pytest.fixture
 async def client_session() -> ClientSession:
@@ -121,7 +123,9 @@ async def central_unit(
 
 
 @pytest.fixture(name="central_local_factory")
-async def central_unit_local_factory(client_session: ClientSession) -> helper.CentralUnitLocalFactory:
+async def central_unit_local_factory(
+    client_session: ClientSession,
+) -> helper.CentralUnitLocalFactory:
     """Yield central"""
 
     return helper.CentralUnitLocalFactory(client_session)
