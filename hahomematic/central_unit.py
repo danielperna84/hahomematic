@@ -1723,17 +1723,18 @@ class ParamsetDescriptionCache(BasePersistentCache):
                 device_address = get_device_address(channel_address)
 
                 for paramset in paramsets.values():
-                    for parameter in paramset:
-                        if (
-                            device_address,
-                            parameter,
-                        ) not in self._address_parameter_cache:
+                    if paramset:
+                        for parameter in paramset:
+                            if (
+                                device_address,
+                                parameter,
+                            ) not in self._address_parameter_cache:
+                                self._address_parameter_cache[
+                                    (device_address, parameter)
+                                ] = []
                             self._address_parameter_cache[
                                 (device_address, parameter)
-                            ] = []
-                        self._address_parameter_cache[
-                            (device_address, parameter)
-                        ].append(get_device_channel(channel_address))
+                            ].append(get_device_channel(channel_address))
 
     async def load(self) -> HmDataOperationResult:
         """
