@@ -11,7 +11,7 @@ import pytest
 from hahomematic.const import HmEntityUsage
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 
-TEST_DEVICES = {
+TEST_DEVICES: dict[str, str] = {
     "VCU5864966": "HmIP-SWDO-I.json",
 }
 

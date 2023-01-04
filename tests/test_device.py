@@ -11,7 +11,7 @@ import pytest
 from hahomematic.const import HmEntityUsage
 from hahomematic.generic_platforms.text import HmText
 
-TEST_DEVICES = {}
+TEST_DEVICES: dict[str, str] = {}
 
 
 @pytest.mark.asyncio

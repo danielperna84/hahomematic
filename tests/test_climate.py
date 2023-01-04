@@ -17,7 +17,7 @@ from hahomematic.custom_platforms.climate import (
     HmPresetMode,
 )
 
-TEST_DEVICES = {
+TEST_DEVICES: dict[str, str] = {
     "VCU1769958": "HmIP-BWTH.json",
     "VCU3609622": "HmIP-eTRV-2.json",
     "INT0000001": "HM-CC-VG-1.json",

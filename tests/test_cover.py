@@ -11,7 +11,7 @@ import pytest
 from hahomematic.const import HmEntityUsage
 from hahomematic.custom_platforms.cover import CeBlind, CeCover, CeGarage, CeIpBlind
 
-TEST_DEVICES = {
+TEST_DEVICES: dict[str, str] = {
     "VCU8537918": "HmIP-BROLL.json",
     "VCU1223813": "HmIP-FBL.json",
     "VCU0000045": "HM-LC-Bl1-FM.json",

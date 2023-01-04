@@ -11,7 +11,7 @@ import pytest
 from hahomematic.const import HmEntityUsage
 from hahomematic.generic_platforms.button import HmButton
 
-TEST_DEVICES = {
+TEST_DEVICES: dict[str, str] = {
     "VCU1437294": "HmIP-SMI.json",
 }
 

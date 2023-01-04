@@ -11,7 +11,7 @@ import pytest
 from hahomematic.const import HmEntityUsage
 from hahomematic.custom_platforms.lock import CeIpLock, CeRfLock
 
-TEST_DEVICES = {
+TEST_DEVICES: dict[str, str] = {
     "VCU9724704": "HmIP-DLD.json",
     "VCU0000146": "HM-Sec-Key.json",
 }
