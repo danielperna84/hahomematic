@@ -1,3 +1,6 @@
+Version 2023.1.1 (2023-01-04)
+- No longer create client_session in json_rpc_client
+
 Version 2023.1.0 (2023-01-01)
 - API Cleanup
 - Allow to disable cache

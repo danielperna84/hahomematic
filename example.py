@@ -4,11 +4,12 @@ import logging
 import sys
 import time
 
+from aiohttp import ClientSession, TCPConnector
+
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig
 from hahomematic.client import InterfaceConfig
 from hahomematic.custom_platforms.entity_definition import validate_entity_definition
-from hahomematic.xml_rpc_server import register_xml_rpc_server
 
 logging.basicConfig(level=logging.DEBUG)
 _LOGGER = logging.getLogger(__name__)
@@ -33,7 +34,12 @@ class Example:
             self.got_devices = True
             print("Number of new device descriptions: %i" % len(args[0]))
             return
-        elif src == const.HH_EVENT_DEVICES_CREATED and args and args[0] and len(args[0]) > 0:
+        elif (
+            src == const.HH_EVENT_DEVICES_CREATED
+            and args
+            and args[0]
+            and len(args[0]) > 0
+        ):
             self.got_devices = True
             print("New devices:")
             print(len(args[0]))
@@ -85,6 +91,9 @@ class Example:
             storage_folder="homematicip_local",
             interface_configs=interface_configs,
             default_callback_port=54321,
+            client_session=ClientSession(
+                connector=TCPConnector(limit=3), loop=asyncio.get_running_loop()
+            ),
         ).get_central()
 
         # For testing we set a short INIT_TIMEOUT

@@ -22,7 +22,6 @@ import hahomematic.device as hm_device
 import hahomematic.entity as hm_entity
 from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
-from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
 

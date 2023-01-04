@@ -139,7 +139,9 @@ class BaseHmLight(CustomEntity):
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
             await self.set_on_time_value(on_time=on_time)
 
-        if brightness := kwargs.get(HM_ARG_BRIGHTNESS, self.brightness) or 255:
+        if brightness := cast(
+            int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255
+        ):
             if brightness != self.brightness:
                 level = brightness / 255.0
                 await self._e_level.send_value(level)
