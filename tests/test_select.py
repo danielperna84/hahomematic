@@ -11,7 +11,7 @@ import pytest
 from hahomematic.const import HmEntityUsage
 from hahomematic.generic_platforms.select import HmSelect
 
-TEST_DEVICES = {
+TEST_DEVICES: dict[str, str] = {
     "VCU6354483": "HmIP-STHD.json",
 }
 

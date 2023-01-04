@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 
+from aiohttp import ClientSession
 import const
 
 from hahomematic.central_unit import CentralConfig, CentralUnit
@@ -10,7 +11,8 @@ from hahomematic.client import InterfaceConfig, LocalRessources
 
 
 class CentralUnitLocalFactory:
-    """Factory for central units."""
+    def __init__(self, client_session: ClientSession):
+        self._client_session = client_session
 
     async def get_central(
         self, address_device_translation: dict[str, str]
@@ -36,6 +38,7 @@ class CentralUnitLocalFactory:
             storage_folder="homematicip_local",
             interface_configs=interface_configs,
             default_callback_port=54321,
+            client_session=self._client_session,
         ).get_central()
         await central_unit.start()
 

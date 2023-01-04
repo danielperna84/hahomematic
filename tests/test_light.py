@@ -15,7 +15,7 @@ from hahomematic.custom_platforms.light import (
     CeIpFixedColorLight,
 )
 
-TEST_DEVICES = {
+TEST_DEVICES: dict[str, str] = {
     "VCU1399816": "HmIP-BDT.json",
     "VCU3747418": "HM-LC-RGBW-WM.json",
     "VCU0000115": "HM-LC-DW-WM.json",

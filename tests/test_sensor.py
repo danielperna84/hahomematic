@@ -11,7 +11,7 @@ import pytest
 from hahomematic.const import HmEntityUsage
 from hahomematic.generic_platforms.sensor import HmSensor
 
-TEST_DEVICES = {
+TEST_DEVICES: dict[str, str] = {
     "VCU7981740": "HmIP-SRH.json",
     "VCU3941846": "HMIP-PSM.json",
 }
