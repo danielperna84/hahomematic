@@ -3,37 +3,38 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
 import const
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
-from hahomematic.client import InterfaceConfig, LocalRessources
+from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity
 from hahomematic.helpers import get_device_address
 
 
 class CentralUnitLocalFactory:
+    """Factory for a central_unit with one local client."""
+
     def __init__(self, client_session: ClientSession):
         self._client_session = client_session
 
     async def get_central(
         self, address_device_translation: dict[str, str]
-    ) -> CentralUnit:
+    ) -> tuple[CentralUnit, Mock]:
         """Returns a central based on give address_device_translation."""
-        interface_configs = {
-            InterfaceConfig(
-                central_name=const.CENTRAL_NAME,
-                interface="Local",
-                port=2002,
-                local_resources=LocalRessources(
-                    address_device_translation=address_device_translation
-                ),
-            )
-        }
+
+        local_client_config = InterfaceConfig(
+            central_name=const.CENTRAL_NAME,
+            interface="Local",
+            port=2002,
+            local_resources=LocalRessources(
+                address_device_translation=address_device_translation
+            ),
+        )
 
         central_unit = await CentralConfig(
             name=const.CENTRAL_NAME,
@@ -42,13 +43,25 @@ class CentralUnitLocalFactory:
             password=const.CCU_PASSWORD,
             central_id="test1234",
             storage_folder="homematicip_local",
-            interface_configs=interface_configs,
+            interface_configs={local_client_config},
             default_callback_port=54321,
             client_session=self._client_session,
         ).get_central()
-        await central_unit.start()
 
-        return get_mock(central_unit)
+        mock_client = get_mock(
+            await _ClientConfig(
+                central=central_unit,
+                interface_config=local_client_config,
+                local_ip="127.0.0.1",
+            ).get_client()
+        )
+
+        with patch(
+            "hahomematic.client.create_client",
+            return_value=mock_client,
+        ):
+            await central_unit.start()
+        return central_unit, mock_client
 
 
 async def get_value_from_generic_entity(
@@ -62,13 +75,13 @@ async def get_value_from_generic_entity(
     await hm_entity.load_entity_value(
         call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
     )
-    return get_mock(hm_entity.value)
+    return hm_entity.value
 
 
 def get_hm_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
     """Return the hm_device."""
     d_address = get_device_address(address=address)
-    return get_mock(central_unit.devices.get(d_address))
+    return central_unit.devices.get(d_address)
 
 
 async def get_hm_generic_entity(
@@ -79,7 +92,7 @@ async def get_hm_generic_entity(
     assert hm_device
     hm_entity = hm_device.generic_entities.get((address, parameter))
     assert hm_entity
-    return get_mock(hm_entity)
+    return hm_entity
 
 
 async def get_hm_custom_entity(
@@ -94,7 +107,7 @@ async def get_hm_custom_entity(
                 await custom_entity.load_entity_value(
                     call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
                 )
-            return get_mock(custom_entity)
+            return custom_entity
     return None
 
 
@@ -106,6 +119,6 @@ def get_mock(instance):
         )
         return instance
 
-    mock = Mock(spec=instance, wraps=instance)
+    mock = MagicMock(spec=instance, wraps=instance)
     mock.__dict__.update(instance.__dict__)
     return mock

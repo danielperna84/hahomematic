@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import cast
+from unittest.mock import call
 
 import const
 import helper
@@ -21,7 +22,7 @@ async def test_hmselect(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmSelect."""
-    central = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     select: HmSelect = cast(
         HmSelect, await get_hm_generic_entity(central, "VCU6354483:1", "WINDOW_STATE")
@@ -33,10 +34,23 @@ async def test_hmselect(
     assert select.value_list == ("CLOSED", "OPEN")
     assert select.value == "CLOSED"
     await select.send_value("OPEN")
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU6354483:1",
+        paramset_key="VALUES",
+        parameter="WINDOW_STATE",
+        value=1,
+    )
     assert select.value == "OPEN"
     central.event(const.LOCAL_INTERFACE_ID, "VCU6354483:1", "WINDOW_STATE", 0)
     assert select.value == "CLOSED"
-    await select.send_value(3)  # do not write. value above max
+    await select.send_value(3)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU6354483:1",
+        paramset_key="VALUES",
+        parameter="WINDOW_STATE",
+        value=1,
+    )
+    # do not write. value above max
     assert select.value == "CLOSED"
 
 

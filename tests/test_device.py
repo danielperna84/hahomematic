@@ -23,7 +23,7 @@ async def test_device_general(
 ) -> None:
     """Test device availability."""
     assert central_local_factory
-    central = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     hm_device = get_hm_device(central_unit=central, address="VCU2128127")
     assert hm_device
@@ -43,7 +43,7 @@ async def test_device_availability(
 ) -> None:
     """Test device availability."""
     assert central_local_factory
-    central = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     hm_device = get_hm_device(central_unit=central, address="VCU6354483")
     assert hm_device

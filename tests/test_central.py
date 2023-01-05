@@ -12,8 +12,11 @@ async def test_device_export(
 ) -> None:
     """Test device export."""
     assert central_local_factory
-    central = await central_local_factory.get_central({"VCU6354483": "HmIP-STHD.json"})
+    central, mock_client = await central_local_factory.get_central(
+        {"VCU6354483": "HmIP-STHD.json"}
+    )
     assert central
+    assert mock_client
     hm_device = get_hm_device(central_unit=central, address="VCU6354483")
     assert hm_device
     await hm_device.export_device_definition()
@@ -25,8 +28,11 @@ async def test_all_parameters(
 ) -> None:
     """Test device export."""
     assert central_local_factory
-    central = await central_local_factory.get_central({"VCU6354483": "HmIP-STHD.json"})
+    central, mock_client = await central_local_factory.get_central(
+        {"VCU6354483": "HmIP-STHD.json"}
+    )
     assert central
+    assert mock_client
     parameters = central.paramset_descriptions.get_all_readable_parameters()
     assert parameters
     assert len(parameters) == 26
