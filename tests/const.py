@@ -1,7 +1,17 @@
 """Constants for tests."""
 from __future__ import annotations
 
-from hahomematic.const import LOCAL_INTERFACE
+from hahomematic.const import (
+    LOCAL_INTERFACE,
+    SYSVAR_HM_TYPE_FLOAT,
+    SYSVAR_HM_TYPE_INTEGER,
+    SYSVAR_TYPE_ALARM,
+    SYSVAR_TYPE_LIST,
+    SYSVAR_TYPE_LOGIC,
+    SYSVAR_TYPE_NUMBER,
+    SYSVAR_TYPE_STRING,
+)
+from hahomematic.helpers import ProgramData, SystemVariableData
 
 CENTRAL_NAME = "CentralTest"
 CCU_HOST = "127.0.0.1"
@@ -9,6 +19,140 @@ CCU_USERNAME = "user"
 CCU_PASSWORD = "pass"
 CCU_PORT = 2002
 LOCAL_INTERFACE_ID = f"{CENTRAL_NAME}-{LOCAL_INTERFACE}"
+
+
+SYSVAR_DATA: list[SystemVariableData] = [
+    SystemVariableData(
+        name="sv_alarm",
+        data_type=SYSVAR_TYPE_ALARM,
+        unit=None,
+        value=False,
+        value_list=None,
+        max_value=None,
+        min_value=None,
+        extended_sysvar=False,
+    ),
+    SystemVariableData(
+        name="sv_alarm_ext",
+        data_type=SYSVAR_TYPE_ALARM,
+        unit=None,
+        value=False,
+        value_list=None,
+        max_value=None,
+        min_value=None,
+        extended_sysvar=True,
+    ),
+    SystemVariableData(
+        name="sv_logic",
+        data_type=SYSVAR_TYPE_LOGIC,
+        unit=None,
+        value=False,
+        value_list=None,
+        max_value=None,
+        min_value=None,
+        extended_sysvar=False,
+    ),
+    SystemVariableData(
+        name="sv_logic_ext",
+        data_type=SYSVAR_TYPE_LOGIC,
+        unit=None,
+        value=False,
+        value_list=None,
+        max_value=None,
+        min_value=None,
+        extended_sysvar=True,
+    ),
+    SystemVariableData(
+        name="sv_list",
+        data_type=SYSVAR_TYPE_LIST,
+        unit=None,
+        value="v1",
+        value_list=["v1", "v2", "v3"],
+        max_value=None,
+        min_value=None,
+        extended_sysvar=False,
+    ),
+    SystemVariableData(
+        name="sv_list_ext",
+        data_type=SYSVAR_TYPE_LIST,
+        unit=None,
+        value="v1",
+        value_list=["v1", "v2", "v3"],
+        max_value=None,
+        min_value=None,
+        extended_sysvar=True,
+    ),
+    SystemVariableData(
+        name="sv_string",
+        data_type=SYSVAR_TYPE_STRING,
+        unit=None,
+        value="test1",
+        value_list=None,
+        max_value=None,
+        min_value=None,
+        extended_sysvar=False,
+    ),
+    SystemVariableData(
+        name="sv_string_ext",
+        data_type=SYSVAR_TYPE_STRING,
+        unit=None,
+        value="test1",
+        value_list=None,
+        max_value=None,
+        min_value=None,
+        extended_sysvar=True,
+    ),
+    SystemVariableData(
+        name="sv_float",
+        data_type=SYSVAR_HM_TYPE_FLOAT,
+        unit=None,
+        value=23.2,
+        value_list=None,
+        max_value=30.0,
+        min_value=5.0,
+        extended_sysvar=False,
+    ),
+    SystemVariableData(
+        name="sv_float_ext",
+        data_type=SYSVAR_HM_TYPE_FLOAT,
+        unit="°C",
+        value=23.2,
+        value_list=None,
+        max_value=30.0,
+        min_value=5.0,
+        extended_sysvar=True,
+    ),
+    SystemVariableData(
+        name="sv_integer",
+        data_type=SYSVAR_HM_TYPE_INTEGER,
+        unit=None,
+        value=17,
+        value_list=None,
+        max_value=30,
+        min_value=5,
+        extended_sysvar=False,
+    ),
+    SystemVariableData(
+        name="sv_integer_ext",
+        data_type=SYSVAR_HM_TYPE_INTEGER,
+        unit=None,
+        value=17,
+        value_list=None,
+        max_value=30,
+        min_value=5,
+        extended_sysvar=True,
+    ),
+]
+
+PROGRAM_DATA: list[ProgramData] = [
+    ProgramData(
+        name="p1", pid="pid1", is_active=True, is_internal=False, last_execute_time=""
+    ),
+    ProgramData(
+        name="p_2", pid="pid2", is_active=False, is_internal=False, last_execute_time=""
+    ),
+]
+
 
 ADDRESS_DEVICE_TRANSLATION = {
     "VCU3432945": "HmIP-STV.json",

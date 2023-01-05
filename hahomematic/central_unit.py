@@ -363,6 +363,7 @@ class CentralUnit:
 
     async def _init_hub(self) -> None:
         """Init the hub."""
+        await self._hub.fetch_program_data()
         await self._hub.fetch_sysvar_data()
 
     def fire_interface_event(
