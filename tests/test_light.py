@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import cast
 
-from conftest import get_hm_custom_entity
 import helper
+from helper import get_hm_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage

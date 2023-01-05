@@ -1,8 +1,8 @@
 """Test the HaHomematic central."""
 from __future__ import annotations
 
-from conftest import get_hm_device
 import helper
+from helper import get_hm_device
 import pytest
 
 
