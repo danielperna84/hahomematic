@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from typing import cast
+from unittest.mock import call
 
-from conftest import get_hm_custom_entity
 import const
 import helper
+from helper import get_hm_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -21,7 +22,7 @@ async def test_ceipsiren(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeIpSiren."""
-    central = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     siren: CeIpSiren = cast(
         CeIpSiren, await get_hm_custom_entity(central, "VCU8249617", 3)
@@ -41,4 +42,13 @@ async def test_ceipsiren(
     await siren.turn_on(
         "FREQUENCY_RISING_AND_FALLING", "BLINKING_ALTERNATELY_REPEATING", 30
     )
-    # TODO: check output with Mock
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU8249617:3",
+        paramset_key="VALUES",
+        value={
+            "ACOUSTIC_ALARM_SELECTION": "FREQUENCY_RISING_AND_FALLING",
+            "OPTICAL_ALARM_SELECTION": "BLINKING_ALTERNATELY_REPEATING",
+            "DURATION_UNIT": "S",
+            "DURATION_VALUE": 30,
+        },
+    )
