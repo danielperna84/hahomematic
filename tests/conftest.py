@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 from aiohttp import ClientSession, TCPConnector
@@ -13,10 +14,9 @@ import pytest_socket
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import InterfaceConfig
 
-# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 GOT_DEVICES = False
-# content of conftest.py
 
 
 def pytest_configure(config):

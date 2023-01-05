@@ -178,6 +178,15 @@ class CentralUnit:
         return self.config.central_url
 
     @property
+    def _has_active_threads(self) -> bool:
+        """Return if active sub threads are alive."""
+        if self._connection_checker.is_alive():
+            return True
+        if self._xml_rpc_server.is_alive():
+            return True
+        return False
+
+    @property
     def interface_ids(self) -> list[str]:
         """Return all associated interfaces."""
         return list(self._clients)
@@ -271,6 +280,9 @@ class CentralUnit:
         _LOGGER.debug("stop: Removing instance")
         if self._attr_name in CENTRAL_INSTANCES:
             del CENTRAL_INSTANCES[self._attr_name]
+
+        while self._has_active_threads:
+            await asyncio.sleep(1)
 
     async def restart_clients(self) -> None:
         """Restart clients"""
@@ -981,7 +993,7 @@ class ConnectionChecker(threading.Thread):
 
     def run(self) -> None:
         """
-        Run the central thread.
+        Run the ConnectionChecker thread.
         """
         _LOGGER.debug(
             "run: Init connection checker to server %s",
@@ -997,7 +1009,8 @@ class ConnectionChecker(threading.Thread):
         self._active = False
 
     async def _check_connection(self) -> None:
-        connection_checker_interval = config.CONNECTION_CHECKER_INTERVAL
+        """Periodically check connection to backend."""
+
         while self._active:
             _LOGGER.debug(
                 "check_connection: Checking connection to server %s",
@@ -1039,7 +1052,8 @@ class ConnectionChecker(threading.Thread):
                 _LOGGER.error(
                     "check_connection failed: %s [%s]", type(err).__name__, err.args
                 )
-            await asyncio.sleep(connection_checker_interval)
+            if self._active:
+                await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
 
 
 class CentralConfig:

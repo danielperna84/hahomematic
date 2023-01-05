@@ -8,7 +8,6 @@ from hahomematic.const import (
     SYSVAR_TYPE_ALARM,
     SYSVAR_TYPE_LIST,
     SYSVAR_TYPE_LOGIC,
-    SYSVAR_TYPE_NUMBER,
     SYSVAR_TYPE_STRING,
 )
 from hahomematic.helpers import ProgramData, SystemVariableData
