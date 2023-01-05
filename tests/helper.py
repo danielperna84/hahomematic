@@ -12,8 +12,9 @@ from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
 from hahomematic.device import HmDevice
-from hahomematic.entity import CustomEntity, GenericEntity
-from hahomematic.helpers import get_device_address
+from hahomematic.entity import CustomEntity, GenericEntity, GenericSystemVariable
+from hahomematic.generic_platforms.button import HmProgramButton
+from hahomematic.helpers import ProgramData, SystemVariableData, get_device_address
 
 
 class CentralUnitLocalFactory:
@@ -23,9 +24,14 @@ class CentralUnitLocalFactory:
         self._client_session = client_session
 
     async def get_central(
-        self, address_device_translation: dict[str, str]
+        self,
+        address_device_translation: dict[str, str],
+        add_sysvars: bool = False,
+        add_programs: bool = False,
     ) -> tuple[CentralUnit, Mock]:
         """Returns a central based on give address_device_translation."""
+        sysvar_data: list[SystemVariableData] = const.SYSVAR_DATA if add_sysvars else []
+        program_data: list[ProgramData] = const.PROGRAM_DATA if add_programs else []
 
         local_client_config = InterfaceConfig(
             central_name=const.CENTRAL_NAME,
@@ -59,6 +65,12 @@ class CentralUnitLocalFactory:
         with patch(
             "hahomematic.client.create_client",
             return_value=mock_client,
+        ), patch(
+            "hahomematic.client.ClientLocal.get_all_system_variables",
+            return_value=sysvar_data,
+        ), patch(
+            "hahomematic.client.ClientLocal.get_all_programs",
+            return_value=program_data,
         ):
             await central_unit.start()
         return central_unit, mock_client
@@ -109,6 +121,24 @@ async def get_hm_custom_entity(
                 )
             return custom_entity
     return None
+
+
+async def get_hm_sysvar_entity(
+    central_unit: CentralUnit, name: str
+) -> GenericSystemVariable | None:
+    """Return the sysvar entity."""
+    sysvar_entity = central_unit.sysvar_entities.get(name)
+    assert sysvar_entity
+    return sysvar_entity
+
+
+async def get_hm_program_button(
+    central_unit: CentralUnit, pid: str
+) -> HmProgramButton | None:
+    """Return the program button."""
+    program_button = central_unit.program_entities.get(pid)
+    assert program_button
+    return program_button
 
 
 def get_mock(instance):

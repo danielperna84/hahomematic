@@ -6,11 +6,11 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_hm_generic_entity
+from helper import get_hm_generic_entity, get_hm_sysvar_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.generic_platforms.number import HmFloat, HmInteger
+from hahomematic.generic_platforms.number import HmFloat, HmInteger, HmSysvarNumber
 
 TEST_DEVICES: dict[str, str] = {
     "VCU4984404": "HmIPW-STHD.json",
@@ -41,6 +41,9 @@ async def test_hmfloat(
     )
     assert efloat.value == 23.0
     central.event(const.LOCAL_INTERFACE_ID, "VCU4984404:1", "TEMPERATURE_MAXIMUM", 20.5)
+    assert efloat.value == 20.5
+    # do not write. value above max
+    await efloat.send_value(45.0)
     assert efloat.value == 20.5
 
 
@@ -82,4 +85,30 @@ async def test_hminteger(
     assert einteger.value == 2
 
 
-# TODO: Add test for sysvar
+@pytest.mark.asyncio
+async def test_hmsysvarnumber(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test HmSysvarNumber."""
+    central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
+    assert central
+    enumber: HmSysvarNumber = cast(
+        HmSysvarNumber,
+        await get_hm_sysvar_entity(central, "sv_float_ext"),
+    )
+    assert enumber.usage == HmEntityUsage.ENTITY
+    assert enumber.unit == "°C"
+    assert enumber.min == 5.0
+    assert enumber.max == 30.0
+    assert enumber.value_list is None
+    assert enumber.value == 23.2
+
+    await enumber.send_variable(23.0)
+    assert mock_client.method_calls[-1] == call.set_system_variable(
+        name="sv_float_ext", value=23.0
+    )
+    assert enumber.value == 23.0
+
+    await enumber.send_variable(35.0)
+    # value over max won't change value
+    assert enumber.value == 23.0

@@ -28,16 +28,22 @@ async def test_hmaction(
         HmAction,
         await get_hm_generic_entity(central, "VCU9724704:1", "LOCK_TARGET_LEVEL"),
     )
-    action_mock = helper.get_mock(action)
     assert action.usage == HmEntityUsage.ENTITY_NO_CREATE
     assert action.is_readable is False
     assert action.value is None
     assert action.value_list == ("LOCKED", "UNLOCKED", "OPEN")
     assert action.hmtype == "ENUM"
-    await action_mock.send_value("OPEN")
+    await action.send_value("OPEN")
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU9724704:1",
         paramset_key="VALUES",
         parameter="LOCK_TARGET_LEVEL",
         value=2,
+    )
+    await action.send_value(1)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU9724704:1",
+        paramset_key="VALUES",
+        parameter="LOCK_TARGET_LEVEL",
+        value=1,
     )
