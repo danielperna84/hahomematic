@@ -163,6 +163,8 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
         "HM-LC-Sw1-FM",
         "HM-LC-Sw1PBU-FM",
         "HM-LC-Sw1-Pl-DN-R1",
+        "HM-LC-Sw1-Pl",
+        "HM-LC-Sw2-FM",
         "HM-LC-Sw1-PCB",
         "HM-LC-Sw4-DR",
         "HM-SwI-3-FM",

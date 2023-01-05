@@ -1,8 +1,9 @@
-# Version 2023.1.1 (2023-01-05)
+# Version 2023.1.1 (2023-01-06)
 - No longer create ClientSession in json_rpc_client for tests
 - Add backend tests
 - Use mocked local client to check  method_calls
 - Remove sleep after connection_checker stops
+- Remove LOWBAT from HM-LC-Sw1-Pl, HM-LC-Sw2-FM
 
 # Version 2023.1.0 (2023-01-01)
 - API Cleanup
