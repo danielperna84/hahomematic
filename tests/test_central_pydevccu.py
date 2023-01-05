@@ -16,7 +16,7 @@ from hahomematic.entity import GenericEntity
 
 
 @pytest.mark.asyncio
-async def no_test_central(central_pydevccu, loop) -> None:
+async def test_central(central_pydevccu, loop) -> None:
     """Test the central."""
     assert central_pydevccu
     assert central_pydevccu.name == CENTRAL_NAME
@@ -125,12 +125,12 @@ async def no_test_central(central_pydevccu, loop) -> None:
 
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2499
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
-    assert usage_types[HmEntityUsage.ENTITY] == 3633
+    assert usage_types[HmEntityUsage.ENTITY] == 3618
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 96
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 
     assert len(central_pydevccu.devices) == 372
-    assert len(central_pydevccu.entities) == 6535
+    assert len(central_pydevccu.entities) == 6520
     assert len(data) == 372
     assert len(custom_entities) == 307
     assert len(ce_channels) == 110
