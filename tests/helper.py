@@ -13,8 +13,8 @@ from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity, GenericSystemVariable
-from hahomematic.helpers import ProgramData, SystemVariableData, get_device_address
 from hahomematic.generic_platforms.button import HmProgramButton
+from hahomematic.helpers import ProgramData, SystemVariableData, get_device_address
 
 
 class CentralUnitLocalFactory:
@@ -130,6 +130,7 @@ async def get_hm_sysvar_entity(
     sysvar_entity = central_unit.sysvar_entities.get(name)
     assert sysvar_entity
     return sysvar_entity
+
 
 async def get_hm_program_button(
     central_unit: CentralUnit, pid: str

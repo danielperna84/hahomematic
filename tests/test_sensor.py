@@ -5,15 +5,16 @@ from typing import cast
 
 import const
 import helper
-from helper import get_hm_generic_entity
+from helper import get_hm_generic_entity, get_hm_sysvar_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.generic_platforms.sensor import HmSensor
+from hahomematic.generic_platforms.sensor import HmSensor, HmSysvarSensor
 
 TEST_DEVICES: dict[str, str] = {
     "VCU7981740": "HmIP-SRH.json",
     "VCU3941846": "HMIP-PSM.json",
+    "VCU8205532": "HmIP-SCTH230.json",
 }
 
 
@@ -36,6 +37,32 @@ async def test_hmsensor_psm(
     central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:6", "VOLTAGE", 234.00)
     assert sensor.value == 234.00
 
+    sensor2: HmSensor = cast(
+        HmSensor, await get_hm_generic_entity(central, "VCU3941846:0", "RSSI_DEVICE")
+    )
+    assert sensor2.usage == HmEntityUsage.ENTITY
+    assert sensor2.unit == "dBm"
+    assert sensor2.value_list is None
+    assert sensor2.value is None
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 24)
+    assert sensor2.value == -24
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", -40)
+    assert sensor2.value == -40
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", -160)
+    assert sensor2.value == -96
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 160)
+    assert sensor2.value == -96
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 400)
+    assert sensor2.value is None
+
+    sensor3: HmSensor = cast(
+        HmSensor, await get_hm_generic_entity(central, "VCU8205532:1", "CONCENTRATION")
+    )
+    assert sensor3.usage == HmEntityUsage.ENTITY
+    assert sensor3.unit == "ppm"
+    assert sensor3.value_list is None
+    assert sensor3.value is None
+
 
 @pytest.mark.asyncio
 async def test_hmsensor_srh(
@@ -57,4 +84,26 @@ async def test_hmsensor_srh(
     assert sensor.value == "OPEN"
 
 
-# TODO: Add test for sysvar
+@pytest.mark.asyncio
+async def test_hmsysvarsensor(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test HmSysvarSensor."""
+    central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
+    assert central
+    sensor: HmSysvarSensor = cast(
+        HmSysvarSensor, await get_hm_sysvar_entity(central, "sv_list")
+    )
+    assert sensor.usage == HmEntityUsage.ENTITY
+    assert sensor.available is True
+    assert sensor.unit is None
+    assert sensor.value_list == ("v1", "v2", "v3")
+    assert sensor.value == "v1"
+
+    sensor2: HmSysvarSensor = cast(
+        HmSysvarSensor, await get_hm_sysvar_entity(central, "sv_float")
+    )
+    assert sensor2.usage == HmEntityUsage.ENTITY
+    assert sensor2.unit is None
+    assert sensor2.value_list is None
+    assert sensor2.value == 23.2

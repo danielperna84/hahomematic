@@ -6,11 +6,11 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_hm_generic_entity
+from helper import ProgramData, get_hm_generic_entity, get_hm_program_button
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.generic_platforms.button import HmButton
+from hahomematic.generic_platforms.button import HmButton, HmProgramButton
 
 TEST_DEVICES: dict[str, str] = {
     "VCU1437294": "HmIP-SMI.json",
@@ -27,6 +27,7 @@ async def test_hmbutton(
         HmButton, await get_hm_generic_entity(central, "VCU1437294:1", "RESET_MOTION")
     )
     assert button.usage == HmEntityUsage.ENTITY
+    assert button.available is True
     assert button.is_readable is False
     assert button.value is None
     assert button.value_list is None
@@ -38,3 +39,43 @@ async def test_hmbutton(
         parameter="RESET_MOTION",
         value=True,
     )
+
+
+@pytest.mark.asyncio
+async def test_hmprogrambutton(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test HmProgramButton."""
+    central, mock_client = await central_local_factory.get_central(
+        {}, add_programs=True
+    )
+    button: HmProgramButton = cast(
+        HmProgramButton, await get_hm_program_button(central, "pid1")
+    )
+    assert button.usage == HmEntityUsage.ENTITY
+    assert button.available is True
+    assert button.is_active is True
+    assert button.is_internal is False
+    assert button.ccu_program_name == "p1"
+    assert button.name == "P_P1"
+    await button.press()
+    assert mock_client.method_calls[-1] == call.execute_program(pid="pid1")
+    updated_program = ProgramData(
+        name="p1",
+        pid="pid1",
+        is_active=False,
+        is_internal=True,
+        last_execute_time="1900-1-1",
+    )
+    button.update_data(updated_program)
+    assert button.is_active is False
+    assert button.is_internal is True
+
+    button2: HmProgramButton = cast(
+        HmProgramButton, await get_hm_program_button(central, "pid2")
+    )
+    assert button2.usage == HmEntityUsage.ENTITY
+    assert button2.is_active is False
+    assert button2.is_internal is False
+    assert button2.ccu_program_name == "p_2"
+    assert button2.name == "P_2"
