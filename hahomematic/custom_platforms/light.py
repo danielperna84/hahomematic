@@ -131,8 +131,8 @@ class BaseHmLight(CustomEntity):
         **kwargs: dict[str, Any] | None,
     ) -> None:
         """Turn the light on."""
-        ramp_time:float | None = None
-        on_time:float | None = None
+        ramp_time: float | None = None
+        on_time: float | None = None
 
         if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))

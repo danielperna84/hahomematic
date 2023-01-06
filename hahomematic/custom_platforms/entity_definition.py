@@ -627,7 +627,7 @@ def _create_entities(
     unique_identifier = generate_unique_identifier(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
-    if unique_identifier in device.central.entities:
+    if device.central.has_entity(unique_identifier=unique_identifier):
         _LOGGER.debug(
             "make_custom_entity: Skipping %s (already exists)", unique_identifier
         )
