@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
+import const
 import helper
 from helper import get_hm_custom_entity
 import pytest
@@ -21,6 +22,9 @@ TEST_DEVICES: dict[str, str] = {
     "VCU3747418": "HM-LC-RGBW-WM.json",
     "VCU0000115": "HM-LC-DW-WM.json",
     "VCU3716619": "HmIP-BSL.json",
+    "VCU0000098": "HM-DW-WM.json",
+    "VCU4704397": "HmIPW-WRC6.json",
+    "VCU0000122": "HM-LC-Dim1L-CV.json",
 }
 
 
@@ -35,6 +39,15 @@ async def test_cedimmer(
         CeDimmer, await get_hm_custom_entity(central, "VCU1399816", 4)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.color_temp is None
+    assert light.hs_color is None
+    assert light.supports_brightness is True
+    assert light.supports_color_temperature is False
+    assert light.supports_effects is False
+    assert light.supports_hs_color is False
+    assert light.supports_transition is True
+    assert light.effect is None
+    assert light.effect_list is None
 
     assert light.brightness == 0
     await light.turn_on()
@@ -53,7 +66,39 @@ async def test_cedimmer(
         value=0.10980392156862745,
     )
     assert light.brightness == 28
-    await light.turn_off()
+    assert light.is_on
+
+    assert light.channel_brightness is None
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1399816:3", "LEVEL", 0.4)
+    assert light.channel_brightness == 102
+
+    await light.turn_on(**{"on_time": 5.0, "ramp_time": 6.0})
+    assert mock_client.method_calls[-3] == call.set_value(
+        channel_address="VCU1399816:4",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME",
+        value=6.0,
+    )
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU1399816:4",
+        paramset_key="VALUES",
+        parameter="ON_TIME",
+        value=5.0,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1399816:4",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.10980392156862745,
+    )
+
+    await light.turn_off(**{"ramp_time": 6.0})
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU1399816:4",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME",
+        value=6.0,
+    )
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1399816:4",
         paramset_key="VALUES",
@@ -61,6 +106,30 @@ async def test_cedimmer(
         value=0.0,
     )
     assert light.brightness == 0
+
+    await light.turn_off()
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1399816:4",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.0,
+    )
+
+    await light.set_on_time_value(0.5)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1399816:4",
+        paramset_key="VALUES",
+        parameter="ON_TIME",
+        value=0.5,
+    )
+
+    await light.set_ramp_time_value(5.0)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1399816:4",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME",
+        value=5.0,
+    )
 
 
 @pytest.mark.asyncio
@@ -74,6 +143,23 @@ async def test_cecolordimmer(
         CeColorDimmer, await get_hm_custom_entity(central, "VCU3747418", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.color_temp is None
+    assert light.hs_color == (0.0, 0.0)
+    assert light.supports_brightness is True
+    assert light.supports_color_temperature is False
+    assert light.supports_effects is True
+    assert light.supports_hs_color is True
+    assert light.supports_transition is True
+    assert light.effect is None
+    assert light.effect_list == [
+        "Off",
+        "Slow color change",
+        "Medium color change",
+        "Fast color change",
+        "Campfire",
+        "Waterfall",
+        "TV simulation",
+    ]
 
     assert light.brightness == 0
     await light.turn_on()
@@ -111,6 +197,41 @@ async def test_cecolordimmer(
     )
     assert light.hs_color == (45.0, 100)
 
+    await light.turn_on(**{"hs_color": (0, 50)})
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3747418:2",
+        paramset_key="VALUES",
+        parameter="COLOR",
+        value=0,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3747418:1",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=1.0,
+    )
+    assert light.hs_color == (0.0, 0.0)
+
+    await light.turn_on(**{"effect": "Slow color change"})
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3747418:3",
+        paramset_key="VALUES",
+        parameter="PROGRAM",
+        value=1,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3747418:1",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=1.0,
+    )
+    assert light.effect == "Slow color change"
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3747418:2", "COLOR", 201)
+    assert light.hs_color == (0.0, 0.0)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3747418:2", "COLOR", None)
+    assert light.hs_color == (0.0, 0.0)
+
 
 @pytest.mark.asyncio
 async def test_cecolortempdimmer(
@@ -123,7 +244,15 @@ async def test_cecolortempdimmer(
         CeColorTempDimmer, await get_hm_custom_entity(central, "VCU0000115", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
-
+    assert light.color_temp == 500
+    assert light.hs_color is None
+    assert light.supports_brightness is True
+    assert light.supports_color_temperature is True
+    assert light.supports_effects is False
+    assert light.supports_hs_color is False
+    assert light.supports_transition is True
+    assert light.effect is None
+    assert light.effect_list is None
     assert light.brightness == 0
     await light.turn_on()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -172,8 +301,21 @@ async def test_ceipfixedcolorlight(
         CeIpFixedColorLight, await get_hm_custom_entity(central, "VCU3716619", 8)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
-
+    assert light.color_temp is None
+    assert light.hs_color == (0.0, 0.0)
+    assert light.supports_brightness is True
+    assert light.supports_color_temperature is False
+    assert light.supports_effects is False
+    assert light.supports_hs_color is True
+    assert light.supports_transition is True
+    assert light.effect is None
+    assert light.effect_list is None
     assert light.brightness == 0
+    assert light.is_on is False
+    assert light.color_name == "BLACK"
+    assert light.channel_color_name is None
+    assert light.channel_brightness is None
+    assert light.channel_hs_color is None
     await light.turn_on()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU3716619:8",
@@ -209,7 +351,7 @@ async def test_ceipfixedcolorlight(
     )
     assert light.color_name == "WHITE"
     await light.turn_on(**{"hs_color": (60, 50)})
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU3716619:8",
         paramset_key="VALUES",
         parameter="COLOR",
@@ -217,7 +359,7 @@ async def test_ceipfixedcolorlight(
     )
     assert light.color_name == "YELLOW"
     await light.turn_on(**{"hs_color": (120, 50)})
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU3716619:8",
         paramset_key="VALUES",
         parameter="COLOR",
@@ -225,7 +367,7 @@ async def test_ceipfixedcolorlight(
     )
     assert light.color_name == "GREEN"
     await light.turn_on(**{"hs_color": (180, 50)})
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU3716619:8",
         paramset_key="VALUES",
         parameter="COLOR",
@@ -233,7 +375,7 @@ async def test_ceipfixedcolorlight(
     )
     assert light.color_name == "TURQUOISE"
     await light.turn_on(**{"hs_color": (240, 50)})
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU3716619:8",
         paramset_key="VALUES",
         parameter="COLOR",
@@ -241,7 +383,7 @@ async def test_ceipfixedcolorlight(
     )
     assert light.color_name == "BLUE"
     await light.turn_on(**{"hs_color": (300, 50)})
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU3716619:8",
         paramset_key="VALUES",
         parameter="COLOR",
@@ -249,10 +391,101 @@ async def test_ceipfixedcolorlight(
     )
     assert light.color_name == "PURPLE"
     await light.turn_on(**{"hs_color": (350, 50)})
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU3716619:8",
         paramset_key="VALUES",
         parameter="COLOR",
         value=4,
     )
     assert light.color_name == "RED"
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3716619:7", "LEVEL", 0.5)
+    assert light.channel_brightness == 127
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3716619:7", "COLOR", 1)
+    assert light.channel_hs_color == (240.0, 100.0)
+    assert light.channel_color_name == "BLUE"
+
+    await light.set_on_time_value(18)
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="DURATION_UNIT",
+        value=0,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="DURATION_VALUE",
+        value=18,
+    )
+
+    await light.set_on_time_value(17000)
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="DURATION_UNIT",
+        value=1,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="DURATION_VALUE",
+        value=283,
+    )
+
+    await light.set_on_time_value(1000000)
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="DURATION_UNIT",
+        value=2,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="DURATION_VALUE",
+        value=277,
+    )
+
+    await light.set_ramp_time_value(18)
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME_UNIT",
+        value=0,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME_VALUE",
+        value=18,
+    )
+
+    await light.set_ramp_time_value(17000)
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME_UNIT",
+        value=1,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME_VALUE",
+        value=283,
+    )
+
+    await light.set_ramp_time_value(1000000)
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME_UNIT",
+        value=2,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3716619:8",
+        paramset_key="VALUES",
+        parameter="RAMP_TIME_VALUE",
+        value=277,
+    )

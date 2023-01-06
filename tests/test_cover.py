@@ -10,7 +10,14 @@ from helper import get_hm_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.custom_platforms.cover import CeBlind, CeCover, CeGarage, CeIpBlind, GARAGE_DOOR_SECTION_CLOSING, GARAGE_DOOR_SECTION_OPENING
+from hahomematic.custom_platforms.cover import (
+    GARAGE_DOOR_SECTION_CLOSING,
+    GARAGE_DOOR_SECTION_OPENING,
+    CeBlind,
+    CeCover,
+    CeGarage,
+    CeIpBlind,
+)
 
 TEST_DEVICES: dict[str, str] = {
     "VCU8537918": "HmIP-BROLL.json",
@@ -312,9 +319,13 @@ async def test_cegarage(
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
     assert cover.current_cover_position == 100
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_OPENING)
+    central.event(
+        const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_OPENING
+    )
     assert cover.is_opening is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_CLOSING)
+    central.event(
+        const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_CLOSING
+    )
     assert cover.is_closing is True
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", None)
@@ -323,4 +334,3 @@ async def test_cegarage(
     assert cover.is_closing is None
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", None)
     assert cover.is_closed is None
-
