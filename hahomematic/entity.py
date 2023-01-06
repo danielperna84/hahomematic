@@ -248,7 +248,7 @@ class BaseEntity(CallbackEntity):
         self._attr_usage = usage
 
     def add_to_collections(self) -> None:
-        """add entity to central_unit collections"""
+        """add entity to device and central collections"""
         self.device.add_entity(self)
         self._central.entities[self._attr_unique_identifier] = self
 
@@ -540,12 +540,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self._attr_state_uncertain: bool = True
         self.wrapped: bool = False
 
-        # Subscribe for all events of this device
-        self._central.add_entity_event_subscriptions(
-            channel_address=channel_address,
-            parameter=parameter,
-            event_handle=self.event,
-        )
+
 
     @config_property
     def channel_operation_mode(self) -> str | None:
@@ -593,6 +588,16 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
     def value(self) -> ParameterT | None:
         """Return the value of the entity."""
         return self._attr_value
+
+    def add_to_collections(self) -> None:
+        """add entity to device and central collections"""
+        super().add_to_collections()
+        # Subscribe for all events of this device
+        self._central.add_entity_event_subscriptions(
+            channel_address=self.channel_address,
+            parameter=self.parameter,
+            event_handle=self.event,
+        )
 
     def event(
         self, interface_id: str, channel_address: str, parameter: str, raw_value: Any
@@ -743,7 +748,7 @@ class WrapperEntity(CallbackEntity):
         return self._wrapped_entity.name
 
     def add_to_collections(self) -> None:
-        """add entity to central_unit collections"""
+        """add entity to device and central collections"""
         self.device.add_entity(self)
         self._central.entities[self.unique_identifier] = self
 
@@ -1143,13 +1148,6 @@ class BaseEvent(BaseParameterEntity[Any]):
         self._attr_last_update: datetime = INIT_DATETIME
         self._attr_value: Any | None = None
 
-        # Subscribe for all action events of this device
-        self._central.add_entity_event_subscriptions(
-            channel_address=channel_address,
-            parameter=parameter,
-            event_handle=self.event,
-        )
-
     @config_property
     def event_type(self) -> HmEventType:
         """Return the event_type of the event."""
@@ -1231,8 +1229,14 @@ class BaseEvent(BaseParameterEntity[Any]):
             )
 
     def add_to_collections(self) -> None:
-        """Add entity to central_unit collections."""
+        """add event to device and central collections"""
         self.device.add_event(self)
+        # Subscribe for all events of this device
+        self._central.add_entity_event_subscriptions(
+            channel_address=self.channel_address,
+            parameter=self.parameter,
+            event_handle=self.event,
+        )
 
     def _set_last_update(self) -> None:
         self._attr_last_update = datetime.now()
