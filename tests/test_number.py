@@ -14,6 +14,7 @@ from hahomematic.generic_platforms.number import HmFloat, HmInteger, HmSysvarNum
 
 TEST_DEVICES: dict[str, str] = {
     "VCU4984404": "HmIPW-STHD.json",
+    "VCU0000011": "HMW-LC-Bl1-DR.json",
 }
 
 
@@ -26,25 +27,25 @@ async def test_hmfloat(
     assert central
     efloat: HmFloat = cast(
         HmFloat,
-        await get_hm_generic_entity(central, "VCU4984404:1", "TEMPERATURE_MAXIMUM"),
+        await get_hm_generic_entity(central, "VCU0000011:3", "LEVEL"),
     )
     assert efloat.usage == HmEntityUsage.ENTITY_NO_CREATE
-    assert efloat.unit == "°C"
+    assert efloat.unit == "%"
     assert efloat.value_list is None
     assert efloat.value is None
-    await efloat.send_value(23.0)
+    await efloat.send_value(0.3)
     assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU4984404:1",
-        paramset_key="MASTER",
-        parameter="TEMPERATURE_MAXIMUM",
-        value=23.0,
+        channel_address="VCU0000011:3",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.3,
     )
-    assert efloat.value == 23.0
-    central.event(const.LOCAL_INTERFACE_ID, "VCU4984404:1", "TEMPERATURE_MAXIMUM", 20.5)
-    assert efloat.value == 20.5
+    assert efloat.value == 0.3
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000011:3", "LEVEL", 0.5)
+    assert efloat.value == 0.5
     # do not write. value above max
     await efloat.send_value(45.0)
-    assert efloat.value == 20.5
+    assert efloat.value == 0.5
 
 
 @pytest.mark.asyncio
