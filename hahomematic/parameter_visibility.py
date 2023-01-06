@@ -76,6 +76,7 @@ _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
     PARAM_TEMPERATURE_MINIMUM,
     "ACTIVITY_STATE",
     "DIRECTION",
+    "SECTION",
 )
 
 # Parameters within the VALUES paramset for which we don't create entities.
@@ -105,7 +106,6 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "QUICK_VETO_TIME",
     "RAMP_STOP",
     "RELOCK_DELAY",
-    "SECTION",
     "SELF_CALIBRATION",
     "SET_SYMBOL_FOR_HEATING_PHASE",
     "SMOKE_DETECTOR_COMMAND",  # ro

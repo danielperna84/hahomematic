@@ -182,7 +182,7 @@ class CentralUnit:
         """Return if active sub threads are alive."""
         if self._connection_checker.is_alive():
             return True
-        if self._xml_rpc_server.is_alive():
+        if self._xml_rpc_server and self._xml_rpc_server.is_alive():
             return True
         return False
 

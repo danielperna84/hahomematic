@@ -131,6 +131,9 @@ class BaseHmLight(CustomEntity):
         **kwargs: dict[str, Any] | None,
     ) -> None:
         """Turn the light on."""
+        ramp_time:float | None = None
+        on_time:float | None = None
+
         if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
             await self.set_ramp_time_value(ramp_time=ramp_time)
@@ -142,7 +145,7 @@ class BaseHmLight(CustomEntity):
         if brightness := cast(
             int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255
         ):
-            if brightness != self.brightness:
+            if brightness != self.brightness or kwargs:
                 level = brightness / 255.0
                 await self._e_level.send_value(level)
 
@@ -416,7 +419,7 @@ class CeIpFixedColorLight(BaseHmLight):
         if isinstance(self._e_on_time_value, HmAction) and isinstance(
             self._e_on_time_unit, HmAction
         ):
-            await self._e_on_time_value.send_value(on_time_unit)
+            await self._e_on_time_unit.send_value(on_time_unit)
             await self._e_on_time_value.send_value(float(on_time))
 
     async def set_ramp_time_value(self, ramp_time: float) -> None:
@@ -432,7 +435,7 @@ class CeIpFixedColorLight(BaseHmLight):
         if isinstance(self._e_ramp_time_value, HmAction) and isinstance(
             self._e_ramp_time_unit, HmAction
         ):
-            await self._e_ramp_time_value.send_value(ramp_time_unit)
+            await self._e_ramp_time_unit.send_value(ramp_time_unit)
             await self._e_ramp_time_value.send_value(float(ramp_time))
 
 
