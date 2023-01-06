@@ -1104,7 +1104,7 @@ class ClientLocal(Client):
             str(importlib.resources.files(package=package)), resource
         )
         for filename in os.listdir(resource_path):
-            if include_list and filename not in include_list:
+            if filename not in include_list:
                 continue
             if file_content := await self._load_json_file(
                 package=package, resource=resource, filename=filename
