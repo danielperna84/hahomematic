@@ -137,7 +137,7 @@ class CentralUnit:
         # {interface_id, client}
         self._clients: Final[dict[str, hm_client.Client]] = {}
         # {{channel_address, parameter}, event_handle}
-        self.entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
+        self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
         # {unique_identifier, entity}
         self.entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
@@ -761,9 +761,9 @@ class CentralUnit:
         # No need to check the response of a XmlRPC-PING
         if parameter == "PONG":
             return
-        if (channel_address, parameter) in self.entity_event_subscriptions:
+        if (channel_address, parameter) in self._entity_event_subscriptions:
             try:
-                for callback in self.entity_event_subscriptions[
+                for callback in self._entity_event_subscriptions[
                     (channel_address, parameter)
                 ]:
                     callback(interface_id, channel_address, parameter, value)
@@ -795,6 +795,22 @@ class CentralUnit:
         return self.device_descriptions.get_raw_device_descriptions(
             interface_id=interface_id
         )
+
+    def add_entity_event_subscriptions(
+        self, channel_address: str, parameter: str, event_handle: Any
+    ) -> None:
+        """Add event_handle to entity_event_subscriptions."""
+        if (channel_address, parameter) not in self._entity_event_subscriptions:
+            self._entity_event_subscriptions[(channel_address, parameter)] = []
+        self._entity_event_subscriptions[(channel_address, parameter)].append(
+            event_handle
+        )
+
+    def remove_entity_event_subscriptions(
+        self, channel_address: str, parameter: str
+    ) -> None:
+        """Remove existing event subscriptions"""
+        del self._entity_event_subscriptions[(channel_address, parameter)]
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""

@@ -541,13 +541,10 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self.wrapped: bool = False
 
         # Subscribe for all events of this device
-        if (
-            channel_address,
-            parameter,
-        ) not in self._central.entity_event_subscriptions:
-            self._central.entity_event_subscriptions[(channel_address, parameter)] = []
-        self._central.entity_event_subscriptions[(channel_address, parameter)].append(
-            self.event
+        self._central.add_entity_event_subscriptions(
+            channel_address=channel_address,
+            parameter=parameter,
+            event_handle=self.event,
         )
 
     @config_property
@@ -672,9 +669,9 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
-        del self._central.entity_event_subscriptions[
-            (self._attr_channel_address, self._attr_parameter)
-        ]
+        self._central.remove_entity_event_subscriptions(
+            channel_address=self._attr_channel_address, parameter=self._attr_parameter
+        )
 
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
@@ -1147,13 +1144,10 @@ class BaseEvent(BaseParameterEntity[Any]):
         self._attr_value: Any | None = None
 
         # Subscribe for all action events of this device
-        if (
-            channel_address,
-            parameter,
-        ) not in self._central.entity_event_subscriptions:
-            self._central.entity_event_subscriptions[(channel_address, parameter)] = []
-        self._central.entity_event_subscriptions[(channel_address, parameter)].append(
-            self.event
+        self._central.add_entity_event_subscriptions(
+            channel_address=channel_address,
+            parameter=parameter,
+            event_handle=self.event,
         )
 
     @config_property
@@ -1245,9 +1239,9 @@ class BaseEvent(BaseParameterEntity[Any]):
 
     def remove_event_subscriptions(self) -> None:
         """Remove existing event subscriptions"""
-        del self._central.entity_event_subscriptions[
-            (self._attr_channel_address, self._attr_parameter)
-        ]
+        self._central.remove_entity_event_subscriptions(
+            channel_address=self._attr_channel_address, parameter=self._attr_parameter
+        )
 
 
 class ClickEvent(BaseEvent):

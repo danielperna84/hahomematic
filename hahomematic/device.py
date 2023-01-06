@@ -520,8 +520,6 @@ class HmDevice:
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
     ) -> None:
         """Create action event entity."""
-        if (channel_address, parameter) not in self.central.entity_event_subscriptions:
-            self.central.entity_event_subscriptions[(channel_address, parameter)] = []
 
         unique_identifier = generate_unique_identifier(
             central=self.central,
@@ -577,8 +575,6 @@ class HmDevice:
                 channel_address,
             )
             return None
-        if (channel_address, parameter) not in self.central.entity_event_subscriptions:
-            self.central.entity_event_subscriptions[(channel_address, parameter)] = []
 
         unique_identifier = generate_unique_identifier(
             central=self.central, address=channel_address, parameter=parameter
