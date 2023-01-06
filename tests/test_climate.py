@@ -165,9 +165,7 @@ async def test_cerfthermostat(
         parameter="AUTO_MODE",
         value=True,
     )
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 0
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 0)
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000050:4", "SET_TEMPERATURE", 24.0)
     assert climate.hvac_mode == HmHvacMode.AUTO
 
@@ -185,13 +183,9 @@ async def test_cerfthermostat(
         parameter="BOOST_MODE",
         value=True,
     )
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 3
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 3)
     assert climate.preset_mode == HmPresetMode.BOOST
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 2
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 2)
     assert climate.preset_mode == HmPresetMode.AWAY
     await climate.set_preset_mode(HmPresetMode.COMFORT)
     assert mock_client.method_calls[-1] == call.set_value(

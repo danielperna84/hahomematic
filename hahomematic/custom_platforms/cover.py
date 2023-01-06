@@ -72,7 +72,7 @@ class CeCover(CustomEntity):
         )
 
     @property
-    def channel_level(self) -> float | None:
+    def channel_level(self) -> float:
         """Return the channel level of the cover."""
         if (
             self._e_channel_level.value is not None
@@ -82,11 +82,9 @@ class CeCover(CustomEntity):
         return self._e_level.value if self._e_level.value is not None else HM_CLOSED
 
     @value_property
-    def current_cover_position(self) -> int | None:
+    def current_cover_position(self) -> int:
         """Return current position of cover."""
-        if self.channel_level is not None:
-            return int(self.channel_level * 100)
-        return None
+        return int(self.channel_level * 100)
 
     @value_property
     def channel_operation_mode(self) -> str | None:
@@ -108,9 +106,7 @@ class CeCover(CustomEntity):
     @value_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self.channel_level is not None:
-            return self.channel_level == HM_CLOSED
-        return None
+        return self.channel_level == HM_CLOSED
 
     @value_property
     def is_opening(self) -> bool | None:
@@ -153,7 +149,7 @@ class CeBlind(CeCover):
         )
 
     @property
-    def channel_tilt_level(self) -> float | None:
+    def channel_tilt_level(self) -> float:
         """Return the channel level of the tilt."""
         if (
             self._e_channel_level_2.value is not None
@@ -163,11 +159,9 @@ class CeBlind(CeCover):
         return self._e_level_2.value if self._e_level_2.value is not None else HM_CLOSED
 
     @value_property
-    def current_cover_tilt_position(self) -> int | None:
+    def current_cover_tilt_position(self) -> int:
         """Return current tilt position of cover."""
-        if self.channel_tilt_level is not None:
-            return int(self.channel_tilt_level * 100)
-        return None
+        return int(self.channel_tilt_level * 100)
 
     async def set_cover_tilt_position(self, position: float) -> None:
         """Move the cover to a specific tilt position."""
