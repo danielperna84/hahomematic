@@ -43,10 +43,10 @@ from hahomematic.generic_platforms.switch import HmSwitch
 _LOGGER = logging.getLogger(__name__)
 
 # HA constants
-HM_MODE_AUTO = "AUTO-MODE"
-HM_MODE_MANU = "MANU-MODE"
-HM_MODE_AWAY = "PARTY-MODE"
-HM_MODE_BOOST = "BOOST-MODE"
+HM_MODE_AUTO = "AUTO-MODE"  # 0
+HM_MODE_MANU = "MANU-MODE"  # 1
+HM_MODE_AWAY = "PARTY-MODE"  # 2
+HM_MODE_BOOST = "BOOST-MODE"  # 3
 
 HM_OFF_TEMPERATURE = 4.5
 
@@ -328,9 +328,6 @@ class CeRfThermostat(BaseClimateEntity):
             await self.set_temperature(
                 temperature=HM_OFF_TEMPERATURE, do_validate=False
             )
-        # if switching hvac_mode then disable boost_mode
-        if self._e_boost_mode.value:
-            await self.set_preset_mode(HmPresetMode.NONE)
 
     async def set_preset_mode(self, preset_mode: HmPresetMode) -> None:
         """Set new preset mode."""
