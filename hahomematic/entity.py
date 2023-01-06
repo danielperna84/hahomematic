@@ -249,8 +249,8 @@ class BaseEntity(CallbackEntity):
 
     def add_to_collections(self) -> None:
         """add entity to device and central collections"""
-        self.device.add_entity(self)
-        self._central.entities[self._attr_unique_identifier] = self
+        self.device.add_entity(entity=self)
+        self._central.add_entity(entity=self)
 
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
@@ -412,6 +412,14 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
                 return fix
         return raw_unit
 
+    @abstractmethod
+    def event(
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
+    ) -> None:
+        """
+        Handle event for which this handler has subscribed.
+        """
+
     def update_parameter_data(self) -> None:
         """Update parameter data"""
         self._assign_parameter_data(
@@ -540,8 +548,6 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self._attr_state_uncertain: bool = True
         self.wrapped: bool = False
 
-
-
     @config_property
     def channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
@@ -589,26 +595,16 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         """Return the value of the entity."""
         return self._attr_value
 
-    def add_to_collections(self) -> None:
-        """add entity to device and central collections"""
-        super().add_to_collections()
-        # Subscribe for all events of this device
-        self._central.add_entity_event_subscriptions(
-            channel_address=self.channel_address,
-            parameter=self.parameter,
-            event_handle=self.event,
-        )
-
     def event(
-        self, interface_id: str, channel_address: str, parameter: str, raw_value: Any
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
         """
         Handle event for which this entity has subscribed.
         """
         old_value = self._attr_value
 
-        value = self._convert_value(raw_value)
-        if self._attr_value == value:
+        new_value = self._convert_value(value)
+        if self._attr_value == new_value:
             return
 
         if not self._check_event_parameters(
@@ -618,11 +614,11 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         ):
             return
 
-        self.update_value(value=value)
+        self.update_value(value=new_value)
 
         # reload paramset_descriptions, if value has changed
         if self._attr_parameter == EVENT_CONFIG_PENDING:
-            if value is False and old_value is True:
+            if new_value is False and old_value is True:
                 self._central.create_task(self.device.reload_paramset_descriptions())
 
         # send device availability events
@@ -635,7 +631,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
             if callable(self._central.callback_ha_event):
                 self._central.callback_ha_event(
                     HmEventType.DEVICE_AVAILABILITY,
-                    self._get_event_data(value),
+                    self._get_event_data(new_value),
                 )
 
     async def load_entity_value(
@@ -671,12 +667,6 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self._attr_state_uncertain = False
         self._set_last_update()
         self.update_entity()
-
-    def remove_event_subscriptions(self) -> None:
-        """Remove existing event subscriptions"""
-        self._central.remove_entity_event_subscriptions(
-            channel_address=self._attr_channel_address, parameter=self._attr_parameter
-        )
 
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
@@ -749,8 +739,8 @@ class WrapperEntity(CallbackEntity):
 
     def add_to_collections(self) -> None:
         """add entity to device and central collections"""
-        self.device.add_entity(self)
-        self._central.entities[self.unique_identifier] = self
+        self.device.add_entity(entity=self)
+        self._central.add_entity(entity=self)
 
 
 _EntityT = TypeVar("_EntityT", bound=GenericEntity)
@@ -1228,24 +1218,8 @@ class BaseEvent(BaseParameterEntity[Any]):
                 value,
             )
 
-    def add_to_collections(self) -> None:
-        """add event to device and central collections"""
-        self.device.add_event(self)
-        # Subscribe for all events of this device
-        self._central.add_entity_event_subscriptions(
-            channel_address=self.channel_address,
-            parameter=self.parameter,
-            event_handle=self.event,
-        )
-
     def _set_last_update(self) -> None:
         self._attr_last_update = datetime.now()
-
-    def remove_event_subscriptions(self) -> None:
-        """Remove existing event subscriptions"""
-        self._central.remove_entity_event_subscriptions(
-            channel_address=self._attr_channel_address, parameter=self._attr_parameter
-        )
 
 
 class ClickEvent(BaseEvent):

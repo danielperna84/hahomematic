@@ -55,7 +55,7 @@ async def test_central(central_pydevccu, loop) -> None:
         assert pub_config_props
 
     entity_types = {}
-    for entity in central_pydevccu.entities.values():
+    for entity in central_pydevccu._entities.values():
         if hasattr(entity, "hmtype"):
             if entity.hmtype not in entity_types:
                 entity_types[entity.hmtype] = {}
@@ -69,18 +69,18 @@ async def test_central(central_pydevccu, loop) -> None:
         assert pub_config_props
 
     parameters = []
-    for entity in central_pydevccu.entities.values():
+    for entity in central_pydevccu._entities.values():
         if hasattr(entity, "parameter"):
             if entity.parameter not in parameters:
                 parameters.append(entity.parameter)
 
     units = set()
-    for entity in central_pydevccu.entities.values():
+    for entity in central_pydevccu._entities.values():
         if hasattr(entity, "_unit"):
             units.add(entity._unit)
 
     usage_types: dict[HmEntityUsage, int] = {}
-    for entity in central_pydevccu.entities.values():
+    for entity in central_pydevccu._entities.values():
         if hasattr(entity, "usage"):
             if entity.usage not in usage_types:
                 usage_types[entity.usage] = 0
@@ -89,7 +89,7 @@ async def test_central(central_pydevccu, loop) -> None:
 
     switches: dict[str, set[int]] = {}
 
-    for entity in central_pydevccu.entities.values():
+    for entity in central_pydevccu._entities.values():
         # if isinstance(entity, HmSwitchPlatform):
         if hasattr(entity, "parameter") and entity.parameter == "ON_TIME":
             device_type = entity.device.device_type[:8]
@@ -102,7 +102,7 @@ async def test_central(central_pydevccu, loop) -> None:
             switches[device_type].add(channel_no)
 
     entity_type_operations: dict[str, dict[str, set[int]]] = {}
-    for entity in central_pydevccu.entities.values():
+    for entity in central_pydevccu._entities.values():
         if isinstance(entity, GenericEntity):
             if entity.platform not in entity_type_operations:
                 entity_type_operations[entity.platform] = {}

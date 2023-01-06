@@ -63,6 +63,7 @@ from hahomematic.decorators import (
 from hahomematic.device import HmDevice
 from hahomematic.entity import (
     BaseEntity,
+    BaseEvent,
     CustomEntity,
     GenericEntity,
     GenericHubEntity,
@@ -139,7 +140,7 @@ class CentralUnit:
         # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
         # {unique_identifier, entity}
-        self.entities: Final[dict[str, BaseEntity]] = {}
+        self._entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
         self.devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
@@ -483,7 +484,7 @@ class CentralUnit:
         if not existing_unique_ids:
             existing_unique_ids = []
         hm_entities = []
-        for entity in self.entities.values():
+        for entity in self._entities.values():
             if (
                 entity.unique_identifier not in existing_unique_ids
                 and entity.usage != HmEntityUsage.ENTITY_NO_CREATE
@@ -492,6 +493,16 @@ class CentralUnit:
                 hm_entities.append(entity)
 
         return hm_entities
+
+    def get_readable_entities(self) -> list[BaseEntity]:
+        """Return a list of readable entities. This also includes custom entities."""
+        readable_entities: list[BaseEntity] = []
+        for entity in self._entities.values():
+            if (isinstance(entity, GenericEntity) and entity.is_readable) or isinstance(
+                entity, CustomEntity
+            ):
+                readable_entities.append(entity)
+        return readable_entities
 
     def get_primary_client(self) -> hm_client.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
@@ -679,7 +690,6 @@ class CentralUnit:
                     )
                 self.device_details.remove(address=address)
                 if hm_device := self.devices.get(address):
-                    hm_device.remove_event_subscriptions()
                     hm_device.remove_from_collections()
                     del self.devices[address]
             except KeyError:
@@ -796,21 +806,48 @@ class CentralUnit:
             interface_id=interface_id
         )
 
-    def add_entity_event_subscriptions(
-        self, channel_address: str, parameter: str, event_handle: Any
-    ) -> None:
-        """Add event_handle to entity_event_subscriptions."""
-        if (channel_address, parameter) not in self._entity_event_subscriptions:
-            self._entity_event_subscriptions[(channel_address, parameter)] = []
-        self._entity_event_subscriptions[(channel_address, parameter)].append(
-            event_handle
-        )
+    def add_entity(self, entity: BaseEntity) -> None:
+        """Add entity to central collections"""
+        if entity.unique_identifier in self._entities:
+            _LOGGER.warning(
+                "Entity %s already registered in central %s",
+                entity.unique_identifier,
+                self.name,
+            )
+            return
+        if not isinstance(entity, BaseEvent):
+            self._entities[entity.unique_identifier] = entity
 
-    def remove_entity_event_subscriptions(
-        self, channel_address: str, parameter: str
-    ) -> None:
-        """Remove existing event subscriptions"""
-        del self._entity_event_subscriptions[(channel_address, parameter)]
+        if isinstance(entity, (GenericEntity, BaseEvent)) and entity.supports_events:
+            if (
+                entity.channel_address,
+                entity.parameter,
+            ) not in self._entity_event_subscriptions:
+                self._entity_event_subscriptions[
+                    (entity.channel_address, entity.parameter)
+                ] = []
+            self._entity_event_subscriptions[
+                (entity.channel_address, entity.parameter)
+            ].append(entity.event)
+
+    def remove_entity(self, entity: BaseEntity) -> None:
+        """Remove entity to central collections"""
+        if entity.unique_identifier in self._entities:
+            del self._entities[entity.unique_identifier]
+
+        if (
+            isinstance(entity, (GenericEntity, BaseEvent))
+            and entity.supports_events
+            and (entity.channel_address, entity.parameter)
+            in self._entity_event_subscriptions
+        ):
+            del self._entity_event_subscriptions[
+                (entity.channel_address, entity.parameter)
+            ]
+
+    def has_entity(self, unique_identifier: str) -> bool:
+        """Check if unique_identifier is alread added."""
+        return unique_identifier in self._entities
 
     def create_task(self, target: Awaitable) -> None:
         """Add task to the executor pool."""
@@ -1299,18 +1336,15 @@ class DeviceDataCache:
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
-        for entity in self._central.entities.values():
-            if (isinstance(entity, GenericEntity) and entity.is_readable) or isinstance(
-                entity, CustomEntity
+        for entity in self._central.get_readable_entities():
+            if paramset_key is None or (
+                isinstance(entity, GenericEntity)
+                and entity.paramset_key == paramset_key
             ):
-                if paramset_key is None or (
-                    isinstance(entity, GenericEntity)
-                    and entity.paramset_key == paramset_key
-                ):
-                    await entity.load_entity_value(
-                        call_source=HmCallSource.HM_INIT,
-                        max_age_seconds=max_age_seconds,
-                    )
+                await entity.load_entity_value(
+                    call_source=HmCallSource.HM_INIT,
+                    max_age_seconds=max_age_seconds,
+                )
 
     def add_device_data(
         self, device_data: dict[str, dict[str, dict[str, Any]]]

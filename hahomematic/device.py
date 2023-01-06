@@ -236,6 +236,8 @@ class HmDevice:
             self.register_update_callback(entity.update_entity)
         if isinstance(entity, CustomEntity):
             self.custom_entities[entity.unique_identifier] = entity
+        if isinstance(entity, BaseEvent):
+            self.events[(entity.channel_address, entity.parameter)] = entity
 
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
@@ -247,37 +249,21 @@ class HmDevice:
             self.unregister_update_callback(entity.update_entity)
         if isinstance(entity, CustomEntity):
             del self.custom_entities[entity.unique_identifier]
-
-    def add_event(self, hm_event: BaseEvent) -> None:
-        """Add a event to a device."""
-        self.events[(hm_event.channel_address, hm_event.parameter)] = hm_event
-
-    def remove_event(self, hm_event: BaseEvent) -> None:
-        """Remove event of a device."""
-        del self.events[(hm_event.channel_address, hm_event.parameter)]
-
-    def remove_event_subscriptions(self) -> None:
-        """Remove existing event subscriptions."""
-        for generic_entity in self.generic_entities.values():
-            if isinstance(generic_entity, GenericEntity):
-                generic_entity.remove_event_subscriptions()
-        for event in self.events.values():
-            event.remove_event_subscriptions()
+        if isinstance(entity, BaseEvent):
+            del self.events[(entity.channel_address, entity.parameter)]
 
     def remove_from_collections(self) -> None:
         """Remove entities from collections and central."""
 
         entities = list(self.generic_entities.values())
         for entity in entities:
-            if entity.unique_identifier in self.central.entities:
-                del self.central.entities[entity.unique_identifier]
+            self.central.remove_entity(entity=entity)
             self.remove_entity(entity)
         self.generic_entities.clear()
 
         custom_entities = list(self.custom_entities.values())
         for custom_entity in custom_entities:
-            if custom_entity.unique_identifier in self.central.entities:
-                del self.central.entities[custom_entity.unique_identifier]
+            self.central.remove_entity(entity=custom_entity)
             self.remove_entity(custom_entity)
         self.custom_entities.clear()
 
@@ -579,7 +565,7 @@ class HmDevice:
         unique_identifier = generate_unique_identifier(
             central=self.central, address=channel_address, parameter=parameter
         )
-        if unique_identifier in self.central.entities:
+        if self.central.has_entity(unique_identifier=unique_identifier):
             _LOGGER.debug(
                 "create_entity_and_append_to_device: Skipping %s (already exists)",
                 unique_identifier,
