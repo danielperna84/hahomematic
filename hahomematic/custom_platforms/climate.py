@@ -30,8 +30,8 @@ from hahomematic.custom_platforms.entity_definition import (
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
-import hahomematic.device as hm_device
-import hahomematic.entity as hm_entity
+import hahomematic.device as hmd
+import hahomematic.entity as hme
 from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
@@ -533,8 +533,8 @@ class CeIpThermostat(BaseClimateEntity):
 
 
 def make_simple_thermostat(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates SimpleRfThermostat entities."""
     return make_custom_entity(
         device=device,
@@ -545,8 +545,8 @@ def make_simple_thermostat(
 
 
 def make_thermostat(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates RfThermostat entities."""
     return make_custom_entity(
         device=device,
@@ -557,8 +557,8 @@ def make_thermostat(
 
 
 def make_thermostat_group(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates RfThermostat group entities."""
     return make_custom_entity(
         device=device,
@@ -569,8 +569,8 @@ def make_thermostat_group(
 
 
 def make_ip_thermostat(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates IPThermostat entities."""
     return make_custom_entity(
         device=device,
@@ -581,8 +581,8 @@ def make_ip_thermostat(
 
 
 def make_ip_thermostat_group(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates IPThermostat group entities."""
     return make_custom_entity(
         device=device,

@@ -12,7 +12,7 @@ import os
 from typing import Any, Final, cast
 
 from hahomematic import config
-import hahomematic.central_unit as hm_central
+import hahomematic.central_unit as hmcu
 from hahomematic.config import CHECK_INTERVAL
 from hahomematic.const import (
     ATTR_ADDRESS,
@@ -79,7 +79,7 @@ class Client(ABC):
         Initialize the Client.
         """
         self.config: Final[_ClientConfig] = client_config
-        self.central: Final[hm_central.CentralUnit] = client_config.central
+        self.central: Final[hmcu.CentralUnit] = client_config.central
         # This is the actual interface_id used for init
         self.interface_id: Final[str] = client_config.interface_id
         # for all device related interaction
@@ -167,9 +167,9 @@ class Client(ABC):
         """Mark device's availability state for this interface."""
         available = forced_availability != HmForcedDeviceAvailability.FORCE_FALSE
         if self._attr_available != available:
-            for hm_device in self.central.devices.values():
-                if hm_device.interface_id == self.interface_id:
-                    hm_device.set_forced_availability(
+            for device in self.central.devices:
+                if device.interface_id == self.interface_id:
+                    device.set_forced_availability(
                         forced_availability=forced_availability
                     )
             self._attr_available = available
@@ -757,12 +757,12 @@ class ClientCCU(Client):
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for device_type in HM_VIRTUAL_REMOTE_TYPES:
-            for hm_device in self.central.devices.values():
+            for device in self.central.devices:
                 if (
-                    hm_device.interface_id == self.interface_id
-                    and hm_device.device_type == device_type
+                    device.interface_id == self.interface_id
+                    and device.device_type == device_type
                 ):
-                    return hm_device
+                    return device
         return None
 
 
@@ -990,7 +990,8 @@ class ClientLocal(Client):
         local_resources = self.config.interface_config.local_resources
         if not local_resources:
             _LOGGER.warning(
-                "get_all_device_descriptions: missing local_resources in config for %s.",
+                "get_all_device_descriptions: "
+                "missing local_resources in config for %s.",
                 self.central.name,
             )
             return None
@@ -1001,6 +1002,7 @@ class ClientLocal(Client):
                 package=local_resources.package,
                 resource=local_resources.device_description_dir,
                 include_list=list(local_resources.address_device_translation.values()),
+                exclude_list=local_resources.ignore_device_on_create,
             ),
         ):
             for device_description in local_device_descriptions:
@@ -1090,7 +1092,11 @@ class ClientLocal(Client):
             self.central.event(self.interface_id, address, parameter, value[parameter])
 
     async def _load_all_json_files(
-        self, package: str, resource: str, include_list: list[str] | None = None
+        self,
+        package: str,
+        resource: str,
+        include_list: list[str] | None = None,
+        exclude_list: list[str] | None = None,
     ) -> list[Any] | None:
         """
         Load all json files from disk into dict.
@@ -1099,12 +1105,14 @@ class ClientLocal(Client):
         #    return None
         if not include_list:
             include_list = []
+        if not exclude_list:
+            exclude_list = []
         result: list[Any] = []
         resource_path = os.path.join(
             str(importlib.resources.files(package=package)), resource
         )
         for filename in os.listdir(resource_path):
-            if filename not in include_list:
+            if filename not in include_list or filename in exclude_list:
                 continue
             if file_content := await self._load_json_file(
                 package=package, resource=resource, filename=filename
@@ -1137,11 +1145,11 @@ class _ClientConfig:
 
     def __init__(
         self,
-        central: hm_central.CentralUnit,
+        central: hmcu.CentralUnit,
         interface_config: InterfaceConfig,
         local_ip: str,
     ):
-        self.central: Final[hm_central.CentralUnit] = central
+        self.central: Final[hmcu.CentralUnit] = central
         self.interface_config: Final[InterfaceConfig] = interface_config
         self.interface: Final[str] = interface_config.interface
         self.interface_id: Final[str] = interface_config.interface_id
@@ -1235,13 +1243,14 @@ class InterfaceConfig:
         """Validate the client_config."""
         if self.interface not in IF_NAMES:
             _LOGGER.warning(
-                "InterfaceConfig: Interface names must be within [%s] for production use",
+                "InterfaceConfig: "
+                "Interface names must be within [%s] for production use",
                 ", ".join(IF_NAMES),
             )
 
 
 async def create_client(
-    central: hm_central.CentralUnit,
+    central: hmcu.CentralUnit,
     interface_config: InterfaceConfig,
     local_ip: str,
 ) -> Client:
@@ -1253,7 +1262,7 @@ async def create_client(
 
 def get_client(interface_id: str) -> Client | None:
     """Return client by interface_id"""
-    for central in hm_central.CENTRAL_INSTANCES.values():
+    for central in hmcu.CENTRAL_INSTANCES.values():
         if central.has_client(interface_id=interface_id):
             return central.get_client(interface_id=interface_id)
     return None
@@ -1264,6 +1273,7 @@ class LocalRessources:
     """Dataclass with information for local client."""
 
     address_device_translation: dict[str, str]
+    ignore_device_on_create: list[str]
     package: str = "pydevccu"
     device_description_dir: str = "device_descriptions"
     paramset_description_dir: str = "paramset_descriptions"

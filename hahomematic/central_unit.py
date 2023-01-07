@@ -20,7 +20,7 @@ from typing import Any, Final, TypeVar
 from aiohttp import ClientSession
 
 from hahomematic import config
-import hahomematic.client as hm_client
+import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_INTERFACE_ID,
     ATTR_TYPE,
@@ -136,13 +136,13 @@ class CentralUnit:
         ] = ParameterVisibilityCache(central=self)
 
         # {interface_id, client}
-        self._clients: Final[dict[str, hm_client.Client]] = {}
+        self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
         # {unique_identifier, entity}
         self._entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
-        self.devices: Final[dict[str, HmDevice]] = {}
+        self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
         self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         # {sysvar_name, program_button}U
@@ -177,6 +177,11 @@ class CentralUnit:
     def central_url(self) -> str:
         """Return the central_orl from config. #CC"""
         return self.config.central_url
+
+    @property
+    def devices(self) -> tuple[HmDevice, ...]:
+        """Return a tuple of devices."""
+        return tuple(self._devices.values())
 
     @property
     def _has_active_threads(self) -> bool:
@@ -328,7 +333,7 @@ class CentralUnit:
         )
         for interface_config in self.config.interface_configs:
             try:
-                if client := await hm_client.create_client(
+                if client := await hmcl.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
                     if (
@@ -457,14 +462,14 @@ class CentralUnit:
         )
         serial: str | None = None
         for interface_config in self.config.interface_configs:
-            client = await hm_client.create_client(
+            client = await hmcl.create_client(
                 central=self, interface_config=interface_config, local_ip=local_ip
             )
             if not serial:
                 serial = await client.get_serial()
         return serial
 
-    def get_client(self, interface_id: str) -> hm_client.Client:
+    def get_client(self, interface_id: str) -> hmcl.Client:
         """Return a client by interface_id. #CC"""
         if self.has_client(interface_id=interface_id) is False:
             raise HaHomematicException(
@@ -475,7 +480,7 @@ class CentralUnit:
 
     def get_device(self, device_address: str) -> HmDevice | None:
         """Return homematic device. #CC"""
-        return self.devices.get(device_address)
+        return self._devices.get(device_address)
 
     def get_entities_by_platform(
         self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
@@ -483,16 +488,16 @@ class CentralUnit:
         """Return all entities by platform. #CC"""
         if not existing_unique_ids:
             existing_unique_ids = []
-        hm_entities = []
+        entities = []
         for entity in self._entities.values():
             if (
                 entity.unique_identifier not in existing_unique_ids
                 and entity.usage != HmEntityUsage.ENTITY_NO_CREATE
                 and entity.platform == platform
             ):
-                hm_entities.append(entity)
+                entities.append(entity)
 
-        return hm_entities
+        return entities
 
     def get_readable_entities(self) -> list[BaseEntity]:
         """Return a list of readable entities. This also includes custom entities."""
@@ -504,11 +509,11 @@ class CentralUnit:
                 readable_entities.append(entity)
         return readable_entities
 
-    def get_primary_client(self) -> hm_client.Client | None:
+    def get_primary_client(self) -> hmcl.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
-        client: hm_client.Client | None = None
+        client: hmcl.Client | None = None
         for client in self._clients.values():
-            if isinstance(client, hm_client.ClientLocal):
+            if isinstance(client, hmcl.ClientLocal):
                 return client
             if client.config.interface in IF_PRIMARY and client.available:
                 return client
@@ -601,7 +606,7 @@ class CentralUnit:
             ):
                 # Do we check for duplicates here? For now, we do.
                 device: HmDevice | None = None
-                if device_address in self.devices:
+                if device_address in self._devices:
                     continue
                 try:
                     device = HmDevice(
@@ -624,7 +629,7 @@ class CentralUnit:
                         device.create_entities_and_append_to_device()
                         await device.load_value_cache()
                         new_devices.add(device)
-                        self.devices[device_address] = device
+                        self._devices[device_address] = device
                 except Exception as err:
                     _LOGGER.error(
                         "create_devices failed: "
@@ -654,9 +659,9 @@ class CentralUnit:
             device_address,
         )
 
-        if (hm_device := self.devices.get(device_address)) is None:
+        if (device := self._devices.get(device_address)) is None:
             return
-        addresses: list[str] = list(hm_device.channels.keys())
+        addresses: list[str] = list(device.channels.keys())
         addresses.append(device_address)
         if len(addresses) == 0:
             _LOGGER.debug(
@@ -677,21 +682,10 @@ class CentralUnit:
             interface_id,
             str(addresses),
         )
-
-        await self.device_descriptions.cleanup(
-            interface_id=interface_id, deleted_addresses=addresses
-        )
-
         for address in addresses:
             try:
-                if ":" in address:
-                    self.paramset_descriptions.remove(
-                        interface_id=interface_id, channel_address=address
-                    )
-                self.device_details.remove(address=address)
-                if hm_device := self.devices.get(address):
-                    hm_device.remove_from_collections()
-                    del self.devices[address]
+                if device := self._devices.get(address):
+                    await self.remove_device(device=device)
             except KeyError:
                 _LOGGER.warning("delete_devices failed: Unable to delete: %s", address)
         await self.paramset_descriptions.save()
@@ -829,6 +823,21 @@ class CentralUnit:
             self._entity_event_subscriptions[
                 (entity.channel_address, entity.parameter)
             ].append(entity.event)
+
+    async def remove_device(self, device: HmDevice) -> None:
+        """Remove device to central collections."""
+        if device.device_address not in self._devices:
+            _LOGGER.debug(
+                "remove_device: device %s not registered in central.",
+                device.device_address,
+            )
+            return
+        device.clear_collections()
+
+        await self.device_descriptions.remove_device(device=device)
+        await self.paramset_descriptions.remove_device(device=device)
+        self.device_details.remove_device(device=device)
+        del self._devices[device.device_address]
 
     def remove_entity(self, entity: BaseEntity) -> None:
         """Remove entity to central collections"""
@@ -1016,7 +1025,7 @@ class CentralUnit:
     ) -> GenericEntity | None:
         """Get entity by channel_address and parameter. #CC"""
         if ":" in channel_address:
-            if device := self.devices.get(get_device_address(channel_address)):
+            if device := self._devices.get(get_device_address(channel_address)):
                 if entity := device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
@@ -1120,7 +1129,7 @@ class CentralConfig:
         username: str,
         password: str,
         central_id: str,
-        interface_configs: set[hm_client.InterfaceConfig],
+        interface_configs: set[hmcl.InterfaceConfig],
         default_callback_port: int,
         client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,
@@ -1138,9 +1147,7 @@ class CentralConfig:
         self.username: Final[str] = username
         self.password: Final[str] = password
         self.central_id: Final[str] = central_id
-        self.interface_configs: Final[
-            set[hm_client.InterfaceConfig]
-        ] = interface_configs
+        self.interface_configs: Final[set[hmcl.InterfaceConfig]] = interface_configs
         self.default_callback_port: Final[int] = default_callback_port
         self.client_session: Final[ClientSession | None] = client_session
         self.tls: Final[bool] = tls
@@ -1224,9 +1231,6 @@ class DeviceDetailsCache:
 
     async def load(self) -> None:
         """Fetch names from backend."""
-        if self._central.config.use_caches is False:
-            _LOGGER.debug("load: not caching names for %s", self._central.name)
-            return
         _LOGGER.debug("load: Loading names for %s", self._central.name)
         if client := self._central.get_primary_client():
             await client.fetch_device_details()
@@ -1280,10 +1284,13 @@ class DeviceDetailsCache:
             return ",".join(functions)
         return None
 
-    def remove(self, address: str) -> None:
+    def remove_device(self, device: HmDevice) -> None:
         """Remove name from cache."""
-        if address in self._names_cache:
-            del self._names_cache[address]
+        if device.device_address in self._names_cache:
+            del self._names_cache[device.device_address]
+        for channel_address in device.channels:
+            if channel_address in self._names_cache:
+                del self._names_cache[channel_address]
 
     async def clear(self) -> None:
         """Clear the cache."""
@@ -1389,25 +1396,29 @@ class BasePersistentCache(ABC):
         self._cache_dir: Final[str] = f"{central.config.storage_folder}/cache"
         self._filename: Final[str] = f"{central.name}_{filename}"
         self._persistant_cache: Final[dict[str, Any]] = persistant_cache
+        self.last_save: datetime = INIT_DATETIME
 
     async def save(self) -> HmDataOperationResult:
         """
         Save current name data in NAMES to disk.
         """
-        if self._central.config.use_caches is False:
-            _LOGGER.debug("save: not saving cache for %s", self._central.name)
-            return HmDataOperationResult.NO_SAVE
 
         def _save() -> HmDataOperationResult:
             if not check_or_create_directory(self._cache_dir):
                 return HmDataOperationResult.NO_SAVE
-            with open(
-                file=os.path.join(self._cache_dir, self._filename),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(self._persistant_cache, fptr)
-            return HmDataOperationResult.SAVE_SUCCESS
+
+            self.last_save = datetime.now()
+            if self._central.config.use_caches:
+                with open(
+                    file=os.path.join(self._cache_dir, self._filename),
+                    mode="w",
+                    encoding=DEFAULT_ENCODING,
+                ) as fptr:
+                    json.dump(self._persistant_cache, fptr)
+                return HmDataOperationResult.SAVE_SUCCESS
+
+            _LOGGER.debug("save: not saving cache for %s", self._central.name)
+            return HmDataOperationResult.NO_SAVE
 
         return await self._central.async_add_executor_job(_save)
 
@@ -1501,25 +1512,29 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Find raw device in cache."""
         return self._raw_device_descriptions_persistant_cache.get(interface_id, [])
 
-    async def cleanup(self, interface_id: str, deleted_addresses: list[str]) -> None:
+    async def remove_device(self, device: HmDevice) -> None:
         """Remove device from cache."""
+        deleted_addresses: list[str] = [device.device_address]
+        deleted_addresses.extend(device.channels)
         self._add_device_descriptions(
-            interface_id=interface_id,
+            interface_id=device.interface_id,
             device_descriptions=[
-                device
-                for device in self.get_raw_device_descriptions(interface_id)
-                if device[HM_ADDRESS] not in deleted_addresses
+                raw_device
+                for raw_device in self.get_raw_device_descriptions(device.interface_id)
+                if raw_device[HM_ADDRESS] not in deleted_addresses
             ],
         )
 
         for address in deleted_addresses:
             try:
-                if ":" not in address and self._addresses.get(interface_id, {}).get(
-                    address, []
+                if ":" not in address and self._addresses.get(
+                    device.interface_id, {}
+                ).get(address, []):
+                    del self._addresses[device.interface_id][address]
+                if self._device_descriptions.get(device.interface_id, {}).get(
+                    address, {}
                 ):
-                    del self._addresses[interface_id][address]
-                if self._device_descriptions.get(interface_id, {}).get(address, {}):
-                    del self._device_descriptions[interface_id][address]
+                    del self._device_descriptions[device.interface_id][address]
             except KeyError:
                 _LOGGER.warning("cleanup failed: Unable to delete: %s", address)
         await self.save()
@@ -1677,15 +1692,17 @@ class ParamsetDescriptionCache(BasePersistentCache):
             paramset_key
         ] = paramset_description
 
-    def remove(self, interface_id: str, channel_address: str) -> None:
-        """Remove paramset descriptions from cache."""
+    async def remove_device(self, device: HmDevice) -> None:
+        """Remove device paramset descriptions from cache."""
         if interface := self._raw_paramset_descriptions_persistant_cache.get(
-            interface_id
+            device.interface_id
         ):
-            if channel_address in interface:
-                del self._raw_paramset_descriptions_persistant_cache[interface_id][
-                    channel_address
-                ]
+            for channel_address in device.channels:
+                if channel_address in interface:
+                    del self._raw_paramset_descriptions_persistant_cache[
+                        device.interface_id
+                    ][channel_address]
+        await self.save()
 
     def get_by_interface(
         self, interface_id: str

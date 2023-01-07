@@ -5,7 +5,7 @@ import logging
 import os
 from typing import Final
 
-import hahomematic.central_unit as hm_central
+import hahomematic.central_unit as hmcu
 from hahomematic.const import (
     DEFAULT_ENCODING,
     EVENT_CONFIG_PENDING,
@@ -21,7 +21,7 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmPlatform,
 )
-import hahomematic.entity as hm_entity
+import hahomematic.entity as hme
 from hahomematic.helpers import (
     check_or_create_directory,
     element_matches_key,
@@ -201,9 +201,9 @@ class ParameterVisibilityCache:
 
     def __init__(
         self,
-        central: hm_central.CentralUnit,
+        central: hmcu.CentralUnit,
     ):
-        self._central: Final[hm_central.CentralUnit] = central
+        self._central: Final[hmcu.CentralUnit] = central
         self._storage_folder: Final[str] = central.config.storage_folder
 
         self._raw_un_ignore_list: Final[set[str]] = set(
@@ -531,7 +531,7 @@ class ParameterVisibilityCache:
                     return True
         return False
 
-    def wrap_entity(self, wrapped_entity: hm_entity.GenericEntity) -> HmPlatform | None:
+    def wrap_entity(self, wrapped_entity: hme.GenericEntity) -> HmPlatform | None:
         """Check if parameter of a device should be wrapped to a different platform."""
 
         for devices, wrapper_def in _WRAP_ENTITY.items():

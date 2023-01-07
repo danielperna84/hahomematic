@@ -21,8 +21,8 @@ from hahomematic.custom_platforms.entity_definition import (
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
-import hahomematic.device as hm_device
-import hahomematic.entity as hm_entity
+import hahomematic.device as hmd
+import hahomematic.entity as hme
 from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.number import HmFloat, HmInteger
@@ -223,15 +223,15 @@ class CeColorDimmer(CeDimmer):
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if self._e_color.value:
-            hm_color = self._e_color.value
-            if hm_color >= 200:
+            color = self._e_color.value
+            if color >= 200:
                 # 200 is a special case (white), so we have a saturation of 0.
                 # Larger values are undefined.
                 # For the sake of robustness we return "white" anyway.
                 return 0.0, 0.0
 
             # For all other colors we assume saturation of 1
-            return hm_color / 200 * 360, 100
+            return color / 200 * 360, 100
         return 0.0, 0.0
 
     @value_property
@@ -262,15 +262,15 @@ class CeColorDimmer(CeDimmer):
             # disable effect
             if self.effect != HM_EFFECT_OFF:
                 await self._e_effect.send_value(0)
-            hue, saturation = kwargs[HM_ARG_HS_COLOR]
-            hm_hue = hue / 360
-            hm_saturation = saturation / 100
-            if hm_saturation < 0.1:  # Special case (white)
-                hm_color = 200
+            khue, ksaturation = kwargs[HM_ARG_HS_COLOR]
+            hue = khue / 360
+            saturation = ksaturation / 100
+            if saturation < 0.1:  # Special case (white)
+                color = 200
             else:
-                hm_color = int(round(max(min(hm_hue, 1), 0) * 199))
+                color = int(round(max(min(hue, 1), 0) * 199))
 
-            await self._e_color.send_value(hm_color)
+            await self._e_color.send_value(color)
 
         if HM_ARG_EFFECT in kwargs:
             effect = str(kwargs[HM_ARG_EFFECT])
@@ -470,8 +470,8 @@ def _convert_color(color: tuple[float, float] | None) -> str:
 
 
 def make_ip_dimmer(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP dimmer entities."""
     return make_custom_entity(
         device=device,
@@ -482,8 +482,8 @@ def make_ip_dimmer(
 
 
 def make_rf_dimmer(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic classic dimmer entities."""
     return make_custom_entity(
         device=device,
@@ -494,8 +494,8 @@ def make_rf_dimmer(
 
 
 def make_rf_dimmer_color(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic classic dimmer with color entities."""
     return make_custom_entity(
         device=device,
@@ -506,8 +506,8 @@ def make_rf_dimmer_color(
 
 
 def make_rf_dimmer_color_temp(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic classic dimmer with color temperature entities."""
     return make_custom_entity(
         device=device,
@@ -518,8 +518,8 @@ def make_rf_dimmer_color_temp(
 
 
 def make_rf_dimmer_with_virt_channel(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic classic dimmer entities."""
     return make_custom_entity(
         device=device,
@@ -530,8 +530,8 @@ def make_rf_dimmer_with_virt_channel(
 
 
 def make_ip_fixed_color_light(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates fixed color light entities like HmIP-BSL."""
     return make_custom_entity(
         device=device,
@@ -542,8 +542,8 @@ def make_ip_fixed_color_light(
 
 
 def make_ip_simple_fixed_color_light(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates simple fixed color light entities like HmIPW-WRC6."""
     return make_custom_entity(
         device=device,

@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import Final
 
-import hahomematic.central_unit as hm_central
+import hahomematic.central_unit as hmcu
 from hahomematic.const import (
     BACKEND_CCU,
     HH_EVENT_HUB_CREATED,
@@ -37,11 +37,11 @@ EXCLUDED = [
 class HmHub:
     """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(self, central: hm_central.CentralUnit):
+    def __init__(self, central: hmcu.CentralUnit):
         """Initialize HomeMatic hub."""
         self._sema_fetch_sysvars = asyncio.Semaphore()
         self._sema_fetch_programs = asyncio.Semaphore()
-        self._central: Final[hm_central.CentralUnit] = central
+        self._central: Final[hmcu.CentralUnit] = central
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
         """fetch sysvar data for the hub."""

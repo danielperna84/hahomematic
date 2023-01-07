@@ -20,8 +20,8 @@ from hahomematic.custom_platforms.entity_definition import (
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
-import hahomematic.device as hm_device
-import hahomematic.entity as hm_entity
+import hahomematic.device as hmd
+import hahomematic.entity as hme
 from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.number import HmFloat
@@ -282,8 +282,8 @@ class CeGarage(CustomEntity):
 
 
 def make_ip_cover(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP cover entities."""
     return make_custom_entity(
         device=device,
@@ -294,8 +294,8 @@ def make_ip_cover(
 
 
 def make_rf_cover(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic classic cover entities."""
     return make_custom_entity(
         device=device,
@@ -306,8 +306,8 @@ def make_rf_cover(
 
 
 def make_ip_blind(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP cover entities."""
     return make_custom_entity(
         device=device,
@@ -318,8 +318,8 @@ def make_ip_blind(
 
 
 def make_ip_garage(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP garage entities."""
     return make_custom_entity(
         device=device,
@@ -330,8 +330,8 @@ def make_ip_garage(
 
 
 def make_rf_blind(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic classic cover entities."""
     return make_custom_entity(
         device=device,

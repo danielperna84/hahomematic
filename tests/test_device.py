@@ -1,11 +1,12 @@
 """Tests for devices of hahomematic."""
 from __future__ import annotations
 
+import asyncio
 from typing import cast
 
 import const
 import helper
-from helper import get_hm_device, get_hm_generic_entity
+from helper import get_device, get_generic_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -25,7 +26,7 @@ async def test_device_general(
     assert central_local_factory
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
-    hm_device = get_hm_device(central_unit=central, address="VCU2128127")
+    hm_device = get_device(central_unit=central, address="VCU2128127")
     assert hm_device
     assert hm_device.device_address == "VCU2128127"
     assert hm_device.name == "HmIP-BSM_VCU2128127"
@@ -45,7 +46,7 @@ async def test_device_availability(
     assert central_local_factory
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
-    hm_device = get_hm_device(central_unit=central, address="VCU6354483")
+    hm_device = get_device(central_unit=central, address="VCU6354483")
     assert hm_device
     assert hm_device.available is True
     for generic_entity in hm_device.generic_entities.values():
@@ -66,3 +67,23 @@ async def test_device_availability(
         assert generic_entity.available is True
     for custom_entity in hm_device.custom_entities.values():
         assert custom_entity.available is True
+
+
+@pytest.mark.asyncio
+async def test_device_config_pending(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test device availability."""
+    assert central_local_factory
+    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    assert central
+    hm_device = get_device(central_unit=central, address="VCU2128127")
+    assert hm_device._e_config_pending.value is False
+    last_save = central.paramset_descriptions.last_save
+    central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:0", "CONFIG_PENDING", True)
+    assert hm_device._e_config_pending.value is True
+    assert last_save == central.paramset_descriptions.last_save
+    central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:0", "CONFIG_PENDING", False)
+    assert hm_device._e_config_pending.value is False
+    await asyncio.sleep(2)
+    assert last_save != central.paramset_descriptions.last_save

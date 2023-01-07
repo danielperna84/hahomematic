@@ -5,7 +5,7 @@ from typing import cast
 
 import const
 import helper
-from helper import get_hm_generic_entity, get_hm_sysvar_entity
+from helper import get_generic_entity, get_sysvar_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -27,10 +27,12 @@ async def test_hmbinarysensor(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     binary_sensor: HmBinarySensor = cast(
-        HmBinarySensor, await get_hm_generic_entity(central, "VCU5864966:1", "STATE")
+        HmBinarySensor, await get_generic_entity(central, "VCU5864966:1", "STATE")
     )
     assert binary_sensor.usage == HmEntityUsage.ENTITY
     assert binary_sensor.value is False
+    assert binary_sensor.is_writeable is False
+    assert binary_sensor.visible is True
     central.event(const.LOCAL_INTERFACE_ID, "VCU5864966:1", "STATE", 1)
     assert binary_sensor.value is True
     central.event(const.LOCAL_INTERFACE_ID, "VCU5864966:1", "STATE", 0)
@@ -48,8 +50,10 @@ async def test_hmsysvarbinarysensor(
     assert central
     binary_sensor: HmSysvarBinarySensor = cast(
         HmSysvarBinarySensor,
-        await get_hm_sysvar_entity(central, "sv_logic"),
+        await get_sysvar_entity(central, "sv_logic"),
     )
+    assert binary_sensor.name == "Sv_Logic"
+    assert binary_sensor.full_name == "CentralTest_Sv_Logic"
     assert binary_sensor.value is False
     assert binary_sensor.is_extended is False
     assert binary_sensor.data_type == "LOGIC"

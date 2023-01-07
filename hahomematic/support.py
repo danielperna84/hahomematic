@@ -8,8 +8,8 @@ import os
 import random
 from typing import Any, Final
 
-import hahomematic.central_unit as hm_central
-import hahomematic.client as hm_client
+import hahomematic.central_unit as hmcu
+import hahomematic.client as hmcl
 from hahomematic.const import (
     DEFAULT_ENCODING,
     HM_ADDRESS,
@@ -28,11 +28,9 @@ PARAMSET_DESCRIPTIONS_DIR = "export_paramset_descriptions"
 class DeviceExporter:
     """Export Devices from Cache."""
 
-    def __init__(
-        self, client: hm_client.Client, interface_id: str, device_address: str
-    ):
-        self._client: Final[hm_client.Client] = client
-        self._central: Final[hm_central.CentralUnit] = client.central
+    def __init__(self, client: hmcl.Client, interface_id: str, device_address: str):
+        self._client: Final[hmcl.Client] = client
+        self._central: Final[hmcu.CentralUnit] = client.central
         self._storage_folder: Final[str] = self._central.config.storage_folder
         self._interface_id: Final[str] = interface_id
         self._device_address: Final[str] = device_address
@@ -119,7 +117,7 @@ class DeviceExporter:
 
 
 async def save_device_definition(
-    client: hm_client.Client, interface_id: str, device_address: str
+    client: hmcl.Client, interface_id: str, device_address: str
 ) -> None:
     """Save device to file."""
     device_exporter = DeviceExporter(
