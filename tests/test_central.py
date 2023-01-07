@@ -13,6 +13,25 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
+async def test_central_basics(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central basics."""
+    assert central_local_factory
+    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    assert central
+    assert central.central_url == "http://127.0.0.1"
+    assert central.is_alive is True
+    assert central.serial == "0"
+    assert central.version == "0"
+    assert await central.validate_config_and_get_serial() == "0815_4711"
+    device = central.get_device("VCU2128127")
+    assert device
+    entities = central.get_readable_entities()
+    assert entities
+
+
+@pytest.mark.asyncio
 async def test_device_export(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:

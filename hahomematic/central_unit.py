@@ -1233,9 +1233,6 @@ class DeviceDetailsCache:
 
     async def load(self) -> None:
         """Fetch names from backend."""
-        if self._central.config.use_caches is False:
-            _LOGGER.debug("load: not caching names for %s", self._central.name)
-            return
         _LOGGER.debug("load: Loading names for %s", self._central.name)
         if client := self._central.get_primary_client():
             await client.fetch_device_details()
@@ -1401,25 +1398,28 @@ class BasePersistentCache(ABC):
         self._cache_dir: Final[str] = f"{central.config.storage_folder}/cache"
         self._filename: Final[str] = f"{central.name}_{filename}"
         self._persistant_cache: Final[dict[str, Any]] = persistant_cache
+        self.last_save: datetime = INIT_DATETIME
 
     async def save(self) -> HmDataOperationResult:
         """
         Save current name data in NAMES to disk.
         """
-        if self._central.config.use_caches is False:
-            _LOGGER.debug("save: not saving cache for %s", self._central.name)
-            return HmDataOperationResult.NO_SAVE
-
         def _save() -> HmDataOperationResult:
             if not check_or_create_directory(self._cache_dir):
                 return HmDataOperationResult.NO_SAVE
-            with open(
-                file=os.path.join(self._cache_dir, self._filename),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(self._persistant_cache, fptr)
-            return HmDataOperationResult.SAVE_SUCCESS
+
+            self.last_save = datetime.now()
+            if self._central.config.use_caches:
+                with open(
+                    file=os.path.join(self._cache_dir, self._filename),
+                    mode="w",
+                    encoding=DEFAULT_ENCODING,
+                ) as fptr:
+                    json.dump(self._persistant_cache, fptr)
+                return HmDataOperationResult.SAVE_SUCCESS
+            else:
+                _LOGGER.debug("save: not saving cache for %s", self._central.name)
+                return HmDataOperationResult.NO_SAVE
 
         return await self._central.async_add_executor_job(_save)
 
