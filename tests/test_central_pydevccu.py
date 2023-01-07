@@ -25,7 +25,7 @@ async def test_central(central_pydevccu, loop) -> None:
     assert central_pydevccu.get_primary_client().model == "PyDevCCU"
 
     data = {}
-    for device in central_pydevccu.devices.values():
+    for device in central_pydevccu.devices:
         if device.device_type not in data:
             data[device.device_type] = {}
         for entity in device.generic_entities.values():
@@ -37,7 +37,7 @@ async def test_central(central_pydevccu, loop) -> None:
         assert pub_config_props
 
     custom_entities = []
-    for device in central_pydevccu.devices.values():
+    for device in central_pydevccu.devices:
         custom_entities.extend(device.custom_entities.values())
 
     ce_channels = {}
@@ -113,7 +113,7 @@ async def test_central(central_pydevccu, loop) -> None:
                 entity._attr_operations
             )
     addresses: dict[str, str] = {}
-    for address, device in central_pydevccu.devices.items():
+    for address, device in central_pydevccu._devices.items():
         addresses[address] = f"{device.device_type}.json"
 
     with open(
@@ -125,7 +125,7 @@ async def test_central(central_pydevccu, loop) -> None:
 
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2800
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
-    assert usage_types[HmEntityUsage.ENTITY] == 3618
+    assert usage_types[HmEntityUsage.ENTITY] == 3611
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 96
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 

@@ -1,8 +1,10 @@
 """Helpers for tests."""
 from __future__ import annotations
 
-import asyncio
-from typing import Any
+import importlib.resources
+import json
+import os
+from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
@@ -10,7 +12,13 @@ import const
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
-from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
+from hahomematic.client import (
+    Client,
+    ClientLocal,
+    InterfaceConfig,
+    LocalRessources,
+    _ClientConfig,
+)
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity, GenericSystemVariable
 from hahomematic.generic_platforms.button import HmProgramButton
@@ -28,17 +36,22 @@ class CentralUnitLocalFactory:
         address_device_translation: dict[str, str],
         add_sysvars: bool = False,
         add_programs: bool = False,
+        ignore_device_on_create: list[str] | None = None,
     ) -> tuple[CentralUnit, Mock]:
         """Returns a central based on give address_device_translation."""
         sysvar_data: list[SystemVariableData] = const.SYSVAR_DATA if add_sysvars else []
         program_data: list[ProgramData] = const.PROGRAM_DATA if add_programs else []
+        _ignore_device_on_create: list[str] = (
+            ignore_device_on_create if ignore_device_on_create else []
+        )
 
         local_client_config = InterfaceConfig(
             central_name=const.CENTRAL_NAME,
             interface="Local",
             port=2002,
             local_resources=LocalRessources(
-                address_device_translation=address_device_translation
+                address_device_translation=address_device_translation,
+                ignore_device_on_create=_ignore_device_on_create,
             ),
         )
 
@@ -93,7 +106,7 @@ async def get_value_from_generic_entity(
 def get_hm_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
     """Return the hm_device."""
     d_address = get_device_address(address=address)
-    return central_unit.devices.get(d_address)
+    return central_unit._devices.get(d_address)
 
 
 async def get_hm_generic_entity(
@@ -124,21 +137,29 @@ async def get_hm_custom_entity(
 
 
 async def get_hm_sysvar_entity(
-    central_unit: CentralUnit, name: str
+    central: CentralUnit, name: str
 ) -> GenericSystemVariable | None:
     """Return the sysvar entity."""
-    sysvar_entity = central_unit.sysvar_entities.get(name)
+    sysvar_entity = central.sysvar_entities.get(name)
     assert sysvar_entity
     return sysvar_entity
 
 
 async def get_hm_program_button(
-    central_unit: CentralUnit, pid: str
+    central: CentralUnit, pid: str
 ) -> HmProgramButton | None:
     """Return the program button."""
-    program_button = central_unit.program_entities.get(pid)
+    program_button = central.program_entities.get(pid)
     assert program_button
     return program_button
+
+
+def load_device_description(central: CentralUnit, filename: str) -> Any:
+    """Load device description."""
+    dev_desc = _load_json_file(
+        package="pydevccu", resource="device_descriptions", filename=filename
+    )
+    return dev_desc
 
 
 def get_mock(instance):
@@ -152,3 +173,16 @@ def get_mock(instance):
     mock = MagicMock(spec=instance, wraps=instance)
     mock.__dict__.update(instance.__dict__)
     return mock
+
+
+def _load_json_file(package: str, resource: str, filename: str) -> Any | None:
+    """
+    Load json file from disk into dict.
+    """
+    package_path = str(importlib.resources.files(package=package))
+    with open(
+        file=os.path.join(package_path, resource, filename),
+        mode="r",
+        encoding=hahomematic_const.DEFAULT_ENCODING,
+    ) as fptr:
+        return json.load(fptr)

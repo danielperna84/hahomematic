@@ -31,6 +31,8 @@ async def test_hmbinarysensor(
     )
     assert binary_sensor.usage == HmEntityUsage.ENTITY
     assert binary_sensor.value is False
+    assert binary_sensor.is_writeable is False
+    assert binary_sensor.visible is True
     central.event(const.LOCAL_INTERFACE_ID, "VCU5864966:1", "STATE", 1)
     assert binary_sensor.value is True
     central.event(const.LOCAL_INTERFACE_ID, "VCU5864966:1", "STATE", 0)
@@ -50,6 +52,8 @@ async def test_hmsysvarbinarysensor(
         HmSysvarBinarySensor,
         await get_hm_sysvar_entity(central, "sv_logic"),
     )
+    assert binary_sensor.name == "Sv_Logic"
+    assert binary_sensor.full_name == "CentralTest_Sv_Logic"
     assert binary_sensor.value is False
     assert binary_sensor.is_extended is False
     assert binary_sensor.data_type == "LOGIC"

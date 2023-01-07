@@ -142,7 +142,7 @@ class CentralUnit:
         # {unique_identifier, entity}
         self._entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
-        self.devices: Final[dict[str, HmDevice]] = {}
+        self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
         self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         # {sysvar_name, program_button}U
@@ -177,6 +177,11 @@ class CentralUnit:
     def central_url(self) -> str:
         """Return the central_orl from config. #CC"""
         return self.config.central_url
+
+    @property
+    def devices(self) -> tuple[HmDevice, ...]:
+        """Return a tuple of devices."""
+        return tuple(self._devices.values())
 
     @property
     def _has_active_threads(self) -> bool:
@@ -475,7 +480,7 @@ class CentralUnit:
 
     def get_device(self, device_address: str) -> HmDevice | None:
         """Return homematic device. #CC"""
-        return self.devices.get(device_address)
+        return self._devices.get(device_address)
 
     def get_entities_by_platform(
         self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
@@ -601,7 +606,7 @@ class CentralUnit:
             ):
                 # Do we check for duplicates here? For now, we do.
                 device: HmDevice | None = None
-                if device_address in self.devices:
+                if device_address in self._devices:
                     continue
                 try:
                     device = HmDevice(
@@ -624,7 +629,7 @@ class CentralUnit:
                         device.create_entities_and_append_to_device()
                         await device.load_value_cache()
                         new_devices.add(device)
-                        self.devices[device_address] = device
+                        self._devices[device_address] = device
                 except Exception as err:
                     _LOGGER.error(
                         "create_devices failed: "
@@ -654,7 +659,7 @@ class CentralUnit:
             device_address,
         )
 
-        if (hm_device := self.devices.get(device_address)) is None:
+        if (hm_device := self._devices.get(device_address)) is None:
             return
         addresses: list[str] = list(hm_device.channels.keys())
         addresses.append(device_address)
@@ -677,21 +682,10 @@ class CentralUnit:
             interface_id,
             str(addresses),
         )
-
-        await self.device_descriptions.cleanup(
-            interface_id=interface_id, deleted_addresses=addresses
-        )
-
         for address in addresses:
             try:
-                if ":" in address:
-                    self.paramset_descriptions.remove(
-                        interface_id=interface_id, channel_address=address
-                    )
-                self.device_details.remove(address=address)
-                if hm_device := self.devices.get(address):
-                    hm_device.remove_from_collections()
-                    del self.devices[address]
+                if device := self._devices.get(address):
+                    await self.remove_device(device=device)
             except KeyError:
                 _LOGGER.warning("delete_devices failed: Unable to delete: %s", address)
         await self.paramset_descriptions.save()
@@ -829,6 +823,21 @@ class CentralUnit:
             self._entity_event_subscriptions[
                 (entity.channel_address, entity.parameter)
             ].append(entity.event)
+
+    async def remove_device(self, device: HmDevice) -> None:
+        """Remove device to central collections."""
+        if device.device_address not in self._devices:
+            _LOGGER.debug(
+                "remove_device: device %s not registered in central.",
+                device.device_address,
+            )
+            return
+        device.clear_collections()
+
+        await self.device_descriptions.remove_device(device=device)
+        await self.paramset_descriptions.remove_device(device=device)
+        self.device_details.remove_device(device=device)
+        del self._devices[device.device_address]
 
     def remove_entity(self, entity: BaseEntity) -> None:
         """Remove entity to central collections"""
@@ -1016,7 +1025,7 @@ class CentralUnit:
     ) -> GenericEntity | None:
         """Get entity by channel_address and parameter. #CC"""
         if ":" in channel_address:
-            if device := self.devices.get(get_device_address(channel_address)):
+            if device := self._devices.get(get_device_address(channel_address)):
                 if entity := device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
@@ -1280,10 +1289,13 @@ class DeviceDetailsCache:
             return ",".join(functions)
         return None
 
-    def remove(self, address: str) -> None:
+    def remove_device(self, device: HmDevice) -> None:
         """Remove name from cache."""
-        if address in self._names_cache:
-            del self._names_cache[address]
+        if device.device_address in self._names_cache:
+            del self._names_cache[device.device_address]
+        for channel_address in device.channels:
+            if channel_address in self._names_cache:
+                del self._names_cache[channel_address]
 
     async def clear(self) -> None:
         """Clear the cache."""
@@ -1501,25 +1513,29 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Find raw device in cache."""
         return self._raw_device_descriptions_persistant_cache.get(interface_id, [])
 
-    async def cleanup(self, interface_id: str, deleted_addresses: list[str]) -> None:
+    async def remove_device(self, device: HmDevice) -> None:
         """Remove device from cache."""
+        deleted_addresses: list[str] = [device.device_address]
+        deleted_addresses.extend(device.channels)
         self._add_device_descriptions(
-            interface_id=interface_id,
+            interface_id=device.interface_id,
             device_descriptions=[
-                device
-                for device in self.get_raw_device_descriptions(interface_id)
-                if device[HM_ADDRESS] not in deleted_addresses
+                raw_device
+                for raw_device in self.get_raw_device_descriptions(device.interface_id)
+                if raw_device[HM_ADDRESS] not in deleted_addresses
             ],
         )
 
         for address in deleted_addresses:
             try:
-                if ":" not in address and self._addresses.get(interface_id, {}).get(
-                    address, []
+                if ":" not in address and self._addresses.get(
+                    device.interface_id, {}
+                ).get(address, []):
+                    del self._addresses[device.interface_id][address]
+                if self._device_descriptions.get(device.interface_id, {}).get(
+                    address, {}
                 ):
-                    del self._addresses[interface_id][address]
-                if self._device_descriptions.get(interface_id, {}).get(address, {}):
-                    del self._device_descriptions[interface_id][address]
+                    del self._device_descriptions[device.interface_id][address]
             except KeyError:
                 _LOGGER.warning("cleanup failed: Unable to delete: %s", address)
         await self.save()
@@ -1677,15 +1693,17 @@ class ParamsetDescriptionCache(BasePersistentCache):
             paramset_key
         ] = paramset_description
 
-    def remove(self, interface_id: str, channel_address: str) -> None:
-        """Remove paramset descriptions from cache."""
+    async def remove_device(self, device: HmDevice) -> None:
+        """Remove device paramset descriptions from cache."""
         if interface := self._raw_paramset_descriptions_persistant_cache.get(
-            interface_id
+            device.interface_id
         ):
-            if channel_address in interface:
-                del self._raw_paramset_descriptions_persistant_cache[interface_id][
-                    channel_address
-                ]
+            for channel_address in device.channels:
+                if channel_address in interface:
+                    del self._raw_paramset_descriptions_persistant_cache[
+                        device.interface_id
+                    ][channel_address]
+        await self.save()
 
     def get_by_interface(
         self, interface_id: str

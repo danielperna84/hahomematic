@@ -47,6 +47,7 @@ from hahomematic.const import (
 from hahomematic.custom_platforms import entity_definition_exists, get_device_funcs
 from hahomematic.decorators import config_property, value_property
 from hahomematic.entity import (
+    BaseEntity,
     BaseEvent,
     CallbackEntity,
     ClickEvent,
@@ -228,6 +229,8 @@ class HmDevice:
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
+        if isinstance(entity, BaseEntity):
+            self.central.add_entity(entity=entity)
         if isinstance(entity, GenericEntity):
             self.generic_entities[(entity.channel_address, entity.parameter)] = entity
             self.register_update_callback(entity.update_entity)
@@ -241,6 +244,8 @@ class HmDevice:
 
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
+        if isinstance(entity, BaseEntity):
+            self.central.remove_entity(entity=entity)
         if isinstance(entity, GenericEntity):
             del self.generic_entities[(entity.channel_address, entity.parameter)]
             self.unregister_update_callback(entity.update_entity)
@@ -252,18 +257,16 @@ class HmDevice:
         if isinstance(entity, BaseEvent):
             del self.events[(entity.channel_address, entity.parameter)]
 
-    def remove_from_collections(self) -> None:
+    def clear_collections(self) -> None:
         """Remove entities from collections and central."""
 
         entities = list(self.generic_entities.values())
         for entity in entities:
-            self.central.remove_entity(entity=entity)
             self.remove_entity(entity)
         self.generic_entities.clear()
 
         custom_entities = list(self.custom_entities.values())
         for custom_entity in custom_entities:
-            self.central.remove_entity(entity=custom_entity)
             self.remove_entity(custom_entity)
         self.custom_entities.clear()
 

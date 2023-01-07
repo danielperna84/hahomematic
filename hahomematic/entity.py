@@ -250,7 +250,6 @@ class BaseEntity(CallbackEntity):
     def add_to_collections(self) -> None:
         """add entity to device and central collections"""
         self.device.add_entity(entity=self)
-        self._central.add_entity(entity=self)
 
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
@@ -740,7 +739,6 @@ class WrapperEntity(CallbackEntity):
     def add_to_collections(self) -> None:
         """add entity to device and central collections"""
         self.device.add_entity(entity=self)
-        self._central.add_entity(entity=self)
 
 
 _EntityT = TypeVar("_EntityT", bound=GenericEntity)

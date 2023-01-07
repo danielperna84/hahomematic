@@ -167,7 +167,7 @@ class Client(ABC):
         """Mark device's availability state for this interface."""
         available = forced_availability != HmForcedDeviceAvailability.FORCE_FALSE
         if self._attr_available != available:
-            for hm_device in self.central.devices.values():
+            for hm_device in self.central.devices:
                 if hm_device.interface_id == self.interface_id:
                     hm_device.set_forced_availability(
                         forced_availability=forced_availability
@@ -757,7 +757,7 @@ class ClientCCU(Client):
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for device_type in HM_VIRTUAL_REMOTE_TYPES:
-            for hm_device in self.central.devices.values():
+            for hm_device in self.central.devices:
                 if (
                     hm_device.interface_id == self.interface_id
                     and hm_device.device_type == device_type
@@ -1001,6 +1001,7 @@ class ClientLocal(Client):
                 package=local_resources.package,
                 resource=local_resources.device_description_dir,
                 include_list=list(local_resources.address_device_translation.values()),
+                exclude_list=local_resources.ignore_device_on_create,
             ),
         ):
             for device_description in local_device_descriptions:
@@ -1090,7 +1091,11 @@ class ClientLocal(Client):
             self.central.event(self.interface_id, address, parameter, value[parameter])
 
     async def _load_all_json_files(
-        self, package: str, resource: str, include_list: list[str] | None = None
+        self,
+        package: str,
+        resource: str,
+        include_list: list[str] | None = None,
+        exclude_list: list[str] | None = None,
     ) -> list[Any] | None:
         """
         Load all json files from disk into dict.
@@ -1099,12 +1104,14 @@ class ClientLocal(Client):
         #    return None
         if not include_list:
             include_list = []
+        if not exclude_list:
+            exclude_list = []
         result: list[Any] = []
         resource_path = os.path.join(
             str(importlib.resources.files(package=package)), resource
         )
         for filename in os.listdir(resource_path):
-            if filename not in include_list:
+            if filename not in include_list or filename in exclude_list:
                 continue
             if file_content := await self._load_json_file(
                 package=package, resource=resource, filename=filename
@@ -1264,6 +1271,7 @@ class LocalRessources:
     """Dataclass with information for local client."""
 
     address_device_translation: dict[str, str]
+    ignore_device_on_create: list[str]
     package: str = "pydevccu"
     device_description_dir: str = "device_descriptions"
     paramset_description_dir: str = "paramset_descriptions"

@@ -45,6 +45,8 @@ async def test_cesimplerfthermostat(
     )
     assert climate.usage == HmEntityUsage.CE_PRIMARY
 
+    assert climate.is_valid is False
+    assert climate.state_uncertain is True
     assert climate.temperature_unit == "°C"
     assert climate.min_temp == 6.0
     assert climate.max_temp == 30.0
