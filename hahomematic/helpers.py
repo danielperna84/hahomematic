@@ -14,7 +14,7 @@ import socket
 import ssl
 from typing import Any
 
-import hahomematic.central_unit as hm_central
+import hahomematic.central_unit as hmcu
 from hahomematic.const import (
     BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
     HM_TYPE,
@@ -34,8 +34,8 @@ from hahomematic.const import (
     TYPE_STRING,
     HmEntityUsage,
 )
-import hahomematic.custom_platforms.entity_definition as hm_ed
-import hahomematic.device as hm_device
+import hahomematic.custom_platforms.entity_definition as hmed
+import hahomematic.device as hmd
 from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ class ClientException(Exception):
 
 
 def generate_unique_identifier(
-    central: hm_central.CentralUnit,
+    central: hmcu.CentralUnit,
     address: str,
     parameter: str | None = None,
     prefix: str | None = None,
@@ -176,8 +176,8 @@ def to_bool(value: Any) -> bool:
 
 
 def get_entity_name(
-    central: hm_central.CentralUnit,
-    device: hm_device.HmDevice,
+    central: hmcu.CentralUnit,
+    device: hmd.HmDevice,
     channel_no: int,
     parameter: str,
 ) -> EntityNameData:
@@ -220,8 +220,8 @@ def get_entity_name(
 
 
 def get_event_name(
-    central: hm_central.CentralUnit,
-    device: hm_device.HmDevice,
+    central: hmcu.CentralUnit,
+    device: hmd.HmDevice,
     channel_no: int,
     parameter: str,
 ) -> EntityNameData:
@@ -259,8 +259,8 @@ def get_event_name(
 
 
 def get_custom_entity_name(
-    central: hm_central.CentralUnit,
-    device: hm_device.HmDevice,
+    central: hmcu.CentralUnit,
+    device: hmd.HmDevice,
     channel_no: int,
     is_only_primary_channel: bool,
     usage: HmEntityUsage,
@@ -309,7 +309,7 @@ def _check_channel_name_with_channel_no(name: str) -> bool:
 
 
 def get_device_name(
-    central: hm_central.CentralUnit, device_address: str, device_type: str
+    central: hmcu.CentralUnit, device_address: str, device_type: str
 ) -> str:
     """Return the cached name for a device, or an auto-generated."""
     if name := central.device_details.get_name(address=device_address):
@@ -334,15 +334,15 @@ def check_channel_is_the_only_primary_channel(
     current_channel: int, device_def: dict[str, Any], device_has_multiple_channels: bool
 ) -> bool:
     """Check if this channel is the only primary channel."""
-    primary_channel: int = device_def[hm_ed.ED_PRIMARY_CHANNEL]
+    primary_channel: int = device_def[hmed.ED_PRIMARY_CHANNEL]
     if primary_channel == current_channel and device_has_multiple_channels is False:
         return True
     return False
 
 
 def _get_base_name_from_channel_or_device(
-    central: hm_central.CentralUnit,
-    device: hm_device.HmDevice,
+    central: hmcu.CentralUnit,
+    device: hmd.HmDevice,
     channel_no: int,
 ) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""

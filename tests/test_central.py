@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import const
 import helper
-from helper import get_hm_device, load_device_description
+from helper import get_device, load_device_description
 import pytest
 
 TEST_DEVICES: dict[str, str] = {
@@ -40,7 +40,7 @@ async def test_device_export(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     assert mock_client
-    hm_device = get_hm_device(central_unit=central, address="VCU6354483")
+    hm_device = get_device(central_unit=central, address="VCU6354483")
     assert hm_device
     await hm_device.export_device_definition()
 

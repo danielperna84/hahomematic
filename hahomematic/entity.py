@@ -11,8 +11,8 @@ from typing import Any, Final, Generic, TypeVar, Union, cast
 
 from slugify import slugify
 
-import hahomematic.central_unit as hm_central
-import hahomematic.client as hm_client
+import hahomematic.central_unit as hmcu
+import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_DEVICE_TYPE,
@@ -55,9 +55,9 @@ from hahomematic.const import (
     HmPlatform,
 )
 import hahomematic.custom_platforms as hm_custom_entity
-import hahomematic.custom_platforms.entity_definition as hm_ed
+import hahomematic.custom_platforms.entity_definition as hmed
 from hahomematic.decorators import config_property, value_property
-import hahomematic.device as hm_device
+import hahomematic.device as hmd
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 from hahomematic.helpers import (
     EntityNameData,
@@ -168,7 +168,7 @@ class BaseEntity(CallbackEntity):
 
     def __init__(
         self,
-        device: hm_device.HmDevice,
+        device: hmd.HmDevice,
         unique_identifier: str,
         channel_no: int,
     ):
@@ -176,10 +176,10 @@ class BaseEntity(CallbackEntity):
         Initialize the entity.
         """
         super().__init__(unique_identifier=unique_identifier)
-        self.device: Final[hm_device.HmDevice] = device
+        self.device: Final[hmd.HmDevice] = device
         self._attr_channel_no: Final[int] = channel_no
         self._attr_channel_address: Final[str] = f"{device.device_address}:{channel_no}"
-        self._central: Final[hm_central.CentralUnit] = device.central
+        self._central: Final[hmcu.CentralUnit] = device.central
         self._channel_type: Final[str] = str(
             device.channels[self._attr_channel_address].type
         )
@@ -188,7 +188,7 @@ class BaseEntity(CallbackEntity):
         ] = self._central.device_details.get_function_text(
             address=self._attr_channel_address
         )
-        self._client: Final[hm_client.Client] = device.central.get_client(
+        self._client: Final[hmcl.Client] = device.central.get_client(
             interface_id=device.interface_id
         )
 
@@ -286,7 +286,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 
     def __init__(
         self,
-        device: hm_device.HmDevice,
+        device: hmd.HmDevice,
         unique_identifier: str,
         channel_address: str,
         paramset_key: str,
@@ -524,7 +524,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 
     def __init__(
         self,
-        device: hm_device.HmDevice,
+        device: hmd.HmDevice,
         unique_identifier: str,
         channel_address: str,
         paramset_key: str,
@@ -751,9 +751,9 @@ class CustomEntity(BaseEntity):
 
     def __init__(
         self,
-        device: hm_device.HmDevice,
+        device: hmd.HmDevice,
         unique_identifier: str,
-        device_enum: hm_ed.EntityDefinition,
+        device_enum: hmed.EntityDefinition,
         device_def: dict[str, Any],
         entity_def: dict[int, tuple[str, ...]],
         channel_no: int,
@@ -761,7 +761,7 @@ class CustomEntity(BaseEntity):
         """
         Initialize the entity.
         """
-        self._device_enum: Final[hm_ed.EntityDefinition] = device_enum
+        self._device_enum: Final[hmed.EntityDefinition] = device_enum
         # required for name in BaseEntity
         self._device_desc: Final[dict[str, Any]] = device_def
         self._entity_def: Final[dict[int, tuple[str, ...]]] = entity_def
@@ -830,7 +830,7 @@ class CustomEntity(BaseEntity):
 
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
-        if secondary_channels := self._device_desc.get(hm_ed.ED_SECONDARY_CHANNELS):
+        if secondary_channels := self._device_desc.get(hmed.ED_SECONDARY_CHANNELS):
             if self.channel_no in secondary_channels:
                 return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
@@ -860,7 +860,7 @@ class CustomEntity(BaseEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
 
-        repeating_fields = self._device_desc.get(hm_ed.ED_REPEATABLE_FIELDS, {})
+        repeating_fields = self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {})
         # Add repeating fields
         for (field_name, parameter) in repeating_fields.items():
             entity = self.device.get_generic_entity(
@@ -869,7 +869,7 @@ class CustomEntity(BaseEntity):
             self._add_entity(field_name=field_name, entity=entity)
 
         visible_repeating_fields = self._device_desc.get(
-            hm_ed.ED_VISIBLE_REPEATABLE_FIELDS, {}
+            hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
         )
         # Add visible repeating fields
         for (field_name, parameter) in visible_repeating_fields.items():
@@ -880,23 +880,23 @@ class CustomEntity(BaseEntity):
 
         # Add device fields
         self._add_entities(
-            field_dict_name=hm_ed.ED_FIELDS,
+            field_dict_name=hmed.ED_FIELDS,
         )
         # Add visible device fields
         self._add_entities(
-            field_dict_name=hm_ed.ED_VISIBLE_FIELDS,
+            field_dict_name=hmed.ED_VISIBLE_FIELDS,
             is_visible=True,
         )
 
         # Add default device entities
         self._mark_entity(field_desc=self._entity_def)
         # add default entities
-        if hm_ed.get_include_default_entities(device_enum=self._device_enum):
-            self._mark_entity(field_desc=hm_ed.get_default_entities())
+        if hmed.get_include_default_entities(device_enum=self._device_enum):
+            self._mark_entity(field_desc=hmed.get_default_entities())
 
         # add extra entities for the device type
         self._mark_entity(
-            field_desc=hm_ed.get_additional_entities_by_device_type(
+            field_desc=hmed.get_additional_entities_by_device_type(
                 device_type=self.device.device_type
             )
         )
@@ -982,7 +982,7 @@ class GenericHubEntity(CallbackEntity):
 
     def __init__(
         self,
-        central: hm_central.CentralUnit,
+        central: hmcu.CentralUnit,
         address: str,
         data: HubData,
     ):
@@ -995,7 +995,7 @@ class GenericHubEntity(CallbackEntity):
             parameter=slugify(data.name),
         )
         super().__init__(unique_identifier=unique_identifier)
-        self.central: Final[hm_central.CentralUnit] = central
+        self.central: Final[hmcu.CentralUnit] = central
         self._attr_name: Final[str] = self.get_name(data=data)
         self._attr_full_name: Final[str] = f"{self.central.name}_{self._attr_name}"
 
@@ -1021,7 +1021,7 @@ class GenericSystemVariable(GenericHubEntity):
 
     def __init__(
         self,
-        central: hm_central.CentralUnit,
+        central: hmcu.CentralUnit,
         data: SystemVariableData,
     ):
         """
@@ -1115,7 +1115,7 @@ class BaseEvent(BaseParameterEntity[Any]):
 
     def __init__(
         self,
-        device: hm_device.HmDevice,
+        device: hmd.HmDevice,
         unique_identifier: str,
         channel_address: str,
         parameter: str,

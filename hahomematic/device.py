@@ -10,8 +10,8 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-import hahomematic.central_unit as hm_central
-import hahomematic.client as hm_client
+import hahomematic.central_unit as hmcu
+import hahomematic.client as hmcl
 from hahomematic.const import (
     BUTTON_ACTIONS,
     CLICK_EVENTS,
@@ -86,22 +86,20 @@ class HmDevice:
     """
 
     def __init__(
-        self, central: hm_central.CentralUnit, interface_id: str, device_address: str
+        self, central: hmcu.CentralUnit, interface_id: str, device_address: str
     ):
         """
         Initialize the device object.
         """
-        self.central: Final[hm_central.CentralUnit] = central
+        self.central: Final[hmcu.CentralUnit] = central
         self._attr_interface_id: Final[str] = interface_id
         self._attr_interface: Final[str] = central.device_details.get_interface(
             device_address
         )
-        self.client: Final[hm_client.Client] = central.get_client(
-            interface_id=interface_id
-        )
+        self.client: Final[hmcl.Client] = central.get_client(interface_id=interface_id)
         self._attr_device_address: Final[str] = device_address
         self.channels: Final[
-            dict[str, hm_central.Channel]
+            dict[str, hmcu.Channel]
         ] = central.device_descriptions.get_channels(interface_id, device_address)
         _LOGGER.debug(
             "__init__: Initializing device: %s, %s",

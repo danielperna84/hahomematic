@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_hm_custom_entity
+from helper import get_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -35,7 +35,7 @@ async def test_cecover(
     """Test CeCover."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
-    cover: CeCover = cast(CeCover, await get_hm_custom_entity(central, "VCU8537918", 4))
+    cover: CeCover = cast(CeCover, await get_custom_entity(central, "VCU8537918", 4))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position == 0
@@ -87,7 +87,7 @@ async def test_ceblind(
     """Test CeBlind."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
-    cover: CeBlind = cast(CeBlind, await get_hm_custom_entity(central, "VCU0000145", 1))
+    cover: CeBlind = cast(CeBlind, await get_custom_entity(central, "VCU0000145", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
     assert cover.channel_operation_mode is None
     assert cover.current_cover_position == 0
@@ -171,7 +171,7 @@ async def test_ceipblind(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     cover: CeIpBlind = cast(
-        CeIpBlind, await get_hm_custom_entity(central, "VCU1223813", 4)
+        CeIpBlind, await get_custom_entity(central, "VCU1223813", 4)
     )
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
@@ -256,9 +256,7 @@ async def test_cegarage(
     """Test CeGarage."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
-    cover: CeGarage = cast(
-        CeGarage, await get_hm_custom_entity(central, "VCU3574044", 1)
-    )
+    cover: CeGarage = cast(CeGarage, await get_custom_entity(central, "VCU3574044", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position is None

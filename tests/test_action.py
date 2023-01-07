@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_hm_generic_entity
+from helper import get_generic_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -26,7 +26,7 @@ async def test_hmaction(
     assert central
     action: HmAction = cast(
         HmAction,
-        await get_hm_generic_entity(central, "VCU9724704:1", "LOCK_TARGET_LEVEL"),
+        await get_generic_entity(central, "VCU9724704:1", "LOCK_TARGET_LEVEL"),
     )
     assert action.usage == HmEntityUsage.ENTITY_NO_CREATE
     assert action.is_readable is False

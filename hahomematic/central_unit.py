@@ -20,7 +20,7 @@ from typing import Any, Final, TypeVar
 from aiohttp import ClientSession
 
 from hahomematic import config
-import hahomematic.client as hm_client
+import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_INTERFACE_ID,
     ATTR_TYPE,
@@ -136,7 +136,7 @@ class CentralUnit:
         ] = ParameterVisibilityCache(central=self)
 
         # {interface_id, client}
-        self._clients: Final[dict[str, hm_client.Client]] = {}
+        self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
         # {unique_identifier, entity}
@@ -333,7 +333,7 @@ class CentralUnit:
         )
         for interface_config in self.config.interface_configs:
             try:
-                if client := await hm_client.create_client(
+                if client := await hmcl.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
                     if (
@@ -462,14 +462,14 @@ class CentralUnit:
         )
         serial: str | None = None
         for interface_config in self.config.interface_configs:
-            client = await hm_client.create_client(
+            client = await hmcl.create_client(
                 central=self, interface_config=interface_config, local_ip=local_ip
             )
             if not serial:
                 serial = await client.get_serial()
         return serial
 
-    def get_client(self, interface_id: str) -> hm_client.Client:
+    def get_client(self, interface_id: str) -> hmcl.Client:
         """Return a client by interface_id. #CC"""
         if self.has_client(interface_id=interface_id) is False:
             raise HaHomematicException(
@@ -488,16 +488,16 @@ class CentralUnit:
         """Return all entities by platform. #CC"""
         if not existing_unique_ids:
             existing_unique_ids = []
-        hm_entities = []
+        entities = []
         for entity in self._entities.values():
             if (
                 entity.unique_identifier not in existing_unique_ids
                 and entity.usage != HmEntityUsage.ENTITY_NO_CREATE
                 and entity.platform == platform
             ):
-                hm_entities.append(entity)
+                entities.append(entity)
 
-        return hm_entities
+        return entities
 
     def get_readable_entities(self) -> list[BaseEntity]:
         """Return a list of readable entities. This also includes custom entities."""
@@ -509,11 +509,11 @@ class CentralUnit:
                 readable_entities.append(entity)
         return readable_entities
 
-    def get_primary_client(self) -> hm_client.Client | None:
+    def get_primary_client(self) -> hmcl.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
-        client: hm_client.Client | None = None
+        client: hmcl.Client | None = None
         for client in self._clients.values():
-            if isinstance(client, hm_client.ClientLocal):
+            if isinstance(client, hmcl.ClientLocal):
                 return client
             if client.config.interface in IF_PRIMARY and client.available:
                 return client
@@ -659,9 +659,9 @@ class CentralUnit:
             device_address,
         )
 
-        if (hm_device := self._devices.get(device_address)) is None:
+        if (device := self._devices.get(device_address)) is None:
             return
-        addresses: list[str] = list(hm_device.channels.keys())
+        addresses: list[str] = list(device.channels.keys())
         addresses.append(device_address)
         if len(addresses) == 0:
             _LOGGER.debug(
@@ -1129,7 +1129,7 @@ class CentralConfig:
         username: str,
         password: str,
         central_id: str,
-        interface_configs: set[hm_client.InterfaceConfig],
+        interface_configs: set[hmcl.InterfaceConfig],
         default_callback_port: int,
         client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,
@@ -1147,9 +1147,7 @@ class CentralConfig:
         self.username: Final[str] = username
         self.password: Final[str] = password
         self.central_id: Final[str] = central_id
-        self.interface_configs: Final[
-            set[hm_client.InterfaceConfig]
-        ] = interface_configs
+        self.interface_configs: Final[set[hmcl.InterfaceConfig]] = interface_configs
         self.default_callback_port: Final[int] = default_callback_port
         self.client_session: Final[ClientSession | None] = client_session
         self.tls: Final[bool] = tls
@@ -1404,6 +1402,7 @@ class BasePersistentCache(ABC):
         """
         Save current name data in NAMES to disk.
         """
+
         def _save() -> HmDataOperationResult:
             if not check_or_create_directory(self._cache_dir):
                 return HmDataOperationResult.NO_SAVE
@@ -1417,9 +1416,9 @@ class BasePersistentCache(ABC):
                 ) as fptr:
                     json.dump(self._persistant_cache, fptr)
                 return HmDataOperationResult.SAVE_SUCCESS
-            else:
-                _LOGGER.debug("save: not saving cache for %s", self._central.name)
-                return HmDataOperationResult.NO_SAVE
+
+            _LOGGER.debug("save: not saving cache for %s", self._central.name)
+            return HmDataOperationResult.NO_SAVE
 
         return await self._central.async_add_executor_job(_save)
 

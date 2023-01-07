@@ -10,8 +10,8 @@ from typing import Any
 from voluptuous import Invalid, Optional, Required, Schema
 
 from hahomematic.backport import StrEnum
-import hahomematic.device as hm_device
-import hahomematic.entity as hm_entity
+import hahomematic.device as hmd
+import hahomematic.entity as hme
 from hahomematic.helpers import element_matches_key, generate_unique_identifier
 
 ED_DEFAULT_ENTITIES = "default_entities"
@@ -579,16 +579,16 @@ def validate_entity_definition() -> Any:
 
 
 def make_custom_entity(
-    device: hm_device.HmDevice,
+    device: hmd.HmDevice,
     custom_entity_class: type,
     device_enum: EntityDefinition,
     group_base_channels: tuple[int, ...],
-) -> tuple[hm_entity.BaseEntity, ...]:
+) -> tuple[hme.BaseEntity, ...]:
     """
     Creates custom_entities.
     We use a helper-function to avoid raising exceptions during object-init.
     """
-    entities: list[hm_entity.BaseEntity] = []
+    entities: list[hme.BaseEntity] = []
     if not group_base_channels:
         group_base_channels = (0,)
 
@@ -615,15 +615,15 @@ def make_custom_entity(
 
 
 def _create_entities(
-    device: hm_device.HmDevice,
+    device: hmd.HmDevice,
     custom_entity_class: type,
     device_enum: EntityDefinition,
     device_def: dict[str, Any],
     entity_def: dict[int, tuple[str, ...]],
     channel_no: int | None = None,
-) -> tuple[hm_entity.BaseEntity, ...]:
+) -> tuple[hme.BaseEntity, ...]:
     """Create custom entities."""
-    entities: list[hm_entity.BaseEntity] = []
+    entities: list[hme.BaseEntity] = []
     unique_identifier = generate_unique_identifier(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )

@@ -7,7 +7,7 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_hm_custom_entity
+from helper import get_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -41,7 +41,7 @@ async def test_cesimplerfthermostat(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     climate: CeSimpleRfThermostat = cast(
-        CeSimpleRfThermostat, await get_hm_custom_entity(central, "VCU0000054", 1)
+        CeSimpleRfThermostat, await get_custom_entity(central, "VCU0000054", 1)
     )
     assert climate.usage == HmEntityUsage.CE_PRIMARY
 
@@ -102,7 +102,7 @@ async def test_cerfthermostat(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     climate: CeRfThermostat = cast(
-        CeRfThermostat, await get_hm_custom_entity(central, "VCU0000050", 4)
+        CeRfThermostat, await get_custom_entity(central, "VCU0000050", 4)
     )
     assert climate.usage == HmEntityUsage.CE_PRIMARY
     assert climate.min_temp == 5.0
@@ -213,7 +213,7 @@ async def test_ceipthermostat(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     climate: CeIpThermostat = cast(
-        CeIpThermostat, await get_hm_custom_entity(central, "VCU1769958", 1)
+        CeIpThermostat, await get_custom_entity(central, "VCU1769958", 1)
     )
     assert climate.usage == HmEntityUsage.CE_PRIMARY
     assert climate.min_temp == 5.0

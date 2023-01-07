@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_hm_custom_entity
+from helper import get_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -35,9 +35,7 @@ async def test_cedimmer(
     """Test CeDimmer."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
-    light: CeDimmer = cast(
-        CeDimmer, await get_hm_custom_entity(central, "VCU1399816", 4)
-    )
+    light: CeDimmer = cast(CeDimmer, await get_custom_entity(central, "VCU1399816", 4))
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color is None
@@ -140,7 +138,7 @@ async def test_cecolordimmer(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     light: CeColorDimmer = cast(
-        CeColorDimmer, await get_hm_custom_entity(central, "VCU3747418", 1)
+        CeColorDimmer, await get_custom_entity(central, "VCU3747418", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -241,7 +239,7 @@ async def test_cecolortempdimmer(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     light: CeColorTempDimmer = cast(
-        CeColorTempDimmer, await get_hm_custom_entity(central, "VCU0000115", 1)
+        CeColorTempDimmer, await get_custom_entity(central, "VCU0000115", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp == 500
@@ -298,7 +296,7 @@ async def test_ceipfixedcolorlight(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     light: CeIpFixedColorLight = cast(
-        CeIpFixedColorLight, await get_hm_custom_entity(central, "VCU3716619", 8)
+        CeIpFixedColorLight, await get_custom_entity(central, "VCU3716619", 8)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None

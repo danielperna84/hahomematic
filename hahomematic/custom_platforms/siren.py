@@ -16,8 +16,8 @@ from hahomematic.custom_platforms.entity_definition import (
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
-import hahomematic.device as hm_device
-import hahomematic.entity as hm_entity
+import hahomematic.device as hmd
+import hahomematic.entity as hme
 from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
@@ -151,8 +151,8 @@ class CeRfSiren(BaseSiren):
 
 
 def make_ip_siren(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP siren entities."""
     return make_custom_entity(
         device=device,
@@ -163,8 +163,8 @@ def make_ip_siren(
 
 
 def make_rf_siren(
-    device: hm_device.HmDevice, group_base_channels: tuple[int, ...]
-) -> tuple[hm_entity.BaseEntity, ...]:
+    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic rf siren entities."""
     return make_custom_entity(
         device=device,

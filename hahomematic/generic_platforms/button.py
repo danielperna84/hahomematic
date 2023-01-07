@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-import hahomematic.central_unit as hm_central
+import hahomematic.central_unit as hmcu
 from hahomematic.const import PROGRAM_ADDRESS, HmPlatform
 from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericHubEntity
@@ -36,7 +36,7 @@ class HmProgramButton(GenericHubEntity):
 
     def __init__(
         self,
-        central: hm_central.CentralUnit,
+        central: hmcu.CentralUnit,
         data: ProgramData,
     ):
         """

@@ -93,7 +93,7 @@ async def get_value_from_generic_entity(
     central_unit: CentralUnit, address: str, parameter: str
 ) -> Any:
     """Return the device value."""
-    hm_entity = await get_hm_generic_entity(
+    hm_entity = await get_generic_entity(
         central_unit=central_unit, address=address, parameter=parameter
     )
     assert hm_entity
@@ -103,28 +103,28 @@ async def get_value_from_generic_entity(
     return hm_entity.value
 
 
-def get_hm_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
+def get_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
     """Return the hm_device."""
     d_address = get_device_address(address=address)
     return central_unit._devices.get(d_address)
 
 
-async def get_hm_generic_entity(
+async def get_generic_entity(
     central_unit: CentralUnit, address: str, parameter: str
 ) -> GenericEntity | None:
     """Return the hm generic_entity."""
-    hm_device = get_hm_device(central_unit=central_unit, address=address)
+    hm_device = get_device(central_unit=central_unit, address=address)
     assert hm_device
     hm_entity = hm_device.generic_entities.get((address, parameter))
     assert hm_entity
     return hm_entity
 
 
-async def get_hm_custom_entity(
+async def get_custom_entity(
     central_unit: CentralUnit, address: str, channel_no: int, do_load: bool = False
 ) -> CustomEntity | None:
     """Return the hm custom_entity."""
-    hm_device = get_hm_device(central_unit, address)
+    hm_device = get_device(central_unit, address)
     assert hm_device
     for custom_entity in hm_device.custom_entities.values():
         if custom_entity.channel_no == channel_no:
@@ -136,7 +136,7 @@ async def get_hm_custom_entity(
     return None
 
 
-async def get_hm_sysvar_entity(
+async def get_sysvar_entity(
     central: CentralUnit, name: str
 ) -> GenericSystemVariable | None:
     """Return the sysvar entity."""
@@ -145,9 +145,7 @@ async def get_hm_sysvar_entity(
     return sysvar_entity
 
 
-async def get_hm_program_button(
-    central: CentralUnit, pid: str
-) -> HmProgramButton | None:
+async def get_program_button(central: CentralUnit, pid: str) -> HmProgramButton | None:
     """Return the program button."""
     program_button = central.program_entities.get(pid)
     assert program_button

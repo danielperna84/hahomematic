@@ -10,7 +10,7 @@ import threading
 from typing import Any, Final
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
-import hahomematic.central_unit as hm_central
+import hahomematic.central_unit as hmcu
 from hahomematic.const import (
     HH_EVENT_ERROR,
     HH_EVENT_RE_ADDED_DEVICE,
@@ -75,7 +75,7 @@ class RPCFunctions:
         We react on that and add those devices as well.
         """
 
-        central: hm_central.CentralUnit | None
+        central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(
                 central.add_new_devices(interface_id, device_descriptions)
@@ -87,7 +87,7 @@ class RPCFunctions:
         We react on that and remove those devices as well.
         """
 
-        central: hm_central.CentralUnit | None
+        central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(central.delete_devices(interface_id, addresses))
 
@@ -201,7 +201,7 @@ class XmlRpcServer(threading.Thread):
         self._simple_xml_rpc_server.register_instance(
             RPCFunctions(self), allow_dotted_names=True
         )
-        self._centrals: Final[dict[str, hm_central.CentralUnit]] = {}
+        self._centrals: Final[dict[str, hmcu.CentralUnit]] = {}
 
     def __new__(cls, local_port: int) -> XmlRpcServer:
         """Create new XmlRPC server."""
@@ -234,17 +234,17 @@ class XmlRpcServer(threading.Thread):
         """return if thread is active."""
         return self._started.is_set() is True  # type: ignore[attr-defined]
 
-    def register_central(self, central: hm_central.CentralUnit) -> None:
+    def register_central(self, central: hmcu.CentralUnit) -> None:
         """Register a central in the XmlRPC-Server"""
         if not self._centrals.get(central.name):
             self._centrals[central.name] = central
 
-    def un_register_central(self, central: hm_central.CentralUnit) -> None:
+    def un_register_central(self, central: hmcu.CentralUnit) -> None:
         """Unregister a central from XmlRPC-Server"""
         if self._centrals.get(central.name):
             del self._centrals[central.name]
 
-    def get_central(self, interface_id: str) -> hm_central.CentralUnit | None:
+    def get_central(self, interface_id: str) -> hmcu.CentralUnit | None:
         """Return a central by interface_id"""
         for central in self._centrals.values():
             if central.has_client(interface_id=interface_id):

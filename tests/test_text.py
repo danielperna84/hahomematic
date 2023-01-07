@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_hm_generic_entity, get_hm_sysvar_entity
+from helper import get_generic_entity, get_sysvar_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -23,7 +23,7 @@ async def no_test_hmtext(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert central
     text: HmText = cast(
-        HmText, await get_hm_generic_entity(central, "VCU7981740:1", "STATE")
+        HmText, await get_generic_entity(central, "VCU7981740:1", "STATE")
     )
     assert text.usage == HmEntityUsage.ENTITY
 
@@ -36,7 +36,7 @@ async def test_hmsysvartext(
     central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
     assert central
     text: HmSysvarText = cast(
-        HmSysvarText, await get_hm_sysvar_entity(central, "sv_string_ext")
+        HmSysvarText, await get_sysvar_entity(central, "sv_string_ext")
     )
     assert text.usage == HmEntityUsage.ENTITY
 
