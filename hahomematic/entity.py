@@ -58,7 +58,7 @@ import hahomematic.custom_platforms as hm_custom_entity
 import hahomematic.custom_platforms.entity_definition as hmed
 from hahomematic.decorators import config_property, value_property
 import hahomematic.device as hmd
-from hahomematic.exceptions import BaseHomematicException, HaHomematicException
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.helpers import (
     EntityNameData,
     HubData,
@@ -247,10 +247,6 @@ class BaseEntity(CallbackEntity):
         """Set the entity usage."""
         self._attr_usage = usage
 
-    def add_to_collections(self) -> None:
-        """add entity to device and central collections"""
-        self.device.add_entity(entity=self)
-
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
@@ -412,9 +408,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         return raw_unit
 
     @abstractmethod
-    def event(
-        self, interface_id: str, channel_address: str, parameter: str, value: Any
-    ) -> None:
+    def event(self, value: Any) -> None:
         """
         Handle event for which this handler has subscribed.
         """
@@ -429,42 +423,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
                 parameter=self._attr_parameter,
             )
         )
-
-    def _check_event_parameters(
-        self,
-        interface_id: str,
-        channel_address: str,
-        parameter: str,
-    ) -> bool:
-        """Check the parameters of an event."""
-        _LOGGER.debug(
-            "event: %s, %s, %s",
-            interface_id,
-            channel_address,
-            parameter,
-        )
-        if interface_id != self.device.interface_id:
-            _LOGGER.warning(
-                "event failed: Incorrect interface_id: %s - should be: %s",
-                interface_id,
-                self.device.interface_id,
-            )
-            return False
-        if channel_address != self._attr_channel_address:
-            _LOGGER.warning(
-                "event failed: Incorrect address: %s - should be: %s",
-                channel_address,
-                self._attr_channel_address,
-            )
-            return False
-        if parameter != self._attr_parameter:
-            _LOGGER.warning(
-                "event failed: Incorrect parameter: %s - should be: %s",
-                parameter,
-                self._attr_parameter,
-            )
-            return False
-        return True
 
     def _convert_value(self, value: ParameterT) -> ParameterT:
         """Convert to value to ParameterT"""
@@ -594,9 +552,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         """Return the value of the entity."""
         return self._attr_value
 
-    def event(
-        self, interface_id: str, channel_address: str, parameter: str, value: Any
-    ) -> None:
+    def event(self, value: Any) -> None:
         """
         Handle event for which this entity has subscribed.
         """
@@ -604,13 +560,6 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 
         new_value = self._convert_value(value)
         if self._attr_value == new_value:
-            return
-
-        if not self._check_event_parameters(
-            interface_id=interface_id,
-            channel_address=channel_address,
-            parameter=parameter,
-        ):
             return
 
         self.update_value(value=new_value)
@@ -691,25 +640,25 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self._attr_last_update = datetime.now()
 
 
-class WrapperEntity(CallbackEntity):
+class WrapperEntity(BaseEntity):
     """
     Base class for entities that switch type of generic entities.
     """
-
-    _wrapped_entity: GenericEntity
 
     def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform):
         """
         Initialize the entity.
         """
-        super().__init__(
-            unique_identifier=f"{wrapped_entity.unique_identifier}_{new_platform}"
-        )
         if wrapped_entity.platform == new_platform:
             raise HaHomematicException(
                 "Cannot create wrapped entity. platform must not be equivalent."
             )
-        self._wrapped_entity = wrapped_entity
+        self._wrapped_entity: Final[GenericEntity] = wrapped_entity
+        super().__init__(
+            device=wrapped_entity.device,
+            channel_no=wrapped_entity.channel_no,
+            unique_identifier=f"{wrapped_entity.unique_identifier}_{new_platform}",
+        )
         self._attr_platform = new_platform
         # use callbacks from wrapped entity
         self._update_callbacks = wrapped_entity._update_callbacks
@@ -721,24 +670,14 @@ class WrapperEntity(CallbackEntity):
     def __getattr__(self, *args: Any) -> Any:
         return getattr(self._wrapped_entity, *args)
 
-    @value_property
-    def available(self) -> bool:
-        """Return the availability of the device."""
-        return self._wrapped_entity.available
-
-    @config_property
-    def full_name(self) -> str:
-        """Return the full name of the entity."""
-        return self._wrapped_entity.full_name
-
-    @config_property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._wrapped_entity.name
-
-    def add_to_collections(self) -> None:
-        """add entity to device and central collections"""
-        self.device.add_entity(entity=self)
+    def _generate_entity_name(self) -> EntityNameData:
+        """Create the name for the entity."""
+        return get_entity_name(
+            central=self._central,
+            device=self.device,
+            channel_no=self.channel_no,
+            parameter=self._attr_parameter,
+        )
 
 
 _EntityT = TypeVar("_EntityT", bound=GenericEntity)
@@ -961,13 +900,6 @@ class CustomEntity(BaseEntity):
         entity.register_update_callback(self.update_entity)
         self.data_entities[field_name] = entity
 
-    def _remove_entity(self, field_name: str, entity: GenericEntity | None) -> None:
-        """Remove entity from collection and un-register callback"""
-        if not entity:
-            return None
-        entity.unregister_update_callback(self.update_entity)
-        del self.data_entities[field_name]
-
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """get entity"""
         if entity := self.data_entities.get(field_name):
@@ -1133,34 +1065,16 @@ class BaseEvent(BaseParameterEntity[Any]):
             parameter_data=parameter_data,
         )
 
-        self._attr_last_update: datetime = INIT_DATETIME
-        self._attr_value: Any | None = None
-
     @config_property
     def event_type(self) -> HmEventType:
         """Return the event_type of the event."""
         return self._attr_event_type
 
-    def event(
-        self, interface_id: str, channel_address: str, parameter: str, value: Any
-    ) -> None:
+    def event(self, value: Any) -> None:
         """
         Handle event for which this handler has subscribed.
         """
-        if not self._check_event_parameters(
-            interface_id=interface_id,
-            channel_address=channel_address,
-            parameter=parameter,
-        ):
-            return
-
-        # fire an event
         self.fire_event(value)
-
-    @value_property
-    def value(self) -> Any:
-        """Return the value."""
-        return self._attr_value
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
@@ -1196,28 +1110,6 @@ class BaseEvent(BaseParameterEntity[Any]):
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
         return HmEntityUsage.EVENT
-
-    async def send_value(self, value: Any) -> None:
-        """Send value to ccu."""
-        try:
-            await self._client.set_value(
-                channel_address=self._attr_channel_address,
-                paramset_key=self._attr_paramset_key,
-                parameter=self._attr_parameter,
-                value=value,
-            )
-        except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "event failed: %s [%s] Unable to send value for: %s, %s, %s",
-                hhe.name,
-                hhe.args,
-                self._attr_channel_address,
-                self._attr_parameter,
-                value,
-            )
-
-    def _set_last_update(self) -> None:
-        self._attr_last_update = datetime.now()
 
 
 class ClickEvent(BaseEvent):

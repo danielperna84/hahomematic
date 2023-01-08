@@ -25,7 +25,6 @@ async def test_hmbinarysensor(
 ) -> None:
     """Test HmBinarySensor."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     binary_sensor: HmBinarySensor = cast(
         HmBinarySensor, await get_generic_entity(central, "VCU5864966:1", "STATE")
     )
@@ -47,7 +46,6 @@ async def test_hmsysvarbinarysensor(
 ) -> None:
     """Test HmSysvarBinarySensor."""
     central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
-    assert central
     binary_sensor: HmSysvarBinarySensor = cast(
         HmSysvarBinarySensor,
         await get_sysvar_entity(central, "sv_logic"),

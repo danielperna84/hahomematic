@@ -254,6 +254,7 @@ class HmDevice:
             del self.custom_entities[entity.unique_identifier]
         if isinstance(entity, BaseEvent):
             del self.events[(entity.channel_address, entity.parameter)]
+        entity.remove_entity()
 
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
@@ -310,8 +311,8 @@ class HmDevice:
         Provide some useful information.
         """
         return (
-            f"address: {self._attr_device_address}, type: {self._attr_device_type}, "
-            f"name: {self._attr_name}, entities: {self.generic_entities}"
+            f"address: {self._attr_device_address}, type: {len(self._attr_device_type)}, "
+            f"name: {self._attr_name}, entities: {len(self.generic_entities)}"
         )
 
     @value_property
@@ -501,7 +502,7 @@ class HmDevice:
             parameter=parameter,
             parameter_data=parameter_data,
         ):
-            action.add_to_collections()
+            self.add_entity(action)
 
     def _create_event_and_append_to_device(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
@@ -537,7 +538,7 @@ class HmDevice:
                 parameter=parameter,
                 parameter_data=parameter_data,
             )
-            event.add_to_collections()
+            self.add_entity(event)
 
     def _create_entity_and_append_to_device(
         self,
@@ -638,14 +639,14 @@ class HmDevice:
                 channel_address,
                 parameter,
             )
-            entity.add_to_collections()
+            self.add_entity(entity)
             if new_platform := self.central.parameter_visibility.wrap_entity(
                 wrapped_entity=entity
             ):
                 wrapper_entity = WrapperEntity(
                     wrapped_entity=entity, new_platform=new_platform
                 )
-                wrapper_entity.add_to_collections()
+                self.add_entity(wrapper_entity)
 
 
 class ValueCache:

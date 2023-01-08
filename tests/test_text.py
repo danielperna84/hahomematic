@@ -21,7 +21,6 @@ async def no_test_hmtext(
 ) -> None:
     """Test HmText. There are currently no text entities"""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     text: HmText = cast(
         HmText, await get_generic_entity(central, "VCU7981740:1", "STATE")
     )
@@ -34,7 +33,6 @@ async def test_hmsysvartext(
 ) -> None:
     """Test HmSysvarText. There are currently no text entities"""
     central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
-    assert central
     text: HmSysvarText = cast(
         HmSysvarText, await get_sysvar_entity(central, "sv_string_ext")
     )

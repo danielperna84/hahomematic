@@ -24,7 +24,6 @@ async def test_hmsensor_psm(
 ) -> None:
     """Test HmSensor."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     sensor: HmSensor = cast(
         HmSensor, await get_generic_entity(central, "VCU3941846:6", "VOLTAGE")
     )
@@ -70,7 +69,6 @@ async def test_hmsensor_srh(
 ) -> None:
     """Test HmSensor."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     sensor: HmSensor = cast(
         HmSensor, await get_generic_entity(central, "VCU7981740:1", "STATE")
     )
@@ -90,7 +88,6 @@ async def test_hmsysvarsensor(
 ) -> None:
     """Test HmSysvarSensor."""
     central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
-    assert central
     sensor: HmSysvarSensor = cast(
         HmSysvarSensor, await get_sysvar_entity(central, "sv_list")
     )

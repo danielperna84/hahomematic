@@ -770,7 +770,7 @@ class CentralUnit:
                 for callback in self._entity_event_subscriptions[
                     (channel_address, parameter)
                 ]:
-                    callback(interface_id, channel_address, parameter, value)
+                    callback(value)
             except RuntimeError as rte:
                 _LOGGER.debug(
                     "event: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
@@ -802,14 +802,14 @@ class CentralUnit:
 
     def add_entity(self, entity: BaseEntity) -> None:
         """Add entity to central collections"""
-        if entity.unique_identifier in self._entities:
-            _LOGGER.warning(
-                "Entity %s already registered in central %s",
-                entity.unique_identifier,
-                self.name,
-            )
-            return
         if not isinstance(entity, BaseEvent):
+            if entity.unique_identifier in self._entities:
+                _LOGGER.warning(
+                    "Entity %s already registered in central %s",
+                    entity.unique_identifier,
+                    self.name,
+                )
+                return
             self._entities[entity.unique_identifier] = entity
 
         if isinstance(entity, (GenericEntity, BaseEvent)) and entity.supports_events:

@@ -34,7 +34,6 @@ async def test_cecover(
 ) -> None:
     """Test CeCover."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     cover: CeCover = cast(CeCover, await get_custom_entity(central, "VCU8537918", 4))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
@@ -86,7 +85,6 @@ async def test_ceblind(
 ) -> None:
     """Test CeBlind."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     cover: CeBlind = cast(CeBlind, await get_custom_entity(central, "VCU0000145", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
     assert cover.channel_operation_mode is None
@@ -169,7 +167,6 @@ async def test_ceipblind(
 ) -> None:
     """Test CeIpBlind."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     cover: CeIpBlind = cast(
         CeIpBlind, await get_custom_entity(central, "VCU1223813", 4)
     )
@@ -255,7 +252,6 @@ async def test_cegarage(
 ) -> None:
     """Test CeGarage."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     cover: CeGarage = cast(CeGarage, await get_custom_entity(central, "VCU3574044", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 

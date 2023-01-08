@@ -643,7 +643,7 @@ def _create_entities(
         channel_no=channel_no,
     )
     if len(entity.data_entities) > 0:
-        entity.add_to_collections()
+        device.add_entity(entity)
         entities.append(entity)
     return tuple(entities)
 

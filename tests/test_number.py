@@ -24,7 +24,6 @@ async def test_hmfloat(
 ) -> None:
     """Test HmFloat."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     efloat: HmFloat = cast(
         HmFloat,
         await get_generic_entity(central, "VCU0000011:3", "LEVEL"),
@@ -54,7 +53,6 @@ async def test_hminteger(
 ) -> None:
     """Test HmInteger."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     einteger: HmInteger = cast(
         HmInteger,
         await get_generic_entity(central, "VCU4984404:1", "SET_POINT_MODE"),
@@ -92,7 +90,6 @@ async def test_hmsysvarnumber(
 ) -> None:
     """Test HmSysvarNumber."""
     central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
-    assert central
     enumber: HmSysvarNumber = cast(
         HmSysvarNumber,
         await get_sysvar_entity(central, "sv_float_ext"),
