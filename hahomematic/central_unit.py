@@ -802,14 +802,14 @@ class CentralUnit:
 
     def add_entity(self, entity: BaseEntity) -> None:
         """Add entity to central collections"""
-        if entity.unique_identifier in self._entities:
-            _LOGGER.warning(
-                "Entity %s already registered in central %s",
-                entity.unique_identifier,
-                self.name,
-            )
-            return
         if not isinstance(entity, BaseEvent):
+            if entity.unique_identifier in self._entities:
+                _LOGGER.warning(
+                    "Entity %s already registered in central %s",
+                    entity.unique_identifier,
+                    self.name,
+                )
+                return
             self._entities[entity.unique_identifier] = entity
 
         if isinstance(entity, (GenericEntity, BaseEvent)) and entity.supports_events:

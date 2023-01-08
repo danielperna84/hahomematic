@@ -914,13 +914,6 @@ class CustomEntity(BaseEntity):
         entity.register_update_callback(self.update_entity)
         self.data_entities[field_name] = entity
 
-    def _remove_entity(self, field_name: str, entity: GenericEntity | None) -> None:
-        """Remove entity from collection and un-register callback"""
-        if not entity:
-            return None
-        entity.unregister_update_callback(self.update_entity)
-        del self.data_entities[field_name]
-
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """get entity"""
         if entity := self.data_entities.get(field_name):
