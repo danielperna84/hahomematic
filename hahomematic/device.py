@@ -311,8 +311,8 @@ class HmDevice:
         Provide some useful information.
         """
         return (
-            f"address: {self._attr_device_address}, type: {self._attr_device_type}, "
-            f"name: {self._attr_name}, entities: {self.generic_entities}"
+            f"address: {self._attr_device_address}, type: {len(self._attr_device_type)}, "
+            f"name: {self._attr_name}, entities: {len(self.generic_entities)}"
         )
 
     @value_property
