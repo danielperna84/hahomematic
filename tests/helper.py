@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.resources
 import json
+import logging
 import os
 from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
@@ -12,17 +13,13 @@ import const
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
-from hahomematic.client import (
-    Client,
-    ClientLocal,
-    InterfaceConfig,
-    LocalRessources,
-    _ClientConfig,
-)
+from hahomematic.client import InterfaceConfig, LocalRessources, _ClientConfig
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity, GenericSystemVariable
 from hahomematic.generic_platforms.button import HmProgramButton
 from hahomematic.helpers import ProgramData, SystemVariableData, get_device_address
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CentralUnitLocalFactory:
@@ -30,6 +27,9 @@ class CentralUnitLocalFactory:
 
     def __init__(self, client_session: ClientSession):
         self._client_session = client_session
+        self.system_event_mock = MagicMock()
+        self.entity_event_mock = MagicMock()
+        self.ha_event_mock = MagicMock()
 
     async def get_central(
         self,
@@ -55,7 +55,7 @@ class CentralUnitLocalFactory:
             ),
         )
 
-        central_unit = await CentralConfig(
+        central = await CentralConfig(
             name=const.CENTRAL_NAME,
             host=const.CCU_HOST,
             username=const.CCU_USERNAME,
@@ -69,7 +69,7 @@ class CentralUnitLocalFactory:
 
         mock_client = get_mock(
             await _ClientConfig(
-                central=central_unit,
+                central=central,
                 interface_config=local_client_config,
                 local_ip="127.0.0.1",
             ).get_client()
@@ -85,8 +85,13 @@ class CentralUnitLocalFactory:
             "hahomematic.client.ClientLocal.get_all_programs",
             return_value=program_data,
         ):
-            await central_unit.start()
-        return central_unit, mock_client
+            await central.start()
+
+        central.callback_system_event = self.system_event_mock
+        central.callback_entity_event = self.entity_event_mock
+        central.callback_ha_event = self.ha_event_mock
+
+        return central, mock_client
 
 
 async def get_value_from_generic_entity(
