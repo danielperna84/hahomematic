@@ -254,6 +254,7 @@ class HmDevice:
             del self.custom_entities[entity.unique_identifier]
         if isinstance(entity, BaseEvent):
             del self.events[(entity.channel_address, entity.parameter)]
+        entity.remove_entity()
 
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
