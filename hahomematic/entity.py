@@ -247,10 +247,6 @@ class BaseEntity(CallbackEntity):
         """Set the entity usage."""
         self._attr_usage = usage
 
-    def add_to_collections(self) -> None:
-        """add entity to device and central collections"""
-        self.device.add_entity(entity=self)
-
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
@@ -644,25 +640,25 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self._attr_last_update = datetime.now()
 
 
-class WrapperEntity(CallbackEntity):
+class WrapperEntity(BaseEntity):
     """
     Base class for entities that switch type of generic entities.
     """
-
-    _wrapped_entity: GenericEntity
 
     def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform):
         """
         Initialize the entity.
         """
-        super().__init__(
-            unique_identifier=f"{wrapped_entity.unique_identifier}_{new_platform}"
-        )
         if wrapped_entity.platform == new_platform:
             raise HaHomematicException(
                 "Cannot create wrapped entity. platform must not be equivalent."
             )
-        self._wrapped_entity = wrapped_entity
+        self._wrapped_entity: Final[GenericEntity] = wrapped_entity
+        super().__init__(
+            device=wrapped_entity.device,
+            channel_no=wrapped_entity.channel_no,
+            unique_identifier=f"{wrapped_entity.unique_identifier}_{new_platform}",
+        )
         self._attr_platform = new_platform
         # use callbacks from wrapped entity
         self._update_callbacks = wrapped_entity._update_callbacks
@@ -674,24 +670,14 @@ class WrapperEntity(CallbackEntity):
     def __getattr__(self, *args: Any) -> Any:
         return getattr(self._wrapped_entity, *args)
 
-    @value_property
-    def available(self) -> bool:
-        """Return the availability of the device."""
-        return self._wrapped_entity.available
-
-    @config_property
-    def full_name(self) -> str:
-        """Return the full name of the entity."""
-        return self._wrapped_entity.full_name
-
-    @config_property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._wrapped_entity.name
-
-    def add_to_collections(self) -> None:
-        """add entity to device and central collections"""
-        self.device.add_entity(entity=self)
+    def _generate_entity_name(self) -> EntityNameData:
+        """Create the name for the entity."""
+        return get_entity_name(
+            central=self._central,
+            device=self.device,
+            channel_no=self.channel_no,
+            parameter=self._attr_parameter,
+        )
 
 
 _EntityT = TypeVar("_EntityT", bound=GenericEntity)
