@@ -137,6 +137,16 @@ async def get_wrapper_entity(
     return entity
 
 
+async def get_event(
+    central_unit: CentralUnit, address: str, parameter: str
+) -> GenericEntity | None:
+    """Return the hm event."""
+    device = get_device(central_unit=central_unit, address=address)
+    event = device.events.get((address, parameter))
+    assert event
+    return event
+
+
 async def get_custom_entity(
     central_unit: CentralUnit, address: str, channel_no: int, do_load: bool = False
 ) -> CustomEntity | None:

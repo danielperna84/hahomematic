@@ -58,7 +58,7 @@ import hahomematic.custom_platforms as hm_custom_entity
 import hahomematic.custom_platforms.entity_definition as hmed
 from hahomematic.decorators import config_property, value_property
 import hahomematic.device as hmd
-from hahomematic.exceptions import BaseHomematicException, HaHomematicException
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.helpers import (
     EntityNameData,
     HubData,
@@ -1065,9 +1065,6 @@ class BaseEvent(BaseParameterEntity[Any]):
             parameter_data=parameter_data,
         )
 
-        self._attr_last_update: datetime = INIT_DATETIME
-        self._attr_value: Any | None = None
-
     @config_property
     def event_type(self) -> HmEventType:
         """Return the event_type of the event."""
@@ -1078,11 +1075,6 @@ class BaseEvent(BaseParameterEntity[Any]):
         Handle event for which this handler has subscribed.
         """
         self.fire_event(value)
-
-    @value_property
-    def value(self) -> Any:
-        """Return the value."""
-        return self._attr_value
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
@@ -1118,28 +1110,6 @@ class BaseEvent(BaseParameterEntity[Any]):
     def _generate_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
         return HmEntityUsage.EVENT
-
-    async def send_value(self, value: Any) -> None:
-        """Send value to ccu."""
-        try:
-            await self._client.set_value(
-                channel_address=self._attr_channel_address,
-                paramset_key=self._attr_paramset_key,
-                parameter=self._attr_parameter,
-                value=value,
-            )
-        except BaseHomematicException as hhe:
-            _LOGGER.warning(
-                "event failed: %s [%s] Unable to send value for: %s, %s, %s",
-                hhe.name,
-                hhe.args,
-                self._attr_channel_address,
-                self._attr_parameter,
-                value,
-            )
-
-    def _set_last_update(self) -> None:
-        self._attr_last_update = datetime.now()
 
 
 class ClickEvent(BaseEvent):
