@@ -412,9 +412,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         return raw_unit
 
     @abstractmethod
-    def event(
-        self, interface_id: str, channel_address: str, parameter: str, value: Any
-    ) -> None:
+    def event(self, value: Any) -> None:
         """
         Handle event for which this handler has subscribed.
         """
@@ -429,42 +427,6 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
                 parameter=self._attr_parameter,
             )
         )
-
-    def _check_event_parameters(
-        self,
-        interface_id: str,
-        channel_address: str,
-        parameter: str,
-    ) -> bool:
-        """Check the parameters of an event."""
-        _LOGGER.debug(
-            "event: %s, %s, %s",
-            interface_id,
-            channel_address,
-            parameter,
-        )
-        if interface_id != self.device.interface_id:
-            _LOGGER.warning(
-                "event failed: Incorrect interface_id: %s - should be: %s",
-                interface_id,
-                self.device.interface_id,
-            )
-            return False
-        if channel_address != self._attr_channel_address:
-            _LOGGER.warning(
-                "event failed: Incorrect address: %s - should be: %s",
-                channel_address,
-                self._attr_channel_address,
-            )
-            return False
-        if parameter != self._attr_parameter:
-            _LOGGER.warning(
-                "event failed: Incorrect parameter: %s - should be: %s",
-                parameter,
-                self._attr_parameter,
-            )
-            return False
-        return True
 
     def _convert_value(self, value: ParameterT) -> ParameterT:
         """Convert to value to ParameterT"""
@@ -594,9 +556,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         """Return the value of the entity."""
         return self._attr_value
 
-    def event(
-        self, interface_id: str, channel_address: str, parameter: str, value: Any
-    ) -> None:
+    def event(self, value: Any) -> None:
         """
         Handle event for which this entity has subscribed.
         """
@@ -604,13 +564,6 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 
         new_value = self._convert_value(value)
         if self._attr_value == new_value:
-            return
-
-        if not self._check_event_parameters(
-            interface_id=interface_id,
-            channel_address=channel_address,
-            parameter=parameter,
-        ):
             return
 
         self.update_value(value=new_value)
@@ -1141,20 +1094,10 @@ class BaseEvent(BaseParameterEntity[Any]):
         """Return the event_type of the event."""
         return self._attr_event_type
 
-    def event(
-        self, interface_id: str, channel_address: str, parameter: str, value: Any
-    ) -> None:
+    def event(self, value: Any) -> None:
         """
         Handle event for which this handler has subscribed.
         """
-        if not self._check_event_parameters(
-            interface_id=interface_id,
-            channel_address=channel_address,
-            parameter=parameter,
-        ):
-            return
-
-        # fire an event
         self.fire_event(value)
 
     @value_property

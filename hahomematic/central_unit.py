@@ -770,7 +770,7 @@ class CentralUnit:
                 for callback in self._entity_event_subscriptions[
                     (channel_address, parameter)
                 ]:
-                    callback(interface_id, channel_address, parameter, value)
+                    callback(value)
             except RuntimeError as rte:
                 _LOGGER.debug(
                     "event: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
