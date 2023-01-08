@@ -43,7 +43,7 @@ def pytest_runtest_setup():
     # pytest_socket.disable_socket(allow_unix_socket=True)
 
 
-@pytest.yield_fixture(name="loop", scope="session")
+@pytest.fixture(name="loop", scope="session")
 def loop() -> asyncio.AbstractEventLoop:
     """Yield running event_loop"""
     event_loop = asyncio.get_event_loop_policy().new_event_loop()
