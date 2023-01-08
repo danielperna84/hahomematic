@@ -24,7 +24,6 @@ async def test_cerflock(
 ) -> None:
     """Test CeRfLock."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     lock: CeRfLock = cast(CeRfLock, await get_custom_entity(central, "VCU0000146", 1))
     assert lock.usage == HmEntityUsage.CE_PRIMARY
 
@@ -76,7 +75,6 @@ async def test_ceiplock(
 ) -> None:
     """Test CeIpLock."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     lock: CeIpLock = cast(CeIpLock, await get_custom_entity(central, "VCU9724704", 1))
     assert lock.usage == HmEntityUsage.CE_PRIMARY
 

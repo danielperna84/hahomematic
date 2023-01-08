@@ -23,7 +23,6 @@ async def test_ceipsiren(
 ) -> None:
     """Test CeIpSiren."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     siren: CeIpSiren = cast(
         CeIpSiren, await get_custom_entity(central, "VCU8249617", 3)
     )

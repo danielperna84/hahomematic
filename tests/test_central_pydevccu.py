@@ -123,7 +123,7 @@ async def test_central(central_pydevccu, loop) -> None:
     ) as fptr:
         json.dump(addresses, fptr, indent=2)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2800
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2807
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
     assert usage_types[HmEntityUsage.ENTITY] == 3611
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 96

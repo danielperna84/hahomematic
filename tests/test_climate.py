@@ -39,7 +39,6 @@ async def test_cesimplerfthermostat(
 ) -> None:
     """Test CeSimpleRfThermostat."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     climate: CeSimpleRfThermostat = cast(
         CeSimpleRfThermostat, await get_custom_entity(central, "VCU0000054", 1)
     )
@@ -100,7 +99,6 @@ async def test_cerfthermostat(
 ) -> None:
     """Test CeRfThermostat."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     climate: CeRfThermostat = cast(
         CeRfThermostat, await get_custom_entity(central, "VCU0000050", 4)
     )
@@ -211,7 +209,6 @@ async def test_ceipthermostat(
 ) -> None:
     """Test CeIpThermostat."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     climate: CeIpThermostat = cast(
         CeIpThermostat, await get_custom_entity(central, "VCU1769958", 1)
     )

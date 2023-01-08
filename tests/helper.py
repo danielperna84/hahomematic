@@ -90,7 +90,8 @@ class CentralUnitLocalFactory:
         central.callback_system_event = self.system_event_mock
         central.callback_entity_event = self.entity_event_mock
         central.callback_ha_event = self.ha_event_mock
-
+        assert central
+        assert mock_client
         return central, mock_client
 
 
@@ -98,40 +99,50 @@ async def get_value_from_generic_entity(
     central_unit: CentralUnit, address: str, parameter: str
 ) -> Any:
     """Return the device value."""
-    hm_entity = await get_generic_entity(
+    entity = await get_generic_entity(
         central_unit=central_unit, address=address, parameter=parameter
     )
-    assert hm_entity
-    await hm_entity.load_entity_value(
+    assert entity
+    await entity.load_entity_value(
         call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
     )
-    return hm_entity.value
+    return entity.value
 
 
 def get_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
-    """Return the hm_device."""
+    """Return the device."""
     d_address = get_device_address(address=address)
-    return central_unit._devices.get(d_address)
+    device = central_unit.get_device(device_address=d_address)
+    assert device
+    return device
 
 
 async def get_generic_entity(
     central_unit: CentralUnit, address: str, parameter: str
 ) -> GenericEntity | None:
     """Return the hm generic_entity."""
-    hm_device = get_device(central_unit=central_unit, address=address)
-    assert hm_device
-    hm_entity = hm_device.generic_entities.get((address, parameter))
-    assert hm_entity
-    return hm_entity
+    device = get_device(central_unit=central_unit, address=address)
+    entity = device.generic_entities.get((address, parameter))
+    assert entity
+    return entity
+
+
+async def get_wrapper_entity(
+    central_unit: CentralUnit, address: str, parameter: str
+) -> GenericEntity | None:
+    """Return the hm wrapper_entity."""
+    device = get_device(central_unit=central_unit, address=address)
+    entity = device.wrapper_entities.get((address, parameter))
+    assert entity
+    return entity
 
 
 async def get_custom_entity(
     central_unit: CentralUnit, address: str, channel_no: int, do_load: bool = False
 ) -> CustomEntity | None:
     """Return the hm custom_entity."""
-    hm_device = get_device(central_unit, address)
-    assert hm_device
-    for custom_entity in hm_device.custom_entities.values():
+    device = get_device(central_unit, address)
+    for custom_entity in device.custom_entities.values():
         if custom_entity.channel_no == channel_no:
             if do_load:
                 await custom_entity.load_entity_value(
@@ -145,16 +156,17 @@ async def get_sysvar_entity(
     central: CentralUnit, name: str
 ) -> GenericSystemVariable | None:
     """Return the sysvar entity."""
-    sysvar_entity = central.sysvar_entities.get(name)
-    assert sysvar_entity
-    return sysvar_entity
+
+    entity = central.sysvar_entities.get(name)
+    assert entity
+    return entity
 
 
 async def get_program_button(central: CentralUnit, pid: str) -> HmProgramButton | None:
     """Return the program button."""
-    program_button = central.program_entities.get(pid)
-    assert program_button
-    return program_button
+    entity = central.program_entities.get(pid)
+    assert entity
+    return entity
 
 
 def load_device_description(central: CentralUnit, filename: str) -> Any:
@@ -162,6 +174,7 @@ def load_device_description(central: CentralUnit, filename: str) -> Any:
     dev_desc = _load_json_file(
         package="pydevccu", resource="device_descriptions", filename=filename
     )
+    assert dev_desc
     return dev_desc
 
 

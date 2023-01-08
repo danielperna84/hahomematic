@@ -23,7 +23,6 @@ async def test_hmaction(
 ) -> None:
     """Test HmAction."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     action: HmAction = cast(
         HmAction,
         await get_generic_entity(central, "VCU9724704:1", "LOCK_TARGET_LEVEL"),

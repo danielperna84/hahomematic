@@ -23,7 +23,6 @@ async def test_hmselect(
 ) -> None:
     """Test HmSelect."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
-    assert central
     select: HmSelect = cast(
         HmSelect, await get_generic_entity(central, "VCU6354483:1", "WINDOW_STATE")
     )
@@ -65,7 +64,6 @@ async def test_hmsysvarselect(
 ) -> None:
     """Test HmSysvarSelect."""
     central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
-    assert central
     select: HmSysvarSelect = cast(
         HmSysvarSelect, await get_sysvar_entity(central, "sv_list_ext")
     )
