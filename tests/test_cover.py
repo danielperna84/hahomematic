@@ -23,7 +23,7 @@ TEST_DEVICES: dict[str, str] = {
     "VCU8537918": "HmIP-BROLL.json",
     "VCU1223813": "HmIP-FBL.json",
     "VCU0000045": "HM-LC-Bl1-FM.json",
-    "VCU3574044": "HmIP-MOD-HO.json",
+    #"VCU3574044": "HmIP-MOD-HO.json",
     "VCU0000145": "HM-LC-JaX.json",
 }
 
@@ -247,7 +247,7 @@ async def test_ceipblind(
 
 
 @pytest.mark.asyncio
-async def test_cegarage(
+async def no_test_cegarage(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeGarage."""

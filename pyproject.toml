@@ -144,6 +144,10 @@ runtime-typing = false
 max-line-length-suggestions = 88
 
 [tool.pytest.ini_options]
+pythonpath = [
+    ".",
+    "hahomematic",
+]
 testpaths = [
     "tests",
 ]
