@@ -100,9 +100,9 @@ class Client(ABC):
         return self._attr_available
 
     @property
+    @abstractmethod
     def model(self) -> str:
         """Return the model of the backend."""
-        return ""
 
     async def proxy_init(self) -> int:
         """

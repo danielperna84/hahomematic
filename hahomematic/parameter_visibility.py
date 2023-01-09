@@ -410,90 +410,82 @@ class ParameterVisibilityCache:
         Add data to relevant_master_paramsets_by_device and
         un_ignore_parameters_by_device from file.
         """
-        try:
-            if "@" in line:
-                # add parameter@devicetype:channel_no:paramset_key
-                data = line.split("@")
-                if len(data) != 2:
-                    _LOGGER.warning(
-                        "add_line_to_cache failed: "
-                        "Could not add line '%s' to un ignore cache. "
-                        "Only one @ expected.",
-                        line,
-                    )
-                    return
-                parameter = data[0]
-                device_data = data[1].split(":")
-                if len(device_data) != 3:
-                    _LOGGER.warning(
-                        "add_line_to_cache failed: "
-                        "Could not add line '%s' to un ignore cache. "
-                        "4 arguments expected: e.g. TEMPERATURE@HmIP-BWTH:1:VALUES.",
-                        line,
-                    )
-                    return
-                device_type = device_data[0].lower()
-                channel_no = int(device_data[1])
-                paramset_key = device_data[2]
-                if (
+        if "@" in line:
+            # add parameter@devicetype:channel_no:paramset_key
+            data = line.split("@")
+            if len(data) != 2:
+                _LOGGER.warning(
+                    "add_line_to_cache failed: "
+                    "Could not add line '%s' to un ignore cache. "
+                    "Only one @ expected.",
+                    line,
+                )
+                return
+            parameter = data[0]
+            device_data = data[1].split(":")
+            if len(device_data) != 3:
+                _LOGGER.warning(
+                    "add_line_to_cache failed: "
+                    "Could not add line '%s' to un ignore cache. "
+                    "4 arguments expected: e.g. TEMPERATURE@HmIP-BWTH:1:VALUES.",
+                    line,
+                )
+                return
+            device_type = device_data[0].lower()
+            channel_no = int(device_data[1])
+            paramset_key = device_data[2]
+            if (
+                device_type
+                not in self._custom_un_ignore_parameters_by_device_paramset_key
+            ):
+                self._custom_un_ignore_parameters_by_device_paramset_key[
                     device_type
-                    not in self._custom_un_ignore_parameters_by_device_paramset_key
-                ):
-                    self._custom_un_ignore_parameters_by_device_paramset_key[
-                        device_type
-                    ] = {}
-                if (
-                    channel_no
-                    not in self._custom_un_ignore_parameters_by_device_paramset_key[
-                        device_type
-                    ]
-                ):
-                    self._custom_un_ignore_parameters_by_device_paramset_key[
-                        device_type
-                    ][channel_no] = {}
-                if (
-                    paramset_key
-                    not in self._custom_un_ignore_parameters_by_device_paramset_key[
-                        device_type
-                    ][channel_no]
-                ):
-                    self._custom_un_ignore_parameters_by_device_paramset_key[
-                        device_type
-                    ][channel_no][paramset_key] = set()
+                ] = {}
+            if (
+                channel_no
+                not in self._custom_un_ignore_parameters_by_device_paramset_key[
+                    device_type
+                ]
+            ):
                 self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
                     channel_no
-                ][paramset_key].add(parameter)
+                ] = {}
+            if (
+                paramset_key
+                not in self._custom_un_ignore_parameters_by_device_paramset_key[
+                    device_type
+                ][channel_no]
+            ):
+                self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
+                    channel_no
+                ][paramset_key] = set()
+            self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
+                channel_no
+            ][paramset_key].add(parameter)
 
-                if paramset_key == PARAMSET_KEY_MASTER:
-                    if device_type not in self._relevant_master_paramsets_by_device:
-                        self._relevant_master_paramsets_by_device[device_type] = set()
-                    self._relevant_master_paramsets_by_device[device_type].add(
-                        channel_no
-                    )
+            if paramset_key == PARAMSET_KEY_MASTER:
+                if device_type not in self._relevant_master_paramsets_by_device:
+                    self._relevant_master_paramsets_by_device[device_type] = set()
+                self._relevant_master_paramsets_by_device[device_type].add(channel_no)
 
-            elif ":" in line:
-                # add parameter:paramset_key
-                data = line.split(":")
-                if len(data) != 2:
-                    _LOGGER.warning(
-                        "add_line_to_cache failed: "
-                        "Could not add line '%s' to un ignore cache. "
-                        "2 arguments expected: e.g. TEMPERATURE:VALUES.",
-                        line,
-                    )
-                    return
-                paramset_key = data[0]
-                parameter = data[1]
-                if paramset_key in (PARAMSET_KEY_VALUES, PARAMSET_KEY_MASTER):
-                    self._un_ignore_parameters_general[paramset_key].add(parameter)
-            else:
-                # add parameter
-                self._un_ignore_parameters_general[PARAMSET_KEY_VALUES].add(line)
-        except Exception:
-            _LOGGER.warning(
-                "add_line_to_cache failed: Could not add line '%s' to un ignore cache.",
-                line,
-            )
+        elif ":" in line:
+            # add parameter:paramset_key
+            data = line.split(":")
+            if len(data) != 2:
+                _LOGGER.warning(
+                    "add_line_to_cache failed: "
+                    "Could not add line '%s' to un ignore cache. "
+                    "2 arguments expected: e.g. TEMPERATURE:VALUES.",
+                    line,
+                )
+                return
+            paramset_key = data[0]
+            parameter = data[1]
+            if paramset_key in (PARAMSET_KEY_VALUES, PARAMSET_KEY_MASTER):
+                self._un_ignore_parameters_general[paramset_key].add(parameter)
+        else:
+            # add parameter
+            self._un_ignore_parameters_general[PARAMSET_KEY_VALUES].add(line)
 
     def parameter_is_hidden(
         self,
@@ -545,9 +537,6 @@ class ParameterVisibilityCache:
 
     async def load(self) -> None:
         """Load custom un ignore parameters from disk."""
-        if self._central.config.load_un_ignore is False:
-            _LOGGER.debug("load: not loading unignore file for %s", self._central.name)
-            return
 
         def _load() -> None:
             if not check_or_create_directory(self._storage_folder):
@@ -579,7 +568,8 @@ class ParameterVisibilityCache:
                     ex.args,
                 )
 
-        await self._central.async_add_executor_job(_load)
+        if self._central.config.load_un_ignore:
+            await self._central.async_add_executor_job(_load)
 
         for line in self._raw_un_ignore_list:
             if "#" not in line:

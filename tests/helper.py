@@ -37,6 +37,7 @@ class CentralUnitLocalFactory:
         add_sysvars: bool = False,
         add_programs: bool = False,
         ignore_device_on_create: list[str] | None = None,
+        un_ignore_list: list[str] | None = None,
     ) -> tuple[CentralUnit, Mock]:
         """Returns a central based on give address_device_translation."""
         sysvar_data: list[SystemVariableData] = const.SYSVAR_DATA if add_sysvars else []
@@ -65,6 +66,8 @@ class CentralUnitLocalFactory:
             interface_configs={local_client_config},
             default_callback_port=54321,
             client_session=self._client_session,
+            load_un_ignore=un_ignore_list is not None,
+            un_ignore_list=un_ignore_list,
         ).get_central()
 
         mock_client = get_mock(

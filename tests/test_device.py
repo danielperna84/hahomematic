@@ -27,7 +27,10 @@ async def test_device_general(
     device = get_device(central_unit=central, address="VCU2128127")
     assert device.device_address == "VCU2128127"
     assert device.name == "HmIP-BSM_VCU2128127"
-    assert str(device) == "address: VCU2128127, type: 8, name: HmIP-BSM_VCU2128127, entities: 23"
+    assert (
+        str(device)
+        == "address: VCU2128127, type: 8, name: HmIP-BSM_VCU2128127, entities: 23"
+    )
     assert device.device_type == "HmIP-BSM"
     assert device.interface == "BidCos-RF"
     assert device.interface_id == const.LOCAL_INTERFACE_ID
