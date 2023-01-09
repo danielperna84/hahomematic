@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import os
 
-from const import CENTRAL_NAME
+import const
 import pytest
 
 from hahomematic.const import DEFAULT_ENCODING, HmEntityUsage
@@ -19,9 +19,9 @@ from hahomematic.entity import GenericEntity
 async def test_central(central_pydevccu, loop) -> None:
     """Test the central."""
     assert central_pydevccu
-    assert central_pydevccu.name == CENTRAL_NAME
+    assert central_pydevccu.name == const.CENTRAL_NAME
     assert central_pydevccu.model == "PyDevCCU"
-    assert central_pydevccu.get_client(f"{CENTRAL_NAME}-BidCos-RF").model == "PyDevCCU"
+    assert central_pydevccu.get_client(f"{const.CENTRAL_NAME}-BidCos-RF").model == "PyDevCCU"
     assert central_pydevccu.get_primary_client().model == "PyDevCCU"
 
     data = {}
@@ -76,8 +76,8 @@ async def test_central(central_pydevccu, loop) -> None:
 
     units = set()
     for entity in central_pydevccu._entities.values():
-        if hasattr(entity, "_unit"):
-            units.add(entity._unit)
+        if hasattr(entity, "unit"):
+            units.add(entity.unit)
 
     usage_types: dict[HmEntityUsage, int] = {}
     for entity in central_pydevccu._entities.values():
@@ -87,31 +87,7 @@ async def test_central(central_pydevccu, loop) -> None:
             counter = usage_types[entity.usage]
             usage_types[entity.usage] = counter + 1
 
-    switches: dict[str, set[int]] = {}
 
-    for entity in central_pydevccu._entities.values():
-        # if isinstance(entity, HmSwitchPlatform):
-        if hasattr(entity, "parameter") and entity.parameter == "ON_TIME":
-            device_type = entity.device.device_type[:8]
-            if device_type.lower().startswith("hmip"):
-                continue
-
-            channel_no = entity.channel_no
-            if device_type not in switches:
-                switches[device_type] = set()
-            switches[device_type].add(channel_no)
-
-    entity_type_operations: dict[str, dict[str, set[int]]] = {}
-    for entity in central_pydevccu._entities.values():
-        if isinstance(entity, GenericEntity):
-            if entity.platform not in entity_type_operations:
-                entity_type_operations[entity.platform] = {}
-
-            if entity.hmtype not in entity_type_operations[entity.platform]:
-                entity_type_operations[entity.platform][entity.hmtype] = set()
-            entity_type_operations[entity.platform][entity.hmtype].add(
-                entity._attr_operations
-            )
     addresses: dict[str, str] = {}
     for address, device in central_pydevccu._devices.items():
         addresses[address] = f"{device.device_type}.json"
@@ -123,12 +99,22 @@ async def test_central(central_pydevccu, loop) -> None:
     ) as fptr:
         json.dump(addresses, fptr, indent=2)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2807
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2757
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
-    assert usage_types[HmEntityUsage.ENTITY] == 3611
+    assert usage_types[HmEntityUsage.ENTITY] == 3615
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 96
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 
     assert len(ce_channels) == 110
     assert len(entity_types) == 6
-    assert len(parameters) == 189
+    assert len(parameters) == 190
+
+    assert len(central_pydevccu._devices) == 372
+    virtual_remotes = ['VCU4264293', 'VCU0000057', 'VCU0000001']
+    await central_pydevccu.delete_devices('CentralTest-BidCos-RF', virtual_remotes)
+    assert len(central_pydevccu._devices) == 369
+    del_addresses = list(central_pydevccu.device_descriptions.get_device_descriptions('CentralTest-BidCos-RF'))
+    del_addresses = [adr for adr in del_addresses if ":" not in adr]
+    await central_pydevccu.delete_devices('CentralTest-BidCos-RF', del_addresses)
+    assert len(central_pydevccu._devices) == 0
+    assert len(central_pydevccu._entities) == 300

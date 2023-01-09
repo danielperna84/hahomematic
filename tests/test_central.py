@@ -42,6 +42,27 @@ async def test_device_export(
 
 
 @pytest.mark.asyncio
+async def test_device_unignore(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test device un ignore."""
+    assert central_local_factory
+    central, mock_client = await central_local_factory.get_central(
+        TEST_DEVICES,
+        un_ignore_list=[
+            "LEVEL",
+            "LEVEL@HmIP-eTRV-2:1:VALUES",
+            "LEVEL@@HmIP-eTRV-2",
+            "LEVEL@HmIP-eTRV-2",
+            "LEVEL@HmIP-eTRV-2:1:MASTER",
+            "VALUES:LEVEL",
+            "HmIP-eTRV-2:1:MASTER"
+        ],
+    )
+    # TODO: asserts
+
+
+@pytest.mark.asyncio
 async def test_all_parameters(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:

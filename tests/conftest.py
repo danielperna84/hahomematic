@@ -25,7 +25,6 @@ def pytest_configure(config):
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
 
-
 def pytest_runtest_setup():
     """Prepare pytest_socket and freezegun.
 
@@ -41,14 +40,6 @@ def pytest_runtest_setup():
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     # pytest_socket.disable_socket(allow_unix_socket=True)
-
-
-@pytest.yield_fixture(name="loop", scope="session")
-def loop() -> asyncio.AbstractEventLoop:
-    """Yield running event_loop"""
-    event_loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield event_loop
-    event_loop.close()
 
 
 @pytest.fixture(name="ccu")

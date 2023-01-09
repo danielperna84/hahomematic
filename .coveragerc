@@ -3,6 +3,8 @@ source = hahomematic
 
 omit =
     hahomematic/__init__.py
+    hahomematic/backport.py
+    hahomematic/hmcli.py
     
 
 [report]

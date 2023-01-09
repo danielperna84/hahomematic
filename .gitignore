@@ -19,3 +19,4 @@ build
 unignore
 venv
 
+.coverage

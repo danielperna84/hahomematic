@@ -82,7 +82,7 @@ CLICK_EVENTS: Final[tuple[str, ...]] = (
     EVENT_PRESS_LONG_START,
 )
 
-DEVICE_ERROR_EVENTS: Final[tuple[str, ...]] = ("ERROR_", "SENSOR_ERROR")
+DEVICE_ERROR_EVENTS: Final[tuple[str, ...]] = ("ERROR", "SENSOR_ERROR")
 
 IMPULSE_EVENTS: Final[tuple[str, ...]] = (EVENT_SEQUENCE_OK,)
 
