@@ -156,4 +156,4 @@ async def test_generic_wrapped_entity(
     wrapped_entity: HmSensor = cast(
         HmSensor, await get_wrapper_entity(central, "VCU3609622:1", "LEVEL")
     )
-    assert wrapped_entity
+    assert wrapped_entity.usage == HmEntityUsage.ENTITY

@@ -7,6 +7,7 @@
 - Simplify entity de-/registration
 - Refactor add/delete device and add tests
 - Add un_ignore_list to test config
+- Allow unignore for DEVICE_ERROR_EVENTS
 
 # Version 2023.1.0 (2023-01-01)
 - API Cleanup

@@ -269,6 +269,11 @@ class HmDevice:
             self.remove_entity(custom_entity)
         self.custom_entities.clear()
 
+        wrapper_entities = list(self.wrapper_entities.values())
+        for wrapper_entity in wrapper_entities:
+            self.remove_entity(wrapper_entity)
+        self.wrapper_entities.clear()
+
         self.events.clear()
 
     def register_update_callback(self, update_callback: Callable) -> None:
@@ -414,6 +419,12 @@ class HmDevice:
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                 ).items():
+                    parameter_is_un_ignored: bool = self.central.parameter_visibility.parameter_is_un_ignored(  # noqa: E501
+                        device_type=self._attr_device_type,
+                        device_channel=device_channel,
+                        paramset_key=paramset_key,
+                        parameter=parameter,
+                    )
                     if parameter_data[HM_OPERATIONS] & OPERATION_EVENT and (
                         parameter in CLICK_EVENTS
                         or parameter.startswith(DEVICE_ERROR_EVENTS)
@@ -436,21 +447,23 @@ class HmDevice:
                         not parameter_data[HM_OPERATIONS] & OPERATION_EVENT
                         and not parameter_data[HM_OPERATIONS] & OPERATION_WRITE
                     ) or (
-                            parameter_data[HM_FLAGS] & FLAG_INTERAL
-                            and parameter not in ALLOWED_INTERNAL_PARAMETERS
-                            and not self.central.parameter_visibility.parameter_is_un_ignored(  # noqa: E501
-                            device_type=self._attr_device_type,
-                            device_channel=device_channel,
-                            paramset_key=paramset_key,
-                            parameter=parameter,
-                        )
+                        parameter_data[HM_FLAGS] & FLAG_INTERAL
+                        and parameter not in ALLOWED_INTERNAL_PARAMETERS
+                        and not parameter_is_un_ignored
                     ):
                         _LOGGER.debug(
                             "create_entities: Skipping %s (no event or internal)",
                             parameter,
                         )
                         continue
-                    if parameter not in IMPULSE_EVENTS:
+                    # CLICK_EVENTS are allowed for Buttons
+                    if (
+                        parameter not in IMPULSE_EVENTS
+                        and (
+                            not parameter.startswith(DEVICE_ERROR_EVENTS)
+                            or parameter_is_un_ignored
+                        )
+                    ):
                         self._create_entity_and_append_to_device(
                             channel_address=channel_address,
                             paramset_key=paramset_key,
@@ -551,6 +564,7 @@ class HmDevice:
         Helper that looks at the paramsets, decides which default
         platform should be used, and creates the required entities.
         """
+
         if self.central.parameter_visibility.ignore_parameter(
             device_type=self._attr_device_type,
             device_channel=get_device_channel(channel_address),
@@ -605,18 +619,8 @@ class HmDevice:
                     entity_t = HmInteger
                 elif parameter_data[HM_TYPE] == TYPE_STRING:
                     entity_t = HmText
-                else:
-                    _LOGGER.warning(
-                        "create_entity_and_append_to_device failed: "
-                        "unsupported actor: %s %s %s",
-                        channel_address,
-                        parameter,
-                        parameter_data[HM_TYPE],
-                    )
         else:
-            if parameter not in CLICK_EVENTS and not parameter.startswith(
-                DEVICE_ERROR_EVENTS
-            ):
+            if parameter not in CLICK_EVENTS:
                 # Also check, if sensor could be a binary_sensor due to value_list.
                 if is_binary_sensor(parameter_data):
                     parameter_data[HM_TYPE] = TYPE_BOOL

@@ -667,6 +667,11 @@ class WrapperEntity(BaseEntity):
         wrapped_entity.set_usage(HmEntityUsage.ENTITY_NO_CREATE)
         wrapped_entity.wrapped = True
 
+    @config_property
+    def usage(self) -> HmEntityUsage:
+        """Return the entity usage."""
+        return HmEntityUsage.ENTITY
+
     def __getattr__(self, *args: Any) -> Any:
         return getattr(self._wrapped_entity, *args)
 
