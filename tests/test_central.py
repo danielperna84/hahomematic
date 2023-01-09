@@ -56,7 +56,7 @@ async def test_device_unignore(
             "LEVEL@HmIP-eTRV-2",
             "LEVEL@HmIP-eTRV-2:1:MASTER",
             "VALUES:LEVEL",
-            "HmIP-eTRV-2:1:MASTER"
+            "HmIP-eTRV-2:1:MASTER",
         ],
     )
     # TODO: asserts
@@ -165,3 +165,24 @@ async def test_delete_device(
         )
         == 8
     )
+
+
+@pytest.mark.asyncio
+async def test_device_delete_virtual_remotes(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test device un ignore."""
+    assert central_local_factory
+    central, mock_client = await central_local_factory.get_central(
+        {
+            "VCU4264293": "HmIP-RCV-50.json",
+            "VCU0000057": "HM-RCV-50.json",
+            "VCU0000001": "HMW-RCV-50.json",
+        },
+    )
+    assert len(central._devices) == 3
+    assert len(central._entities) == 350
+    virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
+    await central.delete_devices(const.LOCAL_INTERFACE_ID, virtual_remotes)
+    assert len(central._devices) == 0
+    assert len(central._entities) == 0

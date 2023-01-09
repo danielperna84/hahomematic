@@ -259,18 +259,19 @@ class HmDevice:
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
 
-        entities = list(self.generic_entities.values())
-        for entity in entities:
+        for event in list(self.events.values()):
+            self.remove_entity(event)
+        self.events.clear()
+
+        for entity in list(self.generic_entities.values()):
             self.remove_entity(entity)
         self.generic_entities.clear()
 
-        custom_entities = list(self.custom_entities.values())
-        for custom_entity in custom_entities:
+        for custom_entity in list(self.custom_entities.values()):
             self.remove_entity(custom_entity)
         self.custom_entities.clear()
 
-        wrapper_entities = list(self.wrapper_entities.values())
-        for wrapper_entity in wrapper_entities:
+        for wrapper_entity in list(self.wrapper_entities.values()):
             self.remove_entity(wrapper_entity)
         self.wrapper_entities.clear()
 
@@ -316,8 +317,10 @@ class HmDevice:
         Provide some useful information.
         """
         return (
-            f"address: {self._attr_device_address}, type: {len(self._attr_device_type)}, "
-            f"name: {self._attr_name}, entities: {len(self.generic_entities)}"
+            f"address: {self._attr_device_address}, "
+            f"type: {len(self._attr_device_type)}, "
+            f"name: {self._attr_name}, "
+            f"entities: {len(self.generic_entities)}"
         )
 
     @value_property
@@ -435,14 +438,6 @@ class HmDevice:
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
-                        if self._attr_device_type in HM_VIRTUAL_REMOTE_TYPES:
-                            self._create_action_and_append_to_device(
-                                channel_address=channel_address,
-                                paramset_key=paramset_key,
-                                parameter=parameter,
-                                parameter_data=parameter_data,
-                            )
-
                     if (
                         not parameter_data[HM_OPERATIONS] & OPERATION_EVENT
                         and not parameter_data[HM_OPERATIONS] & OPERATION_WRITE
@@ -457,12 +452,9 @@ class HmDevice:
                         )
                         continue
                     # CLICK_EVENTS are allowed for Buttons
-                    if (
-                        parameter not in IMPULSE_EVENTS
-                        and (
-                            not parameter.startswith(DEVICE_ERROR_EVENTS)
-                            or parameter_is_un_ignored
-                        )
+                    if parameter not in IMPULSE_EVENTS and (
+                        not parameter.startswith(DEVICE_ERROR_EVENTS)
+                        or parameter_is_un_ignored
                     ):
                         self._create_entity_and_append_to_device(
                             channel_address=channel_address,
@@ -485,37 +477,6 @@ class HmDevice:
                 self._attr_device_type
             ):
                 device_func(self, group_base_channels)
-
-    def _create_action_and_append_to_device(
-        self,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ) -> None:
-        """Create the actions associated to this device"""
-        unique_identifier = generate_unique_identifier(
-            central=self.central,
-            address=channel_address,
-            parameter=parameter,
-            prefix=f"button_{self.central.name}",
-        )
-        _LOGGER.debug(
-            "create_action_and_append_to_device: Creating action for %s, %s, %s",
-            channel_address,
-            parameter,
-            self._attr_interface_id,
-        )
-
-        if action := HmAction(
-            device=self,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            parameter_data=parameter_data,
-        ):
-            self.add_entity(action)
 
     def _create_event_and_append_to_device(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
@@ -597,7 +558,10 @@ class HmDevice:
         if parameter_data[HM_OPERATIONS] & OPERATION_WRITE:
             if parameter_data[HM_TYPE] == TYPE_ACTION:
                 if parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
-                    if parameter in BUTTON_ACTIONS:
+                    if (
+                        parameter in BUTTON_ACTIONS
+                        or self._attr_device_type in HM_VIRTUAL_REMOTE_TYPES
+                    ):
                         entity_t = HmButton
                     else:
                         entity_t = HmAction

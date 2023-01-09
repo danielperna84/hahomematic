@@ -25,6 +25,7 @@ def pytest_configure(config):
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
 
+
 def pytest_runtest_setup():
     """Prepare pytest_socket and freezegun.
 
