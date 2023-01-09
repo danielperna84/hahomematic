@@ -74,7 +74,7 @@ from hahomematic.helpers import (
     is_binary_sensor,
     updated_within_seconds,
 )
-from hahomematic.parameter_visibility import ALLOW_INTERNAL_PARAMETERS
+from hahomematic.parameter_visibility import ALLOWED_INTERNAL_PARAMETERS
 import hahomematic.support as hm_support
 
 _LOGGER = logging.getLogger(__name__)
@@ -436,9 +436,9 @@ class HmDevice:
                         not parameter_data[HM_OPERATIONS] & OPERATION_EVENT
                         and not parameter_data[HM_OPERATIONS] & OPERATION_WRITE
                     ) or (
-                        parameter_data[HM_FLAGS] & FLAG_INTERAL
-                        and parameter not in ALLOW_INTERNAL_PARAMETERS
-                        and not self.central.parameter_visibility.parameter_is_un_ignored(  # noqa: E501
+                            parameter_data[HM_FLAGS] & FLAG_INTERAL
+                            and parameter not in ALLOWED_INTERNAL_PARAMETERS
+                            and not self.central.parameter_visibility.parameter_is_un_ignored(  # noqa: E501
                             device_type=self._attr_device_type,
                             device_channel=device_channel,
                             paramset_key=paramset_key,
