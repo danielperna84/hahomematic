@@ -103,7 +103,7 @@ async def test_central(central_pydevccu) -> None:
 
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2757
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
-    assert usage_types[HmEntityUsage.ENTITY] == 3315
+    assert usage_types[HmEntityUsage.ENTITY] == 3313
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 96
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 
