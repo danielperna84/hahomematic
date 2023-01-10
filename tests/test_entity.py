@@ -7,6 +7,8 @@ from unittest.mock import MagicMock, call
 
 import const
 import helper
+from hahomematic.custom_platforms.entity_definition import get_required_parameters
+from hahomematic.parameter_visibility import check_ignore_parameters_is_clean
 from helper import get_custom_entity, get_generic_entity, get_wrapper_entity
 import pytest
 
@@ -157,3 +159,10 @@ async def test_generic_wrapped_entity(
         HmSensor, await get_wrapper_entity(central, "VCU3609622:1", "LEVEL")
     )
     assert wrapped_entity.usage == HmEntityUsage.ENTITY
+
+
+def test_custom_required_entities() -> None:
+    """Test required parameters from entity definitions."""
+    required_parameters = get_required_parameters()
+    assert len(required_parameters) == 61
+    assert check_ignore_parameters_is_clean() is True

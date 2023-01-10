@@ -9,7 +9,6 @@ import const
 import helper
 import pydevccu
 import pytest
-import pytest_socket
 
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import InterfaceConfig
@@ -17,30 +16,6 @@ from hahomematic.client import InterfaceConfig
 logging.basicConfig(level=logging.INFO)
 
 GOT_DEVICES = False
-
-
-def pytest_configure(config):
-    """Register marker for tests that log exceptions."""
-    config.addinivalue_line(
-        "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
-    )
-
-
-def pytest_runtest_setup():
-    """Prepare pytest_socket and freezegun.
-
-    pytest_socket:
-    Throw if tests attempt to open sockets.
-
-    allow_unix_socket is set to True because it's needed by asyncio.
-    Important: socket_allow_hosts must be called before disable_socket, otherwise all
-    destinations will be allowed.
-
-    freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424
-    """
-    pytest_socket.socket_allow_hosts(["127.0.0.1"])
-    # pytest_socket.disable_socket(allow_unix_socket=True)
 
 
 @pytest.fixture(name="ccu")
@@ -55,9 +30,7 @@ def pydev_ccu() -> pydevccu.Server:
 @pytest.fixture
 async def client_session() -> ClientSession:
     """ClientSession for json client."""
-    client_session = ClientSession(
-        connector=TCPConnector(limit=3)
-    )
+    client_session = ClientSession(connector=TCPConnector(limit=3))
     yield client_session
     if not client_session.closed:
         await client_session.close()
@@ -113,13 +86,5 @@ async def central_unit(
 async def central_unit_local_factory(
     client_session: ClientSession,
 ) -> helper.CentralUnitLocalFactory:
-    """Yield central"""
-
+    """Return central factory"""
     return helper.CentralUnitLocalFactory(client_session)
-
-
-def send_device_value_to_ccu(
-    pydev_ccu: pydevccu.Server, address: str, parameter: str, value: Any
-) -> None:
-    """Send the device value to ccu."""
-    pydev_ccu.setValue(address, parameter, value)
