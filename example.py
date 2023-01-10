@@ -93,7 +93,7 @@ class Example:
             default_callback_port=54321,
             use_caches=False,
             client_session=ClientSession(
-                connector=TCPConnector(limit=3), loop=asyncio.get_running_loop()
+                connector=TCPConnector(limit=3)
             ),
         ).get_central()
 

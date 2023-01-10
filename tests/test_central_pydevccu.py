@@ -16,7 +16,7 @@ from hahomematic.entity import GenericEntity
 
 
 @pytest.mark.asyncio
-async def test_central(central_pydevccu, loop) -> None:
+async def test_central(central_pydevccu) -> None:
     """Test the central."""
     assert central_pydevccu
     assert central_pydevccu.name == const.CENTRAL_NAME
