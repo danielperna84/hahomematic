@@ -56,7 +56,7 @@ def pydev_ccu() -> pydevccu.Server:
 async def client_session() -> ClientSession:
     """ClientSession for json client."""
     client_session = ClientSession(
-        connector=TCPConnector(limit=3), loop=asyncio.get_running_loop()
+        connector=TCPConnector(limit=3)
     )
     yield client_session
     if not client_session.closed:
@@ -65,7 +65,7 @@ async def client_session() -> ClientSession:
 
 @pytest.fixture(name="central_pydevccu")
 async def central_unit(
-    loop: asyncio.AbstractEventLoop, ccu: pydevccu.Server, client_session: ClientSession
+    ccu: pydevccu.Server, client_session: ClientSession
 ) -> CentralUnit:
     """Yield central"""
     sleep_counter = 0
