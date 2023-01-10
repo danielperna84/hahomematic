@@ -81,15 +81,38 @@ _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
 
 # Parameters within the VALUES paramset for which we don't create entities.
 _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
+    "ACCESS_AUTHORIZATION",
+    "ACOUSTIC_NOTIFICATION_SELECTION",  # ro
+    "ADAPTION_DRIVE",  # ro"
     "AES_KEY",
+    "ALARM_COUNT",  # ro"
+    "ALL_LEDS",  # ro"
+    "ARROW_DOWN",  # ro"
+    "ARROW_UP",  # ro
+    "BACKLIGHT",  # ro
+    "BEEP",  # ro"
+    "BELL",  # ro"
+    "BLIND",  # ro"
+    "BOOST_STATE",
     "BOOST_TIME",
     "BOOT",
+    "BULB",  # ro"
     "CLEAR_WINDOW_OPEN_SYMBOL",  # ro
+    "CLOCK",  # ro"
     "COMBINED_PARAMETER",  # ro
     "CONTROL_DIFFERENTIAL_TEMPERATURE",
     "DATE_TIME_UNKNOWN",
     "DECISION_VALUE",
     "DEVICE_IN_BOOTLOADER",
+    "DISPLAY_DATA_ALIGNMENT",  # ro
+    "DISPLAY_DATA_BACKGROUND_COLOR",  # ro
+    "DISPLAY_DATA_COMMIT",  # ro
+    "DISPLAY_DATA_ICON",  # ro
+    "DISPLAY_DATA_ID",  # ro
+    "DISPLAY_DATA_ID",  # ro
+    "DISPLAY_DATA_STRING",  # ro
+    "DISPLAY_DATA_TEXT_COLOR",  # ro
+    "DOOR",  # ro"
     "EXTERNAL_CLOCK",
     "FROST_PROTECTION",
     "HUMIDITY_LIMITER",
@@ -97,25 +120,39 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "INCLUSION_UNSUPPORTED_DEVICE",
     "INHIBIT",
     "INSTALL_MODE",
+    "INTERVAL",  # ro
     "LEVEL_COMBINED",  # ro
     "LEVEL_REAL",
     "OLD_LEVEL",  # ro
     "PARTY_SET_POINT_TEMPERATURE",
+    "PARTY_TEMPERATURE",
     "PARTY_TIME_END",
     "PARTY_TIME_START",
+    "PHONE",  # ro"
     "PROCESS",
     "QUICK_VETO_TIME",
     "RAMP_STOP",
     "RELOCK_DELAY",
+    "SCENE",  # ro"
     "SELF_CALIBRATION",
+    "SERVICE_COUNT",  # ro"
     "SET_SYMBOL_FOR_HEATING_PHASE",
+    "SHADING_SPEED",  # ro
+    "SHEV_POS",  # ro"
     "SMOKE_DETECTOR_COMMAND",  # ro
+    "SPEED",  # ro"
     "STATE_UNCERTAIN",
     "SWITCH_POINT_OCCURED",
-    "VALVE_ADAPTION",
     "TEMPERATURE_LIMITER",
     "TEMPERATURE_OUT_OF_RANGE",
+    "TEXT",
     "TIME_OF_OPERATION",
+    "USER_COLOR",  # ro"
+    "USER_PROGRAM",  # ro"
+    "VALVE_ADAPTION",
+    "WIN_RELEASE_ACT",  # ro"
+    "WIN_RELEASE",
+    "WINDOW",  # ro
 )
 
 # Ignore Parameter that end with
@@ -132,6 +169,7 @@ _IGNORED_PARAMETERS_WILDCARDS_END: Final[tuple[str, ...]] = (
 _IGNORED_PARAMETERS_WILDCARDS_START: Final[tuple[str, ...]] = (
     "ADJUSTING",
     "ERR_TTM",
+    "HANDLE_",
     "IDENTIFICATION_MODE_KEY_VISUAL",
     "IDENTIFY_",
     "PARTY_START",

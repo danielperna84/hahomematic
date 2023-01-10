@@ -71,11 +71,15 @@ async def test_central(central_pydevccu) -> None:
         pub_config_props = get_public_attributes_for_config_property(data_object=entity)
         assert pub_config_props
 
-    parameters = []
+    parameters: list[tuple[str, int]] =[]
     for entity in central_pydevccu._entities.values():
         if hasattr(entity, "parameter"):
-            if entity.parameter not in parameters:
-                parameters.append(entity.parameter)
+            #if entity.device.device_type.startswith("HM-") and
+            #if entity._attr_operations == 2:
+            if (entity.parameter, entity._attr_operations) not in parameters:
+                parameters.append((entity.parameter, entity._attr_operations))
+    parameters = sorted(parameters)
+
 
     units = set()
     for entity in central_pydevccu._entities.values():
@@ -101,15 +105,15 @@ async def test_central(central_pydevccu) -> None:
     ) as fptr:
         json.dump(addresses, fptr, indent=2)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2757
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2713
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
-    assert usage_types[HmEntityUsage.ENTITY] == 3313
+    assert usage_types[HmEntityUsage.ENTITY] == 3236
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 96
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 
     assert len(ce_channels) == 110
     assert len(entity_types) == 6
-    assert len(parameters) == 190
+    assert len(parameters) == 165
 
     assert len(central_pydevccu._devices) == 372
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]

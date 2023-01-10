@@ -133,7 +133,7 @@ async def test_add_device(
         TEST_DEVICES, ignore_device_on_create=["HmIP-BSM.json"]
     )
     assert len(central._devices) == 1
-    assert len(central._entities) == 24
+    assert len(central._entities) == 23
     assert (
         len(
             central.device_descriptions._raw_device_descriptions_persistant_cache.get(
@@ -153,7 +153,7 @@ async def test_add_device(
     dev_desc = load_device_description(central=central, filename="HmIP-BSM.json")
     await central.add_new_devices(const.LOCAL_INTERFACE_ID, dev_desc)
     assert len(central._devices) == 2
-    assert len(central._entities) == 50
+    assert len(central._entities) == 49
     assert (
         len(
             central.device_descriptions._raw_device_descriptions_persistant_cache.get(
@@ -179,7 +179,7 @@ async def test_delete_device(
     """Test device export."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert len(central._devices) == 2
-    assert len(central._entities) == 50
+    assert len(central._entities) == 49
     assert (
         len(
             central.device_descriptions._raw_device_descriptions_persistant_cache.get(
@@ -199,7 +199,7 @@ async def test_delete_device(
 
     await central.delete_devices(const.LOCAL_INTERFACE_ID, ["VCU2128127"])
     assert len(central._devices) == 1
-    assert len(central._entities) == 24
+    assert len(central._entities) == 23
     assert (
         len(
             central.device_descriptions._raw_device_descriptions_persistant_cache.get(
