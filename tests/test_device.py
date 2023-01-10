@@ -2,15 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import cast
 
 import const
 import helper
-from helper import get_device, get_generic_entity
+from helper import get_device
 import pytest
-
-from hahomematic.const import HmEntityUsage
-from hahomematic.generic_platforms.text import HmText
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
@@ -83,3 +79,4 @@ async def test_device_config_pending(
     assert device._e_config_pending.value is False
     await asyncio.sleep(2)
     assert last_save != central.paramset_descriptions.last_save
+

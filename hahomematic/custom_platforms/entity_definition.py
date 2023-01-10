@@ -737,3 +737,36 @@ def _get_device_entities(
         for channel_no, field in deepcopy(additional_entities).items():
             new_entities[channel_no + base_channel_no] = field
     return new_entities
+
+
+def get_required_parameters() -> tuple[str, ...]:
+    """Return all required parameters for custom entities."""
+    required_parameters: list[str] = []
+    for channel in entity_definition[ED_DEFAULT_ENTITIES]:
+        required_parameters.extend(entity_definition[ED_DEFAULT_ENTITIES][channel])
+    for device in entity_definition[ED_DEVICE_DEFINITIONS]:
+        device_def = entity_definition[ED_DEVICE_DEFINITIONS][device][ED_DEVICE_GROUP]
+        required_parameters.extend(
+            list(device_def.get(ED_REPEATABLE_FIELDS, {}).values())
+        )
+        required_parameters.extend(
+            list(device_def.get(ED_VISIBLE_REPEATABLE_FIELDS, {}).values())
+        )
+        required_parameters.extend(
+            list(device_def.get(ED_REPEATABLE_FIELDS, {}).values())
+        )
+        for additional_entities in list(
+            entity_definition[ED_DEVICE_DEFINITIONS][device]
+            .get(ED_ADDITIONAL_ENTITIES, {})
+            .values()
+        ):
+            required_parameters.extend(additional_entities)
+    for device_type in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE]:
+        for additional_entities in list(
+            entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE][
+                device_type
+            ].values()
+        ):
+            required_parameters.extend(additional_entities)
+
+    return tuple(sorted(set(required_parameters)))

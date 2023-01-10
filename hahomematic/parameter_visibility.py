@@ -21,6 +21,7 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmPlatform,
 )
+from hahomematic.custom_platforms.entity_definition import get_required_parameters
 import hahomematic.entity as hme
 from hahomematic.helpers import (
     check_or_create_directory,
@@ -77,6 +78,7 @@ _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
     "ACTIVITY_STATE",
     "DIRECTION",
     "SECTION",
+    "WORKING",
 )
 
 # Parameters within the VALUES paramset for which we don't create entities.
@@ -116,6 +118,7 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "EXTERNAL_CLOCK",
     "FROST_PROTECTION",
     "HUMIDITY_LIMITER",
+    "IDENTIFICATION_MODE_KEY_VISUAL",
     "IDENTIFICATION_MODE_LCD_BACKLIGHT",
     "INCLUSION_UNSUPPORTED_DEVICE",
     "INHIBIT",
@@ -124,6 +127,8 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "LEVEL_COMBINED",  # ro
     "LEVEL_REAL",
     "OLD_LEVEL",  # ro
+    "OVERFLOW",
+    "OVERRUN",
     "PARTY_SET_POINT_TEMPERATURE",
     "PARTY_TEMPERATURE",
     "PARTY_TIME_END",
@@ -142,6 +147,7 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "SMOKE_DETECTOR_COMMAND",  # ro
     "SPEED",  # ro"
     "STATE_UNCERTAIN",
+    "SUBMIT",
     "SWITCH_POINT_OCCURED",
     "TEMPERATURE_LIMITER",
     "TEMPERATURE_OUT_OF_RANGE",
@@ -157,26 +163,24 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
 
 # Ignore Parameter that end with
 _IGNORED_PARAMETERS_WILDCARDS_END: Final[tuple[str, ...]] = (
-    "OVERFLOW",
-    "OVERRUN",
-    "REPORTING",
-    "RESULT",
-    "STATUS",
-    "SUBMIT",
+    "_OVERFLOW",
+    "_OVERRUN",
+    "_REPORTING",
+    "_RESULT",
+    "_STATUS",
+    "_SUBMIT",
 )
 
 # Ignore Parameter that start with
 _IGNORED_PARAMETERS_WILDCARDS_START: Final[tuple[str, ...]] = (
-    "ADJUSTING",
-    "ERR_TTM",
+    "ADJUSTING_",
+    "ERR_TTM_",
     "HANDLE_",
-    "IDENTIFICATION_MODE_KEY_VISUAL",
     "IDENTIFY_",
-    "PARTY_START",
-    "PARTY_STOP",
-    "STATUS_FLAG",
-    "WEEK_PROGRAM",
-    "WORKING",
+    "PARTY_START_",
+    "PARTY_STOP_",
+    "STATUS_FLAG_",
+    "WEEK_PROGRAM_",
 )
 
 
@@ -247,7 +251,7 @@ class ParameterVisibilityCache:
     ):
         self._central: Final[hmcu.CentralUnit] = central
         self._storage_folder: Final[str] = central.config.storage_folder
-
+        self._required_parameters: Final[tuple[str, ...]] = get_required_parameters()
         self._raw_un_ignore_list: Final[set[str]] = set(
             central.config.un_ignore_list or set()
         )
@@ -357,15 +361,17 @@ class ParameterVisibilityCache:
                 return False
 
             if (
-                parameter in _IGNORED_PARAMETERS
-                or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
-                or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
-                or element_matches_key(
-                    search_elements=self._ignore_parameters_by_device_lower.get(
-                        parameter, []
-                    ),
-                    compare_with=device_type_l,
+                (
+                    parameter in _IGNORED_PARAMETERS
+                    or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
+                    or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
                 )
+                and parameter not in self._required_parameters
+            ) or element_matches_key(
+                search_elements=self._ignore_parameters_by_device_lower.get(
+                    parameter, []
+                ),
+                compare_with=device_type_l,
             ):
                 return True
 
@@ -616,3 +622,16 @@ class ParameterVisibilityCache:
         for line in self._raw_un_ignore_list:
             if "#" not in line:
                 self._add_line_to_cache(line)
+
+
+def check_ignore_parameters_is_clean() -> bool:
+    """Check if a required parameter is in ignored parameters."""
+    should_not_be_ignored: list[str] = []
+    for parameter in get_required_parameters():
+        if (
+            parameter in _IGNORED_PARAMETERS
+            or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
+            or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
+        ):
+            should_not_be_ignored.append(parameter)
+    return len(should_not_be_ignored) == 0
