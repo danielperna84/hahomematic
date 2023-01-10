@@ -1,4 +1,8 @@
-# Version 2023.1.1 (2023-01-06)
+# Version 2023.1.2 (2023-01-10)
+- Remove OPERATING_VOLTAGE from HmIP-BROLL, HmIP-FROLL
+- Remove loop from test signature
+
+# Version 2023.1.1 (2023-01-09)
 - No longer create ClientSession in json_rpc_client for tests
 - Add backend tests
 - Use mocked local client to check  method_calls
