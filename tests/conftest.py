@@ -30,9 +30,7 @@ def pydev_ccu() -> pydevccu.Server:
 @pytest.fixture
 async def client_session() -> ClientSession:
     """ClientSession for json client."""
-    client_session = ClientSession(
-        connector=TCPConnector(limit=3)
-    )
+    client_session = ClientSession(connector=TCPConnector(limit=3))
     yield client_session
     if not client_session.closed:
         await client_session.close()
@@ -86,7 +84,7 @@ async def central_unit(
 
 @pytest.fixture(name="central_local_factory")
 async def central_unit_local_factory(
-    client_session: ClientSession
+    client_session: ClientSession,
 ) -> helper.CentralUnitLocalFactory:
     """Return central factory"""
     return helper.CentralUnitLocalFactory(client_session)

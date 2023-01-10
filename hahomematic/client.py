@@ -920,11 +920,9 @@ class ClientLocal(Client):
 
     async def fetch_all_device_data(self) -> None:
         """fetch all device data from CCU."""
-        # TODO: implement  # pylint: disable=fixme
 
     async def fetch_device_details(self) -> None:
         """Fetch names from backend."""
-        # TODO: implement  # pylint: disable=fixme
 
     async def is_connected(self) -> bool:
         """
@@ -1050,7 +1048,6 @@ class ClientLocal(Client):
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
-        # TODO: implement  # pylint: disable=fixme
         return {}
 
     async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
