@@ -930,12 +930,9 @@ class CentralUnit:
         """Set variable value on CCU/Homegear.  #CC"""
         if entity := self.sysvar_entities.get(name):
             await entity.send_variable(value=value)
-        else:
-            _LOGGER.warning(
-                "Variable %s not found on %s. Sending directly to backend",
-                name,
-                self.name,
-            )
+            return
+
+        _LOGGER.warning("Variable %s not found on %s", name, self.name)
 
     # pylint: disable=invalid-name
     async def set_install_mode(
