@@ -1,6 +1,7 @@
 # Version 2023.1.3 (2023-01-12)
 - Unifiy event parameters
 - Refactor entity.py for better event support
+- Fix wrong warning after set_system_variable
 
 # Version 2023.1.2 (2023-01-10)
 - Remove OPERATING_VOLTAGE from HmIP-BROLL, HmIP-FROLL
