@@ -1,5 +1,5 @@
 # Version 2023.1.3 (2023-01-12)
-- 
+- Unifiy event parameters
 
 # Version 2023.1.2 (2023-01-10)
 - Remove OPERATING_VOLTAGE from HmIP-BROLL, HmIP-FROLL

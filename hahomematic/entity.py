@@ -15,11 +15,10 @@ import hahomematic.central_unit as hmcu
 import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_ADDRESS,
+    ATTR_CHANNEL_NO,
     ATTR_DEVICE_TYPE,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
-    ATTR_SUBTYPE,
-    ATTR_TYPE,
     ATTR_VALUE,
     CHANNEL_OPERATION_MODE_VISIBILITY,
     CONFIGURABLE_CHANNEL,
@@ -1083,15 +1082,13 @@ class BaseEvent(BaseParameterEntity[Any]):
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
-        event_data = {
+        return {
             ATTR_INTERFACE_ID: self.device.interface_id,
             ATTR_ADDRESS: self.device.device_address,
+            ATTR_PARAMETER: self._attr_parameter,
+            ATTR_CHANNEL_NO: self._attr_channel_no,
+            ATTR_VALUE: value,
         }
-
-        if value is not None:
-            event_data[ATTR_VALUE] = value
-
-        return event_data
 
     def fire_event(self, value: Any) -> None:
         """
@@ -1124,14 +1121,6 @@ class ClickEvent(BaseEvent):
 
     _attr_event_type = HmEventType.KEYPRESS
 
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        event_data = super().get_event_data(value=value)
-        event_data[ATTR_TYPE] = self._attr_parameter.lower()
-        event_data[ATTR_SUBTYPE] = self.channel_no
-
-        return event_data
-
 
 class DeviceErrorEvent(BaseEvent):
     """
@@ -1139,13 +1128,32 @@ class DeviceErrorEvent(BaseEvent):
     """
 
     _attr_event_type = HmEventType.DEVICE_ERROR
+    _attr_value: Any | None = None
+
+    def event(self, value: Any) -> None:
+        """
+        Handle event for which this handler has subscribed.
+        """
+        old_value = self._attr_value
+        if self._attr_value != value:
+            self._attr_value = value
+        if isinstance(value, bool):
+            if old_value is None and value is True:
+                self.fire_event(value)
+            elif isinstance(old_value, bool) and old_value != value:
+                self.fire_event(value)
+        if isinstance(value, int):
+            if old_value is None and value > 0:
+                self.fire_event(value)
+            elif isinstance(old_value, int) and old_value != value:
+                self.fire_event(value)
+
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
 
         event_data = super().get_event_data(value=value)
         event_data[ATTR_DEVICE_TYPE] = self.device.device_type
-        event_data[ATTR_PARAMETER] = self._attr_parameter
 
         return event_data
 
@@ -1156,14 +1164,6 @@ class ImpulseEvent(BaseEvent):
     """
 
     _attr_event_type = HmEventType.IMPULSE
-
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        event_data = super().get_event_data(value=value)
-        event_data[ATTR_TYPE] = self._attr_parameter.lower()
-        event_data[ATTR_SUBTYPE] = self.channel_no
-
-        return event_data
 
 
 class NoneTypeEntity:
