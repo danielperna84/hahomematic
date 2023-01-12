@@ -36,9 +36,10 @@ async def test_clickevent(
         {
             "interface_id": "CentralTest-Local",
             "address": "VCU2128127",
+            "channel_no": 1,
+            "device_type": "HmIP-BSM",
+            "parameter": "PRESS_SHORT",
             "value": True,
-            "type": "press_short",
-            "subtype": 1,
         },
     )
 
@@ -60,9 +61,10 @@ async def test_impulseevent(
         {
             "interface_id": "CentralTest-Local",
             "address": "VCU0000263",
+            "channel_no": 1,
+            "device_type": "HM-Sen-EP",
+            "parameter": "SEQUENCE_OK",
             "value": True,
-            "type": "sequence_ok",
-            "subtype": 1,
         },
     )
 
@@ -84,8 +86,9 @@ async def test_deviceerrorevent(
         {
             "interface_id": "CentralTest-Local",
             "address": "VCU2128127",
-            "value": True,
+            "channel_no": 0,
             "device_type": "HmIP-BSM",
             "parameter": "ERROR_OVERHEAT",
+            "value": True,
         },
     )

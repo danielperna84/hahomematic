@@ -48,12 +48,12 @@ from hahomematic.custom_platforms import entity_definition_exists, get_device_fu
 from hahomematic.decorators import config_property, value_property
 from hahomematic.entity import (
     BaseEntity,
-    BaseEvent,
     CallbackEntity,
     ClickEvent,
     CustomEntity,
     DeviceErrorEvent,
     GenericEntity,
+    GenericEvent,
     ImpulseEvent,
     WrapperEntity,
 )
@@ -109,7 +109,7 @@ class HmDevice:
         self.generic_entities: dict[tuple[str, str], GenericEntity] = {}
         self.wrapper_entities: dict[tuple[str, str], WrapperEntity] = {}
         self.custom_entities: dict[str, CustomEntity] = {}
-        self.events: dict[tuple[str, str], BaseEvent] = {}
+        self.events: dict[tuple[str, str], GenericEvent] = {}
         self._attr_last_update: datetime = INIT_DATETIME
         self._forced_availability: HmForcedDeviceAvailability = (
             HmForcedDeviceAvailability.NOT_SET
@@ -237,7 +237,7 @@ class HmDevice:
             self.register_update_callback(entity.update_entity)
         if isinstance(entity, CustomEntity):
             self.custom_entities[entity.unique_identifier] = entity
-        if isinstance(entity, BaseEvent):
+        if isinstance(entity, GenericEvent):
             self.events[(entity.channel_address, entity.parameter)] = entity
 
     def remove_entity(self, entity: CallbackEntity) -> None:
@@ -252,7 +252,7 @@ class HmDevice:
             self.unregister_update_callback(entity.update_entity)
         if isinstance(entity, CustomEntity):
             del self.custom_entities[entity.unique_identifier]
-        if isinstance(entity, BaseEvent):
+        if isinstance(entity, GenericEvent):
             del self.events[(entity.channel_address, entity.parameter)]
         entity.remove_entity()
 
@@ -320,7 +320,10 @@ class HmDevice:
             f"address: {self._attr_device_address}, "
             f"type: {len(self._attr_device_type)}, "
             f"name: {self._attr_name}, "
-            f"entities: {len(self.generic_entities)}"
+            f"generic_entities: {len(self.generic_entities)}, "
+            f"custom_entities: {len(self.custom_entities)}, "
+            f"wrapper_entities: {len(self.wrapper_entities)}, "
+            f"events: {len(self.events)}"
         )
 
     @value_property
@@ -378,6 +381,8 @@ class HmDevice:
         """Init the parameter cache."""
         if len(self.generic_entities) > 0:
             await self.value_cache.init_base_entities()
+        if len(self.events) > 0:
+            await self.value_cache.init_readable_events()
         _LOGGER.debug(
             "init_data: Skipping load_data, missing entities for %s.",
             self._attr_device_address,
@@ -496,7 +501,7 @@ class HmDevice:
             parameter,
             self._attr_interface_id,
         )
-        event_t: type[BaseEvent] | None = None
+        event_t: type[GenericEvent] | None = None
         if parameter_data[HM_OPERATIONS] & OPERATION_EVENT:
             if parameter in CLICK_EVENTS:
                 event_t = ClickEvent
@@ -642,7 +647,7 @@ class ValueCache:
                 entity.update_value(value=value)
         except BaseHomematicException as bhe:
             _LOGGER.debug(
-                "init_values_channel0: Failed to init cache for channel0 %s, %s [%s]",
+                "init_base_entities: Failed to init cache for channel0 %s, %s [%s]",
                 self._attr_device.device_type,
                 self._attr_device.device_address,
                 bhe,
@@ -659,6 +664,33 @@ class ValueCache:
             ) or entity.paramset_key == PARAMSET_KEY_MASTER:
                 entities.append(entity)
         return set(entities)
+
+    async def init_readable_events(self) -> None:
+        """Load data by get_value"""
+        try:
+            for event in self._get_readable_events():
+                value = await self.get_value(
+                    channel_address=event.channel_address,
+                    paramset_key=event.paramset_key,
+                    parameter=event.parameter,
+                    call_source=HmCallSource.HM_INIT,
+                )
+                event.update_value(value=value)
+        except BaseHomematicException as bhe:
+            _LOGGER.debug(
+                "init_base_events: Failed to init cache for channel0 %s, %s [%s]",
+                self._attr_device.device_type,
+                self._attr_device.device_address,
+                bhe,
+            )
+
+    def _get_readable_events(self) -> set[GenericEntity]:
+        """Get readable events."""
+        events: list[GenericEvent] = []
+        for event in self._attr_device.events.values():
+            if event.is_readable:
+                events.append(event)
+        return set(events)
 
     async def get_value(
         self,

@@ -15,11 +15,10 @@ import hahomematic.central_unit as hmcu
 import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_ADDRESS,
+    ATTR_CHANNEL_NO,
     ATTR_DEVICE_TYPE,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
-    ATTR_SUBTYPE,
-    ATTR_TYPE,
     ATTR_VALUE,
     CHANNEL_OPERATION_MODE_VISIBILITY,
     CONFIGURABLE_CHANNEL,
@@ -74,9 +73,9 @@ from hahomematic.helpers import (
     updated_within_seconds,
 )
 
-_LOGGER = logging.getLogger(__name__)
 # pylint: disable=consider-alternative-union-syntax
 ParameterT = TypeVar("ParameterT", bool, int, float, str, Union[int, str], None)
+_LOGGER = logging.getLogger(__name__)
 
 
 class CallbackEntity(ABC):
@@ -192,8 +191,8 @@ class BaseEntity(CallbackEntity):
             interface_id=device.interface_id
         )
 
-        self._attr_usage: HmEntityUsage = self._generate_entity_usage()
-        entity_name_data: Final[EntityNameData] = self._generate_entity_name()
+        self._attr_usage: HmEntityUsage = self._get_entity_usage()
+        entity_name_data: Final[EntityNameData] = self._get_entity_name()
         self._attr_full_name: Final[str] = entity_name_data.full_name
         self._attr_name: Final[str | None] = entity_name_data.entity_name
 
@@ -239,7 +238,7 @@ class BaseEntity(CallbackEntity):
             return self._attr_usage
         if isinstance(self, GenericEntity) and self._force_enabled is True:
             return HmEntityUsage.ENTITY
-        if isinstance(self, BaseEvent) and self._force_enabled is True:
+        if isinstance(self, GenericEvent) and self._force_enabled is True:
             return HmEntityUsage.EVENT
         return HmEntityUsage.ENTITY_NO_CREATE
 
@@ -254,16 +253,12 @@ class BaseEntity(CallbackEntity):
         return None
 
     @abstractmethod
-    def _generate_entity_name(self) -> EntityNameData:
+    def _get_entity_name(self) -> EntityNameData:
         """Generate the name for the entity."""
 
-    def _generate_entity_usage(self) -> HmEntityUsage:
+    @abstractmethod
+    def _get_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
-        return (
-            HmEntityUsage.ENTITY_NO_CREATE
-            if self.device.has_custom_entity_definition
-            else HmEntityUsage.ENTITY
-        )
 
     def __str__(self) -> str:
         """
@@ -300,6 +295,9 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             unique_identifier=unique_identifier,
             channel_no=get_device_channel(channel_address),
         )
+        self._attr_value: ParameterT | None = None
+        self._attr_last_update: datetime = INIT_DATETIME
+        self._attr_state_uncertain: bool = True
         self._assign_parameter_data(parameter_data=parameter_data)
 
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
@@ -371,10 +369,33 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return, if entity is readable."""
         return bool(self._attr_operations & OPERATION_READ)
 
+    @value_property
+    def is_valid(self) -> bool:
+        """
+        Return, if the value of the entity is valid based
+        on the last updated datetime.
+        """
+        return self._attr_last_update > INIT_DATETIME
+
     @property
     def is_writeable(self) -> bool:
         """Return, if entity is writeable."""
         return bool(self._attr_operations & OPERATION_WRITE)
+
+    @value_property
+    def last_update(self) -> datetime:
+        """Return the last updated datetime value"""
+        return self._attr_last_update
+
+    @value_property
+    def state_uncertain(self) -> bool:
+        """Return, if the state is uncertain."""
+        return self._attr_state_uncertain
+
+    @value_property
+    def value(self) -> ParameterT | None:
+        """Return the value of the entity."""
+        return self._attr_value
 
     @property
     def supports_events(self) -> bool:
@@ -412,6 +433,40 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """
         Handle event for which this handler has subscribed.
         """
+
+    async def load_entity_value(
+        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
+    ) -> None:
+        """Init the entity data."""
+        if updated_within_seconds(
+            last_update=self._attr_last_update, max_age_seconds=max_age_seconds
+        ):
+            return None
+
+        # Check, if entity is readable
+        if not self.is_readable:
+            return None
+
+        self.update_value(
+            value=await self.device.value_cache.get_value(
+                channel_address=self._attr_channel_address,
+                paramset_key=self._attr_paramset_key,
+                parameter=self._attr_parameter,
+                call_source=call_source,
+            )
+        )
+
+    def update_value(self, value: Any) -> None:
+        """Update value of the entity."""
+        if value == NO_CACHE_ENTRY:
+            if self.last_update != INIT_DATETIME:
+                self._attr_state_uncertain = True
+                self.update_entity()
+            return
+        self._attr_value = self._convert_value(value)
+        self._attr_state_uncertain = False
+        self._set_last_update()
+        self.update_entity()
 
     def update_parameter_data(self) -> None:
         """Update parameter data"""
@@ -453,26 +508,20 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             )
             return None  # type: ignore[return-value]
 
-    def _generate_entity_name(self) -> EntityNameData:
-        """Create the name for the entity."""
-        return get_entity_name(
-            central=self._central,
-            device=self.device,
-            channel_no=self.channel_no,
-            parameter=self._attr_parameter,
-        )
+    def get_event_data(self, value: Any = None) -> dict[str, Any]:
+        """Get the event_data. #CC"""
+        return {
+            ATTR_INTERFACE_ID: self.device.interface_id,
+            ATTR_ADDRESS: self.device.device_address,
+            ATTR_CHANNEL_NO: self._attr_channel_no,
+            ATTR_DEVICE_TYPE: self.device.device_type,
+            ATTR_PARAMETER: self._attr_parameter,
+            ATTR_VALUE: value,
+        }
 
-    def _generate_entity_usage(self) -> HmEntityUsage:
-        """Generate the usage for the entity."""
-        usage = super()._generate_entity_usage()
-        if self._central.parameter_visibility.parameter_is_hidden(
-            device_type=self.device.device_type,
-            device_channel=self.channel_no,
-            paramset_key=self._attr_paramset_key,
-            parameter=self._attr_parameter,
-        ):
-            usage = HmEntityUsage.ENTITY_NO_CREATE
-        return usage
+    def _set_last_update(self) -> None:
+        """Set last_update to current datetime."""
+        self._attr_last_update = datetime.now()
 
 
 class GenericEntity(BaseParameterEntity[ParameterT]):
@@ -480,30 +529,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
     Base class for generic entities.
     """
 
-    def __init__(
-        self,
-        device: hmd.HmDevice,
-        unique_identifier: str,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ):
-        """
-        Initialize the entity.
-        """
-        super().__init__(
-            device=device,
-            unique_identifier=unique_identifier,
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            parameter_data=parameter_data,
-        )
-        self._attr_value: ParameterT | None = None
-        self._attr_last_update: datetime = INIT_DATETIME
-        self._attr_state_uncertain: bool = True
-        self.wrapped: bool = False
+    wrapped: bool = False
 
     @config_property
     def channel_operation_mode(self) -> str | None:
@@ -529,39 +555,14 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
             return True
         return False
 
-    @value_property
-    def is_valid(self) -> bool:
-        """
-        Return, if the value of the entity is valid based
-        on the last updated datetime.
-        """
-        return self._attr_last_update > INIT_DATETIME
-
-    @value_property
-    def last_update(self) -> datetime:
-        """Return the last updated datetime value"""
-        return self._attr_last_update
-
-    @value_property
-    def state_uncertain(self) -> bool:
-        """Return, if the state is uncertain."""
-        return self._attr_state_uncertain
-
-    @value_property
-    def value(self) -> ParameterT | None:
-        """Return the value of the entity."""
-        return self._attr_value
-
     def event(self, value: Any) -> None:
         """
         Handle event for which this entity has subscribed.
         """
         old_value = self._attr_value
-
         new_value = self._convert_value(value)
         if self._attr_value == new_value:
             return
-
         self.update_value(value=new_value)
 
         # reload paramset_descriptions, if value has changed
@@ -579,42 +580,8 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
             if callable(self._central.callback_ha_event):
                 self._central.callback_ha_event(
                     HmEventType.DEVICE_AVAILABILITY,
-                    self._get_event_data(new_value),
+                    self.get_event_data(new_value),
                 )
-
-    async def load_entity_value(
-        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
-    ) -> None:
-        """Init the entity data."""
-        if updated_within_seconds(
-            last_update=self._attr_last_update, max_age_seconds=max_age_seconds
-        ):
-            return None
-
-        # Check, if entity is readable
-        if not self.is_readable:
-            return None
-
-        self.update_value(
-            value=await self.device.value_cache.get_value(
-                channel_address=self._attr_channel_address,
-                paramset_key=self._attr_paramset_key,
-                parameter=self._attr_parameter,
-                call_source=call_source,
-            )
-        )
-
-    def update_value(self, value: Any) -> None:
-        """Update value of the entity."""
-        if value == NO_CACHE_ENTRY:
-            if self.last_update != INIT_DATETIME:
-                self._attr_state_uncertain = True
-                self.update_entity()
-            return
-        self._attr_value = self._convert_value(value)
-        self._attr_state_uncertain = False
-        self._set_last_update()
-        self.update_entity()
 
     async def send_value(self, value: Any) -> None:
         """send value to ccu."""
@@ -625,19 +592,30 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
             value=self._convert_value(value),
         )
 
-    def _get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        return {
-            ATTR_INTERFACE_ID: self.device.interface_id,
-            ATTR_ADDRESS: self.device.device_address,
-            ATTR_DEVICE_TYPE: self.device.device_type,
-            ATTR_PARAMETER: self._attr_parameter,
-            ATTR_VALUE: value,
-        }
+    def _get_entity_name(self) -> EntityNameData:
+        """Create the name for the entity."""
+        return get_entity_name(
+            central=self._central,
+            device=self.device,
+            channel_no=self.channel_no,
+            parameter=self._attr_parameter,
+        )
 
-    def _set_last_update(self) -> None:
-        """Set last_update to current datetime."""
-        self._attr_last_update = datetime.now()
+    def _get_entity_usage(self) -> HmEntityUsage:
+        """Generate the usage for the entity."""
+        usage = (
+            HmEntityUsage.ENTITY_NO_CREATE
+            if self.device.has_custom_entity_definition
+            else HmEntityUsage.ENTITY
+        )
+        if self._central.parameter_visibility.parameter_is_hidden(
+            device_type=self.device.device_type,
+            device_channel=self.channel_no,
+            paramset_key=self._attr_paramset_key,
+            parameter=self._attr_parameter,
+        ):
+            usage = HmEntityUsage.ENTITY_NO_CREATE
+        return usage
 
 
 class WrapperEntity(BaseEntity):
@@ -667,15 +645,14 @@ class WrapperEntity(BaseEntity):
         wrapped_entity.set_usage(HmEntityUsage.ENTITY_NO_CREATE)
         wrapped_entity.wrapped = True
 
-    @config_property
-    def usage(self) -> HmEntityUsage:
-        """Return the entity usage."""
-        return HmEntityUsage.ENTITY
-
     def __getattr__(self, *args: Any) -> Any:
         return getattr(self._wrapped_entity, *args)
 
-    def _generate_entity_name(self) -> EntityNameData:
+    def _get_entity_usage(self) -> HmEntityUsage:
+        """Generate the usage for the entity."""
+        return HmEntityUsage.ENTITY
+
+    def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
         return get_entity_name(
             central=self._central,
@@ -754,7 +731,7 @@ class CustomEntity(BaseEntity):
         """Returns the list of readable entities."""
         return [e for e in self.data_entities.values() if e.is_readable]
 
-    def _generate_entity_name(self) -> EntityNameData:
+    def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
         device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
             device_type=self.device.device_type
@@ -772,7 +749,7 @@ class CustomEntity(BaseEntity):
             usage=self._attr_usage,
         )
 
-    def _generate_entity_usage(self) -> HmEntityUsage:
+    def _get_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
         if secondary_channels := self._device_desc.get(hmed.ED_SECONDARY_CHANNELS):
             if self.channel_no in secondary_channels:
@@ -1044,7 +1021,7 @@ class GenericSystemVariable(GenericHubEntity):
         self.update_value(value=value)
 
 
-class BaseEvent(BaseParameterEntity[Any]):
+class GenericEvent(BaseParameterEntity[Any]):
     """Base class for action events"""
 
     _attr_platform = HmPlatform.EVENT
@@ -1079,19 +1056,8 @@ class BaseEvent(BaseParameterEntity[Any]):
         """
         Handle event for which this handler has subscribed.
         """
+
         self.fire_event(value)
-
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        event_data = {
-            ATTR_INTERFACE_ID: self.device.interface_id,
-            ATTR_ADDRESS: self.device.device_address,
-        }
-
-        if value is not None:
-            event_data[ATTR_VALUE] = value
-
-        return event_data
 
     def fire_event(self, value: Any) -> None:
         """
@@ -1103,7 +1069,7 @@ class BaseEvent(BaseParameterEntity[Any]):
                 self.get_event_data(value=value),
             )
 
-    def _generate_entity_name(self) -> EntityNameData:
+    def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
         return get_event_name(
             central=self._central,
@@ -1112,58 +1078,62 @@ class BaseEvent(BaseParameterEntity[Any]):
             parameter=self._attr_parameter,
         )
 
-    def _generate_entity_usage(self) -> HmEntityUsage:
+    def _get_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
         return HmEntityUsage.EVENT
 
 
-class ClickEvent(BaseEvent):
+class ClickEvent(GenericEvent):
     """
     class for handling click events.
     """
 
     _attr_event_type = HmEventType.KEYPRESS
 
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        event_data = super().get_event_data(value=value)
-        event_data[ATTR_TYPE] = self._attr_parameter.lower()
-        event_data[ATTR_SUBTYPE] = self.channel_no
 
-        return event_data
-
-
-class DeviceErrorEvent(BaseEvent):
+class DeviceErrorEvent(GenericEvent):
     """
     class for handling device error events.
     """
 
     _attr_event_type = HmEventType.DEVICE_ERROR
 
+    def event(self, value: Any) -> None:
+        """
+        Handle event for which this handler has subscribed.
+        """
+        old_value = self._attr_value
+        new_value = self._convert_value(value)
+        if self._attr_value == new_value:
+            return
+        self.update_value(value=new_value)
+
+        if isinstance(value, bool):
+            if old_value is None and value is True:
+                self.fire_event(value)
+            elif isinstance(old_value, bool) and old_value != value:
+                self.fire_event(value)
+        if isinstance(value, int):
+            if old_value is None and value > 0:
+                self.fire_event(value)
+            elif isinstance(old_value, int) and old_value != value:
+                self.fire_event(value)
+
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
 
         event_data = super().get_event_data(value=value)
         event_data[ATTR_DEVICE_TYPE] = self.device.device_type
-        event_data[ATTR_PARAMETER] = self._attr_parameter
 
         return event_data
 
 
-class ImpulseEvent(BaseEvent):
+class ImpulseEvent(GenericEvent):
     """
     class for handling impulse events.
     """
 
     _attr_event_type = HmEventType.IMPULSE
-
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-        event_data = super().get_event_data(value=value)
-        event_data[ATTR_TYPE] = self._attr_parameter.lower()
-        event_data[ATTR_SUBTYPE] = self.channel_no
-
-        return event_data
 
 
 class NoneTypeEntity:

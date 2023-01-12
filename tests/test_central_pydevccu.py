@@ -71,15 +71,14 @@ async def test_central(central_pydevccu) -> None:
         pub_config_props = get_public_attributes_for_config_property(data_object=entity)
         assert pub_config_props
 
-    parameters: list[tuple[str, int]] =[]
+    parameters: list[tuple[str, int]] = []
     for entity in central_pydevccu._entities.values():
         if hasattr(entity, "parameter"):
-            #if entity.device.device_type.startswith("HM-") and
-            #if entity._attr_operations == 2:
+            # if entity.device.device_type.startswith("HM-") and
+            # if entity._attr_operations == 2:
             if (entity.parameter, entity._attr_operations) not in parameters:
                 parameters.append((entity.parameter, entity._attr_operations))
     parameters = sorted(parameters)
-
 
     units = set()
     for entity in central_pydevccu._entities.values():

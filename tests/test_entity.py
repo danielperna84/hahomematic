@@ -7,15 +7,15 @@ from unittest.mock import MagicMock, call
 
 import const
 import helper
-from hahomematic.custom_platforms.entity_definition import get_required_parameters
-from hahomematic.parameter_visibility import check_ignore_parameters_is_clean
 from helper import get_custom_entity, get_generic_entity, get_wrapper_entity
 import pytest
 
 from hahomematic.const import HmCallSource, HmEntityUsage
+from hahomematic.custom_platforms.entity_definition import get_required_parameters
 from hahomematic.custom_platforms.switch import CeSwitch
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
+from hahomematic.parameter_visibility import check_ignore_parameters_is_clean
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
