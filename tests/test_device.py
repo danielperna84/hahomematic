@@ -24,8 +24,13 @@ async def test_device_general(
     assert device.device_address == "VCU2128127"
     assert device.name == "HmIP-BSM_VCU2128127"
     assert (
-        str(device)
-        == "address: VCU2128127, type: 8, name: HmIP-BSM_VCU2128127, entities: 23"
+        str(device) == "address: VCU2128127, "
+        "type: 8, "
+        "name: HmIP-BSM_VCU2128127, "
+        "generic_entities: 23, "
+        "custom_entities: 3, "
+        "wrapper_entities: 0, "
+        "events: 6"
     )
     assert device.device_type == "HmIP-BSM"
     assert device.interface == "BidCos-RF"
@@ -79,4 +84,3 @@ async def test_device_config_pending(
     assert device._e_config_pending.value is False
     await asyncio.sleep(2)
     assert last_save != central.paramset_descriptions.last_save
-
