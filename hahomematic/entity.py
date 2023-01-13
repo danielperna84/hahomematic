@@ -19,6 +19,8 @@ from hahomematic.const import (
     ATTR_DEVICE_TYPE,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
+    ATTR_SUBTYPE,
+    ATTR_TYPE,
     ATTR_VALUE,
     CHANNEL_OPERATION_MODE_VISIBILITY,
     CONFIGURABLE_CHANNEL,
@@ -510,14 +512,16 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data. #CC"""
-        return {
+        event_data = {
             ATTR_INTERFACE_ID: self.device.interface_id,
             ATTR_ADDRESS: self.device.device_address,
             ATTR_CHANNEL_NO: self._attr_channel_no,
             ATTR_DEVICE_TYPE: self.device.device_type,
             ATTR_PARAMETER: self._attr_parameter,
-            ATTR_VALUE: value,
         }
+        if value is not None:
+            event_data[ATTR_VALUE] = value
+        return event_data
 
     def _set_last_update(self) -> None:
         """Set last_update to current datetime."""
@@ -1118,14 +1122,6 @@ class DeviceErrorEvent(GenericEvent):
                 self.fire_event(value)
             elif isinstance(old_value, int) and old_value != value:
                 self.fire_event(value)
-
-    def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data."""
-
-        event_data = super().get_event_data(value=value)
-        event_data[ATTR_DEVICE_TYPE] = self.device.device_type
-
-        return event_data
 
 
 class ImpulseEvent(GenericEvent):
