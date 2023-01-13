@@ -1,33 +1,45 @@
 """Tests for switch entities of hahomematic."""
 from __future__ import annotations
 
-import asyncio
-from typing import cast
-from unittest.mock import MagicMock, call
+from datetime import datetime, timedelta
 
-import const
 import helper
 from helper import get_device
 import pytest
-from datetime import datetime, timedelta
 
 from hahomematic.const import (
+    INIT_DATETIME,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
     SYSVAR_TYPE_LIST,
-    SYSVAR_TYPE_LOGIC,SYSVAR_TYPE_STRING, HmEntityUsage, INIT_DATETIME, TYPE_BOOL, TYPE_FLOAT, TYPE_INTEGER, TYPE_STRING, TYPE_ACTION
+    SYSVAR_TYPE_LOGIC,
+    SYSVAR_TYPE_STRING,
+    TYPE_ACTION,
+    TYPE_BOOL,
+    TYPE_FLOAT,
+    TYPE_INTEGER,
+    TYPE_STRING,
+    HmEntityUsage,
 )
 from hahomematic.helpers import (
+    _check_channel_name_with_channel_no,
     build_headers,
     build_xml_rpc_uri,
+    convert_value,
+    element_matches_key,
+    find_free_port,
     generate_unique_identifier,
     get_custom_entity_name,
+    get_device_channel,
+    get_device_name,
     get_entity_name,
     get_event_name,
+    get_tls_context,
+    get_value_from_dict_by_wildcard_key,
     parse_sys_var,
-    to_bool,get_device_channel,get_device_name,_check_channel_name_with_channel_no,
-    get_tls_context, updated_within_seconds, convert_value, find_free_port, element_matches_key, get_value_from_dict_by_wildcard_key
+    to_bool,
+    updated_within_seconds,
 )
 
 TEST_DEVICES: dict[str, str] = {
@@ -204,37 +216,85 @@ async def test_custom_entity_name(
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
     assert (
-        get_custom_entity_name(central=central, device=device, channel_no=4, is_only_primary_channel=True, usage=HmEntityUsage.CE_PRIMARY).full_name
-        == 'HmIP-BSM_VCU2128127'
+        get_custom_entity_name(
+            central=central,
+            device=device,
+            channel_no=4,
+            is_only_primary_channel=True,
+            usage=HmEntityUsage.CE_PRIMARY,
+        ).full_name
+        == "HmIP-BSM_VCU2128127"
     )
     assert (
-        get_custom_entity_name(central=central, device=device, channel_no=4, is_only_primary_channel=True, usage=HmEntityUsage.CE_PRIMARY).entity_name
+        get_custom_entity_name(
+            central=central,
+            device=device,
+            channel_no=4,
+            is_only_primary_channel=True,
+            usage=HmEntityUsage.CE_PRIMARY,
+        ).entity_name
         == ""
     )
     assert (
-        get_custom_entity_name(central=central, device=device, channel_no=4, is_only_primary_channel=False, usage=HmEntityUsage.CE_SECONDARY).full_name
-        == 'HmIP-BSM_VCU2128127 vch4'
+        get_custom_entity_name(
+            central=central,
+            device=device,
+            channel_no=4,
+            is_only_primary_channel=False,
+            usage=HmEntityUsage.CE_SECONDARY,
+        ).full_name
+        == "HmIP-BSM_VCU2128127 vch4"
     )
     assert (
-        get_custom_entity_name(central=central, device=device, channel_no=4, is_only_primary_channel=False, usage=HmEntityUsage.CE_SECONDARY).entity_name
-        == 'vch4'
+        get_custom_entity_name(
+            central=central,
+            device=device,
+            channel_no=4,
+            is_only_primary_channel=False,
+            usage=HmEntityUsage.CE_SECONDARY,
+        ).entity_name
+        == "vch4"
     )
     central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
     assert (
-        get_custom_entity_name(central=central, device=device, channel_no=5, is_only_primary_channel=True, usage=HmEntityUsage.CE_PRIMARY).full_name
-        == 'HmIP-BSM_VCU2128127 Roof'
+        get_custom_entity_name(
+            central=central,
+            device=device,
+            channel_no=5,
+            is_only_primary_channel=True,
+            usage=HmEntityUsage.CE_PRIMARY,
+        ).full_name
+        == "HmIP-BSM_VCU2128127 Roof"
     )
     assert (
-        get_custom_entity_name(central=central, device=device, channel_no=5, is_only_primary_channel=True, usage=HmEntityUsage.CE_PRIMARY).entity_name
-        == 'Roof'
+        get_custom_entity_name(
+            central=central,
+            device=device,
+            channel_no=5,
+            is_only_primary_channel=True,
+            usage=HmEntityUsage.CE_PRIMARY,
+        ).entity_name
+        == "Roof"
     )
     assert (
-        get_custom_entity_name(central=central, device=device, channel_no=5, is_only_primary_channel=False, usage=HmEntityUsage.CE_SECONDARY).full_name
-        == 'HmIP-BSM_VCU2128127 Roof'
+        get_custom_entity_name(
+            central=central,
+            device=device,
+            channel_no=5,
+            is_only_primary_channel=False,
+            usage=HmEntityUsage.CE_SECONDARY,
+        ).full_name
+        == "HmIP-BSM_VCU2128127 Roof"
     )
     assert (
-        get_custom_entity_name(central=central, device=device, channel_no=5, is_only_primary_channel=False, usage=HmEntityUsage.CE_SECONDARY).entity_name
-        == 'Roof'
+        get_custom_entity_name(
+            central=central,
+            device=device,
+            channel_no=5,
+            is_only_primary_channel=False,
+            usage=HmEntityUsage.CE_SECONDARY,
+        ).entity_name
+        == "Roof"
     )
 
 
@@ -245,15 +305,18 @@ async def test_get_device_name(
     """Test get_device_name."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     assert (
-        get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
-        == 'HmIP-BSM_VCU2128127'
+        get_device_name(
+            central=central, device_address="VCU2128127", device_type="HmIP-BSM"
+        )
+        == "HmIP-BSM_VCU2128127"
     )
     central.device_details.add_name(address="VCU2128127", name="Roof")
     assert (
-        get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
+        get_device_name(
+            central=central, device_address="VCU2128127", device_type="HmIP-BSM"
+        )
         == "Roof"
     )
-
 
 
 @pytest.mark.asyncio
@@ -262,12 +325,25 @@ async def test_tls_context() -> None:
     assert get_tls_context(verify_tls=False).check_hostname is False
     assert get_tls_context(verify_tls=True).check_hostname is True
 
+
 @pytest.mark.asyncio
 async def test_updated_within_seconds() -> None:
     """Test updated_within_seconds."""
-    assert updated_within_seconds(last_update=(datetime.now() - timedelta(seconds=10)), max_age_seconds=60) is True
-    assert updated_within_seconds(last_update=(datetime.now() - timedelta(seconds=70)), max_age_seconds=60) is False
-    assert updated_within_seconds(last_update=INIT_DATETIME, max_age_seconds=60) is False
+    assert (
+        updated_within_seconds(
+            last_update=(datetime.now() - timedelta(seconds=10)), max_age_seconds=60
+        )
+        is True
+    )
+    assert (
+        updated_within_seconds(
+            last_update=(datetime.now() - timedelta(seconds=70)), max_age_seconds=60
+        )
+        is False
+    )
+    assert (
+        updated_within_seconds(last_update=INIT_DATETIME, max_age_seconds=60) is False
+    )
 
 
 @pytest.mark.asyncio
@@ -276,12 +352,23 @@ async def test_convert_value() -> None:
     assert convert_value(value=None, target_type=TYPE_BOOL, value_list=None) is None
     assert convert_value(value=True, target_type=TYPE_BOOL, value_list=None) is True
     assert convert_value(value="true", target_type=TYPE_BOOL, value_list=None) is True
-    assert convert_value(value=1, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is True
-    assert convert_value(value=0, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is False
-    assert convert_value(value=2, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is False
+    assert (
+        convert_value(value=1, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN"))
+        is True
+    )
+    assert (
+        convert_value(value=0, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN"))
+        is False
+    )
+    assert (
+        convert_value(value=2, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN"))
+        is False
+    )
     assert convert_value(value="0.1", target_type=TYPE_FLOAT, value_list=None) == 0.1
     assert convert_value(value="1", target_type=TYPE_INTEGER, value_list=None) == 1
-    assert convert_value(value="test", target_type=TYPE_STRING, value_list=None) == "test"
+    assert (
+        convert_value(value="test", target_type=TYPE_STRING, value_list=None) == "test"
+    )
     assert convert_value(value="1", target_type=TYPE_STRING, value_list=None) == "1"
     assert convert_value(value=True, target_type=TYPE_ACTION, value_list=None) is True
 
@@ -290,20 +377,73 @@ async def test_convert_value() -> None:
 async def test_element_matches_key() -> None:
     """Test element_matches_key."""
     assert element_matches_key(search_elements="HmIP-eTRV", compare_with=None) is False
-    assert element_matches_key(search_elements="HmIP-eTRV", compare_with="HmIP-eTRV-2") is True
-    assert element_matches_key(search_elements="HmIP-eTRV", compare_with="HmIP-eTRV-2", do_wildcard_search=False) is False
-    assert element_matches_key(search_elements=["HmIP-eTRV", "HmIP-BWTH"], compare_with="HmIP-eTRV-2") is True
-    assert element_matches_key(search_elements=["HmIP-eTRV", "HmIP-BWTH"], compare_with="HmIP-eTRV-2", do_wildcard_search=False) is False
-    assert element_matches_key(search_elements=["HmIP-eTRV", "HmIP-BWTH"], compare_with="HmIP-eTRV", do_wildcard_search=False) is True
+    assert (
+        element_matches_key(search_elements="HmIP-eTRV", compare_with="HmIP-eTRV-2")
+        is True
+    )
+    assert (
+        element_matches_key(
+            search_elements="HmIP-eTRV",
+            compare_with="HmIP-eTRV-2",
+            do_wildcard_search=False,
+        )
+        is False
+    )
+    assert (
+        element_matches_key(
+            search_elements=["HmIP-eTRV", "HmIP-BWTH"], compare_with="HmIP-eTRV-2"
+        )
+        is True
+    )
+    assert (
+        element_matches_key(
+            search_elements=["HmIP-eTRV", "HmIP-BWTH"],
+            compare_with="HmIP-eTRV-2",
+            do_wildcard_search=False,
+        )
+        is False
+    )
+    assert (
+        element_matches_key(
+            search_elements=["HmIP-eTRV", "HmIP-BWTH"],
+            compare_with="HmIP-eTRV",
+            do_wildcard_search=False,
+        )
+        is True
+    )
+
 
 @pytest.mark.asyncio
 async def test_value_from_dict_by_wildcard_key() -> None:
     """Test value_from_dict_by_wildcard_key."""
-    assert get_value_from_dict_by_wildcard_key(search_elements={"HmIP-eTRV": True}, compare_with=None) is None
-    assert get_value_from_dict_by_wildcard_key(search_elements={"HmIP-eTRV-2": True}, compare_with="HmIP-eTRV") is True
-    assert get_value_from_dict_by_wildcard_key(search_elements={"HmIP-eTRV-2": False}, compare_with="HmIP-eTRV", do_wildcard_search=False) is None
-    assert get_value_from_dict_by_wildcard_key(search_elements={"HmIP-eTRV-2": False}, compare_with="HmIP-eTRV-2", do_wildcard_search=False) is False
-
+    assert (
+        get_value_from_dict_by_wildcard_key(
+            search_elements={"HmIP-eTRV": True}, compare_with=None
+        )
+        is None
+    )
+    assert (
+        get_value_from_dict_by_wildcard_key(
+            search_elements={"HmIP-eTRV-2": True}, compare_with="HmIP-eTRV"
+        )
+        is True
+    )
+    assert (
+        get_value_from_dict_by_wildcard_key(
+            search_elements={"HmIP-eTRV-2": False},
+            compare_with="HmIP-eTRV",
+            do_wildcard_search=False,
+        )
+        is None
+    )
+    assert (
+        get_value_from_dict_by_wildcard_key(
+            search_elements={"HmIP-eTRV-2": False},
+            compare_with="HmIP-eTRV-2",
+            do_wildcard_search=False,
+        )
+        is False
+    )
 
 
 @pytest.mark.asyncio
