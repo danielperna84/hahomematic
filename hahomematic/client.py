@@ -313,9 +313,16 @@ class Client(ABC):
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
 
-    @abstractmethod
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
+        for device_type in HM_VIRTUAL_REMOTE_TYPES:
+            for device in self.central.devices:
+                if (
+                    device.interface_id == self.interface_id
+                    and device.device_type == device_type
+                ):
+                    return device
+        return None
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
@@ -754,17 +761,6 @@ class ClientCCU(Client):
         """Get the serial of the backend."""
         return await self._json_rpc_client.get_serial()
 
-    def get_virtual_remote(self) -> HmDevice | None:
-        """Get the virtual remote for the Client."""
-        for device_type in HM_VIRTUAL_REMOTE_TYPES:
-            for device in self.central.devices:
-                if (
-                    device.interface_id == self.interface_id
-                    and device.device_type == device_type
-                ):
-                    return device
-        return None
-
 
 class ClientHomegear(Client):
     """Client implementation for Homegear backend."""
@@ -878,10 +874,6 @@ class ClientHomegear(Client):
         """Get the serial of the backend."""
         return "Homegear_SN0815"
 
-    def get_virtual_remote(self) -> HmDevice | None:
-        """Get the virtual remote for the Client."""
-        return None
-
 
 class ClientLocal(Client):
     """
@@ -978,10 +970,6 @@ class ClientLocal(Client):
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
         return LOCAL_SERIAL
-
-    def get_virtual_remote(self) -> HmDevice | None:
-        """Get the virtual remote for the Client."""
-        return None
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
