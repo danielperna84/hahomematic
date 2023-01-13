@@ -9,7 +9,7 @@ import helper
 from helper import get_device, get_generic_entity, load_device_description
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.switch import HmSwitch
 
@@ -125,6 +125,41 @@ async def test_all_parameters(
 
 
 @pytest.mark.asyncio
+async def test_entities_by_platform(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test device export."""
+    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    ebp_sensor = central.get_entities_by_platform(platform=HmPlatform.SENSOR)
+    assert ebp_sensor
+    assert len(ebp_sensor) == 12
+    ebp_sensor2 = central.get_entities_by_platform(platform=HmPlatform.SENSOR, existing_unique_ids=['vcu6354483_1_actual_temperature'])
+    assert ebp_sensor2
+    assert len(ebp_sensor2) == 11
+
+
+@pytest.mark.asyncio
+async def test_hub_entities_by_platform(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test device export."""
+    central, mock_client = await central_local_factory.get_central({}, add_programs=True, add_sysvars=True)
+    ebp_sensor = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_SENSOR)
+    assert ebp_sensor
+    assert len(ebp_sensor) == 4
+    ebp_sensor2 = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_SENSOR, existing_unique_ids=['test1234_sysvar_sv-string'])
+    assert ebp_sensor2
+    assert len(ebp_sensor2) == 3
+
+    ebp_sensor3 = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_BUTTON)
+    assert ebp_sensor3
+    assert len(ebp_sensor3) == 2
+    ebp_sensor4 = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_BUTTON, existing_unique_ids=['test1234_program_p-2'])
+    assert ebp_sensor4
+    assert len(ebp_sensor4) == 1
+
+
+@pytest.mark.asyncio
 async def test_add_device(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
@@ -231,9 +266,13 @@ async def test_device_delete_virtual_remotes(
             "VCU0000001": "HMW-RCV-50.json",
         },
     )
+    assert central.get_virtual_remotes()
+
     assert len(central._devices) == 3
     assert len(central._entities) == 350
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
     await central.delete_devices(const.LOCAL_INTERFACE_ID, virtual_remotes)
     assert len(central._devices) == 0
     assert len(central._entities) == 0
+
+    assert central.get_virtual_remotes() == []
