@@ -417,9 +417,12 @@ def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
 
 def _get_binary_sensor_value(value: int, value_list: tuple[str, ...]) -> bool:
     """Return, the value of a binary_sensor."""
-    str_value = value_list[value]
-    if true_value := BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST.get(value_list):
-        return str_value == true_value
+    try:
+        str_value = value_list[value]
+        if true_value := BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST.get(value_list):
+            return str_value == true_value
+    except IndexError:
+        pass
     return False
 
 
