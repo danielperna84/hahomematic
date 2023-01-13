@@ -684,9 +684,9 @@ class ValueCache:
                 bhe,
             )
 
-    def _get_readable_events(self) -> set[GenericEntity]:
+    def _get_readable_events(self) -> set[GenericEvent]:
         """Get readable events."""
-        events: list[GenericEvent] = []
+        events: [GenericEvent] = []
         for event in self._attr_device.events.values():
             if event.is_readable:
                 events.append(event)
