@@ -117,20 +117,6 @@ def check_or_create_directory(directory: str) -> bool:
     return True
 
 
-def parse_ccu_sys_var(data_type: str | None, raw_value: Any) -> Any:
-    """Helper to parse type of system variables of CCU."""
-    # pylint: disable=no-else-return
-    if not data_type:
-        return raw_value
-    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
-        return raw_value == "true"
-    if data_type == SYSVAR_HM_TYPE_FLOAT:
-        return float(raw_value)
-    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
-        return int(raw_value)
-    return raw_value
-
-
 def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
     """Helper to parse type of system variables."""
     # pylint: disable=no-else-return
