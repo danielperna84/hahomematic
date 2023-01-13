@@ -10,6 +10,7 @@ import logging
 from typing import Any, Final, Generic, TypeVar, Union, cast
 
 from slugify import slugify
+import voluptuous as vol
 
 import hahomematic.central_unit as hmcu
 import hahomematic.client as hmcl
@@ -19,8 +20,6 @@ from hahomematic.const import (
     ATTR_DEVICE_TYPE,
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
-    ATTR_SUBTYPE,
-    ATTR_TYPE,
     ATTR_VALUE,
     CHANNEL_OPERATION_MODE_VISIBILITY,
     CONFIGURABLE_CHANNEL,
@@ -73,6 +72,17 @@ from hahomematic.helpers import (
     get_event_name,
     parse_sys_var,
     updated_within_seconds,
+)
+
+HM_EVENT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ADDRESS): str,
+        vol.Required(ATTR_CHANNEL_NO): int,
+        vol.Required(ATTR_DEVICE_TYPE): str,
+        vol.Required(ATTR_INTERFACE_ID): str,
+        vol.Required(ATTR_PARAMETER): str,
+        vol.Optional(ATTR_VALUE): vol.Any(bool, int),
+    }
 )
 
 # pylint: disable=consider-alternative-union-syntax
@@ -513,15 +523,15 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data. #CC"""
         event_data = {
-            ATTR_INTERFACE_ID: self.device.interface_id,
             ATTR_ADDRESS: self.device.device_address,
             ATTR_CHANNEL_NO: self._attr_channel_no,
             ATTR_DEVICE_TYPE: self.device.device_type,
+            ATTR_INTERFACE_ID: self.device.interface_id,
             ATTR_PARAMETER: self._attr_parameter,
         }
         if value is not None:
             event_data[ATTR_VALUE] = value
-        return event_data
+        return cast(dict[str, Any], HM_EVENT_SCHEMA(event_data))
 
     def _set_last_update(self) -> None:
         """Set last_update to current datetime."""
