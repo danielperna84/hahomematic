@@ -2,6 +2,7 @@
 - Unifiy event parameters
 - Refactor entity.py for better event support
 - Fix wrong warning after set_system_variable
+- Add validation to event_data
 
 # Version 2023.1.2 (2023-01-10)
 - Remove OPERATING_VOLTAGE from HmIP-BROLL, HmIP-FROLL
