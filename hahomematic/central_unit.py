@@ -587,7 +587,7 @@ class CentralUnit:
         )
 
         new_devices = set[HmDevice]()
-        for interface_id, client in self._clients.items():
+        for interface_id in self._clients:
             if not self.paramset_descriptions.get_by_interface(
                 interface_id=interface_id
             ):
