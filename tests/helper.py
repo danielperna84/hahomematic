@@ -33,11 +33,11 @@ class CentralUnitLocalFactory:
 
     async def get_raw_central(
         self,
-        interface_config: InterfaceConfig,
+        interface_config: InterfaceConfig | None,
         un_ignore_list: list[str] | None = None,
     ) -> CentralUnit:
         """Returns a central based on give address_device_translation."""
-
+        interface_configs = {interface_config} if interface_config else {}
         central = await CentralConfig(
             name=const.CENTRAL_NAME,
             host=const.CCU_HOST,
@@ -45,7 +45,7 @@ class CentralUnitLocalFactory:
             password=const.CCU_PASSWORD,
             central_id="test1234",
             storage_folder="homematicip_local",
-            interface_configs={interface_config},
+            interface_configs=interface_configs,
             default_callback_port=54321,
             client_session=self._client_session,
             load_un_ignore=un_ignore_list is not None,

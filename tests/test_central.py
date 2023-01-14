@@ -3,17 +3,17 @@ from __future__ import annotations
 
 from contextlib import suppress
 from typing import cast
-from unittest.mock import PropertyMock, patch, Mock
+from unittest.mock import call, patch
 
 import const
 import helper
-from helper import get_device, get_generic_entity, load_device_description, get_mock
+from helper import get_device, get_generic_entity, get_mock, load_device_description
 import pytest
 
-from hahomematic.const import HmEntityUsage, HmPlatform
+from hahomematic.const import HmEntityUsage, HmInterfaceEventType, HmPlatform
+from hahomematic.exceptions import HaHomematicException, NoClients
 from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.switch import HmSwitch
-from hahomematic.client import Client, ClientLocal
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
@@ -217,6 +217,8 @@ async def test_add_device(
         )
         == 18
     )
+    await central.add_new_devices("NOT_ANINTERFACE_ID", dev_desc)
+    assert len(central._devices) == 2
 
 
 @pytest.mark.asyncio
@@ -266,10 +268,10 @@ async def test_delete_device(
 
 
 @pytest.mark.asyncio
-async def test_device_delete_virtual_remotes(
+async def test_virtual_remote_delete(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test device un ignore."""
+    """Test device delete."""
     assert central_local_factory
     central, mock_client = await central_local_factory.get_default_central(
         {
@@ -278,27 +280,214 @@ async def test_device_delete_virtual_remotes(
             "VCU0000001": "HMW-RCV-50.json",
         },
     )
-    assert central.get_virtual_remotes()
+    assert len(central.get_virtual_remotes()) == 1
+
+    assert central._get_virtual_remote("VCU4264293")
+
+    await central.delete_device(const.LOCAL_INTERFACE_ID, "NOT_A_DEVICE_ID")
 
     assert len(central._devices) == 3
     assert len(central._entities) == 350
-    virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
-    await central.delete_devices(const.LOCAL_INTERFACE_ID, virtual_remotes)
+    await central.delete_devices(const.LOCAL_INTERFACE_ID, ["VCU4264293", "VCU0000057"])
+    assert len(central._devices) == 1
+    assert len(central._entities) == 100
+    await central.delete_device(const.LOCAL_INTERFACE_ID, "VCU0000001")
     assert len(central._devices) == 0
     assert len(central._entities) == 0
-
     assert central.get_virtual_remotes() == []
+
+    await central.delete_device(const.LOCAL_INTERFACE_ID, "NOT_A_DEVICE_ID")
 
 
 @pytest.mark.asyncio
-async def test_central_others(
+async def test_central_not_alive(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test central other methods."""
     assert central_local_factory
-    central, client = await central_local_factory.get_unpatched_default_central({}, do_mock_client=False)
+    central, client = await central_local_factory.get_unpatched_default_central(
+        {}, do_mock_client=False
+    )
     mock_client = get_mock(instance=client, available=False)
 
+    assert central.serial is None
+    assert central.is_alive is True
+
+    mock_client.is_callback_alive.return_value = False
     with patch("hahomematic.client.create_client", return_value=mock_client):
         await central.start()
-        assert central.available is False
+
+    assert central.available is False
+    assert central.serial == "0"
+    assert central.is_alive is False
+
+
+@pytest.mark.asyncio
+async def test_central_callbacks(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central other methods."""
+    assert central_local_factory
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central.fire_interface_event(
+        interface_id="SOME_ID",
+        interface_event_type=HmInterfaceEventType.CALLBACK,
+        available=False,
+    )
+    assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
+        "homematic.interface",
+        {"interface_id": "SOME_ID", "type": "callback", "value": False},
+    )
+
+
+@pytest.mark.asyncio
+async def test_central_services(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central fetch sysvar and programs."""
+    assert central_local_factory
+    central, mock_client = await central_local_factory.get_default_central(
+        TEST_DEVICES, add_programs=True, add_sysvars=True
+    )
+
+    await central.fetch_program_data()
+    assert mock_client.method_calls[-1] == call.get_all_programs(include_internal=False)
+
+    await central.fetch_sysvar_data()
+    assert mock_client.method_calls[-1] == call.get_all_system_variables(
+        include_internal=True
+    )
+
+    assert len(mock_client.method_calls) == 41
+    await central.refresh_entity_data(paramset_key="MASTER")
+    assert len(mock_client.method_calls) == 41
+    await central.refresh_entity_data(paramset_key="VALUES")
+    assert len(mock_client.method_calls) == 73
+
+    await central.get_system_variable(name="SysVar_Name")
+    assert mock_client.method_calls[-1] == call.get_system_variable("SysVar_Name")
+
+    assert len(mock_client.method_calls) == 74
+    await central.set_system_variable(name="sv_alarm", value=True)
+    assert mock_client.method_calls[-1] == call.set_system_variable(
+        name="sv_alarm", value=True
+    )
+    assert len(mock_client.method_calls) == 75
+    await central.set_system_variable(name="SysVar_Name", value=True)
+    assert len(mock_client.method_calls) == 75
+
+    await central.set_install_mode(interface_id=const.LOCAL_INTERFACE_ID)
+    assert mock_client.method_calls[-1] == call.set_install_mode(
+        on=True, t=60, mode=1, device_address=None
+    )
+    assert len(mock_client.method_calls) == 76
+    await central.set_install_mode(interface_id="NOT_A_VALID_INTERFACE_ID")
+    assert len(mock_client.method_calls) == 76
+
+    await central.set_value(
+        interface_id=const.LOCAL_INTERFACE_ID,
+        channel_address="123",
+        parameter="LEVEL",
+        value=1.0,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="123",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=1.0,
+        rx_mode=None,
+    )
+    assert len(mock_client.method_calls) == 77
+    await central.set_value(
+        interface_id="NOT_A_VALID_INTERFACE_ID",
+        channel_address="123",
+        parameter="LEVEL",
+        value=1.0,
+    )
+    assert len(mock_client.method_calls) == 77
+
+    await central.put_paramset(
+        interface_id=const.LOCAL_INTERFACE_ID,
+        address="123",
+        paramset_key="VALUES",
+        value={"LEVEL": 1.0},
+    )
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="123", paramset_key="VALUES", value={"LEVEL": 1.0}, rx_mode=None
+    )
+    assert len(mock_client.method_calls) == 78
+    await central.put_paramset(
+        interface_id="NOT_A_VALID_INTERFACE_ID",
+        address="123",
+        paramset_key="VALUES",
+        value={"LEVEL": 1.0},
+    )
+    assert len(mock_client.method_calls) == 78
+
+    assert (
+        central.get_generic_entity(
+            channel_address="VCU6354483:0", parameter="DUTY_CYCLE"
+        ).parameter
+        == "DUTY_CYCLE"
+    )
+    assert (
+        central.get_generic_entity(channel_address="VCU6354483", parameter="DUTY_CYCLE")
+        is None
+    )
+
+
+@pytest.mark.asyncio
+async def test_central_direct(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central other methods."""
+    assert central_local_factory
+    central, client = await central_local_factory.get_unpatched_default_central(
+        TEST_DEVICES, do_mock_client=False
+    )
+    mock_client = get_mock(instance=client, available=False)
+
+    assert central.serial is None
+    assert central.is_alive is True
+
+    with patch("hahomematic.client.create_client", return_value=mock_client):
+        await central.start_direct()
+    await central._create_clients() is False
+
+    assert central.available is False
+    assert central.serial == "0"
+    assert len(central._devices) == 2
+    assert len(central._entities) == 49
+    await central.stop()
+
+
+@pytest.mark.asyncio
+async def test_central_without_interface_config(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central other methods."""
+    assert central_local_factory
+    central = await central_local_factory.get_raw_central(interface_config=None)
+    assert central.has_clients is False
+
+    with pytest.raises(NoClients):
+        await central.validate_config_and_get_serial()
+
+    with pytest.raises(HaHomematicException):
+        central.get_client("NOT_A_VALID_INTERFACE_ID")
+
+    with pytest.raises(Exception):
+        await central._create_devices()
+
+    await central.start_direct()
+    assert central.has_clients is False
+
+    assert central.available is True
+    assert central.serial is None
+    assert len(central._devices) == 0
+    assert len(central._entities) == 0
+
+    assert await central.get_system_variable(name="SysVar_Name") is None
+    assert central._get_virtual_remote("VCU4264293") is None
+
+    await central.stop()

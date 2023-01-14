@@ -351,7 +351,8 @@ class CentralUnit:
                         client.interface_id,
                         self._attr_name,
                     )
-                    self._clients[client.interface_id] = client
+                    if client:
+                        self._clients[client.interface_id] = client
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
@@ -586,13 +587,7 @@ class CentralUnit:
         )
 
         new_devices = set[HmDevice]()
-        for interface_id, client in self._clients.items():
-            if not client:
-                _LOGGER.debug(
-                    "create_devices: Skipping interface %s, missing client.",
-                    interface_id,
-                )
-                continue
+        for interface_id in self._clients:
             if not self.paramset_descriptions.get_by_interface(
                 interface_id=interface_id
             ):
@@ -683,11 +678,8 @@ class CentralUnit:
             str(addresses),
         )
         for address in addresses:
-            try:
-                if device := self._devices.get(address):
-                    await self.remove_device(device=device)
-            except KeyError:
-                _LOGGER.warning("delete_devices failed: Unable to delete: %s", address)
+            if device := self._devices.get(address):
+                await self.remove_device(device=device)
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
