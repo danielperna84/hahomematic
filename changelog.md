@@ -1,4 +1,4 @@
-# Version 2023.1.4 (2023-01-XX)
+# Version 2023.1.4 (2023-01-15)
 - Remove obsolete parse_ccu_sys_var
 - Add helper, central tests
 
