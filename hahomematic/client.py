@@ -1086,10 +1086,8 @@ class ClientLocal(Client):
         """
         Load all json files from disk into dict.
         """
-        # if not check_or_create_directory(folder):
-        #    return None
         if not include_list:
-            include_list = []
+            return []
         if not exclude_list:
             exclude_list = []
         result: list[Any] = []

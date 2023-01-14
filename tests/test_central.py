@@ -217,6 +217,8 @@ async def test_add_device(
         )
         == 18
     )
+    await central.add_new_devices("NOT_ANINTERFACE_ID", dev_desc)
+    assert len(central._devices) == 2
 
 
 @pytest.mark.asyncio
@@ -278,16 +280,21 @@ async def test_device_delete_virtual_remotes(
             "VCU0000001": "HMW-RCV-50.json",
         },
     )
-    assert central.get_virtual_remotes()
+    assert len(central.get_virtual_remotes()) == 1
+
+    await central.delete_device(const.LOCAL_INTERFACE_ID, "NOT_A_DEVICE_ID")
 
     assert len(central._devices) == 3
     assert len(central._entities) == 350
-    virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
-    await central.delete_devices(const.LOCAL_INTERFACE_ID, virtual_remotes)
+    await central.delete_devices(const.LOCAL_INTERFACE_ID, ["VCU4264293", "VCU0000057"])
+    assert len(central._devices) == 1
+    assert len(central._entities) == 100
+    await central.delete_device(const.LOCAL_INTERFACE_ID, "VCU0000001")
     assert len(central._devices) == 0
     assert len(central._entities) == 0
-
     assert central.get_virtual_remotes() == []
+
+    await central.delete_device(const.LOCAL_INTERFACE_ID, "NOT_A_DEVICE_ID")
 
 
 @pytest.mark.asyncio
@@ -299,6 +306,13 @@ async def test_central_others(
     central, client = await central_local_factory.get_unpatched_default_central({}, do_mock_client=False)
     mock_client = get_mock(instance=client, available=False)
 
+    assert central.serial is None
+    assert central.is_alive is True
+
+    mock_client.is_callback_alive.return_value = False
     with patch("hahomematic.client.create_client", return_value=mock_client):
         await central.start()
-        assert central.available is False
+
+    assert central.available is False
+    assert central.serial == "0"
+    assert central.is_alive is False

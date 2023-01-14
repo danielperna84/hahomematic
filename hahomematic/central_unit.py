@@ -683,11 +683,8 @@ class CentralUnit:
             str(addresses),
         )
         for address in addresses:
-            try:
-                if device := self._devices.get(address):
-                    await self.remove_device(device=device)
-            except KeyError:
-                _LOGGER.warning("delete_devices failed: Unable to delete: %s", address)
+            if device := self._devices.get(address):
+                await self.remove_device(device=device)
 
     @callback_system_event(HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
