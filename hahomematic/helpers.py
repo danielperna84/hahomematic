@@ -139,26 +139,8 @@ def to_bool(value: Any) -> bool:
     if not isinstance(value, str):
         raise ValueError("invalid literal for boolean. Not a string.")
 
-    valid: dict[str, bool] = {
-        "y": True,
-        "yes": True,
-        "t": True,
-        "true": True,
-        "on": True,
-        "1": True,
-        "n": False,
-        "no": False,
-        "f": False,
-        "false": False,
-        "off": False,
-        "0": False,
-    }
-
     lower_value = value.lower()
-    if lower_value in valid:
-        return valid[lower_value]
-
-    raise ValueError(f"invalid literal for boolean: {value}.")
+    return lower_value in ["y", "yes",  "t", "true",  "on",  "1"]
 
 
 def get_entity_name(
