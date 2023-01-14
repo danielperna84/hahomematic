@@ -22,7 +22,7 @@ async def test_hmaction(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmAction."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     action: HmAction = cast(
         HmAction,
         await get_generic_entity(central, "VCU9724704:1", "LOCK_TARGET_LEVEL"),

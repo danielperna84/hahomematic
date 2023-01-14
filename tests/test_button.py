@@ -22,7 +22,7 @@ async def test_hmbutton(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmButton."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     button: HmButton = cast(
         HmButton, await get_generic_entity(central, "VCU1437294:1", "RESET_MOTION")
     )
@@ -46,7 +46,7 @@ async def test_hmprogrambutton(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmProgramButton."""
-    central, mock_client = await central_local_factory.get_central(
+    central, mock_client = await central_local_factory.get_default_central(
         {}, add_programs=True
     )
     button: HmProgramButton = cast(

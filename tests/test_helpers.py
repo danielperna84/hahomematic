@@ -56,7 +56,7 @@ async def test_generate_unique_identifier(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test generate_unique_identifier."""
-    central, mock_client = await central_local_factory.get_central({})
+    central, mock_client = await central_local_factory.get_default_central({})
     assert (
         generate_unique_identifier(
             central=central, address="VCU2128127", parameter="LEVEL"
@@ -168,7 +168,7 @@ async def test_get_entity_name(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test get_entity_name."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
     name_data = get_entity_name(
         central=central, device=device, channel_no=4, parameter="LEVEL"
@@ -199,7 +199,7 @@ async def test_get_event_name(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test get_event_name."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
     name_data = get_event_name(
         central=central, device=device, channel_no=4, parameter="LEVEL"
@@ -230,7 +230,7 @@ async def test_custom_entity_name(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test get_custom_entity_name."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
     name_data = get_custom_entity_name(
         central=central,
@@ -293,7 +293,7 @@ async def test_get_device_name(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test get_device_name."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     assert (
         get_device_name(
             central=central, device_address="VCU2128127", device_type="HmIP-BSM"

@@ -22,7 +22,7 @@ async def test_ceipsiren(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeIpSiren."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     siren: CeIpSiren = cast(
         CeIpSiren, await get_custom_entity(central, "VCU8249617", 3)
     )

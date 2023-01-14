@@ -988,7 +988,7 @@ class ClientLocal(Client):
                 package=local_resources.package,
                 resource=local_resources.device_description_dir,
                 include_list=list(local_resources.address_device_translation.values()),
-                exclude_list=local_resources.ignore_device_on_create,
+                exclude_list=local_resources.ignore_devices_on_create,
             ),
         ):
             for device_description in local_device_descriptions:
@@ -1258,7 +1258,7 @@ class LocalRessources:
     """Dataclass with information for local client."""
 
     address_device_translation: dict[str, str]
-    ignore_device_on_create: list[str]
+    ignore_devices_on_create: list[str]
     package: str = "pydevccu"
     device_description_dir: str = "device_descriptions"
     paramset_description_dir: str = "paramset_descriptions"

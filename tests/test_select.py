@@ -22,7 +22,7 @@ async def test_hmselect(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmSelect."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     select: HmSelect = cast(
         HmSelect, await get_generic_entity(central, "VCU6354483:1", "WINDOW_STATE")
     )
@@ -63,7 +63,9 @@ async def test_hmsysvarselect(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmSysvarSelect."""
-    central, mock_client = await central_local_factory.get_central({}, add_sysvars=True)
+    central, mock_client = await central_local_factory.get_default_central(
+        {}, add_sysvars=True
+    )
     select: HmSysvarSelect = cast(
         HmSysvarSelect, await get_sysvar_entity(central, "sv_list_ext")
     )
