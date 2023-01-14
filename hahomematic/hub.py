@@ -8,7 +8,7 @@ from typing import Final
 import hahomematic.central_unit as hmcu
 from hahomematic.const import (
     BACKEND_CCU,
-    HH_EVENT_HUB_CREATED,
+    HH_EVENT_HUB_REFRESHED,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
@@ -92,7 +92,7 @@ class HmHub:
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
-            self._central.callback_system_event(HH_EVENT_HUB_CREATED, new_programs)
+            self._central.callback_system_event(HH_EVENT_HUB_REFRESHED, new_programs)
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
         """Retrieve all variable data and update hmvariable values."""
@@ -143,7 +143,7 @@ class HmHub:
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
-            self._central.callback_system_event(HH_EVENT_HUB_CREATED, new_sysvars)
+            self._central.callback_system_event(HH_EVENT_HUB_REFRESHED, new_sysvars)
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:
         """Create program as entity."""
