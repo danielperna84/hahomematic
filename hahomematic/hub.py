@@ -143,7 +143,6 @@ class HmHub:
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
-            await asyncio.sleep(1)
             self._central.callback_system_event(HH_EVENT_HUB_CREATED, new_sysvars)
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:
