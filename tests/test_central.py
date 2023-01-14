@@ -3,16 +3,17 @@ from __future__ import annotations
 
 from contextlib import suppress
 from typing import cast
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch, Mock
 
 import const
 import helper
-from helper import get_device, get_generic_entity, load_device_description
+from helper import get_device, get_generic_entity, load_device_description, get_mock
 import pytest
 
 from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.switch import HmSwitch
+from hahomematic.client import Client, ClientLocal
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
@@ -289,3 +290,15 @@ async def test_device_delete_virtual_remotes(
     assert central.get_virtual_remotes() == []
 
 
+@pytest.mark.asyncio
+async def test_central_others(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central other methods."""
+    assert central_local_factory
+    central, client = await central_local_factory.get_unpatched_default_central({}, do_mock_client=False)
+    mock_client = get_mock(instance=client, available=False)
+
+    with patch("hahomematic.client.create_client", return_value=mock_client):
+        await central.start()
+        assert central.available is False

@@ -58,12 +58,10 @@ class CentralUnitLocalFactory:
 
         return central
 
-    async def get_default_central(
+    async def get_unpatched_default_central(
         self,
         address_device_translation: dict[str, str],
         do_mock_client: bool = True,
-        add_sysvars: bool = False,
-        add_programs: bool = False,
         ignore_devices_on_create: list[str] | None = None,
         un_ignore_list: list[str] | None = None,
     ) -> tuple[CentralUnit, Client | Mock]:
@@ -82,6 +80,28 @@ class CentralUnitLocalFactory:
             ignore_devices_on_create=ignore_devices_on_create
             if ignore_devices_on_create
             else [],
+        )
+
+        assert central
+        assert client
+        return central, client
+
+    async def get_default_central(
+        self,
+        address_device_translation: dict[str, str],
+        do_mock_client: bool = True,
+        add_sysvars: bool = False,
+        add_programs: bool = False,
+        ignore_devices_on_create: list[str] | None = None,
+        un_ignore_list: list[str] | None = None,
+    ) -> tuple[CentralUnit, Client | Mock]:
+        """Returns a central based on give address_device_translation."""
+
+        central, client = await self.get_unpatched_default_central(
+            address_device_translation=address_device_translation,
+            do_mock_client=do_mock_client,
+            ignore_devices_on_create=ignore_devices_on_create,
+            un_ignore_list=un_ignore_list,
         )
 
         with patch("hahomematic.client.create_client", return_value=client,), patch(
@@ -235,7 +255,7 @@ def load_device_description(central: CentralUnit, filename: str) -> Any:
     return dev_desc
 
 
-def get_mock(instance):
+def get_mock(instance, **kwargs):
     """Create a mock and copy instance attributes over mock."""
     if isinstance(instance, Mock):
         instance.__dict__.update(
@@ -243,7 +263,7 @@ def get_mock(instance):
         )
         return instance
 
-    mock = MagicMock(spec=instance, wraps=instance)
+    mock = MagicMock(spec=instance, wraps=instance, **kwargs)
     mock.__dict__.update(instance.__dict__)
     return mock
 
