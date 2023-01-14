@@ -151,16 +151,17 @@ async def test_to_bool() -> None:
     assert to_bool(value="true") == True
     assert to_bool(value="on") == True
     assert to_bool(value="1") == True
+    assert to_bool(value="") == False
     assert to_bool(value="n") == False
     assert to_bool(value="no") == False
     assert to_bool(value="f") == False
     assert to_bool(value="false") == False
     assert to_bool(value="off") == False
     assert to_bool(value="0") == False
+    assert to_bool(value="blabla") == False
+    assert to_bool(value="2") == False
     with pytest.raises(ValueError):
         to_bool(value=2)
-    with pytest.raises(ValueError):
-        to_bool(value="2")
 
 
 @pytest.mark.asyncio
