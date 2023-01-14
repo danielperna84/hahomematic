@@ -4,6 +4,7 @@ source = hahomematic
 omit =
     hahomematic/__init__.py
     hahomematic/backport.py
+    #hahomematic/client.py
     hahomematic/hmcli.py
     hahomematic/json_rpc_client.py
     hahomematic/xml_rpc_proxy.py
