@@ -117,20 +117,6 @@ def check_or_create_directory(directory: str) -> bool:
     return True
 
 
-def parse_ccu_sys_var(data_type: str | None, raw_value: Any) -> Any:
-    """Helper to parse type of system variables of CCU."""
-    # pylint: disable=no-else-return
-    if not data_type:
-        return raw_value
-    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
-        return raw_value == "true"
-    if data_type == SYSVAR_HM_TYPE_FLOAT:
-        return float(raw_value)
-    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
-        return int(raw_value)
-    return raw_value
-
-
 def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
     """Helper to parse type of system variables."""
     # pylint: disable=no-else-return
@@ -431,9 +417,12 @@ def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
 
 def _get_binary_sensor_value(value: int, value_list: tuple[str, ...]) -> bool:
     """Return, the value of a binary_sensor."""
-    str_value = value_list[value]
-    if true_value := BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST.get(value_list):
-        return str_value == true_value
+    try:
+        str_value = value_list[value]
+        if true_value := BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST.get(value_list):
+            return str_value == true_value
+    except IndexError:
+        pass
     return False
 
 

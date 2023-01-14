@@ -38,7 +38,7 @@ async def test_cesimplerfthermostat(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeSimpleRfThermostat."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     climate: CeSimpleRfThermostat = cast(
         CeSimpleRfThermostat, await get_custom_entity(central, "VCU0000054", 1)
     )
@@ -98,7 +98,7 @@ async def test_cerfthermostat(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeRfThermostat."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     climate: CeRfThermostat = cast(
         CeRfThermostat, await get_custom_entity(central, "VCU0000050", 4)
     )
@@ -208,7 +208,7 @@ async def test_ceipthermostat(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeIpThermostat."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     climate: CeIpThermostat = cast(
         CeIpThermostat, await get_custom_entity(central, "VCU1769958", 1)
     )

@@ -313,9 +313,16 @@ class Client(ABC):
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
 
-    @abstractmethod
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
+        for device_type in HM_VIRTUAL_REMOTE_TYPES:
+            for device in self.central.devices:
+                if (
+                    device.interface_id == self.interface_id
+                    and device.device_type == device_type
+                ):
+                    return device
+        return None
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
@@ -754,17 +761,6 @@ class ClientCCU(Client):
         """Get the serial of the backend."""
         return await self._json_rpc_client.get_serial()
 
-    def get_virtual_remote(self) -> HmDevice | None:
-        """Get the virtual remote for the Client."""
-        for device_type in HM_VIRTUAL_REMOTE_TYPES:
-            for device in self.central.devices:
-                if (
-                    device.interface_id == self.interface_id
-                    and device.device_type == device_type
-                ):
-                    return device
-        return None
-
 
 class ClientHomegear(Client):
     """Client implementation for Homegear backend."""
@@ -878,10 +874,6 @@ class ClientHomegear(Client):
         """Get the serial of the backend."""
         return "Homegear_SN0815"
 
-    def get_virtual_remote(self) -> HmDevice | None:
-        """Get the virtual remote for the Client."""
-        return None
-
 
 class ClientLocal(Client):
     """
@@ -979,10 +971,6 @@ class ClientLocal(Client):
         """Get the serial of the backend."""
         return LOCAL_SERIAL
 
-    def get_virtual_remote(self) -> HmDevice | None:
-        """Get the virtual remote for the Client."""
-        return None
-
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
         local_resources = self.config.interface_config.local_resources
@@ -1000,7 +988,7 @@ class ClientLocal(Client):
                 package=local_resources.package,
                 resource=local_resources.device_description_dir,
                 include_list=list(local_resources.address_device_translation.values()),
-                exclude_list=local_resources.ignore_device_on_create,
+                exclude_list=local_resources.ignore_devices_on_create,
             ),
         ):
             for device_description in local_device_descriptions:
@@ -1270,7 +1258,7 @@ class LocalRessources:
     """Dataclass with information for local client."""
 
     address_device_translation: dict[str, str]
-    ignore_device_on_create: list[str]
+    ignore_devices_on_create: list[str]
     package: str = "pydevccu"
     device_description_dir: str = "device_descriptions"
     paramset_description_dir: str = "paramset_descriptions"

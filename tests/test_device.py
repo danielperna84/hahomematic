@@ -19,7 +19,7 @@ async def test_device_general(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device availability."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
     assert device.device_address == "VCU2128127"
     assert device.name == "HmIP-BSM_VCU2128127"
@@ -45,7 +45,7 @@ async def test_device_availability(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device availability."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU6354483")
     assert device.available is True
     for generic_entity in device.generic_entities.values():
@@ -73,7 +73,7 @@ async def test_device_config_pending(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device availability."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
     assert device._e_config_pending.value is False
     last_save = central.paramset_descriptions.last_save

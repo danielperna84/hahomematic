@@ -13,7 +13,7 @@ import const
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
-from hahomematic.client import InterfaceConfig, LocalRessources, _ClientConfig
+from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity, GenericSystemVariable
 from hahomematic.generic_platforms.button import HmProgramButton
@@ -31,30 +31,12 @@ class CentralUnitLocalFactory:
         self.entity_event_mock = MagicMock()
         self.ha_event_mock = MagicMock()
 
-    async def get_central(
+    async def get_raw_central(
         self,
-        address_device_translation: dict[str, str],
-        add_sysvars: bool = False,
-        add_programs: bool = False,
-        ignore_device_on_create: list[str] | None = None,
+        interface_config: InterfaceConfig,
         un_ignore_list: list[str] | None = None,
-    ) -> tuple[CentralUnit, Mock]:
+    ) -> CentralUnit:
         """Returns a central based on give address_device_translation."""
-        sysvar_data: list[SystemVariableData] = const.SYSVAR_DATA if add_sysvars else []
-        program_data: list[ProgramData] = const.PROGRAM_DATA if add_programs else []
-        _ignore_device_on_create: list[str] = (
-            ignore_device_on_create if ignore_device_on_create else []
-        )
-
-        local_client_config = InterfaceConfig(
-            central_name=const.CENTRAL_NAME,
-            interface="Local",
-            port=2002,
-            local_resources=LocalRessources(
-                address_device_translation=address_device_translation,
-                ignore_device_on_create=_ignore_device_on_create,
-            ),
-        )
 
         central = await CentralConfig(
             name=const.CENTRAL_NAME,
@@ -63,39 +45,101 @@ class CentralUnitLocalFactory:
             password=const.CCU_PASSWORD,
             central_id="test1234",
             storage_folder="homematicip_local",
-            interface_configs={local_client_config},
+            interface_configs={interface_config},
             default_callback_port=54321,
             client_session=self._client_session,
             load_un_ignore=un_ignore_list is not None,
             un_ignore_list=un_ignore_list,
         ).get_central()
 
-        mock_client = get_mock(
-            await _ClientConfig(
-                central=central,
-                interface_config=local_client_config,
-                local_ip="127.0.0.1",
-            ).get_client()
-        )
-
-        with patch(
-            "hahomematic.client.create_client",
-            return_value=mock_client,
-        ), patch(
-            "hahomematic.client.ClientLocal.get_all_system_variables",
-            return_value=sysvar_data,
-        ), patch(
-            "hahomematic.client.ClientLocal.get_all_programs",
-            return_value=program_data,
-        ):
-            await central.start()
-
         central.callback_system_event = self.system_event_mock
         central.callback_entity_event = self.entity_event_mock
         central.callback_ha_event = self.ha_event_mock
+
+        return central
+
+    async def get_default_central(
+        self,
+        address_device_translation: dict[str, str],
+        do_mock_client: bool = True,
+        add_sysvars: bool = False,
+        add_programs: bool = False,
+        ignore_devices_on_create: list[str] | None = None,
+        un_ignore_list: list[str] | None = None,
+    ) -> tuple[CentralUnit, Client | Mock]:
+        """Returns a central based on give address_device_translation."""
+        interface_config = get_local_client_interface_config(
+            address_device_translation=address_device_translation,
+            ignore_devices_on_create=ignore_devices_on_create,
+        )
+        central = await self.get_raw_central(
+            interface_config=interface_config, un_ignore_list=un_ignore_list
+        )
+        client = await get_client(
+            central=central,
+            interface_config=interface_config,
+            do_mock_client=do_mock_client,
+            ignore_devices_on_create=ignore_devices_on_create
+            if ignore_devices_on_create
+            else [],
+        )
+
+        with patch("hahomematic.client.create_client", return_value=client,), patch(
+            "hahomematic.client.ClientLocal.get_all_system_variables",
+            return_value=const.SYSVAR_DATA if add_sysvars else [],
+        ), patch(
+            "hahomematic.client.ClientLocal.get_all_programs",
+            return_value=const.PROGRAM_DATA if add_programs else [],
+        ):
+            await central.start()
+
         assert central
-        assert mock_client
-        return central, mock_client
+        assert client
+        return central, client
+
+
+def get_local_client_interface_config(
+    address_device_translation: dict[str, str],
+    ignore_devices_on_create: list[str] | None = None,
+) -> InterfaceConfig:
+    """Returns a central based on give address_device_translation."""
+    _ignore_devices_on_create: list[str] = (
+        ignore_devices_on_create if ignore_devices_on_create else []
+    )
+
+    return InterfaceConfig(
+        central_name=const.CENTRAL_NAME,
+        interface="Local",
+        port=2002,
+        local_resources=LocalRessources(
+            address_device_translation=address_device_translation,
+            ignore_devices_on_create=_ignore_devices_on_create,
+        ),
+    )
+
+
+async def get_client(
+    central: CentralUnit,
+    interface_config: InterfaceConfig,
+    do_mock_client: bool = True,
+    ignore_devices_on_create: list[str] | None = None,
+) -> Client | Mock:
+    """Returns a central based on give address_device_translation."""
+
+    _ignore_devices_on_create: list[str] = (
+        ignore_devices_on_create if ignore_devices_on_create else []
+    )
+
+    _client = await _ClientConfig(
+        central=central,
+        interface_config=interface_config,
+        local_ip="127.0.0.1",
+    ).get_client()
+    _mock_client = get_mock(_client)
+    client = _mock_client if do_mock_client else _client
+
+    assert client
+    return client
 
 
 async def get_value_from_generic_entity(

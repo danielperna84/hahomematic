@@ -1,4 +1,8 @@
-# Version 2023.1.3 (2023-01-12)
+# Version 2023.1.4 (2023-01-XX)
+- Remove obsolete parse_ccu_sys_var
+- Add helper, central tests
+
+# Version 2023.1.3 (2023-01-13)
 - Unifiy event parameters
 - Refactor entity.py for better event support
 - Fix wrong warning after set_system_variable

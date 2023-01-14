@@ -3,13 +3,14 @@ from __future__ import annotations
 
 from contextlib import suppress
 from typing import cast
+from unittest.mock import patch
 
 import const
 import helper
 from helper import get_device, get_generic_entity, load_device_description
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.switch import HmSwitch
 
@@ -24,7 +25,7 @@ async def test_central_basics(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test central basics."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
 
     assert central.central_url == "http://127.0.0.1"
     assert central.is_alive is True
@@ -43,7 +44,7 @@ async def test_device_export(
 ) -> None:
     """Test device export."""
     assert central_local_factory
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU6354483")
     await device.export_device_definition()
 
@@ -54,7 +55,7 @@ async def test_device_unignore(
 ) -> None:
     """Test device un ignore."""
     assert central_local_factory
-    central1, mock_client1 = await central_local_factory.get_central(
+    central1, mock_client1 = await central_local_factory.get_default_central(
         {"VCU3609622": "HmIP-eTRV-2.json"},
     )
     assert (
@@ -80,7 +81,7 @@ async def test_device_unignore(
         )
     assert switch1 is None
 
-    central2, mock_client2 = await central_local_factory.get_central(
+    central2, mock_client2 = await central_local_factory.get_default_central(
         {"VCU3609622": "HmIP-eTRV-2.json"},
         un_ignore_list=[
             "LEVEL",  # parameter exists, but hidden
@@ -118,10 +119,55 @@ async def test_all_parameters(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device export."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     parameters = central.paramset_descriptions.get_all_readable_parameters()
     assert parameters
     assert len(parameters) == 43
+
+
+@pytest.mark.asyncio
+async def test_entities_by_platform(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test device export."""
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    ebp_sensor = central.get_entities_by_platform(platform=HmPlatform.SENSOR)
+    assert ebp_sensor
+    assert len(ebp_sensor) == 12
+    ebp_sensor2 = central.get_entities_by_platform(
+        platform=HmPlatform.SENSOR,
+        existing_unique_ids=["vcu6354483_1_actual_temperature"],
+    )
+    assert ebp_sensor2
+    assert len(ebp_sensor2) == 11
+
+
+@pytest.mark.asyncio
+async def test_hub_entities_by_platform(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test device export."""
+    central, mock_client = await central_local_factory.get_default_central(
+        {}, add_programs=True, add_sysvars=True
+    )
+    ebp_sensor = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_SENSOR)
+    assert ebp_sensor
+    assert len(ebp_sensor) == 4
+    ebp_sensor2 = central.get_hub_entities_by_platform(
+        platform=HmPlatform.HUB_SENSOR,
+        existing_unique_ids=["test1234_sysvar_sv-string"],
+    )
+    assert ebp_sensor2
+    assert len(ebp_sensor2) == 3
+
+    ebp_sensor3 = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_BUTTON)
+    assert ebp_sensor3
+    assert len(ebp_sensor3) == 2
+    ebp_sensor4 = central.get_hub_entities_by_platform(
+        platform=HmPlatform.HUB_BUTTON, existing_unique_ids=["test1234_program_p-2"]
+    )
+    assert ebp_sensor4
+    assert len(ebp_sensor4) == 1
 
 
 @pytest.mark.asyncio
@@ -129,8 +175,8 @@ async def test_add_device(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device export."""
-    central, mock_client = await central_local_factory.get_central(
-        TEST_DEVICES, ignore_device_on_create=["HmIP-BSM.json"]
+    central, mock_client = await central_local_factory.get_default_central(
+        TEST_DEVICES, ignore_devices_on_create=["HmIP-BSM.json"]
     )
     assert len(central._devices) == 1
     assert len(central._entities) == 23
@@ -177,7 +223,7 @@ async def test_delete_device(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device export."""
-    central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     assert len(central._devices) == 2
     assert len(central._entities) == 49
     assert (
@@ -224,16 +270,22 @@ async def test_device_delete_virtual_remotes(
 ) -> None:
     """Test device un ignore."""
     assert central_local_factory
-    central, mock_client = await central_local_factory.get_central(
+    central, mock_client = await central_local_factory.get_default_central(
         {
             "VCU4264293": "HmIP-RCV-50.json",
             "VCU0000057": "HM-RCV-50.json",
             "VCU0000001": "HMW-RCV-50.json",
         },
     )
+    assert central.get_virtual_remotes()
+
     assert len(central._devices) == 3
     assert len(central._entities) == 350
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
     await central.delete_devices(const.LOCAL_INTERFACE_ID, virtual_remotes)
     assert len(central._devices) == 0
     assert len(central._entities) == 0
+
+    assert central.get_virtual_remotes() == []
+
+

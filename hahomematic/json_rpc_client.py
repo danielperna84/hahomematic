@@ -54,7 +54,7 @@ from hahomematic.helpers import (
     ProgramData,
     SystemVariableData,
     get_tls_context,
-    parse_ccu_sys_var,
+    parse_sys_var,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -504,17 +504,15 @@ class JsonRpcAioHttpClient:
                     if val_list := var.get(SYSVAR_VALUE_LIST):
                         value_list = val_list.split(";")
                     try:
-                        value = parse_ccu_sys_var(
-                            data_type=data_type, raw_value=raw_value
-                        )
+                        value = parse_sys_var(data_type=data_type, raw_value=raw_value)
                         max_value = None
                         if raw_max_value := var.get(SYSVAR_MAX_VALUE):
-                            max_value = parse_ccu_sys_var(
+                            max_value = parse_sys_var(
                                 data_type=data_type, raw_value=raw_max_value
                             )
                         min_value = None
                         if raw_min_value := var.get(SYSVAR_MIN_VALUE):
-                            min_value = parse_ccu_sys_var(
+                            min_value = parse_sys_var(
                                 data_type=data_type, raw_value=raw_min_value
                             )
                         variables.append(
