@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import helper
 from helper import get_device
@@ -22,10 +23,12 @@ from hahomematic.const import (
     TYPE_STRING,
     HmEntityUsage,
 )
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.helpers import (
     _check_channel_name_with_channel_no,
     build_headers,
     build_xml_rpc_uri,
+    check_or_create_directory,
     convert_value,
     element_matches_key,
     find_free_port,
@@ -104,6 +107,26 @@ async def test_build_headers() -> None:
 @pytest.mark.asyncio
 async def test_check_or_create_directory() -> None:
     """Test check_or_create_directory."""
+    assert check_or_create_directory(directory="") is False
+    with patch(
+        "os.path.exists",
+        return_value=True,
+    ):
+        assert check_or_create_directory(directory="tmpdir_1") is True
+
+    with patch("os.path.exists", return_value=False,), patch(
+        "os.makedirs",
+        return_value=None,
+    ):
+        assert check_or_create_directory(directory="tmpdir_1") is True
+
+    with patch(
+        "os.path.exists",
+        return_value=False,
+    ), patch("os.makedirs", side_effect=OSError("bla bla")):
+        with pytest.raises(HaHomematicException) as exc:
+            check_or_create_directory(directory="tmpdir_ex")
+        assert exc
 
 
 @pytest.mark.asyncio
@@ -147,31 +170,28 @@ async def test_get_entity_name(
     """Test get_entity_name."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
-    assert (
-        get_entity_name(
-            central=central, device=device, channel_no=4, parameter="LEVEL"
-        ).full_name
-        == "HmIP-BSM_VCU2128127 Level"
+    name_data = get_entity_name(
+        central=central, device=device, channel_no=4, parameter="LEVEL"
     )
-    assert (
-        get_entity_name(
-            central=central, device=device, channel_no=4, parameter="LEVEL"
-        ).entity_name
-        == "Level"
-    )
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
+    assert name_data.entity_name == "Level"
+
     central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
-    assert (
-        get_entity_name(
-            central=central, device=device, channel_no=5, parameter="LEVEL"
-        ).full_name
-        == "HmIP-BSM_VCU2128127 Roof Level"
+    name_data = get_entity_name(
+        central=central, device=device, channel_no=5, parameter="LEVEL"
     )
-    assert (
-        get_entity_name(
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
+    assert name_data.entity_name == "Roof Level"
+
+    with patch(
+        "hahomematic.helpers._get_base_name_from_channel_or_device",
+        return_value=None,
+    ):
+        name_data = get_entity_name(
             central=central, device=device, channel_no=5, parameter="LEVEL"
-        ).entity_name
-        == "Roof Level"
-    )
+        )
+        assert name_data.full_name == ""
+        assert name_data.entity_name is None
 
 
 @pytest.mark.asyncio
@@ -181,31 +201,28 @@ async def test_get_event_name(
     """Test get_event_name."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
-    assert (
-        get_event_name(
-            central=central, device=device, channel_no=4, parameter="LEVEL"
-        ).full_name
-        == "HmIP-BSM_VCU2128127 Channel 4 Level"
+    name_data = get_event_name(
+        central=central, device=device, channel_no=4, parameter="LEVEL"
     )
-    assert (
-        get_event_name(
-            central=central, device=device, channel_no=4, parameter="LEVEL"
-        ).entity_name
-        == "Channel 4 Level"
-    )
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 Channel 4 Level"
+    assert name_data.entity_name == "Channel 4 Level"
+
     central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
-    assert (
-        get_event_name(
-            central=central, device=device, channel_no=5, parameter="LEVEL"
-        ).full_name
-        == "HmIP-BSM_VCU2128127 Roof Level"
+    name_data = get_event_name(
+        central=central, device=device, channel_no=5, parameter="LEVEL"
     )
-    assert (
-        get_event_name(
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
+    assert name_data.entity_name == "Roof Level"
+
+    with patch(
+        "hahomematic.helpers._get_base_name_from_channel_or_device",
+        return_value=None,
+    ):
+        name_data = get_event_name(
             central=central, device=device, channel_no=5, parameter="LEVEL"
-        ).entity_name
-        == "Roof Level"
-    )
+        )
+        assert name_data.full_name == ""
+        assert name_data.entity_name is None
 
 
 @pytest.mark.asyncio
@@ -215,87 +232,60 @@ async def test_custom_entity_name(
     """Test get_custom_entity_name."""
     central, mock_client = await central_local_factory.get_central(TEST_DEVICES)
     device = get_device(central_unit=central, address="VCU2128127")
-    assert (
-        get_custom_entity_name(
-            central=central,
-            device=device,
-            channel_no=4,
-            is_only_primary_channel=True,
-            usage=HmEntityUsage.CE_PRIMARY,
-        ).full_name
-        == "HmIP-BSM_VCU2128127"
+    name_data = get_custom_entity_name(
+        central=central,
+        device=device,
+        channel_no=4,
+        is_only_primary_channel=True,
+        usage=HmEntityUsage.CE_PRIMARY,
     )
-    assert (
-        get_custom_entity_name(
-            central=central,
-            device=device,
-            channel_no=4,
-            is_only_primary_channel=True,
-            usage=HmEntityUsage.CE_PRIMARY,
-        ).entity_name
-        == ""
+    assert name_data.full_name == "HmIP-BSM_VCU2128127"
+    assert name_data.entity_name == ""
+
+    name_data = get_custom_entity_name(
+        central=central,
+        device=device,
+        channel_no=4,
+        is_only_primary_channel=False,
+        usage=HmEntityUsage.CE_SECONDARY,
     )
-    assert (
-        get_custom_entity_name(
-            central=central,
-            device=device,
-            channel_no=4,
-            is_only_primary_channel=False,
-            usage=HmEntityUsage.CE_SECONDARY,
-        ).full_name
-        == "HmIP-BSM_VCU2128127 vch4"
-    )
-    assert (
-        get_custom_entity_name(
-            central=central,
-            device=device,
-            channel_no=4,
-            is_only_primary_channel=False,
-            usage=HmEntityUsage.CE_SECONDARY,
-        ).entity_name
-        == "vch4"
-    )
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 vch4"
+    assert name_data.entity_name == "vch4"
+
     central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
-    assert (
-        get_custom_entity_name(
-            central=central,
-            device=device,
-            channel_no=5,
-            is_only_primary_channel=True,
-            usage=HmEntityUsage.CE_PRIMARY,
-        ).full_name
-        == "HmIP-BSM_VCU2128127 Roof"
+    name_data = get_custom_entity_name(
+        central=central,
+        device=device,
+        channel_no=5,
+        is_only_primary_channel=True,
+        usage=HmEntityUsage.CE_PRIMARY,
     )
-    assert (
-        get_custom_entity_name(
-            central=central,
-            device=device,
-            channel_no=5,
-            is_only_primary_channel=True,
-            usage=HmEntityUsage.CE_PRIMARY,
-        ).entity_name
-        == "Roof"
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof"
+    assert name_data.entity_name == "Roof"
+
+    name_data = get_custom_entity_name(
+        central=central,
+        device=device,
+        channel_no=5,
+        is_only_primary_channel=False,
+        usage=HmEntityUsage.CE_SECONDARY,
     )
-    assert (
-        get_custom_entity_name(
-            central=central,
-            device=device,
-            channel_no=5,
-            is_only_primary_channel=False,
-            usage=HmEntityUsage.CE_SECONDARY,
-        ).full_name
-        == "HmIP-BSM_VCU2128127 Roof"
-    )
-    assert (
-        get_custom_entity_name(
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof"
+    assert name_data.entity_name == "Roof"
+
+    with patch(
+        "hahomematic.helpers._get_base_name_from_channel_or_device",
+        return_value=None,
+    ):
+        name_data = get_custom_entity_name(
             central=central,
             device=device,
             channel_no=5,
             is_only_primary_channel=False,
             usage=HmEntityUsage.CE_SECONDARY,
-        ).entity_name
-        == "Roof"
-    )
+        )
+        assert name_data.full_name == ""
+        assert name_data.entity_name is None
 
 
 @pytest.mark.asyncio
