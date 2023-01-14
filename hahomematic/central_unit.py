@@ -351,7 +351,8 @@ class CentralUnit:
                         client.interface_id,
                         self._attr_name,
                     )
-                    self._clients[client.interface_id] = client
+                    if client:
+                        self._clients[client.interface_id] = client
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
@@ -587,12 +588,6 @@ class CentralUnit:
 
         new_devices = set[HmDevice]()
         for interface_id, client in self._clients.items():
-            if not client:
-                _LOGGER.debug(
-                    "create_devices: Skipping interface %s, missing client.",
-                    interface_id,
-                )
-                continue
             if not self.paramset_descriptions.get_by_interface(
                 interface_id=interface_id
             ):

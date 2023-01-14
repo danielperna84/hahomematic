@@ -140,7 +140,7 @@ def to_bool(value: Any) -> bool:
         raise ValueError("invalid literal for boolean. Not a string.")
 
     lower_value = value.lower()
-    return lower_value in ["y", "yes",  "t", "true",  "on",  "1"]
+    return lower_value in ["y", "yes", "t", "true", "on", "1"]
 
 
 def get_entity_name(
