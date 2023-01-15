@@ -183,7 +183,7 @@ async def test_add_device(
     assert len(central._entities) == 23
     assert (
         len(
-            central.device_descriptions._raw_device_descriptions_persistant_cache.get(
+            central.device_descriptions._raw_device_descriptions.get(
                 const.LOCAL_INTERFACE_ID
             )
         )
@@ -191,7 +191,7 @@ async def test_add_device(
     )
     assert (
         len(
-            central.paramset_descriptions._raw_paramset_descriptions_persistant_cache.get(
+            central.paramset_descriptions._raw_paramset_descriptions.get(
                 const.LOCAL_INTERFACE_ID
             )
         )
@@ -203,7 +203,7 @@ async def test_add_device(
     assert len(central._entities) == 49
     assert (
         len(
-            central.device_descriptions._raw_device_descriptions_persistant_cache.get(
+            central.device_descriptions._raw_device_descriptions.get(
                 const.LOCAL_INTERFACE_ID
             )
         )
@@ -211,7 +211,7 @@ async def test_add_device(
     )
     assert (
         len(
-            central.paramset_descriptions._raw_paramset_descriptions_persistant_cache.get(
+            central.paramset_descriptions._raw_paramset_descriptions.get(
                 const.LOCAL_INTERFACE_ID
             )
         )
@@ -231,7 +231,7 @@ async def test_delete_device(
     assert len(central._entities) == 49
     assert (
         len(
-            central.device_descriptions._raw_device_descriptions_persistant_cache.get(
+            central.device_descriptions._raw_device_descriptions.get(
                 const.LOCAL_INTERFACE_ID
             )
         )
@@ -239,7 +239,7 @@ async def test_delete_device(
     )
     assert (
         len(
-            central.paramset_descriptions._raw_paramset_descriptions_persistant_cache.get(
+            central.paramset_descriptions._raw_paramset_descriptions.get(
                 const.LOCAL_INTERFACE_ID
             )
         )
@@ -251,7 +251,7 @@ async def test_delete_device(
     assert len(central._entities) == 23
     assert (
         len(
-            central.device_descriptions._raw_device_descriptions_persistant_cache.get(
+            central.device_descriptions._raw_device_descriptions.get(
                 const.LOCAL_INTERFACE_ID
             )
         )
@@ -259,7 +259,7 @@ async def test_delete_device(
     )
     assert (
         len(
-            central.paramset_descriptions._raw_paramset_descriptions_persistant_cache.get(
+            central.paramset_descriptions._raw_paramset_descriptions.get(
                 const.LOCAL_INTERFACE_ID
             )
         )

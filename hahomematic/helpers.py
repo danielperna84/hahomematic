@@ -343,7 +343,7 @@ def get_device_address(address: str) -> str:
 def get_device_channel(address: str) -> int:
     """Return the channel part of an address"""
     if ":" not in address:
-        raise Exception("Address has no channel part.")
+        raise HaHomematicException("Address has no channel part.")
     return int(address.split(":")[1])
 
 

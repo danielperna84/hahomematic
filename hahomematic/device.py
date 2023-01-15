@@ -362,7 +362,7 @@ class HmDevice:
         for (
             paramset_key,
             channel_addresses,
-        ) in self.central.paramset_descriptions.get_device_channels_by_paramset(
+        ) in self.central.paramset_descriptions.get_channel_addresses_by_paramset_key(
             interface_id=self._attr_interface_id,
             device_address=self._attr_device_address,
         ).items():
@@ -400,7 +400,7 @@ class HmDevice:
                 )
                 continue
 
-            if not self.central.paramset_descriptions.get_by_interface_channel_address(
+            if not self.central.paramset_descriptions.get_paramset_keys(  # noqa: E501
                 interface_id=self._attr_interface_id, channel_address=channel_address
             ):
                 _LOGGER.debug(
@@ -408,9 +408,7 @@ class HmDevice:
                     channel_address,
                 )
                 continue
-            for (
-                paramset_key
-            ) in self.central.paramset_descriptions.get_by_interface_channel_address(
+            for paramset_key in self.central.paramset_descriptions.get_paramset_keys(
                 interface_id=self._attr_interface_id, channel_address=channel_address
             ):
                 if not self.central.parameter_visibility.is_relevant_paramset(
@@ -422,7 +420,7 @@ class HmDevice:
                 for (
                     parameter,
                     parameter_data,
-                ) in self.central.paramset_descriptions.get_by_interface_channel_address_paramset_key(  # noqa: E501
+                ) in self.central.paramset_descriptions.get_paramset_descriptions(  # noqa: E501
                     interface_id=self._attr_interface_id,
                     channel_address=channel_address,
                     paramset_key=paramset_key,
