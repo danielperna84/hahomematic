@@ -456,7 +456,7 @@ def _convert_color(color: tuple[float, float] | None) -> str:
         bsl_color = "WHITE"
     elif 30 < hue <= 90:
         bsl_color = "YELLOW"
-    elif 90 < hue <= 160:
+    elif 90 < hue <= 150:
         bsl_color = "GREEN"
     elif 150 < hue <= 210:
         bsl_color = "TURQUOISE"
