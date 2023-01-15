@@ -48,12 +48,7 @@ from hahomematic.const import (
     HmInterfaceEventType,
 )
 from hahomematic.device import HmDevice
-from hahomematic.exceptions import (
-    AuthFailure,
-    BaseHomematicException,
-    HaHomematicException,
-    NoConnection,
-)
+from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
 from hahomematic.helpers import (
     ProgramData,
     SystemVariableData,
@@ -119,7 +114,7 @@ class Client(ABC):
             )
             _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
         except BaseHomematicException as hhe:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "proxy_init failed: %s [%s] Unable to initialize proxy for %s",
                 hhe.name,
                 hhe.args,
@@ -144,7 +139,7 @@ class Client(ABC):
             _LOGGER.debug("proxy_de_init: init('%s')", self.config.init_url)
             await self._proxy.init(self.config.init_url)
         except BaseHomematicException as hhe:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "proxy_de_init failed: %s [%s] Unable to de-initialize proxy for %s",
                 hhe.name,
                 hhe.args,
@@ -221,7 +216,7 @@ class Client(ABC):
         Connection is not connected, if three consecutive checks fail.
         Return connectivity state.
         """
-        if await self._check_connection_availability() is True:
+        if await self.check_connection_availability() is True:
             self._connection_error_count = 0
         else:
             self._connection_error_count += 1
@@ -268,7 +263,7 @@ class Client(ABC):
         return True
 
     @abstractmethod
-    async def _check_connection_availability(self) -> bool:
+    async def check_connection_availability(self) -> bool:
         """Send ping to CCU to generate PONG event."""
 
     @abstractmethod
@@ -395,7 +390,7 @@ class Client(ABC):
                 parameter,
                 paramset_key,
             )
-            raise HaHomematicException from hhe
+            raise hhe
 
     async def _set_value(
         self,
@@ -466,7 +461,7 @@ class Client(ABC):
                 address,
                 paramset_key,
             )
-            raise HaHomematicException from hhe
+            raise hhe
 
     async def put_paramset(
         self,
@@ -686,14 +681,14 @@ class ClientCCU(Client):
                 "Unable to get all device data via JSON-RPC RegaScript."
             )
 
-    async def _check_connection_availability(self) -> bool:
+    async def check_connection_availability(self) -> bool:
         """Check if _proxy is still initialized."""
         try:
             await self._proxy.ping(self.interface_id)
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.error("ping failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.debug("ping failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
@@ -801,14 +796,14 @@ class ClientHomegear(Client):
                     address,
                 )
 
-    async def _check_connection_availability(self) -> bool:
+    async def check_connection_availability(self) -> bool:
         """Check if proxy is still initialized."""
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.error("ping failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("ping failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
@@ -928,7 +923,7 @@ class ClientLocal(Client):
         """Return if XmlRPC-Server is alive based on received events for this client."""
         return True
 
-    async def _check_connection_availability(self) -> bool:
+    async def check_connection_availability(self) -> bool:
         """Send ping to CCU to generate PONG event."""
         return True
 
@@ -1162,7 +1157,8 @@ class _ClientConfig:
         )
         self.xml_rpc_proxy: Final[XmlRpcProxy] = XmlRpcProxy(
             max_workers=1,
-            thread_name_prefix=f"XmlRpcProxy for {self.interface_id}",
+            interface_id=self.interface_id,
+            connection_status=central.config.connection_status,
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
             tls=central.config.tls,
@@ -1170,7 +1166,8 @@ class _ClientConfig:
         )
         self.xml_rpc_proxy_read: Final[XmlRpcProxy] = XmlRpcProxy(
             max_workers=1,
-            thread_name_prefix=f"XmlRpcProxyRead for {self.interface_id}",
+            interface_id=self.interface_id,
+            connection_status=central.config.connection_status,
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
             tls=central.config.tls,
@@ -1187,7 +1184,7 @@ class _ClientConfig:
             if self.interface_config.local_resources:
                 return ClientLocal(client_config=self)
             methods = await self.xml_rpc_proxy.system.listMethods()
-            if "getVersion" not in methods:
+            if methods and "getVersion" not in methods:
                 # BidCos-Wired does not support getVersion()
                 client = ClientCCU(client_config=self)
             elif version := await self.xml_rpc_proxy.getVersion():
@@ -1196,12 +1193,16 @@ class _ClientConfig:
                     client = ClientHomegear(client_config=self)
             if not client:
                 client = ClientCCU(client_config=self)
-            self.serial = await client.get_serial()
-            return client
+            if await client.check_connection_availability():
+                self.serial = await client.get_serial()
+                return client
+            raise NoConnection(f"No connection to {self.interface_id}")
         except AuthFailure as auf:
             raise AuthFailure(f"Unable to authenticate {auf.args}.") from auf
-        except Exception as noc:
-            raise NoConnection(f"Unable to connect {noc.args}.") from noc
+        except NoConnection as noc:
+            raise noc
+        except Exception as exc:
+            raise NoConnection(f"Unable to connect {exc.args}.") from exc
 
 
 class InterfaceConfig:

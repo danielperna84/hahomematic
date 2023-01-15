@@ -1,7 +1,8 @@
-# Version 2023.1.4 (2023-01-15)
+# Version 2023.1.4 (2023-01-16)
 - Remove obsolete parse_ccu_sys_var
 - Add helper, central tests
 - Add more tests and test based refactorings
+- Reduce backend calls and logging during lost connection
 
 # Version 2023.1.3 (2023-01-13)
 - Unifiy event parameters

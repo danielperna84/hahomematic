@@ -85,7 +85,8 @@ from hahomematic.helpers import (
 from hahomematic.hub import HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.parameter_visibility import ParameterVisibilityCache
-import hahomematic.xml_rpc_server as xml_rpc
+from hahomematic.xml_rpc_proxy import XmlRpcProxy
+from hahomematic import xml_rpc_server
 
 _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -108,10 +109,13 @@ class CentralUnit:
         self.config: Final[CentralConfig] = central_config
         self._attr_name: Final[str] = central_config.name
         self._attr_model: str | None = None
+        self._connection_status: Final[
+            CentralConnectionStatus
+        ] = central_config.connection_status
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._xml_rpc_server: xml_rpc.XmlRpcServer | None = None
+        self._xml_rpc_server: xml_rpc_server.XmlRpcServer | None = None
         if central_config.enable_server:
-            self._xml_rpc_server = xml_rpc.register_xml_rpc_server(
+            self._xml_rpc_server = xml_rpc_server.register_xml_rpc_server(
                 local_port=central_config.callback_port
                 or central_config.default_callback_port
             )
@@ -351,20 +355,38 @@ class CentralUnit:
                         client.interface_id,
                         self._attr_name,
                     )
-                    if client:
-                        self._clients[client.interface_id] = client
+                    self._clients[client.interface_id] = client
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
                     interface_event_type=HmInterfaceEventType.PROXY,
                     available=False,
                 )
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "create_clients failed: "
-                    "Unable to create client for central [%s]. Check logs.",
+                    "Unable to create client for central [%s]",
                     ex.args,
                 )
-        return len(self._clients) > 0
+
+        clients_created = len(self._clients)
+        clients_specified = len(self.config.interface_configs)
+
+        if clients_created > 0:
+            if clients_created == clients_specified:
+                _LOGGER.info(
+                    "create_clients: All clients successfully created for %s",
+                    self._attr_name,
+                )
+            else:
+                _LOGGER.warning(
+                    "create_clients: Only %i/%i clients created for %s",
+                    clients_created,
+                    clients_specified,
+                    self._attr_name,
+                )
+            return True
+        _LOGGER.warning("create_clients failed for %s", self._attr_name)
+        return False
 
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
@@ -578,7 +600,7 @@ class CentralUnit:
         """
 
         if not self._clients:
-            raise Exception(
+            raise HaHomematicException(
                 f"create_devices: "
                 f"No clients initialized. Not starting central {self._attr_name}."
             )
@@ -1129,6 +1151,9 @@ class CentralConfig:
         use_caches: bool = True,
         load_un_ignore: bool = True,
     ):
+        self.connection_status: Final[
+            CentralConnectionStatus
+        ] = CentralConnectionStatus()
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
         self.host: Final[str] = host
@@ -1202,6 +1227,42 @@ class CentralConfig:
             tls=self.tls,
             verify_tls=self.verify_tls,
         )
+
+
+class CentralConnectionStatus:
+    """The central connection status"""
+
+    def __init__(self) -> None:
+        """Init the CentralConnectionStatus."""
+        self._xml_proxy_issues: list[str] = []
+
+    @property
+    def outgoing_issue(self) -> bool:
+        """Return if there is an outgoing connection issue."""
+        return len(self._xml_proxy_issues) > 0
+
+    def add_issue(self, issuer: XmlRpcProxy) -> bool:
+        """Add issue to collection."""
+        if isinstance(issuer, XmlRpcProxy):
+            if issuer.interface_id not in self._xml_proxy_issues:
+                self._xml_proxy_issues.append(issuer.interface_id)
+                return True
+
+        return False
+
+    def remove_issue(self, issuer: XmlRpcProxy) -> bool:
+        """Add issue to collection."""
+        if isinstance(issuer, XmlRpcProxy):
+            if issuer.interface_id in self._xml_proxy_issues:
+                self._xml_proxy_issues.remove(issuer.interface_id)
+                return True
+
+        return False
+
+    def has_issue(self, issuer: XmlRpcProxy) -> bool:
+        """Add issue to collection."""
+        if isinstance(issuer, XmlRpcProxy):
+            return issuer.interface_id in self._xml_proxy_issues
 
 
 class DeviceDetailsCache:
@@ -1701,10 +1762,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
     def get_parameter_data(
         self, interface_id: str, channel_address: str, paramset_key: str, parameter: str
     ) -> Any:
-        """
-        Get parameter_data by interface, channel_address, paramset_key,
-        parameter from cache.
-        """
+        """Get parameter_data  from cache."""
         return (
             self._raw_paramset_descriptions.get(interface_id, {})
             .get(channel_address, {})

@@ -206,7 +206,7 @@ class JsonRpcAioHttpClient:
         if not keep_session:
             await self._do_logout(session_id=session_id)
         if (error := response["error"]) is not None:
-            raise HaHomematicException(f"post: error: {error}")
+            raise HaHomematicException(f"_post: error: {error}")
         return response
 
     async def _post_script(
@@ -331,16 +331,16 @@ class JsonRpcAioHttpClient:
                 _LOGGER.warning("_do_post failed: Status: %i", response.status)
                 return {"error": response.status, "result": {}}
         except ClientConnectorError as err:
-            _LOGGER.error("_do_post failed: ClientConnectorError")
+            _LOGGER.error("_do_post failed: ClientConnectorError: %s", err)
             return {"error": str(err), "result": {}}
         except ClientError as cce:
-            _LOGGER.error("_do_post failed: ClientError")
+            _LOGGER.error("_do_post failed: ClientError: %s", cce)
             return {"error": str(cce), "result": {}}
         except TypeError as ter:
-            _LOGGER.error("_do_post failed: TypeError")
+            _LOGGER.error("_do_post failed: TypeError: %s", ter)
             return {"error": str(ter), "result": {}}
         except OSError as oer:
-            _LOGGER.error("_do_post failed: OSError")
+            _LOGGER.error("_do_post failed: OSError: %s", oer)
             return {"error": str(oer), "result": {}}
         except Exception as ex:
             raise HaHomematicException from ex
@@ -528,7 +528,7 @@ class JsonRpcAioHttpClient:
                             )
                         )
                     except ValueError as verr:
-                        _LOGGER.error(
+                        _LOGGER.warning(
                             "get_all_system_variables failed: "
                             "ValueError [%s] Failed to parse SysVar %s ",
                             verr.args,
