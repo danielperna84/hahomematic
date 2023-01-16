@@ -75,7 +75,7 @@ from hahomematic.helpers import (
     updated_within_seconds,
 )
 from hahomematic.parameter_visibility import ALLOWED_INTERNAL_PARAMETERS
-import hahomematic.support as hm_support
+from hahomematic import support
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -297,7 +297,7 @@ class HmDevice:
 
     async def export_device_definition(self) -> None:
         """Export the device definition for current device."""
-        await hm_support.save_device_definition(
+        await support.save_device_definition(
             client=self.client,
             interface_id=self._attr_interface_id,
             device_address=self._attr_device_address,
