@@ -15,7 +15,7 @@ import logging
 import os
 import socket
 import threading
-from typing import Any, Final, TypeVar
+from typing import Any, Final, TypeVar, Union
 
 from aiohttp import ClientSession
 
@@ -93,6 +93,7 @@ T = TypeVar("T")
 
 # {instance_name, central_unit}
 CENTRAL_INSTANCES: dict[str, CentralUnit] = {}
+ConnectionProblemIssuer = Union[XmlRpcProxy | JsonRpcAioHttpClient]
 
 
 class CentralUnit:
@@ -109,9 +110,9 @@ class CentralUnit:
         self.config: Final[CentralConfig] = central_config
         self._attr_name: Final[str] = central_config.name
         self._attr_model: str | None = None
-        self._connection_status: Final[
-            CentralConnectionStatus
-        ] = central_config.connection_status
+        self._connection_state: Final[
+            CentralConnectionState
+        ] = central_config.connection_state
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._xml_rpc_server: xml_rpc_server.XmlRpcServer | None = None
         if central_config.enable_server:
@@ -344,7 +345,7 @@ class CentralUnit:
                         interface_config.interface
                         not in await client.get_available_interfaces()
                     ):
-                        _LOGGER.warning(
+                        _LOGGER.debug(
                             "_create_clients failed: "
                             "Interface: %s is not available for backend.",
                             interface_config.interface,
@@ -368,23 +369,13 @@ class CentralUnit:
                     ex.args,
                 )
 
-        clients_created = len(self._clients)
-        clients_specified = len(self.config.interface_configs)
-
-        if clients_created > 0:
-            if clients_created == clients_specified:
-                _LOGGER.info(
-                    "create_clients: All clients successfully created for %s",
-                    self._attr_name,
-                )
-            else:
-                _LOGGER.warning(
-                    "create_clients: Only %i/%i clients created for %s",
-                    clients_created,
-                    clients_specified,
-                    self._attr_name,
-                )
+        if self.has_clients:
+            _LOGGER.info(
+                "create_clients: All clients successfully created for %s",
+                self._attr_name,
+            )
             return True
+
         _LOGGER.warning("create_clients failed for %s", self._attr_name)
         return False
 
@@ -574,12 +565,12 @@ class CentralUnit:
 
     def has_client(self, interface_id: str) -> bool:
         """Check if client exists in central. #CC"""
-        return self._clients.get(interface_id) is not None
+        return interface_id in self._clients
 
     @property
     def has_clients(self) -> bool:
         """Check if clients exists in central. #CC"""
-        return len(self._clients) > 0
+        return len(self._clients) == len(self.config.interface_configs)
 
     async def _load_caches(self) -> None:
         """Load files to caches."""
@@ -1151,9 +1142,9 @@ class CentralConfig:
         use_caches: bool = True,
         load_un_ignore: bool = True,
     ):
-        self.connection_status: Final[
-            CentralConnectionStatus
-        ] = CentralConnectionStatus()
+        self.connection_state: Final[
+            CentralConnectionState
+        ] = CentralConnectionState()
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
         self.host: Final[str] = host
@@ -1223,17 +1214,19 @@ class CentralConfig:
             username=self.username,
             password=self.password,
             device_url=self.central_url,
+            connection_state=self.connection_state,
             client_session=self.client_session,
             tls=self.tls,
             verify_tls=self.verify_tls,
         )
 
 
-class CentralConnectionStatus:
+class CentralConnectionState:
     """The central connection status"""
 
     def __init__(self) -> None:
         """Init the CentralConnectionStatus."""
+        self._json_issue: bool = False
         self._xml_proxy_issues: list[str] = []
 
     @property
@@ -1241,28 +1234,40 @@ class CentralConnectionStatus:
         """Return if there is an outgoing connection issue."""
         return len(self._xml_proxy_issues) > 0
 
-    def add_issue(self, issuer: XmlRpcProxy) -> bool:
+    def add_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
         if isinstance(issuer, XmlRpcProxy):
             if issuer.interface_id not in self._xml_proxy_issues:
                 self._xml_proxy_issues.append(issuer.interface_id)
                 return True
-
+        if isinstance(issuer, JsonRpcAioHttpClient):
+            if self._json_issue is False:
+                self._json_issue = True
+                return True
         return False
 
-    def remove_issue(self, issuer: XmlRpcProxy) -> bool:
+    def remove_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
         if isinstance(issuer, XmlRpcProxy):
             if issuer.interface_id in self._xml_proxy_issues:
                 self._xml_proxy_issues.remove(issuer.interface_id)
                 return True
-
+            return False
+        if isinstance(issuer, JsonRpcAioHttpClient):
+            if self._json_issue is True:
+                self._json_issue = False
+                return True
+            return False
         return False
 
-    def has_issue(self, issuer: XmlRpcProxy) -> bool:
+    def has_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
         if isinstance(issuer, XmlRpcProxy):
             return issuer.interface_id in self._xml_proxy_issues
+        if isinstance(issuer, JsonRpcAioHttpClient):
+            return self._json_issue
+        return False
+
 
 
 class DeviceDetailsCache:

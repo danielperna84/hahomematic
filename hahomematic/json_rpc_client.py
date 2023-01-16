@@ -56,6 +56,7 @@ from hahomematic.helpers import (
     get_tls_context,
     parse_sys_var,
 )
+import hahomematic.central_unit as hmcu
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,12 +69,14 @@ class JsonRpcAioHttpClient:
         username: str,
         password: str,
         device_url: str,
+        connection_state: hmcu.CentralConnectionState,
         client_session: ClientSession | None = None,
         tls: bool = False,
         verify_tls: bool = False,
     ):
         """Session setup."""
         self._client_session: Final[ClientSession | None] = client_session
+        self._connection_state: Final[hmcu.CentralConnectionState] = connection_state
         self._session_id: str | None = None
         self._last_session_id_refresh: datetime | None = None
         self._username: Final[str] = username
@@ -164,7 +167,7 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("_do_login: Method: %s [%s]", method, session_id)
 
             if not session_id:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "_do_login failed: Unable to open session: %s", response[ATTR_ERROR]
                 )
                 return None
@@ -223,7 +226,7 @@ class JsonRpcAioHttpClient:
             session_id = await self._do_login()
 
         if not session_id:
-            _LOGGER.warning("_post_script failed: Error while logging in via JSON-RPC.")
+            _LOGGER.debug("_post_script failed: Error while logging in via JSON-RPC.")
             return {"error": "Unable to open session.", "result": {}}
 
         if (script := self._get_script(script_name=script_name)) is None:
@@ -316,6 +319,7 @@ class JsonRpcAioHttpClient:
                 )
             if response.status == 200:
                 try:
+                    self._connection_state.remove_issue(issuer=self)
                     return await response.json(encoding="utf-8")
                 except ValueError as ver:
                     _LOGGER.error(
@@ -331,6 +335,7 @@ class JsonRpcAioHttpClient:
                 _LOGGER.warning("_do_post failed: Status: %i", response.status)
                 return {"error": response.status, "result": {}}
         except ClientConnectorError as err:
+            self._connection_state.add_issue(issuer=self)
             _LOGGER.error("_do_post failed: ClientConnectorError: %s", err)
             return {"error": str(err), "result": {}}
         except ClientError as cce:

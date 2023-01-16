@@ -170,7 +170,7 @@ class Client(ABC):
                         forced_availability=forced_availability
                     )
             self._attr_available = available
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "mark_all_devices_availability: marked all devices %s for %s",
                 "available" if available else "unavailable",
                 self.interface_id,
@@ -184,7 +184,7 @@ class Client(ABC):
     async def reconnect(self) -> bool:
         """re-init all RPC clients."""
         if await self.is_connected():
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "reconnect: waiting to re-connect client %s for %is",
                 self.interface_id,
                 int(config.RECONNECT_WAIT),
@@ -192,7 +192,7 @@ class Client(ABC):
             await asyncio.sleep(config.RECONNECT_WAIT)
 
             await self.proxy_re_init()
-            _LOGGER.warning(
+            _LOGGER.info(
                 "reconnect: re-connected client %s",
                 self.interface_id,
             )
@@ -1160,7 +1160,7 @@ class _ClientConfig:
         self.xml_rpc_proxy: Final[XmlRpcProxy] = XmlRpcProxy(
             max_workers=1,
             interface_id=self.interface_id,
-            connection_status=central.config.connection_status,
+            connection_state=central.config.connection_state,
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
             tls=central.config.tls,
@@ -1169,7 +1169,7 @@ class _ClientConfig:
         self.xml_rpc_proxy_read: Final[XmlRpcProxy] = XmlRpcProxy(
             max_workers=1,
             interface_id=self.interface_id,
-            connection_status=central.config.connection_status,
+            connection_state=central.config.connection_state,
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
             tls=central.config.tls,
