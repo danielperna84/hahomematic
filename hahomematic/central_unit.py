@@ -226,7 +226,7 @@ class CentralUnit:
     def serial(self) -> str | None:
         """Return the serial of the backend."""
         if client := self.get_primary_client():
-            return client.config.serial
+            return client.serial
         return None
 
     @config_property
@@ -235,8 +235,8 @@ class CentralUnit:
         if self._attr_version is None:
             versions: list[str] = []
             for client in self._clients.values():
-                if client.config.version:
-                    versions.append(client.config.version)
+                if client.version:
+                    versions.append(client.version)
             self._attr_version = max(versions) if versions else None
         return self._attr_version
 
@@ -538,7 +538,7 @@ class CentralUnit:
         for client in self._clients.values():
             if isinstance(client, hmcl.ClientLocal):
                 return client
-            if client.config.interface in IF_PRIMARY and client.available:
+            if client.interface in IF_PRIMARY and client.available:
                 return client
         return client
 
