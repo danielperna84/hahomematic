@@ -162,7 +162,7 @@ class CentralUnit:
 
         self.json_rpc_client: Final[
             JsonRpcAioHttpClient
-        ] = central_config.get_json_rpc_client()
+        ] = central_config.create_json_rpc_client()
 
         CENTRAL_INSTANCES[self._attr_name] = self
         self._connection_checker: Final[ConnectionChecker] = ConnectionChecker(self)
@@ -1213,11 +1213,11 @@ class CentralConfig:
             return False
         return True
 
-    async def get_central(self) -> CentralUnit:
+    async def create_central(self) -> CentralUnit:
         """Return the central."""
         return CentralUnit(self)
 
-    def get_json_rpc_client(self) -> JsonRpcAioHttpClient:
+    def create_json_rpc_client(self) -> JsonRpcAioHttpClient:
         """Return the json rpc client."""
         return JsonRpcAioHttpClient(
             username=self.username,

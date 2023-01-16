@@ -69,7 +69,7 @@ async def central_unit(
         default_callback_port=54321,
         client_session=client_session,
         use_caches=False,
-    ).get_central()
+    ).create_central()
     central_unit.callback_system_event = systemcallback
     await central_unit.start()
     while not GOT_DEVICES and sleep_counter < 300:

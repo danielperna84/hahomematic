@@ -50,7 +50,7 @@ class CentralUnitLocalFactory:
             client_session=self._client_session,
             load_un_ignore=un_ignore_list is not None,
             un_ignore_list=un_ignore_list,
-        ).get_central()
+        ).create_central()
 
         central.callback_system_event = self.system_event_mock
         central.callback_entity_event = self.entity_event_mock

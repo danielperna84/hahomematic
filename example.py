@@ -95,7 +95,7 @@ class Example:
             client_session=ClientSession(
                 connector=TCPConnector(limit=3)
             ),
-        ).get_central()
+        ).create_central()
 
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10
