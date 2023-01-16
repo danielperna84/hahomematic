@@ -19,7 +19,7 @@ from typing import Any, Final, TypeVar, Union
 
 from aiohttp import ClientSession
 
-from hahomematic import config
+from hahomematic import config, xml_rpc_server
 import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_INTERFACE_ID,
@@ -86,14 +86,14 @@ from hahomematic.hub import HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.parameter_visibility import ParameterVisibilityCache
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
-from hahomematic import xml_rpc_server
 
 _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
 # {instance_name, central_unit}
 CENTRAL_INSTANCES: dict[str, CentralUnit] = {}
-ConnectionProblemIssuer = Union[XmlRpcProxy | JsonRpcAioHttpClient]
+# pylint: disable=consider-alternative-union-syntax
+ConnectionProblemIssuer = Union[JsonRpcAioHttpClient, XmlRpcProxy]
 
 
 class CentralUnit:
@@ -346,7 +346,7 @@ class CentralUnit:
                         not in await client.get_available_interfaces()
                     ):
                         _LOGGER.debug(
-                            "_create_clients failed: "
+                            "create_clients failed: "
                             "Interface: %s is not available for backend.",
                             interface_config.interface,
                         )
@@ -370,7 +370,7 @@ class CentralUnit:
                 )
 
         if self.has_clients:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "create_clients: All clients successfully created for %s",
                 self._attr_name,
             )
@@ -1142,9 +1142,7 @@ class CentralConfig:
         use_caches: bool = True,
         load_un_ignore: bool = True,
     ):
-        self.connection_state: Final[
-            CentralConnectionState
-        ] = CentralConnectionState()
+        self.connection_state: Final[CentralConnectionState] = CentralConnectionState()
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
         self.host: Final[str] = host
@@ -1236,38 +1234,40 @@ class CentralConnectionState:
 
     def add_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
-        if isinstance(issuer, XmlRpcProxy):
-            if issuer.interface_id not in self._xml_proxy_issues:
-                self._xml_proxy_issues.append(issuer.interface_id)
-                return True
         if isinstance(issuer, JsonRpcAioHttpClient):
             if self._json_issue is False:
                 self._json_issue = True
+                _LOGGER.debug("add_issue: add issue for JsonRpcAioHttpClient")
+                return True
+        if isinstance(issuer, XmlRpcProxy):
+            if issuer.interface_id not in self._xml_proxy_issues:
+                self._xml_proxy_issues.append(issuer.interface_id)
+                _LOGGER.debug("add_issue: add issue for %s", issuer.interface_id)
                 return True
         return False
 
     def remove_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
-        if isinstance(issuer, XmlRpcProxy):
-            if issuer.interface_id in self._xml_proxy_issues:
-                self._xml_proxy_issues.remove(issuer.interface_id)
-                return True
-            return False
         if isinstance(issuer, JsonRpcAioHttpClient):
             if self._json_issue is True:
                 self._json_issue = False
+                _LOGGER.debug("remove_issue: removing issue for JsonRpcAioHttpClient")
                 return True
-            return False
+        if isinstance(issuer, XmlRpcProxy):
+            if issuer.interface_id in self._xml_proxy_issues:
+                self._xml_proxy_issues.remove(issuer.interface_id)
+                _LOGGER.debug(
+                    "remove_issue: removing issue for %s", issuer.interface_id
+                )
+                return True
         return False
 
     def has_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
-        if isinstance(issuer, XmlRpcProxy):
-            return issuer.interface_id in self._xml_proxy_issues
         if isinstance(issuer, JsonRpcAioHttpClient):
             return self._json_issue
-        return False
-
+        if isinstance(issuer, XmlRpcProxy):
+            return issuer.interface_id in self._xml_proxy_issues
 
 
 class DeviceDetailsCache:

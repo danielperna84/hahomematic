@@ -10,6 +10,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
+from hahomematic import support
 import hahomematic.central_unit as hmcu
 import hahomematic.client as hmcl
 from hahomematic.const import (
@@ -75,7 +76,6 @@ from hahomematic.helpers import (
     updated_within_seconds,
 )
 from hahomematic.parameter_visibility import ALLOWED_INTERNAL_PARAMETERS
-from hahomematic import support
 
 _LOGGER = logging.getLogger(__name__)
 

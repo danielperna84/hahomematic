@@ -15,6 +15,7 @@ from typing import Any, Final
 from aiohttp import ClientConnectorError, ClientError, ClientSession
 
 from hahomematic import config
+import hahomematic.central_unit as hmcu
 from hahomematic.const import (
     ATTR_ERROR,
     ATTR_NAME,
@@ -56,7 +57,6 @@ from hahomematic.helpers import (
     get_tls_context,
     parse_sys_var,
 )
-import hahomematic.central_unit as hmcu
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -280,6 +280,9 @@ class JsonRpcAioHttpClient:
         use_default_params: bool = True,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST function."""
+        if self._connection_state.outgoing_issue:
+            # Report 'Service Unavailable' if there is an outgoing issue
+            return {"error": "503", "result": {}}
         if not self._client_session:
             no_session = "_do_post failed: ClientSession not initialized."
             _LOGGER.warning(no_session)
