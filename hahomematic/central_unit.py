@@ -19,7 +19,7 @@ from typing import Any, Final, TypeVar, Union
 
 from aiohttp import ClientSession
 
-from hahomematic import config, xml_rpc_server
+from hahomematic import config
 import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_INTERFACE_ID,
@@ -86,6 +86,7 @@ from hahomematic.hub import HmHub
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.parameter_visibility import ParameterVisibilityCache
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
+import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -114,9 +115,9 @@ class CentralUnit:
             CentralConnectionState
         ] = central_config.connection_state
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._xml_rpc_server: xml_rpc_server.XmlRpcServer | None = None
+        self._xml_rpc_server: xml_rpc.XmlRpcServer | None = None
         if central_config.enable_server:
-            self._xml_rpc_server = xml_rpc_server.register_xml_rpc_server(
+            self._xml_rpc_server = xml_rpc.register_xml_rpc_server(
                 local_port=central_config.callback_port
                 or central_config.default_callback_port
             )
@@ -570,7 +571,9 @@ class CentralUnit:
     @property
     def has_clients(self) -> bool:
         """Check if clients exists in central. #CC"""
-        return len(self._clients) == len(self.config.interface_configs)
+        count_client = len(self._clients)
+        count_client_defined = len(self.config.interface_configs)
+        return count_client > 0 and count_client == count_client_defined
 
     async def _load_caches(self) -> None:
         """Load files to caches."""
