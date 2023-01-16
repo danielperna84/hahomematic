@@ -458,7 +458,7 @@ class Example:
             interface_configs=interface_configs,
             client_session=None,
             default_callback_port=48888,
-        ).get_central()
+        ).create_central()
 
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10

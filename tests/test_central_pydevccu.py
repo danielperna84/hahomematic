@@ -21,10 +21,7 @@ async def test_central(central_pydevccu) -> None:
     assert central_pydevccu
     assert central_pydevccu.name == const.CENTRAL_NAME
     assert central_pydevccu.model == "PyDevCCU"
-    assert (
-        central_pydevccu.get_client(f"{const.CENTRAL_NAME}-BidCos-RF").model
-        == "PyDevCCU"
-    )
+    assert central_pydevccu.get_client(const.PYDEVCCU_INTERFACE_ID).model == "PyDevCCU"
     assert central_pydevccu.get_primary_client().model == "PyDevCCU"
 
     data = {}
@@ -116,14 +113,14 @@ async def test_central(central_pydevccu) -> None:
 
     assert len(central_pydevccu._devices) == 372
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
-    await central_pydevccu.delete_devices("CentralTest-BidCos-RF", virtual_remotes)
+    await central_pydevccu.delete_devices(const.PYDEVCCU_INTERFACE_ID, virtual_remotes)
     assert len(central_pydevccu._devices) == 369
     del_addresses = list(
         central_pydevccu.device_descriptions.get_device_descriptions(
-            "CentralTest-BidCos-RF"
+            const.PYDEVCCU_INTERFACE_ID
         )
     )
     del_addresses = [adr for adr in del_addresses if ":" not in adr]
-    await central_pydevccu.delete_devices("CentralTest-BidCos-RF", del_addresses)
+    await central_pydevccu.delete_devices(const.PYDEVCCU_INTERFACE_ID, del_addresses)
     assert len(central_pydevccu._devices) == 0
     assert len(central_pydevccu._entities) == 0

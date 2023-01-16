@@ -48,7 +48,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         self,
         max_workers: int,
         interface_id: str,
-        connection_status: hmcu.CentralConnectionStatus,
+        connection_state: hmcu.CentralConnectionState,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -56,7 +56,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         Initialize new proxy for server and get local ip
         """
         self.interface_id = interface_id
-        self._connection_status: Final[hmcu.CentralConnectionStatus] = connection_status
+        self._connection_state: Final[hmcu.CentralConnectionState] = connection_state
         self._loop: Final[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
         self._proxy_executor: Final[ThreadPoolExecutor] = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix=interface_id
@@ -86,7 +86,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         try:
             if args[
                 0
-            ] in VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION or not self._connection_status.has_issue(  # noqa: E501
+            ] in VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION or not self._connection_state.has_issue(  # noqa: E501
                 issuer=self
             ):
                 _LOGGER.debug("__async_request: %s", args)
@@ -96,13 +96,13 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                     self,
                     *args,
                 )
-                self._connection_status.remove_issue(issuer=self)
+                self._connection_state.remove_issue(issuer=self)
                 return result
             raise NoConnection(f"No connection to {self.interface_id}")
         except OSError as ose:
             message = f"OSError on {self.interface_id}: {ose.args}"
             if ose.args[0] in NO_CONNECTION_ERROR_CODES:
-                if self._connection_status.add_issue(issuer=self):
+                if self._connection_state.add_issue(issuer=self):
                     _LOGGER.error(message)
                 else:
                     _LOGGER.debug(message)
@@ -112,7 +112,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         except xmlrpc.client.Fault as fex:
             raise ProxyException(fex) from fex
         except xmlrpc.client.ProtocolError as per:
-            if not self._connection_status.has_issue(issuer=self):
+            if not self._connection_state.has_issue(issuer=self):
                 if per.errmsg == "Unauthorized":
                     raise AuthFailure(per) from per
                 raise NoConnection(per) from per

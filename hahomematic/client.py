@@ -73,21 +73,23 @@ class Client(ABC):
         """
         Initialize the Client.
         """
-        self.config: Final[_ClientConfig] = client_config
+        self._config: Final[_ClientConfig] = client_config
         self.central: Final[hmcu.CentralUnit] = client_config.central
-        # This is the actual interface_id used for init
-        self.interface_id: Final[str] = client_config.interface_id
-        # for all device related interaction
-        self._proxy: Final[XmlRpcProxy] = client_config.xml_rpc_proxy
-        self._proxy_read: Final[XmlRpcProxy] = client_config.xml_rpc_proxy_read
+
         self._json_rpc_client: Final[
             JsonRpcAioHttpClient
-        ] = self.central.json_rpc_client
+        ] = client_config.central.json_rpc_client
+        self._proxy: Final[XmlRpcProxy] = client_config.xml_rpc_proxy
+        self._proxy_read: Final[XmlRpcProxy] = client_config.xml_rpc_proxy_read
+        self.interface: Final[str] = client_config.interface
+        self.interface_id: Final[str] = client_config.interface_id
+        self.serial: Final[str] = client_config.serial
+        self.version: Final[str] = client_config.version
 
-        self._is_callback_alive: bool = True
         self._attr_available: bool = True
-        self.last_updated: datetime = INIT_DATETIME
         self._connection_error_count: int = 0
+        self._is_callback_alive: bool = True
+        self.last_updated: datetime = INIT_DATETIME
 
     @property
     def available(self) -> bool:
@@ -106,9 +108,9 @@ class Client(ABC):
         """
         try:
             _LOGGER.debug(
-                "proxy_init: init('%s', '%s')", self.config.init_url, self.interface_id
+                "proxy_init: init('%s', '%s')", self._config.init_url, self.interface_id
             )
-            await self._proxy.init(self.config.init_url, self.interface_id)
+            await self._proxy.init(self._config.init_url, self.interface_id)
             self._mark_all_devices_forced_availability(
                 forced_availability=HmForcedDeviceAvailability.NOT_SET
             )
@@ -136,8 +138,8 @@ class Client(ABC):
             )
             return PROXY_DE_INIT_SKIPPED
         try:
-            _LOGGER.debug("proxy_de_init: init('%s')", self.config.init_url)
-            await self._proxy.init(self.config.init_url)
+            _LOGGER.debug("proxy_de_init: init('%s')", self._config.init_url)
+            await self._proxy.init(self._config.init_url)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "proxy_de_init failed: %s [%s] Unable to de-initialize proxy for %s",
@@ -168,7 +170,7 @@ class Client(ABC):
                         forced_availability=forced_availability
                     )
             self._attr_available = available
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "mark_all_devices_availability: marked all devices %s for %s",
                 "available" if available else "unavailable",
                 self.interface_id,
@@ -182,7 +184,7 @@ class Client(ABC):
     async def reconnect(self) -> bool:
         """re-init all RPC clients."""
         if await self.is_connected():
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "reconnect: waiting to re-connect client %s for %is",
                 self.interface_id,
                 int(config.RECONNECT_WAIT),
@@ -190,7 +192,7 @@ class Client(ABC):
             await asyncio.sleep(config.RECONNECT_WAIT)
 
             await self.proxy_re_init()
-            _LOGGER.warning(
+            _LOGGER.info(
                 "reconnect: re-connected client %s",
                 self.interface_id,
             )
@@ -763,10 +765,10 @@ class ClientHomegear(Client):
     @property
     def model(self) -> str:
         """Return the model of the backend."""
-        if self.config.version:
+        if self._config.version:
             return (
                 BACKEND_PYDEVCCU
-                if BACKEND_PYDEVCCU.lower() in self.config.version
+                if BACKEND_PYDEVCCU.lower() in self._config.version
                 else BACKEND_HOMEGEAR
             )
         return BACKEND_CCU
@@ -968,7 +970,7 @@ class ClientLocal(Client):
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
-        local_resources = self.config.interface_config.local_resources
+        local_resources = self._config.interface_config.local_resources
         if not local_resources:
             _LOGGER.warning(
                 "get_all_device_descriptions: "
@@ -1035,7 +1037,7 @@ class ClientLocal(Client):
 
     async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
         """Get paramset description from CCU."""
-        local_resources = self.config.interface_config.local_resources
+        local_resources = self._config.interface_config.local_resources
         if not local_resources:
             _LOGGER.warning(
                 "_get_paramset_description: missing local_resources in config for %s.",
@@ -1158,7 +1160,7 @@ class _ClientConfig:
         self.xml_rpc_proxy: Final[XmlRpcProxy] = XmlRpcProxy(
             max_workers=1,
             interface_id=self.interface_id,
-            connection_status=central.config.connection_status,
+            connection_state=central.config.connection_state,
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
             tls=central.config.tls,
@@ -1167,7 +1169,7 @@ class _ClientConfig:
         self.xml_rpc_proxy_read: Final[XmlRpcProxy] = XmlRpcProxy(
             max_workers=1,
             interface_id=self.interface_id,
-            connection_status=central.config.connection_status,
+            connection_state=central.config.connection_state,
             uri=self.xml_rpc_uri,
             headers=self.xml_rpc_headers,
             tls=central.config.tls,
@@ -1217,7 +1219,7 @@ class InterfaceConfig:
         local_resources: LocalRessources | None = None,
     ):
         self.interface: Final[str] = LOCAL_INTERFACE if local_resources else interface
-        self.interface_id: Final[str] = f"{central_name}-{interface}"
+        self.interface_id: Final[str] = f"{central_name}-{self.interface}"
         self.port: Final[int] = port
         self.remote_path: Final[str | None] = remote_path
         self.local_resources: Final[LocalRessources | None] = local_resources

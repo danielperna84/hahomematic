@@ -54,7 +54,7 @@ from hahomematic.const import (
     HmEventType,
     HmPlatform,
 )
-import hahomematic.custom_platforms as hm_custom_entity
+import hahomematic.custom_platforms as hmce
 import hahomematic.custom_platforms.entity_definition as hmed
 from hahomematic.decorators import config_property, value_property
 import hahomematic.device as hmd
@@ -747,7 +747,7 @@ class CustomEntity(BaseEntity):
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
-        device_has_multiple_channels = hm_custom_entity.is_multi_channel_device(
+        device_has_multiple_channels = hmce.is_multi_channel_device(
             device_type=self.device.device_type
         )
         is_only_primary_channel = check_channel_is_the_only_primary_channel(

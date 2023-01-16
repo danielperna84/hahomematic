@@ -34,7 +34,7 @@ async def test_clickevent(
     assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.keypress",
         {
-            "interface_id": "CentralTest-Local",
+            "interface_id": const.LOCAL_INTERFACE_ID,
             "address": "VCU2128127",
             "channel_no": 1,
             "device_type": "HmIP-BSM",
@@ -59,7 +59,7 @@ async def test_impulseevent(
     assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.impulse",
         {
-            "interface_id": "CentralTest-Local",
+            "interface_id": const.LOCAL_INTERFACE_ID,
             "address": "VCU0000263",
             "channel_no": 1,
             "device_type": "HM-Sen-EP",
@@ -84,7 +84,7 @@ async def test_deviceerrorevent(
     assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.device_error",
         {
-            "interface_id": "CentralTest-Local",
+            "interface_id": const.LOCAL_INTERFACE_ID,
             "address": "VCU2128127",
             "channel_no": 0,
             "device_type": "HmIP-BSM",
