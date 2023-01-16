@@ -3,6 +3,7 @@
 - Add helper, central tests
 - Add more tests and test based refactorings
 - Reduce backend calls and logging during lost connection
+- Update color_conversion threshold by @guillempages
 
 # Version 2023.1.3 (2023-01-13)
 - Unifiy event parameters
