@@ -35,7 +35,7 @@ NO_CONNECTION_ERROR_CODES: Final[dict[int, str]] = {
     errno.ECONNREFUSED: "Connection refused",
     errno.ENETUNREACH: "Network is unreachable",
     errno.ETIMEDOUT: "Operation timed out",
-    error.EHOSTUNREACH: "No route to host",
+    errno.EHOSTUNREACH: "No route to host",
 }
 
 
