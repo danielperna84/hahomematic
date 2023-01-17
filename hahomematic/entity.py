@@ -795,19 +795,19 @@ class CustomEntity(BaseEntity):
     def _init_entities(self) -> None:
         """init entity collection"""
 
-        repeating_fields = self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {})
         # Add repeating fields
-        for (field_name, parameter) in repeating_fields.items():
+        for (field_name, parameter) in self._device_desc.get(
+            hmed.ED_REPEATABLE_FIELDS, {}
+        ).items():
             entity = self.device.get_generic_entity(
                 channel_address=self._attr_channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity)
 
-        visible_repeating_fields = self._device_desc.get(
-            hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
-        )
         # Add visible repeating fields
-        for (field_name, parameter) in visible_repeating_fields.items():
+        for (field_name, parameter) in self._device_desc.get(
+            hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
+        ).items():
             entity = self.device.get_generic_entity(
                 channel_address=self._attr_channel_address, parameter=parameter
             )
@@ -856,6 +856,19 @@ class CustomEntity(BaseEntity):
                         entity.set_usage(HmEntityUsage.CE_VISIBLE)
                     self._add_entity(field_name=field_name, entity=entity)
 
+    def _add_entity(
+        self, field_name: str, entity: GenericEntity | None, is_visible: bool = False
+    ) -> None:
+        """Add entity to collection and register callback"""
+        if not entity:
+            return None
+
+        if is_visible:
+            entity.set_usage(HmEntityUsage.CE_VISIBLE)
+
+        entity.register_update_callback(self.update_entity)
+        self.data_entities[field_name] = entity
+
     def _mark_entity(self, field_desc: dict[int, tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
         if not field_desc:
@@ -882,19 +895,6 @@ class CustomEntity(BaseEntity):
                     and entity.parameter in un_ignore_params
                 ):
                     entity.set_usage(HmEntityUsage.ENTITY)
-
-    def _add_entity(
-        self, field_name: str, entity: GenericEntity | None, is_visible: bool = False
-    ) -> None:
-        """Add entity to collection and register callback"""
-        if not entity:
-            return None
-
-        if is_visible:
-            entity.set_usage(HmEntityUsage.CE_VISIBLE)
-
-        entity.register_update_callback(self.update_entity)
-        self.data_entities[field_name] = entity
 
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """get entity"""
