@@ -201,7 +201,7 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
         "HmIP-SPI",
     ),
     "LOWBAT": (
-        "HM-LC-Sw1-DR,"
+        "HM-LC-Sw1-DR",
         "HM-LC-Sw1-FM",
         "HM-LC-Sw1-PCB",
         "HM-LC-Sw1-Pl",
