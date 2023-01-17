@@ -1,10 +1,8 @@
 """Here we provide access to the custom entity creation functions."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
-
 from hahomematic.custom_platforms import climate, cover, light, lock, siren, switch
+from hahomematic.custom_platforms.entity_definition import CustomConfig
 from hahomematic.helpers import element_matches_key
 
 _ALL_DEVICES = (
@@ -26,7 +24,7 @@ _BLACKLISTED_DEVICES = (
 )
 
 
-def get_device_funcs(device_type: str) -> list[tuple[Callable, tuple[int, ...]]]:
+def get_device_funcs(device_type: str) -> list[CustomConfig]:
     """Return the function to create custom entities"""
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
@@ -47,8 +45,8 @@ def get_device_funcs(device_type: str) -> list[tuple[Callable, tuple[int, ...]]]
 
 
 def _get_device_func_by_platform(
-    platform_devices: dict[str, tuple[Any, tuple[int, ...]]], device_type: str
-) -> tuple[Callable, tuple[int, ...]] | None:
+    platform_devices: dict[str, CustomConfig], device_type: str
+) -> CustomConfig | None:
     """Return the function to create custom entities"""
     for name, func in platform_devices.items():
         if device_type.lower() == name.lower():
@@ -63,9 +61,8 @@ def _get_device_func_by_platform(
 def is_multi_channel_device(device_type: str) -> bool:
     """Return true, if device has multiple channels"""
     channels: list[int] = []
-    funcs = get_device_funcs(device_type=device_type)
-    for func in funcs:
-        channels.extend(func[1])
+    for custom_entity_config in get_device_funcs(device_type=device_type):
+        channels.extend(custom_entity_config.group_base_channels)
 
     return len(channels) > 1
 

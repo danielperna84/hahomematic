@@ -3,7 +3,9 @@ This module contains device descriptions for custom entities.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from copy import deepcopy
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -770,3 +772,12 @@ def get_required_parameters() -> tuple[str, ...]:
             required_parameters.extend(additional_entities)
 
     return tuple(sorted(set(required_parameters)))
+
+
+@dataclass
+class CustomConfig:
+    """Data for custom entity creation."""
+
+    func: Callable
+    group_base_channels: tuple[int, ...]
+    extended: dict[str, Any] | None = None

@@ -35,7 +35,10 @@ _LOGGER = logging.getLogger(__name__)
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
     dict[str, tuple[tuple[int, ...], tuple[str, ...]]]
 ] = {
-    "HmIP-DRBLI4": ((1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21), (PARAM_CHANNEL_OPERATION_MODE,),),
+    "HmIP-DRBLI4": (
+        (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
+        (PARAM_CHANNEL_OPERATION_MODE,),
+    ),
     "HmIP-DRDI3": ((1, 2, 3), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DRSI1": ((1,), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DRSI4": ((1, 2, 3, 4), (PARAM_CHANNEL_OPERATION_MODE,)),

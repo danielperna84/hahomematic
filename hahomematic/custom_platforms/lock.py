@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import logging
-from typing import Any
 
 from hahomematic.const import HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -14,6 +13,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_LOCK_TARGET_LEVEL,
     FIELD_OPEN,
     FIELD_STATE,
+    CustomConfig,
     EntityDefinition,
     make_custom_entity,
 )
@@ -212,9 +212,9 @@ def make_rf_lock(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
-    "HmIP-DLD": (make_ip_lock, (0,)),
-    "HM-Sec-Key": (make_rf_lock, (1,)),
+DEVICES: dict[str, CustomConfig] = {
+    "HmIP-DLD": CustomConfig(func=make_ip_lock, group_base_channels=(0,)),
+    "HM-Sec-Key": CustomConfig(func=make_rf_lock, group_base_channels=(1,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
 
 from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
@@ -26,6 +25,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_TEMPERATURE_MAXIMUM,
     FIELD_TEMPERATURE_MINIMUM,
     FIELD_VALVE_STATE,
+    CustomConfig,
     EntityDefinition,
     make_custom_entity,
 )
@@ -593,24 +593,28 @@ def make_ip_thermostat_group(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
-    "ALPHA-IP-RBG": (make_ip_thermostat, (1,)),
-    "BC-RT-TRX-CyG": (make_thermostat, (1,)),
-    "BC-RT-TRX-CyN": (make_thermostat, (1,)),
-    "BC-TC-C-WM": (make_thermostat, (1,)),
-    "HM-CC-RT-DN": (make_thermostat, (4,)),
-    "HM-CC-TC": (make_simple_thermostat, (1,)),
-    "HM-CC-VG-1": (make_thermostat_group, (1,)),
-    "HM-TC-IT-WM-W-EU": (make_thermostat, (2,)),
-    "HmIP-BWTH": (make_ip_thermostat, (1,)),
-    "HmIP-eTRV": (make_ip_thermostat, (1,)),
-    "HmIP-HEATING": (make_ip_thermostat_group, (1,)),
-    "HmIP-STH": (make_ip_thermostat, (1,)),
-    "HmIP-WTH": (make_ip_thermostat, (1,)),
-    "HmIPW-STH": (make_ip_thermostat, (1,)),
-    "HmIPW-WTH": (make_ip_thermostat, (1,)),
-    "Thermostat AA": (make_ip_thermostat, (1,)),
-    "ZEL STG RM FWT": (make_simple_thermostat, (1,)),
+DEVICES: dict[str, CustomConfig] = {
+    "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
+    "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
+    "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
+    "BC-TC-C-WM": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
+    "HM-CC-RT-DN": CustomConfig(func=make_thermostat, group_base_channels=(4,)),
+    "HM-CC-TC": CustomConfig(func=make_simple_thermostat, group_base_channels=(1,)),
+    "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, group_base_channels=(1,)),
+    "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, group_base_channels=(2,)),
+    "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
+    "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
+    "HmIP-HEATING": CustomConfig(
+        func=make_ip_thermostat_group, group_base_channels=(1,)
+    ),
+    "HmIP-STH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
+    "HmIP-WTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
+    "HmIPW-STH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
+    "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
+    "Thermostat AA": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
+    "ZEL STG RM FWT": CustomConfig(
+        func=make_simple_thermostat, group_base_channels=(1,)
+    ),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)

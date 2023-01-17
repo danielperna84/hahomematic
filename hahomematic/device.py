@@ -476,10 +476,10 @@ class HmDevice:
             )
 
             # Call the custom creation function.
-            for (device_func, group_base_channels) in get_device_funcs(
-                self._attr_device_type
-            ):
-                device_func(self, group_base_channels)
+            for custom_entity_config in get_device_funcs(self._attr_device_type):
+                custom_entity_config.func(
+                    self, custom_entity_config.group_base_channels
+                )
 
     def _create_event_and_append_to_device(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]

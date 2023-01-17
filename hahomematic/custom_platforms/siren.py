@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import logging
-from typing import Any
 
 from hahomematic.const import HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -12,6 +11,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_ACOUSTIC_ALARM_SELECTION,
     FIELD_OPTICAL_ALARM_ACTIVE,
     FIELD_OPTICAL_ALARM_SELECTION,
+    CustomConfig,
     EntityDefinition,
     make_custom_entity,
 )
@@ -175,8 +175,8 @@ def make_rf_siren(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
-    "HmIP-ASIR": (make_ip_siren, (0,)),
+DEVICES: dict[str, CustomConfig] = {
+    "HmIP-ASIR": CustomConfig(func=make_ip_siren, group_base_channels=(0,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()
