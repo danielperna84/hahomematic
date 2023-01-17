@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -16,6 +15,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_LEVEL_2,
     FIELD_SECTION,
     FIELD_STOP,
+    CustomConfig,
     EntityDefinition,
     make_custom_entity,
 )
@@ -342,30 +342,34 @@ def make_rf_blind(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, tuple[Any, tuple[int, ...]]] = {
-    "HmIP-BROLL": (make_ip_cover, (3,)),
-    "HmIP-FROLL": (make_ip_cover, (3,)),
-    "HmIP-BBL": (make_ip_blind, (3,)),
-    "HmIP-FBL": (make_ip_blind, (3,)),
-    "HmIP-HDM": (make_ip_blind, (0,)),  # 0 is correct, HDM1 has no status channel.
-    "HmIP-DRBLI4": (make_ip_blind, (9, 13, 17, 21)),
-    "HmIPW-DRBL4": (make_ip_blind, (1, 5, 9, 13)),
-    "HmIP-MOD-HO": (make_ip_garage, (1,)),
-    "HmIP-MOD-TM": (make_ip_garage, (1,)),
-    "HM-LC-Bl1-FM-2": (make_rf_cover, (1,)),
-    "HM-LC-Bl1-FM": (make_rf_cover, (1,)),
-    "HM-LC-Bl1-PB-FM": (make_rf_cover, (1,)),
-    "HM-LC-Bl1-SM-2": (make_rf_cover, (1,)),
-    "HM-LC-Bl1-SM": (make_rf_cover, (1,)),
-    "HM-LC-Bl1PBU-FM": (make_rf_cover, (1,)),
-    "HM-LC-JaX": (make_rf_blind, (1,)),
-    "HM-LC-Ja1PBU-FM": (make_rf_blind, (1,)),
-    "ZEL STG RM FEP 230V": (make_rf_cover, (1,)),
-    "263 146": (make_rf_cover, (1,)),
-    "263 147": (make_rf_cover, (1,)),
-    "HM-LC-BlX": (make_rf_cover, (1,)),
-    "HM-Sec-Win": (make_rf_cover, (1,)),
-    "HMW-LC-Bl1": (make_rf_cover, (3,)),
+DEVICES: dict[str, CustomConfig] = {
+    "HmIP-BROLL": CustomConfig(func=make_ip_cover, group_base_channels=(3,)),
+    "HmIP-FROLL": CustomConfig(func=make_ip_cover, group_base_channels=(3,)),
+    "HmIP-BBL": CustomConfig(func=make_ip_blind, group_base_channels=(3,)),
+    "HmIP-FBL": CustomConfig(func=make_ip_blind, group_base_channels=(3,)),
+    "HmIP-HDM": CustomConfig(
+        func=make_ip_blind, group_base_channels=(0,)
+    ),  # 0 is correct, HDM1 has no status channel.
+    "HmIP-DRBLI4": CustomConfig(
+        func=make_ip_blind, group_base_channels=(9, 13, 17, 21)
+    ),
+    "HmIPW-DRBL4": CustomConfig(func=make_ip_blind, group_base_channels=(1, 5, 9, 13)),
+    "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, group_base_channels=(1,)),
+    "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, group_base_channels=(1,)),
+    "HM-LC-Bl1-FM-2": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HM-LC-Bl1-FM": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HM-LC-Bl1-PB-FM": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HM-LC-Bl1-SM-2": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HM-LC-Bl1-SM": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HM-LC-Bl1PBU-FM": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HM-LC-JaX": CustomConfig(func=make_rf_blind, group_base_channels=(1,)),
+    "HM-LC-Ja1PBU-FM": CustomConfig(func=make_rf_blind, group_base_channels=(1,)),
+    "ZEL STG RM FEP 230V": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "263 146": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "263 147": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HM-LC-BlX": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HM-Sec-Win": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
+    "HMW-LC-Bl1": CustomConfig(func=make_rf_cover, group_base_channels=(3,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()

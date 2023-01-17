@@ -805,7 +805,7 @@ class ClientHomegear(Client):
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.warning("ping failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.debug("ping failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 

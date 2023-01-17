@@ -6,10 +6,11 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
+import errno
 import logging
 from typing import Any, Final
 import xmlrpc.client
-import errno
+
 import hahomematic.central_unit as hmcu
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
 from hahomematic.exceptions import AuthFailure, NoConnection, ProxyException
