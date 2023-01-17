@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 from typing import Any, Final
 import xmlrpc.client
-
+import errno
 import hahomematic.central_unit as hmcu
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
 from hahomematic.exceptions import AuthFailure, NoConnection, ProxyException
@@ -32,9 +32,10 @@ VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION: Final[tuple[str, ...]] = (
 )
 
 NO_CONNECTION_ERROR_CODES: Final[dict[int, str]] = {
-    51: "Network is unreachable",
-    60: "Operation timed out",
-    61: "Connection refused",
+    errno.ECONNREFUSED: "Connection refused",
+    errno.ENETUNREACH: "Network is unreachable",
+    errno.ETIMEDOUT: "Operation timed out",
+    errno.EHOSTUNREACH: "No route to host",
 }
 
 

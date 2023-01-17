@@ -35,31 +35,28 @@ _LOGGER = logging.getLogger(__name__)
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
     dict[str, tuple[tuple[int, ...], tuple[str, ...]]]
 ] = {
-    "HmIPW-DRBL4": ((1, 5, 9, 13), (PARAM_CHANNEL_OPERATION_MODE,)),
-    "HmIP-DRBLI4": (
-        (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
-        (PARAM_CHANNEL_OPERATION_MODE,),
-    ),
+    "HmIP-DRBLI4": ((1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21), (PARAM_CHANNEL_OPERATION_MODE,),),
+    "HmIP-DRDI3": ((1, 2, 3), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DRSI1": ((1,), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DRSI4": ((1, 2, 3, 4), (PARAM_CHANNEL_OPERATION_MODE,)),
-    "HmIP-DRDI3": ((1, 2, 3), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-DSD-PCB": ((1,), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-FCI1": ((1,), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-FCI6": (tuple(range(1, 7)), (PARAM_CHANNEL_OPERATION_MODE,)),
-    "HmIPW-FIO6": (tuple(range(1, 7)), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-FSI16": ((1,), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-MIO16-PCB": ((13, 14, 15, 16), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-MOD-RC8": (tuple(range(1, 9)), (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIPW-DRBL4": ((1, 5, 9, 13), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIPW-DRI16": (tuple(range(1, 17)), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIPW-DRI32": (tuple(range(1, 33)), (PARAM_CHANNEL_OPERATION_MODE,)),
+    "HmIPW-FIO6": (tuple(range(1, 7)), (PARAM_CHANNEL_OPERATION_MODE,)),
     "ALPHA-IP-RBG": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
     "HM-CC-RT-DN": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
     "HM-CC-VG-1": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
     "HmIP-BWTH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HmIP-eTRV": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
     "HmIP-HEATING": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
     "HmIP-STH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
     "HmIP-WTH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-eTRV": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
     "HmIPW-STH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
     "HmIPW-WTH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
 }
@@ -156,9 +153,9 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "USER_COLOR",  # ro"
     "USER_PROGRAM",  # ro"
     "VALVE_ADAPTION",
-    "WIN_RELEASE_ACT",  # ro"
-    "WIN_RELEASE",
     "WINDOW",  # ro
+    "WIN_RELEASE",
+    "WIN_RELEASE_ACT",  # ro"
 )
 
 # Ignore Parameter that end with
@@ -204,21 +201,22 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
         "HmIP-SPI",
     ),
     "LOWBAT": (
+        "HM-LC-Sw1-DR",
         "HM-LC-Sw1-FM",
-        "HM-LC-Sw1PBU-FM",
-        "HM-LC-Sw1-Pl-DN-R1",
-        "HM-LC-Sw1-Pl",
-        "HM-LC-Sw2-FM",
         "HM-LC-Sw1-PCB",
+        "HM-LC-Sw1-Pl",
+        "HM-LC-Sw1-Pl-DN-R1",
+        "HM-LC-Sw1PBU-FM",
+        "HM-LC-Sw2-FM",
         "HM-LC-Sw4-DR",
         "HM-SwI-3-FM",
     ),
     "LOW_BAT": ("HmIP-BWTH", "HmIP-PCBS"),
     "OPERATING_VOLTAGE": (
         "ELV-SH-BS2",
-        "HmIP-BS2",
         "HmIP-BDT",
         "HmIP-BROLL",
+        "HmIP-BS2",
         "HmIP-BSL",
         "HmIP-BSM",
         "HmIP-BWTH",

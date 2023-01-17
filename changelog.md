@@ -1,3 +1,8 @@
+# Version 2023.1.5 (2023-01-17)
+- Remove LOWBAT from HM-LC-Sw1-DR
+- Sort lists in parameter_visibility.py
+- 
+
 # Version 2023.1.4 (2023-01-16)
 - Remove obsolete parse_ccu_sys_var
 - Add helper, central tests
