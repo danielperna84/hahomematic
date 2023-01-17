@@ -94,7 +94,7 @@ def make_rf_switch(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig] = {
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "ELV-SH-BS2": CustomConfig(func=make_ip_switch, group_base_channels=(3, 7)),
     "HmIP-BS2": CustomConfig(func=make_ip_switch, group_base_channels=(3, 7)),
     "HmIP-BSM": CustomConfig(func=make_ip_switch, group_base_channels=(3,)),

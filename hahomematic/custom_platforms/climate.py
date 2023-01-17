@@ -593,7 +593,7 @@ def make_ip_thermostat_group(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig] = {
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
     "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
     "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, group_base_channels=(1,)),

@@ -342,7 +342,7 @@ def make_rf_blind(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig] = {
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-BROLL": CustomConfig(func=make_ip_cover, group_base_channels=(3,)),
     "HmIP-FROLL": CustomConfig(func=make_ip_cover, group_base_channels=(3,)),
     "HmIP-BBL": CustomConfig(func=make_ip_blind, group_base_channels=(3,)),

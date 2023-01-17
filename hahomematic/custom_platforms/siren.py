@@ -175,7 +175,7 @@ def make_rf_siren(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig] = {
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-ASIR": CustomConfig(func=make_ip_siren, group_base_channels=(0,)),
 }
 
