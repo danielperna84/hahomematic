@@ -24,8 +24,10 @@ _BLACKLISTED_DEVICES = (
 )
 
 
-def get_device_funcs(device_type: str) -> list[CustomConfig]:
-    """Return the function to create custom entities"""
+def get_entity_configs(
+    device_type: str,
+) -> list[CustomConfig | tuple[CustomConfig, ...]]:
+    """Return the entity configs to create custom entities"""
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
     for platform_blacklisted_devices in _BLACKLISTED_DEVICES:
@@ -36,7 +38,7 @@ def get_device_funcs(device_type: str) -> list[CustomConfig]:
             return []
 
     for platform_devices in _ALL_DEVICES:
-        if func := _get_device_func_by_platform(
+        if func := _get_entity_config_by_platform(
             platform_devices=platform_devices,
             device_type=device_type,
         ):
@@ -44,16 +46,18 @@ def get_device_funcs(device_type: str) -> list[CustomConfig]:
     return funcs
 
 
-def _get_device_func_by_platform(
-    platform_devices: dict[str, CustomConfig], device_type: str
-) -> CustomConfig | None:
-    """Return the function to create custom entities"""
-    for name, func in platform_devices.items():
-        if device_type.lower() == name.lower():
-            return func
-    for name, func in platform_devices.items():
-        if device_type.lower().startswith(name.lower()):
-            return func
+def _get_entity_config_by_platform(
+    platform_devices: dict[str, CustomConfig | tuple[CustomConfig, ...]],
+    device_type: str,
+) -> CustomConfig | tuple[CustomConfig, ...] | None:
+    """Return the entity configs to create custom entities"""
+    for d_type, custom_configs in platform_devices.items():
+        if device_type.lower() == d_type.lower():
+            return custom_configs
+
+    for d_type, custom_configs in platform_devices.items():
+        if device_type.lower().startswith(d_type.lower()):
+            return custom_configs
 
     return None
 
@@ -61,12 +65,16 @@ def _get_device_func_by_platform(
 def is_multi_channel_device(device_type: str) -> bool:
     """Return true, if device has multiple channels"""
     channels: list[int] = []
-    for custom_entity_config in get_device_funcs(device_type=device_type):
-        channels.extend(custom_entity_config.group_base_channels)
+    for entity_configs in get_entity_configs(device_type=device_type):
+        if isinstance(entity_configs, CustomConfig):
+            channels.extend(entity_configs.group_base_channels)
+        else:
+            for entity_config in entity_configs:
+                channels.extend(entity_config.group_base_channels)
 
     return len(channels) > 1
 
 
 def entity_definition_exists(device_type: str) -> bool:
     """Check if device desc exits."""
-    return len(get_device_funcs(device_type)) > 0
+    return len(get_entity_configs(device_type)) > 0

@@ -44,7 +44,8 @@ from hahomematic.const import (
     HmCallSource,
     HmForcedDeviceAvailability,
 )
-from hahomematic.custom_platforms import entity_definition_exists, get_device_funcs
+from hahomematic.custom_platforms import entity_definition_exists, get_entity_configs
+from hahomematic.custom_platforms.entity_definition import CustomConfig
 from hahomematic.decorators import config_property, value_property
 from hahomematic.entity import (
     BaseEntity,
@@ -476,10 +477,12 @@ class HmDevice:
             )
 
             # Call the custom creation function.
-            for custom_entity_config in get_device_funcs(self._attr_device_type):
-                custom_entity_config.func(
-                    self, custom_entity_config.group_base_channels
-                )
+            for entity_configs in get_entity_configs(self._attr_device_type):
+                if isinstance(entity_configs, CustomConfig):
+                    entity_configs.func(self, entity_configs.group_base_channels)
+                else:
+                    for entity_config in entity_configs:
+                        entity_config.func(self, entity_config.group_base_channels)
 
     def _create_event_and_append_to_device(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]

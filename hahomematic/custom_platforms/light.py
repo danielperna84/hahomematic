@@ -555,7 +555,7 @@ def make_ip_simple_fixed_color_light(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig] = {
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-BSL": CustomConfig(
         func=make_ip_fixed_color_light, group_base_channels=(7, 11)
     ),
