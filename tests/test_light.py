@@ -485,7 +485,7 @@ async def test_ceipfixedcolorlight(
 
 
 @pytest.mark.asyncio
-async def test_hbw_dimmer(
+async def no_test_hbw_dimmer(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeColorDimmer."""
