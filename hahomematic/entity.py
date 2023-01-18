@@ -838,13 +838,6 @@ class CustomEntity(BaseEntity):
         if hmed.get_include_default_entities(device_enum=self._device_enum):
             self._mark_entities(entity_def=hmed.get_default_entities())
 
-        # add extra entities for the device type
-        self._mark_entities(
-            entity_def=hmed.get_additional_entities_by_device_type(
-                device_type=self.device.device_type
-            )
-        )
-
         # add custom un_ignore entities
         self._mark_entity_by_custom_un_ignore_parameters(
             un_ignore_params_by_paramset_key=self._central.parameter_visibility.get_un_ignore_parameters(  # noqa: E501

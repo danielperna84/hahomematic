@@ -14,13 +14,12 @@ import voluptuous as vol
 from hahomematic.backport import StrEnum
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.helpers import element_matches_key, generate_unique_identifier
+from hahomematic.helpers import generate_unique_identifier
 
 ED_DEFAULT_ENTITIES = "default_entities"
 ED_INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
 ED_DEVICE_GROUP = "device_group"
 ED_DEVICE_DEFINITIONS = "device_definitions"
-ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE = "additional_entities_by_device_type"
 ED_ADDITIONAL_ENTITIES = "additional_entities"
 ED_FIELDS = "fields"
 ED_REPEATABLE_FIELDS = "repeatable_fields"
@@ -154,11 +153,6 @@ SCHEMA_DEVICE_DESCRIPTION = vol.Schema(
         vol.Required(ED_DEVICE_DEFINITIONS): vol.Schema(
             {
                 vol.Required(EntityDefinition): SCHEMA_ED_DEVICE_GROUPS,
-            }
-        ),
-        vol.Required(ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE): vol.Schema(
-            {
-                vol.Required(str): SCHEMA_ED_ADDITIONAL_ENTITIES,
             }
         ),
     }
@@ -529,7 +523,6 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, vol.Any]] = {
             },
         },
     },
-    ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE: {},
 }
 
 
@@ -617,18 +610,6 @@ def _create_entities(
 def get_default_entities() -> dict[int | tuple[int, ...], tuple[str, ...]]:
     """Return the default entities."""
     return deepcopy(entity_definition[ED_DEFAULT_ENTITIES])  # type: ignore[arg-type]
-
-
-def get_additional_entities_by_device_type(
-    device_type: str,
-) -> dict[int | tuple[int, ...], tuple[str, ...]]:
-    """Return the additional entities."""
-    for data in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].items():
-        d_type: str = str(data[0])
-        additional_entities: dict[int | tuple[int, ...], tuple[str, ...]] = data[1]
-        if element_matches_key(search_elements=d_type, compare_with=device_type):
-            return deepcopy(additional_entities)
-    return {}
 
 
 def get_include_default_entities(device_enum: EntityDefinition) -> bool:

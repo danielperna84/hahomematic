@@ -4,7 +4,6 @@ from __future__ import annotations
 from hahomematic.custom_platforms import climate, cover, light, lock, siren, switch
 from hahomematic.custom_platforms.entity_definition import (
     ED_ADDITIONAL_ENTITIES,
-    ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE,
     ED_DEFAULT_ENTITIES,
     ED_DEVICE_DEFINITIONS,
     ED_DEVICE_GROUP,
@@ -104,11 +103,6 @@ def get_required_parameters() -> tuple[str, ...]:
             entity_definition[ED_DEVICE_DEFINITIONS][device]
             .get(ED_ADDITIONAL_ENTITIES, {})
             .values()
-        ):
-            required_parameters.extend(additional_entities)
-    for device_type in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE]:
-        for additional_entities in list(
-            entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE][device_type].values()
         ):
             required_parameters.extend(additional_entities)
 
