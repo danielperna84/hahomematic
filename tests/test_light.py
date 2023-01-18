@@ -6,7 +6,6 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -34,7 +33,7 @@ async def test_cedimmer(
 ) -> None:
     """Test CeDimmer."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    light: CeDimmer = cast(CeDimmer, await get_custom_entity(central, "VCU1399816", 4))
+    light: CeDimmer = cast(CeDimmer, await helper.get_custom_entity(central, "VCU1399816", 4))
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color is None
@@ -136,7 +135,7 @@ async def test_cecolordimmer(
     """Test CeColorDimmer."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeColorDimmer = cast(
-        CeColorDimmer, await get_custom_entity(central, "VCU3747418", 1)
+        CeColorDimmer, await helper.get_custom_entity(central, "VCU3747418", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -236,7 +235,7 @@ async def test_cecolortempdimmer(
     """Test CeColorTempDimmer."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeColorTempDimmer = cast(
-        CeColorTempDimmer, await get_custom_entity(central, "VCU0000115", 1)
+        CeColorTempDimmer, await helper.get_custom_entity(central, "VCU0000115", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp == 500
@@ -292,7 +291,7 @@ async def test_ceipfixedcolorlight(
     """Test CeIpFixedColorLight."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeIpFixedColorLight = cast(
-        CeIpFixedColorLight, await get_custom_entity(central, "VCU3716619", 8)
+        CeIpFixedColorLight, await helper.get_custom_entity(central, "VCU3716619", 8)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None

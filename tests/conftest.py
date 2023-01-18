@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
 
 from aiohttp import ClientSession, TCPConnector
 import const
@@ -37,9 +36,7 @@ async def client_session() -> ClientSession:
 
 
 @pytest.fixture(name="central_pydevccu")
-async def central_unit(
-    ccu: pydevccu.Server, client_session: ClientSession
-) -> CentralUnit:
+async def central_unit(ccu: pydevccu.Server, client_session: ClientSession) -> CentralUnit:
     """Yield central"""
     sleep_counter = 0
     global GOT_DEVICES

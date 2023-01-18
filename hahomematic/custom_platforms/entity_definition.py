@@ -574,9 +574,7 @@ def validate_entity_definition() -> Any:
     try:
         return SCHEMA_DEVICE_DESCRIPTION(entity_definition)
     except Invalid as err:
-        _LOGGER.error(
-            "The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg
-        )
+        _LOGGER.error("The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg)
         return None
 
 
@@ -585,6 +583,7 @@ def make_custom_entity(
     custom_entity_class: type,
     device_enum: EntityDefinition,
     group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """
     Creates custom_entities.
@@ -610,6 +609,7 @@ def make_custom_entity(
                     device_def=device_def,
                     entity_def=entity_def,
                     channel_no=channel_no,
+                    extended=extended,
                 )
             )
 
@@ -623,6 +623,7 @@ def _create_entities(
     device_def: dict[str, Any],
     entity_def: dict[int, tuple[str, ...]],
     channel_no: int | None = None,
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Create custom entities."""
     entities: list[hme.BaseEntity] = []
@@ -630,9 +631,7 @@ def _create_entities(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
     if device.central.has_entity(unique_identifier=unique_identifier):
-        _LOGGER.debug(
-            "make_custom_entity: Skipping %s (already exists)", unique_identifier
-        )
+        _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_identifier)
         return tuple(entities)
     if f"{device.device_address}:{channel_no}" not in device.channels:
         return tuple(entities)
@@ -643,6 +642,7 @@ def _create_entities(
         device_def=device_def,
         entity_def=entity_def,
         channel_no=channel_no,
+        extended=extended,
     )
     if len(entity.data_entities) > 0:
         device.add_entity(entity)
@@ -683,9 +683,7 @@ def _get_device(device_enum: EntityDefinition) -> dict[str, Any] | None:
     return None
 
 
-def _get_device_group(
-    device_enum: EntityDefinition, base_channel_no: int
-) -> dict[str, Any]:
+def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> dict[str, Any]:
     """Return the device group."""
     device = _get_device(device_enum)
     group: dict[str, Any] = {}
@@ -748,15 +746,9 @@ def get_required_parameters() -> tuple[str, ...]:
         required_parameters.extend(entity_definition[ED_DEFAULT_ENTITIES][channel])
     for device in entity_definition[ED_DEVICE_DEFINITIONS]:
         device_def = entity_definition[ED_DEVICE_DEFINITIONS][device][ED_DEVICE_GROUP]
-        required_parameters.extend(
-            list(device_def.get(ED_REPEATABLE_FIELDS, {}).values())
-        )
-        required_parameters.extend(
-            list(device_def.get(ED_VISIBLE_REPEATABLE_FIELDS, {}).values())
-        )
-        required_parameters.extend(
-            list(device_def.get(ED_REPEATABLE_FIELDS, {}).values())
-        )
+        required_parameters.extend(list(device_def.get(ED_REPEATABLE_FIELDS, {}).values()))
+        required_parameters.extend(list(device_def.get(ED_VISIBLE_REPEATABLE_FIELDS, {}).values()))
+        required_parameters.extend(list(device_def.get(ED_REPEATABLE_FIELDS, {}).values()))
         for additional_entities in list(
             entity_definition[ED_DEVICE_DEFINITIONS][device]
             .get(ED_ADDITIONAL_ENTITIES, {})
@@ -765,9 +757,7 @@ def get_required_parameters() -> tuple[str, ...]:
             required_parameters.extend(additional_entities)
     for device_type in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE]:
         for additional_entities in list(
-            entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE][
-                device_type
-            ].values()
+            entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE][device_type].values()
         ):
             required_parameters.extend(additional_entities)
 
@@ -779,5 +769,12 @@ class CustomConfig:
     """Data for custom entity creation."""
 
     func: Callable
-    group_base_channels: tuple[int, ...]
-    extended: dict[str, Any] | None = None
+    channels: tuple[int, ...]
+    extended: ExtendedConfig | None = None
+
+
+@dataclass
+class ExtendedConfig:
+    """Extended data for custom entity creation."""
+
+    fixed_channels: dict[int, dict[str, str]]

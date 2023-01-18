@@ -6,7 +6,6 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -34,7 +33,7 @@ async def test_cecover(
 ) -> None:
     """Test CeCover."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeCover = cast(CeCover, await get_custom_entity(central, "VCU8537918", 4))
+    cover: CeCover = cast(CeCover, await helper.get_custom_entity(central, "VCU8537918", 4))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position == 0
@@ -85,7 +84,7 @@ async def test_ceblind(
 ) -> None:
     """Test CeBlind."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeBlind = cast(CeBlind, await get_custom_entity(central, "VCU0000145", 1))
+    cover: CeBlind = cast(CeBlind, await helper.get_custom_entity(central, "VCU0000145", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
     assert cover.channel_operation_mode is None
     assert cover.current_cover_position == 0
@@ -167,9 +166,7 @@ async def test_ceipblind(
 ) -> None:
     """Test CeIpBlind."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeIpBlind = cast(
-        CeIpBlind, await get_custom_entity(central, "VCU1223813", 4)
-    )
+    cover: CeIpBlind = cast(CeIpBlind, await helper.get_custom_entity(central, "VCU1223813", 4))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position == 0
@@ -252,7 +249,7 @@ async def no_test_cegarage(
 ) -> None:
     """Test CeGarage."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeGarage = cast(CeGarage, await get_custom_entity(central, "VCU3574044", 1))
+    cover: CeGarage = cast(CeGarage, await helper.get_custom_entity(central, "VCU3574044", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position is None
@@ -313,13 +310,9 @@ async def no_test_cegarage(
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
     assert cover.current_cover_position == 100
 
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_OPENING
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_OPENING)
     assert cover.is_opening is True
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_CLOSING
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_CLOSING)
     assert cover.is_closing is True
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", None)

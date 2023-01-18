@@ -86,22 +86,18 @@ class HmDevice:
     Object to hold information about a device and associated entities.
     """
 
-    def __init__(
-        self, central: hmcu.CentralUnit, interface_id: str, device_address: str
-    ):
+    def __init__(self, central: hmcu.CentralUnit, interface_id: str, device_address: str):
         """
         Initialize the device object.
         """
         self.central: Final[hmcu.CentralUnit] = central
         self._attr_interface_id: Final[str] = interface_id
-        self._attr_interface: Final[str] = central.device_details.get_interface(
-            device_address
-        )
+        self._attr_interface: Final[str] = central.device_details.get_interface(device_address)
         self.client: Final[hmcl.Client] = central.get_client(interface_id=interface_id)
         self._attr_device_address: Final[str] = device_address
-        self.channels: Final[
-            dict[str, hmcu.Channel]
-        ] = central.device_descriptions.get_channels(interface_id, device_address)
+        self.channels: Final[dict[str, hmcu.Channel]] = central.device_descriptions.get_channels(
+            interface_id, device_address
+        )
         _LOGGER.debug(
             "__init__: Initializing device: %s, %s",
             interface_id,
@@ -112,9 +108,7 @@ class HmDevice:
         self.custom_entities: dict[str, CustomEntity] = {}
         self.events: dict[tuple[str, str], GenericEvent] = {}
         self._attr_last_update: datetime = INIT_DATETIME
-        self._forced_availability: HmForcedDeviceAvailability = (
-            HmForcedDeviceAvailability.NOT_SET
-        )
+        self._forced_availability: HmForcedDeviceAvailability = HmForcedDeviceAvailability.NOT_SET
         self._update_callbacks: list[Callable] = []
         self._attr_device_type: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
@@ -208,23 +202,17 @@ class HmDevice:
     @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity"""
-        return self.generic_entities.get(
-            (f"{self._attr_device_address}:0", EVENT_UN_REACH)
-        )
+        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_UN_REACH))
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity"""
-        return self.generic_entities.get(
-            (f"{self._attr_device_address}:0", EVENT_STICKY_UN_REACH)
-        )
+        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_STICKY_UN_REACH))
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity"""
-        return self.generic_entities.get(
-            (f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING)
-        )
+        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING))
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
@@ -307,9 +295,7 @@ class HmDevice:
     def _set_last_update(self) -> None:
         self._attr_last_update = datetime.now()
 
-    def get_generic_entity(
-        self, channel_address: str, parameter: str
-    ) -> GenericEntity | None:
+    def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Return an entity from device."""
         return self.generic_entities.get((channel_address, parameter))
 
@@ -342,16 +328,11 @@ class HmDevice:
     @property
     def config_pending(self) -> bool:
         """Return if a config change of the device is pending."""
-        if (
-            self._e_config_pending is not None
-            and self._e_config_pending.value is not None
-        ):
+        if self._e_config_pending is not None and self._e_config_pending.value is not None:
             return self._e_config_pending.value is True
         return False
 
-    def set_forced_availability(
-        self, forced_availability: HmForcedDeviceAvailability
-    ) -> None:
+    def set_forced_availability(self, forced_availability: HmForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
         if not self._forced_availability == forced_availability:
             self._forced_availability = forced_availability
@@ -426,11 +407,13 @@ class HmDevice:
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                 ).items():
-                    parameter_is_un_ignored: bool = self.central.parameter_visibility.parameter_is_un_ignored(  # noqa: E501
-                        device_type=self._attr_device_type,
-                        device_channel=device_channel,
-                        paramset_key=paramset_key,
-                        parameter=parameter,
+                    parameter_is_un_ignored: bool = (
+                        self.central.parameter_visibility.parameter_is_un_ignored(  # noqa: E501
+                            device_type=self._attr_device_type,
+                            device_channel=device_channel,
+                            paramset_key=paramset_key,
+                            parameter=parameter,
+                        )
                     )
                     if parameter_data[HM_OPERATIONS] & OPERATION_EVENT and (
                         parameter in CLICK_EVENTS
@@ -457,8 +440,7 @@ class HmDevice:
                         continue
                     # CLICK_EVENTS are allowed for Buttons
                     if parameter not in IMPULSE_EVENTS and (
-                        not parameter.startswith(DEVICE_ERROR_EVENTS)
-                        or parameter_is_un_ignored
+                        not parameter.startswith(DEVICE_ERROR_EVENTS) or parameter_is_un_ignored
                     ):
                         self._create_entity_and_append_to_device(
                             channel_address=channel_address,
@@ -479,10 +461,10 @@ class HmDevice:
             # Call the custom creation function.
             for entity_configs in get_entity_configs(self._attr_device_type):
                 if isinstance(entity_configs, CustomConfig):
-                    entity_configs.func(self, entity_configs.group_base_channels)
+                    entity_configs.func(self, entity_configs.channels)
                 else:
                     for entity_config in entity_configs:
-                        entity_config.func(self, entity_config.group_base_channels)
+                        entity_config.func(self, entity_config.channels)
 
     def _create_event_and_append_to_device(
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
@@ -617,9 +599,7 @@ class HmDevice:
             if new_platform := self.central.parameter_visibility.wrap_entity(
                 wrapped_entity=entity
             ):
-                wrapper_entity = WrapperEntity(
-                    wrapped_entity=entity, new_platform=new_platform
-                )
+                wrapper_entity = WrapperEntity(wrapped_entity=entity, new_platform=new_platform)
                 self.add_entity(wrapper_entity)
 
 
@@ -713,9 +693,7 @@ class ValueCache:
                 )
             ) != NO_CACHE_ENTRY:
                 return (
-                    NO_CACHE_ENTRY
-                    if cached_value == self._NO_VALUE_CACHE_ENTRY
-                    else cached_value
+                    NO_CACHE_ENTRY if cached_value == self._NO_VALUE_CACHE_ENTRY else cached_value
                 )
 
             value: Any = self._NO_VALUE_CACHE_ENTRY
@@ -740,9 +718,9 @@ class ValueCache:
                 self._attr_value_cache[paramset_key][channel_address] = {}
             # write value to cache even if an exception has occurred
             # to avoid repetitive calls to CCU within max_age_seconds
-            self._attr_value_cache[paramset_key][channel_address][
-                parameter
-            ] = CacheEntry(value=value, last_update=datetime.now())
+            self._attr_value_cache[paramset_key][channel_address][parameter] = CacheEntry(
+                value=value, last_update=datetime.now()
+            )
             return NO_CACHE_ENTRY if value == self._NO_VALUE_CACHE_ENTRY else value
 
     def _get_value_from_cache(

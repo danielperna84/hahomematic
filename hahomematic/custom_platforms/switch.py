@@ -11,6 +11,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_STATE,
     CustomConfig,
     EntityDefinition,
+    ExtendedConfig,
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
@@ -32,9 +33,7 @@ class CeSwitch(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_state: HmSwitch = self._get_entity(
-            field_name=FIELD_STATE, entity_type=HmSwitch
-        )
+        self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
         self._e_on_time_value: HmAction = self._get_entity(
             field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
         )
@@ -70,7 +69,9 @@ class CeSwitch(CustomEntity):
 
 
 def make_ip_switch(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP switch entities."""
     return make_custom_entity(
@@ -78,11 +79,14 @@ def make_ip_switch(
         custom_entity_class=CeSwitch,
         device_enum=EntityDefinition.IP_SWITCH,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_rf_switch(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP switch entities."""
     return make_custom_entity(
@@ -90,36 +94,31 @@ def make_rf_switch(
         custom_entity_class=CeSwitch,
         device_enum=EntityDefinition.RF_SWITCH,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "ELV-SH-BS2": CustomConfig(func=make_ip_switch, group_base_channels=(3, 7)),
-    "HmIP-BS2": CustomConfig(func=make_ip_switch, group_base_channels=(3, 7)),
-    "HmIP-BSM": CustomConfig(func=make_ip_switch, group_base_channels=(3,)),
-    "HmIP-FSM": CustomConfig(func=make_ip_switch, group_base_channels=(1,)),
-    "HmIP-FSI": CustomConfig(func=make_ip_switch, group_base_channels=(2,)),
-    "HmIP-PS": CustomConfig(func=make_ip_switch, group_base_channels=(2,)),
-    "HmIP-BSL": CustomConfig(func=make_ip_switch, group_base_channels=(3,)),
-    "HmIP-DRSI1": CustomConfig(func=make_ip_switch, group_base_channels=(2,)),
-    "HmIP-DRSI4": CustomConfig(func=make_ip_switch, group_base_channels=(5, 9, 13, 17)),
-    "HmIPW-DRS": CustomConfig(
-        func=make_ip_switch, group_base_channels=(1, 5, 9, 13, 17, 21, 25, 29)
-    ),
-    "HmIP-MOD-OC8": CustomConfig(
-        func=make_ip_switch, group_base_channels=(9, 13, 17, 21, 25, 29, 33, 37)
-    ),
-    "HmIP-PCBS": CustomConfig(func=make_ip_switch, group_base_channels=(2,)),
-    "HmIP-PCBS2": CustomConfig(func=make_ip_switch, group_base_channels=(3, 7)),
-    "HmIP-PCBS-BAT": CustomConfig(func=make_ip_switch, group_base_channels=(2,)),
-    "HmIP-SCTH230": CustomConfig(func=make_ip_switch, group_base_channels=(7,)),
-    "HmIP-USBSM": CustomConfig(func=make_ip_switch, group_base_channels=(2,)),
-    "HmIP-WGC": CustomConfig(func=make_ip_switch, group_base_channels=(2,)),
-    "HmIP-WHS2": CustomConfig(func=make_ip_switch, group_base_channels=(1, 5)),
-    "HmIPW-FIO6": CustomConfig(
-        func=make_ip_switch, group_base_channels=(7, 11, 15, 19, 23, 27)
-    ),
+    "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+    "HmIP-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+    "HmIP-BSM": CustomConfig(func=make_ip_switch, channels=(3,)),
+    "HmIP-FSM": CustomConfig(func=make_ip_switch, channels=(1,)),
+    "HmIP-FSI": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-PS": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-BSL": CustomConfig(func=make_ip_switch, channels=(3,)),
+    "HmIP-DRSI1": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-DRSI4": CustomConfig(func=make_ip_switch, channels=(5, 9, 13, 17)),
+    "HmIPW-DRS": CustomConfig(func=make_ip_switch, channels=(1, 5, 9, 13, 17, 21, 25, 29)),
+    "HmIP-MOD-OC8": CustomConfig(func=make_ip_switch, channels=(9, 13, 17, 21, 25, 29, 33, 37)),
+    "HmIP-PCBS": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-PCBS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+    "HmIP-PCBS-BAT": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-SCTH230": CustomConfig(func=make_ip_switch, channels=(7,)),
+    "HmIP-USBSM": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-WGC": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-WHS2": CustomConfig(func=make_ip_switch, channels=(1, 5)),
+    "HmIPW-FIO6": CustomConfig(func=make_ip_switch, channels=(7, 11, 15, 19, 23, 27)),
     # "HM-LC-Sw": CustomEntityConfig(make_rf_switch, group_base_channels=(1, 2, 3, 4)),
     # "HM-ES-PM": CustomEntityConfig(make_rf_switch, group_base_channels=(1,))),
 }

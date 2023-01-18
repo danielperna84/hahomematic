@@ -13,6 +13,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_OPTICAL_ALARM_SELECTION,
     CustomConfig,
     EntityDefinition,
+    ExtendedConfig,
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
@@ -59,9 +60,7 @@ class BaseSiren(CustomEntity):
         """Return a list of available lights."""
 
     @abstractmethod
-    async def turn_on(
-        self, acoustic_alarm: str, optical_alarm: str, duration: int
-    ) -> None:
+    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> None:
         """Turn the device on."""
 
     @abstractmethod
@@ -141,9 +140,7 @@ class CeIpSiren(BaseSiren):
 class CeRfSiren(BaseSiren):
     """Class for classic HomeMatic siren entities."""
 
-    async def turn_on(
-        self, acoustic_alarm: str, optical_alarm: str, duration: int
-    ) -> None:
+    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> None:
         """Turn the device on."""
 
     async def turn_off(self) -> None:
@@ -151,7 +148,9 @@ class CeRfSiren(BaseSiren):
 
 
 def make_ip_siren(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP siren entities."""
     return make_custom_entity(
@@ -159,11 +158,14 @@ def make_ip_siren(
         custom_entity_class=CeIpSiren,
         device_enum=EntityDefinition.IP_SIREN,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_rf_siren(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic rf siren entities."""
     return make_custom_entity(
@@ -171,12 +173,13 @@ def make_rf_siren(
         custom_entity_class=CeRfSiren,
         device_enum=EntityDefinition.RF_SIREN,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "HmIP-ASIR": CustomConfig(func=make_ip_siren, group_base_channels=(0,)),
+    "HmIP-ASIR": CustomConfig(func=make_ip_siren, channels=(0,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()

@@ -5,7 +5,7 @@ import importlib.resources
 import json
 import logging
 import os
-from typing import Any, cast
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
@@ -17,7 +17,7 @@ from hahomematic.client import Client, InterfaceConfig, LocalRessources, _Client
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity, GenericSystemVariable
 from hahomematic.generic_platforms.button import HmProgramButton
-from hahomematic.helpers import ProgramData, SystemVariableData, get_device_address
+from hahomematic.helpers import get_device_address
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,9 +77,7 @@ class CentralUnitLocalFactory:
             central=central,
             interface_config=interface_config,
             do_mock_client=do_mock_client,
-            ignore_devices_on_create=ignore_devices_on_create
-            if ignore_devices_on_create
-            else [],
+            ignore_devices_on_create=ignore_devices_on_create if ignore_devices_on_create else [],
         )
 
         assert central
@@ -145,11 +143,6 @@ async def get_client(
     ignore_devices_on_create: list[str] | None = None,
 ) -> Client | Mock:
     """Returns a central based on give address_device_translation."""
-
-    _ignore_devices_on_create: list[str] = (
-        ignore_devices_on_create if ignore_devices_on_create else []
-    )
-
     _client = await _ClientConfig(
         central=central,
         interface_config=interface_config,
@@ -170,9 +163,7 @@ async def get_value_from_generic_entity(
         central_unit=central_unit, address=address, parameter=parameter
     )
     assert entity
-    await entity.load_entity_value(
-        call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
-    )
+    await entity.load_entity_value(call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED)
     return entity.value
 
 
@@ -229,9 +220,7 @@ async def get_custom_entity(
     return None
 
 
-async def get_sysvar_entity(
-    central: CentralUnit, name: str
-) -> GenericSystemVariable | None:
+async def get_sysvar_entity(central: CentralUnit, name: str) -> GenericSystemVariable | None:
     """Return the sysvar entity."""
 
     entity = central.sysvar_entities.get(name)
@@ -258,9 +247,7 @@ def load_device_description(central: CentralUnit, filename: str) -> Any:
 def get_mock(instance, **kwargs):
     """Create a mock and copy instance attributes over mock."""
     if isinstance(instance, Mock):
-        instance.__dict__.update(
-            instance._mock_wraps.__dict__  # pylint: disable=protected-access
-        )
+        instance.__dict__.update(instance._mock_wraps.__dict__)  # pylint: disable=protected-access
         return instance
 
     mock = MagicMock(spec=instance, wraps=instance, **kwargs)

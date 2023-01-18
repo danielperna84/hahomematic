@@ -111,15 +111,12 @@ class CentralUnit:
         self.config: Final[CentralConfig] = central_config
         self._attr_name: Final[str] = central_config.name
         self._attr_model: str | None = None
-        self._connection_state: Final[
-            CentralConnectionState
-        ] = central_config.connection_state
+        self._connection_state: Final[CentralConnectionState] = central_config.connection_state
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
         self._xml_rpc_server: xml_rpc.XmlRpcServer | None = None
         if central_config.enable_server:
             self._xml_rpc_server = xml_rpc.register_xml_rpc_server(
-                local_port=central_config.callback_port
-                or central_config.default_callback_port
+                local_port=central_config.callback_port or central_config.default_callback_port
             )
             self._xml_rpc_server.register_central(self)
         self.local_port: Final[int] = (
@@ -128,18 +125,16 @@ class CentralUnit:
 
         # Caches for CCU data
         self.device_data: Final[DeviceDataCache] = DeviceDataCache(central=self)
-        self.device_details: Final[DeviceDetailsCache] = DeviceDetailsCache(
+        self.device_details: Final[DeviceDetailsCache] = DeviceDetailsCache(central=self)
+        self.device_descriptions: Final[DeviceDescriptionCache] = DeviceDescriptionCache(
             central=self
         )
-        self.device_descriptions: Final[
-            DeviceDescriptionCache
-        ] = DeviceDescriptionCache(central=self)
-        self.paramset_descriptions: Final[
-            ParamsetDescriptionCache
-        ] = ParamsetDescriptionCache(central=self)
-        self.parameter_visibility: Final[
-            ParameterVisibilityCache
-        ] = ParameterVisibilityCache(central=self)
+        self.paramset_descriptions: Final[ParamsetDescriptionCache] = ParamsetDescriptionCache(
+            central=self
+        )
+        self.parameter_visibility: Final[ParameterVisibilityCache] = ParameterVisibilityCache(
+            central=self
+        )
 
         # {interface_id, client}
         self._clients: Final[dict[str, hmcl.Client]] = {}
@@ -162,9 +157,7 @@ class CentralUnit:
         # Signature: (event_type, event_data) #CC
         self.callback_ha_event: Callable | None = None
 
-        self.json_rpc_client: Final[
-            JsonRpcAioHttpClient
-        ] = central_config.create_json_rpc_client()
+        self.json_rpc_client: Final[JsonRpcAioHttpClient] = central_config.create_json_rpc_client()
 
         CENTRAL_INSTANCES[self._attr_name] = self
         self._connection_checker: Final[ConnectionChecker] = ConnectionChecker(self)
@@ -334,18 +327,13 @@ class CentralUnit:
             )
             return False
 
-        local_ip = await self._identify_callback_ip(
-            list(self.config.interface_configs)[0].port
-        )
+        local_ip = await self._identify_callback_ip(list(self.config.interface_configs)[0].port)
         for interface_config in self.config.interface_configs:
             try:
                 if client := await hmcl.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
-                    if (
-                        interface_config.interface
-                        not in await client.get_available_interfaces()
-                    ):
+                    if interface_config.interface not in await client.get_available_interfaces():
                         _LOGGER.debug(
                             "create_clients failed: "
                             "Interface: %s is not available for backend.",
@@ -365,8 +353,7 @@ class CentralUnit:
                     available=False,
                 )
                 _LOGGER.debug(
-                    "create_clients failed: "
-                    "Unable to create client for central [%s]",
+                    "create_clients failed: Unable to create client for central [%s]",
                     ex.args,
                 )
 
@@ -384,9 +371,7 @@ class CentralUnit:
         """Init clients of control unit, and start connection checker."""
         for client in self._clients.values():
             if PROXY_INIT_SUCCESS == await client.proxy_init():
-                _LOGGER.debug(
-                    "init_clients: client for %s initialized", client.interface_id
-                )
+                _LOGGER.debug("init_clients: client for %s initialized", client.interface_id)
 
     async def _de_init_clients(self) -> None:
         """De-init clients"""
@@ -442,9 +427,7 @@ class CentralUnit:
         callback_ip: str | None = None
         while callback_ip is None:
             if (
-                callback_ip := await self.async_add_executor_job(
-                    get_local_ip, self.config.host
-                )
+                callback_ip := await self.async_add_executor_job(get_local_ip, self.config.host)
             ) is None:
                 _LOGGER.warning("Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL)
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
@@ -472,9 +455,7 @@ class CentralUnit:
         if len(self.config.interface_configs) == 0:
             raise NoClients("validate_config: No clients defined.")
 
-        local_ip = await self._identify_callback_ip(
-            list(self.config.interface_configs)[0].port
-        )
+        local_ip = await self._identify_callback_ip(list(self.config.interface_configs)[0].port)
         serial: str | None = None
         for interface_config in self.config.interface_configs:
             client = await hmcl.create_client(
@@ -488,8 +469,7 @@ class CentralUnit:
         """Return a client by interface_id. #CC"""
         if self.has_client(interface_id=interface_id) is False:
             raise HaHomematicException(
-                f"get_client: interface_id {interface_id} "
-                f"does not exist on {self._attr_name}"
+                f"get_client: interface_id {interface_id} " f"does not exist on {self._attr_name}"
             )
         return self._clients[interface_id]
 
@@ -583,9 +563,7 @@ class CentralUnit:
             await self.device_details.load()
             await self.device_data.load()
         except json.decoder.JSONDecodeError:
-            _LOGGER.warning(
-                "load_caches failed: Unable to load caches for %s.", self._attr_name
-            )
+            _LOGGER.warning("load_caches failed: Unable to load caches for %s.", self._attr_name)
             await self.clear_all()
 
     async def _create_devices(self) -> None:
@@ -598,15 +576,11 @@ class CentralUnit:
                 f"create_devices: "
                 f"No clients initialized. Not starting central {self._attr_name}."
             )
-        _LOGGER.debug(
-            "create_devices: Starting to create devices for %s.", self._attr_name
-        )
+        _LOGGER.debug("create_devices: Starting to create devices for %s.", self._attr_name)
 
         new_devices = set[HmDevice]()
         for interface_id in self._clients:
-            if not self.paramset_descriptions.has_interface_id(
-                interface_id=interface_id
-            ):
+            if not self.paramset_descriptions.has_interface_id(interface_id=interface_id):
                 _LOGGER.debug(
                     "create_devices: Skipping interface %s, missing paramsets.",
                     interface_id,
@@ -628,8 +602,7 @@ class CentralUnit:
 
                 except Exception as err:
                     _LOGGER.error(
-                        "create_devices failed: "
-                        "%s [%s] Unable to create device: %s, %s",
+                        "create_devices failed: %s [%s] Unable to create device: %s, %s",
                         type(err).__name__,
                         err.args,
                         interface_id,
@@ -643,16 +616,13 @@ class CentralUnit:
                         self._devices[device_address] = device
                 except Exception as err:
                     _LOGGER.error(
-                        "create_devices failed: "
-                        "%s [%s] Unable to create entities: %s, %s",
+                        "create_devices failed: %s [%s] Unable to create entities: %s, %s",
                         type(err).__name__,
                         err.args,
                         interface_id,
                         device_address,
                     )
-        _LOGGER.debug(
-            "create_devices: Finished creating devices for %s.", self._attr_name
-        )
+        _LOGGER.debug("create_devices: Finished creating devices for %s.", self._attr_name)
 
         if (
             len(new_devices) > 0
@@ -676,8 +646,7 @@ class CentralUnit:
         addresses.append(device_address)
         if len(addresses) == 0:
             _LOGGER.debug(
-                "delete_device: Nothing to delete: interface_id = %s, "
-                "device_address = %s",
+                "delete_device: Nothing to delete: interface_id = %s, device_address = %s",
                 interface_id,
                 device_address,
             )
@@ -727,22 +696,16 @@ class CentralUnit:
             # We need this list to avoid adding duplicates.
             known_addresses = [
                 dev_desc[HM_ADDRESS]
-                for dev_desc in self.device_descriptions.get_raw_device_descriptions(
-                    interface_id
-                )
+                for dev_desc in self.device_descriptions.get_raw_device_descriptions(interface_id)
             ]
             client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
                     if dev_desc[HM_ADDRESS] not in known_addresses:
-                        self.device_descriptions.add_device_description(
-                            interface_id, dev_desc
-                        )
+                        self.device_descriptions.add_device_description(interface_id, dev_desc)
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:
-                    _LOGGER.error(
-                        "add_new_devices failed: %s [%s]", type(err).__name__, err.args
-                    )
+                    _LOGGER.error("add_new_devices failed: %s [%s]", type(err).__name__, err.args)
 
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
@@ -751,15 +714,12 @@ class CentralUnit:
             await self._create_devices()
 
     @callback_event
-    def event(
-        self, interface_id: str, channel_address: str, parameter: str, value: Any
-    ) -> None:
+    def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """
         If a device emits some sort event, we will handle it here.
         """
         _LOGGER.debug(
-            "event: interface_id = %s, channel_address = %s, "
-            "parameter = %s, value = %s",
+            "event: interface_id = %s, channel_address = %s, parameter = %s, value = %s",
             interface_id,
             channel_address,
             parameter,
@@ -774,9 +734,7 @@ class CentralUnit:
             return
         if (channel_address, parameter) in self._entity_event_subscriptions:
             try:
-                for callback in self._entity_event_subscriptions[
-                    (channel_address, parameter)
-                ]:
+                for callback in self._entity_event_subscriptions[(channel_address, parameter)]:
                     callback(value)
             except RuntimeError as rte:
                 _LOGGER.debug(
@@ -803,9 +761,7 @@ class CentralUnit:
         """
         _LOGGER.debug("list_devices: interface_id = %s", interface_id)
 
-        return self.device_descriptions.get_raw_device_descriptions(
-            interface_id=interface_id
-        )
+        return self.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
 
     def add_entity(self, entity: BaseEntity) -> None:
         """Add entity to central collections"""
@@ -824,12 +780,10 @@ class CentralUnit:
                 entity.channel_address,
                 entity.parameter,
             ) not in self._entity_event_subscriptions:
-                self._entity_event_subscriptions[
-                    (entity.channel_address, entity.parameter)
-                ] = []
-            self._entity_event_subscriptions[
-                (entity.channel_address, entity.parameter)
-            ].append(entity.event)
+                self._entity_event_subscriptions[(entity.channel_address, entity.parameter)] = []
+            self._entity_event_subscriptions[(entity.channel_address, entity.parameter)].append(
+                entity.event
+            )
 
     async def remove_device(self, device: HmDevice) -> None:
         """Remove device to central collections."""
@@ -854,12 +808,9 @@ class CentralUnit:
         if (
             isinstance(entity, (GenericEntity, GenericEvent))
             and entity.supports_events
-            and (entity.channel_address, entity.parameter)
-            in self._entity_event_subscriptions
+            and (entity.channel_address, entity.parameter) in self._entity_event_subscriptions
         ):
-            del self._entity_event_subscriptions[
-                (entity.channel_address, entity.parameter)
-            ]
+            del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
 
     def has_entity(self, unique_identifier: str) -> bool:
         """Check if unique_identifier is alread added."""
@@ -894,9 +845,7 @@ class CentralUnit:
             )
             return None
 
-    async def async_add_executor_job(
-        self, executor_func: Callable[..., T], *args: Any
-    ) -> T:
+    async def async_add_executor_job(self, executor_func: Callable[..., T], *args: Any) -> T:
         """Add an executor job from within the event_loop."""
         try:
             return await self._loop.run_in_executor(None, executor_func, *args)
@@ -1024,9 +973,7 @@ class CentralUnit:
                 return virtual_remote
         return None
 
-    def get_generic_entity(
-        self, channel_address: str, parameter: str
-    ) -> GenericEntity | None:
+    def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Get entity by channel_address and parameter. #CC"""
         if ":" in channel_address:
             if device := self._devices.get(get_device_address(channel_address)):
@@ -1115,9 +1062,7 @@ class ConnectionChecker(threading.Thread):
                 _LOGGER.error("check_connection failed: no connection: %s", nex.args)
                 continue
             except Exception as err:
-                _LOGGER.error(
-                    "check_connection failed: %s [%s]", type(err).__name__, err.args
-                )
+                _LOGGER.error("check_connection failed: %s [%s]", type(err).__name__, err.args)
             if self._active:
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
 
@@ -1259,9 +1204,7 @@ class CentralConnectionState:
         if isinstance(issuer, XmlRpcProxy):
             if issuer.interface_id in self._xml_proxy_issues:
                 self._xml_proxy_issues.remove(issuer.interface_id)
-                _LOGGER.debug(
-                    "remove_issue: removing issue for %s", issuer.interface_id
-                )
+                _LOGGER.debug("remove_issue: removing issue for %s", issuer.interface_id)
                 return True
         return False
 
@@ -1402,17 +1345,14 @@ class DeviceDataCache:
         """Refresh entity data."""
         for entity in self._central.get_readable_entities():
             if paramset_key is None or (
-                isinstance(entity, GenericEntity)
-                and entity.paramset_key == paramset_key
+                isinstance(entity, GenericEntity) and entity.paramset_key == paramset_key
             ):
                 await entity.load_entity_value(
                     call_source=HmCallSource.HM_INIT,
                     max_age_seconds=max_age_seconds,
                 )
 
-    def add_device_data(
-        self, device_data: dict[str, dict[str, dict[str, Any]]]
-    ) -> None:
+    def add_device_data(self, device_data: dict[str, dict[str, dict[str, Any]]]) -> None:
         """Add device data to cache."""
         self._central_values_cache = device_data
         self._last_updated = datetime.now()
@@ -1575,13 +1515,11 @@ class DeviceDescriptionCache(BasePersistentCache):
 
         for address in deleted_addresses:
             try:
-                if ":" not in address and self._addresses.get(
-                    device.interface_id, {}
-                ).get(address, []):
-                    del self._addresses[device.interface_id][address]
-                if self._device_descriptions.get(device.interface_id, {}).get(
-                    address, {}
+                if ":" not in address and self._addresses.get(device.interface_id, {}).get(
+                    address, []
                 ):
+                    del self._addresses[device.interface_id][address]
+                if self._device_descriptions.get(device.interface_id, {}).get(address, {}):
                     del self._device_descriptions[device.interface_id][address]
             except KeyError:
                 _LOGGER.warning("cleanup failed: Unable to delete: %s", address)
@@ -1591,14 +1529,10 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Return the addresses by interface"""
         return self._addresses.get(interface_id, {})
 
-    def get_channels(
-        self, interface_id: str, device_address: str
-    ) -> dict[str, Channel]:
+    def get_channels(self, interface_id: str, device_address: str) -> dict[str, Channel]:
         """Return the device channels by interface and device_address"""
         channels: dict[str, Channel] = {}
-        for channel_address in self._addresses.get(interface_id, {}).get(
-            device_address, []
-        ):
+        for channel_address in self._addresses.get(interface_id, {}).get(device_address, []):
             channel_name = str(
                 self.get_device_parameter(
                     interface_id=interface_id,
@@ -1618,14 +1552,10 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Return the device dict by interface and device_address"""
         return self._device_descriptions.get(interface_id, {}).get(device_address, {})
 
-    def get_device_with_channels(
-        self, interface_id: str, device_address: str
-    ) -> dict[str, Any]:
+    def get_device_with_channels(self, interface_id: str, device_address: str) -> dict[str, Any]:
         """Return the device dict by interface and device_address"""
         data: dict[str, Any] = {
-            device_address: self._device_descriptions.get(interface_id, {}).get(
-                device_address, {}
-            )
+            device_address: self._device_descriptions.get(interface_id, {}).get(device_address, {})
         }
         children = data[device_address]["CHILDREN"]
         for channel_address in children:
@@ -1639,9 +1569,7 @@ class DeviceDescriptionCache(BasePersistentCache):
     ) -> Any | None:
         """Return the device parameter by interface and device_address"""
         return (
-            self._device_descriptions.get(interface_id, {})
-            .get(device_address, {})
-            .get(parameter)
+            self._device_descriptions.get(interface_id, {}).get(device_address, {}).get(parameter)
         )
 
     def _convert_device_descriptions(
@@ -1679,9 +1607,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         Load device data from disk into _device_description_cache.
         """
         if self._central.config.use_caches is False:
-            _LOGGER.debug(
-                "load: not caching paramset descriptions for %s", self._central.name
-            )
+            _LOGGER.debug("load: not caching paramset descriptions for %s", self._central.name)
             return HmDataOperationResult.NO_LOAD
         result = await super().load()
         for (
@@ -1721,13 +1647,8 @@ class ParamsetDescriptionCache(BasePersistentCache):
             self._raw_paramset_descriptions[interface_id] = {}
         if channel_address not in self._raw_paramset_descriptions[interface_id]:
             self._raw_paramset_descriptions[interface_id][channel_address] = {}
-        if (
-            paramset_key
-            not in self._raw_paramset_descriptions[interface_id][channel_address]
-        ):
-            self._raw_paramset_descriptions[interface_id][channel_address][
-                paramset_key
-            ] = {}
+        if paramset_key not in self._raw_paramset_descriptions[interface_id][channel_address]:
+            self._raw_paramset_descriptions[interface_id][channel_address][paramset_key] = {}
 
         self._raw_paramset_descriptions[interface_id][channel_address][
             paramset_key
@@ -1738,9 +1659,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         if interface := self._raw_paramset_descriptions.get(device.interface_id):
             for channel_address in device.channels:
                 if channel_address in interface:
-                    del self._raw_paramset_descriptions[device.interface_id][
-                        channel_address
-                    ]
+                    del self._raw_paramset_descriptions[device.interface_id][channel_address]
         await self.save()
 
     def has_interface_id(self, interface_id: str) -> bool:
@@ -1749,11 +1668,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     def get_paramset_keys(self, interface_id: str, channel_address: str) -> list[str]:
         """Get paramset_keys from paramset descriptions cache."""
-        return list(
-            self._raw_paramset_descriptions.get(interface_id, {}).get(
-                channel_address, []
-            )
-        )
+        return list(self._raw_paramset_descriptions.get(interface_id, {}).get(channel_address, []))
 
     def get_paramset_descriptions(
         self, interface_id: str, channel_address: str, paramset_key: str
@@ -1793,9 +1708,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         parameters: set[str] = set()
         for channels in self._raw_paramset_descriptions.values():
             for channel_address in channels:
-                for parameter, paramset in channels[channel_address][
-                    PARAMSET_KEY_VALUES
-                ].items():
+                for parameter, paramset in channels[channel_address][PARAMSET_KEY_VALUES].items():
                     operations = paramset[HM_OPERATIONS]
                     if operations & OPERATION_READ and operations & OPERATION_EVENT:
                         parameters.add(parameter)
@@ -1839,21 +1752,17 @@ class ParamsetDescriptionCache(BasePersistentCache):
                             device_address,
                             parameter,
                         ) not in self._address_parameter_cache:
-                            self._address_parameter_cache[
-                                (device_address, parameter)
-                            ] = []
-                        self._address_parameter_cache[
-                            (device_address, parameter)
-                        ].append(get_device_channel(channel_address))
+                            self._address_parameter_cache[(device_address, parameter)] = []
+                        self._address_parameter_cache[(device_address, parameter)].append(
+                            get_device_channel(channel_address)
+                        )
 
     async def load(self) -> HmDataOperationResult:
         """
         Load paramset descriptions from disk into paramset cache.
         """
         if self._central.config.use_caches is False:
-            _LOGGER.debug(
-                "load: not caching device descriptions for %s", self._central.name
-            )
+            _LOGGER.debug("load: not caching device descriptions for %s", self._central.name)
             return HmDataOperationResult.NO_LOAD
         result = await super().load()
         self._init_address_parameter_list()

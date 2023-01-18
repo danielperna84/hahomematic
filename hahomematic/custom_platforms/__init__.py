@@ -67,10 +67,10 @@ def is_multi_channel_device(device_type: str) -> bool:
     channels: list[int] = []
     for entity_configs in get_entity_configs(device_type=device_type):
         if isinstance(entity_configs, CustomConfig):
-            channels.extend(entity_configs.group_base_channels)
+            channels.extend(entity_configs.channels)
         else:
             for entity_config in entity_configs:
-                channels.extend(entity_config.group_base_channels)
+                channels.extend(entity_config.channels)
 
     return len(channels) > 1
 

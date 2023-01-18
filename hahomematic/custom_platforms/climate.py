@@ -27,6 +27,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_VALVE_STATE,
     CustomConfig,
     EntityDefinition,
+    ExtendedConfig,
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
@@ -201,9 +202,7 @@ class BaseClimateEntity(CustomEntity):
             temperature = self.min_temp
         return temperature
 
-    async def set_temperature(
-        self, temperature: float, do_validate: bool = True
-    ) -> None:
+    async def set_temperature(self, temperature: float, do_validate: bool = True) -> None:
         """Set new target temperature."""
         await self._e_setpoint.send_value(value=temperature, do_validate=do_validate)
 
@@ -221,9 +220,7 @@ class BaseClimateEntity(CustomEntity):
         """Enable the away mode by calendar on thermostat."""
         return None
 
-    async def enable_away_mode_by_duration(
-        self, hours: int, away_temperature: float
-    ) -> None:
+    async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
         """Enable the away mode by duration on thermostat."""
         return None
 
@@ -325,9 +322,7 @@ class CeRfThermostat(BaseClimateEntity):
             await self._e_manu_mode.send_value(self.target_temperature)
             # Disable validation here to allow setting a value,
             # that is out of the validation range.
-            await self.set_temperature(
-                temperature=HM_OFF_TEMPERATURE, do_validate=False
-            )
+            await self.set_temperature(temperature=HM_OFF_TEMPERATURE, do_validate=False)
 
     async def set_preset_mode(self, preset_mode: HmPresetMode) -> None:
         """Set new preset mode."""
@@ -363,9 +358,7 @@ class CeIpThermostat(BaseClimateEntity):
         self._e_set_point_mode: HmInteger = self._get_entity(
             field_name=FIELD_SET_POINT_MODE, entity_type=HmInteger
         )
-        self._e_level: HmSensor = self._get_entity(
-            field_name=FIELD_LEVEL, entity_type=HmSensor
-        )
+        self._e_level: HmSensor = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmSensor)
         self._e_state: HmBinarySensor = self._get_entity(
             field_name=FIELD_STATE, entity_type=HmBinarySensor
         )
@@ -384,9 +377,7 @@ class CeIpThermostat(BaseClimateEntity):
             return None
         if self.hvac_mode == HmHvacMode.OFF:
             return HmHvacAction.OFF
-        if self._e_state.value is True or (
-            self._e_level.value and self._e_level.value > 0.0
-        ):
+        if self._e_state.value is True or (self._e_level.value and self._e_level.value > 0.0):
             return HmHvacAction.HEAT if self._is_heating_mode else HmHvacAction.COOL
         return HmHvacAction.IDLE
 
@@ -418,11 +409,7 @@ class CeIpThermostat(BaseClimateEntity):
         if self._e_set_point_mode.value == HMIP_MODE_AWAY:
             return HmPresetMode.AWAY
         if self.hvac_mode == HmHvacMode.AUTO:
-            return (
-                self._current_profile_name
-                if self._current_profile_name
-                else HmPresetMode.NONE
-            )
+            return self._current_profile_name if self._current_profile_name else HmPresetMode.NONE
         return HmPresetMode.NONE
 
     @value_property
@@ -485,9 +472,7 @@ class CeIpThermostat(BaseClimateEntity):
             },
         )
 
-    async def enable_away_mode_by_duration(
-        self, hours: int, away_temperature: float
-    ) -> None:
+    async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
         """Enable the away mode by duration on thermostat."""
         start = datetime.now() - timedelta(minutes=10)
         end = datetime.now() + timedelta(hours=hours)
@@ -514,9 +499,7 @@ class CeIpThermostat(BaseClimateEntity):
     @property
     def _current_profile_name(self) -> HmPresetMode | None:
         """Return a profile index by name."""
-        inv_profiles: dict[int, HmPresetMode] = {
-            v: k for k, v in self._profiles.items()
-        }
+        inv_profiles: dict[int, HmPresetMode] = {v: k for k, v in self._profiles.items()}
         if self._e_active_profile.value:
             return inv_profiles.get(int(self._e_active_profile.value))
         return None
@@ -533,7 +516,9 @@ class CeIpThermostat(BaseClimateEntity):
 
 
 def make_simple_thermostat(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates SimpleRfThermostat entities."""
     return make_custom_entity(
@@ -541,11 +526,14 @@ def make_simple_thermostat(
         custom_entity_class=CeSimpleRfThermostat,
         device_enum=EntityDefinition.SIMPLE_RF_THERMOSTAT,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_thermostat(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates RfThermostat entities."""
     return make_custom_entity(
@@ -553,11 +541,14 @@ def make_thermostat(
         custom_entity_class=CeRfThermostat,
         device_enum=EntityDefinition.RF_THERMOSTAT,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_thermostat_group(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates RfThermostat group entities."""
     return make_custom_entity(
@@ -565,11 +556,14 @@ def make_thermostat_group(
         custom_entity_class=CeRfThermostat,
         device_enum=EntityDefinition.RF_THERMOSTAT_GROUP,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_ip_thermostat(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates IPThermostat entities."""
     return make_custom_entity(
@@ -577,11 +571,14 @@ def make_ip_thermostat(
         custom_entity_class=CeIpThermostat,
         device_enum=EntityDefinition.IP_THERMOSTAT,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_ip_thermostat_group(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates IPThermostat group entities."""
     return make_custom_entity(
@@ -589,32 +586,29 @@ def make_ip_thermostat_group(
         custom_entity_class=CeIpThermostat,
         device_enum=EntityDefinition.IP_THERMOSTAT_GROUP,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
-    "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
-    "BC-TC-C-WM": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
-    "HM-CC-RT-DN": CustomConfig(func=make_thermostat, group_base_channels=(4,)),
-    "HM-CC-TC": CustomConfig(func=make_simple_thermostat, group_base_channels=(1,)),
-    "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, group_base_channels=(1,)),
-    "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, group_base_channels=(2,)),
-    "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIP-HEATING": CustomConfig(
-        func=make_ip_thermostat_group, group_base_channels=(1,)
-    ),
-    "HmIP-STH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIP-WTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIPW-STH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "Thermostat AA": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "ZEL STG RM FWT": CustomConfig(
-        func=make_simple_thermostat, group_base_channels=(1,)
-    ),
+    "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, channels=(1,)),
+    "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, channels=(1,)),
+    "BC-TC-C-WM": CustomConfig(func=make_thermostat, channels=(1,)),
+    "HM-CC-RT-DN": CustomConfig(func=make_thermostat, channels=(4,)),
+    "HM-CC-TC": CustomConfig(func=make_simple_thermostat, channels=(1,)),
+    "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, channels=(1,)),
+    "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, channels=(2,)),
+    "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-HEATING": CustomConfig(func=make_ip_thermostat_group, channels=(1,)),
+    "HmIP-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIPW-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "Thermostat AA": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "ZEL STG RM FWT": CustomConfig(func=make_simple_thermostat, channels=(1,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)

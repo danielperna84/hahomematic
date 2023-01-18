@@ -15,6 +15,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_STATE,
     CustomConfig,
     EntityDefinition,
+    ExtendedConfig,
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
@@ -137,18 +138,12 @@ class CeRfLock(BaseLock):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_state: HmSwitch = self._get_entity(
-            field_name=FIELD_STATE, entity_type=HmSwitch
-        )
-        self._e_open: HmAction = self._get_entity(
-            field_name=FIELD_OPEN, entity_type=HmAction
-        )
+        self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
+        self._e_open: HmAction = self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
         self._e_direction: HmSensor = self._get_entity(
             field_name=FIELD_DIRECTION, entity_type=HmSensor
         )
-        self._e_error: HmSensor = self._get_entity(
-            field_name=FIELD_ERROR, entity_type=HmSensor
-        )
+        self._e_error: HmSensor = self._get_entity(field_name=FIELD_ERROR, entity_type=HmSensor)
 
     @value_property
     def is_locked(self) -> bool:
@@ -188,7 +183,9 @@ class CeRfLock(BaseLock):
 
 
 def make_ip_lock(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP lock entities."""
     return make_custom_entity(
@@ -196,11 +193,14 @@ def make_ip_lock(
         custom_entity_class=CeIpLock,
         device_enum=EntityDefinition.IP_LOCK,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_rf_lock(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic rf lock entities."""
     return make_custom_entity(
@@ -208,13 +208,14 @@ def make_rf_lock(
         custom_entity_class=CeRfLock,
         device_enum=EntityDefinition.RF_LOCK,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "HmIP-DLD": CustomConfig(func=make_ip_lock, group_base_channels=(0,)),
-    "HM-Sec-Key": CustomConfig(func=make_rf_lock, group_base_channels=(1,)),
+    "HmIP-DLD": CustomConfig(func=make_ip_lock, channels=(0,)),
+    "HM-Sec-Key": CustomConfig(func=make_rf_lock, channels=(1,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()
