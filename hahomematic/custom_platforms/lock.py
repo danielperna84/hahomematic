@@ -214,8 +214,8 @@ def make_rf_lock(
 
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "HmIP-DLD": CustomConfig(func=make_ip_lock, channels=(0,)),
     "HM-Sec-Key": CustomConfig(func=make_rf_lock, channels=(1,)),
+    "HmIP-DLD": CustomConfig(func=make_ip_lock, channels=(0,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()

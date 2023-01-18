@@ -347,31 +347,29 @@ def make_rf_blind(
 
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "HmIP-BROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
-    "HmIP-FROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
-    "HmIP-BBL": CustomConfig(func=make_ip_blind, channels=(3,)),
-    "HmIP-FBL": CustomConfig(func=make_ip_blind, channels=(3,)),
-    "HmIP-HDM": CustomConfig(
-        func=make_ip_blind, channels=(0,)
-    ),  # 0 is correct, HDM1 has no status channel.
-    "HmIP-DRBLI4": CustomConfig(func=make_ip_blind, channels=(9, 13, 17, 21)),
-    "HmIPW-DRBL4": CustomConfig(func=make_ip_blind, channels=(1, 5, 9, 13)),
-    "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, channels=(1,)),
-    "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, channels=(1,)),
-    "HM-LC-Bl1-FM-2": CustomConfig(func=make_rf_cover, channels=(1,)),
-    "HM-LC-Bl1-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
-    "HM-LC-Bl1-PB-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
-    "HM-LC-Bl1-SM-2": CustomConfig(func=make_rf_cover, channels=(1,)),
-    "HM-LC-Bl1-SM": CustomConfig(func=make_rf_cover, channels=(1,)),
-    "HM-LC-Bl1PBU-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
-    "HM-LC-JaX": CustomConfig(func=make_rf_blind, channels=(1,)),
-    "HM-LC-Ja1PBU-FM": CustomConfig(func=make_rf_blind, channels=(1,)),
-    "ZEL STG RM FEP 230V": CustomConfig(func=make_rf_cover, channels=(1,)),
     "263 146": CustomConfig(func=make_rf_cover, channels=(1,)),
     "263 147": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-FM-2": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-PB-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-SM": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-SM-2": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1PBU-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
     "HM-LC-BlX": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Ja1PBU-FM": CustomConfig(func=make_rf_blind, channels=(1,)),
+    "HM-LC-JaX": CustomConfig(func=make_rf_blind, channels=(1,)),
     "HM-Sec-Win": CustomConfig(func=make_rf_cover, channels=(1,)),
     "HMW-LC-Bl1": CustomConfig(func=make_rf_cover, channels=(3,)),
+    "HmIP-BBL": CustomConfig(func=make_ip_blind, channels=(3,)),
+    "HmIP-BROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
+    "HmIP-DRBLI4": CustomConfig(func=make_ip_blind, channels=(9, 13, 17, 21)),
+    "HmIP-FBL": CustomConfig(func=make_ip_blind, channels=(3,)),
+    "HmIP-FROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
+    "HmIP-HDM": CustomConfig(func=make_ip_blind, channels=(0,)),
+    "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, channels=(1,)),
+    "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, channels=(1,)),
+    "HmIPW-DRBL4": CustomConfig(func=make_ip_blind, channels=(1, 5, 9, 13)),
+    "ZEL STG RM FEP 230V": CustomConfig(func=make_rf_cover, channels=(1,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()
