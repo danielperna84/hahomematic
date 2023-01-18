@@ -686,7 +686,7 @@ class CustomEntity(BaseEntity):
         unique_identifier: str,
         device_enum: hmed.EntityDefinition,
         device_def: dict[str, Any],
-        entity_def: dict[int, tuple[str, ...]],
+        entity_def: dict[int | tuple[int, ...], tuple[str, ...]],
         channel_no: int,
         extended: hmed.ExtendedConfig | None = None,
     ):
@@ -696,7 +696,7 @@ class CustomEntity(BaseEntity):
         self._device_enum: Final[hmed.EntityDefinition] = device_enum
         # required for name in BaseEntity
         self._device_desc: Final[dict[str, Any]] = device_def
-        self._entity_def: Final[dict[int, tuple[str, ...]]] = entity_def
+        self._entity_def: Final[dict[int | tuple[int, ...], tuple[str, ...]]] = entity_def
         super().__init__(
             device=device,
             unique_identifier=unique_identifier,
@@ -810,6 +810,18 @@ class CustomEntity(BaseEntity):
             )
             self._add_entity(field_name=field_name, entity=entity, is_visible=True)
 
+        if self._extended:
+            if fixed_channels := self._extended.fixed_channels:
+                for channel_no, mapping in fixed_channels.items():
+                    for field_name, parameter in mapping.items():
+                        channel_address = f"{self.device.device_address}:{channel_no}"
+                        entity = self.device.get_generic_entity(
+                            channel_address=channel_address, parameter=parameter
+                        )
+                        self._add_entity(field_name=field_name, entity=entity)
+            if additional_entities := self._extended.additional_entities:
+                self._mark_entities(entity_def=additional_entities)
+
         # Add device fields
         self._add_entities(
             field_dict_name=hmed.ED_FIELDS,
@@ -821,17 +833,10 @@ class CustomEntity(BaseEntity):
         )
 
         # Add default device entities
-        self._mark_entity(field_desc=self._entity_def)
+        self._mark_entities(entity_def=self._entity_def)
         # add default entities
         if hmed.get_include_default_entities(device_enum=self._device_enum):
-            self._mark_entity(field_desc=hmed.get_default_entities())
-
-        # add extra entities for the device type
-        self._mark_entity(
-            field_desc=hmed.get_additional_entities_by_device_type(
-                device_type=self.device.device_type
-            )
-        )
+            self._mark_entities(entity_def=hmed.get_default_entities())
 
         # add custom un_ignore entities
         self._mark_entity_by_custom_un_ignore_parameters(
@@ -866,18 +871,26 @@ class CustomEntity(BaseEntity):
         entity.register_update_callback(self.update_entity)
         self.data_entities[field_name] = entity
 
-    def _mark_entity(self, field_desc: dict[int, tuple[str, ...]]) -> None:
+    def _mark_entities(self, entity_def: dict[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
-        if not field_desc:
+        if not entity_def:
             return None
-        for channel_no, parameters in field_desc.items():
-            channel_address = f"{self.device.device_address}:{channel_no}"
-            for parameter in parameters:
-                entity = self.device.get_generic_entity(
-                    channel_address=channel_address, parameter=parameter
-                )
-                if entity:
-                    entity.set_usage(HmEntityUsage.ENTITY)
+        for channel_nos, parameters in entity_def.items():
+            if isinstance(channel_nos, int):
+                self._mark_entity(channel_no=channel_nos, parameters=parameters)
+            else:
+                for channel_no in channel_nos:
+                    self._mark_entity(channel_no=channel_no, parameters=parameters)
+
+    def _mark_entity(self, channel_no: int, parameters: tuple[str, ...]) -> None:
+        """Mark entity to be created in HA."""
+        channel_address = f"{self.device.device_address}:{channel_no}"
+        for parameter in parameters:
+            entity = self.device.get_generic_entity(
+                channel_address=channel_address, parameter=parameter
+            )
+            if entity:
+                entity.set_usage(HmEntityUsage.ENTITY)
 
     def _mark_entity_by_custom_un_ignore_parameters(
         self, un_ignore_params_by_paramset_key: dict[str, tuple[str, ...]]

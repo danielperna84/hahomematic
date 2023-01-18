@@ -9,7 +9,7 @@ import helper
 import pytest
 
 from hahomematic.const import HmCallSource, HmEntityUsage
-from hahomematic.custom_platforms.entity_definition import get_required_parameters
+from hahomematic.custom_platforms import get_required_parameters
 from hahomematic.custom_platforms.switch import CeSwitch
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
@@ -154,5 +154,5 @@ async def test_generic_wrapped_entity(
 def test_custom_required_entities() -> None:
     """Test required parameters from entity definitions."""
     required_parameters = get_required_parameters()
-    assert len(required_parameters) == 61
+    assert len(required_parameters) == 64
     assert check_ignore_parameters_is_clean() is True

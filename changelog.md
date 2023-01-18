@@ -6,6 +6,8 @@
 - Add ExtendedConfig to custom entities
 - Cleanup test imports
 - Increase the line length to 99
+- Add ExtendedConfig and use for additional_entities
+- Remove obsolete ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE from entity_definition
 
 # Version 2023.1.4 (2023-01-16)
 - Remove obsolete parse_ccu_sys_var
