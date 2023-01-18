@@ -27,6 +27,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_VALVE_STATE,
     CustomConfig,
     EntityDefinition,
+    ExtendedConfig,
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
@@ -533,7 +534,9 @@ class CeIpThermostat(BaseClimateEntity):
 
 
 def make_simple_thermostat(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates SimpleRfThermostat entities."""
     return make_custom_entity(
@@ -541,11 +544,14 @@ def make_simple_thermostat(
         custom_entity_class=CeSimpleRfThermostat,
         device_enum=EntityDefinition.SIMPLE_RF_THERMOSTAT,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_thermostat(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates RfThermostat entities."""
     return make_custom_entity(
@@ -553,11 +559,14 @@ def make_thermostat(
         custom_entity_class=CeRfThermostat,
         device_enum=EntityDefinition.RF_THERMOSTAT,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_thermostat_group(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates RfThermostat group entities."""
     return make_custom_entity(
@@ -565,11 +574,14 @@ def make_thermostat_group(
         custom_entity_class=CeRfThermostat,
         device_enum=EntityDefinition.RF_THERMOSTAT_GROUP,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_ip_thermostat(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates IPThermostat entities."""
     return make_custom_entity(
@@ -577,11 +589,14 @@ def make_ip_thermostat(
         custom_entity_class=CeIpThermostat,
         device_enum=EntityDefinition.IP_THERMOSTAT,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_ip_thermostat_group(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates IPThermostat group entities."""
     return make_custom_entity(
@@ -589,32 +604,29 @@ def make_ip_thermostat_group(
         custom_entity_class=CeIpThermostat,
         device_enum=EntityDefinition.IP_THERMOSTAT_GROUP,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
-    "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
-    "BC-TC-C-WM": CustomConfig(func=make_thermostat, group_base_channels=(1,)),
-    "HM-CC-RT-DN": CustomConfig(func=make_thermostat, group_base_channels=(4,)),
-    "HM-CC-TC": CustomConfig(func=make_simple_thermostat, group_base_channels=(1,)),
-    "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, group_base_channels=(1,)),
-    "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, group_base_channels=(2,)),
-    "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIP-HEATING": CustomConfig(
-        func=make_ip_thermostat_group, group_base_channels=(1,)
-    ),
-    "HmIP-STH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIP-WTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIPW-STH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "Thermostat AA": CustomConfig(func=make_ip_thermostat, group_base_channels=(1,)),
-    "ZEL STG RM FWT": CustomConfig(
-        func=make_simple_thermostat, group_base_channels=(1,)
-    ),
+    "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, channels=(1,)),
+    "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, channels=(1,)),
+    "BC-TC-C-WM": CustomConfig(func=make_thermostat, channels=(1,)),
+    "HM-CC-RT-DN": CustomConfig(func=make_thermostat, channels=(4,)),
+    "HM-CC-TC": CustomConfig(func=make_simple_thermostat, channels=(1,)),
+    "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, channels=(1,)),
+    "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, channels=(2,)),
+    "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-HEATING": CustomConfig(func=make_ip_thermostat_group, channels=(1,)),
+    "HmIP-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIPW-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "Thermostat AA": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "ZEL STG RM FWT": CustomConfig(func=make_simple_thermostat, channels=(1,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)

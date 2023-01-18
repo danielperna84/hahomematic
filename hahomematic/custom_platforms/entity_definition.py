@@ -585,6 +585,7 @@ def make_custom_entity(
     custom_entity_class: type,
     device_enum: EntityDefinition,
     group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """
     Creates custom_entities.
@@ -610,6 +611,7 @@ def make_custom_entity(
                     device_def=device_def,
                     entity_def=entity_def,
                     channel_no=channel_no,
+                    extended=extended,
                 )
             )
 
@@ -623,6 +625,7 @@ def _create_entities(
     device_def: dict[str, Any],
     entity_def: dict[int, tuple[str, ...]],
     channel_no: int | None = None,
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Create custom entities."""
     entities: list[hme.BaseEntity] = []
@@ -643,6 +646,7 @@ def _create_entities(
         device_def=device_def,
         entity_def=entity_def,
         channel_no=channel_no,
+        extended=extended,
     )
     if len(entity.data_entities) > 0:
         device.add_entity(entity)
@@ -779,5 +783,12 @@ class CustomConfig:
     """Data for custom entity creation."""
 
     func: Callable
-    group_base_channels: tuple[int, ...]
-    extended: dict[str, Any] | None = None
+    channels: tuple[int, ...]
+    extended: ExtendedConfig | None = None
+
+
+@dataclass
+class ExtendedConfig:
+    """Extended data for custom entity creation."""
+
+    fixed_channels: dict[int, dict[str, str]]

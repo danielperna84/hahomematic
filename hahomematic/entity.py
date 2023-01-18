@@ -692,6 +692,7 @@ class CustomEntity(BaseEntity):
         device_def: dict[str, Any],
         entity_def: dict[int, tuple[str, ...]],
         channel_no: int,
+        extended: hmed.ExtendedConfig | None = None,
     ):
         """
         Initialize the entity.
@@ -705,7 +706,7 @@ class CustomEntity(BaseEntity):
             unique_identifier=unique_identifier,
             channel_no=channel_no,
         )
-
+        self._extended: Final[hmed.ExtendedConfig | None] = extended
         self.data_entities: dict[str, GenericEntity] = {}
         self._init_entities()
         self._init_entity_fields()

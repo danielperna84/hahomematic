@@ -17,6 +17,7 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_STOP,
     CustomConfig,
     EntityDefinition,
+    ExtendedConfig,
     make_custom_entity,
 )
 from hahomematic.decorators import value_property
@@ -282,7 +283,9 @@ class CeGarage(CustomEntity):
 
 
 def make_ip_cover(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP cover entities."""
     return make_custom_entity(
@@ -290,11 +293,14 @@ def make_ip_cover(
         custom_entity_class=CeCover,
         device_enum=EntityDefinition.IP_COVER,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_rf_cover(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic classic cover entities."""
     return make_custom_entity(
@@ -302,11 +308,14 @@ def make_rf_cover(
         custom_entity_class=CeCover,
         device_enum=EntityDefinition.RF_COVER,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_ip_blind(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP cover entities."""
     return make_custom_entity(
@@ -314,11 +323,14 @@ def make_ip_blind(
         custom_entity_class=CeIpBlind,
         device_enum=EntityDefinition.IP_COVER,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_ip_garage(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomematicIP garage entities."""
     return make_custom_entity(
@@ -326,11 +338,14 @@ def make_ip_garage(
         custom_entity_class=CeGarage,
         device_enum=EntityDefinition.IP_GARAGE,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 def make_rf_blind(
-    device: hmd.HmDevice, group_base_channels: tuple[int, ...]
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """Creates HomeMatic classic cover entities."""
     return make_custom_entity(
@@ -338,38 +353,37 @@ def make_rf_blind(
         custom_entity_class=CeBlind,
         device_enum=EntityDefinition.RF_COVER,
         group_base_channels=group_base_channels,
+        extended=extended,
     )
 
 
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "HmIP-BROLL": CustomConfig(func=make_ip_cover, group_base_channels=(3,)),
-    "HmIP-FROLL": CustomConfig(func=make_ip_cover, group_base_channels=(3,)),
-    "HmIP-BBL": CustomConfig(func=make_ip_blind, group_base_channels=(3,)),
-    "HmIP-FBL": CustomConfig(func=make_ip_blind, group_base_channels=(3,)),
+    "HmIP-BROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
+    "HmIP-FROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
+    "HmIP-BBL": CustomConfig(func=make_ip_blind, channels=(3,)),
+    "HmIP-FBL": CustomConfig(func=make_ip_blind, channels=(3,)),
     "HmIP-HDM": CustomConfig(
-        func=make_ip_blind, group_base_channels=(0,)
+        func=make_ip_blind, channels=(0,)
     ),  # 0 is correct, HDM1 has no status channel.
-    "HmIP-DRBLI4": CustomConfig(
-        func=make_ip_blind, group_base_channels=(9, 13, 17, 21)
-    ),
-    "HmIPW-DRBL4": CustomConfig(func=make_ip_blind, group_base_channels=(1, 5, 9, 13)),
-    "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, group_base_channels=(1,)),
-    "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, group_base_channels=(1,)),
-    "HM-LC-Bl1-FM-2": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HM-LC-Bl1-FM": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HM-LC-Bl1-PB-FM": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HM-LC-Bl1-SM-2": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HM-LC-Bl1-SM": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HM-LC-Bl1PBU-FM": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HM-LC-JaX": CustomConfig(func=make_rf_blind, group_base_channels=(1,)),
-    "HM-LC-Ja1PBU-FM": CustomConfig(func=make_rf_blind, group_base_channels=(1,)),
-    "ZEL STG RM FEP 230V": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "263 146": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "263 147": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HM-LC-BlX": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HM-Sec-Win": CustomConfig(func=make_rf_cover, group_base_channels=(1,)),
-    "HMW-LC-Bl1": CustomConfig(func=make_rf_cover, group_base_channels=(3,)),
+    "HmIP-DRBLI4": CustomConfig(func=make_ip_blind, channels=(9, 13, 17, 21)),
+    "HmIPW-DRBL4": CustomConfig(func=make_ip_blind, channels=(1, 5, 9, 13)),
+    "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, channels=(1,)),
+    "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, channels=(1,)),
+    "HM-LC-Bl1-FM-2": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-PB-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-SM-2": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-SM": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1PBU-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-JaX": CustomConfig(func=make_rf_blind, channels=(1,)),
+    "HM-LC-Ja1PBU-FM": CustomConfig(func=make_rf_blind, channels=(1,)),
+    "ZEL STG RM FEP 230V": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "263 146": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "263 147": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-BlX": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-Sec-Win": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HMW-LC-Bl1": CustomConfig(func=make_rf_cover, channels=(3,)),
 }
 
 BLACKLISTED_DEVICES: tuple[str, ...] = ()
