@@ -44,13 +44,9 @@ async def test_central(central_pydevccu) -> None:
         if custom_entity.device.device_type not in ce_channels:
             ce_channels[custom_entity.device.device_type] = []
         ce_channels[custom_entity.device.device_type].append(custom_entity.channel_no)
-        pub_value_props = get_public_attributes_for_value_property(
-            data_object=custom_entity
-        )
+        pub_value_props = get_public_attributes_for_value_property(data_object=custom_entity)
         assert pub_value_props
-        pub_config_props = get_public_attributes_for_config_property(
-            data_object=custom_entity
-        )
+        pub_config_props = get_public_attributes_for_config_property(data_object=custom_entity)
         assert pub_config_props
 
     entity_types = {}
@@ -115,9 +111,7 @@ async def test_central(central_pydevccu) -> None:
     await central_pydevccu.delete_devices(const.PYDEVCCU_INTERFACE_ID, virtual_remotes)
     assert len(central_pydevccu._devices) == 369
     del_addresses = list(
-        central_pydevccu.device_descriptions.get_device_descriptions(
-            const.PYDEVCCU_INTERFACE_ID
-        )
+        central_pydevccu.device_descriptions.get_device_descriptions(const.PYDEVCCU_INTERFACE_ID)
     )
     del_addresses = [adr for adr in del_addresses if ":" not in adr]
     await central_pydevccu.delete_devices(const.PYDEVCCU_INTERFACE_ID, del_addresses)

@@ -63,9 +63,7 @@ class BaseHmLight(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_level: HmFloat = self._get_entity(
-            field_name=FIELD_LEVEL, entity_type=HmFloat
-        )
+        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
         self._e_on_time_value: HmAction = self._get_entity(
             field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
         )
@@ -144,9 +142,7 @@ class BaseHmLight(CustomEntity):
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
             await self.set_on_time_value(on_time=on_time)
 
-        if brightness := cast(
-            int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255
-        ):
+        if brightness := cast(int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255):
             if brightness != self.brightness or kwargs:
                 level = brightness / 255.0
                 await self._e_level.send_value(level)
@@ -214,9 +210,7 @@ class CeColorDimmer(CeDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color: HmInteger = self._get_entity(
-            field_name=FIELD_COLOR, entity_type=HmInteger
-        )
+        self._e_color: HmInteger = self._get_entity(field_name=FIELD_COLOR, entity_type=HmInteger)
         self._e_effect: HmInteger = self._get_entity(
             field_name=FIELD_PROGRAM, entity_type=HmInteger
         )
@@ -297,8 +291,7 @@ class CeColorTempDimmer(CeDimmer):
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between 153..500."""
         return int(
-            HM_MAX_MIREDS
-            - (HM_MAX_MIREDS - HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
+            HM_MAX_MIREDS - (HM_MAX_MIREDS - HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
         )
 
     @value_property
@@ -344,15 +337,11 @@ class CeIpFixedColorLight(BaseHmLight):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color: HmSelect = self._get_entity(
-            field_name=FIELD_COLOR, entity_type=HmSelect
-        )
+        self._e_color: HmSelect = self._get_entity(field_name=FIELD_COLOR, entity_type=HmSelect)
         self._e_channel_color: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_COLOR, entity_type=HmSensor
         )
-        self._e_level: HmFloat = self._get_entity(
-            field_name=FIELD_LEVEL, entity_type=HmFloat
-        )
+        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
         self._e_channel_level: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
         )
@@ -595,52 +584,24 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-DRDI3": CustomConfig(func=make_ip_dimmer, channels=(4, 8, 12)),
     "HmIP-SCTH230": CustomConfig(func=make_ip_dimmer, channels=(11,)),
     "HM-LC-AO-SM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1L-CV-2": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1L-CV": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
+    "HM-LC-Dim1L-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1L-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "HM-LC-Dim1L-Pl-2": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HM-LC-Dim1L-Pl-3": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1L-Pl": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1PWM-CV-2": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1PWM-CV": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1T-CV-2": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1T-CV": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
+    "HM-LC-Dim1L-Pl-3": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1L-Pl": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1PWM-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1PWM-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1T-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1T-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "HM-LC-Dim1T-DR": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3)),
-    "HM-LC-Dim1T-FM-2": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
+    "HM-LC-Dim1T-FM-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "HM-LC-Dim1T-FM-LF": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HM-LC-Dim1T-FM": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
+    "HM-LC-Dim1T-FM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "HM-LC-Dim1T-Pl-2": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HM-LC-Dim1T-Pl-3": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1T-Pl": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1TPBU-FM-2": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
-    "HM-LC-Dim1TPBU-FM": CustomConfig(
-        func=make_rf_dimmer_with_virt_channel, channels=(1,)
-    ),
+    "HM-LC-Dim1T-Pl-3": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1T-Pl": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1TPBU-FM-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+    "HM-LC-Dim1TPBU-FM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "HM-LC-Dim2L-CV": CustomConfig(func=make_rf_dimmer, channels=(1, 2)),
     "HM-LC-Dim2L-SM-2": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
     "HM-LC-Dim2L-SM": CustomConfig(func=make_rf_dimmer, channels=(1, 2)),

@@ -88,9 +88,7 @@ async def test_hmsysvarsensor(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmSysvarSensor."""
-    central, mock_client = await central_local_factory.get_default_central(
-        {}, add_sysvars=True
-    )
+    central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
     sensor: HmSysvarSensor = cast(
         HmSysvarSensor, await helper.get_sysvar_entity(central, "sv_list")
     )

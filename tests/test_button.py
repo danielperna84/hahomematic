@@ -46,9 +46,7 @@ async def test_hmprogrambutton(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmProgramButton."""
-    central, mock_client = await central_local_factory.get_default_central(
-        {}, add_programs=True
-    )
+    central, mock_client = await central_local_factory.get_default_central({}, add_programs=True)
     button: HmProgramButton = cast(
         HmProgramButton, await helper.get_program_button(central, "pid1")
     )

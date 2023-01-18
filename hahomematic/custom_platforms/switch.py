@@ -33,9 +33,7 @@ class CeSwitch(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_state: HmSwitch = self._get_entity(
-            field_name=FIELD_STATE, entity_type=HmSwitch
-        )
+        self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
         self._e_on_time_value: HmAction = self._get_entity(
             field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
         )
@@ -111,12 +109,8 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-BSL": CustomConfig(func=make_ip_switch, channels=(3,)),
     "HmIP-DRSI1": CustomConfig(func=make_ip_switch, channels=(2,)),
     "HmIP-DRSI4": CustomConfig(func=make_ip_switch, channels=(5, 9, 13, 17)),
-    "HmIPW-DRS": CustomConfig(
-        func=make_ip_switch, channels=(1, 5, 9, 13, 17, 21, 25, 29)
-    ),
-    "HmIP-MOD-OC8": CustomConfig(
-        func=make_ip_switch, channels=(9, 13, 17, 21, 25, 29, 33, 37)
-    ),
+    "HmIPW-DRS": CustomConfig(func=make_ip_switch, channels=(1, 5, 9, 13, 17, 21, 25, 29)),
+    "HmIP-MOD-OC8": CustomConfig(func=make_ip_switch, channels=(9, 13, 17, 21, 25, 29, 33, 37)),
     "HmIP-PCBS": CustomConfig(func=make_ip_switch, channels=(2,)),
     "HmIP-PCBS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
     "HmIP-PCBS-BAT": CustomConfig(func=make_ip_switch, channels=(2,)),

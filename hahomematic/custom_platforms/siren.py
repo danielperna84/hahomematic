@@ -60,9 +60,7 @@ class BaseSiren(CustomEntity):
         """Return a list of available lights."""
 
     @abstractmethod
-    async def turn_on(
-        self, acoustic_alarm: str, optical_alarm: str, duration: int
-    ) -> None:
+    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> None:
         """Turn the device on."""
 
     @abstractmethod
@@ -142,9 +140,7 @@ class CeIpSiren(BaseSiren):
 class CeRfSiren(BaseSiren):
     """Class for classic HomeMatic siren entities."""
 
-    async def turn_on(
-        self, acoustic_alarm: str, optical_alarm: str, duration: int
-    ) -> None:
+    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> None:
         """Turn the device on."""
 
     async def turn_off(self) -> None:

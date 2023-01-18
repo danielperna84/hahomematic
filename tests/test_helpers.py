@@ -57,9 +57,7 @@ async def test_generate_unique_identifier(
     """Test generate_unique_identifier."""
     central, mock_client = await central_local_factory.get_default_central({})
     assert (
-        generate_unique_identifier(
-            central=central, address="VCU2128127", parameter="LEVEL"
-        )
+        generate_unique_identifier(central=central, address="VCU2128127", parameter="LEVEL")
         == "vcu2128127_level"
     )
     assert (
@@ -69,9 +67,7 @@ async def test_generate_unique_identifier(
         == "prefix_vcu2128127_level"
     )
     assert (
-        generate_unique_identifier(
-            central=central, address="INT0001", parameter="LEVEL"
-        )
+        generate_unique_identifier(central=central, address="INT0001", parameter="LEVEL")
         == "test1234_int0001_level"
     )
 
@@ -80,10 +76,7 @@ async def test_generate_unique_identifier(
 async def test_build_xml_rpc_uri() -> None:
     """Test build_xml_rpc_uri."""
     assert build_xml_rpc_uri(host="1.2.3.4", port=80, path=None) == "http://1.2.3.4:80"
-    assert (
-        build_xml_rpc_uri(host="1.2.3.4", port=80, path="group")
-        == "http://1.2.3.4:80/group"
-    )
+    assert build_xml_rpc_uri(host="1.2.3.4", port=80, path="group") == "http://1.2.3.4:80/group"
     assert (
         build_xml_rpc_uri(host="1.2.3.4", port=80, path="group", tls=True)
         == "https://1.2.3.4:80/group"
@@ -94,9 +87,7 @@ async def test_build_xml_rpc_uri() -> None:
 async def test_build_headers() -> None:
     """Test build_xml_rpc_uri."""
     assert build_headers() == [("Authorization", "Basic Tm9uZTpOb25l")]
-    assert build_headers(username="Martin") == [
-        ("Authorization", "Basic TWFydGluOk5vbmU=")
-    ]
+    assert build_headers(username="Martin") == [("Authorization", "Basic TWFydGluOk5vbmU=")]
     assert build_headers(password="asdf") == [("Authorization", "Basic Tm9uZTphc2Rm")]
     assert build_headers(username="Martin", password="asdf") == [
         ("Authorization", "Basic TWFydGluOmFzZGY=")
@@ -170,16 +161,12 @@ async def test_get_entity_name(
     """Test get_entity_name."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = helper.get_device(central_unit=central, address="VCU2128127")
-    name_data = get_entity_name(
-        central=central, device=device, channel_no=4, parameter="LEVEL"
-    )
+    name_data = get_entity_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
     assert name_data.entity_name == "Level"
 
     central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
-    name_data = get_entity_name(
-        central=central, device=device, channel_no=5, parameter="LEVEL"
-    )
+    name_data = get_entity_name(central=central, device=device, channel_no=5, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
     assert name_data.entity_name == "Roof Level"
 
@@ -201,16 +188,12 @@ async def test_get_event_name(
     """Test get_event_name."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     device = helper.get_device(central_unit=central, address="VCU2128127")
-    name_data = get_event_name(
-        central=central, device=device, channel_no=4, parameter="LEVEL"
-    )
+    name_data = get_event_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Channel 4 Level"
     assert name_data.entity_name == "Channel 4 Level"
 
     central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
-    name_data = get_event_name(
-        central=central, device=device, channel_no=5, parameter="LEVEL"
-    )
+    name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
     assert name_data.entity_name == "Roof Level"
 
@@ -218,9 +201,7 @@ async def test_get_event_name(
         "hahomematic.helpers._get_base_name_from_channel_or_device",
         return_value=None,
     ):
-        name_data = get_event_name(
-            central=central, device=device, channel_no=5, parameter="LEVEL"
-        )
+        name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
         assert name_data.full_name == ""
         assert name_data.entity_name is None
 
@@ -295,16 +276,12 @@ async def test_get_device_name(
     """Test get_device_name."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     assert (
-        get_device_name(
-            central=central, device_address="VCU2128127", device_type="HmIP-BSM"
-        )
+        get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "HmIP-BSM_VCU2128127"
     )
     central.device_details.add_name(address="VCU2128127", name="Roof")
     assert (
-        get_device_name(
-            central=central, device_address="VCU2128127", device_type="HmIP-BSM"
-        )
+        get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "Roof"
     )
 
@@ -331,9 +308,7 @@ async def test_updated_within_seconds() -> None:
         )
         is False
     )
-    assert (
-        updated_within_seconds(last_update=INIT_DATETIME, max_age_seconds=60) is False
-    )
+    assert updated_within_seconds(last_update=INIT_DATETIME, max_age_seconds=60) is False
 
 
 @pytest.mark.asyncio
@@ -342,23 +317,12 @@ async def test_convert_value() -> None:
     assert convert_value(value=None, target_type=TYPE_BOOL, value_list=None) is None
     assert convert_value(value=True, target_type=TYPE_BOOL, value_list=None) is True
     assert convert_value(value="true", target_type=TYPE_BOOL, value_list=None) is True
-    assert (
-        convert_value(value=1, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN"))
-        is True
-    )
-    assert (
-        convert_value(value=0, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN"))
-        is False
-    )
-    assert (
-        convert_value(value=2, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN"))
-        is False
-    )
+    assert convert_value(value=1, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is True
+    assert convert_value(value=0, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is False
+    assert convert_value(value=2, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is False
     assert convert_value(value="0.1", target_type=TYPE_FLOAT, value_list=None) == 0.1
     assert convert_value(value="1", target_type=TYPE_INTEGER, value_list=None) == 1
-    assert (
-        convert_value(value="test", target_type=TYPE_STRING, value_list=None) == "test"
-    )
+    assert convert_value(value="test", target_type=TYPE_STRING, value_list=None) == "test"
     assert convert_value(value="1", target_type=TYPE_STRING, value_list=None) == "1"
     assert convert_value(value=True, target_type=TYPE_ACTION, value_list=None) is True
 
@@ -367,10 +331,7 @@ async def test_convert_value() -> None:
 async def test_element_matches_key() -> None:
     """Test element_matches_key."""
     assert element_matches_key(search_elements="HmIP-eTRV", compare_with=None) is False
-    assert (
-        element_matches_key(search_elements="HmIP-eTRV", compare_with="HmIP-eTRV-2")
-        is True
-    )
+    assert element_matches_key(search_elements="HmIP-eTRV", compare_with="HmIP-eTRV-2") is True
     assert (
         element_matches_key(
             search_elements="HmIP-eTRV",
@@ -380,9 +341,7 @@ async def test_element_matches_key() -> None:
         is False
     )
     assert (
-        element_matches_key(
-            search_elements=["HmIP-eTRV", "HmIP-BWTH"], compare_with="HmIP-eTRV-2"
-        )
+        element_matches_key(search_elements=["HmIP-eTRV", "HmIP-BWTH"], compare_with="HmIP-eTRV-2")
         is True
     )
     assert (
@@ -407,9 +366,7 @@ async def test_element_matches_key() -> None:
 async def test_value_from_dict_by_wildcard_key() -> None:
     """Test value_from_dict_by_wildcard_key."""
     assert (
-        get_value_from_dict_by_wildcard_key(
-            search_elements={"HmIP-eTRV": True}, compare_with=None
-        )
+        get_value_from_dict_by_wildcard_key(search_elements={"HmIP-eTRV": True}, compare_with=None)
         is None
     )
     assert (

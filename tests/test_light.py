@@ -33,9 +33,7 @@ async def test_cedimmer(
 ) -> None:
     """Test CeDimmer."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    light: CeDimmer = cast(
-        CeDimmer, await helper.get_custom_entity(central, "VCU1399816", 4)
-    )
+    light: CeDimmer = cast(CeDimmer, await helper.get_custom_entity(central, "VCU1399816", 4))
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color is None

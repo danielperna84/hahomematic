@@ -5,6 +5,7 @@
 - Allow multiple CustomConfigs for a hm device
 - Add ExtendedConfig to custom entities
 - Cleanup test imports
+- Increase the line length to 99
 
 # Version 2023.1.4 (2023-01-16)
 - Remove obsolete parse_ccu_sys_var

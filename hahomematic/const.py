@@ -11,9 +11,7 @@ DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = (
     15  # check if connection is available via rpc ping every:
 )
 DEFAULT_ENCODING: Final = "UTF-8"
-DEFAULT_RECONNECT_WAIT: Final = (
-    120  # wait with reconnect after a first ping was successful
-)
+DEFAULT_RECONNECT_WAIT: Final = 120  # wait with reconnect after a first ping was successful
 DEFAULT_TIMEOUT: Final = 60  # default timeout for a connection
 DEFAULT_TLS: Final = False
 DEFAULT_VERIFY_TLS: Final = False

@@ -191,12 +191,8 @@ class BaseEntity(CallbackEntity):
         self._attr_channel_no: Final[int] = channel_no
         self._attr_channel_address: Final[str] = f"{device.device_address}:{channel_no}"
         self._central: Final[hmcu.CentralUnit] = device.central
-        self._channel_type: Final[str] = str(
-            device.channels[self._attr_channel_address].type
-        )
-        self._attr_function: Final[
-            str | None
-        ] = self._central.device_details.get_function_text(
+        self._channel_type: Final[str] = str(device.channels[self._attr_channel_address].type)
+        self._attr_function: Final[str | None] = self._central.device_details.get_function_text(
             address=self._attr_channel_address
         )
         self._client: Final[hmcl.Client] = device.central.get_client(
@@ -891,10 +887,7 @@ class CustomEntity(BaseEntity):
             return None
         for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
             for entity in self.device.generic_entities.values():
-                if (
-                    entity.paramset_key == paramset_key
-                    and entity.parameter in un_ignore_params
-                ):
+                if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
                     entity.set_usage(HmEntityUsage.ENTITY)
 
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:

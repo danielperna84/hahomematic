@@ -146,12 +146,8 @@ SYSVAR_DATA: list[SystemVariableData] = [
 ]
 
 PROGRAM_DATA: list[ProgramData] = [
-    ProgramData(
-        name="p1", pid="pid1", is_active=True, is_internal=False, last_execute_time=""
-    ),
-    ProgramData(
-        name="p_2", pid="pid2", is_active=False, is_internal=False, last_execute_time=""
-    ),
+    ProgramData(name="p1", pid="pid1", is_active=True, is_internal=False, last_execute_time=""),
+    ProgramData(name="p_2", pid="pid2", is_active=False, is_internal=False, last_execute_time=""),
 ]
 
 

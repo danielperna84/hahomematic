@@ -79,9 +79,7 @@ class HmHub:
         new_programs: list[HmProgramButton] = []
 
         for program_data in programs:
-            entity: HmProgramButton | None = self._central.program_entities.get(
-                program_data.pid
-            )
+            entity: HmProgramButton | None = self._central.program_entities.get(program_data.pid)
             if entity:
                 entity.update_data(data=program_data)
             else:
@@ -98,9 +96,7 @@ class HmHub:
         """Retrieve all variable data and update hmvariable values."""
         variables: list[SystemVariableData] = []
         if client := self._central.get_primary_client():
-            variables = await client.get_all_system_variables(
-                include_internal=include_internal
-            )
+            variables = await client.get_all_system_variables(include_internal=include_internal)
         if not variables:
             _LOGGER.debug(
                 "_update_entities: No sysvars received for %s",
@@ -118,9 +114,7 @@ class HmHub:
         if self._central.model is BACKEND_CCU:
             variables = _clean_variables(variables)
 
-        missing_variable_names = self._identify_missing_variable_names(
-            variables=variables
-        )
+        missing_variable_names = self._identify_missing_variable_names(variables=variables)
         if missing_variable_names:
             self._remove_sysvar_entity(del_entities=missing_variable_names)
 
@@ -130,9 +124,7 @@ class HmHub:
             name = sysvar.name
             value = sysvar.value
 
-            entity: GenericSystemVariable | None = self._central.sysvar_entities.get(
-                name
-            )
+            entity: GenericSystemVariable | None = self._central.sysvar_entities.get(name)
             if entity:
                 entity.update_value(value)
             else:
@@ -151,9 +143,7 @@ class HmHub:
         self._central.program_entities[data.pid] = program_entity
         return program_entity
 
-    def _create_system_variable(
-        self, data: SystemVariableData
-    ) -> GenericSystemVariable:
+    def _create_system_variable(self, data: SystemVariableData) -> GenericSystemVariable:
         """Create system variable as entity."""
         sysvar_entity = self._create_sysvar_entity(data=data)
         self._central.sysvar_entities[data.name] = sysvar_entity
@@ -170,10 +160,7 @@ class HmHub:
                 return HmSysvarBinarySensor(central=self._central, data=data)
             if data_type == SYSVAR_TYPE_LIST and extended_sysvar:
                 return HmSysvarSelect(central=self._central, data=data)
-            if (
-                data_type in (SYSVAR_HM_TYPE_FLOAT, SYSVAR_HM_TYPE_INTEGER)
-                and extended_sysvar
-            ):
+            if data_type in (SYSVAR_HM_TYPE_FLOAT, SYSVAR_HM_TYPE_INTEGER) and extended_sysvar:
                 return HmSysvarNumber(central=self._central, data=data)
             if data_type == SYSVAR_TYPE_STRING and extended_sysvar:
                 return HmSysvarText(central=self._central, data=data)
@@ -205,9 +192,7 @@ class HmHub:
                 missing_programs.append(pid)
         return missing_programs
 
-    def _identify_missing_variable_names(
-        self, variables: list[SystemVariableData]
-    ) -> set[str]:
+    def _identify_missing_variable_names(self, variables: list[SystemVariableData]) -> set[str]:
         """Identify missing variables."""
         variable_names: dict[str, bool] = {x.name: x.extended_sysvar for x in variables}
         missing_variables: set[str] = set()

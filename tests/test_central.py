@@ -182,19 +182,11 @@ async def test_add_device(
     assert len(central._devices) == 1
     assert len(central._entities) == 23
     assert (
-        len(
-            central.device_descriptions._raw_device_descriptions.get(
-                const.LOCAL_INTERFACE_ID
-            )
-        )
+        len(central.device_descriptions._raw_device_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 9
     )
     assert (
-        len(
-            central.paramset_descriptions._raw_paramset_descriptions.get(
-                const.LOCAL_INTERFACE_ID
-            )
-        )
+        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 8
     )
     dev_desc = helper.load_device_description(central=central, filename="HmIP-BSM.json")
@@ -202,19 +194,11 @@ async def test_add_device(
     assert len(central._devices) == 2
     assert len(central._entities) == 49
     assert (
-        len(
-            central.device_descriptions._raw_device_descriptions.get(
-                const.LOCAL_INTERFACE_ID
-            )
-        )
+        len(central.device_descriptions._raw_device_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 20
     )
     assert (
-        len(
-            central.paramset_descriptions._raw_paramset_descriptions.get(
-                const.LOCAL_INTERFACE_ID
-            )
-        )
+        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 18
     )
     await central.add_new_devices("NOT_ANINTERFACE_ID", dev_desc)
@@ -230,19 +214,11 @@ async def test_delete_device(
     assert len(central._devices) == 2
     assert len(central._entities) == 49
     assert (
-        len(
-            central.device_descriptions._raw_device_descriptions.get(
-                const.LOCAL_INTERFACE_ID
-            )
-        )
+        len(central.device_descriptions._raw_device_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 20
     )
     assert (
-        len(
-            central.paramset_descriptions._raw_paramset_descriptions.get(
-                const.LOCAL_INTERFACE_ID
-            )
-        )
+        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 18
     )
 
@@ -250,19 +226,11 @@ async def test_delete_device(
     assert len(central._devices) == 1
     assert len(central._entities) == 23
     assert (
-        len(
-            central.device_descriptions._raw_device_descriptions.get(
-                const.LOCAL_INTERFACE_ID
-            )
-        )
+        len(central.device_descriptions._raw_device_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 9
     )
     assert (
-        len(
-            central.paramset_descriptions._raw_paramset_descriptions.get(
-                const.LOCAL_INTERFACE_ID
-            )
-        )
+        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 8
     )
 
@@ -354,9 +322,7 @@ async def test_central_services(
     assert mock_client.method_calls[-1] == call.get_all_programs(include_internal=False)
 
     await central.fetch_sysvar_data()
-    assert mock_client.method_calls[-1] == call.get_all_system_variables(
-        include_internal=True
-    )
+    assert mock_client.method_calls[-1] == call.get_all_system_variables(include_internal=True)
 
     assert len(mock_client.method_calls) == 41
     await central.refresh_entity_data(paramset_key="MASTER")
@@ -369,9 +335,7 @@ async def test_central_services(
 
     assert len(mock_client.method_calls) == 74
     await central.set_system_variable(name="sv_alarm", value=True)
-    assert mock_client.method_calls[-1] == call.set_system_variable(
-        name="sv_alarm", value=True
-    )
+    assert mock_client.method_calls[-1] == call.set_system_variable(name="sv_alarm", value=True)
     assert len(mock_client.method_calls) == 75
     await central.set_system_variable(name="SysVar_Name", value=True)
     assert len(mock_client.method_calls) == 75
@@ -430,10 +394,7 @@ async def test_central_services(
         ).parameter
         == "DUTY_CYCLE"
     )
-    assert (
-        central.get_generic_entity(channel_address="VCU6354483", parameter="DUTY_CYCLE")
-        is None
-    )
+    assert central.get_generic_entity(channel_address="VCU6354483", parameter="DUTY_CYCLE") is None
 
 
 @pytest.mark.asyncio
