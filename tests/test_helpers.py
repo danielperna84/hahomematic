@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import helper
-from helper import get_device
 import pytest
 
 from hahomematic.const import (
@@ -136,30 +135,30 @@ async def test_parse_sys_var() -> None:
     assert parse_sys_var(data_type=SYSVAR_TYPE_STRING, raw_value="1.4") == "1.4"
     assert parse_sys_var(data_type=SYSVAR_HM_TYPE_FLOAT, raw_value="1.4") == 1.4
     assert parse_sys_var(data_type=SYSVAR_HM_TYPE_INTEGER, raw_value="1") == 1
-    assert parse_sys_var(data_type=SYSVAR_TYPE_ALARM, raw_value="true") == True
+    assert parse_sys_var(data_type=SYSVAR_TYPE_ALARM, raw_value="true") is True
     assert parse_sys_var(data_type=SYSVAR_TYPE_LIST, raw_value="1") == 1
-    assert parse_sys_var(data_type=SYSVAR_TYPE_LOGIC, raw_value="true") == True
+    assert parse_sys_var(data_type=SYSVAR_TYPE_LOGIC, raw_value="true") is True
 
 
 @pytest.mark.asyncio
 async def test_to_bool() -> None:
     """Test to_bool."""
-    assert to_bool(value=True) == True
-    assert to_bool(value="y") == True
-    assert to_bool(value="yes") == True
-    assert to_bool(value="t") == True
-    assert to_bool(value="true") == True
-    assert to_bool(value="on") == True
-    assert to_bool(value="1") == True
-    assert to_bool(value="") == False
-    assert to_bool(value="n") == False
-    assert to_bool(value="no") == False
-    assert to_bool(value="f") == False
-    assert to_bool(value="false") == False
-    assert to_bool(value="off") == False
-    assert to_bool(value="0") == False
-    assert to_bool(value="blabla") == False
-    assert to_bool(value="2") == False
+    assert to_bool(value=True) is True
+    assert to_bool(value="y") is True
+    assert to_bool(value="yes") is True
+    assert to_bool(value="t") is True
+    assert to_bool(value="true") is True
+    assert to_bool(value="on") is True
+    assert to_bool(value="1") is True
+    assert to_bool(value="") is False
+    assert to_bool(value="n") is False
+    assert to_bool(value="no") is False
+    assert to_bool(value="f") is False
+    assert to_bool(value="false") is False
+    assert to_bool(value="off") is False
+    assert to_bool(value="0") is False
+    assert to_bool(value="blabla") is False
+    assert to_bool(value="2") is False
     with pytest.raises(ValueError):
         to_bool(value=2)
 
@@ -170,7 +169,7 @@ async def test_get_entity_name(
 ) -> None:
     """Test get_entity_name."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    device = get_device(central_unit=central, address="VCU2128127")
+    device = helper.get_device(central_unit=central, address="VCU2128127")
     name_data = get_entity_name(
         central=central, device=device, channel_no=4, parameter="LEVEL"
     )
@@ -201,7 +200,7 @@ async def test_get_event_name(
 ) -> None:
     """Test get_event_name."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    device = get_device(central_unit=central, address="VCU2128127")
+    device = helper.get_device(central_unit=central, address="VCU2128127")
     name_data = get_event_name(
         central=central, device=device, channel_no=4, parameter="LEVEL"
     )
@@ -232,7 +231,7 @@ async def test_custom_entity_name(
 ) -> None:
     """Test get_custom_entity_name."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    device = get_device(central_unit=central, address="VCU2128127")
+    device = helper.get_device(central_unit=central, address="VCU2128127")
     name_data = get_custom_entity_name(
         central=central,
         device=device,

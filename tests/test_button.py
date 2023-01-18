@@ -4,13 +4,12 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
-import const
 import helper
-from helper import ProgramData, get_generic_entity, get_program_button
 import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.generic_platforms.button import HmButton, HmProgramButton
+from hahomematic.helpers import ProgramData
 
 TEST_DEVICES: dict[str, str] = {
     "VCU1437294": "HmIP-SMI.json",
@@ -24,7 +23,8 @@ async def test_hmbutton(
     """Test HmButton."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     button: HmButton = cast(
-        HmButton, await get_generic_entity(central, "VCU1437294:1", "RESET_MOTION")
+        HmButton,
+        await helper.get_generic_entity(central, "VCU1437294:1", "RESET_MOTION"),
     )
     assert button.usage == HmEntityUsage.ENTITY
     assert button.available is True
@@ -50,7 +50,7 @@ async def test_hmprogrambutton(
         {}, add_programs=True
     )
     button: HmProgramButton = cast(
-        HmProgramButton, await get_program_button(central, "pid1")
+        HmProgramButton, await helper.get_program_button(central, "pid1")
     )
     assert button.usage == HmEntityUsage.ENTITY
     assert button.available is True
@@ -72,7 +72,7 @@ async def test_hmprogrambutton(
     assert button.is_internal is True
 
     button2: HmProgramButton = cast(
-        HmProgramButton, await get_program_button(central, "pid2")
+        HmProgramButton, await helper.get_program_button(central, "pid2")
     )
     assert button2.usage == HmEntityUsage.ENTITY
     assert button2.is_active is False

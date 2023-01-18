@@ -6,7 +6,6 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_custom_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -24,7 +23,7 @@ async def test_ceipsiren(
     """Test CeIpSiren."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     siren: CeIpSiren = cast(
-        CeIpSiren, await get_custom_entity(central, "VCU8249617", 3)
+        CeIpSiren, await helper.get_custom_entity(central, "VCU8249617", 3)
     )
     assert siren.usage == HmEntityUsage.CE_PRIMARY
 

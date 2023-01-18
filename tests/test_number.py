@@ -6,7 +6,6 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_generic_entity, get_sysvar_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -26,7 +25,7 @@ async def test_hmfloat(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     efloat: HmFloat = cast(
         HmFloat,
-        await get_generic_entity(central, "VCU0000011:3", "LEVEL"),
+        await helper.get_generic_entity(central, "VCU0000011:3", "LEVEL"),
     )
     assert efloat.usage == HmEntityUsage.ENTITY_NO_CREATE
     assert efloat.unit == "%"
@@ -55,7 +54,7 @@ async def test_hminteger(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     einteger: HmInteger = cast(
         HmInteger,
-        await get_generic_entity(central, "VCU4984404:1", "SET_POINT_MODE"),
+        await helper.get_generic_entity(central, "VCU4984404:1", "SET_POINT_MODE"),
     )
     assert einteger.usage == HmEntityUsage.ENTITY_NO_CREATE
     assert einteger.unit is None
@@ -94,7 +93,7 @@ async def test_hmsysvarnumber(
     )
     enumber: HmSysvarNumber = cast(
         HmSysvarNumber,
-        await get_sysvar_entity(central, "sv_float_ext"),
+        await helper.get_sysvar_entity(central, "sv_float_ext"),
     )
     assert enumber.usage == HmEntityUsage.ENTITY
     assert enumber.unit == "°C"

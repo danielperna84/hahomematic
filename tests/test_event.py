@@ -1,13 +1,11 @@
 """Tests for switch entities of hahomematic."""
 from __future__ import annotations
 
-import asyncio
 from typing import cast
 from unittest.mock import call
 
 import const
 import helper
-from helper import get_event
 import pytest
 
 from hahomematic.const import HmEntityUsage, HmEventType
@@ -26,7 +24,7 @@ async def test_clickevent(
     """Test ClickEvent."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     event: ClickEvent = cast(
-        ClickEvent, await get_event(central, "VCU2128127:1", "PRESS_SHORT")
+        ClickEvent, await helper.get_event(central, "VCU2128127:1", "PRESS_SHORT")
     )
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.KEYPRESS
@@ -51,7 +49,7 @@ async def test_impulseevent(
     """Test ImpulseEvent."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     event: ImpulseEvent = cast(
-        ImpulseEvent, await get_event(central, "VCU0000263:1", "SEQUENCE_OK")
+        ImpulseEvent, await helper.get_event(central, "VCU0000263:1", "SEQUENCE_OK")
     )
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.IMPULSE
@@ -76,7 +74,8 @@ async def test_deviceerrorevent(
     """Test DeviceErrorEvent."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     event: DeviceErrorEvent = cast(
-        DeviceErrorEvent, await get_event(central, "VCU2128127:0", "ERROR_OVERHEAT")
+        DeviceErrorEvent,
+        await helper.get_event(central, "VCU2128127:0", "ERROR_OVERHEAT"),
     )
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.DEVICE_ERROR

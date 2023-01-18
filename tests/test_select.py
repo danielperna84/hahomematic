@@ -6,7 +6,6 @@ from unittest.mock import call
 
 import const
 import helper
-from helper import get_generic_entity, get_sysvar_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -24,7 +23,8 @@ async def test_hmselect(
     """Test HmSelect."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     select: HmSelect = cast(
-        HmSelect, await get_generic_entity(central, "VCU6354483:1", "WINDOW_STATE")
+        HmSelect,
+        await helper.get_generic_entity(central, "VCU6354483:1", "WINDOW_STATE"),
     )
     assert select.usage == HmEntityUsage.ENTITY_NO_CREATE
     assert select.unit is None
@@ -67,7 +67,7 @@ async def test_hmsysvarselect(
         {}, add_sysvars=True
     )
     select: HmSysvarSelect = cast(
-        HmSysvarSelect, await get_sysvar_entity(central, "sv_list_ext")
+        HmSysvarSelect, await helper.get_sysvar_entity(central, "sv_list_ext")
     )
     assert select.usage == HmEntityUsage.ENTITY
     assert select.unit is None

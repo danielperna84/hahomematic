@@ -5,7 +5,7 @@ import importlib.resources
 import json
 import logging
 import os
-from typing import Any, cast
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
@@ -17,7 +17,7 @@ from hahomematic.client import Client, InterfaceConfig, LocalRessources, _Client
 from hahomematic.device import HmDevice
 from hahomematic.entity import CustomEntity, GenericEntity, GenericSystemVariable
 from hahomematic.generic_platforms.button import HmProgramButton
-from hahomematic.helpers import ProgramData, SystemVariableData, get_device_address
+from hahomematic.helpers import get_device_address
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,11 +145,6 @@ async def get_client(
     ignore_devices_on_create: list[str] | None = None,
 ) -> Client | Mock:
     """Returns a central based on give address_device_translation."""
-
-    _ignore_devices_on_create: list[str] = (
-        ignore_devices_on_create if ignore_devices_on_create else []
-    )
-
     _client = await _ClientConfig(
         central=central,
         interface_config=interface_config,

@@ -7,7 +7,6 @@ from unittest.mock import call, patch
 
 import const
 import helper
-from helper import get_device, get_generic_entity, get_mock, load_device_description
 import pytest
 
 from hahomematic.const import HmEntityUsage, HmInterfaceEventType, HmPlatform
@@ -46,7 +45,7 @@ async def test_device_export(
     """Test device export."""
     assert central_local_factory
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    device = get_device(central_unit=central, address="VCU6354483")
+    device = helper.get_device(central_unit=central, address="VCU6354483")
     await device.export_device_definition()
 
 
@@ -69,7 +68,7 @@ async def test_device_unignore(
         is False
     )
     level1: HmFloat = cast(
-        HmFloat, await get_generic_entity(central1, "VCU3609622:1", "LEVEL")
+        HmFloat, await helper.get_generic_entity(central1, "VCU3609622:1", "LEVEL")
     )
     assert level1.usage == HmEntityUsage.ENTITY_NO_CREATE
     assert len(level1.device.generic_entities) == 22
@@ -78,7 +77,7 @@ async def test_device_unignore(
     with suppress(AssertionError):
         switch1: HmSwitch = cast(
             HmSwitch,
-            await get_generic_entity(central1, "VCU3609622:1", "VALVE_ADAPTION"),
+            await helper.get_generic_entity(central1, "VCU3609622:1", "VALVE_ADAPTION"),
         )
     assert switch1 is None
 
@@ -105,12 +104,13 @@ async def test_device_unignore(
         is True
     )
     level2: HmFloat = cast(
-        HmFloat, await get_generic_entity(central2, "VCU3609622:1", "LEVEL")
+        HmFloat, await helper.get_generic_entity(central2, "VCU3609622:1", "LEVEL")
     )
     assert level2.usage == HmEntityUsage.ENTITY
     assert len(level2.device.generic_entities) == 23
     switch2: HmSwitch = cast(
-        HmSwitch, await get_generic_entity(central2, "VCU3609622:1", "VALVE_ADAPTION")
+        HmSwitch,
+        await helper.get_generic_entity(central2, "VCU3609622:1", "VALVE_ADAPTION"),
     )
     assert switch2.usage == HmEntityUsage.ENTITY
 
@@ -197,7 +197,7 @@ async def test_add_device(
         )
         == 8
     )
-    dev_desc = load_device_description(central=central, filename="HmIP-BSM.json")
+    dev_desc = helper.load_device_description(central=central, filename="HmIP-BSM.json")
     await central.add_new_devices(const.LOCAL_INTERFACE_ID, dev_desc)
     assert len(central._devices) == 2
     assert len(central._entities) == 49
@@ -308,7 +308,7 @@ async def test_central_not_alive(
     central, client = await central_local_factory.get_unpatched_default_central(
         {}, do_mock_client=False
     )
-    mock_client = get_mock(instance=client, available=False)
+    mock_client = helper.get_mock(instance=client, available=False)
 
     assert central.serial is None
     assert central.is_alive is True
@@ -445,7 +445,7 @@ async def test_central_direct(
     central, client = await central_local_factory.get_unpatched_default_central(
         TEST_DEVICES, do_mock_client=False
     )
-    mock_client = get_mock(instance=client, available=False)
+    mock_client = helper.get_mock(instance=client, available=False)
 
     assert central.serial is None
     assert central.is_alive is True

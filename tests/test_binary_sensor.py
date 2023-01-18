@@ -5,7 +5,6 @@ from typing import cast
 
 import const
 import helper
-from helper import get_generic_entity, get_sysvar_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -26,7 +25,8 @@ async def test_hmbinarysensor(
     """Test HmBinarySensor."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     binary_sensor: HmBinarySensor = cast(
-        HmBinarySensor, await get_generic_entity(central, "VCU5864966:1", "STATE")
+        HmBinarySensor,
+        await helper.get_generic_entity(central, "VCU5864966:1", "STATE"),
     )
     assert binary_sensor.usage == HmEntityUsage.ENTITY
     assert binary_sensor.value is False
@@ -50,7 +50,7 @@ async def test_hmsysvarbinarysensor(
     )
     binary_sensor: HmSysvarBinarySensor = cast(
         HmSysvarBinarySensor,
-        await get_sysvar_entity(central, "sv_logic"),
+        await helper.get_sysvar_entity(central, "sv_logic"),
     )
     assert binary_sensor.name == "Sv_Logic"
     assert binary_sensor.full_name == "CentralTest_Sv_Logic"

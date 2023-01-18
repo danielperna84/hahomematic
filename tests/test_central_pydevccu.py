@@ -12,7 +12,6 @@ from hahomematic.decorators import (
     get_public_attributes_for_config_property,
     get_public_attributes_for_value_property,
 )
-from hahomematic.entity import GenericEntity
 
 
 @pytest.mark.asyncio

@@ -5,7 +5,6 @@ from typing import cast
 
 import const
 import helper
-from helper import get_generic_entity, get_sysvar_entity
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -25,7 +24,7 @@ async def test_hmsensor_psm(
     """Test HmSensor."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     sensor: HmSensor = cast(
-        HmSensor, await get_generic_entity(central, "VCU3941846:6", "VOLTAGE")
+        HmSensor, await helper.get_generic_entity(central, "VCU3941846:6", "VOLTAGE")
     )
     assert sensor.usage == HmEntityUsage.ENTITY
     assert sensor.unit == "V"
@@ -37,7 +36,8 @@ async def test_hmsensor_psm(
     assert sensor.value == 234.00
 
     sensor2: HmSensor = cast(
-        HmSensor, await get_generic_entity(central, "VCU3941846:0", "RSSI_DEVICE")
+        HmSensor,
+        await helper.get_generic_entity(central, "VCU3941846:0", "RSSI_DEVICE"),
     )
     assert sensor2.usage == HmEntityUsage.ENTITY
     assert sensor2.unit == "dBm"
@@ -55,7 +55,8 @@ async def test_hmsensor_psm(
     assert sensor2.value is None
 
     sensor3: HmSensor = cast(
-        HmSensor, await get_generic_entity(central, "VCU8205532:1", "CONCENTRATION")
+        HmSensor,
+        await helper.get_generic_entity(central, "VCU8205532:1", "CONCENTRATION"),
     )
     assert sensor3.usage == HmEntityUsage.ENTITY
     assert sensor3.unit == "ppm"
@@ -70,7 +71,7 @@ async def test_hmsensor_srh(
     """Test HmSensor."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     sensor: HmSensor = cast(
-        HmSensor, await get_generic_entity(central, "VCU7981740:1", "STATE")
+        HmSensor, await helper.get_generic_entity(central, "VCU7981740:1", "STATE")
     )
     assert sensor.usage == HmEntityUsage.ENTITY
     assert sensor.unit is None
@@ -91,7 +92,7 @@ async def test_hmsysvarsensor(
         {}, add_sysvars=True
     )
     sensor: HmSysvarSensor = cast(
-        HmSysvarSensor, await get_sysvar_entity(central, "sv_list")
+        HmSysvarSensor, await helper.get_sysvar_entity(central, "sv_list")
     )
     assert sensor.usage == HmEntityUsage.ENTITY
     assert sensor.available is True
@@ -100,7 +101,7 @@ async def test_hmsysvarsensor(
     assert sensor.value == "v1"
 
     sensor2: HmSysvarSensor = cast(
-        HmSysvarSensor, await get_sysvar_entity(central, "sv_float")
+        HmSysvarSensor, await helper.get_sysvar_entity(central, "sv_float")
     )
     assert sensor2.usage == HmEntityUsage.ENTITY
     assert sensor2.unit is None
