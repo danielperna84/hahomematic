@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from voluptuous import Invalid, Optional, Required, Schema
+import voluptuous as vol
 
 from hahomematic.backport import StrEnum
 import hahomematic.device as hmd
@@ -121,48 +121,50 @@ class EntityDefinition(StrEnum):
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
 
 
-SCHEMA_ED_ADDITIONAL_ENTITIES = Schema({Required(int): Schema(tuple([Optional(str)]))})
+SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
+    {vol.Required(vol.Any(int, tuple[int, ...])): vol.Schema(tuple([vol.Optional(str)]))}
+)
 
-SCHEMA_ED_FIELD_DETAILS = Schema({Required(str): str})
+SCHEMA_ED_FIELD_DETAILS = vol.Schema({vol.Required(str): str})
 
-SCHEMA_ED_FIELD = Schema({Required(int): SCHEMA_ED_FIELD_DETAILS})
+SCHEMA_ED_FIELD = vol.Schema({vol.Required(int): SCHEMA_ED_FIELD_DETAILS})
 
-SCHEMA_ED_DEVICE_GROUP = Schema(
+SCHEMA_ED_DEVICE_GROUP = vol.Schema(
     {
-        Required(ED_PRIMARY_CHANNEL): int,
-        Optional(ED_SECONDARY_CHANNELS): tuple([int]),
-        Optional(ED_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
-        Optional(ED_VISIBLE_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
-        Optional(ED_FIELDS): SCHEMA_ED_FIELD,
-        Optional(ED_VISIBLE_FIELDS): SCHEMA_ED_FIELD,
+        vol.Required(ED_PRIMARY_CHANNEL): int,
+        vol.Optional(ED_SECONDARY_CHANNELS): tuple([int]),
+        vol.Optional(ED_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
+        vol.Optional(ED_VISIBLE_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
+        vol.Optional(ED_FIELDS): SCHEMA_ED_FIELD,
+        vol.Optional(ED_VISIBLE_FIELDS): SCHEMA_ED_FIELD,
     }
 )
 
-SCHEMA_ED_DEVICE_GROUPS = Schema(
+SCHEMA_ED_DEVICE_GROUPS = vol.Schema(
     {
-        Required(ED_DEVICE_GROUP): SCHEMA_ED_DEVICE_GROUP,
-        Optional(ED_ADDITIONAL_ENTITIES): SCHEMA_ED_ADDITIONAL_ENTITIES,
-        Optional(ED_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES): bool,
+        vol.Required(ED_DEVICE_GROUP): SCHEMA_ED_DEVICE_GROUP,
+        vol.Optional(ED_ADDITIONAL_ENTITIES): SCHEMA_ED_ADDITIONAL_ENTITIES,
+        vol.Optional(ED_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES): bool,
     }
 )
 
-SCHEMA_DEVICE_DESCRIPTION = Schema(
+SCHEMA_DEVICE_DESCRIPTION = vol.Schema(
     {
-        Required(ED_DEFAULT_ENTITIES): SCHEMA_ED_ADDITIONAL_ENTITIES,
-        Required(ED_DEVICE_DEFINITIONS): Schema(
+        vol.Required(ED_DEFAULT_ENTITIES): SCHEMA_ED_ADDITIONAL_ENTITIES,
+        vol.Required(ED_DEVICE_DEFINITIONS): vol.Schema(
             {
-                Required(EntityDefinition): SCHEMA_ED_DEVICE_GROUPS,
+                vol.Required(EntityDefinition): SCHEMA_ED_DEVICE_GROUPS,
             }
         ),
-        Required(ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE): Schema(
+        vol.Required(ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE): vol.Schema(
             {
-                Required(str): SCHEMA_ED_ADDITIONAL_ENTITIES,
+                vol.Required(str): SCHEMA_ED_ADDITIONAL_ENTITIES,
             }
         ),
     }
 )
 
-entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
+entity_definition: dict[str, dict[int | str | EntityDefinition, vol.Any]] = {
     ED_DEFAULT_ENTITIES: {
         0: (
             "DUTY_CYCLE",
@@ -527,45 +529,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, Any]] = {
             },
         },
     },
-    ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE: {
-        "HmIP-SCTH230": {
-            1: ("CONCENTRATION",),
-            4: (
-                "HUMIDITY",
-                "ACTUAL_TEMPERATURE",
-            ),
-        },
-        "HmIP-DLD": {
-            0: ("ERROR_JAMMED",),
-        },
-        # HM-Sec-Win*
-        "HM-Sec-Win": {
-            1: (
-                "DIRECTION",
-                "WORKING",
-                "ERROR",
-            ),
-            2: (
-                "LEVEL",
-                "STATUS",
-            ),
-        },
-        # HM-Sec-Key*
-        "HM-Sec-Key": {
-            1: (
-                "DIRECTION",
-                "ERROR",
-            ),
-        },
-        # HmIPW-DR*
-        "HmIPW-DR": {
-            0: ("ACTUAL_TEMPERATURE",),
-        },
-        # HmIP-DR*
-        "HmIP-DR": {
-            0: ("ACTUAL_TEMPERATURE",),
-        },
-    },
+    ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE: {},
 }
 
 
@@ -573,7 +537,7 @@ def validate_entity_definition() -> Any:
     """Validate the entity_definition."""
     try:
         return SCHEMA_DEVICE_DESCRIPTION(entity_definition)
-    except Invalid as err:
+    except vol.Invalid as err:
         _LOGGER.error("The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg)
         return None
 
@@ -620,7 +584,7 @@ def _create_entities(
     device: hmd.HmDevice,
     custom_entity_class: type,
     device_enum: EntityDefinition,
-    device_def: dict[str, Any],
+    device_def: dict[str, vol.Any],
     entity_def: dict[int, tuple[str, ...]],
     channel_no: int | None = None,
     extended: ExtendedConfig | None = None,
@@ -650,18 +614,18 @@ def _create_entities(
     return tuple(entities)
 
 
-def get_default_entities() -> dict[int, tuple[str, ...]]:
+def get_default_entities() -> dict[int | tuple[int, ...], tuple[str, ...]]:
     """Return the default entities."""
     return deepcopy(entity_definition[ED_DEFAULT_ENTITIES])  # type: ignore[arg-type]
 
 
 def get_additional_entities_by_device_type(
     device_type: str,
-) -> dict[int, tuple[str, ...]]:
+) -> dict[int | tuple[int, ...], tuple[str, ...]]:
     """Return the additional entities."""
     for data in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE].items():
         d_type: str = str(data[0])
-        additional_entities: dict[int, tuple[str, ...]] = data[1]
+        additional_entities: dict[int | tuple[int, ...], tuple[str, ...]] = data[1]
         if element_matches_key(search_elements=d_type, compare_with=device_type):
             return deepcopy(additional_entities)
     return {}
@@ -675,7 +639,7 @@ def get_include_default_entities(device_enum: EntityDefinition) -> bool:
     return DEFAULT_INCLUDE_DEFAULT_ENTITIES
 
 
-def _get_device(device_enum: EntityDefinition) -> dict[str, Any] | None:
+def _get_device(device_enum: EntityDefinition) -> dict[str, vol.Any] | None:
     """Return device from entity definitions."""
     device = entity_definition[ED_DEVICE_DEFINITIONS].get(device_enum)
     if device:
@@ -683,10 +647,10 @@ def _get_device(device_enum: EntityDefinition) -> dict[str, Any] | None:
     return None
 
 
-def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> dict[str, Any]:
+def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> dict[str, vol.Any]:
     """Return the device group."""
     device = _get_device(device_enum)
-    group: dict[str, Any] = {}
+    group: dict[str, vol.Any] = {}
     if device:
         group = deepcopy(device[ED_DEVICE_GROUP])
         if group and base_channel_no == 0:
@@ -713,8 +677,8 @@ def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> di
 
 
 def _rebase_entity_dict(
-    entity_dict: str, group: dict[str, Any], base_channel_no: int
-) -> dict[int, Any]:
+    entity_dict: str, group: dict[str, vol.Any], base_channel_no: int
+) -> dict[int, vol.Any]:
     """Rebase entity_dict with base_channel_no."""
     new_fields = {}
     if fields := group.get(entity_dict):
@@ -739,31 +703,6 @@ def _get_device_entities(
     return new_entities
 
 
-def get_required_parameters() -> tuple[str, ...]:
-    """Return all required parameters for custom entities."""
-    required_parameters: list[str] = []
-    for channel in entity_definition[ED_DEFAULT_ENTITIES]:
-        required_parameters.extend(entity_definition[ED_DEFAULT_ENTITIES][channel])
-    for device in entity_definition[ED_DEVICE_DEFINITIONS]:
-        device_def = entity_definition[ED_DEVICE_DEFINITIONS][device][ED_DEVICE_GROUP]
-        required_parameters.extend(list(device_def.get(ED_REPEATABLE_FIELDS, {}).values()))
-        required_parameters.extend(list(device_def.get(ED_VISIBLE_REPEATABLE_FIELDS, {}).values()))
-        required_parameters.extend(list(device_def.get(ED_REPEATABLE_FIELDS, {}).values()))
-        for additional_entities in list(
-            entity_definition[ED_DEVICE_DEFINITIONS][device]
-            .get(ED_ADDITIONAL_ENTITIES, {})
-            .values()
-        ):
-            required_parameters.extend(additional_entities)
-    for device_type in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE]:
-        for additional_entities in list(
-            entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE][device_type].values()
-        ):
-            required_parameters.extend(additional_entities)
-
-    return tuple(sorted(set(required_parameters)))
-
-
 @dataclass
 class CustomConfig:
     """Data for custom entity creation."""
@@ -777,4 +716,19 @@ class CustomConfig:
 class ExtendedConfig:
     """Extended data for custom entity creation."""
 
-    fixed_channels: dict[int, dict[str, str]]
+    fixed_channels: dict[int, dict[str, str]] | None = None
+    additional_entities: dict[int | tuple[int, ...], tuple[str, ...]] | None = None
+
+    @property
+    def required_parameters(self) -> tuple[str, ...]:
+        """Return vol.Required parameters from extended config."""
+        required_parameters: list[str] = []
+        if fixed_channels := self.fixed_channels:
+            for mapping in fixed_channels.values():
+                required_parameters.extend(mapping.values())
+
+        if additional_entities := self.additional_entities:
+            for parameters in additional_entities.values():
+                required_parameters.extend(parameters)
+
+        return tuple(required_parameters)

@@ -2,7 +2,17 @@
 from __future__ import annotations
 
 from hahomematic.custom_platforms import climate, cover, light, lock, siren, switch
-from hahomematic.custom_platforms.entity_definition import CustomConfig
+from hahomematic.custom_platforms.entity_definition import (
+    ED_ADDITIONAL_ENTITIES,
+    ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE,
+    ED_DEFAULT_ENTITIES,
+    ED_DEVICE_DEFINITIONS,
+    ED_DEVICE_GROUP,
+    ED_REPEATABLE_FIELDS,
+    ED_VISIBLE_REPEATABLE_FIELDS,
+    CustomConfig,
+    entity_definition,
+)
 from hahomematic.helpers import element_matches_key
 
 _ALL_DEVICES = (
@@ -78,3 +88,38 @@ def is_multi_channel_device(device_type: str) -> bool:
 def entity_definition_exists(device_type: str) -> bool:
     """Check if device desc exits."""
     return len(get_entity_configs(device_type)) > 0
+
+
+def get_required_parameters() -> tuple[str, ...]:
+    """Return all required parameters for custom entities."""
+    required_parameters: list[str] = []
+    for channel in entity_definition[ED_DEFAULT_ENTITIES]:
+        required_parameters.extend(entity_definition[ED_DEFAULT_ENTITIES][channel])
+    for device in entity_definition[ED_DEVICE_DEFINITIONS]:
+        device_def = entity_definition[ED_DEVICE_DEFINITIONS][device][ED_DEVICE_GROUP]
+        required_parameters.extend(list(device_def.get(ED_REPEATABLE_FIELDS, {}).values()))
+        required_parameters.extend(list(device_def.get(ED_VISIBLE_REPEATABLE_FIELDS, {}).values()))
+        required_parameters.extend(list(device_def.get(ED_REPEATABLE_FIELDS, {}).values()))
+        for additional_entities in list(
+            entity_definition[ED_DEVICE_DEFINITIONS][device]
+            .get(ED_ADDITIONAL_ENTITIES, {})
+            .values()
+        ):
+            required_parameters.extend(additional_entities)
+    for device_type in entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE]:
+        for additional_entities in list(
+            entity_definition[ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE][device_type].values()
+        ):
+            required_parameters.extend(additional_entities)
+
+    for platform_spec in _ALL_DEVICES:
+        for custom_configs in platform_spec.values():
+            if isinstance(custom_configs, CustomConfig):
+                if extended := custom_configs.extended:
+                    required_parameters.extend(extended.required_parameters)
+            else:
+                for custom_config in custom_configs:
+                    if extended := custom_config.extended:
+                        required_parameters.extend(extended.required_parameters)
+
+    return tuple(sorted(set(required_parameters)))

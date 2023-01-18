@@ -10,7 +10,7 @@ import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.custom_platforms.light import (
-    CeColorDimmer,
+    CeColorDimmer, CeColorDimmerEffect,
     CeColorTempDimmer,
     CeDimmer,
     CeIpFixedColorLight,
@@ -134,8 +134,8 @@ async def test_cecolordimmer(
 ) -> None:
     """Test CeColorDimmer."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    light: CeColorDimmer = cast(
-        CeColorDimmer, await helper.get_custom_entity(central, "VCU3747418", 1)
+    light: CeColorDimmerEffect = cast(
+        CeColorDimmerEffect, await helper.get_custom_entity(central, "VCU3747418", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -205,7 +205,7 @@ async def test_cecolordimmer(
         parameter="LEVEL",
         value=1.0,
     )
-    assert light.hs_color == (0.0, 0.0)
+    assert light.hs_color == (0.0, 100.0)
 
     await light.turn_on(**{"effect": "Slow color change"})
     assert mock_client.method_calls[-2] == call.set_value(
@@ -482,3 +482,16 @@ async def test_ceipfixedcolorlight(
         parameter="RAMP_TIME_VALUE",
         value=277,
     )
+
+
+@pytest.mark.asyncio
+async def test_hbw_dimmer(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test CeColorDimmer."""
+    central, mock_client = await central_local_factory.get_default_central({'VCU9973336': "HBW-LC-RGBWW-IN6-DR.json"})
+    light: CeColorDimmer = cast(
+        CeColorDimmer, await helper.get_custom_entity(central, 'VCU9973336', 9)
+    )
+    assert light
+

@@ -21,7 +21,7 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmPlatform,
 )
-from hahomematic.custom_platforms.entity_definition import get_required_parameters
+from hahomematic.custom_platforms import get_required_parameters
 import hahomematic.entity as hme
 from hahomematic.helpers import (
     check_or_create_directory,

@@ -128,7 +128,7 @@ class BaseClimateEntity(CustomEntity):
     @value_property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if self._e_temperature_minimum and self._e_temperature_minimum.value:
+        if self._e_temperature_minimum.value is not None:
             min_temp = float(self._e_temperature_minimum.value)
         else:
             min_temp = self._e_setpoint.min
@@ -140,7 +140,7 @@ class BaseClimateEntity(CustomEntity):
     @value_property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        if self._e_temperature_maximum and self._e_temperature_maximum.value:
+        if self._e_temperature_maximum.value is not None:
             return float(self._e_temperature_maximum.value)
         return self._e_setpoint.max
 
@@ -366,7 +366,7 @@ class CeIpThermostat(BaseClimateEntity):
     @property
     def _is_heating_mode(self) -> bool:
         """Return the heating_mode of the device."""
-        if self._e_heating_mode.value:
+        if self._e_heating_mode.value is not None:
             return str(self._e_heating_mode.value) == "HEATING"
         return True
 
@@ -500,7 +500,7 @@ class CeIpThermostat(BaseClimateEntity):
     def _current_profile_name(self) -> HmPresetMode | None:
         """Return a profile index by name."""
         inv_profiles: dict[int, HmPresetMode] = {v: k for k, v in self._profiles.items()}
-        if self._e_active_profile.value:
+        if self._e_active_profile.value is not None:
             return inv_profiles.get(int(self._e_active_profile.value))
         return None
 

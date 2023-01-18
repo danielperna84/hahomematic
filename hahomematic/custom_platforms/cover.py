@@ -83,7 +83,7 @@ class CeCover(CustomEntity):
     @value_property
     def channel_operation_mode(self) -> str | None:
         """Return channel_operation_mode of cover."""
-        if self._e_channel_level:
+        if self._e_channel_level.value is not None:
             return self._e_channel_level.channel_operation_mode
         return None
 
@@ -358,17 +358,49 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HM-LC-BlX": CustomConfig(func=make_rf_cover, channels=(1,)),
     "HM-LC-Ja1PBU-FM": CustomConfig(func=make_rf_blind, channels=(1,)),
     "HM-LC-JaX": CustomConfig(func=make_rf_blind, channels=(1,)),
-    "HM-Sec-Win": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-Sec-Win": CustomConfig(
+        func=make_rf_cover,
+        channels=(1,),
+        extended=ExtendedConfig(
+            additional_entities={
+                1: (
+                    "DIRECTION",
+                    "WORKING",
+                    "ERROR",
+                ),
+                2: (
+                    "LEVEL",
+                    "STATUS",
+                ),
+            }
+        ),
+    ),
     "HMW-LC-Bl1": CustomConfig(func=make_rf_cover, channels=(3,)),
     "HmIP-BBL": CustomConfig(func=make_ip_blind, channels=(3,)),
     "HmIP-BROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
-    "HmIP-DRBLI4": CustomConfig(func=make_ip_blind, channels=(9, 13, 17, 21)),
+    "HmIP-DRBLI4": CustomConfig(
+        func=make_ip_blind,
+        channels=(9, 13, 17, 21),
+        extended=ExtendedConfig(
+            additional_entities={
+                0: ("ACTUAL_TEMPERATURE",),
+            }
+        ),
+    ),
     "HmIP-FBL": CustomConfig(func=make_ip_blind, channels=(3,)),
     "HmIP-FROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
     "HmIP-HDM": CustomConfig(func=make_ip_blind, channels=(0,)),
     "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, channels=(1,)),
     "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, channels=(1,)),
-    "HmIPW-DRBL4": CustomConfig(func=make_ip_blind, channels=(1, 5, 9, 13)),
+    "HmIPW-DRBL4": CustomConfig(
+        func=make_ip_blind,
+        channels=(1, 5, 9, 13),
+        extended=ExtendedConfig(
+            additional_entities={
+                0: ("ACTUAL_TEMPERATURE",),
+            }
+        ),
+    ),
     "ZEL STG RM FEP 230V": CustomConfig(func=make_rf_cover, channels=(1,)),
 }
 
