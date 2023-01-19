@@ -547,8 +547,6 @@ def make_custom_entity(
     We use a helper-function to avoid raising exceptions during object-init.
     """
     entities: list[hme.BaseEntity] = []
-    if not group_base_channels:
-        group_base_channels = (0,)
 
     entity_def = _get_device_entities(device_enum, group_base_channels[0])
 
