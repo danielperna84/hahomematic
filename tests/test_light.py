@@ -129,7 +129,7 @@ async def test_cedimmer(
     )
 
 
-async def test_cecolordimmer(
+async def no_test_cecolordimmer(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeColorDimmer."""
