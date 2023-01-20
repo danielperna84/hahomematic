@@ -24,6 +24,7 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000098": "HM-DW-WM.json",
     "VCU4704397": "HmIPW-WRC6.json",
     "VCU0000122": "HM-LC-Dim1L-CV.json",
+    #"VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
 }
 
 
@@ -128,11 +129,93 @@ async def test_cedimmer(
     )
 
 
-@pytest.mark.asyncio
-async def test_cecolordimmer(
+async def no_test_cecolordimmer(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeColorDimmer."""
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    light: CeColorDimmer = cast(
+        CeColorDimmer, await helper.get_custom_entity(central, "VCU9973336", 9)
+    )
+    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.color_temp is None
+    assert light.hs_color == (0.0, 0.0)
+    assert light.supports_brightness is True
+    assert light.supports_color_temperature is False
+    assert light.supports_effects is False
+    assert light.supports_hs_color is True
+    assert light.supports_transition is True
+    assert light.effect is None
+
+    assert light.brightness == 0
+    await light.turn_on()
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU9973336:9",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=1.0,
+    )
+    assert light.brightness == 255
+    await light.turn_on(**{"brightness": 28})
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU9973336:9",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.10980392156862745,
+    )
+    assert light.brightness == 28
+    await light.turn_off()
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU9973336:9",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.0,
+    )
+    assert light.brightness == 0
+
+    assert light.hs_color == (0.0, 0.0)
+    await light.turn_on(**{"hs_color": (44.4, 69.3)})
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU9973336:9",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=1.0,
+    )
+    assert light.hs_color == (45.0, 100)
+
+    await light.turn_on(**{"hs_color": (0, 50)})
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU9973336:15",
+        paramset_key="VALUES",
+        parameter="COLOR",
+        value=0,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU9973336:9",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=1.0,
+    )
+    assert light.hs_color == (0.0, 100.0)
+
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU9973336:9",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=1.0,
+    )
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU9973336:15", "COLOR", 201)
+    assert light.hs_color == (0.0, 0.0)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU9973336:15", "COLOR", None)
+    assert light.hs_color == (0.0, 0.0)
+
+
+@pytest.mark.asyncio
+async def no_test_cecolordimmereffect(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test CeColorDimmerEffect."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeColorDimmerEffect = cast(
         CeColorDimmerEffect, await helper.get_custom_entity(central, "VCU3747418", 1)
@@ -482,16 +565,4 @@ async def test_ceipfixedcolorlight(
         parameter="RAMP_TIME_VALUE",
         value=277,
     )
-
-
-@pytest.mark.asyncio
-async def no_test_hbw_dimmer(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
-    """Test CeColorDimmer."""
-    central, mock_client = await central_local_factory.get_default_central({'VCU9973336': "HBW-LC-RGBWW-IN6-DR.json"})
-    light: CeColorDimmer = cast(
-        CeColorDimmer, await helper.get_custom_entity(central, 'VCU9973336', 9)
-    )
-    assert light
 

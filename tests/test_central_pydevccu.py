@@ -98,13 +98,13 @@ async def test_central(central_pydevccu) -> None:
 
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2713
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
-    assert usage_types[HmEntityUsage.ENTITY] == 3236
+    assert usage_types[HmEntityUsage.ENTITY] == 3253
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 96
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 
     assert len(ce_channels) == 110
     assert len(entity_types) == 6
-    assert len(parameters) == 165
+    assert len(parameters) == 167
 
     assert len(central_pydevccu._devices) == 372
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]

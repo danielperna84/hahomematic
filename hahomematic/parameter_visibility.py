@@ -186,6 +186,7 @@ _IGNORED_PARAMETERS_WILDCARDS_START: Final[tuple[str, ...]] = (
 _UN_IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
     "HmIP-DLD": ("ERROR_JAMMED",),
     "HmIP-SWSD": ("SMOKE_DETECTOR_ALARM_STATUS",),
+    "HM-OU-LED16": ("LED_STATUS"),
     "HM-Sec-Win": ("DIRECTION", "WORKING", "ERROR", "STATUS"),
     "HM-Sec-Key": ("DIRECTION", "ERROR"),
     "HmIP-PCBS-BAT": (
