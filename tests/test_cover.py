@@ -15,7 +15,7 @@ from hahomematic.custom_platforms.cover import (
     CeBlind,
     CeCover,
     CeGarage,
-    CeIpBlind,
+    CeIpBlind,CeWindowDrive, HM_WD_CLOSED, HM_OPEN, HM_CLOSED
 )
 
 TEST_DEVICES: dict[str, str] = {
@@ -38,7 +38,7 @@ async def test_cecover(
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position == 0
-    assert cover.channel_level == 0.0
+    assert cover.channel_level == HM_CLOSED
     assert cover.channel_operation_mode is None
     assert cover.is_closed is True
     await cover.set_cover_position(81)
@@ -63,7 +63,7 @@ async def test_cecover(
         channel_address="VCU8537918:4",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=0.0,
+        value=HM_CLOSED,
     )
     assert cover.current_cover_position == 0
 
@@ -80,16 +80,16 @@ async def test_cecover(
 
 
 @pytest.mark.asyncio
-async def test_cecover_sec_win(
+async def test_cewindowdrive(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test CeCover."""
+    """Test CeWindowDrive."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeCover = cast(CeCover, await helper.get_custom_entity(central, "VCU0000350", 1))
+    cover: CeWindowDrive = cast(CeWindowDrive, await helper.get_custom_entity(central, "VCU0000350", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position == 0
-    assert cover.channel_level == 0.0
+    assert cover.channel_level == HM_WD_CLOSED
     assert cover.channel_operation_mode is None
     assert cover.is_closed is True
     await cover.set_cover_position(81)
@@ -107,7 +107,7 @@ async def test_cecover_sec_win(
         channel_address="VCU0000350:1",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=1.0,
+        value=HM_OPEN,
     )
     assert cover.current_cover_position == 100
     await cover.close_cover()
@@ -115,12 +115,20 @@ async def test_cecover_sec_win(
         channel_address="VCU0000350:1",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=0.0,
+        value=HM_WD_CLOSED,
     )
     assert cover.current_cover_position == 0
-    central.event(const.LOCAL_INTERFACE_ID, "VCU0000350:1", "LEVEL", -0.005)
-    assert cover.channel_level == -0.005
+    assert cover.channel_level == HM_WD_CLOSED
+    assert cover.is_closed == True
+
+    await cover.set_cover_position(1)
     assert cover.current_cover_position == 0
+    assert cover.channel_level ==  HM_CLOSED
+    assert cover.is_closed == False
+
+    await cover.set_cover_position(0.0)
+    assert cover.current_cover_position == 0
+    assert cover.channel_level ==  HM_WD_CLOSED
     assert cover.is_closed == True
 
 
@@ -149,7 +157,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=1.0,
+        value=HM_OPEN,
     )
     assert cover.current_cover_position == 100
     assert cover.current_cover_tilt_position == 0
@@ -158,7 +166,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=0.0,
+        value=HM_CLOSED,
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
@@ -167,7 +175,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL_SLATS",
-        value=1.0,
+        value=HM_OPEN,
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 100
@@ -185,7 +193,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL_SLATS",
-        value=0.0,
+        value=HM_CLOSED,
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
@@ -231,7 +239,7 @@ async def test_ceipblind(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=1.0,
+        value=HM_OPEN,
     )
     assert cover.current_cover_position == 100
     assert cover.current_cover_tilt_position == 100
@@ -240,7 +248,7 @@ async def test_ceipblind(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=0.0,
+        value=HM_CLOSED,
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
@@ -249,7 +257,7 @@ async def test_ceipblind(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=0.0,
+        value=HM_CLOSED,
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 100
@@ -258,7 +266,7 @@ async def test_ceipblind(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=0.0,
+        value=HM_CLOSED,
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 45
@@ -267,7 +275,7 @@ async def test_ceipblind(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=0.0,
+        value=HM_CLOSED,
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
@@ -281,11 +289,11 @@ async def test_ceipblind(
     assert cover.current_cover_tilt_position == 80
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:3", "LEVEL", None)
-    assert cover.channel_level == 0.0
+    assert cover.channel_level == HM_CLOSED
     assert cover.current_cover_position == 0
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:3", "LEVEL_2", None)
-    assert cover.channel_tilt_level == 0.0
+    assert cover.channel_tilt_level == HM_CLOSED
     assert cover.current_cover_tilt_position == 0
 
 

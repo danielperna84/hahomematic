@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 HM_OPEN: float = 1.0  # must be float!
 HM_CLOSED: float = 0.0  # must be float!
+HM_WD_CLOSED: float = -0.005  # must be float! HM-Sec-Win
 
 HM_OPENING = "UP"
 HM_CLOSING = "DOWN"
@@ -55,6 +56,8 @@ class CeCover(CustomEntity):
     """Class for HomeMatic cover entities."""
 
     _attr_platform = HmPlatform.COVER
+    _attr_hm_closed_state: float = HM_CLOSED
+    _attr_hm_open_state: float = HM_OPEN
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -73,7 +76,9 @@ class CeCover(CustomEntity):
         """Return the channel level of the cover."""
         if self._e_channel_level.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
             return float(self._e_channel_level.value)
-        return self._e_level.value if self._e_level.value is not None else HM_CLOSED
+        return (
+            self._e_level.value if self._e_level.value is not None else self._attr_hm_closed_state
+        )
 
     @value_property
     def current_cover_position(self) -> int:
@@ -100,7 +105,7 @@ class CeCover(CustomEntity):
     @value_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self.channel_level <= HM_CLOSED
+        return self.channel_level == self._attr_hm_closed_state
 
     @value_property
     def is_opening(self) -> bool | None:
@@ -118,15 +123,32 @@ class CeCover(CustomEntity):
 
     async def open_cover(self) -> None:
         """Open the cover."""
-        await self._set_cover_level(level=HM_OPEN)
+        await self._set_cover_level(level=self._attr_hm_open_state)
 
     async def close_cover(self) -> None:
         """Close the cover."""
-        await self._set_cover_level(level=HM_CLOSED)
+        await self._set_cover_level(level=self._attr_hm_closed_state)
 
     async def stop_cover(self) -> None:
         """Stop the device if in motion."""
         await self._e_stop.send_value(True)
+
+
+class CeWindowDrive(CeCover):
+    """Class for Homematic window drive."""
+
+    _attr_hm_closed_state: float = HM_WD_CLOSED
+    _attr_hm_open_state: float = HM_OPEN
+
+    async def _set_cover_level(self, level: float) -> None:
+        """Move the window drive to a specific position. Value range is -0.005 to 1.0."""
+        if level == 0.0:
+            wd_level = HM_WD_CLOSED
+        elif 0.0 < level <= 0.01:
+            wd_level = 0
+        else:
+            wd_level = level
+        await self._e_level.send_value(value=wd_level, do_validate=False)
 
 
 class CeBlind(CeCover):
@@ -145,7 +167,11 @@ class CeBlind(CeCover):
         """Return the channel level of the tilt."""
         if self._e_channel_level_2.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
             return float(self._e_channel_level_2.value)
-        return self._e_level_2.value if self._e_level_2.value is not None else HM_CLOSED
+        return (
+            self._e_level_2.value
+            if self._e_level_2.value is not None
+            else self._attr_hm_closed_state
+        )
 
     @value_property
     def current_cover_tilt_position(self) -> int:
@@ -164,11 +190,11 @@ class CeBlind(CeCover):
 
     async def open_cover_tilt(self) -> None:
         """Open the tilt."""
-        await self._set_cover_tilt_level(level=HM_OPEN)
+        await self._set_cover_tilt_level(level=self._attr_hm_open_state)
 
     async def close_cover_tilt(self) -> None:
         """Close the tilt."""
-        await self._set_cover_tilt_level(level=HM_CLOSED)
+        await self._set_cover_tilt_level(level=self._attr_hm_closed_state)
 
     async def stop_cover_tilt(self) -> None:
         """Stop the device if in motion."""
@@ -180,13 +206,13 @@ class CeIpBlind(CeBlind):
 
     async def open_cover(self) -> None:
         """Open the cover and open the tilt."""
-        await super()._set_cover_tilt_level(level=HM_OPEN)
-        await self._set_cover_level(level=HM_OPEN)
+        await super()._set_cover_tilt_level(level=self._attr_hm_open_state)
+        await self._set_cover_level(level=self._attr_hm_open_state)
 
     async def close_cover(self) -> None:
         """Close the cover and close the tilt."""
-        await super()._set_cover_tilt_level(level=HM_CLOSED)
-        await self._set_cover_level(level=HM_CLOSED)
+        await super()._set_cover_tilt_level(level=self._attr_hm_closed_state)
+        await self._set_cover_level(level=self._attr_hm_closed_state)
 
     async def _set_cover_tilt_level(self, level: float) -> None:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
@@ -345,6 +371,21 @@ def make_rf_blind(
     )
 
 
+def make_rf_window_drive(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[hme.BaseEntity, ...]:
+    """Creates HomeMatic classic window drive entities."""
+    return make_custom_entity(
+        device=device,
+        custom_entity_class=CeWindowDrive,
+        device_enum=EntityDefinition.RF_COVER,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 146": CustomConfig(func=make_rf_cover, channels=(1,)),
@@ -359,7 +400,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HM-LC-Ja1PBU-FM": CustomConfig(func=make_rf_blind, channels=(1,)),
     "HM-LC-JaX": CustomConfig(func=make_rf_blind, channels=(1,)),
     "HM-Sec-Win": CustomConfig(
-        func=make_rf_cover,
+        func=make_rf_window_drive,
         channels=(1,),
         extended=ExtendedConfig(
             additional_entities={
