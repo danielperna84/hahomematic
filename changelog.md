@@ -1,5 +1,5 @@
 # Version 2023.1.6 (2023-01-XX)
-- Also negative values means closed for covers
+- Add a new custom entity type for windows drive
 
 # Version 2023.1.5 (2023-01-20)
 - Remove LOWBAT from HM-LC-Sw1-DR
