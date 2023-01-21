@@ -100,7 +100,7 @@ class CeCover(CustomEntity):
     @value_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self.channel_level == HM_CLOSED
+        return self.channel_level <= HM_CLOSED
 
     @value_property
     def is_opening(self) -> bool | None:

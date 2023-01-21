@@ -1,4 +1,7 @@
-# Version 2023.1.5 (2023-01-17)
+# Version 2023.1.6 (2023-01-XX)
+- Also negative values means closed for covers
+
+# Version 2023.1.5 (2023-01-20)
 - Remove LOWBAT from HM-LC-Sw1-DR
 - Sort lists in parameter_visibility.py
 - Replace custom entity config data structure by CustomConfig
