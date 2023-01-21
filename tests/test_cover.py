@@ -24,6 +24,7 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000045": "HM-LC-Bl1-FM.json",
     # "VCU3574044": "HmIP-MOD-HO.json",
     "VCU0000145": "HM-LC-JaX.json",
+    "VCU0000350": "HM-Sec-Win.json",
 }
 
 
@@ -76,6 +77,51 @@ async def test_cecover(
     central.event(const.LOCAL_INTERFACE_ID, "VCU8537918:3", "LEVEL", 0.5)
     assert cover.channel_level == 0.5
     assert cover.current_cover_position == 50
+
+
+@pytest.mark.asyncio
+async def test_cecover_sec_win(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test CeCover."""
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    cover: CeCover = cast(CeCover, await helper.get_custom_entity(central, "VCU0000350", 1))
+    assert cover.usage == HmEntityUsage.CE_PRIMARY
+
+    assert cover.current_cover_position == 0
+    assert cover.channel_level == 0.0
+    assert cover.channel_operation_mode is None
+    assert cover.is_closed is True
+    await cover.set_cover_position(81)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000350:1",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.81,
+    )
+    assert cover.current_cover_position == 81
+    assert cover.is_closed is False
+
+    await cover.open_cover()
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000350:1",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=1.0,
+    )
+    assert cover.current_cover_position == 100
+    await cover.close_cover()
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000350:1",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.0,
+    )
+    assert cover.current_cover_position == 0
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000350:1", "LEVEL", -0.005)
+    assert cover.channel_level == -0.005
+    assert cover.current_cover_position == 0
+    assert cover.is_closed == True
 
 
 @pytest.mark.asyncio
