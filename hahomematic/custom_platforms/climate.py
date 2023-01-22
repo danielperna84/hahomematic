@@ -427,23 +427,23 @@ class CeIpThermostat(BaseClimateEntity):
 
     async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> bool:
         """Set new target hvac mode."""
-        if hvac_mode == HmHvacMode.AUTO:
-            if not await self._e_control_mode.send_value(HMIP_MODE_AUTO):
-                return False
-        elif hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
-            if not await self._e_control_mode.send_value(HMIP_MODE_MANU):
-                return False
-            if not await self.set_temperature(temperature=self._min_or_target_temperature):
-                return False
-        elif hvac_mode == HmHvacMode.OFF:
-            if not await self._e_control_mode.send_value(HMIP_MODE_MANU):
-                return False
-            if not await self.set_temperature(temperature=HM_OFF_TEMPERATURE):
-                return False
+
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
             if not await self.set_preset_mode(HmPresetMode.NONE):
                 return False
+
+        if hvac_mode == HmHvacMode.AUTO:
+            return await self._e_control_mode.send_value(HMIP_MODE_AUTO)
+        if hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
+            if not await self._e_control_mode.send_value(HMIP_MODE_MANU):
+                return False
+            return await self.set_temperature(temperature=self._min_or_target_temperature)
+        if hvac_mode == HmHvacMode.OFF:
+            if not await self._e_control_mode.send_value(HMIP_MODE_MANU):
+                return False
+            return await self.set_temperature(temperature=HM_OFF_TEMPERATURE)
+
         return True
 
     async def set_preset_mode(self, preset_mode: HmPresetMode) -> bool:
@@ -456,10 +456,9 @@ class CeIpThermostat(BaseClimateEntity):
             if self.hvac_mode != HmHvacMode.AUTO:
                 if not await self.set_hvac_mode(HmHvacMode.AUTO):
                     return False
-            profile_idx = self._profiles.get(preset_mode)
             if not await self._e_boost_mode.send_value(False):
                 return False
-            if profile_idx:
+            if profile_idx := self._profiles.get(preset_mode):
                 if not await self._e_active_profile.send_value(profile_idx):
                     return False
         return True
