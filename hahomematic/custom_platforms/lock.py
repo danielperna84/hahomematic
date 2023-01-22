@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from hahomematic.const import HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -25,8 +24,6 @@ from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
-
-_LOGGER = logging.getLogger(__name__)
 
 # HM constants
 LOCK_STATE_UNKNOWN = "UNKNOWN"
@@ -67,15 +64,15 @@ class BaseLock(CustomEntity):
         """Return true if the lock is unlocking."""
 
     @abstractmethod
-    async def lock(self) -> None:
+    async def lock(self) -> bool:
         """Lock the lock."""
 
     @abstractmethod
-    async def unlock(self) -> None:
+    async def unlock(self) -> bool:
         """Unlock the lock."""
 
     @abstractmethod
-    async def open(self) -> None:
+    async def open(self) -> bool:
         """Open the lock."""
 
 
@@ -119,17 +116,17 @@ class CeIpLock(BaseLock):
         """Return true if lock is jammed."""
         return False
 
-    async def lock(self) -> None:
+    async def lock(self) -> bool:
         """Lock the lock."""
-        await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_LOCKED)
+        return await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_LOCKED)
 
-    async def unlock(self) -> None:
+    async def unlock(self) -> bool:
         """Unlock the lock."""
-        await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_UNLOCKED)
+        return await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_UNLOCKED)
 
-    async def open(self) -> None:
+    async def open(self) -> bool:
         """Open the lock."""
-        await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_OPEN)
+        return await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_OPEN)
 
 
 class CeRfLock(BaseLock):
@@ -169,17 +166,17 @@ class CeRfLock(BaseLock):
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value != "NO_ERROR"
 
-    async def lock(self) -> None:
+    async def lock(self) -> bool:
         """Lock the lock."""
-        await self._e_state.send_value(False)
+        return await self._e_state.send_value(False)
 
-    async def unlock(self) -> None:
+    async def unlock(self) -> bool:
         """Unlock the lock."""
-        await self._e_state.send_value(True)
+        return await self._e_state.send_value(True)
 
-    async def open(self) -> None:
+    async def open(self) -> bool:
         """Open the lock."""
-        await self._e_open.send_value(True)
+        return await self._e_open.send_value(True)
 
 
 def make_ip_lock(

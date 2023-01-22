@@ -261,15 +261,15 @@ class Client(ABC):
         """Send ping to CCU to generate PONG event."""
 
     @abstractmethod
-    async def execute_program(self, pid: str) -> None:
-        """Execute a program on CCU / Homegear."""
+    async def execute_program(self, pid: str) -> bool:
+        """Execute a program on CCU / Homegear.."""
 
     @abstractmethod
-    async def set_system_variable(self, name: str, value: Any) -> None:
+    async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
 
     @abstractmethod
-    async def delete_system_variable(self, name: str) -> None:
+    async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
 
     @abstractmethod
@@ -323,7 +323,7 @@ class Client(ABC):
         t: int = 60,
         mode: int = 1,
         device_address: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Activate or deactivate installmode on CCU / Homegear."""
         try:
             args: list[Any] = [on]
@@ -337,6 +337,8 @@ class Client(ABC):
             await self._proxy.setInstallMode(*args)
         except BaseHomematicException as hhe:
             _LOGGER.warning("set_install_mode failed: %s [%s]", hhe.name, hhe.args)
+            return False
+        return True
 
     async def get_install_mode(self) -> Any:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
@@ -385,7 +387,7 @@ class Client(ABC):
         parameter: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Set single value on paramset VALUES."""
         try:
             if rx_mode:
@@ -402,6 +404,8 @@ class Client(ABC):
                 parameter,
                 value,
             )
+            return False
+        return True
 
     async def set_value(
         self,
@@ -410,17 +414,16 @@ class Client(ABC):
         parameter: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Set single value on paramset VALUES."""
         if paramset_key == PARAMSET_KEY_VALUES:
-            await self._set_value(
+            return await self._set_value(
                 channel_address=channel_address,
                 parameter=parameter,
                 value=value,
                 rx_mode=rx_mode,
             )
-            return
-        await self.put_paramset(
+        return await self.put_paramset(
             address=channel_address,
             paramset_key=paramset_key,
             value={parameter: value},
@@ -456,18 +459,18 @@ class Client(ABC):
         paramset_key: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> None:
+    ) -> bool:
         """
         Set paramsets manually.
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
         try:
+            _LOGGER.debug("put_paramset: %s, %s, %s", address, paramset_key, value)
             if rx_mode:
                 await self._proxy.putParamset(address, paramset_key, value, rx_mode)
             else:
                 await self._proxy.putParamset(address, paramset_key, value)
-            _LOGGER.debug("put_paramset: %s, %s, %s", address, paramset_key, value)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "put_paramset failed: %s [%s] %s, %s, %s",
@@ -477,6 +480,8 @@ class Client(ABC):
                 paramset_key,
                 value,
             )
+            return False
+        return True
 
     async def fetch_paramset_description(
         self, channel_address: str, paramset_key: str, save_to_file: bool = True
@@ -670,17 +675,17 @@ class ClientCCU(Client):
         self.last_updated = INIT_DATETIME
         return False
 
-    async def execute_program(self, pid: str) -> None:
+    async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU."""
-        await self._json_rpc_client.execute_program(pid=pid)
+        return await self._json_rpc_client.execute_program(pid=pid)
 
-    async def set_system_variable(self, name: str, value: Any) -> None:
+    async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
-        await self._json_rpc_client.set_system_variable(name=name, value=value)
+        return await self._json_rpc_client.set_system_variable(name=name, value=value)
 
-    async def delete_system_variable(self, name: str) -> None:
+    async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
-        await self._json_rpc_client.delete_system_variable(name=name)
+        return await self._json_rpc_client.delete_system_variable(name=name)
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
@@ -779,23 +784,27 @@ class ClientHomegear(Client):
         self.last_updated = INIT_DATETIME
         return False
 
-    async def execute_program(self, pid: str) -> None:
+    async def execute_program(self, pid: str) -> bool:
         """Execute a program on Homegear."""
-        return None
+        return True
 
-    async def set_system_variable(self, name: str, value: Any) -> None:
+    async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
         try:
             await self._proxy.setSystemVariable(name, value)
         except BaseHomematicException as hhe:
             _LOGGER.warning("set_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            return False
+        return True
 
-    async def delete_system_variable(self, name: str) -> None:
+    async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
         try:
             await self._proxy.deleteSystemVariable(name)
         except BaseHomematicException as hhe:
             _LOGGER.warning("delete_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            return False
+        return True
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
@@ -893,14 +902,17 @@ class ClientLocal(Client):
         """Send ping to CCU to generate PONG event."""
         return True
 
-    async def execute_program(self, pid: str) -> None:
+    async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
+        return True
 
-    async def set_system_variable(self, name: str, value: Any) -> None:
+    async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
+        return True
 
-    async def delete_system_variable(self, name: str) -> None:
+    async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
+        return True
 
     async def get_system_variable(self, name: str) -> str:
         """Get single system variable from CCU / Homegear."""
@@ -960,8 +972,9 @@ class ClientLocal(Client):
         t: int = 60,
         mode: int = 1,
         device_address: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Activate or deactivate installmode on CCU / Homegear."""
+        return True
 
     async def get_install_mode(self) -> Any:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
@@ -984,9 +997,10 @@ class ClientLocal(Client):
         parameter: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Set single value on paramset VALUES."""
         self.central.event(self.interface_id, channel_address, parameter, value)
+        return True
 
     async def get_paramset(self, address: str, paramset_key: str) -> Any:
         """
@@ -1023,7 +1037,7 @@ class ClientLocal(Client):
         paramset_key: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> None:
+    ) -> bool:
         """
         Set paramsets manually.
         Address is usually the channel_address,
@@ -1031,6 +1045,7 @@ class ClientLocal(Client):
         """
         for parameter in value:
             self.central.event(self.interface_id, address, parameter, value[parameter])
+        return True
 
     async def _load_all_json_files(
         self,

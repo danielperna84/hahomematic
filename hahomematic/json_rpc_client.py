@@ -371,7 +371,7 @@ class JsonRpcAioHttpClient:
         """Return if credentials are available."""
         return self._username is not None and self._password is not None
 
-    async def execute_program(self, pid: str) -> None:
+    async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
         _LOGGER.debug("execute_program: Executing a program via JSON-RPC")
         try:
@@ -388,8 +388,10 @@ class JsonRpcAioHttpClient:
                 )
         except BaseHomematicException as hhe:
             _LOGGER.warning("execute_program failed: %s [%s]", hhe.name, hhe.args)
+            return False
+        return True
 
-    async def set_system_variable(self, name: str, value: Any) -> None:
+    async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
         _LOGGER.debug("set_system_variable: Setting System variable via JSON-RPC")
         try:
@@ -407,7 +409,7 @@ class JsonRpcAioHttpClient:
                         "Value (%s) contains html tags. This is not allowed.",
                         value,
                     )
-                    return
+                    return False
                 response = await self._post_script(
                     script_name=REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
                 )
@@ -422,8 +424,10 @@ class JsonRpcAioHttpClient:
                 )
         except BaseHomematicException as hhe:
             _LOGGER.warning("set_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            return False
+        return True
 
-    async def delete_system_variable(self, name: str) -> None:
+    async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
         _LOGGER.debug("delete_system_variable: Getting System variable via JSON-RPC")
         try:
@@ -437,6 +441,8 @@ class JsonRpcAioHttpClient:
                 _LOGGER.debug("delete_system_variable: Deleted: %s", str(deleted))
         except BaseHomematicException as hhe:
             _LOGGER.warning("delete_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            return False
+        return True
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""

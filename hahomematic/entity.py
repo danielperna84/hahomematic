@@ -593,9 +593,9 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
                     self.get_event_data(new_value),
                 )
 
-    async def send_value(self, value: Any) -> None:
+    async def send_value(self, value: Any) -> bool:
         """send value to ccu."""
-        await self._client.set_value(
+        return await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
             parameter=self._attr_parameter,
@@ -725,7 +725,7 @@ class CustomEntity(BaseEntity):
     def is_valid(self) -> bool:
         """Return if the state is valid."""
         for entity in self._readable_entities:
-            if entity.is_valid is False:
+            if not entity.is_valid:
                 return False
         return True
 
@@ -769,9 +769,9 @@ class CustomEntity(BaseEntity):
 
     async def put_paramset(
         self, paramset_key: str, value: Any, rx_mode: str | None = None
-    ) -> None:
+    ) -> bool:
         """Set paramsets manually."""
-        await self._client.put_paramset(
+        return await self._client.put_paramset(
             address=self._attr_channel_address,
             paramset_key=paramset_key,
             value=value,
@@ -906,6 +906,15 @@ class CustomEntity(BaseEntity):
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """get entity"""
         if entity := self.data_entities.get(field_name):
+            if not isinstance(entity, entity_type):
+                _LOGGER.debug(
+                    "_get_entity: type mismatch for requested sub entity: "
+                    "expected: %s, but is %s for field name %s of enitity %s",
+                    entity_type.name,
+                    type(entity),
+                    field_name,
+                    self.name,
+                )
             return cast(entity_type, entity)  # type: ignore[valid-type]
         return cast(
             entity_type, NoneTypeEntity()  # type:ignore[valid-type]
@@ -1033,13 +1042,15 @@ class GenericSystemVariable(GenericHubEntity):
             self._attr_value = value
             self.update_entity()
 
-    async def send_variable(self, value: Any) -> None:
+    async def send_variable(self, value: Any) -> bool:
         """Set variable value on CCU/Homegear."""
+        success: bool = True
         if client := self.central.get_primary_client():
-            await client.set_system_variable(
+            success = await client.set_system_variable(
                 name=self.ccu_var_name, value=parse_sys_var(self.data_type, value)
             )
         self.update_value(value=value)
+        return success
 
 
 class GenericEvent(BaseParameterEntity[Any]):
@@ -1163,5 +1174,6 @@ class NoneTypeEntity:
     visible: Any = None
     channel_operation_mode: str | None = None
 
-    def send_value(self, value: Any) -> None:
-        """Dummy method."""
+    def send_value(self, value: Any) -> bool:
+        """Dummy method"""
+        return True

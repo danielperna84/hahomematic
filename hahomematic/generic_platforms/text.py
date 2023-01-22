@@ -1,12 +1,8 @@
 """Module for entities implemented using text."""
 from __future__ import annotations
 
-import logging
-
 from hahomematic.const import HmPlatform
 from hahomematic.entity import GenericEntity, GenericSystemVariable
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HmText(GenericEntity[str]):
@@ -17,9 +13,9 @@ class HmText(GenericEntity[str]):
 
     _attr_platform = HmPlatform.TEXT
 
-    async def send_value(self, value: str | None) -> None:
+    async def send_value(self, value: str | None) -> bool:
         """Set the value of the entity."""
-        await super().send_value(value)
+        return await super().send_value(value)
 
 
 class HmSysvarText(GenericSystemVariable):
@@ -30,6 +26,6 @@ class HmSysvarText(GenericSystemVariable):
     _attr_platform = HmPlatform.HUB_TEXT
     _attr_is_extended = True
 
-    async def send_variable(self, value: str | None) -> None:
+    async def send_variable(self, value: str | None) -> bool:
         """Set the value of the entity."""
-        await super().send_variable(value)
+        return await super().send_variable(value)

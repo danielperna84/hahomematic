@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from hahomematic.const import HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -22,8 +21,6 @@ import hahomematic.entity as hme
 from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
-
-_LOGGER = logging.getLogger(__name__)
 
 # HM constants
 HMIP_ACOUSTIC_ALARM_SELECTION = "ACOUSTIC_ALARM_SELECTION"
@@ -60,11 +57,11 @@ class BaseSiren(CustomEntity):
         """Return a list of available lights."""
 
     @abstractmethod
-    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> None:
+    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> bool:
         """Turn the device on."""
 
     @abstractmethod
-    async def turn_off(self) -> None:
+    async def turn_off(self) -> bool:
         """Turn the device off."""
 
 
@@ -110,9 +107,9 @@ class CeIpSiren(BaseSiren):
         acoustic_alarm: str,
         optical_alarm: str,
         duration: int = DEFAULT_DURATION_VALUE,
-    ) -> None:
+    ) -> bool:
         """Turn the device on."""
-        await self._client.put_paramset(
+        return await self._client.put_paramset(
             address=f"{self.device.device_address}:3",
             paramset_key="VALUES",
             value={
@@ -123,9 +120,9 @@ class CeIpSiren(BaseSiren):
             },
         )
 
-    async def turn_off(self) -> None:
+    async def turn_off(self) -> bool:
         """Turn the device off."""
-        await self._client.put_paramset(
+        return await self._client.put_paramset(
             address=f"{self.device.device_address}:3",
             paramset_key="VALUES",
             value={
@@ -140,11 +137,13 @@ class CeIpSiren(BaseSiren):
 class CeRfSiren(BaseSiren):
     """Class for classic HomeMatic siren entities."""
 
-    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> None:
+    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> bool:
         """Turn the device on."""
+        return True
 
-    async def turn_off(self) -> None:
+    async def turn_off(self) -> bool:
         """Turn the device off."""
+        return True
 
 
 def make_ip_siren(

@@ -4,7 +4,6 @@ switch platform (https://www.home-assistant.io/integrations/switch/).
 """
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
@@ -12,7 +11,6 @@ from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericSystemVariable
 
 PARAM_ON_TIME = "ON_TIME"
-_LOGGER = logging.getLogger(__name__)
 
 
 class HmSwitch(GenericEntity[bool]):
@@ -30,20 +28,21 @@ class HmSwitch(GenericEntity[bool]):
             return False
         return self._attr_value
 
-    async def turn_on(self, **kwargs: dict[str, Any] | None) -> None:
+    async def turn_on(self, **kwargs: dict[str, Any] | None) -> bool:
         """Turn the switch on."""
         if HM_ARG_ON_TIME in kwargs:
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            await self.set_on_time_value(on_time=on_time)
-        await self.send_value(True)
+            if not await self.set_on_time_value(on_time=on_time):
+                return False
+        return await self.send_value(True)
 
-    async def turn_off(self) -> None:
+    async def turn_off(self) -> bool:
         """Turn the switch off."""
-        await self.send_value(False)
+        return await self.send_value(False)
 
-    async def set_on_time_value(self, on_time: float) -> None:
+    async def set_on_time_value(self, on_time: float) -> bool:
         """Set the on time value in seconds."""
-        await self._client.set_value(
+        return await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
             parameter=PARAM_ON_TIME,

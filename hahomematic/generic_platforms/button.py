@@ -4,7 +4,6 @@ button platform (https://www.home-assistant.io/integrations/button/).
 """
 from __future__ import annotations
 
-import logging
 from typing import Final
 
 import hahomematic.central_unit as hmcu
@@ -12,8 +11,6 @@ from hahomematic.const import PROGRAM_ADDRESS, HmPlatform
 from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericHubEntity
 from hahomematic.helpers import HubData, ProgramData
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HmButton(GenericEntity[None]):
@@ -24,9 +21,9 @@ class HmButton(GenericEntity[None]):
 
     _attr_platform = HmPlatform.BUTTON
 
-    async def press(self) -> None:
+    async def press(self) -> bool:
         """Handle the button press."""
-        await self.send_value(True)
+        return await self.send_value(True)
 
 
 class HmProgramButton(GenericHubEntity):
@@ -79,6 +76,6 @@ class HmProgramButton(GenericHubEntity):
         if do_update:
             self.update_entity()
 
-    async def press(self) -> None:
+    async def press(self) -> bool:
         """Handle the button press."""
-        await self.central.execute_program(pid=self.pid)
+        return await self.central.execute_program(pid=self.pid)

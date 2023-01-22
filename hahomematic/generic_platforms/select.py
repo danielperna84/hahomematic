@@ -30,23 +30,22 @@ class HmSelect(GenericEntity[Union[int, str]]):
             return self._attr_value_list[int(self._attr_value)]
         return str(self._attr_default)
 
-    async def send_value(self, value: int | str) -> None:
+    async def send_value(self, value: int | str) -> bool:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
         if isinstance(value, int) and self._attr_value_list:
             if 0 <= value < len(self._attr_value_list):
-                await super().send_value(value)
-                return None
+                return await super().send_value(value)
         elif self._attr_value_list:
             if value in self._attr_value_list:
-                await super().send_value(self._attr_value_list.index(value))
-                return None
+                return await super().send_value(self._attr_value_list.index(value))
 
         _LOGGER.warning(
             "Value not in value_list for %s/%s.",
             self.name,
             self.unique_identifier,
         )
+        return False
 
 
 class HmSysvarSelect(GenericSystemVariable):
@@ -64,20 +63,19 @@ class HmSysvarSelect(GenericSystemVariable):
             return self._attr_value_list[int(self._attr_value)]
         return None
 
-    async def send_variable(self, value: int | str) -> None:
+    async def send_variable(self, value: int | str) -> bool:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
         if isinstance(value, int) and self._attr_value_list:
             if 0 <= value < len(self._attr_value_list):
-                await super().send_variable(value)
-                return None
+                return await super().send_variable(value)
         elif self._attr_value_list:
             if value in self._attr_value_list:
-                await super().send_variable(self._attr_value_list.index(value))
-                return None
+                return await super().send_variable(self._attr_value_list.index(value))
 
         _LOGGER.warning(
             "Value not in value_list for %s/%s.",
             self.name,
             self.unique_identifier,
         )
+        return False

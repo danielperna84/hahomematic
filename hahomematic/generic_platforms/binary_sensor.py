@@ -4,13 +4,9 @@ binary_sensor platform (https://www.home-assistant.io/integrations/binary_sensor
 """
 from __future__ import annotations
 
-import logging
-
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericSystemVariable
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HmBinarySensor(GenericEntity[bool]):
