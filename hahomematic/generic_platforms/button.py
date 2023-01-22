@@ -21,9 +21,9 @@ class HmButton(GenericEntity[None]):
 
     _attr_platform = HmPlatform.BUTTON
 
-    async def press(self) -> None:
+    async def press(self) -> bool:
         """Handle the button press."""
-        await self.send_value(True)
+        return await self.send_value(True)
 
 
 class HmProgramButton(GenericHubEntity):
@@ -76,6 +76,6 @@ class HmProgramButton(GenericHubEntity):
         if do_update:
             self.update_entity()
 
-    async def press(self) -> None:
+    async def press(self) -> bool:
         """Handle the button press."""
-        await self.central.execute_program(pid=self.pid)
+        return await self.central.execute_program(pid=self.pid)

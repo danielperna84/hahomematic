@@ -15,10 +15,9 @@ class HmAction(GenericEntity[None]):
 
     _attr_platform = HmPlatform.ACTION
 
-    async def send_value(self, value: Any) -> None:
+    async def send_value(self, value: Any) -> bool:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
         if value is not None and self._attr_value_list and isinstance(value, str):
-            await super().send_value(self._attr_value_list.index(value))
-        else:
-            await super().send_value(value)
+            return await super().send_value(self._attr_value_list.index(value))
+        return await super().send_value(value)

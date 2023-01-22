@@ -1,5 +1,6 @@
-# Version 2023.1.6 (2023-01-XX)
+# Version 2023.1.6 (2023-01-22)
 - Add a new custom entity type for windows drive
+- Return True if sending service calls succeed
 
 # Version 2023.1.5 (2023-01-20)
 - Remove LOWBAT from HM-LC-Sw1-DR

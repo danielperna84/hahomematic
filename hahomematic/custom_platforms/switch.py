@@ -48,21 +48,22 @@ class CeSwitch(CustomEntity):
         """Return the current value of the switch."""
         return self._e_state.value
 
-    async def turn_on(self, **kwargs: dict[str, Any] | None) -> None:
+    async def turn_on(self, **kwargs: dict[str, Any] | None) -> bool:
         """Turn the switch on."""
         if HM_ARG_ON_TIME in kwargs and isinstance(self._e_on_time_value, HmAction):
             on_time: float = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            await self._e_on_time_value.send_value(on_time)
+            if not await self._e_on_time_value.send_value(on_time):
+                return False
 
-        await self._e_state.turn_on()
+        return await self._e_state.turn_on()
 
-    async def turn_off(self) -> None:
+    async def turn_off(self) -> bool:
         """Turn the switch off."""
-        await self._e_state.turn_off()
+        return await self._e_state.turn_off()
 
-    async def set_on_time_value(self, on_time: float) -> None:
+    async def set_on_time_value(self, on_time: float) -> bool:
         """Set the on time value in seconds."""
-        await self._e_on_time_value.send_value(float(on_time))
+        return await self._e_on_time_value.send_value(float(on_time))
 
 
 def make_ip_switch(

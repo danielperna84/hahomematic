@@ -27,23 +27,23 @@ class HmFloat(BaseNumber[float]):
     This is a default platform that gets automatically generated.
     """
 
-    async def send_value(self, value: float, do_validate: bool = True) -> None:
+    async def send_value(self, value: float, do_validate: bool = True) -> bool:
         """Set the value of the entity."""
-        if value is not None and (
-            (self._attr_min <= float(value) <= self._attr_max) or do_validate is False
-        ):
-            await super().send_value(value)
-        elif self._attr_special:
+        if (
+            value is not None and self._attr_min <= float(value) <= self._attr_max
+        ) or not do_validate:
+            return await super().send_value(value)
+        if self._attr_special:
             if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
-                await super().send_value(value)
-        else:
-            _LOGGER.warning(
-                "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
-                value,
-                self._attr_min,
-                self._attr_max,
-                self._attr_special,
-            )
+                return await super().send_value(value)
+        _LOGGER.warning(
+            "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
+            value,
+            self._attr_min,
+            self._attr_max,
+            self._attr_special,
+        )
+        return False
 
 
 class HmInteger(BaseNumber[int]):
@@ -52,23 +52,23 @@ class HmInteger(BaseNumber[int]):
     This is a default platform that gets automatically generated.
     """
 
-    async def send_value(self, value: int, do_validate: bool = True) -> None:
+    async def send_value(self, value: int, do_validate: bool = True) -> bool:
         """Set the value of the entity."""
-        if value is not None and (
-            (self._attr_min <= int(value) <= self._attr_max) or do_validate is False
-        ):
-            await super().send_value(value)
-        elif self._attr_special:
+        if (
+            value is not None and self._attr_min <= int(value) <= self._attr_max
+        ) or not do_validate:
+            return await super().send_value(value)
+        if self._attr_special:
             if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
-                await super().send_value(value)
-        else:
-            _LOGGER.warning(
-                "number.int failed: Invalid value: %s (min: %s, max: %s, special: %s)",
-                value,
-                self._attr_min,
-                self._attr_max,
-                self._attr_special,
-            )
+                return await super().send_value(value)
+        _LOGGER.warning(
+            "number.int failed: Invalid value: %s (min: %s, max: %s, special: %s)",
+            value,
+            self._attr_min,
+            self._attr_max,
+            self._attr_special,
+        )
+        return False
 
 
 class HmSysvarNumber(GenericSystemVariable):
@@ -79,18 +79,16 @@ class HmSysvarNumber(GenericSystemVariable):
     _attr_platform = HmPlatform.HUB_NUMBER
     _attr_is_extended = True
 
-    async def send_variable(self, value: float) -> None:
+    async def send_variable(self, value: float) -> bool:
         """Set the value of the entity."""
         if value is not None and self.max is not None and self.min is not None:
             if self.min <= float(value) <= self.max:
-                await super().send_variable(value)
-            else:
-                _LOGGER.warning(
-                    "sysvar.number failed: Invalid value: %s (min: %s, max: %s)",
-                    value,
-                    self.min,
-                    self.max,
-                )
-            return
-        if value is not None:
-            await super().send_variable(value)
+                return await super().send_variable(value)
+            _LOGGER.warning(
+                "sysvar.number failed: Invalid value: %s (min: %s, max: %s)",
+                value,
+                self.min,
+                self.max,
+            )
+            return False
+        return await super().send_variable(value)

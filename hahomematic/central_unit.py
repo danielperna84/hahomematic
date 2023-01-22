@@ -168,7 +168,7 @@ class CentralUnit:
     def available(self) -> bool:
         """Return the availability of the central_unit."""
         for client in self._clients.values():
-            if client.available is False:
+            if not client.available:
                 return False
         return True
 
@@ -467,7 +467,7 @@ class CentralUnit:
 
     def get_client(self, interface_id: str) -> hmcl.Client:
         """Return a client by interface_id. #CC"""
-        if self.has_client(interface_id=interface_id) is False:
+        if not self.has_client(interface_id=interface_id):
             raise HaHomematicException(
                 f"get_client: interface_id {interface_id} " f"does not exist on {self._attr_name}"
             )
@@ -725,7 +725,7 @@ class CentralUnit:
             parameter,
             str(value),
         )
-        if self.has_client(interface_id=interface_id) is False:
+        if not self.has_client(interface_id=interface_id):
             return
 
         self.last_events[interface_id] = datetime.now()
@@ -856,10 +856,11 @@ class CentralUnit:
             )
             raise HaHomematicException from cer
 
-    async def execute_program(self, pid: str) -> None:
+    async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
         if client := self.get_primary_client():
-            await client.execute_program(pid=pid)
+            return await client.execute_program(pid=pid)
+        return False
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
         """fetch sysvar data for the hub. #CC"""
@@ -883,13 +884,13 @@ class CentralUnit:
             return await client.get_system_variable(name)
         return None
 
-    async def set_system_variable(self, name: str, value: Any) -> None:
+    async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set variable value on CCU/Homegear.  #CC"""
         if entity := self.sysvar_entities.get(name):
-            await entity.send_variable(value=value)
-            return
+            return await entity.send_variable(value=value)
 
         _LOGGER.warning("Variable %s not found on %s", name, self.name)
+        return False
 
     # pylint: disable=invalid-name
     async def set_install_mode(
@@ -899,16 +900,16 @@ class CentralUnit:
         t: int = 60,
         mode: int = 1,
         device_address: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Activate or deactivate install-mode on CCU / Homegear. #CC"""
-        if self.has_client(interface_id=interface_id) is False:
+        if not self.has_client(interface_id=interface_id):
             _LOGGER.warning(
                 "set_install_mode: interface_id %s does not exist on %s",
                 interface_id,
                 self._attr_name,
             )
-            return None
-        await self.get_client(interface_id=interface_id).set_install_mode(
+            return False
+        return await self.get_client(interface_id=interface_id).set_install_mode(
             on=on, t=t, mode=mode, device_address=device_address
         )
 
@@ -920,16 +921,16 @@ class CentralUnit:
         value: Any,
         paramset_key: str = PARAMSET_KEY_VALUES,
         rx_mode: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Set a single value on paramset VALUES. #CC"""
-        if self.has_client(interface_id=interface_id) is False:
+        if not self.has_client(interface_id=interface_id):
             _LOGGER.warning(
                 "set_value: interface_id %s does not exist on %s",
                 interface_id,
                 self._attr_name,
             )
-            return None
-        await self.get_client(interface_id=interface_id).set_value(
+            return False
+        return await self.get_client(interface_id=interface_id).set_value(
             channel_address=channel_address,
             paramset_key=paramset_key,
             parameter=parameter,
@@ -944,21 +945,21 @@ class CentralUnit:
         paramset_key: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> None:
+    ) -> bool:
         """
         Set paramsets manually.
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device. #CC
         """
-        if self.has_client(interface_id=interface_id) is False:
+        if not self.has_client(interface_id=interface_id):
             _LOGGER.warning(
                 "put_paramset: interface_id %s does not exist on %s",
                 interface_id,
                 self._attr_name,
             )
-            return None
+            return False
 
-        await self.get_client(interface_id=interface_id).put_paramset(
+        return await self.get_client(interface_id=interface_id).put_paramset(
             address=address,
             paramset_key=paramset_key,
             value=value,
@@ -1030,7 +1031,7 @@ class ConnectionChecker(threading.Thread):
                 self._central.name,
             )
             try:
-                if self._central.has_clients is False:
+                if not self._central.has_clients:
                     _LOGGER.warning(
                         "check_connection failed: No clients exist. "
                         "Trying to create clients for server %s",
@@ -1131,14 +1132,14 @@ class CentralConfig:
     @property
     def load_un_ignore(self) -> bool:
         """Return if unignore should be loaded."""
-        if self.enable_server is False:
+        if not self.enable_server:
             return False
         return self._load_un_ignore
 
     @property
     def use_caches(self) -> bool:
         """Return if caches should be used."""
-        if self.enable_server is False:
+        if not self.enable_server:
             return False
         return self._use_caches
 
@@ -1183,7 +1184,7 @@ class CentralConnectionState:
     def add_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
         if isinstance(issuer, JsonRpcAioHttpClient):
-            if self._json_issue is False:
+            if not self._json_issue:
                 self._json_issue = True
                 _LOGGER.debug("add_issue: add issue for JsonRpcAioHttpClient")
                 return True
@@ -1332,7 +1333,7 @@ class DeviceDataCache:
 
     async def load(self) -> None:
         """Fetch device data from backend."""
-        if self._central.config.use_caches is False:
+        if not self._central.config.use_caches:
             _LOGGER.debug("load: not caching device data for %s", self._central.name)
             return
         _LOGGER.debug("load: device data for %s", self._central.name)
@@ -1606,7 +1607,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         """
         Load device data from disk into _device_description_cache.
         """
-        if self._central.config.use_caches is False:
+        if not self._central.config.use_caches:
             _LOGGER.debug("load: not caching paramset descriptions for %s", self._central.name)
             return HmDataOperationResult.NO_LOAD
         result = await super().load()
@@ -1761,7 +1762,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """
         Load paramset descriptions from disk into paramset cache.
         """
-        if self._central.config.use_caches is False:
+        if not self._central.config.use_caches:
             _LOGGER.debug("load: not caching device descriptions for %s", self._central.name)
             return HmDataOperationResult.NO_LOAD
         result = await super().load()
