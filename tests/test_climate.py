@@ -278,11 +278,14 @@ async def test_ceipthermostat(
     assert climate.preset_mode == HmPresetMode.BOOST
 
     await climate.set_hvac_mode(HmHvacMode.AUTO)
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU1769958:1",
         paramset_key="VALUES",
         parameter="BOOST_MODE",
         value=False,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1769958:1", paramset_key="VALUES", parameter="CONTROL_MODE", value=0
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", HMIP_MODE_AUTO)
     central.event(const.LOCAL_INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)

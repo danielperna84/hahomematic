@@ -12,10 +12,14 @@ from hahomematic.const import HmEntityUsage
 from hahomematic.custom_platforms.cover import (
     GARAGE_DOOR_SECTION_CLOSING,
     GARAGE_DOOR_SECTION_OPENING,
+    HM_CLOSED,
+    HM_OPEN,
+    HM_WD_CLOSED,
     CeBlind,
     CeCover,
     CeGarage,
-    CeIpBlind,CeWindowDrive, HM_WD_CLOSED, HM_OPEN, HM_CLOSED
+    CeIpBlind,
+    CeWindowDrive,
 )
 
 TEST_DEVICES: dict[str, str] = {
@@ -85,7 +89,9 @@ async def test_cewindowdrive(
 ) -> None:
     """Test CeWindowDrive."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeWindowDrive = cast(CeWindowDrive, await helper.get_custom_entity(central, "VCU0000350", 1))
+    cover: CeWindowDrive = cast(
+        CeWindowDrive, await helper.get_custom_entity(central, "VCU0000350", 1)
+    )
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position == 0
@@ -123,12 +129,12 @@ async def test_cewindowdrive(
 
     await cover.set_cover_position(1)
     assert cover.current_cover_position == 0
-    assert cover.channel_level ==  HM_CLOSED
+    assert cover.channel_level == HM_CLOSED
     assert cover.is_closed == False
 
     await cover.set_cover_position(0.0)
     assert cover.current_cover_position == 0
-    assert cover.channel_level ==  HM_WD_CLOSED
+    assert cover.channel_level == HM_WD_CLOSED
     assert cover.is_closed == True
 
 
