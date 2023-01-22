@@ -1,12 +1,8 @@
 """Module for entities implemented using text."""
 from __future__ import annotations
 
-import logging
-
 from hahomematic.const import HmPlatform
 from hahomematic.entity import GenericEntity, GenericSystemVariable
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HmText(GenericEntity[str]):

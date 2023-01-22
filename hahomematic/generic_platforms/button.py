@@ -4,7 +4,6 @@ button platform (https://www.home-assistant.io/integrations/button/).
 """
 from __future__ import annotations
 
-import logging
 from typing import Final
 
 import hahomematic.central_unit as hmcu
@@ -12,8 +11,6 @@ from hahomematic.const import PROGRAM_ADDRESS, HmPlatform
 from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericHubEntity
 from hahomematic.helpers import HubData, ProgramData
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HmButton(GenericEntity[None]):

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from hahomematic.const import HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -22,8 +21,6 @@ import hahomematic.entity as hme
 from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
-
-_LOGGER = logging.getLogger(__name__)
 
 # HM constants
 HMIP_ACOUSTIC_ALARM_SELECTION = "ACOUSTIC_ALARM_SELECTION"

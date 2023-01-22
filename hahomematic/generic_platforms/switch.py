@@ -4,7 +4,6 @@ switch platform (https://www.home-assistant.io/integrations/switch/).
 """
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
@@ -12,7 +11,6 @@ from hahomematic.decorators import value_property
 from hahomematic.entity import GenericEntity, GenericSystemVariable
 
 PARAM_ON_TIME = "ON_TIME"
-_LOGGER = logging.getLogger(__name__)
 
 
 class HmSwitch(GenericEntity[bool]):

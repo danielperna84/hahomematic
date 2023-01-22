@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 from typing import Any, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, HmPlatform
@@ -30,8 +29,6 @@ from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.number import HmFloat, HmInteger
 from hahomematic.generic_platforms.select import HmSelect
 from hahomematic.generic_platforms.sensor import HmSensor
-
-_LOGGER = logging.getLogger(__name__)
 
 # HM constants
 HM_ARG_BRIGHTNESS = "brightness"

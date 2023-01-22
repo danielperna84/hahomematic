@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
     FIELD_CHANNEL_LEVEL,
@@ -27,8 +25,6 @@ from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.sensor import HmSensor
-
-_LOGGER = logging.getLogger(__name__)
 
 HM_OPEN: float = 1.0  # must be float!
 HM_CLOSED: float = 0.0  # must be float!

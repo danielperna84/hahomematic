@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
 
 from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
@@ -40,8 +39,6 @@ from hahomematic.generic_platforms.number import HmFloat, HmInteger
 from hahomematic.generic_platforms.select import HmSelect
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
-
-_LOGGER = logging.getLogger(__name__)
 
 # HA constants
 HM_MODE_AUTO = "AUTO-MODE"  # 0

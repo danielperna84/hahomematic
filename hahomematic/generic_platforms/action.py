@@ -1,13 +1,10 @@
 """Module for entities implemented actions."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform
 from hahomematic.entity import GenericEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HmAction(GenericEntity[None]):

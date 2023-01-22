@@ -1,7 +1,6 @@
 """Code to create the required entities for switch entities."""
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, HmPlatform
@@ -21,8 +20,6 @@ from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.switch import HmSwitch
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CeSwitch(CustomEntity):

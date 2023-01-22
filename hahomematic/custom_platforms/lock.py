@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from hahomematic.const import HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -25,8 +24,6 @@ from hahomematic.entity import CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
-
-_LOGGER = logging.getLogger(__name__)
 
 # HM constants
 LOCK_STATE_UNKNOWN = "UNKNOWN"
