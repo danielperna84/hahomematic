@@ -10,7 +10,8 @@ import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.custom_platforms.light import (
-    CeColorDimmer, CeColorDimmerEffect,
+    CeColorDimmer,
+    CeColorDimmerEffect,
     CeColorTempDimmer,
     CeDimmer,
     CeIpFixedColorLight,
@@ -24,7 +25,7 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000098": "HM-DW-WM.json",
     "VCU4704397": "HmIPW-WRC6.json",
     "VCU0000122": "HM-LC-Dim1L-CV.json",
-    #"VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
+    # "VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
 }
 
 
@@ -565,4 +566,3 @@ async def test_ceipfixedcolorlight(
         parameter="RAMP_TIME_VALUE",
         value=277,
     )
-
