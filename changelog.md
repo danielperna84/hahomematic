@@ -1,5 +1,6 @@
 # Version 2023.1.7 (2023-01-24)
 - Aggregate calls to backend
+- Fix HmIP-MOD-TM: inverted direction
 
 # Version 2023.1.6 (2023-01-22)
 - Add a new custom entity type for windows drive
