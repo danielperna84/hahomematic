@@ -18,7 +18,7 @@ from hahomematic.custom_platforms.entity_definition import (
     ExtendedConfig,
     make_custom_entity,
 )
-from hahomematic.decorators import value_property
+from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
 from hahomematic.entity import CallParameterCollector, CustomEntity
@@ -216,6 +216,7 @@ class CeBlind(CeCover):
 class CeIpBlind(CeBlind):
     """Class for HomematicIP blind entities."""
 
+    @bind_collector
     async def open_cover(self, collector: CallParameterCollector | None = None) -> bool:
         """Open the cover and open the tilt."""
         if not await super()._set_cover_tilt_level(
@@ -224,6 +225,7 @@ class CeIpBlind(CeBlind):
             return False
         return await self._set_cover_level(level=self._attr_hm_open_state, collector=collector)
 
+    @bind_collector
     async def close_cover(self, collector: CallParameterCollector | None = None) -> bool:
         """Close the cover and close the tilt."""
         if not await super()._set_cover_tilt_level(
@@ -232,6 +234,7 @@ class CeIpBlind(CeBlind):
             return False
         return await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
 
+    @bind_collector
     async def _set_cover_tilt_level(
         self, level: float, collector: CallParameterCollector | None = None
     ) -> bool:

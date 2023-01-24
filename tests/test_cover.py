@@ -241,47 +241,32 @@ async def test_ceipblind(
     assert cover.current_cover_position == 81
     assert cover.current_cover_tilt_position == 0
     await cover.open_cover()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU1223813:4",
-        paramset_key="VALUES",
-        parameter="LEVEL",
-        value=HM_OPEN,
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 1.0}
     )
     assert cover.current_cover_position == 100
     assert cover.current_cover_tilt_position == 100
     await cover.close_cover()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU1223813:4",
-        paramset_key="VALUES",
-        parameter="LEVEL",
-        value=HM_CLOSED,
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
     await cover.open_cover_tilt()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU1223813:4",
-        paramset_key="VALUES",
-        parameter="LEVEL",
-        value=HM_CLOSED,
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 0.0}
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 100
     await cover.set_cover_tilt_position(45)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU1223813:4",
-        paramset_key="VALUES",
-        parameter="LEVEL",
-        value=HM_CLOSED,
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 0.45, "LEVEL": 0.0}
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 45
     await cover.close_cover_tilt()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU1223813:4",
-        paramset_key="VALUES",
-        parameter="LEVEL",
-        value=HM_CLOSED,
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
     )
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0

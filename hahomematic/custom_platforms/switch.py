@@ -13,7 +13,7 @@ from hahomematic.custom_platforms.entity_definition import (
     ExtendedConfig,
     make_custom_entity,
 )
-from hahomematic.decorators import value_property
+from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
 from hahomematic.entity import CallParameterCollector, CustomEntity
@@ -48,6 +48,7 @@ class CeSwitch(CustomEntity):
         """Return the current value of the switch."""
         return self._e_state.value
 
+    @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
     ) -> bool:
@@ -59,6 +60,7 @@ class CeSwitch(CustomEntity):
 
         return await self._e_state.turn_on(collector=collector, **kwargs)
 
+    @bind_collector
     async def turn_off(self, collector: CallParameterCollector | None = None) -> bool:
         """Turn the switch off."""
         return await self._e_state.turn_off(collector=collector)

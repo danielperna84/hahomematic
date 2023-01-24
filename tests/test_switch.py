@@ -28,41 +28,23 @@ async def test_ceswitch(
     assert switch.value is None
     assert switch.channel_value is False
     await switch.turn_on()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU2128127:4",
-        paramset_key="VALUES",
-        parameter="STATE",
-        value=True,
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU2128127:4", paramset_key="VALUES", value={"STATE": True}
     )
     assert switch.value is True
     await switch.turn_off()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU2128127:4",
-        paramset_key="VALUES",
-        parameter="STATE",
-        value=False,
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU2128127:4", paramset_key="VALUES", value={"STATE": False}
     )
     assert switch.value is False
     await switch.turn_on(**{"on_time": 60})
-    assert mock_client.method_calls[-2] == call.set_value(
-        channel_address="VCU2128127:4",
-        paramset_key="VALUES",
-        parameter="ON_TIME",
-        value=60.0,
-    )
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU2128127:4",
-        paramset_key="VALUES",
-        parameter="STATE",
-        value=True,
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU2128127:4", paramset_key="VALUES", value={"ON_TIME": 60.0, "STATE": True}
     )
     assert switch.value is True
     await switch.set_on_time_value(35.4)
     assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU2128127:4",
-        paramset_key="VALUES",
-        parameter="ON_TIME",
-        value=35.4,
+        channel_address="VCU2128127:4", paramset_key="VALUES", parameter="ON_TIME", value=35.4
     )
 
 

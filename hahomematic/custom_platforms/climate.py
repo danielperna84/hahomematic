@@ -29,7 +29,7 @@ from hahomematic.custom_platforms.entity_definition import (
     ExtendedConfig,
     make_custom_entity,
 )
-from hahomematic.decorators import value_property
+from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
 from hahomematic.entity import CallParameterCollector, CustomEntity
@@ -320,6 +320,7 @@ class CeRfThermostat(BaseClimateEntity):
         """Flag if climate supports preset."""
         return True
 
+    @bind_collector
     async def set_hvac_mode(
         self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
     ) -> bool:
@@ -446,6 +447,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Flag if climate supports preset."""
         return True
 
+    @bind_collector
     async def set_hvac_mode(
         self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
     ) -> bool:
@@ -475,6 +477,7 @@ class CeIpThermostat(BaseClimateEntity):
 
         return True
 
+    @bind_collector
     async def set_preset_mode(
         self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
     ) -> bool:

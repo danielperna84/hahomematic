@@ -21,7 +21,7 @@ from hahomematic.custom_platforms.entity_definition import (
     ExtendedConfig,
     make_custom_entity,
 )
-from hahomematic.decorators import value_property
+from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
 from hahomematic.entity import CallParameterCollector, CustomEntity
@@ -123,6 +123,7 @@ class BaseHmLight(CustomEntity):
         """Return the list of supported effects."""
         return None
 
+    @bind_collector
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
@@ -146,6 +147,7 @@ class BaseHmLight(CustomEntity):
                 return await self._e_level.send_value(value=level, collector=collector)
         return True
 
+    @bind_collector
     async def turn_off(
         self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
     ) -> bool:
@@ -231,6 +233,7 @@ class CeColorDimmer(CeDimmer):
         """Flag if light supports effects."""
         return False
 
+    @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> bool:
@@ -286,6 +289,7 @@ class CeColorDimmerEffect(CeColorDimmer):
         """Return the list of supported effects."""
         return self._effect_list
 
+    @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> bool:
@@ -328,6 +332,7 @@ class CeColorTempDimmer(CeDimmer):
         """Flag if light supports color temperature."""
         return True
 
+    @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> bool:
@@ -420,6 +425,7 @@ class CeIpFixedColorLight(BaseHmLight):
         """Flag if light supports color."""
         return True
 
+    @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> bool:

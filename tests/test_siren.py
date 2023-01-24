@@ -45,7 +45,22 @@ async def test_ceipsiren(
             "DURATION_UNIT": 0,
             "DURATION_VALUE": 30,
         },
-        rx_mode=None,
+    )
+
+    await siren.turn_on(
+        acoustic_alarm="FREQUENCY_RISING_AND_FALLING",
+        optical_alarm="BLINKING_ALTERNATELY_REPEATING",
+        duration=30,
+    )
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU8249617:3",
+        paramset_key="VALUES",
+        value={
+            "ACOUSTIC_ALARM_SELECTION": 3,
+            "OPTICAL_ALARM_SELECTION": 1,
+            "DURATION_UNIT": 0,
+            "DURATION_VALUE": 30,
+        },
     )
 
     await siren.turn_off()
@@ -58,5 +73,4 @@ async def test_ceipsiren(
             "DURATION_UNIT": 0,
             "DURATION_VALUE": 1,
         },
-        rx_mode=None,
     )
