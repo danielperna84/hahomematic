@@ -21,7 +21,7 @@ from hahomematic.custom_platforms.entity_definition import (
 from hahomematic.decorators import value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.entity import CustomEntity
+from hahomematic.entity import CallParameterCollector, CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.sensor import HmSensor
@@ -88,15 +88,19 @@ class CeCover(CustomEntity):
             return self._e_channel_level.channel_operation_mode
         return None
 
-    async def set_cover_position(self, position: float) -> bool:
+    async def set_cover_position(
+        self, position: float, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Move the cover to a specific position."""
         position = min(100.0, max(0.0, position))
         level = position / 100.0
-        return await self._set_cover_level(level=level)
+        return await self._set_cover_level(level=level, collector=collector)
 
-    async def _set_cover_level(self, level: float) -> bool:
+    async def _set_cover_level(
+        self, level: float, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Move the cover to a specific position. Value range is 0.0 to 1.0."""
-        return await self._e_level.send_value(level)
+        return await self._e_level.send_value(value=level, collector=collector)
 
     @value_property
     def is_closed(self) -> bool | None:
@@ -117,17 +121,17 @@ class CeCover(CustomEntity):
             return str(self._e_direction.value) == HM_CLOSING
         return None
 
-    async def open_cover(self) -> bool:
+    async def open_cover(self, collector: CallParameterCollector | None = None) -> bool:
         """Open the cover."""
-        return await self._set_cover_level(level=self._attr_hm_open_state)
+        return await self._set_cover_level(level=self._attr_hm_open_state, collector=collector)
 
-    async def close_cover(self) -> bool:
+    async def close_cover(self, collector: CallParameterCollector | None = None) -> bool:
         """Close the cover."""
-        return await self._set_cover_level(level=self._attr_hm_closed_state)
+        return await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
 
-    async def stop_cover(self) -> bool:
+    async def stop_cover(self, collector: CallParameterCollector | None = None) -> bool:
         """Stop the device if in motion."""
-        return await self._e_stop.send_value(True)
+        return await self._e_stop.send_value(value=True, collector=collector)
 
 
 class CeWindowDrive(CeCover):
@@ -136,7 +140,9 @@ class CeWindowDrive(CeCover):
     _attr_hm_closed_state: float = HM_WD_CLOSED
     _attr_hm_open_state: float = HM_OPEN
 
-    async def _set_cover_level(self, level: float) -> bool:
+    async def _set_cover_level(
+        self, level: float, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Move the window drive to a specific position. Value range is -0.005 to 1.0."""
         if level == 0.0:
             wd_level = HM_WD_CLOSED
@@ -144,7 +150,9 @@ class CeWindowDrive(CeCover):
             wd_level = 0
         else:
             wd_level = level
-        return await self._e_level.send_value(value=wd_level, do_validate=False)
+        return await self._e_level.send_value(
+            value=wd_level, collector=collector, do_validate=False
+        )
 
 
 class CeBlind(CeCover):
@@ -174,49 +182,65 @@ class CeBlind(CeCover):
         """Return current tilt position of cover."""
         return int(self.channel_tilt_level * 100)
 
-    async def set_cover_tilt_position(self, position: float) -> None:
+    async def set_cover_tilt_position(
+        self, position: float, collector: CallParameterCollector | None = None
+    ) -> None:
         """Move the cover to a specific tilt position."""
         position = min(100.0, max(0.0, position))
         level = position / 100.0
-        await self._set_cover_tilt_level(level)
+        await self._set_cover_tilt_level(level=level, collector=collector)
 
-    async def _set_cover_tilt_level(self, level: float) -> bool:
+    async def _set_cover_tilt_level(
+        self, level: float, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
-        return await self._e_level_2.send_value(level)
+        return await self._e_level_2.send_value(value=level, collector=collector)
 
-    async def open_cover_tilt(self) -> bool:
+    async def open_cover_tilt(self, collector: CallParameterCollector | None = None) -> bool:
         """Open the tilt."""
-        return await self._set_cover_tilt_level(level=self._attr_hm_open_state)
+        return await self._set_cover_tilt_level(
+            level=self._attr_hm_open_state, collector=collector
+        )
 
-    async def close_cover_tilt(self) -> bool:
+    async def close_cover_tilt(self, collector: CallParameterCollector | None = None) -> bool:
         """Close the tilt."""
-        return await self._set_cover_tilt_level(level=self._attr_hm_closed_state)
+        return await self._set_cover_tilt_level(
+            level=self._attr_hm_closed_state, collector=collector
+        )
 
-    async def stop_cover_tilt(self) -> bool:
+    async def stop_cover_tilt(self, collector: CallParameterCollector | None = None) -> bool:
         """Stop the device if in motion."""
-        return await self._e_stop.send_value(True)
+        return await self._e_stop.send_value(value=True, collector=collector)
 
 
 class CeIpBlind(CeBlind):
     """Class for HomematicIP blind entities."""
 
-    async def open_cover(self) -> bool:
+    async def open_cover(self, collector: CallParameterCollector | None = None) -> bool:
         """Open the cover and open the tilt."""
-        if not await super()._set_cover_tilt_level(level=self._attr_hm_open_state):
+        if not await super()._set_cover_tilt_level(
+            level=self._attr_hm_open_state, collector=collector
+        ):
             return False
-        return await self._set_cover_level(level=self._attr_hm_open_state)
+        return await self._set_cover_level(level=self._attr_hm_open_state, collector=collector)
 
-    async def close_cover(self) -> bool:
+    async def close_cover(self, collector: CallParameterCollector | None = None) -> bool:
         """Close the cover and close the tilt."""
-        if not await super()._set_cover_tilt_level(level=self._attr_hm_closed_state):
+        if not await super()._set_cover_tilt_level(
+            level=self._attr_hm_closed_state, collector=collector
+        ):
             return False
-        return await self._set_cover_level(level=self._attr_hm_closed_state)
+        return await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
 
-    async def _set_cover_tilt_level(self, level: float) -> bool:
+    async def _set_cover_tilt_level(
+        self, level: float, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
-        if not await super()._set_cover_tilt_level(level=level):
+        if not await super()._set_cover_tilt_level(level=level, collector=collector):
             return False
-        return await self.set_cover_position(position=self.current_cover_position or 0)
+        return await self.set_cover_position(
+            position=self.current_cover_position or 0, collector=collector
+        )
 
 
 class CeGarage(CustomEntity):
@@ -281,19 +305,19 @@ class CeGarage(CustomEntity):
 
     async def open_cover(self) -> bool:
         """Open the garage door."""
-        return await self._e_door_command.send_value(GARAGE_DOOR_COMMAND_OPEN)
+        return await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_OPEN)
 
     async def close_cover(self) -> bool:
         """Close the garage door."""
-        return await self._e_door_command.send_value(GARAGE_DOOR_COMMAND_CLOSE)
+        return await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_CLOSE)
 
     async def stop_cover(self) -> bool:
         """Stop the device if in motion."""
-        return await self._e_door_command.send_value(GARAGE_DOOR_COMMAND_STOP)
+        return await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_STOP)
 
     async def vent_cover(self) -> bool:
         """Move the garage door to vent position."""
-        return await self._e_door_command.send_value(GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
+        return await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
 
 
 def make_ip_cover(

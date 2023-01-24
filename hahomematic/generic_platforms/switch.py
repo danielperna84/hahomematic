@@ -8,7 +8,11 @@ from typing import Any, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
 from hahomematic.decorators import value_property
-from hahomematic.entity import GenericEntity, GenericSystemVariable
+from hahomematic.entity import (
+    CallParameterCollector,
+    GenericEntity,
+    GenericSystemVariable,
+)
 
 PARAM_ON_TIME = "ON_TIME"
 
@@ -28,17 +32,19 @@ class HmSwitch(GenericEntity[bool]):
             return False
         return self._attr_value
 
-    async def turn_on(self, **kwargs: dict[str, Any] | None) -> bool:
+    async def turn_on(
+        self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
+    ) -> bool:
         """Turn the switch on."""
         if HM_ARG_ON_TIME in kwargs:
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
             if not await self.set_on_time_value(on_time=on_time):
                 return False
-        return await self.send_value(True)
+        return await self.send_value(value=True, collector=collector)
 
-    async def turn_off(self) -> bool:
+    async def turn_off(self, collector: CallParameterCollector | None = None) -> bool:
         """Turn the switch off."""
-        return await self.send_value(False)
+        return await self.send_value(value=False, collector=collector)
 
     async def set_on_time_value(self, on_time: float) -> bool:
         """Set the on time value in seconds."""

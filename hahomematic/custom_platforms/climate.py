@@ -32,7 +32,7 @@ from hahomematic.custom_platforms.entity_definition import (
 from hahomematic.decorators import value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.entity import CustomEntity
+from hahomematic.entity import CallParameterCollector, CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.number import HmFloat, HmInteger
@@ -199,15 +199,26 @@ class BaseClimateEntity(CustomEntity):
             temperature = self.min_temp
         return temperature
 
-    async def set_temperature(self, temperature: float, do_validate: bool = True) -> bool:
+    async def set_temperature(
+        self,
+        temperature: float,
+        collector: CallParameterCollector | None = None,
+        do_validate: bool = True,
+    ) -> bool:
         """Set new target temperature."""
-        return await self._e_setpoint.send_value(value=temperature, do_validate=do_validate)
+        return await self._e_setpoint.send_value(
+            value=temperature, collector=collector, do_validate=do_validate
+        )
 
-    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> bool:
+    async def set_hvac_mode(
+        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Set new target hvac mode."""
         return True
 
-    async def set_preset_mode(self, preset_mode: HmPresetMode) -> bool:
+    async def set_preset_mode(
+        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Set new preset mode."""
         return True
 
@@ -309,28 +320,38 @@ class CeRfThermostat(BaseClimateEntity):
         """Flag if climate supports preset."""
         return True
 
-    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> bool:
+    async def set_hvac_mode(
+        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Set new target hvac mode."""
         if hvac_mode == HmHvacMode.AUTO:
-            return await self._e_auto_mode.send_value(True)
+            return await self._e_auto_mode.send_value(value=True, collector=collector)
         if hvac_mode == HmHvacMode.HEAT:
-            return await self._e_manu_mode.send_value(self._min_or_target_temperature)
+            return await self._e_manu_mode.send_value(
+                value=self._min_or_target_temperature, collector=collector
+            )
         if hvac_mode == HmHvacMode.OFF:
-            if not await self._e_manu_mode.send_value(self.target_temperature):
+            if not await self._e_manu_mode.send_value(
+                value=self.target_temperature, collector=collector
+            ):
                 return False
             # Disable validation here to allow setting a value,
             # that is out of the validation range.
-            return await self.set_temperature(temperature=HM_OFF_TEMPERATURE, do_validate=False)
+            return await self.set_temperature(
+                temperature=HM_OFF_TEMPERATURE, collector=collector, do_validate=False
+            )
         return True
 
-    async def set_preset_mode(self, preset_mode: HmPresetMode) -> bool:
+    async def set_preset_mode(
+        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Set new preset mode."""
         if preset_mode == HmPresetMode.BOOST:
-            return await self._e_boost_mode.send_value(True)
+            return await self._e_boost_mode.send_value(value=True, collector=collector)
         if preset_mode == HmPresetMode.COMFORT:
-            return await self._e_comfort_mode.send_value(True)
+            return await self._e_comfort_mode.send_value(value=True, collector=collector)
         if preset_mode == HmPresetMode.ECO:
-            return await self._e_lowering_mode.send_value(True)
+            return await self._e_lowering_mode.send_value(value=True, collector=collector)
         return True
 
 
@@ -425,41 +446,53 @@ class CeIpThermostat(BaseClimateEntity):
         """Flag if climate supports preset."""
         return True
 
-    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> bool:
+    async def set_hvac_mode(
+        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Set new target hvac mode."""
 
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
-            if not await self.set_preset_mode(HmPresetMode.NONE):
+            if not await self.set_preset_mode(preset_mode=HmPresetMode.NONE, collector=collector):
                 return False
 
         if hvac_mode == HmHvacMode.AUTO:
-            return await self._e_control_mode.send_value(HMIP_MODE_AUTO)
+            return await self._e_control_mode.send_value(value=HMIP_MODE_AUTO, collector=collector)
         if hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
-            if not await self._e_control_mode.send_value(HMIP_MODE_MANU):
+            if not await self._e_control_mode.send_value(
+                value=HMIP_MODE_MANU, collector=collector
+            ):
                 return False
-            return await self.set_temperature(temperature=self._min_or_target_temperature)
+            return await self.set_temperature(
+                temperature=self._min_or_target_temperature, collector=collector
+            )
         if hvac_mode == HmHvacMode.OFF:
-            if not await self._e_control_mode.send_value(HMIP_MODE_MANU):
+            if not await self._e_control_mode.send_value(
+                value=HMIP_MODE_MANU, collector=collector
+            ):
                 return False
-            return await self.set_temperature(temperature=HM_OFF_TEMPERATURE)
+            return await self.set_temperature(temperature=HM_OFF_TEMPERATURE, collector=collector)
 
         return True
 
-    async def set_preset_mode(self, preset_mode: HmPresetMode) -> bool:
+    async def set_preset_mode(
+        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Set new preset mode."""
         if preset_mode == HmPresetMode.BOOST:
-            return await self._e_boost_mode.send_value(True)
+            return await self._e_boost_mode.send_value(value=True, collector=collector)
         if preset_mode == HmPresetMode.NONE:
-            return await self._e_boost_mode.send_value(False)
+            return await self._e_boost_mode.send_value(value=False, collector=collector)
         if preset_mode in self._profile_names:
             if self.hvac_mode != HmHvacMode.AUTO:
-                if not await self.set_hvac_mode(HmHvacMode.AUTO):
+                if not await self.set_hvac_mode(hvac_mode=HmHvacMode.AUTO, collector=collector):
                     return False
-            if not await self._e_boost_mode.send_value(False):
+            if not await self._e_boost_mode.send_value(value=False, collector=collector):
                 return False
             if profile_idx := self._profiles.get(preset_mode):
-                if not await self._e_active_profile.send_value(profile_idx):
+                if not await self._e_active_profile.send_value(
+                    value=profile_idx, collector=collector
+                ):
                     return False
         return True
 

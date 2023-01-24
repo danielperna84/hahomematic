@@ -593,8 +593,14 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
                     self.get_event_data(new_value),
                 )
 
-    async def send_value(self, value: Any) -> bool:
+    async def send_value(
+        self, value: Any, collector: CallParameterCollector | None = None
+    ) -> bool:
         """send value to ccu."""
+        if collector:
+            collector.add_entity(self, self._convert_value(value))
+            return True
+
         return await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
@@ -1176,4 +1182,31 @@ class NoneTypeEntity:
 
     def send_value(self, value: Any) -> bool:
         """Dummy method"""
+        return True
+
+
+class CallParameterCollector:
+    """Create a Paramset based on given generic entities."""
+
+    _paramset: dict[str, Any] = {}
+
+    def __init__(self, custom_entity: CustomEntity):
+        """Init the generator"""
+        self._custom_entity = custom_entity
+
+    def add_entity(self, entity: GenericEntity, value: Any) -> None:
+        """Add a generic entity."""
+        if entity.channel_address != self._custom_entity.channel_address:
+            raise HaHomematicException(
+                f"add_entity: Mismatch in channel_address for {self._custom_entity.full_name}"
+            )
+
+        self._paramset[entity.parameter] = value
+
+    async def put_paramset(self) -> bool:
+        """Send paramset to backend."""
+        if self._paramset:
+            await self._custom_entity.put_paramset(
+                paramset_key=PARAMSET_KEY_VALUES, value=self._paramset
+            )
         return True

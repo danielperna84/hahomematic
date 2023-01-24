@@ -44,6 +44,8 @@ FIELD_CURRENT = "current"
 FIELD_DIRECTION = "direction"
 FIELD_DOOR_COMMAND = "door_command"
 FIELD_DOOR_STATE = "door_state"
+FIELD_DURATION_UNIT = "duration_unit"
+FIELD_DURATION = "duration"
 FIELD_DUTY_CYCLE = "duty_cycle"
 FIELD_DUTYCYCLE = "dutycycle"
 FIELD_ERROR = "error"
@@ -303,6 +305,8 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, vol.Any]] = {
                     FIELD_OPTICAL_ALARM_ACTIVE: "OPTICAL_ALARM_ACTIVE",
                     FIELD_ACOUSTIC_ALARM_SELECTION: "ACOUSTIC_ALARM_SELECTION",
                     FIELD_OPTICAL_ALARM_SELECTION: "OPTICAL_ALARM_SELECTION",
+                    FIELD_DURATION: "DURATION_VALUE",
+                    FIELD_DURATION_UNIT: "DURATION_UNIT",
                 },
             },
         },

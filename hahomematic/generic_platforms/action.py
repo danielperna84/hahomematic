@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from hahomematic.const import HmPlatform
-from hahomematic.entity import GenericEntity
+from hahomematic.entity import CallParameterCollector, GenericEntity
 
 
 class HmAction(GenericEntity[None]):
@@ -15,9 +15,13 @@ class HmAction(GenericEntity[None]):
 
     _attr_platform = HmPlatform.ACTION
 
-    async def send_value(self, value: Any) -> bool:
+    async def send_value(
+        self, value: Any, collector: CallParameterCollector | None = None
+    ) -> bool:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
         if value is not None and self._attr_value_list and isinstance(value, str):
-            return await super().send_value(self._attr_value_list.index(value))
-        return await super().send_value(value)
+            return await super().send_value(
+                value=self._attr_value_list.index(value), collector=collector
+            )
+        return await super().send_value(value=value, collector=collector)

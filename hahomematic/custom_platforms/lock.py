@@ -118,15 +118,15 @@ class CeIpLock(BaseLock):
 
     async def lock(self) -> bool:
         """Lock the lock."""
-        return await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_LOCKED)
+        return await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_LOCKED)
 
     async def unlock(self) -> bool:
         """Unlock the lock."""
-        return await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_UNLOCKED)
+        return await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_UNLOCKED)
 
     async def open(self) -> bool:
         """Open the lock."""
-        return await self._e_lock_target_level.send_value(LOCK_TARGET_LEVEL_OPEN)
+        return await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_OPEN)
 
 
 class CeRfLock(BaseLock):
@@ -168,15 +168,15 @@ class CeRfLock(BaseLock):
 
     async def lock(self) -> bool:
         """Lock the lock."""
-        return await self._e_state.send_value(False)
+        return await self._e_state.send_value(value=False)
 
     async def unlock(self) -> bool:
         """Unlock the lock."""
-        return await self._e_state.send_value(True)
+        return await self._e_state.send_value(value=True)
 
     async def open(self) -> bool:
         """Open the lock."""
-        return await self._e_open.send_value(True)
+        return await self._e_open.send_value(value=True)
 
 
 def make_ip_lock(
