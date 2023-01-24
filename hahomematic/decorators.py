@@ -7,10 +7,12 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
+from inspect import getfullargspec
 import logging
 from typing import Any, Generic, TypeVar
 
 import hahomematic.client as hmcl
+import hahomematic.entity as hme
 from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,6 +104,35 @@ def callback_event(func: Callable) -> Callable:
     if asyncio.iscoroutinefunction(func):
         return async_wrapper_callback_event
     return wrapper_callback_event
+
+
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+
+
+def bind_collector(func: _CallableT) -> _CallableT:
+    """Decorate function to automatically add collector if not set."""
+
+    argument_name = "collector"
+    argument_index = getfullargspec(func).args.index(argument_name)
+
+    @wraps(func)
+    async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
+        """Wrapper for callback event."""
+        try:
+            collector_exists = args[argument_index] is not None
+        except IndexError:
+            collector_exists = kwargs.get(argument_name) is not None
+
+        if collector_exists:
+            return_value = await func(*args, **kwargs)
+        else:
+            collector = hme.CallParameterCollector(custom_entity=args[0])
+            kwargs[argument_name] = collector
+            return_value = await func(*args, **kwargs)
+            await collector.put_paramset()
+        return return_value
+
+    return wrapper_collector  # type: ignore[return-value]
 
 
 G = TypeVar("G")  # think about variance

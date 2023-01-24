@@ -9,7 +9,11 @@ from typing import Union
 
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import value_property
-from hahomematic.entity import GenericEntity, GenericSystemVariable
+from hahomematic.entity import (
+    CallParameterCollector,
+    GenericEntity,
+    GenericSystemVariable,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,22 +34,25 @@ class HmSelect(GenericEntity[Union[int, str]]):
             return self._attr_value_list[int(self._attr_value)]
         return str(self._attr_default)
 
-    async def send_value(self, value: int | str) -> bool:
+    async def send_value(
+        self, value: int | str, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
         if isinstance(value, int) and self._attr_value_list:
             if 0 <= value < len(self._attr_value_list):
-                return await super().send_value(value)
+                await super().send_value(value=value, collector=collector)
         elif self._attr_value_list:
             if value in self._attr_value_list:
-                return await super().send_value(self._attr_value_list.index(value))
-
-        _LOGGER.warning(
-            "Value not in value_list for %s/%s.",
-            self.name,
-            self.unique_identifier,
-        )
-        return False
+                await super().send_value(
+                    value=self._attr_value_list.index(value), collector=collector
+                )
+        else:
+            _LOGGER.warning(
+                "Value not in value_list for %s/%s.",
+                self.name,
+                self.unique_identifier,
+            )
 
 
 class HmSysvarSelect(GenericSystemVariable):

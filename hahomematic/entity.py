@@ -593,9 +593,15 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
                     self.get_event_data(new_value),
                 )
 
-    async def send_value(self, value: Any) -> bool:
+    async def send_value(
+        self, value: Any, collector: CallParameterCollector | None = None
+    ) -> None:
         """send value to ccu."""
-        return await self._client.set_value(
+        if collector:
+            collector.add_entity(self, self._convert_value(value))
+            return
+
+        await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
             parameter=self._attr_parameter,
@@ -1176,4 +1182,32 @@ class NoneTypeEntity:
 
     def send_value(self, value: Any) -> bool:
         """Dummy method"""
+        return True
+
+
+class CallParameterCollector:
+    """Create a Paramset based on given generic entities."""
+
+    def __init__(self, custom_entity: CustomEntity):
+        """Init the generator"""
+        self._custom_entity = custom_entity
+        self._paramsets: dict[str, dict[str, Any]] = {}
+
+    def add_entity(self, entity: GenericEntity, value: Any) -> None:
+        """Add a generic entity."""
+        # if entity.channel_address != self._custom_entity.channel_address:
+        #    raise HaHomematicException(
+        #        f"add_entity: Mismatch in channel_address for {self._custom_entity.full_name}"
+        #    )
+        if entity.channel_address not in self._paramsets:
+            self._paramsets[entity.channel_address] = {}
+        self._paramsets[entity.channel_address][entity.parameter] = value
+
+    async def put_paramset(self) -> bool:
+        """Send paramset to backend."""
+        for channel_address, paramset in self._paramsets.items():
+            if not await self._custom_entity.device.client.put_paramset(
+                address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
+            ):
+                return False
         return True

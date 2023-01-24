@@ -7,7 +7,12 @@ from __future__ import annotations
 import logging
 
 from hahomematic.const import HM_VALUE, HmPlatform
-from hahomematic.entity import GenericEntity, GenericSystemVariable, ParameterT
+from hahomematic.entity import (
+    CallParameterCollector,
+    GenericEntity,
+    GenericSystemVariable,
+    ParameterT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,23 +32,28 @@ class HmFloat(BaseNumber[float]):
     This is a default platform that gets automatically generated.
     """
 
-    async def send_value(self, value: float, do_validate: bool = True) -> bool:
+    async def send_value(
+        self,
+        value: float,
+        collector: CallParameterCollector | None = None,
+        do_validate: bool = True,
+    ) -> None:
         """Set the value of the entity."""
         if (
             value is not None and self._attr_min <= float(value) <= self._attr_max
         ) or not do_validate:
-            return await super().send_value(value)
-        if self._attr_special:
+            await super().send_value(value=value, collector=collector)
+        elif self._attr_special:
             if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
-                return await super().send_value(value)
-        _LOGGER.warning(
-            "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
-            value,
-            self._attr_min,
-            self._attr_max,
-            self._attr_special,
-        )
-        return False
+                await super().send_value(value=value, collector=collector)
+        else:
+            _LOGGER.warning(
+                "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
+                value,
+                self._attr_min,
+                self._attr_max,
+                self._attr_special,
+            )
 
 
 class HmInteger(BaseNumber[int]):
@@ -52,23 +62,25 @@ class HmInteger(BaseNumber[int]):
     This is a default platform that gets automatically generated.
     """
 
-    async def send_value(self, value: int, do_validate: bool = True) -> bool:
+    async def send_value(
+        self, value: int, collector: CallParameterCollector | None = None, do_validate: bool = True
+    ) -> None:
         """Set the value of the entity."""
         if (
             value is not None and self._attr_min <= int(value) <= self._attr_max
         ) or not do_validate:
-            return await super().send_value(value)
-        if self._attr_special:
+            await super().send_value(value=value, collector=collector)
+        elif self._attr_special:
             if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
-                return await super().send_value(value)
-        _LOGGER.warning(
-            "number.int failed: Invalid value: %s (min: %s, max: %s, special: %s)",
-            value,
-            self._attr_min,
-            self._attr_max,
-            self._attr_special,
-        )
-        return False
+                await super().send_value(value=value, collector=collector)
+        else:
+            _LOGGER.warning(
+                "number.int failed: Invalid value: %s (min: %s, max: %s, special: %s)",
+                value,
+                self._attr_min,
+                self._attr_max,
+                self._attr_special,
+            )
 
 
 class HmSysvarNumber(GenericSystemVariable):

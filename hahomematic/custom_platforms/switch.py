@@ -13,10 +13,10 @@ from hahomematic.custom_platforms.entity_definition import (
     ExtendedConfig,
     make_custom_entity,
 )
-from hahomematic.decorators import value_property
+from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.entity import CustomEntity
+from hahomematic.entity import CallParameterCollector, CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.switch import HmSwitch
@@ -48,22 +48,26 @@ class CeSwitch(CustomEntity):
         """Return the current value of the switch."""
         return self._e_state.value
 
-    async def turn_on(self, **kwargs: dict[str, Any] | None) -> bool:
+    @bind_collector
+    async def turn_on(
+        self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
+    ) -> None:
         """Turn the switch on."""
         if HM_ARG_ON_TIME in kwargs and isinstance(self._e_on_time_value, HmAction):
             on_time: float = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            if not await self._e_on_time_value.send_value(on_time):
-                return False
+            await self._e_on_time_value.send_value(value=on_time, collector=collector)
 
-        return await self._e_state.turn_on()
+        await self._e_state.turn_on(collector=collector, **kwargs)
 
-    async def turn_off(self) -> bool:
+    async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the switch off."""
-        return await self._e_state.turn_off()
+        await self._e_state.turn_off(collector=collector)
 
-    async def set_on_time_value(self, on_time: float) -> bool:
+    async def set_on_time_value(
+        self, on_time: float, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set the on time value in seconds."""
-        return await self._e_on_time_value.send_value(float(on_time))
+        await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
 
 def make_ip_switch(

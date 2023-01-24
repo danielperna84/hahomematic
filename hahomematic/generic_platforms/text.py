@@ -2,7 +2,11 @@
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.entity import GenericEntity, GenericSystemVariable
+from hahomematic.entity import (
+    CallParameterCollector,
+    GenericEntity,
+    GenericSystemVariable,
+)
 
 
 class HmText(GenericEntity[str]):
@@ -13,9 +17,11 @@ class HmText(GenericEntity[str]):
 
     _attr_platform = HmPlatform.TEXT
 
-    async def send_value(self, value: str | None) -> bool:
+    async def send_value(
+        self, value: str | None, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set the value of the entity."""
-        return await super().send_value(value)
+        await super().send_value(value=value, collector=collector)
 
 
 class HmSysvarText(GenericSystemVariable):

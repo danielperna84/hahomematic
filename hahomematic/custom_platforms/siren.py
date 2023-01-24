@@ -8,6 +8,8 @@ from hahomematic.const import HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
     FIELD_ACOUSTIC_ALARM_ACTIVE,
     FIELD_ACOUSTIC_ALARM_SELECTION,
+    FIELD_DURATION,
+    FIELD_DURATION_UNIT,
     FIELD_OPTICAL_ALARM_ACTIVE,
     FIELD_OPTICAL_ALARM_SELECTION,
     CustomConfig,
@@ -15,10 +17,10 @@ from hahomematic.custom_platforms.entity_definition import (
     ExtendedConfig,
     make_custom_entity,
 )
-from hahomematic.decorators import value_property
+from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.entity import CustomEntity
+from hahomematic.entity import CallParameterCollector, CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 
@@ -83,6 +85,12 @@ class CeIpSiren(BaseSiren):
         self._e_optical_alarm_selection: HmAction = self._get_entity(
             field_name=FIELD_OPTICAL_ALARM_SELECTION, entity_type=HmAction
         )
+        self._e_duration: HmAction = self._get_entity(
+            field_name=FIELD_DURATION, entity_type=HmAction
+        )
+        self._e_duration_unit: HmAction = self._get_entity(
+            field_name=FIELD_DURATION_UNIT, entity_type=HmAction
+        )
 
     @value_property
     def is_on(self) -> bool:
@@ -102,36 +110,35 @@ class CeIpSiren(BaseSiren):
         """Return a list of available lights."""
         return self._e_optical_alarm_selection.value_list
 
+    @bind_collector
     async def turn_on(
         self,
         acoustic_alarm: str,
         optical_alarm: str,
         duration: int = DEFAULT_DURATION_VALUE,
+        collector: CallParameterCollector | None = None,
     ) -> bool:
         """Turn the device on."""
-        return await self._client.put_paramset(
-            address=f"{self.device.device_address}:3",
-            paramset_key="VALUES",
-            value={
-                HMIP_ACOUSTIC_ALARM_SELECTION: acoustic_alarm,
-                HMIP_OPTICAL_ALARM_SELECTION: optical_alarm,
-                HMIP_DURATION_UNIT: DEFAULT_DURATION_UNIT,
-                HMIP_DURATION_VALUE: duration,
-            },
+        await self._e_acoustic_alarm_selection.send_value(
+            value=acoustic_alarm, collector=collector
         )
+        await self._e_optical_alarm_selection.send_value(value=optical_alarm, collector=collector)
+        await self._e_duration_unit.send_value(value=DEFAULT_DURATION_UNIT, collector=collector)
+        await self._e_duration.send_value(value=duration, collector=collector)
+        return True
 
-    async def turn_off(self) -> bool:
+    @bind_collector
+    async def turn_off(self, collector: CallParameterCollector | None = None) -> bool:
         """Turn the device off."""
-        return await self._client.put_paramset(
-            address=f"{self.device.device_address}:3",
-            paramset_key="VALUES",
-            value={
-                HMIP_ACOUSTIC_ALARM_SELECTION: DISABLE_ACOUSTIC_SIGNAL,
-                HMIP_OPTICAL_ALARM_SELECTION: DISABLE_OPTICAL_SIGNAL,
-                HMIP_DURATION_UNIT: DEFAULT_DURATION_UNIT,
-                HMIP_DURATION_VALUE: 1,
-            },
+        await self._e_acoustic_alarm_selection.send_value(
+            value=DISABLE_ACOUSTIC_SIGNAL, collector=collector
         )
+        await self._e_optical_alarm_selection.send_value(
+            value=DISABLE_OPTICAL_SIGNAL, collector=collector
+        )
+        await self._e_duration_unit.send_value(value=DEFAULT_DURATION_UNIT, collector=collector)
+        await self._e_duration.send_value(value=1, collector=collector)
+        return True
 
 
 class CeRfSiren(BaseSiren):

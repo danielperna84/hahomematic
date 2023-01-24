@@ -29,10 +29,10 @@ from hahomematic.custom_platforms.entity_definition import (
     ExtendedConfig,
     make_custom_entity,
 )
-from hahomematic.decorators import value_property
+from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.entity import CustomEntity
+from hahomematic.entity import CallParameterCollector, CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.number import HmFloat, HmInteger
@@ -199,31 +199,37 @@ class BaseClimateEntity(CustomEntity):
             temperature = self.min_temp
         return temperature
 
-    async def set_temperature(self, temperature: float, do_validate: bool = True) -> bool:
+    async def set_temperature(
+        self,
+        temperature: float,
+        collector: CallParameterCollector | None = None,
+        do_validate: bool = True,
+    ) -> None:
         """Set new target temperature."""
-        return await self._e_setpoint.send_value(value=temperature, do_validate=do_validate)
+        await self._e_setpoint.send_value(
+            value=temperature, collector=collector, do_validate=do_validate
+        )
 
-    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> bool:
+    async def set_hvac_mode(
+        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set new target hvac mode."""
-        return True
 
-    async def set_preset_mode(self, preset_mode: HmPresetMode) -> bool:
+    async def set_preset_mode(
+        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set new preset mode."""
-        return True
 
     async def enable_away_mode_by_calendar(
         self, start: datetime, end: datetime, away_temperature: float
-    ) -> bool:
+    ) -> None:
         """Enable the away mode by calendar on thermostat."""
-        return True
 
-    async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> bool:
+    async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
         """Enable the away mode by duration on thermostat."""
-        return True
 
-    async def disable_away_mode(self) -> bool:
+    async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
-        return True
 
 
 class CeSimpleRfThermostat(BaseClimateEntity):
@@ -309,29 +315,35 @@ class CeRfThermostat(BaseClimateEntity):
         """Flag if climate supports preset."""
         return True
 
-    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> bool:
+    @bind_collector
+    async def set_hvac_mode(
+        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HmHvacMode.AUTO:
-            return await self._e_auto_mode.send_value(True)
-        if hvac_mode == HmHvacMode.HEAT:
-            return await self._e_manu_mode.send_value(self._min_or_target_temperature)
-        if hvac_mode == HmHvacMode.OFF:
-            if not await self._e_manu_mode.send_value(self.target_temperature):
-                return False
+            await self._e_auto_mode.send_value(value=True, collector=collector)
+        elif hvac_mode == HmHvacMode.HEAT:
+            await self._e_manu_mode.send_value(
+                value=self._min_or_target_temperature, collector=collector
+            )
+        elif hvac_mode == HmHvacMode.OFF:
+            await self._e_manu_mode.send_value(value=self.target_temperature, collector=collector)
             # Disable validation here to allow setting a value,
             # that is out of the validation range.
-            return await self.set_temperature(temperature=HM_OFF_TEMPERATURE, do_validate=False)
-        return True
+            await self.set_temperature(
+                temperature=HM_OFF_TEMPERATURE, collector=collector, do_validate=False
+            )
 
-    async def set_preset_mode(self, preset_mode: HmPresetMode) -> bool:
+    async def set_preset_mode(
+        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set new preset mode."""
         if preset_mode == HmPresetMode.BOOST:
-            return await self._e_boost_mode.send_value(True)
-        if preset_mode == HmPresetMode.COMFORT:
-            return await self._e_comfort_mode.send_value(True)
-        if preset_mode == HmPresetMode.ECO:
-            return await self._e_lowering_mode.send_value(True)
-        return True
+            await self._e_boost_mode.send_value(value=True, collector=collector)
+        elif preset_mode == HmPresetMode.COMFORT:
+            await self._e_comfort_mode.send_value(value=True, collector=collector)
+        elif preset_mode == HmPresetMode.ECO:
+            await self._e_lowering_mode.send_value(value=True, collector=collector)
 
 
 class CeIpThermostat(BaseClimateEntity):
@@ -425,78 +437,74 @@ class CeIpThermostat(BaseClimateEntity):
         """Flag if climate supports preset."""
         return True
 
-    async def set_hvac_mode(self, hvac_mode: HmHvacMode) -> bool:
+    @bind_collector
+    async def set_hvac_mode(
+        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set new target hvac mode."""
 
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
-            if not await self.set_preset_mode(HmPresetMode.NONE):
-                return False
+            await self.set_preset_mode(preset_mode=HmPresetMode.NONE, collector=collector)
 
         if hvac_mode == HmHvacMode.AUTO:
-            return await self._e_control_mode.send_value(HMIP_MODE_AUTO)
-        if hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
-            if not await self._e_control_mode.send_value(HMIP_MODE_MANU):
-                return False
-            return await self.set_temperature(temperature=self._min_or_target_temperature)
-        if hvac_mode == HmHvacMode.OFF:
-            if not await self._e_control_mode.send_value(HMIP_MODE_MANU):
-                return False
-            return await self.set_temperature(temperature=HM_OFF_TEMPERATURE)
+            await self._e_control_mode.send_value(value=HMIP_MODE_AUTO, collector=collector)
+        elif hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
+            await self._e_control_mode.send_value(value=HMIP_MODE_MANU, collector=collector)
+            await self.set_temperature(
+                temperature=self._min_or_target_temperature, collector=collector
+            )
+        elif hvac_mode == HmHvacMode.OFF:
+            await self._e_control_mode.send_value(value=HMIP_MODE_MANU, collector=collector)
+            await self.set_temperature(temperature=HM_OFF_TEMPERATURE, collector=collector)
 
-        return True
-
-    async def set_preset_mode(self, preset_mode: HmPresetMode) -> bool:
+    @bind_collector
+    async def set_preset_mode(
+        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+    ) -> None:
         """Set new preset mode."""
         if preset_mode == HmPresetMode.BOOST:
-            return await self._e_boost_mode.send_value(True)
-        if preset_mode == HmPresetMode.NONE:
-            return await self._e_boost_mode.send_value(False)
-        if preset_mode in self._profile_names:
+            await self._e_boost_mode.send_value(value=True, collector=collector)
+        elif preset_mode == HmPresetMode.NONE:
+            await self._e_boost_mode.send_value(value=False, collector=collector)
+        elif preset_mode in self._profile_names:
             if self.hvac_mode != HmHvacMode.AUTO:
-                if not await self.set_hvac_mode(HmHvacMode.AUTO):
-                    return False
-            if not await self._e_boost_mode.send_value(False):
-                return False
+                await self.set_hvac_mode(hvac_mode=HmHvacMode.AUTO, collector=collector)
+                await self._e_boost_mode.send_value(value=False, collector=collector)
             if profile_idx := self._profiles.get(preset_mode):
-                if not await self._e_active_profile.send_value(profile_idx):
-                    return False
-        return True
+                await self._e_active_profile.send_value(value=profile_idx, collector=collector)
 
     async def enable_away_mode_by_calendar(
         self, start: datetime, end: datetime, away_temperature: float
-    ) -> bool:
+    ) -> None:
         """Enable the away mode by calendar on thermostat."""
-        if (
-            await self.put_paramset(
-                paramset_key="VALUES",
-                value={
-                    "CONTROL_MODE": HMIP_MODE_AWAY,
-                    "PARTY_TIME_END": end.strftime(PARTY_DATE_FORMAT),
-                    "PARTY_TIME_START": start.strftime(PARTY_DATE_FORMAT),
-                },
-            )
-            is False
-        ):
-            return False
-        return await self.put_paramset(
+        await self.put_paramset(
+            paramset_key="VALUES",
+            value={
+                "CONTROL_MODE": HMIP_MODE_AWAY,
+                "PARTY_TIME_END": end.strftime(PARTY_DATE_FORMAT),
+                "PARTY_TIME_START": start.strftime(PARTY_DATE_FORMAT),
+            },
+        )
+
+        await self.put_paramset(
             paramset_key="VALUES",
             value={
                 "SET_POINT_TEMPERATURE": away_temperature,
             },
         )
 
-    async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> bool:
+    async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
         """Enable the away mode by duration on thermostat."""
         start = datetime.now() - timedelta(minutes=10)
         end = datetime.now() + timedelta(hours=hours)
-        return await self.enable_away_mode_by_calendar(
+        await self.enable_away_mode_by_calendar(
             start=start, end=end, away_temperature=away_temperature
         )
 
-    async def disable_away_mode(self) -> bool:
+    async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
-        return await self.put_paramset(
+        await self.put_paramset(
             paramset_key="VALUES",
             value={
                 "CONTROL_MODE": HMIP_MODE_AWAY,
