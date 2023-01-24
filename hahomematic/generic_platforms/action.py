@@ -22,4 +22,5 @@ class HmAction(GenericEntity[None]):
         # We allow setting the value via index as well, just in case.
         if value is not None and self._attr_value_list and isinstance(value, str):
             await super().send_value(value=self._attr_value_list.index(value), collector=collector)
-        await super().send_value(value=value, collector=collector)
+        else:
+            await super().send_value(value=value, collector=collector)
