@@ -884,13 +884,12 @@ class CentralUnit:
             return await client.get_system_variable(name)
         return None
 
-    async def set_system_variable(self, name: str, value: Any) -> bool:
+    async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear.  #CC"""
         if entity := self.sysvar_entities.get(name):
-            return await entity.send_variable(value=value)
-
-        _LOGGER.warning("Variable %s not found on %s", name, self.name)
-        return False
+            await entity.send_variable(value=value)
+        else:
+            _LOGGER.warning("Variable %s not found on %s", name, self.name)
 
     # pylint: disable=invalid-name
     async def set_install_mode(
