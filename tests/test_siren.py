@@ -40,9 +40,9 @@ async def test_ceipsiren(
         address="VCU8249617:3",
         paramset_key="VALUES",
         value={
-            "ACOUSTIC_ALARM_SELECTION": 3,
-            "OPTICAL_ALARM_SELECTION": 1,
-            "DURATION_UNIT": 0,
+            "ACOUSTIC_ALARM_SELECTION": "FREQUENCY_RISING_AND_FALLING",
+            "OPTICAL_ALARM_SELECTION": "BLINKING_ALTERNATELY_REPEATING",
+            "DURATION_UNIT": "S",
             "DURATION_VALUE": 30,
         },
     )
@@ -56,9 +56,9 @@ async def test_ceipsiren(
         address="VCU8249617:3",
         paramset_key="VALUES",
         value={
-            "ACOUSTIC_ALARM_SELECTION": 3,
-            "OPTICAL_ALARM_SELECTION": 1,
-            "DURATION_UNIT": 0,
+            "ACOUSTIC_ALARM_SELECTION": "FREQUENCY_RISING_AND_FALLING",
+            "OPTICAL_ALARM_SELECTION": "BLINKING_ALTERNATELY_REPEATING",
+            "DURATION_UNIT": "S",
             "DURATION_VALUE": 30,
         },
     )
@@ -68,9 +68,9 @@ async def test_ceipsiren(
         address="VCU8249617:3",
         paramset_key="VALUES",
         value={
-            "ACOUSTIC_ALARM_SELECTION": 0,
-            "OPTICAL_ALARM_SELECTION": 0,
-            "DURATION_UNIT": 0,
+            "ACOUSTIC_ALARM_SELECTION": "DISABLE_ACOUSTIC_SIGNAL",
+            "OPTICAL_ALARM_SELECTION": "DISABLE_OPTICAL_SIGNAL",
+            "DURATION_UNIT": "S",
             "DURATION_VALUE": 1,
         },
     )
