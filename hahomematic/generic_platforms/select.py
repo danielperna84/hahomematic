@@ -36,24 +36,23 @@ class HmSelect(GenericEntity[Union[int, str]]):
 
     async def send_value(
         self, value: int | str, collector: CallParameterCollector | None = None
-    ) -> bool:
+    ) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
         if isinstance(value, int) and self._attr_value_list:
             if 0 <= value < len(self._attr_value_list):
-                return await super().send_value(value=value, collector=collector)
+                await super().send_value(value=value, collector=collector)
         elif self._attr_value_list:
             if value in self._attr_value_list:
-                return await super().send_value(
+                await super().send_value(
                     value=self._attr_value_list.index(value), collector=collector
                 )
-
-        _LOGGER.warning(
-            "Value not in value_list for %s/%s.",
-            self.name,
-            self.unique_identifier,
-        )
-        return False
+        else:
+            _LOGGER.warning(
+                "Value not in value_list for %s/%s.",
+                self.name,
+                self.unique_identifier,
+            )
 
 
 class HmSysvarSelect(GenericSystemVariable):

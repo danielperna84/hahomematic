@@ -921,7 +921,7 @@ class CentralUnit:
         value: Any,
         paramset_key: str = PARAMSET_KEY_VALUES,
         rx_mode: str | None = None,
-    ) -> bool:
+    ) -> None:
         """Set a single value on paramset VALUES. #CC"""
         if not self.has_client(interface_id=interface_id):
             _LOGGER.warning(
@@ -929,8 +929,8 @@ class CentralUnit:
                 interface_id,
                 self._attr_name,
             )
-            return False
-        return await self.get_client(interface_id=interface_id).set_value(
+            return
+        await self.get_client(interface_id=interface_id).set_value(
             channel_address=channel_address,
             paramset_key=paramset_key,
             parameter=parameter,
@@ -945,7 +945,7 @@ class CentralUnit:
         paramset_key: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> bool:
+    ) -> None:
         """
         Set paramsets manually.
         Address is usually the channel_address,
@@ -957,9 +957,9 @@ class CentralUnit:
                 interface_id,
                 self._attr_name,
             )
-            return False
+            return
 
-        return await self.get_client(interface_id=interface_id).put_paramset(
+        await self.get_client(interface_id=interface_id).put_paramset(
             address=address,
             paramset_key=paramset_key,
             value=value,

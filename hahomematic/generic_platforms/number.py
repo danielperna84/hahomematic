@@ -37,23 +37,23 @@ class HmFloat(BaseNumber[float]):
         value: float,
         collector: CallParameterCollector | None = None,
         do_validate: bool = True,
-    ) -> bool:
+    ) -> None:
         """Set the value of the entity."""
         if (
             value is not None and self._attr_min <= float(value) <= self._attr_max
         ) or not do_validate:
-            return await super().send_value(value=value, collector=collector)
-        if self._attr_special:
+            await super().send_value(value=value, collector=collector)
+        elif self._attr_special:
             if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
-                return await super().send_value(value=value, collector=collector)
-        _LOGGER.warning(
-            "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
-            value,
-            self._attr_min,
-            self._attr_max,
-            self._attr_special,
-        )
-        return False
+                await super().send_value(value=value, collector=collector)
+        else:
+            _LOGGER.warning(
+                "number.float failed: Invalid value: %s (min: %s, max: %s, special: %s)",
+                value,
+                self._attr_min,
+                self._attr_max,
+                self._attr_special,
+            )
 
 
 class HmInteger(BaseNumber[int]):
@@ -64,23 +64,23 @@ class HmInteger(BaseNumber[int]):
 
     async def send_value(
         self, value: int, collector: CallParameterCollector | None = None, do_validate: bool = True
-    ) -> bool:
+    ) -> None:
         """Set the value of the entity."""
         if (
             value is not None and self._attr_min <= int(value) <= self._attr_max
         ) or not do_validate:
-            return await super().send_value(value=value, collector=collector)
-        if self._attr_special:
+            await super().send_value(value=value, collector=collector)
+        elif self._attr_special:
             if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
-                return await super().send_value(value=value, collector=collector)
-        _LOGGER.warning(
-            "number.int failed: Invalid value: %s (min: %s, max: %s, special: %s)",
-            value,
-            self._attr_min,
-            self._attr_max,
-            self._attr_special,
-        )
-        return False
+                await super().send_value(value=value, collector=collector)
+        else:
+            _LOGGER.warning(
+                "number.int failed: Invalid value: %s (min: %s, max: %s, special: %s)",
+                value,
+                self._attr_min,
+                self._attr_max,
+                self._attr_special,
+            )
 
 
 class HmSysvarNumber(GenericSystemVariable):

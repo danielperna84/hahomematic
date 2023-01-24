@@ -21,9 +21,9 @@ class HmButton(GenericEntity[None]):
 
     _attr_platform = HmPlatform.BUTTON
 
-    async def press(self) -> bool:
+    async def press(self) -> None:
         """Handle the button press."""
-        return await self.send_value(value=True)
+        await self.send_value(value=True)
 
 
 class HmProgramButton(GenericHubEntity):

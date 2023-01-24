@@ -364,46 +364,43 @@ async def test_ceipfixedcolorlight(
     assert light.channel_color_name == "BLUE"
 
     await light.set_on_time_value(18)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3716619:8", paramset_key="VALUES", parameter="DURATION_VALUE", value=18
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3716619:8",
+        paramset_key="VALUES",
+        value={"DURATION_UNIT": 0, "DURATION_VALUE": 18},
     )
 
     await light.set_on_time_value(17000)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3716619:8",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3716619:8",
         paramset_key="VALUES",
-        parameter="DURATION_VALUE",
-        value=283,
+        value={"DURATION_UNIT": 1, "DURATION_VALUE": 283},
     )
 
     await light.set_on_time_value(1000000)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3716619:8",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3716619:8",
         paramset_key="VALUES",
-        parameter="DURATION_VALUE",
-        value=277,
+        value={"DURATION_UNIT": 2, "DURATION_VALUE": 277},
     )
 
     await light.set_ramp_time_value(18)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3716619:8",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3716619:8",
         paramset_key="VALUES",
-        parameter="RAMP_TIME_VALUE",
-        value=18,
+        value={"RAMP_TIME_UNIT": 0, "RAMP_TIME_VALUE": 18},
     )
 
     await light.set_ramp_time_value(17000)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3716619:8",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3716619:8",
         paramset_key="VALUES",
-        parameter="RAMP_TIME_VALUE",
-        value=283,
+        value={"RAMP_TIME_UNIT": 1, "RAMP_TIME_VALUE": 283},
     )
 
     await light.set_ramp_time_value(1000000)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3716619:8",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3716619:8",
         paramset_key="VALUES",
-        parameter="RAMP_TIME_VALUE",
-        value=277,
+        value={"RAMP_TIME_UNIT": 2, "RAMP_TIME_VALUE": 277},
     )

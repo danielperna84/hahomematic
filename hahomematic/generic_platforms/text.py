@@ -19,9 +19,9 @@ class HmText(GenericEntity[str]):
 
     async def send_value(
         self, value: str | None, collector: CallParameterCollector | None = None
-    ) -> bool:
+    ) -> None:
         """Set the value of the entity."""
-        return await super().send_value(value=value, collector=collector)
+        await super().send_value(value=value, collector=collector)
 
 
 class HmSysvarText(GenericSystemVariable):

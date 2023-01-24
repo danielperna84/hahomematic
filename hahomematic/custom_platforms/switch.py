@@ -51,25 +51,23 @@ class CeSwitch(CustomEntity):
     @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
-    ) -> bool:
+    ) -> None:
         """Turn the switch on."""
         if HM_ARG_ON_TIME in kwargs and isinstance(self._e_on_time_value, HmAction):
             on_time: float = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            if not await self._e_on_time_value.send_value(value=on_time, collector=collector):
-                return False
+            await self._e_on_time_value.send_value(value=on_time, collector=collector)
 
-        return await self._e_state.turn_on(collector=collector, **kwargs)
+        await self._e_state.turn_on(collector=collector, **kwargs)
 
-    @bind_collector
-    async def turn_off(self, collector: CallParameterCollector | None = None) -> bool:
+    async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the switch off."""
-        return await self._e_state.turn_off(collector=collector)
+        await self._e_state.turn_off(collector=collector)
 
     async def set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
-    ) -> bool:
+    ) -> None:
         """Set the on time value in seconds."""
-        return await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
+        await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
 
 def make_ip_switch(

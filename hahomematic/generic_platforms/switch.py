@@ -34,21 +34,20 @@ class HmSwitch(GenericEntity[bool]):
 
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
-    ) -> bool:
+    ) -> None:
         """Turn the switch on."""
         if HM_ARG_ON_TIME in kwargs:
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            if not await self.set_on_time_value(on_time=on_time):
-                return False
-        return await self.send_value(value=True, collector=collector)
+            await self.set_on_time_value(on_time=on_time)
+        await self.send_value(value=True, collector=collector)
 
-    async def turn_off(self, collector: CallParameterCollector | None = None) -> bool:
+    async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the switch off."""
-        return await self.send_value(value=False, collector=collector)
+        await self.send_value(value=False, collector=collector)
 
-    async def set_on_time_value(self, on_time: float) -> bool:
+    async def set_on_time_value(self, on_time: float) -> None:
         """Set the on time value in seconds."""
-        return await self._client.set_value(
+        await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
             parameter=PARAM_ON_TIME,

@@ -64,15 +64,15 @@ class BaseLock(CustomEntity):
         """Return true if the lock is unlocking."""
 
     @abstractmethod
-    async def lock(self) -> bool:
+    async def lock(self) -> None:
         """Lock the lock."""
 
     @abstractmethod
-    async def unlock(self) -> bool:
+    async def unlock(self) -> None:
         """Unlock the lock."""
 
     @abstractmethod
-    async def open(self) -> bool:
+    async def open(self) -> None:
         """Open the lock."""
 
 
@@ -116,17 +116,17 @@ class CeIpLock(BaseLock):
         """Return true if lock is jammed."""
         return False
 
-    async def lock(self) -> bool:
+    async def lock(self) -> None:
         """Lock the lock."""
-        return await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_LOCKED)
+        await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_LOCKED)
 
-    async def unlock(self) -> bool:
+    async def unlock(self) -> None:
         """Unlock the lock."""
-        return await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_UNLOCKED)
+        await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_UNLOCKED)
 
-    async def open(self) -> bool:
+    async def open(self) -> None:
         """Open the lock."""
-        return await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_OPEN)
+        await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_OPEN)
 
 
 class CeRfLock(BaseLock):
@@ -166,17 +166,17 @@ class CeRfLock(BaseLock):
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value != "NO_ERROR"
 
-    async def lock(self) -> bool:
+    async def lock(self) -> None:
         """Lock the lock."""
-        return await self._e_state.send_value(value=False)
+        await self._e_state.send_value(value=False)
 
-    async def unlock(self) -> bool:
+    async def unlock(self) -> None:
         """Unlock the lock."""
-        return await self._e_state.send_value(value=True)
+        await self._e_state.send_value(value=True)
 
-    async def open(self) -> bool:
+    async def open(self) -> None:
         """Open the lock."""
-        return await self._e_open.send_value(value=True)
+        await self._e_open.send_value(value=True)
 
 
 def make_ip_lock(

@@ -595,13 +595,13 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 
     async def send_value(
         self, value: Any, collector: CallParameterCollector | None = None
-    ) -> bool:
+    ) -> None:
         """send value to ccu."""
         if collector:
             collector.add_entity(self, self._convert_value(value))
-            return True
+            return
 
-        return await self._client.set_value(
+        await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
             parameter=self._attr_parameter,
@@ -1206,7 +1206,8 @@ class CallParameterCollector:
     async def put_paramset(self) -> bool:
         """Send paramset to backend."""
         for channel_address, paramset in self._paramsets.items():
-            await self._custom_entity.device.client.put_paramset(
+            if not await self._custom_entity.device.client.put_paramset(
                 address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
-            )
+            ):
+                return False
         return True

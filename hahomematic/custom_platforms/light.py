@@ -128,48 +128,42 @@ class BaseHmLight(CustomEntity):
         self,
         collector: CallParameterCollector | None = None,
         **kwargs: dict[str, Any] | None,
-    ) -> bool:
+    ) -> None:
         """Turn the light on."""
 
         if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
-            if not await self.set_ramp_time_value(ramp_time=ramp_time, collector=collector):
-                return False
-
+            await self.set_ramp_time_value(ramp_time=ramp_time, collector=collector)
         if HM_ARG_ON_TIME in kwargs:
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            if not await self.set_on_time_value(on_time=on_time, collector=collector):
-                return False
-
+            await self.set_on_time_value(on_time=on_time, collector=collector)
         if brightness := cast(int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255):
             if brightness != self.brightness or kwargs:
                 level = brightness / 255.0
-                return await self._e_level.send_value(value=level, collector=collector)
-        return True
+                await self._e_level.send_value(value=level, collector=collector)
 
     @bind_collector
     async def turn_off(
         self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
-    ) -> bool:
+    ) -> None:
         """Turn the light off."""
         if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
-            if not await self.set_ramp_time_value(ramp_time=ramp_time, collector=collector):
-                return False
+            await self.set_ramp_time_value(ramp_time=ramp_time, collector=collector)
 
-        return await self._e_level.send_value(value=HM_DIMMER_OFF, collector=collector)
+        await self._e_level.send_value(value=HM_DIMMER_OFF, collector=collector)
 
     async def set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
-    ) -> bool:
+    ) -> None:
         """Set the on time value in seconds."""
-        return await self._e_on_time_value.send_value(value=on_time, collector=collector)
+        await self._e_on_time_value.send_value(value=on_time, collector=collector)
 
     async def set_ramp_time_value(
         self, ramp_time: float, collector: CallParameterCollector | None = None
-    ) -> bool:
+    ) -> None:
         """Set the ramp time value in seconds."""
-        return await self._e_ramp_time_value.send_value(value=ramp_time, collector=collector)
+        await self._e_ramp_time_value.send_value(value=ramp_time, collector=collector)
 
 
 class CeDimmer(BaseHmLight):
@@ -236,7 +230,7 @@ class CeColorDimmer(CeDimmer):
     @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
-    ) -> bool:
+    ) -> None:
         """Turn the light on."""
         if HM_ARG_HS_COLOR in kwargs:
             khue, ksaturation = kwargs[HM_ARG_HS_COLOR]
@@ -247,9 +241,8 @@ class CeColorDimmer(CeDimmer):
             else:
                 color = int(round(max(min(hue, 1), 0) * 199))
 
-            if not await self._e_color.send_value(value=color, collector=collector):
-                return False
-        return await super().turn_on(collector=collector, **kwargs)
+            await self._e_color.send_value(value=color, collector=collector)
+        await super().turn_on(collector=collector, **kwargs)
 
 
 class CeColorDimmerEffect(CeColorDimmer):
@@ -292,22 +285,20 @@ class CeColorDimmerEffect(CeColorDimmer):
     @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
-    ) -> bool:
+    ) -> None:
         """Turn the light on."""
         if HM_ARG_HS_COLOR in kwargs:
             # disable effect
             if self.supports_effects and self.effect != HM_EFFECT_OFF:
-                if not await self._e_effect.send_value(value=0, collector=collector):
-                    return False
+                await self._e_effect.send_value(value=0, collector=collector)
 
         if self.supports_effects and HM_ARG_EFFECT in kwargs:
             effect = str(kwargs[HM_ARG_EFFECT])
             effect_idx = self._effect_list.index(effect)
             if effect_idx is not None:
-                if not await self._e_effect.send_value(value=effect_idx, collector=collector):
-                    return False
+                await self._e_effect.send_value(value=effect_idx, collector=collector)
 
-        return await super().turn_on(collector=collector, **kwargs)
+        await super().turn_on(collector=collector, **kwargs)
 
 
 class CeColorTempDimmer(CeDimmer):
@@ -335,17 +326,16 @@ class CeColorTempDimmer(CeDimmer):
     @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
-    ) -> bool:
+    ) -> None:
         """Turn the light on."""
 
         if HM_ARG_COLOR_TEMP in kwargs:
             color_level = (HM_MAX_MIREDS - kwargs[HM_ARG_COLOR_TEMP]) / (
                 HM_MAX_MIREDS - HM_MIN_MIREDS
             )
-            if not await self._e_color_level.send_value(value=color_level, collector=collector):
-                return False
+            await self._e_color_level.send_value(value=color_level, collector=collector)
 
-        return await super().turn_on(collector=collector, **kwargs)
+        await super().turn_on(collector=collector, **kwargs)
 
 
 class CeIpFixedColorLight(BaseHmLight):
@@ -428,19 +418,19 @@ class CeIpFixedColorLight(BaseHmLight):
     @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
-    ) -> bool:
+    ) -> None:
         """Turn the light on."""
         if HM_ARG_HS_COLOR in kwargs:
             hs_color = kwargs[HM_ARG_HS_COLOR]
             simple_rgb_color = _convert_color(hs_color)
-            if not await self._e_color.send_value(value=simple_rgb_color, collector=collector):
-                return False
+            await self._e_color.send_value(value=simple_rgb_color, collector=collector)
 
-        return await super().turn_on(collector=collector, **kwargs)
+        await super().turn_on(collector=collector, **kwargs)
 
+    @bind_collector
     async def set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
-    ) -> bool:
+    ) -> None:
         """Set the on time value in seconds."""
         on_time_unit = TIME_UNIT_SECONDS
         if on_time > 16343:
@@ -450,13 +440,13 @@ class CeIpFixedColorLight(BaseHmLight):
             on_time /= 60
             on_time_unit = TIME_UNIT_HOURS
 
-        if not await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector):
-            return False
-        return await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
+        await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
+        await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
+    @bind_collector
     async def set_ramp_time_value(
         self, ramp_time: float, collector: CallParameterCollector | None = None
-    ) -> bool:
+    ) -> None:
         """Set the ramp time value in seconds."""
         ramp_time_unit = TIME_UNIT_SECONDS
         if ramp_time > 16343:
@@ -466,11 +456,8 @@ class CeIpFixedColorLight(BaseHmLight):
             ramp_time /= 60
             ramp_time_unit = TIME_UNIT_HOURS
 
-        if not await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector):
-            return False
-        return await self._e_ramp_time_value.send_value(
-            value=float(ramp_time), collector=collector
-        )
+        await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
+        await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
 
 
 def _convert_color(color: tuple[float, float] | None) -> str:
