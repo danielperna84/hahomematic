@@ -91,16 +91,17 @@ class HmSysvarNumber(GenericSystemVariable):
     _attr_platform = HmPlatform.HUB_NUMBER
     _attr_is_extended = True
 
-    async def send_variable(self, value: float) -> bool:
+    async def send_variable(self, value: float) -> None:
         """Set the value of the entity."""
         if value is not None and self.max is not None and self.min is not None:
             if self.min <= float(value) <= self.max:
-                return await super().send_variable(value)
-            _LOGGER.warning(
-                "sysvar.number failed: Invalid value: %s (min: %s, max: %s)",
-                value,
-                self.min,
-                self.max,
-            )
-            return False
-        return await super().send_variable(value)
+                await super().send_variable(value)
+            else:
+                _LOGGER.warning(
+                    "sysvar.number failed: Invalid value: %s (min: %s, max: %s)",
+                    value,
+                    self.min,
+                    self.max,
+                )
+            return
+        await super().send_variable(value)

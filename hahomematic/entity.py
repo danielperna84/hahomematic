@@ -1048,15 +1048,13 @@ class GenericSystemVariable(GenericHubEntity):
             self._attr_value = value
             self.update_entity()
 
-    async def send_variable(self, value: Any) -> bool:
+    async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        success: bool = True
         if client := self.central.get_primary_client():
-            success = await client.set_system_variable(
+            await client.set_system_variable(
                 name=self.ccu_var_name, value=parse_sys_var(self.data_type, value)
             )
         self.update_value(value=value)
-        return success
 
 
 class GenericEvent(BaseParameterEntity[Any]):

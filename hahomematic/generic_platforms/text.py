@@ -32,6 +32,6 @@ class HmSysvarText(GenericSystemVariable):
     _attr_platform = HmPlatform.HUB_TEXT
     _attr_is_extended = True
 
-    async def send_variable(self, value: str | None) -> bool:
+    async def send_variable(self, value: str | None) -> None:
         """Set the value of the entity."""
-        return await super().send_variable(value)
+        await super().send_variable(value)

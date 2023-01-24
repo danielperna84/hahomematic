@@ -50,7 +50,7 @@ from hahomematic.const import (
     SYSVAR_VALUE,
     SYSVAR_VALUE_LIST,
 )
-from hahomematic.exceptions import BaseHomematicException, HaHomematicException
+from hahomematic.exceptions import BaseHomematicException, ClientException
 from hahomematic.helpers import (
     ProgramData,
     SystemVariableData,
@@ -202,7 +202,7 @@ class JsonRpcAioHttpClient:
         if not keep_session:
             await self._do_logout(session_id=session_id)
         if (error := response["error"]) is not None:
-            raise HaHomematicException(f"_post: error: {error}")
+            raise ClientException(f"_post: error: {error}")
         return response
 
     async def _post_script(
@@ -247,7 +247,7 @@ class JsonRpcAioHttpClient:
             await self._do_logout(session_id=session_id)
 
         if (error := response["error"]) is not None:
-            raise HaHomematicException(f"_post_script: error: {error}")
+            raise ClientException(f"_post_script: error: {error}")
         return response
 
     def _get_script(self, script_name: str) -> str | None:
@@ -338,7 +338,7 @@ class JsonRpcAioHttpClient:
             _LOGGER.error("_do_post failed: OSError: %s", oer)
             return {"error": str(oer), "result": {}}
         except Exception as ex:
-            raise HaHomematicException from ex
+            raise ClientException from ex
 
     async def logout(self) -> None:
         """Logout of CCU."""

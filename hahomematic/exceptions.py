@@ -13,12 +13,12 @@ class BaseHomematicException(Exception):
         self.name: Final[str] = name
 
 
-class ProxyException(BaseHomematicException):
-    """hahomematic Proxy exception."""
+class ClientException(BaseHomematicException):
+    """hahomematic Client exception."""
 
     def __init__(self, *args: Any) -> None:
-        """Init the ProxyException."""
-        super().__init__("ProxyException", *args)
+        """Init the ClientException."""
+        super().__init__("ClientException", *args)
 
 
 class NoConnection(BaseHomematicException):
