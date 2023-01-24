@@ -289,9 +289,7 @@ async def test_ceipthermostat(
     central.event(const.LOCAL_INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", HMIP_MODE_AUTO)
     await climate.set_preset_mode(HmPresetMode.WEEK_PROGRAM_1)
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1769958:1",
-        paramset_key="VALUES",
-        value={"BOOST_MODE": False, "ACTIVE_PROFILE": 1},
+        address="VCU1769958:1", paramset_key="VALUES", value={"ACTIVE_PROFILE": 1}
     )
     assert climate.preset_mode == HmPresetMode.WEEK_PROGRAM_1
 

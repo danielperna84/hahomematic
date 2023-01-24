@@ -83,7 +83,7 @@ async def test_ceiplock(
         channel_address="VCU9724704:1",
         paramset_key="VALUES",
         parameter="LOCK_TARGET_LEVEL",
-        value=0,
+        value="LOCKED",
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU9724704:1", "LOCK_STATE", 1)
     assert lock.is_locked is True
@@ -92,7 +92,7 @@ async def test_ceiplock(
         channel_address="VCU9724704:1",
         paramset_key="VALUES",
         parameter="LOCK_TARGET_LEVEL",
-        value=1,
+        value="UNLOCKED",
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU9724704:1", "LOCK_STATE", 2)
     assert lock.is_locked is False
@@ -101,7 +101,7 @@ async def test_ceiplock(
         channel_address="VCU9724704:1",
         paramset_key="VALUES",
         parameter="LOCK_TARGET_LEVEL",
-        value=2,
+        value="OPEN",
     )
 
     assert lock.is_locking is None
