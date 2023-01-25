@@ -1,4 +1,5 @@
 # Version 2023.1.8 (2023-01-XX)
+- Remove VALVE_STATE from HmIPW-FALMOT-C12
 - 
 
 # Version 2023.1.7 (2023-01-24)
