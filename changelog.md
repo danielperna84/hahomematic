@@ -1,3 +1,6 @@
+# Version 2023.1.8 (2023-01-XX)
+- 
+
 # Version 2023.1.7 (2023-01-24)
 - Aggregate calls to backend
 - Fix HmIP-MOD-TM: inverted direction
