@@ -19,7 +19,8 @@ from hahomematic.custom_platforms.cover import (
     HM_WD_CLOSED,
     CeBlind,
     CeCover,
-    CeGarageTM,CeGarageHO,
+    CeGarageHO,
+    CeGarageTM,
     CeIpBlind,
     CeWindowDrive,
 )
@@ -28,8 +29,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU8537918": "HmIP-BROLL.json",
     "VCU1223813": "HmIP-FBL.json",
     "VCU0000045": "HM-LC-Bl1-FM.json",
-    #"VCU3574044": "HmIP-MOD-HO.json",
-    #"VCU6166407": "HmIP-MOD-TM.json",
+    "VCU3574044": "HmIP-MOD-HO.json",
+    "VCU6166407": "HmIP-MOD-TM.json",
     "VCU0000145": "HM-LC-JaX.json",
     "VCU0000350": "HM-Sec-Win.json",
 }
@@ -292,7 +293,7 @@ async def test_ceipblind(
 
 
 @pytest.mark.asyncio
-async def no_test_cegarageho(
+async def test_cegarageho(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeGarageHO."""
@@ -358,9 +359,13 @@ async def no_test_cegarageho(
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
     assert cover.current_cover_position == 100
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_HO_SECTION_OPENING)
+    central.event(
+        const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_HO_SECTION_OPENING
+    )
     assert cover.is_opening is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_HO_SECTION_CLOSING)
+    central.event(
+        const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_HO_SECTION_CLOSING
+    )
     assert cover.is_closing is True
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", None)
@@ -372,7 +377,7 @@ async def no_test_cegarageho(
 
 
 @pytest.mark.asyncio
-async def no_test_cegaragetm(
+async def test_cegaragetm(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeGarageTM."""
@@ -438,9 +443,13 @@ async def no_test_cegaragetm(
     central.event(const.LOCAL_INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 1)
     assert cover.current_cover_position == 100
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", GARAGE_DOOR_TM_SECTION_OPENING)
+    central.event(
+        const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", GARAGE_DOOR_TM_SECTION_OPENING
+    )
     assert cover.is_opening is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", GARAGE_DOOR_TM_SECTION_CLOSING)
+    central.event(
+        const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", GARAGE_DOOR_TM_SECTION_CLOSING
+    )
     assert cover.is_closing is True
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", None)

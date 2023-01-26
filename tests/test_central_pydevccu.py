@@ -96,20 +96,20 @@ async def test_central(central_pydevccu) -> None:
     ) as fptr:
         json.dump(addresses, fptr, indent=2)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2713
-    assert usage_types[HmEntityUsage.CE_PRIMARY] == 175
-    assert usage_types[HmEntityUsage.ENTITY] == 3241
-    assert usage_types[HmEntityUsage.CE_VISIBLE] == 96
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2756
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 184
+    assert usage_types[HmEntityUsage.ENTITY] == 3264
+    assert usage_types[HmEntityUsage.CE_VISIBLE] == 97
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 
-    assert len(ce_channels) == 110
+    assert len(ce_channels) == 112
     assert len(entity_types) == 6
     assert len(parameters) == 167
 
-    assert len(central_pydevccu._devices) == 372
+    assert len(central_pydevccu._devices) == 374
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
     await central_pydevccu.delete_devices(const.PYDEVCCU_INTERFACE_ID, virtual_remotes)
-    assert len(central_pydevccu._devices) == 369
+    assert len(central_pydevccu._devices) == 371
     del_addresses = list(
         central_pydevccu.device_descriptions.get_device_descriptions(const.PYDEVCCU_INTERFACE_ID)
     )

@@ -1,4 +1,4 @@
-pydevccu>=0.1.4
+pydevccu>=0.1.5
 pip>=21.0,<22.4
 aiohttp>=3.8.1
 voluptuous>=0.13.1
