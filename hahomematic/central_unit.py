@@ -15,7 +15,7 @@ import logging
 import os
 import socket
 import threading
-from typing import Any, Final, TypeVar, Union
+from typing import Any, Final, TypeVar
 
 from aiohttp import ClientSession
 
@@ -93,8 +93,7 @@ T = TypeVar("T")
 
 # {instance_name, central_unit}
 CENTRAL_INSTANCES: dict[str, CentralUnit] = {}
-# pylint: disable=consider-alternative-union-syntax
-ConnectionProblemIssuer = Union[JsonRpcAioHttpClient, XmlRpcProxy]
+ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 
 
 class CentralUnit:

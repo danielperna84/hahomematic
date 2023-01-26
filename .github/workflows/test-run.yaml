@@ -1,8 +1,9 @@
-name: "Test"
+name: "Test-Run"
 
 on:
   push:
     branches:
+      - 'dev**'
       - devel
       - master
   pull_request: ~
@@ -13,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11"]
     steps:
     - name: Set Timezone
       uses: szenius/set-timezone@v1.1

@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, Final, Generic, TypeVar, Union, cast
+from typing import Any, Final, Generic, TypeVar, cast
 
 from slugify import slugify
 import voluptuous as vol
@@ -85,8 +85,7 @@ HM_EVENT_SCHEMA = vol.Schema(
     }
 )
 
-# pylint: disable=consider-alternative-union-syntax
-ParameterT = TypeVar("ParameterT", bool, int, float, str, Union[int, str], None)
+ParameterT = TypeVar("ParameterT", bool, int, float, str, int | str, None)
 _LOGGER = logging.getLogger(__name__)
 
 
