@@ -233,6 +233,7 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
         "HmIP-PS",
         "HmIP-SFD",
     ),
+    "VALVE_STATE": ("HmIPW-FALMOT-C12", "HmIP-FALMOT-C12"),
 }
 
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {"LOWBAT": 0}

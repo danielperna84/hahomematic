@@ -2,6 +2,51 @@
 requires = ["setuptools~=62.3", "wheel~=0.37.1"]
 build-backend = "setuptools.build_meta"
 
+[project]
+name        = "hahomematic"
+version     = "2023.1.8"
+license     = {text = "MIT License"}
+description = "Homematic interface for Home Assistant running on Python 3."
+readme      = "README.md"
+authors     = [
+    {name = "Daniel Perna", email = "danielperna84@gmail.com"},
+    {name = "SukramJ", email = "sukramj@icloud.com"},
+]
+keywords    = ["home", "automation", "homematic"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Home Automation",
+]
+requires-python = ">=3.9.0"
+dependencies    = [
+    "aiohttp>=3.8.1",
+    "python-slugify>=4.0.1",
+    "voluptuous>=0.13.1",
+]
+
+[project.urls]
+"Source Code" = "https://github.com/danielperna84/hahomematic"
+"Bug Reports" = "https://github.com/danielperna84/hahomematic/issues"
+"Docs: Dev"   = "https://github.com/danielperna84/hahomematic"
+"Forum"       = "https://github.com/danielperna84/hahomematic/discussions"
+
+[options.entry_points."console_scripts"]
+hahomematic = "hahomematic.hmcli:main"
+
+[tool.setuptools.packages.find]
+include = ["hahomematic*"]
+exclude = ["tests", "tests.*", "dist", "build"]
+
+[tool.setuptools.package-data]
+myModule = ["py.typed", "rega_scripts/*.fn"]
+
 [tool.black]
 target-version = ["py39", "py310", "py311"]
 exclude = 'generated'
@@ -21,8 +66,8 @@ forced_separate = [
 ]
 combine_as_imports = true
 
-[tool.pylint.MASTER]
-py-version = "3.10"
+[tool.pylint.MAIN]
+py-version = "3.9"
 ignore = [
     "tests",
 ]
