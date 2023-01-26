@@ -5,7 +5,6 @@ select platform (https://www.home-assistant.io/integrations/select/).
 from __future__ import annotations
 
 import logging
-from typing import Union
 
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import value_property
@@ -18,8 +17,7 @@ from hahomematic.entity import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=consider-alternative-union-syntax
-class HmSelect(GenericEntity[Union[int, str]]):
+class HmSelect(GenericEntity[int | str]):
     """
     Implementation of a select entity.
     This is a default platform that gets automatically generated.
