@@ -19,12 +19,11 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.9.0"
+requires-python = ">=3.10.0"
 dependencies    = [
     "aiohttp>=3.8.1",
     "python-slugify>=4.0.1",
@@ -48,7 +47,7 @@ exclude = ["tests", "tests.*", "dist", "build"]
 myModule = ["py.typed", "rega_scripts/*.fn"]
 
 [tool.black]
-target-version = ["py39", "py310", "py311"]
+target-version = ["py310", "py311"]
 exclude = 'generated'
 line-length = 99
 
@@ -67,7 +66,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MAIN]
-py-version = "3.9"
+py-version = "3.10"
 ignore = [
     "tests",
 ]
