@@ -643,7 +643,7 @@ class WrapperEntity(BaseEntity):
         Initialize the entity.
         """
         if wrapped_entity.platform == new_platform:
-            raise HaHomematicException(
+            raise HaHomematicException(  # pragma: no cover@
                 "Cannot create wrapped entity. platform must not be equivalent."
             )
         self._wrapped_entity: Final[GenericEntity] = wrapped_entity
@@ -912,7 +912,7 @@ class CustomEntity(BaseEntity):
         """get entity"""
         if entity := self.data_entities.get(field_name):
             if not isinstance(entity, entity_type):
-                _LOGGER.debug(
+                _LOGGER.debug(  # pragma: no cover
                     "_get_entity: type mismatch for requested sub entity: "
                     "expected: %s, but is %s for field name %s of enitity %s",
                     entity_type.name,

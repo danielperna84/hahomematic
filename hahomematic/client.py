@@ -621,7 +621,7 @@ class Client(ABC):
         await self.central.paramset_descriptions.save()
 
 
-class ClientCCU(Client):
+class ClientCCU(Client):  # pragma: no cover
     """Client implementation for CCU backend."""
 
     @property
