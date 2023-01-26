@@ -33,19 +33,8 @@ class HmSensor(GenericEntity[Any]):
 
     def _get_converter_func(self) -> Any:
         """Return a converter based on sensor."""
-        if convert_func := CONVERTERS_BY_DEVICE_PARAM.get(
-            (self.device.device_type, self.parameter)
-        ):
-            return convert_func
         if convert_func := CONVERTERS_BY_PARAM.get(self.parameter):
             return convert_func
-
-
-def _convert_float_to_int(value: Any) -> int | None:
-    """Convert value to int."""
-    if value is not None and isinstance(value, float):
-        return int(value)
-    return value
 
 
 def _fix_rssi(value: Any) -> int | None:
@@ -84,10 +73,6 @@ class HmSysvarSensor(GenericSystemVariable):
             return self.value_list[int(self._attr_value)]
         return _check_length_and_warn(name=self.ccu_var_name, value=self._attr_value)
 
-
-CONVERTERS_BY_DEVICE_PARAM: dict[tuple[str, str], Any] = {
-    ("HmIP-SCTH230", "CONCENTRATION"): _convert_float_to_int,
-}
 
 CONVERTERS_BY_PARAM: dict[str, Any] = {
     "RSSI_PEER": _fix_rssi,
