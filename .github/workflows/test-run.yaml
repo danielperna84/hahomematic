@@ -1,8 +1,9 @@
-name: "Test"
+name: "Test-Run"
 
 on:
   push:
     branches:
+      - 'dev**'
       - devel
       - master
   pull_request: ~
