@@ -25,7 +25,7 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000098": "HM-DW-WM.json",
     "VCU4704397": "HmIPW-WRC6.json",
     "VCU0000122": "HM-LC-Dim1L-CV.json",
-    # "VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
+    "VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
 }
 
 
@@ -93,7 +93,7 @@ async def test_cedimmer(
     )
 
 
-async def no_test_cecolordimmer(
+async def test_cecolordimmer(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test CeColorDimmer."""
