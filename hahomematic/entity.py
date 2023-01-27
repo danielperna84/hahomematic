@@ -253,11 +253,11 @@ class BaseEntity(CallbackEntity):
         """Set the entity usage."""
         self._attr_usage = usage
 
+    @abstractmethod
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Init the entity data."""
-        return None
 
     @abstractmethod
     def _get_entity_name(self) -> EntityNameData:
@@ -643,7 +643,7 @@ class WrapperEntity(BaseEntity):
         Initialize the entity.
         """
         if wrapped_entity.platform == new_platform:
-            raise HaHomematicException(  # pragma: no cover
+            raise HaHomematicException(
                 "Cannot create wrapped entity. platform must not be equivalent."
             )
         self._wrapped_entity: Final[GenericEntity] = wrapped_entity
@@ -659,6 +659,14 @@ class WrapperEntity(BaseEntity):
         # hide wrapped entity from HA
         wrapped_entity.set_usage(HmEntityUsage.ENTITY_NO_CREATE)
         wrapped_entity.wrapped = True
+
+    async def load_entity_value(
+        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
+    ) -> None:
+        """Init the entity data."""
+        await self._wrapped_entity.load_entity_value(
+            call_source=call_source, max_age_seconds=max_age_seconds
+        )
 
     def __getattr__(self, *args: Any) -> Any:
         return getattr(self._wrapped_entity, *args)
@@ -901,7 +909,7 @@ class CustomEntity(BaseEntity):
         """get entity"""
         if entity := self.data_entities.get(field_name):
             if not isinstance(entity, entity_type):
-                _LOGGER.debug(  # pragma: no cover
+                _LOGGER.debug(
                     "_get_entity: type mismatch for requested sub entity: "
                     "expected: %s, but is %s for field name %s of enitity %s",
                     entity_type.name,

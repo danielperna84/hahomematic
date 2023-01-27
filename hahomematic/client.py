@@ -111,7 +111,7 @@ class Client(ABC):
                 forced_availability=HmForcedDeviceAvailability.NOT_SET
             )
             _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
-        except BaseHomematicException as hhe:  # pragma: no cover
+        except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "proxy_init failed: %s [%s] Unable to initialize proxy for %s",
                 hhe.name,
@@ -136,7 +136,7 @@ class Client(ABC):
         try:
             _LOGGER.debug("proxy_de_init: init('%s')", self._config.init_url)
             await self._proxy.init(self._config.init_url)
-        except BaseHomematicException as hhe:  # pragma: no cover
+        except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "proxy_de_init failed: %s [%s] Unable to de-initialize proxy for %s",
                 hhe.name,
@@ -317,7 +317,7 @@ class Client(ABC):
         return None
 
     # pylint: disable=invalid-name
-    async def set_install_mode(  # pragma: no cover
+    async def set_install_mode(
         self,
         on: bool = True,
         t: int = 60,
@@ -340,7 +340,7 @@ class Client(ABC):
             return False
         return True
 
-    async def get_install_mode(self) -> Any:  # pragma: no cover
+    async def get_install_mode(self) -> Any:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
             return await self._proxy.getInstallMode()
@@ -621,7 +621,7 @@ class Client(ABC):
         await self.central.paramset_descriptions.save()
 
 
-class ClientCCU(Client):  # pragma: no cover
+class ClientCCU(Client):
     """Client implementation for CCU backend."""
 
     @property
@@ -845,7 +845,7 @@ class ClientHomegear(Client):
         return "Homegear_SN0815"
 
 
-class ClientLocal(Client):
+class ClientLocal(Client):  # pragma: no cover
     """
     Local client object that emulates the XML-RPC proxy
     and provides access to other data via XML-RPC
