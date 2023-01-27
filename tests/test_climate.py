@@ -302,13 +302,11 @@ async def test_ceipthermostat(
     #         "PARTY_TIME_END": "2023_01_28 18:47",
     #         "PARTY_TIME_START": "2023_01_24 14:37",
     #     },
-    #     rx_mode=None,
     # )
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU1769958:1",
         paramset_key="VALUES",
         value={"SET_POINT_TEMPERATURE": 17.0},
-        rx_mode=None,
     )
     await climate.enable_away_mode_by_calendar(
         start=datetime(2000, 12, 1), end=datetime(2024, 12, 1), away_temperature=17.0
@@ -321,13 +319,11 @@ async def test_ceipthermostat(
             "PARTY_TIME_END": "2024_12_01 00:00",
             "PARTY_TIME_START": "2000_12_01 00:00",
         },
-        rx_mode=None,
     )
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU1769958:1",
         paramset_key="VALUES",
         value={"SET_POINT_TEMPERATURE": 17.0},
-        rx_mode=None,
     )
     await climate.disable_away_mode()
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -338,5 +334,4 @@ async def test_ceipthermostat(
             "PARTY_TIME_START": "2000_01_01 00:00",
             "PARTY_TIME_END": "2000_01_01 00:00",
         },
-        rx_mode=None,
     )

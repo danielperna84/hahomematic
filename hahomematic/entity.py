@@ -772,17 +772,6 @@ class CustomEntity(BaseEntity):
                 return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
 
-    async def put_paramset(
-        self, paramset_key: str, value: Any, rx_mode: str | None = None
-    ) -> bool:
-        """Set paramsets manually."""
-        return await self._client.put_paramset(
-            address=self._attr_channel_address,
-            paramset_key=paramset_key,
-            value=value,
-            rx_mode=rx_mode,
-        )
-
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
