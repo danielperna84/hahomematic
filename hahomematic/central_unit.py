@@ -911,59 +911,6 @@ class CentralUnit:
             on=on, t=t, mode=mode, device_address=device_address
         )
 
-    async def set_value(
-        self,
-        interface_id: str,
-        channel_address: str,
-        parameter: str,
-        value: Any,
-        paramset_key: str = PARAMSET_KEY_VALUES,
-        rx_mode: str | None = None,
-    ) -> None:
-        """Set a single value on paramset VALUES. #CC"""
-        if not self.has_client(interface_id=interface_id):
-            _LOGGER.warning(
-                "set_value: interface_id %s does not exist on %s",
-                interface_id,
-                self._attr_name,
-            )
-            return
-        await self.get_client(interface_id=interface_id).set_value(
-            channel_address=channel_address,
-            paramset_key=paramset_key,
-            parameter=parameter,
-            value=value,
-            rx_mode=rx_mode,
-        )
-
-    async def put_paramset(
-        self,
-        interface_id: str,
-        address: str,
-        paramset_key: str,
-        value: Any,
-        rx_mode: str | None = None,
-    ) -> None:
-        """
-        Set paramsets manually.
-        Address is usually the channel_address,
-        but for bidcos devices there is a master paramset at the device. #CC
-        """
-        if not self.has_client(interface_id=interface_id):
-            _LOGGER.warning(
-                "put_paramset: interface_id %s does not exist on %s",
-                interface_id,
-                self._attr_name,
-            )
-            return
-
-        await self.get_client(interface_id=interface_id).put_paramset(
-            address=address,
-            paramset_key=paramset_key,
-            value=value,
-            rx_mode=rx_mode,
-        )
-
     def _get_virtual_remote(self, device_address: str) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for client in self._clients.values():

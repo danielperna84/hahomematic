@@ -9,7 +9,7 @@ import const
 import helper
 import pytest
 
-from hahomematic.const import HmEntityUsage, HmInterfaceEventType, HmPlatform
+from hahomematic.const import HmEntityUsage, HmInterfaceEventType, HmPlatform, PARAMSET_KEY_VALUES
 from hahomematic.exceptions import HaHomematicException, NoClients
 from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.switch import HmSwitch
@@ -348,44 +348,44 @@ async def test_central_services(
     await central.set_install_mode(interface_id="NOT_A_VALID_INTERFACE_ID")
     assert len(mock_client.method_calls) == 76
 
-    await central.set_value(
-        interface_id=const.LOCAL_INTERFACE_ID,
+    await central.get_client(interface_id=const.LOCAL_INTERFACE_ID).set_value(
         channel_address="123",
+        paramset_key=PARAMSET_KEY_VALUES,
         parameter="LEVEL",
         value=1.0,
     )
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="123",
-        paramset_key="VALUES",
-        parameter="LEVEL",
-        value=1.0,
-        rx_mode=None,
-    )
-    assert len(mock_client.method_calls) == 77
-    await central.set_value(
-        interface_id="NOT_A_VALID_INTERFACE_ID",
-        channel_address="123",
+        paramset_key=PARAMSET_KEY_VALUES,
         parameter="LEVEL",
         value=1.0,
     )
     assert len(mock_client.method_calls) == 77
 
-    await central.put_paramset(
-        interface_id=const.LOCAL_INTERFACE_ID,
+    with pytest.raises(HaHomematicException):
+        await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").set_value(
+            channel_address="123",
+            paramset_key=PARAMSET_KEY_VALUES,
+            parameter="LEVEL",
+            value=1.0,
+        )
+    assert len(mock_client.method_calls) == 77
+
+    await central.get_client(interface_id=const.LOCAL_INTERFACE_ID).put_paramset(
         address="123",
-        paramset_key="VALUES",
+        paramset_key=PARAMSET_KEY_VALUES,
         value={"LEVEL": 1.0},
     )
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="123", paramset_key="VALUES", value={"LEVEL": 1.0}, rx_mode=None
+        address="123", paramset_key="VALUES", value={"LEVEL": 1.0}
     )
     assert len(mock_client.method_calls) == 78
-    await central.put_paramset(
-        interface_id="NOT_A_VALID_INTERFACE_ID",
-        address="123",
-        paramset_key="VALUES",
-        value={"LEVEL": 1.0},
-    )
+    with pytest.raises(HaHomematicException):
+        await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").put_paramset(
+            address="123",
+            paramset_key=PARAMSET_KEY_VALUES,
+            value={"LEVEL": 1.0},
+        )
     assert len(mock_client.method_calls) == 78
 
     assert (

@@ -253,11 +253,11 @@ class BaseEntity(CallbackEntity):
         """Set the entity usage."""
         self._attr_usage = usage
 
+    @abstractmethod
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Init the entity data."""
-        return None
 
     @abstractmethod
     def _get_entity_name(self) -> EntityNameData:
@@ -660,6 +660,14 @@ class WrapperEntity(BaseEntity):
         wrapped_entity.set_usage(HmEntityUsage.ENTITY_NO_CREATE)
         wrapped_entity.wrapped = True
 
+    async def load_entity_value(
+        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
+    ) -> None:
+        """Init the entity data."""
+        await self._wrapped_entity.load_entity_value(
+            call_source=call_source, max_age_seconds=max_age_seconds
+        )
+
     def __getattr__(self, *args: Any) -> Any:
         return getattr(self._wrapped_entity, *args)
 
@@ -771,17 +779,6 @@ class CustomEntity(BaseEntity):
             if self.channel_no in secondary_channels:
                 return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
-
-    async def put_paramset(
-        self, paramset_key: str, value: Any, rx_mode: str | None = None
-    ) -> bool:
-        """Set paramsets manually."""
-        return await self._client.put_paramset(
-            address=self._attr_channel_address,
-            paramset_key=paramset_key,
-            value=value,
-            rx_mode=rx_mode,
-        )
 
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
