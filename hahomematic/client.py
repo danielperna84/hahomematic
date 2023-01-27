@@ -111,7 +111,7 @@ class Client(ABC):
                 forced_availability=HmForcedDeviceAvailability.NOT_SET
             )
             _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
-        except BaseHomematicException as hhe:
+        except BaseHomematicException as hhe:  # pragma: no cover
             _LOGGER.warning(
                 "proxy_init failed: %s [%s] Unable to initialize proxy for %s",
                 hhe.name,
@@ -136,7 +136,7 @@ class Client(ABC):
         try:
             _LOGGER.debug("proxy_de_init: init('%s')", self._config.init_url)
             await self._proxy.init(self._config.init_url)
-        except BaseHomematicException as hhe:
+        except BaseHomematicException as hhe:  # pragma: no cover
             _LOGGER.warning(
                 "proxy_de_init failed: %s [%s] Unable to de-initialize proxy for %s",
                 hhe.name,
@@ -317,7 +317,7 @@ class Client(ABC):
         return None
 
     # pylint: disable=invalid-name
-    async def set_install_mode(
+    async def set_install_mode(  # pragma: no cover
         self,
         on: bool = True,
         t: int = 60,
@@ -340,7 +340,7 @@ class Client(ABC):
             return False
         return True
 
-    async def get_install_mode(self) -> Any:
+    async def get_install_mode(self) -> Any:  # pragma: no cover
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
             return await self._proxy.getInstallMode()
@@ -390,11 +390,11 @@ class Client(ABC):
     ) -> bool:
         """Set single value on paramset VALUES."""
         try:
+            _LOGGER.debug("_set_value: %s, %s, %s", channel_address, parameter, value)
             if rx_mode:
                 await self._proxy.setValue(channel_address, parameter, value, rx_mode)
             else:
                 await self._proxy.setValue(channel_address, parameter, value)
-            _LOGGER.debug("_set_value: %s, %s, %s", channel_address, parameter, value)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "_set_value failed with %s [%s]: %s, %s, %s",
@@ -415,7 +415,7 @@ class Client(ABC):
         value: Any,
         rx_mode: str | None = None,
     ) -> bool:
-        """Set single value on paramset VALUES."""
+        """Set single value on paramset VALUES. #CC"""
         if paramset_key == PARAMSET_KEY_VALUES:
             return await self._set_value(
                 channel_address=channel_address,
@@ -463,7 +463,7 @@ class Client(ABC):
         """
         Set paramsets manually.
         Address is usually the channel_address,
-        but for bidcos devices there is a master paramset at the device.
+        but for bidcos devices there is a master paramset at the device. #CC
         """
         try:
             _LOGGER.debug("put_paramset: %s, %s, %s", address, paramset_key, value)

@@ -643,7 +643,7 @@ class WrapperEntity(BaseEntity):
         Initialize the entity.
         """
         if wrapped_entity.platform == new_platform:
-            raise HaHomematicException(  # pragma: no cover@
+            raise HaHomematicException(  # pragma: no cover
                 "Cannot create wrapped entity. platform must not be equivalent."
             )
         self._wrapped_entity: Final[GenericEntity] = wrapped_entity
