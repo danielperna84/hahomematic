@@ -249,7 +249,7 @@ class ParameterVisibilityCache:
     def __init__(
         self,
         central: hmcu.CentralUnit,
-    ):
+    ) -> None:
         """Init the parameter visibility cache."""
         self._central: Final[hmcu.CentralUnit] = central
         self._storage_folder: Final[str] = central.config.storage_folder

@@ -100,7 +100,7 @@ ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 class CentralUnit:
     """Central unit that collects everything to handle communication from/to CCU/Homegear."""
 
-    def __init__(self, central_config: CentralConfig):
+    def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
         _LOGGER.debug("__init__")
         self._sema_add_devices = asyncio.Semaphore()
@@ -921,7 +921,7 @@ class CentralUnit:
 class ConnectionChecker(threading.Thread):
     """Periodically check Connection to CCU / Homegear."""
 
-    def __init__(self, central: CentralUnit):
+    def __init__(self, central: CentralUnit) -> None:
         """Init the connection checker."""
         threading.Thread.__init__(self, name=f"ConnectionChecker for {central.name}")
         self._central: Final[CentralUnit] = central
@@ -1008,7 +1008,7 @@ class CentralConfig:
         un_ignore_list: list[str] | None = None,
         use_caches: bool = True,
         load_un_ignore: bool = True,
-    ):
+    ) -> None:
         """Init the client config."""
         self.connection_state: Final[CentralConnectionState] = CentralConnectionState()
         self.storage_folder: Final[str] = storage_folder
@@ -1135,7 +1135,7 @@ class CentralConnectionState:
 class DeviceDetailsCache:
     """Cache for device/channel details."""
 
-    def __init__(self, central: CentralUnit):
+    def __init__(self, central: CentralUnit) -> None:
         """Init the device details cache."""
         # {address, name}
         self._names_cache: Final[dict[str, str]] = {}
@@ -1235,7 +1235,7 @@ class DeviceDetailsCache:
 class DeviceDataCache:
     """Cache for device/channel initial data."""
 
-    def __init__(self, central: CentralUnit):
+    def __init__(self, central: CentralUnit) -> None:
         """Init the device data cache."""
         self._central: Final[CentralUnit] = central
         # { interface, {channel_address, {parameter, CacheEntry}}}
@@ -1305,7 +1305,7 @@ class BasePersistentCache(ABC):
         central: CentralUnit,
         filename: str,
         persistant_cache: dict[str, Any],
-    ):
+    ) -> None:
         """Init the base class of the persistent cache."""
         self._central: Final[CentralUnit] = central
         self._cache_dir: Final[str] = f"{central.config.storage_folder}/cache"
@@ -1368,7 +1368,7 @@ class BasePersistentCache(ABC):
 class DeviceDescriptionCache(BasePersistentCache):
     """Cache for device/channel names."""
 
-    def __init__(self, central: CentralUnit):
+    def __init__(self, central: CentralUnit) -> None:
         """Init the device description cache."""
         # {interface_id, [device_descriptions]}
         self._raw_device_descriptions: Final[dict[str, list[dict[str, Any]]]] = {}
@@ -1527,7 +1527,7 @@ class DeviceDescriptionCache(BasePersistentCache):
 class ParamsetDescriptionCache(BasePersistentCache):
     """Cache for paramset descriptions."""
 
-    def __init__(self, central: CentralUnit):
+    def __init__(self, central: CentralUnit) -> None:
         """Init the paramset description cache."""
         # {interface_id, {channel_address, paramsets}}
         self._raw_paramset_descriptions: Final[

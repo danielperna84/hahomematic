@@ -82,7 +82,7 @@ _LOGGER = logging.getLogger(__name__)
 class HmDevice:
     """Object to hold information about a device and associated entities."""
 
-    def __init__(self, central: hmcu.CentralUnit, interface_id: str, device_address: str):
+    def __init__(self, central: hmcu.CentralUnit, interface_id: str, device_address: str) -> None:
         """Initialize the device object."""
         self.central: Final[hmcu.CentralUnit] = central
         self._attr_interface_id: Final[str] = interface_id
@@ -592,7 +592,7 @@ class ValueCache:
 
     _sema_get_or_load_value = asyncio.BoundedSemaphore(1)
 
-    def __init__(self, device: HmDevice):
+    def __init__(self, device: HmDevice) -> None:
         """Init the value cache."""
         self._attr_device: Final[HmDevice] = device
         # { parparamset_key, {channel_address, {parameter, CacheEntry}}}

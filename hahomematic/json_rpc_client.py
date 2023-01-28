@@ -71,7 +71,7 @@ class JsonRpcAioHttpClient:
         client_session: ClientSession | None = None,
         tls: bool = False,
         verify_tls: bool = False,
-    ):
+    ) -> None:
         """Session setup."""
         self._client_session: Final[ClientSession | None] = client_session
         self._connection_state: Final[hmcu.CentralConnectionState] = connection_state

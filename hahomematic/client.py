@@ -65,7 +65,7 @@ _LOGGER = logging.getLogger(__name__)
 class Client(ABC):
     """Client object to access the backends via XML-RPC or JSON-RPC."""
 
-    def __init__(self, client_config: _ClientConfig):
+    def __init__(self, client_config: _ClientConfig) -> None:
         """Initialize the Client."""
         self._config: Final[_ClientConfig] = client_config
         self.central: Final[hmcu.CentralUnit] = client_config.central
@@ -1075,7 +1075,7 @@ class _ClientConfig:
         central: hmcu.CentralUnit,
         interface_config: InterfaceConfig,
         local_ip: str,
-    ):
+    ) -> None:
         self.central: Final[hmcu.CentralUnit] = central
         self.interface_config: Final[InterfaceConfig] = interface_config
         self.interface: Final[str] = interface_config.interface
@@ -1159,7 +1159,7 @@ class InterfaceConfig:
         port: int,
         remote_path: str | None = None,
         local_resources: LocalRessources | None = None,
-    ):
+    ) -> None:
         """Init the interface config."""
         self.interface: Final[str] = LOCAL_INTERFACE if local_resources else interface
         self.interface_id: Final[str] = f"{central_name}-{self.interface}"
