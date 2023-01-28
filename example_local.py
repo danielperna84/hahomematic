@@ -59,7 +59,7 @@ class Example:
                     address_device_translation={
                         "VCU3432945": "HmIP-STV.json",
                         "VCU0000011": "HMW-LC-Bl1-DR.json",
-                        "VCU6529515": "HmIP-MOD-HO.json",
+                        "VCU3574044": "HmIP-MOD-HO.json",
                         "VCU4070501": "HmIP-FSM16.json",
                         "VCU0000019": "263 155.json",
                         "VCU5628817": "HmIP-SMO.json",
@@ -356,6 +356,7 @@ class Example:
                         "VCU0000179": "HM-RC-Sec4-2.json",
                         "VCU1399816": "HmIP-BDT.json",
                         "VCU0000044": "HM-LC-Bl1-SM.json",
+                        "VCU6166407": "HmIP-MOD-TM.json",
                         "VCU0000297": "HM-LC-Sw4-DR-2.json",
                         "VCU0000191": "atent.json",
                         "VCU0000089": "HM-LC-Dim1T-FM-2.json",
@@ -416,6 +417,7 @@ class Example:
                         "VCU0000271": "HM-Sen-MDIR-SM.json",
                         "VCU9981826": "HmIP-SFD.json",
                         "VCU0000349": "HM-Sec-WDS-2.json",
+                        "VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
                         "VCU0000189": "HM-PB-2-WM.json",
                         "VCU0000098": "HM-DW-WM.json",
                         "VCU0000058": "HM-OU-CF-Pl.json",
@@ -429,7 +431,8 @@ class Example:
                         "VCU0000173": "HM-PB-6-WM55.json",
                         "VCU9710932": "HmIP-SMI55.json",
                         "VCU0000323": "HM-LC-Sw1-SM.json",
-                    }
+                    },
+                    ignore_devices_on_create=[],
                 ),
             ),
         }

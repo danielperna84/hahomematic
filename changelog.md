@@ -6,6 +6,8 @@
 - Remove set_value, put_paramset from central
 - Remove put_paramset from custom_entity
 - Cleanup code base with ruff 
+- Ensure the signal handler gets called at most once by @mtdcr
+- JsonRpcAioHttpClient: Allow empty password by @mtdcr
 
 # Version 2023.1.7 (2023-01-24)
 - Aggregate calls to backend
