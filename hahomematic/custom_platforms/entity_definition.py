@@ -1,6 +1,4 @@
-"""
-This module contains device descriptions for custom entities.
-"""
+"""This module contains device descriptions for custom entities."""
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -123,7 +121,7 @@ class EntityDefinition(StrEnum):
 
 
 SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
-    {vol.Required(vol.Any(int, tuple[int, ...])): vol.Schema(tuple([vol.Optional(str)]))}
+    {vol.Required(vol.Any(int, tuple[int, ...])): vol.Schema((vol.Optional(str),))}
 )
 
 SCHEMA_ED_FIELD_DETAILS = vol.Schema({vol.Required(str): str})
@@ -133,7 +131,7 @@ SCHEMA_ED_FIELD = vol.Schema({vol.Required(int): SCHEMA_ED_FIELD_DETAILS})
 SCHEMA_ED_DEVICE_GROUP = vol.Schema(
     {
         vol.Required(ED_PRIMARY_CHANNEL): int,
-        vol.Optional(ED_SECONDARY_CHANNELS): tuple([int]),
+        vol.Optional(ED_SECONDARY_CHANNELS): (int,),
         vol.Optional(ED_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
         vol.Optional(ED_VISIBLE_REPEATABLE_FIELDS): SCHEMA_ED_FIELD_DETAILS,
         vol.Optional(ED_FIELDS): SCHEMA_ED_FIELD,
@@ -547,7 +545,8 @@ def make_custom_entity(
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
     """
-    Creates custom_entities.
+    Create custom_entities.
+
     We use a helper-function to avoid raising exceptions during object-init.
     """
     entities: list[hme.BaseEntity] = []

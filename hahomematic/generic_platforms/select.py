@@ -1,6 +1,7 @@
 """
-Module for entities implemented using the
-select platform (https://www.home-assistant.io/integrations/select/).
+Module for entities implemented using the select platform.
+
+See https://www.home-assistant.io/integrations/select/.
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class HmSelect(GenericEntity[int | str]):
     """
     Implementation of a select entity.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -54,9 +56,7 @@ class HmSelect(GenericEntity[int | str]):
 
 
 class HmSysvarSelect(GenericSystemVariable):
-    """
-    Implementation of a sysvar select entity.
-    """
+    """Implementation of a sysvar select entity."""
 
     _attr_platform = HmPlatform.HUB_SELECT
     _attr_is_extended = True

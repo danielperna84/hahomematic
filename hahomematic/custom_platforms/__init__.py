@@ -36,7 +36,7 @@ _BLACKLISTED_DEVICES = (
 def get_entity_configs(
     device_type: str,
 ) -> list[CustomConfig | tuple[CustomConfig, ...]]:
-    """Return the entity configs to create custom entities"""
+    """Return the entity configs to create custom entities."""
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
     for platform_blacklisted_devices in _BLACKLISTED_DEVICES:
@@ -59,7 +59,7 @@ def _get_entity_config_by_platform(
     platform_devices: dict[str, CustomConfig | tuple[CustomConfig, ...]],
     device_type: str,
 ) -> CustomConfig | tuple[CustomConfig, ...] | None:
-    """Return the entity configs to create custom entities"""
+    """Return the entity configs to create custom entities."""
     for d_type, custom_configs in platform_devices.items():
         if device_type.lower() == d_type.lower():
             return custom_configs
@@ -72,7 +72,7 @@ def _get_entity_config_by_platform(
 
 
 def is_multi_channel_device(device_type: str) -> bool:
-    """Return true, if device has multiple channels"""
+    """Return true, if device has multiple channels."""
     channels: list[int] = []
     for entity_configs in get_entity_configs(device_type=device_type):
         if isinstance(entity_configs, CustomConfig):

@@ -1,5 +1,8 @@
-"""Code to create the required entities for cover devices."""
+"""
+Module for entities implemented using the cover platform.
 
+See https://www.home-assistant.io/integrations/cover/.
+"""
 from __future__ import annotations
 
 from hahomematic.const import HmEntityUsage, HmPlatform
@@ -332,7 +335,7 @@ def make_ip_cover(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP cover entities."""
+    """Create HomematicIP cover entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeCover,
@@ -347,7 +350,7 @@ def make_rf_cover(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic classic cover entities."""
+    """Create HomeMatic classic cover entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeCover,
@@ -362,7 +365,7 @@ def make_ip_blind(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP cover entities."""
+    """Create HomematicIP cover entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpBlind,
@@ -377,7 +380,7 @@ def make_ip_garage_ho(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP garage entities."""
+    """Create HomematicIP garage entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeGarageHO,
@@ -392,7 +395,7 @@ def make_ip_garage_tm(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP garage entities."""
+    """Create HomematicIP garage entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeGarageTM,
@@ -407,7 +410,7 @@ def make_rf_blind(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic classic cover entities."""
+    """Create HomeMatic classic cover entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeBlind,
@@ -422,7 +425,7 @@ def make_rf_window_drive(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic classic window drive entities."""
+    """Create HomeMatic classic window drive entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeWindowDrive,

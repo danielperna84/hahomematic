@@ -1,6 +1,7 @@
 """
-Module for entities implemented using the
-binary_sensor platform (https://www.home-assistant.io/integrations/binary_sensor/).
+Module for entities implemented using the binary_sensor platform.
+
+See https://www.home-assistant.io/integrations/binary_sensor/.
 """
 from __future__ import annotations
 
@@ -12,6 +13,7 @@ from hahomematic.entity import GenericEntity, GenericSystemVariable
 class HmBinarySensor(GenericEntity[bool]):
     """
     Implementation of a binary_sensor.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -26,9 +28,7 @@ class HmBinarySensor(GenericEntity[bool]):
 
 
 class HmSysvarBinarySensor(GenericSystemVariable):
-    """
-    Implementation of a sysvar binary_sensor.
-    """
+    """Implementation of a sysvar binary_sensor."""
 
     _attr_platform = HmPlatform.HUB_BINARY_SENSOR
 

@@ -1,6 +1,4 @@
-"""
-Implementation of a locking ServerProxy for XML-RPC communication.
-"""
+"""Implementation of a locking ServerProxy for XML-RPC communication."""
 from __future__ import annotations
 
 import asyncio
@@ -42,9 +40,7 @@ NO_CONNECTION_ERROR_CODES: Final[dict[int, str]] = {
 
 # noinspection PyProtectedMember,PyUnresolvedReferences
 class XmlRpcProxy(xmlrpc.client.ServerProxy):
-    """
-    ServerProxy implementation with ThreadPoolExecutor when request is executing.
-    """
+    """ServerProxy implementation with ThreadPoolExecutor when request is executing."""
 
     def __init__(
         self,
@@ -54,9 +50,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         *args: Any,
         **kwargs: Any,
     ) -> None:
-        """
-        Initialize new proxy for server and get local ip
-        """
+        """Initialize new proxy for server and get local ip."""
         self.interface_id = interface_id
         self._connection_state: Final[hmcu.CentralConnectionState] = connection_state
         self._loop: Final[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
@@ -72,16 +66,11 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         )
 
     async def _async_add_proxy_executor_job(self, func: Callable, *args: Any) -> Awaitable:
-        """
-        Add an executor job from within the event_loop
-        for all device related interaction.
-        """
+        """Add an executor job from within the event_loop for all device related interaction."""
         return await self._loop.run_in_executor(self._proxy_executor, func, *args)
 
     async def __async_request(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-        """
-        Call method on server side
-        """
+        """Call method on server side."""
         parent = xmlrpc.client.ServerProxy
         try:
             if args[
@@ -122,9 +111,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             raise ClientException(ex) from ex
 
     def __getattr__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
-        """
-        Magic method dispatcher
-        """
+        """Magic method dispatcher."""
         return xmlrpc.client._Method(self.__async_request, *args, **kwargs)
 
     def stop(self) -> None:

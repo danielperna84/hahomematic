@@ -63,16 +63,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Client(ABC):
-    """
-    Client object that initializes the XML-RPC proxy
-    and provides access to other data via XML-RPC
-    or JSON-RPC.
-    """
+    """Client object to access the backends via XML-RPC or JSON-RPC."""
 
     def __init__(self, client_config: _ClientConfig):
-        """
-        Initialize the Client.
-        """
+        """Initialize the Client."""
         self._config: Final[_ClientConfig] = client_config
         self.central: Final[hmcu.CentralUnit] = client_config.central
 
@@ -100,10 +94,7 @@ class Client(ABC):
         """Return the model of the backend."""
 
     async def proxy_init(self) -> int:
-        """
-        To receive events the proxy has to tell the CCU / Homegear
-        where to send the events. For that we call the init-method.
-        """
+        """Init the proxy has to tell the CCU / Homegear where to send the events."""
         try:
             _LOGGER.debug("proxy_init: init('%s', '%s')", self._config.init_url, self.interface_id)
             await self._proxy.init(self._config.init_url, self.interface_id)
@@ -124,9 +115,7 @@ class Client(ABC):
         return PROXY_INIT_SUCCESS
 
     async def proxy_de_init(self) -> int:
-        """
-        De-init to stop CCU from sending events for this remote.
-        """
+        """De-init to stop CCU from sending events for this remote."""
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "proxy_de_init: Skipping de-init for %s (not initialized)",
@@ -149,7 +138,7 @@ class Client(ABC):
         return PROXY_DE_INIT_SUCCESS
 
     async def proxy_re_init(self) -> int:
-        """Reinit Proxy"""
+        """Reinit Proxy."""
         if PROXY_DE_INIT_FAILED != await self.proxy_de_init():
             return await self.proxy_init()
         return PROXY_DE_INIT_FAILED
@@ -209,6 +198,7 @@ class Client(ABC):
     async def is_connected(self) -> bool:
         """
         Perform actions required for connectivity check.
+
         Connection is not connected, if three consecutive checks fail.
         Return connectivity state.
         """
@@ -415,7 +405,7 @@ class Client(ABC):
         value: Any,
         rx_mode: str | None = None,
     ) -> bool:
-        """Set single value on paramset VALUES. #CC"""
+        """Set single value on paramset VALUES. #CC."""
         if paramset_key == PARAMSET_KEY_VALUES:
             return await self._set_value(
                 channel_address=channel_address,
@@ -433,6 +423,7 @@ class Client(ABC):
     async def get_paramset(self, address: str, paramset_key: str) -> Any:
         """
         Return a paramset from CCU.
+
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
@@ -462,8 +453,9 @@ class Client(ABC):
     ) -> bool:
         """
         Set paramsets manually.
+
         Address is usually the channel_address,
-        but for bidcos devices there is a master paramset at the device. #CC
+        but for bidcos devices there is a master paramset at the device. #CC.
         """
         try:
             _LOGGER.debug("put_paramset: %s, %s, %s", address, paramset_key, value)
@@ -486,9 +478,7 @@ class Client(ABC):
     async def fetch_paramset_description(
         self, channel_address: str, paramset_key: str, save_to_file: bool = True
     ) -> None:
-        """
-        Fetch a specific paramset and add it to the known ones.
-        """
+        """Fetch a specific paramset and add it to the known ones."""
         _LOGGER.debug("fetch_paramset_description: %s for %s", paramset_key, channel_address)
 
         try:
@@ -514,9 +504,7 @@ class Client(ABC):
             await self.central.paramset_descriptions.save()
 
     async def fetch_paramset_descriptions(self, device_description: dict[str, Any]) -> None:
-        """
-        Fetch paramsets for provided device description.
-        """
+        """Fetch paramsets for provided device description."""
         data = await self.get_paramset_descriptions(device_description=device_description)
         for address, paramsets in data.items():
             _LOGGER.debug("fetch_paramset_descriptions for %s", address)
@@ -590,9 +578,7 @@ class Client(ABC):
         return all_paramsets
 
     async def update_paramset_descriptions(self, device_address: str) -> None:
-        """
-        Update paramsets descriptions for provided device_address.
-        """
+        """Update paramsets descriptions for provided device_address."""
         if not self.central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
         ):
@@ -630,9 +616,7 @@ class ClientCCU(Client):
         return BACKEND_CCU
 
     async def fetch_device_details(self) -> None:
-        """
-        Get all names via JSON-RPS and store in data.NAMES.
-        """
+        """Get all names via JSON-RPS and store in data.NAMES."""
         if json_result := await self._json_rpc_client.get_device_details():
             for device in json_result:
                 self.central.device_details.add_name(
@@ -753,9 +737,7 @@ class ClientHomegear(Client):
         return
 
     async def fetch_device_details(self) -> None:
-        """
-        Get all names from metadata (Homegear).
-        """
+        """Get all names from metadata (Homegear)."""
         _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
         for address in self.central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
@@ -846,11 +828,7 @@ class ClientHomegear(Client):
 
 
 class ClientLocal(Client):  # pragma: no cover
-    """
-    Local client object that emulates the XML-RPC proxy
-    and provides access to other data via XML-RPC
-    or JSON-RPC.
-    """
+    """Local client object to provide access to locally stored files."""
 
     _paramset_descriptions_cache: dict[str, Any] = {}
 
@@ -865,16 +843,11 @@ class ClientLocal(Client):  # pragma: no cover
         return BACKEND_LOCAL
 
     async def proxy_init(self) -> int:
-        """
-        To receive events the proxy has to tell the CCU / Homegear
-        where to send the events. For that we call the init-method.
-        """
+        """Init the proxy has to tell the CCU / Homegear where to send the events."""
         return PROXY_INIT_SUCCESS
 
     async def proxy_de_init(self) -> int:
-        """
-        De-init to stop CCU from sending events for this remote.
-        """
+        """De-init to stop CCU from sending events for this remote."""
         return PROXY_DE_INIT_SUCCESS
 
     def stop(self) -> None:
@@ -889,6 +862,7 @@ class ClientLocal(Client):  # pragma: no cover
     async def is_connected(self) -> bool:
         """
         Perform actions required for connectivity check.
+
         Connection is not connected, if three consecutive checks fail.
         Return connectivity state.
         """
@@ -1005,6 +979,7 @@ class ClientLocal(Client):  # pragma: no cover
     async def get_paramset(self, address: str, paramset_key: str) -> Any:
         """
         Return a paramset from CCU.
+
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
@@ -1040,6 +1015,7 @@ class ClientLocal(Client):  # pragma: no cover
     ) -> bool:
         """
         Set paramsets manually.
+
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
@@ -1054,9 +1030,7 @@ class ClientLocal(Client):  # pragma: no cover
         include_list: list[str] | None = None,
         exclude_list: list[str] | None = None,
     ) -> list[Any] | None:
-        """
-        Load all json files from disk into dict.
-        """
+        """Load all json files from disk into dict."""
         if not include_list:
             return []
         if not exclude_list:
@@ -1073,16 +1047,13 @@ class ClientLocal(Client):  # pragma: no cover
         return result
 
     async def _load_json_file(self, package: str, resource: str, filename: str) -> Any | None:
-        """
-        Load json file from disk into dict.
-        """
+        """Load json file from disk into dict."""
         package_path = str(importlib.resources.files(package=package))
 
         def _load() -> Any | None:
 
             with open(
                 file=os.path.join(package_path, resource, filename),
-                mode="r",
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
                 return json.load(fptr)
@@ -1184,6 +1155,7 @@ class InterfaceConfig:
         remote_path: str | None = None,
         local_resources: LocalRessources | None = None,
     ):
+        """Init the interface config."""
         self.interface: Final[str] = LOCAL_INTERFACE if local_resources else interface
         self.interface_id: Final[str] = f"{central_name}-{self.interface}"
         self.port: Final[int] = port
@@ -1212,7 +1184,7 @@ async def create_client(
 
 
 def get_client(interface_id: str) -> Client | None:
-    """Return client by interface_id"""
+    """Return client by interface_id."""
     for central in hmcu.CENTRAL_INSTANCES.values():
         if central.has_client(interface_id=interface_id):
             return central.get_client(interface_id=interface_id)

@@ -1,3 +1,4 @@
+"""Test supprt for hahomematic."""
 from __future__ import annotations
 
 import asyncio
@@ -19,7 +20,7 @@ GOT_DEVICES = False
 
 @pytest.fixture(name="ccu")
 def pydev_ccu() -> pydevccu.Server:
-    """Defines the virtual ccu"""
+    """Create the virtual ccu."""
     ccu = pydevccu.Server(addr=(const.CCU_HOST, const.CCU_PORT))
     ccu.start()
     yield ccu
@@ -28,7 +29,7 @@ def pydev_ccu() -> pydevccu.Server:
 
 @pytest.fixture
 async def client_session() -> ClientSession:
-    """ClientSession for json client."""
+    """Create ClientSession for json client."""
     client_session = ClientSession(connector=TCPConnector(limit=3))
     yield client_session
     if not client_session.closed:
@@ -37,7 +38,7 @@ async def client_session() -> ClientSession:
 
 @pytest.fixture(name="central_pydevccu")
 async def central_unit(ccu: pydevccu.Server, client_session: ClientSession) -> CentralUnit:
-    """Yield central"""
+    """Create and yield central."""
     sleep_counter = 0
     global GOT_DEVICES
     GOT_DEVICES = False
@@ -70,7 +71,6 @@ async def central_unit(ccu: pydevccu.Server, client_session: ClientSession) -> C
     central_unit.callback_system_event = systemcallback
     await central_unit.start()
     while not GOT_DEVICES and sleep_counter < 300:
-        print("Waiting for devices")
         sleep_counter += 1
         await asyncio.sleep(1)
 
@@ -83,5 +83,5 @@ async def central_unit(ccu: pydevccu.Server, client_session: ClientSession) -> C
 async def central_unit_local_factory(
     client_session: ClientSession,
 ) -> helper.CentralUnitLocalFactory:
-    """Return central factory"""
+    """Return central factory."""
     return helper.CentralUnitLocalFactory(client_session)

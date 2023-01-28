@@ -1,3 +1,0 @@
-from hahomematic.custom_platforms.entity_definition import validate_entity_definition
-
-print(validate_entity_definition())

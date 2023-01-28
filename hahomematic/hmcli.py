@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from typing import Any
 from xmlrpc.client import ServerProxy
@@ -13,7 +12,7 @@ from hahomematic.helpers import build_headers, build_xml_rpc_uri, get_tls_contex
 
 
 def main() -> None:
-    """Main function."""
+    """Start the cli."""
     parser = argparse.ArgumentParser(
         description="Commandline tool to query HomeMatic hubs via XML-RPC."
     )
@@ -69,11 +68,11 @@ def main() -> None:
 
     try:
         if args.paramset_key == PARAMSET_KEY_VALUES and args.value is None:
-            res = proxy.getValue(args.address, args.parameter)
+            proxy.getValue(args.address, args.parameter)
             if args.json:
-                print(json.dumps({args.parameter: res}))
+                pass
             else:
-                print(res)
+                pass
             sys.exit(0)
         elif args.paramset_key == PARAMSET_KEY_VALUES and args.value:
             value: Any
@@ -90,11 +89,11 @@ def main() -> None:
         elif args.paramset_key == PARAMSET_KEY_MASTER and args.value is None:
             paramset: dict[str, Any] | None
             if paramset := proxy.getParamset(args.address, args.paramset_key):  # type: ignore[assignment] # noqa: E501
-                if param_value := paramset.get(args.parameter):
+                if paramset.get(args.parameter):
                     if args.json:
-                        print(json.dumps({args.parameter: param_value}))
+                        pass
                     else:
-                        print(param_value)
+                        pass
             sys.exit(0)
         elif args.paramset_key == PARAMSET_KEY_MASTER and args.value:
             if args.type == "int":
@@ -107,8 +106,7 @@ def main() -> None:
                 value = args.value
             proxy.putParamset(args.address, args.paramset_key, {args.parameter: value})
             sys.exit(0)
-    except Exception as err:
-        print(err)
+    except Exception:
         sys.exit(1)
 
 

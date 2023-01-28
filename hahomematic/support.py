@@ -29,6 +29,7 @@ class DeviceExporter:
     """Export Devices from Cache."""
 
     def __init__(self, client: hmcl.Client, interface_id: str, device_address: str):
+        """Init the device exporter."""
         self._client: Final[hmcl.Client] = client
         self._central: Final[hmcu.CentralUnit] = client.central
         self._storage_folder: Final[str] = self._central.config.storage_folder

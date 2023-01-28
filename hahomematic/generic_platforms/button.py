@@ -1,6 +1,7 @@
 """
-Module for entities implemented using the
-button platform (https://www.home-assistant.io/integrations/button/).
+Module for entities implemented using the button platform.
+
+See https://www.home-assistant.io/integrations/boton/.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from hahomematic.helpers import HubData, ProgramData
 class HmButton(GenericEntity[None]):
     """
     Implementation of a button.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -36,9 +38,7 @@ class HmProgramButton(GenericHubEntity):
         central: hmcu.CentralUnit,
         data: ProgramData,
     ):
-        """
-        Initialize the entity.
-        """
+        """Initialize the entity."""
         super().__init__(
             central=central,
             address=PROGRAM_ADDRESS,

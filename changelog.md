@@ -1,7 +1,7 @@
 # Version 2023.1.8 (2023-01-XX)
 - Remove VALVE_STATE from HmIPW-FALMOT-C12
 - Remove support for python 3.9
-- Remove old-style union syntax
+- Replace old-style union syntax
 - Remove to int converter for HmIP-SCTH230 CONCENTRATION
 - Remove set_value, put_paramset from central
 - Remove put_paramset from custom_entity

@@ -1,5 +1,8 @@
-"""Code to create the required entities for lock devices."""
+"""
+Module for entities implemented using the lock platform.
 
+See https://www.home-assistant.io/integrations/lock/.
+"""
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -184,7 +187,7 @@ def make_ip_lock(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP lock entities."""
+    """Create HomematicIP lock entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpLock,
@@ -199,7 +202,7 @@ def make_rf_lock(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic rf lock entities."""
+    """Create HomeMatic rf lock entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeRfLock,

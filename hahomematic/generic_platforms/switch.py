@@ -1,6 +1,7 @@
 """
-Module for entities implemented using the
-switch platform (https://www.home-assistant.io/integrations/switch/).
+Module for entities implemented using the switch platform.
+
+See https://www.home-assistant.io/integrations/switch/.
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ PARAM_ON_TIME = "ON_TIME"
 class HmSwitch(GenericEntity[bool]):
     """
     Implementation of a switch.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -56,9 +58,7 @@ class HmSwitch(GenericEntity[bool]):
 
 
 class HmSysvarSwitch(GenericSystemVariable):
-    """
-    Implementation of a sysvar switch entity.
-    """
+    """Implementation of a sysvar switch entity."""
 
     _attr_platform = HmPlatform.HUB_SWITCH
     _attr_is_extended = True

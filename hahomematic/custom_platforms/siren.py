@@ -1,5 +1,8 @@
-"""Code to create the required entities for siren devices."""
+"""
+Module for entities implemented using the siren platform.
 
+See https://www.home-assistant.io/integrations/siren/.
+"""
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -158,7 +161,7 @@ def make_ip_siren(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP siren entities."""
+    """Create HomematicIP siren entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpSiren,
@@ -173,7 +176,7 @@ def make_rf_siren(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic rf siren entities."""
+    """Create HomeMatic rf siren entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeRfSiren,

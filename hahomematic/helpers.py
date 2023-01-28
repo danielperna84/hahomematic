@@ -1,6 +1,4 @@
-"""
-Helper functions used within hahomematic
-"""
+"""Helper functions used within hahomematic."""
 from __future__ import annotations
 
 import base64
@@ -41,10 +39,6 @@ from hahomematic.exceptions import HaHomematicException
 _LOGGER = logging.getLogger(__name__)
 
 
-class ClientException(Exception):
-    """hahomematic Client exception."""
-
-
 def generate_unique_identifier(
     central: hmcu.CentralUnit,
     address: str,
@@ -53,6 +47,7 @@ def generate_unique_identifier(
 ) -> str:
     """
     Build unique identifier from address and parameter.
+
     Central id is addionally used for heating groups.
     Prefix is used for events and buttons.
     """
@@ -93,7 +88,7 @@ def build_headers(
     password: str | None = None,
 ) -> list[tuple[str, str]]:
     """Build XML-RPC API header."""
-    cred_bytes = f"{username}:{password}".encode("utf-8")
+    cred_bytes = f"{username}:{password}".encode()
     base64_message = base64.b64encode(cred_bytes).decode("utf-8")
     return [("Authorization", f"Basic {base64_message}")]
 
@@ -117,7 +112,7 @@ def check_or_create_directory(directory: str) -> bool:
 
 
 def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
-    """Helper to parse type of system variables."""
+    """Parse system variables to fix type."""
     # pylint: disable=no-else-return
     if not data_type:
         return raw_value
@@ -148,7 +143,7 @@ def get_entity_name(
     channel_no: int,
     parameter: str,
 ) -> EntityNameData:
-    """get name for entity"""
+    """Get name for entity."""
     channel_address = f"{device.device_address}:{channel_no}"
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
@@ -192,7 +187,7 @@ def get_event_name(
     channel_no: int,
     parameter: str,
 ) -> EntityNameData:
-    """get name for event"""
+    """Get name for event."""
     channel_address = f"{device.device_address}:{channel_no}"
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
@@ -232,7 +227,7 @@ def get_custom_entity_name(
     is_only_primary_channel: bool,
     usage: HmEntityUsage,
 ) -> EntityNameData:
-    """Get name for custom entity"""
+    """Get name for custom entity."""
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
         device=device,
@@ -260,7 +255,7 @@ def get_custom_entity_name(
 
 
 def _check_channel_name_with_channel_no(name: str) -> bool:
-    """check if name contains channel and this is an int."""
+    """Check if name contains channel and this is an int."""
     if name.count(":") == 1:
         channel_part = name.split(":")[1]
         try:
@@ -314,7 +309,7 @@ def _get_base_name_from_channel_or_device(
 
 
 def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
-    """Return tls verified/unverified ssl/tls context"""
+    """Return tls verified/unverified ssl/tls context."""
     if verify_tls:
         ssl_context = ssl.create_default_context()
     else:
@@ -325,21 +320,21 @@ def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
 
 
 def get_device_address(address: str) -> str:
-    """Return the device part of an address"""
+    """Return the device part of an address."""
     if ":" in address:
         return address.split(":")[0]
     return address
 
 
 def get_device_channel(address: str) -> int:
-    """Return the channel part of an address"""
+    """Return the channel part of an address."""
     if ":" not in address:
         raise HaHomematicException("Address has no channel part.")
     return int(address.split(":")[1])
 
 
 def get_channel_no(address: str) -> int | None:
-    """Return the channel part of an address"""
+    """Return the channel part of an address."""
     if ":" not in address:
         return None
     return int(address.split(":")[1])
@@ -356,7 +351,7 @@ def updated_within_seconds(last_update: datetime, max_age_seconds: int = MAX_CAC
 
 
 def convert_value(value: Any, target_type: str, value_list: tuple[str, ...] | None) -> Any:
-    """Convert a value to target_type"""
+    """Convert a value to target_type."""
     if value is None:
         return None
     if target_type == TYPE_BOOL:
@@ -477,7 +472,7 @@ class SystemVariableData(HubData):
 
 
 class EntityNameData:
-    """Dataclass for entity name parts"""
+    """Dataclass for entity name parts."""
 
     def __init__(self, device_name: str, channel_name: str, parameter_name: str | None = None):
         """Init the EntityNameData class."""

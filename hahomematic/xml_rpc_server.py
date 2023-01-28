@@ -1,7 +1,8 @@
 """
-Server module.
+XML-RPC server module.
+
 Provides the XML-RPC server which handles communication
-with the CCU or Homegear
+with the CCU or Homegear.
 """
 from __future__ import annotations
 
@@ -27,10 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=invalid-name
 class RPCFunctions:
-    """
-    The XML-RPC functions the CCU or Homegear will expect,
-    additionally there are some internal functions for hahomematic itself.
-    """
+    """The XML-RPC functions the CCU or Homegear will expect."""
 
     def __init__(self, xml_rpc_server: XmlRpcServer):
         """Init RPCFunctions."""
@@ -38,17 +36,13 @@ class RPCFunctions:
         self._xml_rpc_server: XmlRpcServer = xml_rpc_server
 
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
-        """
-        If a device emits some sort event, we will handle it here.
-        """
+        """If a device emits some sort event, we will handle it here."""
         if central := self._xml_rpc_server.get_central(interface_id):
             central.event(interface_id, channel_address, parameter, value)
 
     @callback_system_event(HH_EVENT_ERROR)
     def error(self, interface_id: str, error_code: str, msg: str) -> None:
-        """
-        When some error occurs the CCU / Homegear will send its error message here.
-        """
+        """When some error occurs the CCU / Homegear will send its error message here."""
         _LOGGER.warning(
             "error failed: interface_id = %s, error_code = %i, message = %s",
             interface_id,
@@ -57,29 +51,20 @@ class RPCFunctions:
         )
 
     def listDevices(self, interface_id: str) -> list[dict[str, Any]]:
-        """
-        The CCU / Homegear asks for devices known to our XML-RPC server.
-        We respond to that request using this method.
-        """
+        """Return already existing devices to CCU / Homegear."""
         if central := self._xml_rpc_server.get_central(interface_id):
             return central.list_devices(interface_id)  # type: ignore[no-any-return]
         return []
 
     def newDevices(self, interface_id: str, device_descriptions: list[dict[str, Any]]) -> None:
-        """
-        The CCU / Homegear informs us about newly added devices.
-        We react on that and add those devices as well.
-        """
+        """Add new devices send from backend."""
 
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(central.add_new_devices(interface_id, device_descriptions))
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
-        """
-        The CCU / Homegear informs us about removed devices.
-        We react on that and remove those devices as well.
-        """
+        """Delete devices send from backend."""
 
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
@@ -89,6 +74,7 @@ class RPCFunctions:
     def updateDevice(self, interface_id: str, address: str, hint: int) -> None:
         """
         Update a device.
+
         Irrelevant, as currently only changes to link
         partners are reported.
         """
@@ -103,9 +89,7 @@ class RPCFunctions:
     def replaceDevice(
         self, interface_id: str, old_device_address: str, new_device_address: str
     ) -> None:
-        """
-        Replace a device. Probably irrelevant for us.
-        """
+        """Replace a device. Probably irrelevant for us."""
         _LOGGER.debug(
             "replaceDevice: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
             interface_id,
@@ -116,7 +100,9 @@ class RPCFunctions:
     @callback_system_event(HH_EVENT_RE_ADDED_DEVICE)
     def readdedDevice(self, interface_id: str, addresses: list[str]) -> None:
         """
-        Readded device. Probably irrelevant for us.
+        Readd device from backend.
+
+        Probably irrelevant for us.
         Gets called when a known devices is put into learn-mode
         while installation mode is active.
         """
@@ -129,9 +115,7 @@ class RPCFunctions:
 
 # Restrict to specific paths.
 class RequestHandler(SimpleXMLRPCRequestHandler):
-    """
-    We handle requests to / and /RPC2.
-    """
+    """We handle requests to / and /RPC2."""
 
     rpc_paths = (
         "/",
@@ -154,16 +138,17 @@ class HaHomematicXMLRPCServer(SimpleXMLRPCServer):
 
     # pylint: disable=arguments-differ
     def system_listMethods(self, interface_id: str | None = None) -> list[str]:
-        """system.listMethods() => ['add', 'subtract', 'multiple']
-        Returns a list of the methods supported by the server.
-        Required for HomeMatic CCU usage."""
+        """
+        Return a list of the methods supported by the server.
+
+        system.listMethods() => ['add', 'subtract', 'multiple']
+        Required for HomeMatic CCU usage.
+        """
         return SimpleXMLRPCServer.system_listMethods(self)
 
 
 class XmlRpcServer(threading.Thread):
-    """
-    XML-RPC server thread to handle messages from CCU / Homegear.
-    """
+    """XML-RPC server thread to handle messages from CCU / Homegear."""
 
     _initialized: bool = False
     _instances: Final[dict[int, XmlRpcServer]] = {}
@@ -198,18 +183,16 @@ class XmlRpcServer(threading.Thread):
         """Create new XmlRPC server."""
         if (xml_rpc := cls._instances.get(local_port)) is None:
             _LOGGER.debug("Creating XmlRpc server")
-            xml_rpc = super(XmlRpcServer, cls).__new__(cls)
+            xml_rpc = super().__new__(cls)
         return xml_rpc
 
     def run(self) -> None:
-        """
-        Run the XmlRPC-Server thread.
-        """
+        """Run the XmlRPC-Server thread."""
         _LOGGER.debug("run: Starting XmlRPC-Server at http://%s:%i", IP_ANY_V4, self.local_port)
         self._simple_xml_rpc_server.serve_forever()
 
     def stop(self) -> None:
-        """Stops the XmlRPC-Server."""
+        """Stop the XmlRPC-Server."""
         _LOGGER.debug("stop: Shutting down XmlRPC-Server")
         self._simple_xml_rpc_server.shutdown()
         _LOGGER.debug("stop: Stopping XmlRPC-Server")
@@ -224,17 +207,17 @@ class XmlRpcServer(threading.Thread):
         return self._started.is_set() is True  # type: ignore[attr-defined]
 
     def register_central(self, central: hmcu.CentralUnit) -> None:
-        """Register a central in the XmlRPC-Server"""
+        """Register a central in the XmlRPC-Server."""
         if not self._centrals.get(central.name):
             self._centrals[central.name] = central
 
     def un_register_central(self, central: hmcu.CentralUnit) -> None:
-        """Unregister a central from XmlRPC-Server"""
+        """Unregister a central from XmlRPC-Server."""
         if self._centrals.get(central.name):
             del self._centrals[central.name]
 
     def get_central(self, interface_id: str) -> hmcu.CentralUnit | None:
-        """Return a central by interface_id"""
+        """Return a central by interface_id."""
         for central in self._centrals.values():
             if central.has_client(interface_id=interface_id):
                 return central

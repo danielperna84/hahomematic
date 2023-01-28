@@ -1,6 +1,7 @@
 """
-Module for entities implemented using the
-sensor platform (https://www.home-assistant.io/integrations/sensor/).
+Module for entities implemented using the sensor platform.
+
+See https://www.home-assistant.io/integrations/sensor/.
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class HmSensor(GenericEntity[Any]):
     """
     Implementation of a sensor.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -40,7 +42,8 @@ class HmSensor(GenericEntity[Any]):
 def _fix_rssi(value: Any) -> int | None:
     """
     Fix rssi value.
-    See https://github.com/danielperna84/hahomematic/blob/devel/docs/rssi_fix.md
+
+    See https://github.com/danielperna84/hahomematic/blob/devel/docs/rssi_fix.md.
     """
     if value is None or not isinstance(value, int):
         return None
@@ -56,9 +59,7 @@ def _fix_rssi(value: Any) -> int | None:
 
 
 class HmSysvarSensor(GenericSystemVariable):
-    """
-    Implementation of a sysvar sensor.
-    """
+    """Implementation of a sysvar sensor."""
 
     _attr_platform = HmPlatform.HUB_SENSOR
 

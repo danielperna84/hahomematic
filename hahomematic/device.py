@@ -1,6 +1,4 @@
-"""
-Module for the Device class.
-"""
+"""Module for the Device class."""
 from __future__ import annotations
 
 import asyncio
@@ -82,14 +80,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class HmDevice:
-    """
-    Object to hold information about a device and associated entities.
-    """
+    """Object to hold information about a device and associated entities."""
 
     def __init__(self, central: hmcu.CentralUnit, interface_id: str, device_address: str):
-        """
-        Initialize the device object.
-        """
+        """Initialize the device object."""
         self.central: Final[hmcu.CentralUnit] = central
         self._attr_interface_id: Final[str] = interface_id
         self._attr_interface: Final[str] = central.device_details.get_interface(device_address)
@@ -201,17 +195,17 @@ class HmDevice:
 
     @property
     def _e_unreach(self) -> GenericEntity | None:
-        """Return th UNREACH entity"""
+        """Return th UNREACH entity."""
         return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_UN_REACH))
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
-        """Return th STICKY_UN_REACH entity"""
+        """Return th STICKY_UN_REACH entity."""
         return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_STICKY_UN_REACH))
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
-        """Return th CONFIG_PENDING entity"""
+        """Return th CONFIG_PENDING entity."""
         return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING))
 
     def add_entity(self, entity: CallbackEntity) -> None:
@@ -277,9 +271,7 @@ class HmDevice:
             self._update_callbacks.remove(update_callback)
 
     def update_device(self, *args: Any) -> None:
-        """
-        Do what is needed when the state of the entity has been updated.
-        """
+        """Do what is needed when the state of the entity has been updated."""
         self._set_last_update()
         for _callback in self._update_callbacks:
             _callback(*args)
@@ -300,9 +292,7 @@ class HmDevice:
         return self.generic_entities.get((channel_address, parameter))
 
     def __str__(self) -> str:
-        """
-        Provide some useful information.
-        """
+        """Provide some useful information."""
         return (
             f"address: {self._attr_device_address}, "
             f"type: {len(self._attr_device_type)}, "
@@ -371,9 +361,7 @@ class HmDevice:
         )
 
     def create_entities_and_append_to_device(self) -> None:
-        """
-        Create the entities associated to this device.
-        """
+        """Create the entities associated to this device."""
         for channel_address in self.channels:
             if (device_channel := get_channel_no(channel_address)) is None:
                 _LOGGER.warning(
@@ -509,10 +497,7 @@ class HmDevice:
         parameter: str,
         parameter_data: dict[str, Any],
     ) -> None:
-        """
-        Helper that looks at the paramsets, decides which default
-        platform should be used, and creates the required entities.
-        """
+        """Decides which default platform should be used, and creates the required entities."""
 
         if self.central.parameter_visibility.ignore_parameter(
             device_type=self._attr_device_type,
@@ -604,19 +589,20 @@ class HmDevice:
 
 
 class ValueCache:
-    """A Cache to temporaily stored values"""
+    """A Cache to temporaily stored values."""
 
     _NO_VALUE_CACHE_ENTRY: Final[str] = "NO_VALUE_CACHE_ENTRY"
 
     _sema_get_or_load_value = asyncio.BoundedSemaphore(1)
 
     def __init__(self, device: HmDevice):
+        """Init the value cache."""
         self._attr_device: Final[HmDevice] = device
         # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
         self._attr_value_cache: Final[dict[str, dict[str, dict[str, CacheEntry]]]] = {}
 
     async def init_base_entities(self) -> None:
-        """Load data by get_value"""
+        """Load data by get_value."""
         try:
             for entity in self._get_base_entities():
                 value = await self.get_value(
@@ -647,7 +633,7 @@ class ValueCache:
         return set(entities)
 
     async def init_readable_events(self) -> None:
-        """Load data by get_value"""
+        """Load data by get_value."""
         try:
             for event in self._get_readable_events():
                 value = await self.get_value(

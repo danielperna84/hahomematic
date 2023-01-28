@@ -1,8 +1,8 @@
+"""Example for hahomematic."""
 # !/usr/bin/python3
 import asyncio
 import logging
 import sys
-import time
 
 from aiohttp import ClientSession, TCPConnector
 
@@ -20,19 +20,20 @@ CCU_PASSWORD = ""
 
 
 class Example:
+    """Example for hahomematic."""
+
     # Create a server that listens on 127.0.0.1:* and identifies itself as myserver.
     got_devices = False
 
     def __init__(self):
+        """Init example."""
         self.SLEEPCOUNTER = 0
         self.central = None
 
-    def systemcallback(self, src, *args):
+    def _systemcallback(self, src, *args):
         self.got_devices = True
-        print("systemcallback: %s" % src)
         if src == const.HH_EVENT_NEW_DEVICES and args and args[0] and len(args[0]) > 0:
             self.got_devices = True
-            print("Number of new device descriptions: %i" % len(args[0]))
             return
         elif (
             src == const.HH_EVENT_DEVICES_CREATED
@@ -41,28 +42,18 @@ class Example:
             and len(args[0]) > 0
         ):
             self.got_devices = True
-            print("New devices:")
-            print(len(args[0]))
             return
         for arg in args:
-            print("argument: %s" % arg)
+            pass
 
-    def eventcallback(self, address, interface_id, key, value):
-        print(
-            "eventcallback at %i: %s, %s, %s, %s"
-            % (int(time.time()), address, interface_id, key, value)
-        )
+    def _eventcallback(self, address, interface_id, key, value):
+        pass
 
-    def hacallback(self, eventtype, event_data):
-        print(
-            "hacallback: %s, %s"
-            % (
-                eventtype,
-                event_data,
-            )
-        )
+    def _hacallback(self, eventtype, event_data):
+        pass
 
     async def example_run(self):
+        """Process the example."""
         central_name = "ccu-dev"
         interface_configs = {
             InterfaceConfig(
@@ -103,9 +94,9 @@ class Example:
         # it while initializing.
         config.CACHE_DIR = "cache"
         # Add callbacks to handle the events and see what happens on the system.
-        self.central.callback_system_event = self.systemcallback
-        self.central.callback_entity_event = self.eventcallback
-        self.central.callback_ha_event = self.hacallback
+        self.central.callback_system_event = self._systemcallback
+        self.central.callback_entity_event = self._eventcallback
+        self.central.callback_ha_event = self._hacallback
 
         await self.central.start()
         while not self.got_devices and self.SLEEPCOUNTER < 20:
