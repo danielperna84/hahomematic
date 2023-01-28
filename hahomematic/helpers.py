@@ -474,7 +474,9 @@ class SystemVariableData(HubData):
 class EntityNameData:
     """Dataclass for entity name parts."""
 
-    def __init__(self, device_name: str, channel_name: str, parameter_name: str | None = None):
+    def __init__(
+        self, device_name: str, channel_name: str, parameter_name: str | None = None
+    ) -> None:
         """Init the EntityNameData class."""
         self._device_name = device_name
         self._channel_name = channel_name

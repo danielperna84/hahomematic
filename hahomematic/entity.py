@@ -176,7 +176,7 @@ class BaseEntity(CallbackEntity):
         device: hmd.HmDevice,
         unique_identifier: str,
         channel_no: int,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(unique_identifier=unique_identifier)
         self.device: Final[hmd.HmDevice] = device
@@ -279,7 +279,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         paramset_key: str,
         parameter: str,
         parameter_data: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize the entity."""
         self._attr_paramset_key: Final[str] = paramset_key
         # required for name in BaseEntity
@@ -617,7 +617,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 class WrapperEntity(BaseEntity):
     """Base class for entities that switch type of generic entities."""
 
-    def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform):
+    def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform) -> None:
         """Initialize the entity."""
         if wrapped_entity.platform == new_platform:
             raise HaHomematicException(
@@ -678,7 +678,7 @@ class CustomEntity(BaseEntity):
         entity_def: dict[int | tuple[int, ...], tuple[str, ...]],
         channel_no: int,
         extended: hmed.ExtendedConfig | None = None,
-    ):
+    ) -> None:
         """Initialize the entity."""
         self._device_enum: Final[hmed.EntityDefinition] = device_enum
         # required for name in BaseEntity
@@ -898,7 +898,7 @@ class GenericHubEntity(CallbackEntity):
         central: hmcu.CentralUnit,
         address: str,
         data: HubData,
-    ):
+    ) -> None:
         """Initialize the entity."""
         unique_identifier: Final[str] = generate_unique_identifier(
             central=central,
@@ -934,7 +934,7 @@ class GenericSystemVariable(GenericHubEntity):
         self,
         central: hmcu.CentralUnit,
         data: SystemVariableData,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(central=central, address=SYSVAR_ADDRESS, data=data)
         self.ccu_var_name: Final[str] = data.name
@@ -1029,7 +1029,7 @@ class GenericEvent(BaseParameterEntity[Any]):
         channel_address: str,
         parameter: str,
         parameter_data: dict[str, Any],
-    ):
+    ) -> None:
         """Initialize the event handler."""
         super().__init__(
             device=device,
@@ -1130,7 +1130,7 @@ class NoneTypeEntity:
 class CallParameterCollector:
     """Create a Paramset based on given generic entities."""
 
-    def __init__(self, custom_entity: CustomEntity):
+    def __init__(self, custom_entity: CustomEntity) -> None:
         """Init the generator."""
         self._custom_entity = custom_entity
         self._paramsets: dict[str, dict[str, Any]] = {}

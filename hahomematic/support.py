@@ -28,7 +28,7 @@ PARAMSET_DESCRIPTIONS_DIR = "export_paramset_descriptions"
 class DeviceExporter:
     """Export Devices from Cache."""
 
-    def __init__(self, client: hmcl.Client, interface_id: str, device_address: str):
+    def __init__(self, client: hmcl.Client, interface_id: str, device_address: str) -> None:
         """Init the device exporter."""
         self._client: Final[hmcl.Client] = client
         self._central: Final[hmcu.CentralUnit] = client.central
@@ -71,10 +71,10 @@ class DeviceExporter:
 
         # anonymize paramset_descriptions
         anonymize_paramset_descriptions: dict[str, Any] = {}
-        for address, paramset_descriptions in paramset_descriptions.items():
+        for address, paramset_description in paramset_descriptions.items():
             anonymize_paramset_descriptions[
                 self._anonymize_address(address=address)
-            ] = paramset_descriptions
+            ] = paramset_description
 
         # Save device_descriptions for device to file.
         await self._save(

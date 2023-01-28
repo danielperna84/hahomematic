@@ -37,7 +37,7 @@ class HmProgramButton(GenericHubEntity):
         self,
         central: hmcu.CentralUnit,
         data: ProgramData,
-    ):
+    ) -> None:
         """Initialize the entity."""
         super().__init__(
             central=central,

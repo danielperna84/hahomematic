@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 class RPCFunctions:
     """The XML-RPC functions the CCU or Homegear will expect."""
 
-    def __init__(self, xml_rpc_server: XmlRpcServer):
+    def __init__(self, xml_rpc_server: XmlRpcServer) -> None:
         """Init RPCFunctions."""
         _LOGGER.debug("__init__")
         self._xml_rpc_server: XmlRpcServer = xml_rpc_server
@@ -155,7 +155,7 @@ class XmlRpcServer(threading.Thread):
     def __init__(
         self,
         local_port: int = PORT_ANY,
-    ):
+    ) -> None:
         """Init XmlRPC server."""
         if self._initialized:
             return

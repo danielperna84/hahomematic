@@ -37,7 +37,7 @@ EXCLUDED = [
 class HmHub:
     """The HomeMatic hub. (CCU/HomeGear)."""
 
-    def __init__(self, central: hmcu.CentralUnit):
+    def __init__(self, central: hmcu.CentralUnit) -> None:
         """Initialize HomeMatic hub."""
         self._sema_fetch_sysvars = asyncio.Semaphore()
         self._sema_fetch_programs = asyncio.Semaphore()

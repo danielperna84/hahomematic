@@ -5,6 +5,7 @@
 - Remove to int converter for HmIP-SCTH230 CONCENTRATION
 - Remove set_value, put_paramset from central
 - Remove put_paramset from custom_entity
+- Cleanup code base with ruff 
 
 # Version 2023.1.7 (2023-01-24)
 - Aggregate calls to backend
