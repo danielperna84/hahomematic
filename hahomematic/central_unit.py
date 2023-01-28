@@ -164,10 +164,7 @@ class CentralUnit:
     @value_property
     def available(self) -> bool:
         """Return the availability of the central_unit."""
-        for client in self._clients.values():
-            if not client.available:
-                return False
-        return True
+        return all(client.available for client in self._clients.values())
 
     @property
     def central_url(self) -> str:
@@ -196,17 +193,13 @@ class CentralUnit:
     @value_property
     def is_alive(self) -> bool:
         """Return if XmlRPC-Server is alive."""
-        for client in self._clients.values():
-            if not client.is_callback_alive():
-                return False
-        return True
+        return all(client.is_callback_alive() for client in self._clients.values())
 
     @config_property
     def model(self) -> str | None:
         """Return the model of the backend. #CC."""
-        if not self._attr_model:
-            if client := self.get_primary_client():
-                self._attr_model = client.model
+        if not self._attr_model and (client := self.get_primary_client()):
+            self._attr_model = client.model
         return self._attr_model
 
     @config_property
@@ -310,7 +303,6 @@ class CentralUnit:
 
     async def _create_clients(self) -> bool:
         """Create clients for the central unit. Start connection checker afterwards."""
-
         if len(self._clients) > 0:
             _LOGGER.warning(
                 "create_clients: Clients for %s are already created.",
@@ -388,7 +380,6 @@ class CentralUnit:
         available: bool,
     ) -> None:
         """Fire an event about the interface status."""
-
         event_data = {
             ATTR_INTERFACE_ID: interface_id,
             ATTR_TYPE: interface_event_type,
@@ -403,7 +394,6 @@ class CentralUnit:
 
     async def _identify_callback_ip(self, port: int) -> str:
         """Identify local IP used for callbacks."""
-
         # Do not add: pylint disable=no-member
         # This is only an issue on macOS
         def get_local_ip(host: str) -> str | None:
@@ -565,7 +555,6 @@ class CentralUnit:
 
     async def _create_devices(self) -> None:
         """Trigger creation of the objects that expose the functionality."""
-
         if not self._clients:
             raise HaHomematicException(
                 f"create_devices: "
@@ -685,7 +674,7 @@ class CentralUnit:
                 "add_new_devices failed: Missing client for interface_id %s.",
                 interface_id,
             )
-            return None
+            return
 
         async with self._sema_add_devices:
             # We need this list to avoid adding duplicates.
@@ -815,7 +804,7 @@ class CentralUnit:
                 "create_task: task cancelled for %s.",
                 self._attr_name,
             )
-            return None
+            return
 
     def _async_create_task(self, target: Coroutine) -> asyncio.Task:
         """Create a task from within the event_loop. This method must be run in the event_loop."""
@@ -909,12 +898,16 @@ class CentralUnit:
 
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Get entity by channel_address and parameter. #CC."""
-        if ":" in channel_address:
-            if device := self._devices.get(get_device_address(channel_address)):
-                if entity := device.get_generic_entity(
+        if (
+            ":" in channel_address
+            and (device := self._devices.get(get_device_address(channel_address)))
+            and (
+                entity := device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
-                ):
-                    return entity
+                )
+            )
+        ):
+            return entity
         return None
 
     async def clear_all(self) -> None:
@@ -950,7 +943,6 @@ class ConnectionChecker(threading.Thread):
 
     async def _check_connection(self) -> None:
         """Periodically check connection to backend."""
-
         while self._active:
             _LOGGER.debug(
                 "check_connection: Checking connection to server %s",
@@ -1110,30 +1102,26 @@ class CentralConnectionState:
 
     def add_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
-        if isinstance(issuer, JsonRpcAioHttpClient):
-            if not self._json_issue:
-                self._json_issue = True
-                _LOGGER.debug("add_issue: add issue for JsonRpcAioHttpClient")
-                return True
-        if isinstance(issuer, XmlRpcProxy):
-            if issuer.interface_id not in self._xml_proxy_issues:
-                self._xml_proxy_issues.append(issuer.interface_id)
-                _LOGGER.debug("add_issue: add issue for %s", issuer.interface_id)
-                return True
+        if isinstance(issuer, JsonRpcAioHttpClient) and not self._json_issue:
+            self._json_issue = True
+            _LOGGER.debug("add_issue: add issue for JsonRpcAioHttpClient")
+            return True
+        if isinstance(issuer, XmlRpcProxy) and issuer.interface_id not in self._xml_proxy_issues:
+            self._xml_proxy_issues.append(issuer.interface_id)
+            _LOGGER.debug("add_issue: add issue for %s", issuer.interface_id)
+            return True
         return False
 
     def remove_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
-        if isinstance(issuer, JsonRpcAioHttpClient):
-            if self._json_issue is True:
-                self._json_issue = False
-                _LOGGER.debug("remove_issue: removing issue for JsonRpcAioHttpClient")
-                return True
-        if isinstance(issuer, XmlRpcProxy):
-            if issuer.interface_id in self._xml_proxy_issues:
-                self._xml_proxy_issues.remove(issuer.interface_id)
-                _LOGGER.debug("remove_issue: removing issue for %s", issuer.interface_id)
-                return True
+        if isinstance(issuer, JsonRpcAioHttpClient) and self._json_issue is True:
+            self._json_issue = False
+            _LOGGER.debug("remove_issue: removing issue for JsonRpcAioHttpClient")
+            return True
+        if isinstance(issuer, XmlRpcProxy) and issuer.interface_id in self._xml_proxy_issues:
+            self._xml_proxy_issues.remove(issuer.interface_id)
+            _LOGGER.debug("remove_issue: removing issue for %s", issuer.interface_id)
+            return True
         return False
 
     def has_issue(self, issuer: ConnectionProblemIssuer) -> bool:

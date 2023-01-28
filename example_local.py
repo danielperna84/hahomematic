@@ -35,12 +35,7 @@ class Example:
         if src == const.HH_EVENT_NEW_DEVICES and args and args[0] and len(args[0]) > 0:
             self.got_devices = True
             return
-        elif (
-            src == const.HH_EVENT_DEVICES_CREATED
-            and args
-            and args[0]
-            and len(args[0]) > 0
-        ):
+        if src == const.HH_EVENT_DEVICES_CREATED and args and args[0] and len(args[0]) > 0:
             if len(args[0]) > 1:
                 self.got_devices = True
             return
@@ -55,7 +50,6 @@ class Example:
 
     async def example_run(self):
         """Process the example."""
-
         interface_configs = {
             InterfaceConfig(
                 central_name=CENTRAL_NAME,

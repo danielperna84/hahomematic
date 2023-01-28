@@ -241,7 +241,6 @@ class HmDevice:
 
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
-
         for event in list(self.events.values()):
             self.remove_entity(event)
         self.events.clear()
@@ -324,7 +323,7 @@ class HmDevice:
 
     def set_forced_availability(self, forced_availability: HmForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
-        if not self._forced_availability == forced_availability:
+        if self._forced_availability != forced_availability:
             self._forced_availability = forced_availability
             for entity in self.generic_entities.values():
                 entity.update_entity()
@@ -370,7 +369,7 @@ class HmDevice:
                 )
                 continue
 
-            if not self.central.paramset_descriptions.get_paramset_keys(  # noqa: E501
+            if not self.central.paramset_descriptions.get_paramset_keys(
                 interface_id=self._attr_interface_id, channel_address=channel_address
             ):
                 _LOGGER.debug(
@@ -390,13 +389,13 @@ class HmDevice:
                 for (
                     parameter,
                     parameter_data,
-                ) in self.central.paramset_descriptions.get_paramset_descriptions(  # noqa: E501
+                ) in self.central.paramset_descriptions.get_paramset_descriptions(
                     interface_id=self._attr_interface_id,
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                 ).items():
                     parameter_is_un_ignored: bool = (
-                        self.central.parameter_visibility.parameter_is_un_ignored(  # noqa: E501
+                        self.central.parameter_visibility.parameter_is_un_ignored(
                             device_type=self._attr_device_type,
                             device_channel=device_channel,
                             paramset_key=paramset_key,
@@ -458,7 +457,6 @@ class HmDevice:
         self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
     ) -> None:
         """Create action event entity."""
-
         unique_identifier = generate_unique_identifier(
             central=self.central,
             address=channel_address,
@@ -498,7 +496,6 @@ class HmDevice:
         parameter_data: dict[str, Any],
     ) -> None:
         """Decides which default platform should be used, and creates the required entities."""
-
         if self.central.parameter_visibility.ignore_parameter(
             device_type=self._attr_device_type,
             device_channel=get_device_channel(channel_address),
@@ -510,7 +507,7 @@ class HmDevice:
                 parameter,
                 channel_address,
             )
-            return None
+            return
 
         unique_identifier = generate_unique_identifier(
             central=self.central, address=channel_address, parameter=parameter
@@ -520,7 +517,7 @@ class HmDevice:
                 "create_entity_and_append_to_device: Skipping %s (already exists)",
                 unique_identifier,
             )
-            return None
+            return
         _LOGGER.debug(
             "create_entity_and_append_to_device: Creating entity for %s, %s, %s",
             channel_address,
@@ -736,11 +733,10 @@ class ValueCache:
                 parameter,
                 CacheEntry.empty(),
             )
-        ) != CacheEntry.empty():
-            if updated_within_seconds(
-                last_update=cache_entry.last_update, max_age_seconds=max_age_seconds
-            ):
-                return cache_entry.value
+        ) != CacheEntry.empty() and updated_within_seconds(
+            last_update=cache_entry.last_update, max_age_seconds=max_age_seconds
+        ):
+            return cache_entry.value
         return NO_CACHE_ENTRY
 
 

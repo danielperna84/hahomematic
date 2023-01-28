@@ -4,11 +4,11 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from aiohttp import ClientSession, TCPConnector
 import const
 import helper
 import pydevccu
 import pytest
+from aiohttp import ClientSession, TCPConnector
 
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import InterfaceConfig

@@ -209,10 +209,7 @@ class HmHub:
 
 def _is_excluded(variable: str, excludes: list[str]) -> bool:
     """Check if variable is excluded by exclude_list."""
-    for marker in excludes:
-        if marker in variable:
-            return True
-    return False
+    return any(marker in variable for marker in excludes)
 
 
 def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:

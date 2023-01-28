@@ -131,7 +131,7 @@ def to_bool(value: Any) -> bool:
         return value
 
     if not isinstance(value, str):
-        raise ValueError("invalid literal for boolean. Not a string.")
+        raise TypeError("invalid literal for boolean. Not a string.")
 
     lower_value = value.lower()
     return lower_value in ["y", "yes", "t", "true", "on", "1"]
@@ -304,7 +304,7 @@ def _get_base_name_from_channel_or_device(
     default_channel_name = f"{device.device_type} {channel_address}"
     name = central.device_details.get_name(channel_address)
     if name is None or name == default_channel_name:
-        name = f"{device.name}:{channel_no}"
+        return f"{device.name}:{channel_no}"
     return name
 
 

@@ -8,8 +8,8 @@ import os
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
-from aiohttp import ClientSession
 import const
+from aiohttp import ClientSession
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
@@ -95,7 +95,6 @@ class CentralUnitLocalFactory:
         un_ignore_list: list[str] | None = None,
     ) -> tuple[CentralUnit, Client | Mock]:
         """Return a central based on give address_device_translation."""
-
         central, client = await self.get_unpatched_default_central(
             address_device_translation=address_device_translation,
             do_mock_client=do_mock_client,
@@ -223,7 +222,6 @@ async def get_custom_entity(
 
 async def get_sysvar_entity(central: CentralUnit, name: str) -> GenericSystemVariable | None:
     """Return the sysvar entity."""
-
     entity = central.sysvar_entities.get(name)
     assert entity
     return entity

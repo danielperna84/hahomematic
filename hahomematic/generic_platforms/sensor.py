@@ -37,6 +37,7 @@ class HmSensor(GenericEntity[Any]):
         """Return a converter based on sensor."""
         if convert_func := CONVERTERS_BY_PARAM.get(self.parameter):
             return convert_func
+        return None
 
 
 def _fix_rssi(value: Any) -> int | None:

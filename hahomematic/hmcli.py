@@ -88,12 +88,11 @@ def main() -> None:
             sys.exit(0)
         elif args.paramset_key == PARAMSET_KEY_MASTER and args.value is None:
             paramset: dict[str, Any] | None
-            if paramset := proxy.getParamset(args.address, args.paramset_key):  # type: ignore[assignment] # noqa: E501
-                if paramset.get(args.parameter):
-                    if args.json:
-                        pass
-                    else:
-                        pass
+            if (paramset := proxy.getParamset(args.address, args.paramset_key)) and paramset.get(args.parameter):  # type: ignore[assignment] # noqa: E501
+                if args.json:
+                    pass
+                else:
+                    pass
             sys.exit(0)
         elif args.paramset_key == PARAMSET_KEY_MASTER and args.value:
             if args.type == "int":

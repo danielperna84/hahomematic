@@ -366,9 +366,10 @@ class ParameterVisibilityCache:
             ):
                 return True
 
-            if (accept_channel := _ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)) is not None:
-                if accept_channel != device_channel:
-                    return True
+            if (
+                accept_channel := _ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
+            ) is not None and accept_channel != device_channel:
+                return True
         if paramset_key == PARAMSET_KEY_MASTER:
             if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
                 device_type_l, {}
@@ -396,7 +397,6 @@ class ParameterVisibilityCache:
         parameter: str,
     ) -> bool:
         """Return if parameter is on un_ignore list."""
-
         device_type_l = device_type.lower()
 
         if parameter in self._un_ignore_parameters_general[paramset_key]:
@@ -415,18 +415,18 @@ class ParameterVisibilityCache:
             )
         )
 
-        if dt_short:
-            if parameter in self._un_ignore_parameters_by_device_paramset_key.get(
-                dt_short[0], {}
-            ).get(device_channel, {}).get(paramset_key, set()):
-                return True
+        if dt_short and parameter in self._un_ignore_parameters_by_device_paramset_key.get(
+            dt_short[0], {}
+        ).get(device_channel, {}).get(paramset_key, set()):
+            return True
 
-        if un_ignore_parameters := get_value_from_dict_by_wildcard_key(
-            search_elements=self._un_ignore_parameters_by_device_lower,
-            compare_with=device_type_l,
-        ):
-            if parameter in un_ignore_parameters:
-                return True
+        if (
+            un_ignore_parameters := get_value_from_dict_by_wildcard_key(
+                search_elements=self._un_ignore_parameters_by_device_lower,
+                compare_with=device_type_l,
+            )
+        ) and parameter in un_ignore_parameters:
+            return True
 
         return False
 
@@ -545,14 +545,15 @@ class ParameterVisibilityCache:
 
     def wrap_entity(self, wrapped_entity: hme.GenericEntity) -> HmPlatform | None:
         """Check if parameter of a device should be wrapped to a different platform."""
-
         for devices, wrapper_def in _WRAP_ENTITY.items():
-            if element_matches_key(
-                search_elements=devices,
-                compare_with=wrapped_entity.device.device_type,
+            if (
+                element_matches_key(
+                    search_elements=devices,
+                    compare_with=wrapped_entity.device.device_type,
+                )
+                and wrapped_entity.parameter in wrapper_def
             ):
-                if wrapped_entity.parameter in wrapper_def:
-                    return wrapper_def[wrapped_entity.parameter]
+                return wrapper_def[wrapped_entity.parameter]
         return None
 
     async def load(self) -> None:

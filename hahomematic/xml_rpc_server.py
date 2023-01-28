@@ -58,14 +58,12 @@ class RPCFunctions:
 
     def newDevices(self, interface_id: str, device_descriptions: list[dict[str, Any]]) -> None:
         """Add new devices send from backend."""
-
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(central.add_new_devices(interface_id, device_descriptions))
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices send from backend."""
-
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(central.delete_devices(interface_id, addresses))
@@ -124,7 +122,8 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
 
 
 class HaHomematicXMLRPCServer(SimpleXMLRPCServer):
-    """Simple XML-RPC server.
+    """
+    Simple XML-RPC server.
 
     Simple XML-RPC server that allows functions and a single instance
     to be installed to handle requests. The default implementation
@@ -183,7 +182,7 @@ class XmlRpcServer(threading.Thread):
         """Create new XmlRPC server."""
         if (xml_rpc := cls._instances.get(local_port)) is None:
             _LOGGER.debug("Creating XmlRpc server")
-            xml_rpc = super().__new__(cls)
+            return super().__new__(cls)
         return xml_rpc
 
     def run(self) -> None:

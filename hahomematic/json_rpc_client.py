@@ -110,11 +110,14 @@ class JsonRpcAioHttpClient:
                 method=method,
                 extra_params={ATTR_SESSION_ID: session_id},
             )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                if response[ATTR_RESULT] is True:
-                    self._last_session_id_refresh = datetime.now()
-                    _LOGGER.debug("_do_renew_login: Method: %s [%s]", method, session_id)
-                    return session_id
+            if (
+                response[ATTR_ERROR] is None
+                and response[ATTR_RESULT]
+                and response[ATTR_RESULT] is True
+            ):
+                self._last_session_id_refresh = datetime.now()
+                _LOGGER.debug("_do_renew_login: Method: %s [%s]", method, session_id)
+                return session_id
             return await self._do_login()
         except ClientError as cer:
             _LOGGER.error(

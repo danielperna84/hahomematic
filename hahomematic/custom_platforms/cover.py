@@ -149,9 +149,9 @@ class CeWindowDrive(CeCover):
         self, level: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Move the window drive to a specific position. Value range is -0.005 to 1.0."""
-        if level == 0.0:
+        if level == HM_CLOSED:
             wd_level = HM_WD_CLOSED
-        elif 0.0 < level <= 0.01:
+        elif HM_CLOSED < level <= 0.01:
             wd_level = 0
         else:
             wd_level = level
@@ -275,7 +275,7 @@ class BaseGarage(CustomEntity):
             await self.open_cover()
         if 10.0 < position <= 50.0:
             await self.vent_cover()
-        if 0.0 <= position <= 10.0:
+        if HM_CLOSED <= position <= 10.0:
             await self.close_cover()
 
     @value_property
