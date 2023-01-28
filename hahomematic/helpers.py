@@ -84,8 +84,8 @@ def build_xml_rpc_uri(
 
 
 def build_headers(
-    username: str | None = None,
-    password: str | None = None,
+    username: str,
+    password: str,
 ) -> list[tuple[str, str]]:
     """Build XML-RPC API header."""
     cred_bytes = f"{username}:{password}".encode()
