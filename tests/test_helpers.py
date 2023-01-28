@@ -86,9 +86,8 @@ async def test_build_xml_rpc_uri() -> None:
 @pytest.mark.asyncio
 async def test_build_headers() -> None:
     """Test build_xml_rpc_uri."""
-    assert build_headers() == [("Authorization", "Basic Tm9uZTpOb25l")]
-    assert build_headers(username="Martin") == [("Authorization", "Basic TWFydGluOk5vbmU=")]
-    assert build_headers(password="asdf") == [("Authorization", "Basic Tm9uZTphc2Rm")]
+    assert build_headers(username="Martin", password="") == [('Authorization', 'Basic TWFydGluOg==')]
+    assert build_headers(username="", password="asdf") == [('Authorization', 'Basic OmFzZGY=')]
     assert build_headers(username="Martin", password="asdf") == [
         ("Authorization", "Basic TWFydGluOmFzZGY=")
     ]
