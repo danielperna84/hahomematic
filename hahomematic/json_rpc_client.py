@@ -142,7 +142,7 @@ class JsonRpcAioHttpClient:
             if not self._username:
                 _LOGGER.warning("_do_login failed: No username set.")
                 return None
-            if not self._password:
+            if self._password is None:
                 _LOGGER.warning("_do_login failed: No password set.")
                 return None
 
@@ -281,7 +281,7 @@ class JsonRpcAioHttpClient:
             no_username = "_do_post failed: No username set."
             _LOGGER.warning(no_username)
             return {"error": str(no_username), "result": {}}
-        if not self._password:
+        if self._password is None:
             no_password = "_do_post failed: No password set."
             _LOGGER.warning(no_password)
             return {"error": str(no_password), "result": {}}
