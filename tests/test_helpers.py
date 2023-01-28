@@ -150,7 +150,7 @@ async def test_to_bool() -> None:
     assert to_bool(value="0") is False
     assert to_bool(value="blabla") is False
     assert to_bool(value="2") is False
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         to_bool(value=2)
 
 

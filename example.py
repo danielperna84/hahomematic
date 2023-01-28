@@ -35,12 +35,7 @@ class Example:
         if src == const.HH_EVENT_NEW_DEVICES and args and args[0] and len(args[0]) > 0:
             self.got_devices = True
             return
-        elif (
-            src == const.HH_EVENT_DEVICES_CREATED
-            and args
-            and args[0]
-            and len(args[0]) > 0
-        ):
+        if src == const.HH_EVENT_DEVICES_CREATED and args and args[0] and len(args[0]) > 0:
             self.got_devices = True
             return
         for arg in args:
@@ -83,9 +78,7 @@ class Example:
             interface_configs=interface_configs,
             default_callback_port=54321,
             use_caches=False,
-            client_session=ClientSession(
-                connector=TCPConnector(limit=3)
-            ),
+            client_session=ClientSession(connector=TCPConnector(limit=3)),
         ).create_central()
 
         # For testing we set a short INIT_TIMEOUT

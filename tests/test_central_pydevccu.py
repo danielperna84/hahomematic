@@ -65,11 +65,11 @@ async def test_central(central_pydevccu) -> None:
 
     parameters: list[tuple[str, int]] = []
     for entity in central_pydevccu._entities.values():
-        if hasattr(entity, "parameter"):
-            # if entity.device.device_type.startswith("HM-") and
-            # if entity._attr_operations == 2:
-            if (entity.parameter, entity._attr_operations) not in parameters:
-                parameters.append((entity.parameter, entity._attr_operations))
+        if (
+            hasattr(entity, "parameter")
+            and (entity.parameter, entity._attr_operations) not in parameters
+        ):
+            parameters.append((entity.parameter, entity._attr_operations))
     parameters = sorted(parameters)
 
     units = set()

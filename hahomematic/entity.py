@@ -430,11 +430,11 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         if updated_within_seconds(
             last_update=self._attr_last_update, max_age_seconds=max_age_seconds
         ):
-            return None
+            return
 
         # Check, if entity is readable
         if not self.is_readable:
-            return None
+            return
 
         self.update_value(
             value=await self.device.value_cache.get_value(
@@ -553,9 +553,12 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self.update_value(value=new_value)
 
         # reload paramset_descriptions, if value has changed
-        if self._attr_parameter == EVENT_CONFIG_PENDING:
-            if new_value is False and old_value is True:
-                self._central.create_task(self.device.reload_paramset_descriptions())
+        if (
+            self._attr_parameter == EVENT_CONFIG_PENDING
+            and new_value is False
+            and old_value is True
+        ):
+            self._central.create_task(self.device.reload_paramset_descriptions())
 
         # send device availability events
         if self._attr_parameter in (
@@ -596,19 +599,19 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 
     def _get_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
-        usage = (
-            HmEntityUsage.ENTITY_NO_CREATE
-            if self.device.has_custom_entity_definition
-            else HmEntityUsage.ENTITY
-        )
         if self._central.parameter_visibility.parameter_is_hidden(
             device_type=self.device.device_type,
             device_channel=self.channel_no,
             paramset_key=self._attr_paramset_key,
             parameter=self._attr_parameter,
         ):
-            usage = HmEntityUsage.ENTITY_NO_CREATE
-        return usage
+            return HmEntityUsage.ENTITY_NO_CREATE
+
+        return (
+            HmEntityUsage.ENTITY_NO_CREATE
+            if self.device.has_custom_entity_definition
+            else HmEntityUsage.ENTITY
+        )
 
 
 class WrapperEntity(BaseEntity):
@@ -700,26 +703,19 @@ class CustomEntity(BaseEntity):
         """Return the latest last_update timestamp."""
         latest_update: datetime = INIT_DATETIME
         for entity in self._readable_entities:
-            if entity_last_update := entity.last_update:
-                if entity_last_update > latest_update:
-                    latest_update = entity_last_update
+            if (entity_last_update := entity.last_update) and entity_last_update > latest_update:
+                latest_update = entity_last_update
         return latest_update
 
     @value_property
     def is_valid(self) -> bool:
         """Return if the state is valid."""
-        for entity in self._readable_entities:
-            if not entity.is_valid:
-                return False
-        return True
+        return all(entity.is_valid for entity in self._readable_entities)
 
     @value_property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
-        for entity in self._readable_entities:
-            if entity.state_uncertain:
-                return True
-        return False
+        return any(entity.state_uncertain for entity in self._readable_entities)
 
     @property
     def _readable_entities(self) -> list[GenericEntity]:
@@ -746,9 +742,10 @@ class CustomEntity(BaseEntity):
 
     def _get_entity_usage(self) -> HmEntityUsage:
         """Generate the usage for the entity."""
-        if secondary_channels := self._device_desc.get(hmed.ED_SECONDARY_CHANNELS):
-            if self.channel_no in secondary_channels:
-                return HmEntityUsage.CE_SECONDARY
+        if (
+            secondary_channels := self._device_desc.get(hmed.ED_SECONDARY_CHANNELS)
+        ) and self.channel_no in secondary_channels:
+            return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
 
     async def load_entity_value(
@@ -764,7 +761,6 @@ class CustomEntity(BaseEntity):
 
     def _init_entities(self) -> None:
         """init entity collection."""
-
         # Add repeating fields
         for (field_name, parameter) in self._device_desc.get(
             hmed.ED_REPEATABLE_FIELDS, {}
@@ -836,7 +832,7 @@ class CustomEntity(BaseEntity):
     ) -> None:
         """Add entity to collection and register callback."""
         if not entity:
-            return None
+            return
 
         if is_visible:
             entity.set_usage(HmEntityUsage.CE_VISIBLE)
@@ -847,7 +843,7 @@ class CustomEntity(BaseEntity):
     def _mark_entities(self, entity_def: dict[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
         if not entity_def:
-            return None
+            return
         for channel_nos, parameters in entity_def.items():
             if isinstance(channel_nos, int):
                 self._mark_entity(channel_no=channel_nos, parameters=parameters)
@@ -870,7 +866,7 @@ class CustomEntity(BaseEntity):
     ) -> None:
         """Mark entities to be created in HA."""
         if not un_ignore_params_by_paramset_key:
-            return None
+            return
         for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
             for entity in self.device.generic_entities.values():
                 if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
@@ -1051,7 +1047,6 @@ class GenericEvent(BaseParameterEntity[Any]):
 
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
-
         self.fire_event(value)
 
     def fire_event(self, value: Any) -> None:

@@ -134,17 +134,19 @@ class BaseHmLight(CustomEntity):
         **kwargs: dict[str, Any] | None,
     ) -> None:
         """Turn the light on."""
-
         if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
             await self.set_ramp_time_value(ramp_time=ramp_time, collector=collector)
         if HM_ARG_ON_TIME in kwargs:
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
             await self.set_on_time_value(on_time=on_time, collector=collector)
-        if brightness := cast(int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255):
-            if brightness != self.brightness or kwargs:
-                level = brightness / 255.0
-                await self._e_level.send_value(value=level, collector=collector)
+        if (
+            (brightness := cast(int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255))
+            and brightness != self.brightness
+            or kwargs
+        ):
+            level = brightness / 255.0
+            await self._e_level.send_value(value=level, collector=collector)
 
     @bind_collector
     async def turn_off(
@@ -183,7 +185,7 @@ class CeDimmer(BaseHmLight):
     @value_property
     def is_on(self) -> bool | None:
         """Return true if dimmer is on."""
-        return self._e_level.value is not None and self._e_level.value > 0.0
+        return self._e_level.value is not None and self._e_level.value > HM_DIMMER_OFF
 
     @value_property
     def brightness(self) -> int | None:
@@ -291,10 +293,8 @@ class CeColorDimmerEffect(CeColorDimmer):
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the light on."""
-        if HM_ARG_HS_COLOR in kwargs:
-            # disable effect
-            if self.supports_effects and self.effect != HM_EFFECT_OFF:
-                await self._e_effect.send_value(value=0, collector=collector)
+        if HM_ARG_HS_COLOR in kwargs and self.supports_effects and self.effect != HM_EFFECT_OFF:
+            await self._e_effect.send_value(value=0, collector=collector)
 
         if self.supports_effects and HM_ARG_EFFECT in kwargs:
             effect = str(kwargs[HM_ARG_EFFECT])
@@ -332,7 +332,6 @@ class CeColorTempDimmer(CeDimmer):
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the light on."""
-
         if HM_ARG_COLOR_TEMP in kwargs:
             color_level = (HM_MAX_MIREDS - kwargs[HM_ARG_COLOR_TEMP]) / (
                 HM_MAX_MIREDS - HM_MIN_MIREDS
@@ -471,27 +470,24 @@ def _convert_color(color: tuple[float, float] | None) -> str:
     Device contains only 8 colors including white and black,
     so a conversion is required.
     """
-
     if color is None:
         return "WHITE"
 
     hue: int = int(color[0])
     saturation: int = int(color[1])
     if saturation < 5:
-        bsl_color = "WHITE"
-    elif 30 < hue <= 90:
-        bsl_color = "YELLOW"
-    elif 90 < hue <= 150:
-        bsl_color = "GREEN"
-    elif 150 < hue <= 210:
-        bsl_color = "TURQUOISE"
-    elif 210 < hue <= 270:
-        bsl_color = "BLUE"
-    elif 270 < hue <= 330:
-        bsl_color = "PURPLE"
-    else:
-        bsl_color = "RED"
-    return bsl_color
+        return "WHITE"
+    if 30 < hue <= 90:
+        return "YELLOW"
+    if 90 < hue <= 150:
+        return "GREEN"
+    if 150 < hue <= 210:
+        return "TURQUOISE"
+    if 210 < hue <= 270:
+        return "BLUE"
+    if 270 < hue <= 330:
+        return "PURPLE"
+    return "RED"
 
 
 def make_ip_dimmer(

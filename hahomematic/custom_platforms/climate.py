@@ -44,6 +44,8 @@ from hahomematic.generic_platforms.select import HmSelect
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
 
+CLOSED_LEVEL = 0.0
+
 # HA constants
 HM_MODE_AUTO = "AUTO-MODE"  # 0
 HM_MODE_MANU = "MANU-MODE"  # 1
@@ -200,7 +202,7 @@ class BaseClimateEntity(CustomEntity):
         """Return the min or target temperature."""
         temperature: float = self.target_temperature or self.min_temp
         if temperature < self.min_temp:
-            temperature = self.min_temp
+            return self.min_temp
         return temperature
 
     async def set_temperature(
@@ -393,7 +395,9 @@ class CeIpThermostat(BaseClimateEntity):
             return None
         if self.hvac_mode == HmHvacMode.OFF:
             return HmHvacAction.OFF
-        if self._e_state.value is True or (self._e_level.value and self._e_level.value > 0.0):
+        if self._e_state.value is True or (
+            self._e_level.value and self._e_level.value > CLOSED_LEVEL
+        ):
             return HmHvacAction.HEAT if self._is_heating_mode else HmHvacAction.COOL
         return HmHvacAction.IDLE
 
@@ -446,7 +450,6 @@ class CeIpThermostat(BaseClimateEntity):
         self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new target hvac mode."""
-
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
             await self.set_preset_mode(preset_mode=HmPresetMode.NONE, collector=collector)

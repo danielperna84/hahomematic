@@ -105,7 +105,6 @@ _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 def bind_collector(func: _CallableT) -> _CallableT:
     """Decorate function to automatically add collector if not set."""
-
     argument_name = "collector"
     argument_index = getfullargspec(func).args.index(argument_name)
 

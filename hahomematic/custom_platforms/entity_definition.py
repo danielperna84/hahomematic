@@ -1,4 +1,4 @@
-"""This module contains device descriptions for custom entities."""
+"""The module contains device descriptions for custom entities."""
 from __future__ import annotations
 
 from collections.abc import Callable

@@ -962,7 +962,7 @@ class ClientLocal(Client):  # pragma: no cover
         call_source: HmCallSource = HmCallSource.MANUAL_OR_SCHEDULED,
     ) -> Any:
         """Return a value from CCU."""
-        return None
+        return
 
     async def set_value(
         self,
@@ -995,14 +995,20 @@ class ClientLocal(Client):  # pragma: no cover
             )
             return None
 
-        if address not in self._paramset_descriptions_cache:
-            if file_name := local_resources.address_device_translation.get(address.split(":")[0]):
-                if data := await self._load_json_file(
+        if (
+            address not in self._paramset_descriptions_cache
+            and (
+                file_name := local_resources.address_device_translation.get(address.split(":")[0])
+            )
+            and (
+                data := await self._load_json_file(
                     package=local_resources.package,
                     resource=local_resources.paramset_description_dir,
                     filename=file_name,
-                ):
-                    self._paramset_descriptions_cache.update(data)
+                )
+            )
+        ):
+            self._paramset_descriptions_cache.update(data)
 
         return self._paramset_descriptions_cache.get(address, {}).get(paramset_key)
 
@@ -1117,7 +1123,6 @@ class _ClientConfig:
 
     async def get_client(self) -> Client:
         """Identify the used client."""
-
         try:
             client: Client | None = None
             if self.interface_config.local_resources:
