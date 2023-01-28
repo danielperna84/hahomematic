@@ -12,6 +12,7 @@ from hahomematic.entity import (
 class HmText(GenericEntity[str]):
     """
     Implementation of a text.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -25,9 +26,7 @@ class HmText(GenericEntity[str]):
 
 
 class HmSysvarText(GenericSystemVariable):
-    """
-    Implementation of a sysvar text entity.
-    """
+    """Implementation of a sysvar text entity."""
 
     _attr_platform = HmPlatform.HUB_TEXT
     _attr_is_extended = True

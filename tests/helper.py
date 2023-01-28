@@ -26,6 +26,7 @@ class CentralUnitLocalFactory:
     """Factory for a central_unit with one local client."""
 
     def __init__(self, client_session: ClientSession):
+        """Init the central factory."""
         self._client_session = client_session
         self.system_event_mock = MagicMock()
         self.entity_event_mock = MagicMock()
@@ -36,7 +37,7 @@ class CentralUnitLocalFactory:
         interface_config: InterfaceConfig | None,
         un_ignore_list: list[str] | None = None,
     ) -> CentralUnit:
-        """Returns a central based on give address_device_translation."""
+        """Return a central based on give address_device_translation."""
         interface_configs = {interface_config} if interface_config else {}
         central = await CentralConfig(
             name=const.CENTRAL_NAME,
@@ -65,7 +66,7 @@ class CentralUnitLocalFactory:
         ignore_devices_on_create: list[str] | None = None,
         un_ignore_list: list[str] | None = None,
     ) -> tuple[CentralUnit, Client | Mock]:
-        """Returns a central based on give address_device_translation."""
+        """Return a central based on give address_device_translation."""
         interface_config = get_local_client_interface_config(
             address_device_translation=address_device_translation,
             ignore_devices_on_create=ignore_devices_on_create,
@@ -93,7 +94,7 @@ class CentralUnitLocalFactory:
         ignore_devices_on_create: list[str] | None = None,
         un_ignore_list: list[str] | None = None,
     ) -> tuple[CentralUnit, Client | Mock]:
-        """Returns a central based on give address_device_translation."""
+        """Return a central based on give address_device_translation."""
 
         central, client = await self.get_unpatched_default_central(
             address_device_translation=address_device_translation,
@@ -120,7 +121,7 @@ def get_local_client_interface_config(
     address_device_translation: dict[str, str],
     ignore_devices_on_create: list[str] | None = None,
 ) -> InterfaceConfig:
-    """Returns a central based on give address_device_translation."""
+    """Return a central based on give address_device_translation."""
     _ignore_devices_on_create: list[str] = (
         ignore_devices_on_create if ignore_devices_on_create else []
     )
@@ -142,7 +143,7 @@ async def get_client(
     do_mock_client: bool = True,
     ignore_devices_on_create: list[str] | None = None,
 ) -> Client | Mock:
-    """Returns a central based on give address_device_translation."""
+    """Return a central based on give address_device_translation."""
     _client = await _ClientConfig(
         central=central,
         interface_config=interface_config,
@@ -256,13 +257,10 @@ def get_mock(instance, **kwargs):
 
 
 def _load_json_file(package: str, resource: str, filename: str) -> Any | None:
-    """
-    Load json file from disk into dict.
-    """
+    """Load json file from disk into dict."""
     package_path = str(importlib.resources.files(package=package))
     with open(
         file=os.path.join(package_path, resource, filename),
-        mode="r",
         encoding=hahomematic_const.DEFAULT_ENCODING,
     ) as fptr:
         return json.load(fptr)

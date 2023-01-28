@@ -1,4 +1,4 @@
-"""Module for the hub"""
+"""Module for the hub."""
 from __future__ import annotations
 
 import asyncio

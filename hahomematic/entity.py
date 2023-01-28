@@ -1,6 +1,4 @@
-"""
-Functions for entity creation.
-"""
+"""Functions for entity creation."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -95,6 +93,7 @@ class CallbackEntity(ABC):
     _attr_platform: HmPlatform
 
     def __init__(self, unique_identifier: str) -> None:
+        """Init the callback entity."""
         self._attr_unique_identifier: Final[str] = unique_identifier
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
@@ -139,36 +138,32 @@ class CallbackEntity(ABC):
         )
 
     def register_update_callback(self, update_callback: Callable) -> None:
-        """register update callback"""
+        """register update callback."""
         if callable(update_callback):
             self._update_callbacks.append(update_callback)
 
     def unregister_update_callback(self, update_callback: Callable) -> None:
-        """remove update callback"""
+        """remove update callback."""
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
 
     def register_remove_callback(self, remove_callback: Callable) -> None:
-        """register the remove callback"""
+        """register the remove callback."""
         if callable(remove_callback) and remove_callback not in self._remove_callbacks:
             self._remove_callbacks.append(remove_callback)
 
     def unregister_remove_callback(self, remove_callback: Callable) -> None:
-        """remove the remove callback"""
+        """remove the remove callback."""
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
 
     def update_entity(self, *args: Any) -> None:
-        """
-        Do what is needed when the value of the entity has been updated.
-        """
+        """Do what is needed when the value of the entity has been updated."""
         for _callback in self._update_callbacks:
             _callback(*args)
 
     def remove_entity(self, *args: Any) -> None:
-        """
-        Do what is needed when the entity has been removed.
-        """
+        """Do what is needed when the entity has been removed."""
         for _callback in self._remove_callbacks:
             _callback(*args)
 
@@ -182,9 +177,7 @@ class BaseEntity(CallbackEntity):
         unique_identifier: str,
         channel_no: int,
     ):
-        """
-        Initialize the entity.
-        """
+        """Initialize the entity."""
         super().__init__(unique_identifier=unique_identifier)
         self.device: Final[hmd.HmDevice] = device
         self._attr_channel_no: Final[int] = channel_no
@@ -268,9 +261,7 @@ class BaseEntity(CallbackEntity):
         """Generate the usage for the entity."""
 
     def __str__(self) -> str:
-        """
-        Provide some useful information.
-        """
+        """Provide some useful information."""
         return (
             f"address: {self._attr_channel_address}, type: {self.device.device_type}, "
             f"name: {self.full_name}"
@@ -278,9 +269,7 @@ class BaseEntity(CallbackEntity):
 
 
 class BaseParameterEntity(Generic[ParameterT], BaseEntity):
-    """
-    Base class for stateless entities.
-    """
+    """Base class for stateless entities."""
 
     def __init__(
         self,
@@ -291,9 +280,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         parameter: str,
         parameter_data: dict[str, Any],
     ):
-        """
-        Initialize the entity.
-        """
+        """Initialize the entity."""
         self._attr_paramset_key: Final[str] = paramset_key
         # required for name in BaseEntity
         self._attr_parameter: Final[str] = parameter
@@ -378,10 +365,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 
     @value_property
     def is_valid(self) -> bool:
-        """
-        Return, if the value of the entity is valid based
-        on the last updated datetime.
-        """
+        """Return, if the value of the entity is valid based on the last updated datetime."""
         return self._attr_last_update > INIT_DATETIME
 
     @property
@@ -391,7 +375,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 
     @value_property
     def last_update(self) -> datetime:
-        """Return the last updated datetime value"""
+        """Return the last updated datetime value."""
         return self._attr_last_update
 
     @value_property
@@ -425,7 +409,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         return self._attr_visible
 
     def _fix_unit(self, raw_unit: str | None) -> str | None:
-        """replace given unit"""
+        """replace given unit."""
         if new_unit := FIX_UNIT_BY_PARAM.get(self._attr_parameter):
             return new_unit
         if not raw_unit:
@@ -437,9 +421,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 
     @abstractmethod
     def event(self, value: Any) -> None:
-        """
-        Handle event for which this handler has subscribed.
-        """
+        """Handle event for which this handler has subscribed."""
 
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
@@ -476,7 +458,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self.update_entity()
 
     def update_parameter_data(self) -> None:
-        """Update parameter data"""
+        """Update parameter data."""
         self._assign_parameter_data(
             parameter_data=self.device.central.paramset_descriptions.get_parameter_data(
                 interface_id=self.device.interface_id,
@@ -487,7 +469,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         )
 
     def _convert_value(self, value: ParameterT) -> ParameterT:
-        """Convert to value to ParameterT"""
+        """Convert to value to ParameterT."""
         if value is None:
             return None
         try:
@@ -516,7 +498,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             return None  # type: ignore[return-value]
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data. #CC"""
+        """Get the event_data. #CC."""
         event_data = {
             ATTR_ADDRESS: self.device.device_address,
             ATTR_CHANNEL_NO: self._attr_channel_no,
@@ -534,9 +516,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 
 
 class GenericEntity(BaseParameterEntity[ParameterT]):
-    """
-    Base class for generic entities.
-    """
+    """Base class for generic entities."""
 
     wrapped: bool = False
 
@@ -565,9 +545,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         return False
 
     def event(self, value: Any) -> None:
-        """
-        Handle event for which this entity has subscribed.
-        """
+        """Handle event for which this entity has subscribed."""
         old_value = self._attr_value
         new_value = self._convert_value(value)
         if self._attr_value == new_value:
@@ -634,14 +612,10 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 
 
 class WrapperEntity(BaseEntity):
-    """
-    Base class for entities that switch type of generic entities.
-    """
+    """Base class for entities that switch type of generic entities."""
 
     def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform):
-        """
-        Initialize the entity.
-        """
+        """Initialize the entity."""
         if wrapped_entity.platform == new_platform:
             raise HaHomematicException(
                 "Cannot create wrapped entity. platform must not be equivalent."
@@ -669,6 +643,7 @@ class WrapperEntity(BaseEntity):
         )
 
     def __getattr__(self, *args: Any) -> Any:
+        """Return any other attribute not explicitly defined in the class."""
         return getattr(self._wrapped_entity, *args)
 
     def _get_entity_usage(self) -> HmEntityUsage:
@@ -689,9 +664,7 @@ _EntityT = TypeVar("_EntityT", bound=GenericEntity)
 
 
 class CustomEntity(BaseEntity):
-    """
-    Base class for custom entities.
-    """
+    """Base class for custom entities."""
 
     def __init__(
         self,
@@ -703,9 +676,7 @@ class CustomEntity(BaseEntity):
         channel_no: int,
         extended: hmed.ExtendedConfig | None = None,
     ):
-        """
-        Initialize the entity.
-        """
+        """Initialize the entity."""
         self._device_enum: Final[hmed.EntityDefinition] = device_enum
         # required for name in BaseEntity
         self._device_desc: Final[dict[str, Any]] = device_def
@@ -792,7 +763,7 @@ class CustomEntity(BaseEntity):
         self.update_entity()
 
     def _init_entities(self) -> None:
-        """init entity collection"""
+        """init entity collection."""
 
         # Add repeating fields
         for (field_name, parameter) in self._device_desc.get(
@@ -863,7 +834,7 @@ class CustomEntity(BaseEntity):
     def _add_entity(
         self, field_name: str, entity: GenericEntity | None, is_visible: bool = False
     ) -> None:
-        """Add entity to collection and register callback"""
+        """Add entity to collection and register callback."""
         if not entity:
             return None
 
@@ -906,7 +877,7 @@ class CustomEntity(BaseEntity):
                     entity.set_usage(HmEntityUsage.ENTITY)
 
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
-        """get entity"""
+        """get entity."""
         if entity := self.data_entities.get(field_name):
             if not isinstance(entity, entity_type):
                 _LOGGER.debug(
@@ -932,9 +903,7 @@ class GenericHubEntity(CallbackEntity):
         address: str,
         data: HubData,
     ):
-        """
-        Initialize the entity.
-        """
+        """Initialize the entity."""
         unique_identifier: Final[str] = generate_unique_identifier(
             central=central,
             address=address,
@@ -970,9 +939,7 @@ class GenericSystemVariable(GenericHubEntity):
         central: hmcu.CentralUnit,
         data: SystemVariableData,
     ):
-        """
-        Initialize the entity.
-        """
+        """Initialize the entity."""
         super().__init__(central=central, address=SYSVAR_ADDRESS, data=data)
         self.ccu_var_name: Final[str] = data.name
         self.data_type: Final[str | None] = data.data_type
@@ -1054,7 +1021,7 @@ class GenericSystemVariable(GenericHubEntity):
 
 
 class GenericEvent(BaseParameterEntity[Any]):
-    """Base class for action events"""
+    """Base class for action events."""
 
     _attr_platform = HmPlatform.EVENT
     _attr_event_type: HmEventType
@@ -1067,9 +1034,7 @@ class GenericEvent(BaseParameterEntity[Any]):
         parameter: str,
         parameter_data: dict[str, Any],
     ):
-        """
-        Initialize the event handler.
-        """
+        """Initialize the event handler."""
         super().__init__(
             device=device,
             unique_identifier=unique_identifier,
@@ -1085,16 +1050,12 @@ class GenericEvent(BaseParameterEntity[Any]):
         return self._attr_event_type
 
     def event(self, value: Any) -> None:
-        """
-        Handle event for which this handler has subscribed.
-        """
+        """Handle event for which this handler has subscribed."""
 
         self.fire_event(value)
 
     def fire_event(self, value: Any) -> None:
-        """
-        Do what is needed to fire an event.
-        """
+        """Do what is needed to fire an event."""
         if callable(self._central.callback_ha_event):
             self._central.callback_ha_event(
                 self.event_type,
@@ -1116,24 +1077,18 @@ class GenericEvent(BaseParameterEntity[Any]):
 
 
 class ClickEvent(GenericEvent):
-    """
-    class for handling click events.
-    """
+    """class for handling click events."""
 
     _attr_event_type = HmEventType.KEYPRESS
 
 
 class DeviceErrorEvent(GenericEvent):
-    """
-    class for handling device error events.
-    """
+    """class for handling device error events."""
 
     _attr_event_type = HmEventType.DEVICE_ERROR
 
     def event(self, value: Any) -> None:
-        """
-        Handle event for which this handler has subscribed.
-        """
+        """Handle event for which this handler has subscribed."""
         old_value = self._attr_value
         new_value = self._convert_value(value)
         if self._attr_value == new_value:
@@ -1153,9 +1108,7 @@ class DeviceErrorEvent(GenericEvent):
 
 
 class ImpulseEvent(GenericEvent):
-    """
-    class for handling impulse events.
-    """
+    """class for handling impulse events."""
 
     _attr_event_type = HmEventType.IMPULSE
 
@@ -1175,7 +1128,7 @@ class NoneTypeEntity:
     channel_operation_mode: str | None = None
 
     def send_value(self, value: Any) -> bool:
-        """Dummy method"""
+        """Send value dummy method."""
         return True
 
 
@@ -1183,7 +1136,7 @@ class CallParameterCollector:
     """Create a Paramset based on given generic entities."""
 
     def __init__(self, custom_entity: CustomEntity):
-        """Init the generator"""
+        """Init the generator."""
         self._custom_entity = custom_entity
         self._paramsets: dict[str, dict[str, Any]] = {}
 

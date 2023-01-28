@@ -1,4 +1,8 @@
-"""Code to create the required entities for thermostat devices."""
+"""
+Module for entities implemented using the climate platform.
+
+See https://www.home-assistant.io/integrations/climate/.
+"""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -173,7 +177,7 @@ class BaseClimateEntity(CustomEntity):
 
     @value_property
     def hvac_action(self) -> HmHvacAction | None:
-        """Return the hvac action"""
+        """Return the hvac action."""
         return None
 
     @value_property
@@ -193,7 +197,7 @@ class BaseClimateEntity(CustomEntity):
 
     @property
     def _min_or_target_temperature(self) -> float:
-        """Return the min or target temperature"""
+        """Return the min or target temperature."""
         temperature: float = self.target_temperature or self.min_temp
         if temperature < self.min_temp:
             temperature = self.min_temp
@@ -266,7 +270,7 @@ class CeRfThermostat(BaseClimateEntity):
 
     @value_property
     def hvac_action(self) -> HmHvacAction | None:
-        """Return the hvac action"""
+        """Return the hvac action."""
         if self._e_valve_state.value is None:
             return None
         if self.hvac_mode == HmHvacMode.OFF:
@@ -384,7 +388,7 @@ class CeIpThermostat(BaseClimateEntity):
 
     @value_property
     def hvac_action(self) -> HmHvacAction | None:
-        """Return the hvac action"""
+        """Return the hvac action."""
         if self._e_state.value is None and self._e_level.value is None:
             return None
         if self.hvac_mode == HmHvacMode.OFF:
@@ -545,7 +549,7 @@ def make_simple_thermostat(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates SimpleRfThermostat entities."""
+    """Create SimpleRfThermostat entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeSimpleRfThermostat,
@@ -560,7 +564,7 @@ def make_thermostat(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates RfThermostat entities."""
+    """Create RfThermostat entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeRfThermostat,
@@ -575,7 +579,7 @@ def make_thermostat_group(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates RfThermostat group entities."""
+    """Create RfThermostat group entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeRfThermostat,
@@ -590,7 +594,7 @@ def make_ip_thermostat(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates IPThermostat entities."""
+    """Create IPThermostat entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpThermostat,
@@ -605,7 +609,7 @@ def make_ip_thermostat_group(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates IPThermostat group entities."""
+    """Create IPThermostat group entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpThermostat,

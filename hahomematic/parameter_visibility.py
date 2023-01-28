@@ -1,4 +1,4 @@
-""" Module about parameter visibility within hahomematic """
+"""Module about parameter visibility within hahomematic."""
 from __future__ import annotations
 
 import logging
@@ -250,6 +250,7 @@ class ParameterVisibilityCache:
         self,
         central: hmcu.CentralUnit,
     ):
+        """Init the parameter visibility cache."""
         self._central: Final[hmcu.CentralUnit] = central
         self._storage_folder: Final[str] = central.config.storage_folder
         self._required_parameters: Final[tuple[str, ...]] = get_required_parameters()
@@ -285,10 +286,7 @@ class ParameterVisibilityCache:
         self._init()
 
     def _init(self) -> None:
-        """
-        Init relevant_master_paramsets_by_device and
-        un_ignore_parameters_by_device from const.
-        """
+        """Process cache initilisation."""
         for (
             device_type,
             channels_parameter,
@@ -316,7 +314,7 @@ class ParameterVisibilityCache:
     def get_un_ignore_parameters(
         self, device_type: str, device_channel: int
     ) -> dict[str, tuple[str, ...]]:
-        """Return un_ignore_parameters"""
+        """Return un_ignore_parameters."""
         device_type_l = device_type.lower()
         un_ignore_parameters: dict[str, set[str]] = {}
         if device_type_l is not None and device_channel is not None:
@@ -397,7 +395,7 @@ class ParameterVisibilityCache:
         paramset_key: str,
         parameter: str,
     ) -> bool:
-        """Return if parameter is on un_ignore list"""
+        """Return if parameter is on un_ignore list."""
 
         device_type_l = device_type.lower()
 
@@ -435,6 +433,7 @@ class ParameterVisibilityCache:
     def _add_line_to_cache(self, line: str) -> None:
         """
         Add line to from un ignore file to cache.
+
         Add data to relevant_master_paramsets_by_device and
         un_ignore_parameters_by_device from file.
         """
@@ -515,7 +514,7 @@ class ParameterVisibilityCache:
         paramset_key: str,
         parameter: str,
     ) -> bool:
-        """Return if parameter should be hidden"""
+        """Return if parameter should be hidden."""
         return parameter in _HIDDEN_PARAMETERS and not self.parameter_is_un_ignored(
             device_type=device_type,
             device_channel=device_channel,
@@ -577,7 +576,6 @@ class ParameterVisibilityCache:
                         self._storage_folder,
                         FILE_CUSTOM_UN_IGNORE_PARAMETERS,
                     ),
-                    mode="r",
                     encoding=DEFAULT_ENCODING,
                 ) as fptr:
                     for file_line in fptr.readlines():

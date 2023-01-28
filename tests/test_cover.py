@@ -129,17 +129,17 @@ async def test_cewindowdrive(
     )
     assert cover.current_cover_position == 0
     assert cover.channel_level == HM_WD_CLOSED
-    assert cover.is_closed == True
+    assert cover.is_closed is True
 
     await cover.set_cover_position(1)
     assert cover.current_cover_position == 0
     assert cover.channel_level == HM_CLOSED
-    assert cover.is_closed == False
+    assert cover.is_closed is False
 
     await cover.set_cover_position(0.0)
     assert cover.current_cover_position == 0
     assert cover.channel_level == HM_WD_CLOSED
-    assert cover.is_closed == True
+    assert cover.is_closed is True
 
 
 @pytest.mark.asyncio

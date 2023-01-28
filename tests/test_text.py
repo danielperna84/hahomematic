@@ -17,7 +17,7 @@ TEST_DEVICES: dict[str, str] = {}
 async def no_test_hmtext(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test HmText. There are currently no text entities"""
+    """Test HmText. There are currently no text entities."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     text: HmText = cast(HmText, await helper.get_generic_entity(central, "VCU7981740:1", "STATE"))
     assert text.usage == HmEntityUsage.ENTITY
@@ -27,7 +27,7 @@ async def no_test_hmtext(
 async def test_hmsysvartext(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test HmSysvarText. There are currently no text entities"""
+    """Test HmSysvarText. There are currently no text entities."""
     central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
     text: HmSysvarText = cast(
         HmSysvarText, await helper.get_sysvar_entity(central, "sv_string_ext")

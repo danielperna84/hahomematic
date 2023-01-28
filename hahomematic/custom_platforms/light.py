@@ -1,4 +1,8 @@
-"""Code to create the required entities for light entities."""
+"""
+Module for entities implemented using the light platform.
+
+See https://www.home-assistant.io/integrations/light/.
+"""
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -353,12 +357,12 @@ class CeIpFixedColorLight(BaseHmLight):
 
     @value_property
     def color_name(self) -> str | None:
-        """Return the name of the color"""
+        """Return the name of the color."""
         return self._e_color.value
 
     @property
     def channel_color_name(self) -> str | None:
-        """Return the name of the channel color"""
+        """Return the name of the channel color."""
         return self._e_channel_color.value
 
     def _init_entity_fields(self) -> None:
@@ -495,7 +499,7 @@ def make_ip_dimmer(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP dimmer entities."""
+    """Create HomematicIP dimmer entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
@@ -510,7 +514,7 @@ def make_rf_dimmer(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic classic dimmer entities."""
+    """Create HomeMatic classic dimmer entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
@@ -525,7 +529,7 @@ def make_rf_dimmer_color(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic classic dimmer with color entities."""
+    """Create HomeMatic classic dimmer with color entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeColorDimmer,
@@ -540,7 +544,7 @@ def make_rf_dimmer_color_effect(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic classic dimmer and effect with color entities."""
+    """Create HomeMatic classic dimmer and effect with color entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeColorDimmerEffect,
@@ -555,7 +559,7 @@ def make_rf_dimmer_color_temp(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic classic dimmer with color temperature entities."""
+    """Create HomeMatic classic dimmer with color temperature entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeColorTempDimmer,
@@ -570,7 +574,7 @@ def make_rf_dimmer_with_virt_channel(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomeMatic classic dimmer entities."""
+    """Create HomeMatic classic dimmer entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
@@ -585,7 +589,7 @@ def make_ip_fixed_color_light(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates fixed color light entities like HmIP-BSL."""
+    """Create fixed color light entities like HmIP-BSL."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpFixedColorLight,
@@ -600,7 +604,7 @@ def make_ip_simple_fixed_color_light(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates simple fixed color light entities like HmIPW-WRC6."""
+    """Create simple fixed color light entities like HmIPW-WRC6."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeIpFixedColorLight,

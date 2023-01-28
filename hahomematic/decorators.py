@@ -1,6 +1,4 @@
-"""
-Decorators used within hahomematic.
-"""
+"""Decorators used within hahomematic."""
 from __future__ import annotations
 
 import asyncio
@@ -19,23 +17,21 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def callback_system_event(name: str) -> Callable:
-    """
-    Check if callback_system is set and call it AFTER original function.
-    """
+    """Check if callback_system is set and call it AFTER original function."""
 
     def decorator_callback_system_event(func: Callable) -> Callable:
-        """Decorator for callback system event."""
+        """Decorate callback system events."""
 
         @wraps(func)
         async def async_wrapper_callback_system_event(*args: Any) -> Any:
-            """Wrapper for callback system event."""
+            """Wrap async callback system events."""
             return_value = await func(*args)
             exec_callback_system_event(*args)
             return return_value
 
         @wraps(func)
         def wrapper_callback_system_event(*args: Any) -> Any:
-            """Wrapper for callback system event."""
+            """Wrap callback system events."""
             return_value = func(*args)
             exec_callback_system_event(*args)
             return return_value
@@ -66,20 +62,18 @@ def callback_system_event(name: str) -> Callable:
 
 
 def callback_event(func: Callable) -> Callable:
-    """
-    Check if callback_event is set and call it AFTER original function.
-    """
+    """Check if callback_event is set and call it AFTER original function."""
 
     @wraps(func)
     async def async_wrapper_callback_event(*args: Any) -> Any:
-        """Wrapper for callback event."""
+        """Wrap async callback events."""
         return_value = await func(*args)
         exec_callback_entity_event(*args)
         return return_value
 
     @wraps(func)
     def wrapper_callback_event(*args: Any) -> Any:
-        """Wrapper for callback event."""
+        """Wrap callback events."""
         return_value = func(*args)
         exec_callback_entity_event(*args)
         return return_value
@@ -117,7 +111,7 @@ def bind_collector(func: _CallableT) -> _CallableT:
 
     @wraps(func)
     async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
-        """Wrapper for callback event."""
+        """Wrap method to add collector."""
         try:
             collector_exists = args[argument_index] is not None
         except IndexError:
@@ -141,7 +135,7 @@ S = TypeVar("S")
 
 # pylint: disable=invalid-name
 class generic_property(Generic[G, S], property):
-    """Generic property implemantation"""
+    """Generic property implemantation."""
 
     fget: Callable[[Any], G] | None
     fset: Callable[[Any, S], None] | None
@@ -154,6 +148,7 @@ class generic_property(Generic[G, S], property):
         fdel: Callable[[Any], None] | None = None,
         doc: str | None = None,
     ) -> None:
+        """Init the generic property."""
         super().__init__(fget, fset, fdel, doc)
         # self.fget = fget
         # self.fset = fset
@@ -163,18 +158,19 @@ class generic_property(Generic[G, S], property):
         self.__doc__ = doc
 
     def getter(self, __fget: Callable[[Any], G]) -> generic_property:
-        """custom generic getter"""
+        """Return generic getter."""
         return type(self)(__fget, self.fset, self.fdel, self.__doc__)
 
     def setter(self, __fset: Callable[[Any, S], None]) -> generic_property:
-        """custom generic setter"""
+        """Return generic setter."""
         return type(self)(self.fget, __fset, self.fdel, self.__doc__)
 
     def deleter(self, __fdel: Callable[[Any], None]) -> generic_property:
-        """custom generic deleter"""
+        """Return generic deleter."""
         return type(self)(self.fget, self.fset, __fdel, self.__doc__)
 
     def __get__(self, __obj: Any, __type: type | None = None) -> G:
+        """Return the attribute."""
         if __obj is None:
             return self  # type: ignore[return-value]
         if self.fget is None:
@@ -182,11 +178,13 @@ class generic_property(Generic[G, S], property):
         return self.fget(__obj)
 
     def __set__(self, __obj: Any, __value: Any) -> None:
+        """Set the attribute."""
         if self.fset is None:
             raise AttributeError("can't set attribute")
         self.fset(__obj, __value)
 
     def __delete__(self, __obj: Any) -> None:
+        """Delete the attribute."""
         if self.fdel is None:
             raise AttributeError("can't delete attribute")
         self.fdel(__obj)
@@ -194,25 +192,25 @@ class generic_property(Generic[G, S], property):
 
 # pylint: disable=invalid-name
 class config_property(generic_property[G, S], property):
-    """Decorator to mark own config properties."""
+    """Decorate to mark own config properties."""
 
 
 # pylint: disable=invalid-name
 class value_property(generic_property[G, S], property):
-    """Decorator to mark own value properties."""
+    """Decorate to mark own value properties."""
 
 
 def _get_public_attributes_by_decorator(
     data_object: Any, property_decorator: type
 ) -> dict[str, Any]:
     """Return the object attributes by decorator."""
-    pub_attributes = list(
+    pub_attributes = [
         y
         for y in dir(data_object.__class__)
         if not y.startswith("_")
         and isinstance(getattr(data_object.__class__, y), property_decorator)
-    )
-    return dict((x, getattr(data_object, x)) for x in pub_attributes)
+    ]
+    return {x: getattr(data_object, x) for x in pub_attributes}
 
 
 def get_public_attributes_for_config_property(data_object: Any) -> dict[str, Any]:

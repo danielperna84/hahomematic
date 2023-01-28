@@ -1,6 +1,4 @@
-"""
-Implementation of an async json-rpc client.
-"""
+"""Implementation of an async json-rpc client."""
 from __future__ import annotations
 
 from datetime import datetime

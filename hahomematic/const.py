@@ -1,4 +1,4 @@
-""" Constants used by hahomematic. """
+"""Constants used by hahomematic."""
 from __future__ import annotations
 
 from datetime import datetime

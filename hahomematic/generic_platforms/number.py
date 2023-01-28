@@ -1,6 +1,7 @@
 """
-Module for entities implemented using the
-number platform (https://www.home-assistant.io/integrations/number/).
+Module for entities implemented using the number platform.
+
+See https://www.home-assistant.io/integrations/number/.
 """
 from __future__ import annotations
 
@@ -20,6 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class BaseNumber(GenericEntity[ParameterT]):
     """
     Implementation of a number.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -29,6 +31,7 @@ class BaseNumber(GenericEntity[ParameterT]):
 class HmFloat(BaseNumber[float]):
     """
     Implementation of a Float.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -59,6 +62,7 @@ class HmFloat(BaseNumber[float]):
 class HmInteger(BaseNumber[int]):
     """
     Implementation of an Integer.
+
     This is a default platform that gets automatically generated.
     """
 
@@ -84,9 +88,7 @@ class HmInteger(BaseNumber[int]):
 
 
 class HmSysvarNumber(GenericSystemVariable):
-    """
-    Implementation of a sysvar number.
-    """
+    """Implementation of a sysvar number."""
 
     _attr_platform = HmPlatform.HUB_NUMBER
     _attr_is_extended = True

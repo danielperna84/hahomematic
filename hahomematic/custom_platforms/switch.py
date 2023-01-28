@@ -1,4 +1,8 @@
-"""Code to create the required entities for switch entities."""
+"""
+Module for entities implemented using the switch platform.
+
+See https://www.home-assistant.io/integrations/switch/.
+"""
 from __future__ import annotations
 
 from typing import Any, cast
@@ -75,7 +79,7 @@ def make_ip_switch(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP switch entities."""
+    """Create HomematicIP switch entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeSwitch,
@@ -90,7 +94,7 @@ def make_rf_switch(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hme.BaseEntity, ...]:
-    """Creates HomematicIP switch entities."""
+    """Create HomematicIP switch entities."""
     return make_custom_entity(
         device=device,
         custom_entity_class=CeSwitch,
