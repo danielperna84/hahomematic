@@ -103,7 +103,7 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
-        _LOGGER.debug("__init__")
+        _LOGGER.debug("__INIT__")
         self._sema_add_devices = asyncio.Semaphore()
         # Keep the config for the central #CC
         self.config: Final[CentralConfig] = central_config
@@ -266,14 +266,14 @@ class CentralUnit:
             # un-register and stop XmlRPC-Server, if possible
             if self._xml_rpc_server.no_central_registered:
                 self._xml_rpc_server.stop()
-            _LOGGER.debug("stop: XmlRPC-Server stopped")
+            _LOGGER.debug("STOP: XmlRPC-Server stopped")
         else:
             _LOGGER.debug(
-                "stop: shared XmlRPC-Server NOT stopped. "
-                "There is still another central instance registered."
+                "STOP: shared XmlRPC-Server NOT stopped. "
+                "There is still another central instance registered"
             )
 
-        _LOGGER.debug("stop: Removing instance")
+        _LOGGER.debug("STOP: Removing instance")
         if self._attr_name in CENTRAL_INSTANCES:
             del CENTRAL_INSTANCES[self._attr_name]
 
@@ -297,22 +297,22 @@ class CentralUnit:
         """Stop clients."""
         await self._de_init_clients()
         for client in self._clients.values():
-            _LOGGER.debug("stop_client: Stopping %s.", client.interface_id)
+            _LOGGER.debug("STOP_CLIENT: Stopping %s", client.interface_id)
             client.stop()
-        _LOGGER.debug("stop_clients: Clearing existing clients.")
+        _LOGGER.debug("STOP_CLIENTS: Clearing existing clients.")
         self._clients.clear()
 
     async def _create_clients(self) -> bool:
         """Create clients for the central unit. Start connection checker afterwards."""
         if len(self._clients) > 0:
             _LOGGER.warning(
-                "create_clients: Clients for %s are already created.",
+                "CREATE_CLIENTS: Clients for %s are already created",
                 self._attr_name,
             )
             return False
         if len(self.config.interface_configs) == 0:
             _LOGGER.warning(
-                "create_clients failed: No Interfaces for %s defined.",
+                "CREATE_CLIENTS failed: No Interfaces for %s defined",
                 self._attr_name,
             )
             return False
@@ -325,13 +325,12 @@ class CentralUnit:
                 ):
                     if interface_config.interface not in await client.get_available_interfaces():
                         _LOGGER.debug(
-                            "create_clients failed: "
-                            "Interface: %s is not available for backend.",
+                            "CREATE_CLIENTS failed: Interface: %s is not available for backend",
                             interface_config.interface,
                         )
                         continue
                     _LOGGER.debug(
-                        "create_clients: Adding client %s to %s.",
+                        "CREATE_CLIENTS: Adding client %s to %s",
                         client.interface_id,
                         self._attr_name,
                     )
@@ -343,31 +342,31 @@ class CentralUnit:
                     available=False,
                 )
                 _LOGGER.debug(
-                    "create_clients failed: Unable to create client for central [%s]",
+                    "CREATE_CLIENTS failed: Unable to create client for central [%s]",
                     ex.args,
                 )
 
         if self.has_clients:
             _LOGGER.debug(
-                "create_clients: All clients successfully created for %s",
+                "CREATE_CLIENTS: All clients successfully created for %s",
                 self._attr_name,
             )
             return True
 
-        _LOGGER.warning("create_clients failed for %s", self._attr_name)
+        _LOGGER.warning("CREATE_CLIENTS failed for %s", self._attr_name)
         return False
 
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
         for client in self._clients.values():
             if PROXY_INIT_SUCCESS == await client.proxy_init():
-                _LOGGER.debug("init_clients: client for %s initialized", client.interface_id)
+                _LOGGER.debug("INIT_CLIENTS: client for %s initialized", client.interface_id)
 
     async def _de_init_clients(self) -> None:
         """De-init clients."""
         for name, client in self._clients.items():
             if await client.proxy_de_init():
-                _LOGGER.debug("stop: Proxy de-initialized: %s", name)
+                _LOGGER.debug("STOP: Proxy de-initialized: %s", name)
 
     async def _init_hub(self) -> None:
         """Init the hub."""
@@ -425,7 +424,7 @@ class CentralUnit:
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
         _LOGGER.debug(
-            "start_connection_checker: Starting connection_checker for %s",
+            "START_CONNECTION_CHECKER: Starting connection_checker for %s",
             self._attr_name,
         )
         self._connection_checker.start()
@@ -434,7 +433,7 @@ class CentralUnit:
         """Start the connection checker."""
         self._connection_checker.stop()
         _LOGGER.debug(
-            "stop_connection_checker: Stopped connection_checker for %s",
+            "STOP_CONNECTION_CHECKER: Stopped connection_checker for %s",
             self._attr_name,
         )
 
@@ -551,7 +550,7 @@ class CentralUnit:
             await self.device_details.load()
             await self.device_data.load()
         except json.decoder.JSONDecodeError:
-            _LOGGER.warning("load_caches failed: Unable to load caches for %s.", self._attr_name)
+            _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._attr_name)
             await self.clear_all()
 
     async def _create_devices(self) -> None:
@@ -561,13 +560,13 @@ class CentralUnit:
                 f"create_devices: "
                 f"No clients initialized. Not starting central {self._attr_name}."
             )
-        _LOGGER.debug("create_devices: Starting to create devices for %s.", self._attr_name)
+        _LOGGER.debug("CREATE_DEVICES: Starting to create devices for %s", self._attr_name)
 
         new_devices = set[HmDevice]()
         for interface_id in self._clients:
             if not self.paramset_descriptions.has_interface_id(interface_id=interface_id):
                 _LOGGER.debug(
-                    "create_devices: Skipping interface %s, missing paramsets.",
+                    "CREATE_DEVICES: Skipping interface %s, missing paramsets",
                     interface_id,
                 )
                 continue
@@ -587,7 +586,7 @@ class CentralUnit:
 
                 except Exception as err:
                     _LOGGER.error(
-                        "create_devices failed: %s [%s] Unable to create device: %s, %s",
+                        "CREATE_DEVICES failed: %s [%s] Unable to create device: %s, %s",
                         type(err).__name__,
                         err.args,
                         interface_id,
@@ -601,13 +600,13 @@ class CentralUnit:
                         self._devices[device_address] = device
                 except Exception as err:
                     _LOGGER.error(
-                        "create_devices failed: %s [%s] Unable to create entities: %s, %s",
+                        "CREATE_DEVICES failed: %s [%s] Unable to create entities: %s, %s",
                         type(err).__name__,
                         err.args,
                         interface_id,
                         device_address,
                     )
-        _LOGGER.debug("create_devices: Finished creating devices for %s.", self._attr_name)
+        _LOGGER.debug("CREATE_DEVICES: Finished creating devices for %s", self._attr_name)
 
         if (
             len(new_devices) > 0
@@ -620,7 +619,7 @@ class CentralUnit:
     async def delete_device(self, interface_id: str, device_address: str) -> None:
         """Delete devices from central_unit. #CC."""
         _LOGGER.debug(
-            "delete_device: interface_id = %s, device_address = %s",
+            "DELETE_DEVICE: interface_id = %s, device_address = %s",
             interface_id,
             device_address,
         )
@@ -631,7 +630,7 @@ class CentralUnit:
         addresses.append(device_address)
         if len(addresses) == 0:
             _LOGGER.debug(
-                "delete_device: Nothing to delete: interface_id = %s, device_address = %s",
+                "DELETE_DEVICE: Nothing to delete: interface_id = %s, device_address = %s",
                 interface_id,
                 device_address,
             )
@@ -643,7 +642,7 @@ class CentralUnit:
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
-            "delete_devices: interface_id = %s, addresses = %s",
+            "DELETE_DEVICES: interface_id = %s, addresses = %s",
             interface_id,
             str(addresses),
         )
@@ -665,14 +664,14 @@ class CentralUnit:
     ) -> None:
         """Add new devices to central unit."""
         _LOGGER.debug(
-            "add_new_devices: interface_id = %s, device_descriptions = %s",
+            "ADD_NEW_DEVICES: interface_id = %s, device_descriptions = %s",
             interface_id,
             len(device_descriptions),
         )
 
         if interface_id not in self._clients:
             _LOGGER.warning(
-                "add_new_devices failed: Missing client for interface_id %s.",
+                "ADD_NEW_DEVICES failed: Missing client for interface_id %s",
                 interface_id,
             )
             return
@@ -690,7 +689,7 @@ class CentralUnit:
                         self.device_descriptions.add_device_description(interface_id, dev_desc)
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:
-                    _LOGGER.error("add_new_devices failed: %s [%s]", type(err).__name__, err.args)
+                    _LOGGER.error("ADD_NEW_DEVICES failed: %s [%s]", type(err).__name__, err.args)
 
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
@@ -702,7 +701,7 @@ class CentralUnit:
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """If a device emits some sort event, we will handle it here."""
         _LOGGER.debug(
-            "event: interface_id = %s, channel_address = %s, parameter = %s, value = %s",
+            "EVENT: interface_id = %s, channel_address = %s, parameter = %s, value = %s",
             interface_id,
             channel_address,
             parameter,
@@ -729,7 +728,7 @@ class CentralUnit:
                 )
             except Exception as ex:
                 _LOGGER.warning(
-                    "event failed: Unable to call callback for: %s, %s, %s, %s",
+                    "EVENT failed: Unable to call callback for: %s, %s, %s, %s",
                     interface_id,
                     channel_address,
                     parameter,
@@ -769,7 +768,7 @@ class CentralUnit:
         """Remove device to central collections."""
         if device.device_address not in self._devices:
             _LOGGER.debug(
-                "remove_device: device %s not registered in central.",
+                "remove_device: device %s not registered in central",
                 device.device_address,
             )
             return
@@ -802,7 +801,7 @@ class CentralUnit:
             self._loop.call_soon_threadsafe(self._async_create_task, target)
         except CancelledError:
             _LOGGER.debug(
-                "create_task: task cancelled for %s.",
+                "create_task: task cancelled for %s",
                 self._attr_name,
             )
             return
@@ -817,7 +816,7 @@ class CentralUnit:
             return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
         except CancelledError:
             _LOGGER.debug(
-                "run_coroutine: coroutine interrupted for %s.",
+                "run_coroutine: coroutine interrupted for %s",
                 self._attr_name,
             )
             return None
@@ -828,7 +827,7 @@ class CentralUnit:
             return await self._loop.run_in_executor(None, executor_func, *args)
         except CancelledError as cer:
             _LOGGER.debug(
-                "async_add_executor_job: task cancelled for %s.",
+                "async_add_executor_job: task cancelled for %s",
                 self._attr_name,
             )
             raise HaHomematicException from cer
@@ -880,7 +879,7 @@ class CentralUnit:
         """Activate or deactivate install-mode on CCU / Homegear. #CC."""
         if not self.has_client(interface_id=interface_id):
             _LOGGER.warning(
-                "set_install_mode: interface_id %s does not exist on %s",
+                "SET_INSTALL_MODE: interface_id %s does not exist on %s",
                 interface_id,
                 self._attr_name,
             )
@@ -952,7 +951,7 @@ class ConnectionChecker(threading.Thread):
             try:
                 if not self._central.has_clients:
                     _LOGGER.warning(
-                        "check_connection failed: No clients exist. "
+                        "CHECK_CONNECTION failed: No clients exist. "
                         "Trying to create clients for server %s",
                         self._central.name,
                     )
@@ -979,10 +978,10 @@ class ConnectionChecker(threading.Thread):
                             # refresh entity data
                             await self._central.device_data.refresh_entity_data()
             except NoConnection as nex:
-                _LOGGER.error("check_connection failed: no connection: %s", nex.args)
+                _LOGGER.error("CHECK_CONNECTION failed: no connection: %s", nex.args)
                 continue
             except Exception as err:
-                _LOGGER.error("check_connection failed: %s [%s]", type(err).__name__, err.args)
+                _LOGGER.error("CHECK_CONNECTION failed: %s [%s]", type(err).__name__, err.args)
             if self._active:
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
 
@@ -1066,20 +1065,20 @@ class CentralConfig:
     def check_config(self) -> bool:
         """Check config."""
         if not self.username:
-            _LOGGER.warning("Check_config: Username must not be empty")
+            _LOGGER.warning("CHECK_CONFIG: Username must not be empty")
             return False
         if self.password is None:
-            _LOGGER.warning("Check_config: Password is required")  # type: ignore[unreachable]
+            _LOGGER.warning("CHECK_CONFIG: Password is required")  # type: ignore[unreachable]
             return False
         if not check_password(self.password):
-            _LOGGER.warning("Check_config: password contains not allowed characters")
+            _LOGGER.warning("CHECK_CONFIG: password contains not allowed characters")
             # Here we only log a warning to get some feedback
             # no return False
 
         try:
             check_or_create_directory(self.storage_folder)
         except BaseHomematicException:
-            _LOGGER.warning("Check_config: directory % cannot be created", self.storage_folder)
+            _LOGGER.warning("CHECK_CONFIG: directory % cannot be created", self.storage_folder)
             return False
         return True
 
@@ -1449,7 +1448,7 @@ class DeviceDescriptionCache(BasePersistentCache):
                 if self._device_descriptions.get(device.interface_id, {}).get(address, {}):
                     del self._device_descriptions[device.interface_id][address]
             except KeyError:
-                _LOGGER.warning("cleanup failed: Unable to delete: %s", address)
+                _LOGGER.warning("REMOVE_DEVICE failed: Unable to delete: %s", address)
         await self.save()
 
     def get_addresses(self, interface_id: str) -> dict[str, list[str]]:

@@ -78,7 +78,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             ] in VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION or not self._connection_state.has_issue(  # noqa: E501
                 issuer=self
             ):
-                _LOGGER.debug("__async_request: %s", args)
+                _LOGGER.debug("__ASYNC_REQUEST: %s", args)
                 result = await self._async_add_proxy_executor_job(
                     # pylint: disable=protected-access
                     parent._ServerProxy__request,  # type: ignore[attr-defined]

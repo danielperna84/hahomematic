@@ -240,5 +240,9 @@ fixture-parentheses = false
 [tool.ruff.per-file-ignores]
 "script/*" = ["T20"]
 
+[tool.ruff.isort]
+required-imports = ["from __future__ import annotations"]
+known-first-party = ["hahomematic"]
+
 [tool.ruff.mccabe]
 max-complexity = 25

@@ -49,7 +49,7 @@ class HmSelect(GenericEntity[int | str]):
                 )
         else:
             _LOGGER.warning(
-                "Value not in value_list for %s/%s.",
+                "Value not in value_list for %s/%s",
                 self.name,
                 self.unique_identifier,
             )
@@ -79,7 +79,7 @@ class HmSysvarSelect(GenericSystemVariable):
                 await super().send_variable(self._attr_value_list.index(value))
         else:
             _LOGGER.warning(
-                "Value not in value_list for %s/%s.",
+                "Value not in value_list for %s/%s",
                 self.name,
                 self.unique_identifier,
             )

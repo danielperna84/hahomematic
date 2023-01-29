@@ -87,7 +87,7 @@ def _check_length_and_warn(name: str | None, value: Any) -> Any:
     if isinstance(value, str) and len(value) > 255:
         _LOGGER.warning(
             "Value of sysvar %s exceedes maximum allowed length of "
-            "255 chars by Home Assistant. Value will be limited to 255 chars.",
+            "255 chars by Home Assistant. Value will be limited to 255 chars",
             name,
         )
         return value[0:255:1]

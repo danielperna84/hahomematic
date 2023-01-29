@@ -589,7 +589,7 @@ def _create_entities(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
     if device.central.has_entity(unique_identifier=unique_identifier):
-        _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_identifier)
+        _LOGGER.debug("MAKE_CUSTOM_ENTITY: Skipping %s (already exists)", unique_identifier)
         return tuple(entities)
     if f"{device.device_address}:{channel_no}" not in device.channels:
         return tuple(entities)

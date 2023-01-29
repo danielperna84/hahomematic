@@ -96,15 +96,15 @@ class Client(ABC):
     async def proxy_init(self) -> int:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
         try:
-            _LOGGER.debug("proxy_init: init('%s', '%s')", self._config.init_url, self.interface_id)
+            _LOGGER.debug("PROXY_INIT: init('%s', '%s')", self._config.init_url, self.interface_id)
             await self._proxy.init(self._config.init_url, self.interface_id)
             self._mark_all_devices_forced_availability(
                 forced_availability=HmForcedDeviceAvailability.NOT_SET
             )
-            _LOGGER.debug("proxy_init: Proxy for %s initialized", self.interface_id)
+            _LOGGER.debug("PROXY_INIT: Proxy for %s initialized", self.interface_id)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "proxy_init failed: %s [%s] Unable to initialize proxy for %s",
+                "PROXY_INIT failed: %s [%s] Unable to initialize proxy for %s",
                 hhe.name,
                 hhe.args,
                 self.interface_id,
@@ -118,16 +118,16 @@ class Client(ABC):
         """De-init to stop CCU from sending events for this remote."""
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
-                "proxy_de_init: Skipping de-init for %s (not initialized)",
+                "PROXY_DE_INIT: Skipping de-init for %s (not initialized)",
                 self.interface_id,
             )
             return PROXY_DE_INIT_SKIPPED
         try:
-            _LOGGER.debug("proxy_de_init: init('%s')", self._config.init_url)
+            _LOGGER.debug("PROXY_DE_INIT: init('%s')", self._config.init_url)
             await self._proxy.init(self._config.init_url)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "proxy_de_init failed: %s [%s] Unable to de-initialize proxy for %s",
+                "PROXY_DE_INIT failed: %s [%s] Unable to de-initialize proxy for %s",
                 hhe.name,
                 hhe.args,
                 self.interface_id,
@@ -154,7 +154,7 @@ class Client(ABC):
                     device.set_forced_availability(forced_availability=forced_availability)
             self._attr_available = available
             _LOGGER.debug(
-                "mark_all_devices_availability: marked all devices %s for %s",
+                "MARK_ALL_DEVICES_AVAILABILITY: marked all devices %s for %s",
                 "available" if available else "unavailable",
                 self.interface_id,
             )
@@ -168,7 +168,7 @@ class Client(ABC):
         """re-init all RPC clients."""
         if await self.is_connected():
             _LOGGER.debug(
-                "reconnect: waiting to re-connect client %s for %is",
+                "RECONNECT: waiting to re-connect client %s for %is",
                 self.interface_id,
                 int(config.RECONNECT_WAIT),
             )
@@ -176,7 +176,7 @@ class Client(ABC):
 
             await self.proxy_re_init()
             _LOGGER.info(
-                "reconnect: re-connected client %s",
+                "RECONNECT: re-connected client %s",
                 self.interface_id,
             )
             return True
@@ -230,7 +230,7 @@ class Client(ABC):
                     )
                     self._is_callback_alive = False
                 _LOGGER.warning(
-                    "is_callback_alive: "
+                    "IS_CALLBACK_ALIVE: "
                     "Callback for %s has not received events for %i seconds')",
                     self.interface_id,
                     seconds_since_last_event,
@@ -303,7 +303,7 @@ class Client(ABC):
         try:
             return await self._proxy.listDevices()
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_all_devices failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("GET_ALL_DEVICES failed: %s [%s]", hhe.name, hhe.args)
         return None
 
     # pylint: disable=invalid-name
@@ -326,7 +326,7 @@ class Client(ABC):
 
             await self._proxy.setInstallMode(*args)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("set_install_mode failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("SET_INSTALL_MODE failed: %s [%s]", hhe.name, hhe.args)
             return False
         return True
 
@@ -335,7 +335,7 @@ class Client(ABC):
         try:
             return await self._proxy.getInstallMode()
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_install_mode failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("GET_INSTALL_MODE failed: %s [%s]", hhe.name, hhe.args)
         return 0
 
     async def get_value(
@@ -348,7 +348,7 @@ class Client(ABC):
         """Return a value from CCU."""
         try:
             _LOGGER.debug(
-                "get_value: channel_address %s, parameter %s, paramset_key, %s, source:%s",
+                "GET_VALUE: channel_address %s, parameter %s, paramset_key, %s, source:%s",
                 channel_address,
                 parameter,
                 paramset_key,
@@ -362,7 +362,7 @@ class Client(ABC):
             return paramset.get(parameter)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
-                "get_value failed with %s [%s]: %s, %s, %s",
+                "GET_VALUE failed with %s [%s]: %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 channel_address,
@@ -380,14 +380,14 @@ class Client(ABC):
     ) -> bool:
         """Set single value on paramset VALUES."""
         try:
-            _LOGGER.debug("_set_value: %s, %s, %s", channel_address, parameter, value)
+            _LOGGER.debug("SET_VALUE: %s, %s, %s", channel_address, parameter, value)
             if rx_mode:
                 await self._proxy.setValue(channel_address, parameter, value, rx_mode)
             else:
                 await self._proxy.setValue(channel_address, parameter, value)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "_set_value failed with %s [%s]: %s, %s, %s",
+                "SET_VALUE failed with %s [%s]: %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 channel_address,
@@ -429,14 +429,14 @@ class Client(ABC):
         """
         try:
             _LOGGER.debug(
-                "get_paramset: address %s, paramset_key %s",
+                "GET_PARAMSET: address %s, paramset_key %s",
                 address,
                 paramset_key,
             )
             return await self._proxy_read.getParamset(address, paramset_key)
         except BaseHomematicException as hhe:
             _LOGGER.debug(
-                "get_paramset failed with %s [%s]: %s, %s",
+                "GET_PARAMSET failed with %s [%s]: %s, %s",
                 hhe.name,
                 hhe.args,
                 address,
@@ -458,14 +458,14 @@ class Client(ABC):
         but for bidcos devices there is a master paramset at the device. #CC.
         """
         try:
-            _LOGGER.debug("put_paramset: %s, %s, %s", address, paramset_key, value)
+            _LOGGER.debug("PUT_PARAMSET: %s, %s, %s", address, paramset_key, value)
             if rx_mode:
                 await self._proxy.putParamset(address, paramset_key, value, rx_mode)
             else:
                 await self._proxy.putParamset(address, paramset_key, value)
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "put_paramset failed: %s [%s] %s, %s, %s",
+                "PUT_PARAMSET failed: %s [%s] %s, %s, %s",
                 hhe.name,
                 hhe.args,
                 address,
@@ -479,7 +479,7 @@ class Client(ABC):
         self, channel_address: str, paramset_key: str, save_to_file: bool = True
     ) -> None:
         """Fetch a specific paramset and add it to the known ones."""
-        _LOGGER.debug("fetch_paramset_description: %s for %s", paramset_key, channel_address)
+        _LOGGER.debug("FETCH_PARAMSET_DESCRIPTION: %s for %s", paramset_key, channel_address)
 
         try:
             parameter_data = await self._get_paramset_description(
@@ -493,7 +493,7 @@ class Client(ABC):
             )
         except BaseHomematicException as hhe:
             _LOGGER.warning(
-                "fetch_paramset_description failed: "
+                "FETCH_PARAMSET_DESCRIPTION failed: "
                 "%s [%s] Unable to get paramset %s for channel_address %s",
                 hhe.name,
                 hhe.args,
@@ -507,7 +507,7 @@ class Client(ABC):
         """Fetch paramsets for provided device description."""
         data = await self.get_paramset_descriptions(device_description=device_description)
         for address, paramsets in data.items():
-            _LOGGER.debug("fetch_paramset_descriptions for %s", address)
+            _LOGGER.debug("FETCH_PARAMSET_DESCRIPTIONS for %s", address)
             for paramset_key, paramset_description in paramsets.items():
                 self.central.paramset_descriptions.add(
                     interface_id=self.interface_id,
@@ -525,7 +525,7 @@ class Client(ABC):
         paramsets: dict[str, dict[str, Any]] = {}
         address = device_description[HM_ADDRESS]
         paramsets[address] = {}
-        _LOGGER.debug("get_paramset_descriptions for %s", address)
+        _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
         for paramset_key in device_description.get(HM_PARAMSETS, []):
             if (device_channel := get_channel_no(address)) is None:
                 # No paramsets at root device
@@ -552,7 +552,7 @@ class Client(ABC):
                 )
             except BaseHomematicException as hhe:
                 _LOGGER.warning(
-                    "get_paramsets failed with %s [%s] for %s address %s.",
+                    "GET_PARAMSETS failed with %s [%s] for %s address %s",
                     hhe.name,
                     hhe.args,
                     paramset_key,
@@ -583,9 +583,9 @@ class Client(ABC):
             interface_id=self.interface_id
         ):
             _LOGGER.warning(
-                "update_paramset_descriptions failed: "
+                "UPDATE_PARAMSET_DESCRIPTIONS failed: "
                 "Interface missing in central_unit cache. "
-                "Not updating paramsets for %s.",
+                "Not updating paramsets for %s",
                 device_address,
             )
             return
@@ -593,9 +593,9 @@ class Client(ABC):
             interface_id=self.interface_id, device_address=device_address
         ):
             _LOGGER.warning(
-                "update_paramset_descriptions failed: "
+                "UPDATE_PARAMSET_DESCRIPTIONS failed: "
                 "Channel missing in central_unit.cache. "
-                "Not updating paramsets for %s.",
+                "Not updating paramsets for %s",
                 device_address,
             )
             return
@@ -636,16 +636,16 @@ class ClientCCU(Client):
                     device[ATTR_ADDRESS], device[ATTR_INTERFACE]
                 )
         else:
-            _LOGGER.debug("fetch_names_json: Unable to fetch device details via JSON-RPC.")
+            _LOGGER.debug("FETCH_NAMES_JSON: Unable to fetch device details via JSON-RPC")
 
     async def fetch_all_device_data(self) -> None:
         """fetch all device data from CCU."""
         if device_data := await self._json_rpc_client.get_all_device_data():
-            _LOGGER.debug("fetch_all_device_data: Fetched all device data.")
+            _LOGGER.debug("FETCH_ALL_DEVICE_DATA: Fetched all device data")
             self.central.device_data.add_device_data(device_data=device_data)
         else:
             _LOGGER.debug(
-                "fetch_all_device_data: Unable to get all device data via JSON-RPC RegaScript."
+                "FETCH_ALL_DEVICE_DATA: Unable to get all device data via JSON-RPC RegaScript"
             )
 
     async def check_connection_availability(self) -> bool:
@@ -655,7 +655,7 @@ class ClientCCU(Client):
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.debug("ping failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.debug("PING failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
@@ -738,7 +738,7 @@ class ClientHomegear(Client):
 
     async def fetch_device_details(self) -> None:
         """Get all names from metadata (Homegear)."""
-        _LOGGER.debug("fetch_names_metadata: Fetching names via Metadata.")
+        _LOGGER.debug("FETCH_NAMES_METADATA: Fetching names via Metadata")
         for address in self.central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
         ):
@@ -762,7 +762,7 @@ class ClientHomegear(Client):
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.debug("ping failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.debug("PING failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
@@ -775,7 +775,7 @@ class ClientHomegear(Client):
         try:
             await self._proxy.setSystemVariable(name, value)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("set_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("SET_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
             return False
         return True
 
@@ -784,7 +784,7 @@ class ClientHomegear(Client):
         try:
             await self._proxy.deleteSystemVariable(name)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("delete_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("DELETE_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
             return False
         return True
 
@@ -793,7 +793,7 @@ class ClientHomegear(Client):
         try:
             return await self._proxy.getSystemVariable(name)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_system_variable failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("GET_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
 
     async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
@@ -803,7 +803,7 @@ class ClientHomegear(Client):
                 for name, value in hg_variables.items():
                     variables.append(SystemVariableData(name=name, value=value))
         except BaseHomematicException as hhe:
-            _LOGGER.warning("get_all_system_variables failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("GET_ALL_SYSTEM_VARIABLES failed: %s [%s]", hhe.name, hhe.args)
         return variables
 
     async def get_available_interfaces(self) -> list[str]:
@@ -921,7 +921,7 @@ class ClientLocal(Client):  # pragma: no cover
         local_resources = self._config.interface_config.local_resources
         if not local_resources:
             _LOGGER.warning(
-                "get_all_device_descriptions: missing local_resources in config for %s.",
+                "GET_ALL_DEVICE_DESCRIPTIONS: missing local_resources in config for %s",
                 self.central.name,
             )
             return None
@@ -990,7 +990,7 @@ class ClientLocal(Client):  # pragma: no cover
         local_resources = self._config.interface_config.local_resources
         if not local_resources:
             _LOGGER.warning(
-                "_get_paramset_description: missing local_resources in config for %s.",
+                "GET_PARAMSET_DESCRIPTION: missing local_resources in config for %s",
                 self.central.name,
             )
             return None
@@ -1172,7 +1172,8 @@ class InterfaceConfig:
         """Validate the client_config."""
         if self.interface not in IF_NAMES:
             _LOGGER.warning(
-                "InterfaceConfig: Interface names must be within [%s] for production use",
+                "VALIDATE interface config failed: "
+                "Interface names must be within [%s] for production use",
                 ", ".join(IF_NAMES),
             )
 

@@ -1,13 +1,14 @@
 # Version 2023.1.8 (2023-01-XX)
-- Remove VALVE_STATE from HmIPW-FALMOT-C12
-- Remove support for python 3.9
-- Replace old-style union syntax
-- Remove to int converter for HmIP-SCTH230 CONCENTRATION
-- Remove set_value, put_paramset from central
-- Remove put_paramset from custom_entity
+- Cleanup LOGGER messages
 - Cleanup code base with ruff 
 - Ensure the signal handler gets called at most once by @mtdcr
 - JsonRpcAioHttpClient: Allow empty password by @mtdcr
+- Remove VALVE_STATE from HmIPW-FALMOT-C12
+- Remove put_paramset from custom_entity
+- Remove set_value, put_paramset from central
+- Remove support for python 3.9
+- Remove to int converter for HmIP-SCTH230 CONCENTRATION
+- Replace old-style union syntax
 - Validate password with regex (warning only!)
 
 # Version 2023.1.7 (2023-01-24)
@@ -19,22 +20,22 @@
 - Return True if sending service calls succeed
 
 # Version 2023.1.5 (2023-01-20)
-- Remove LOWBAT from HM-LC-Sw1-DR
-- Sort lists in parameter_visibility.py
-- Replace custom entity config data structure by CustomConfig
-- Allow multiple CustomConfigs for a hm device
+- Add ExtendedConfig and use for additional_entities
 - Add ExtendedConfig to custom entities
+- Add LED_STATUS to HM-OU-LED16
+- Allow multiple CustomConfigs for a hm device
 - Cleanup test imports
 - Increase the line length to 99
-- Add ExtendedConfig and use for additional_entities
+- Remove LOWBAT from HM-LC-Sw1-DR
 - Remove obsolete ED_ADDITIONAL_ENTITIES_BY_DEVICE_TYPE from entity_definition
-- Add LED_STATUS to HM-OU-LED16
+- Replace custom entity config data structure by CustomConfig
+- Sort lists in parameter_visibility.py
 
 # Version 2023.1.4 (2023-01-16)
-- Remove obsolete parse_ccu_sys_var
 - Add helper, central tests
 - Add more tests and test based refactorings
 - Reduce backend calls and logging during lost connection
+- Remove obsolete parse_ccu_sys_var
 - Update color_conversion threshold by @guillempages
 
 # Version 2023.1.3 (2023-01-13)

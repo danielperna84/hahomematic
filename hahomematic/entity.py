@@ -489,7 +489,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             )
         except ValueError:
             _LOGGER.debug(
-                "_convert_value: conversion failed for %s, %s, %s, value: [%s]",
+                "CONVERT_VALUE: conversion failed for %s, %s, %s, value: [%s]",
                 self.device.interface_id,
                 self._attr_channel_address,
                 self._attr_parameter,
@@ -877,7 +877,7 @@ class CustomEntity(BaseEntity):
         if entity := self.data_entities.get(field_name):
             if not isinstance(entity, entity_type):
                 _LOGGER.debug(
-                    "_get_entity: type mismatch for requested sub entity: "
+                    "GET_ENTITY: type mismatch for requested sub entity: "
                     "expected: %s, but is %s for field name %s of enitity %s",
                     entity_type.name,
                     type(entity),
