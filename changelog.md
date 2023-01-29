@@ -2,6 +2,7 @@
 - Cleanup LOGGER messages
 - Cleanup code base with ruff 
 - Ensure the signal handler gets called at most once by @mtdcr
+- Fix stop central, if another central is active on the same XmlRPC server
 - JsonRpcAioHttpClient: Allow empty password by @mtdcr
 - Remove VALVE_STATE from HmIPW-FALMOT-C12
 - Remove put_paramset from custom_entity
