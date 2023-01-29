@@ -1,4 +1,4 @@
-# Version 2023.1.8 (2023-01-XX)
+# Version 2023.1.8 (2023-01-29)
 - Cleanup LOGGER messages
 - Cleanup code base with ruff 
 - Ensure the signal handler gets called at most once by @mtdcr
