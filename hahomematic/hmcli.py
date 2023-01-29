@@ -14,28 +14,63 @@ from hahomematic.helpers import build_headers, build_xml_rpc_uri, get_tls_contex
 def main() -> None:
     """Start the cli."""
     parser = argparse.ArgumentParser(
-        description="Commandline tool to query HomeMatic hubs via XML-RPC."
+        description="Commandline tool to query HomeMatic hubs via XML-RPC",
     )
     parser.add_argument(
         "--host",
         "-H",
         required=True,
         type=str,
-        help="Hostname / IP address to connect to.",
+        help="Hostname / IP address to connect to",
     )
-    parser.add_argument("--port", "-p", required=True, type=int, help="Port to connect to.")
-    parser.add_argument("--path", type=str, help="Path, used for heating groups.")
-    parser.add_argument("--username", "-U", nargs="?", help="Username required for access.")
-    parser.add_argument("--password", "-P", nargs="?", help="Password required for access.")
-    parser.add_argument("--tls", "-t", action="store_true", help="Enable TLS encryption.")
-    parser.add_argument("--verify", "-v", action="store_true", help="Verify TLS encryption.")
-    parser.add_argument("--json", "-j", action="store_true", help="Output as JSON.")
+    parser.add_argument(
+        "--port",
+        "-p",
+        required=True,
+        type=int,
+        help="Port to connect to",
+    )
+    parser.add_argument(
+        "--path",
+        type=str,
+        help="Path, used for heating groups",
+    )
+    parser.add_argument(
+        "--username",
+        "-U",
+        nargs="?",
+        help="Username required for access",
+    )
+    parser.add_argument(
+        "--password",
+        "-P",
+        nargs="?",
+        help="Password required for access",
+    )
+    parser.add_argument(
+        "--tls",
+        "-t",
+        action="store_true",
+        help="Enable TLS encryption",
+    )
+    parser.add_argument(
+        "--verify",
+        "-v",
+        action="store_true",
+        help="Verify TLS encryption",
+    )
+    parser.add_argument(
+        "--json",
+        "-j",
+        action="store_true",
+        help="Output as JSON",
+    )
     parser.add_argument(
         "--address",
         "-a",
         required=True,
         type=str,
-        help="Address of HomeMatic device, including channel.",
+        help="Address of HomeMatic device, including channel",
     )
     parser.add_argument(
         "--paramset_key",
@@ -43,14 +78,20 @@ def main() -> None:
         choices=[PARAMSET_KEY_VALUES, PARAMSET_KEY_MASTER],
         help="Paramset of HomeMatic device. Default: VALUES",
     )
-    parser.add_argument("--parameter", required=True, help="Parameter of HomeMatic device.")
     parser.add_argument(
-        "--value", type=str, help="Value to set for parameter. Use 0/1 for boolean."
+        "--parameter",
+        required=True,
+        help="Parameter of HomeMatic device",
+    )
+    parser.add_argument(
+        "--value",
+        type=str,
+        help="Value to set for parameter. Use 0/1 for boolean",
     )
     parser.add_argument(
         "--type",
         choices=["int", "float", "bool"],
-        help="Type of value when setting a value. Using str if not provided.",
+        help="Type of value when setting a value. Using str if not provided",
     )
     args = parser.parse_args()
 

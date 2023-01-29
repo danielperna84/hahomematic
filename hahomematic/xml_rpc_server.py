@@ -32,7 +32,6 @@ class RPCFunctions:
 
     def __init__(self, xml_rpc_server: XmlRpcServer) -> None:
         """Init RPCFunctions."""
-        _LOGGER.debug("__init__")
         self._xml_rpc_server: XmlRpcServer = xml_rpc_server
 
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
@@ -44,7 +43,7 @@ class RPCFunctions:
     def error(self, interface_id: str, error_code: str, msg: str) -> None:
         """When some error occurs the CCU / Homegear will send its error message here."""
         _LOGGER.warning(
-            "error failed: interface_id = %s, error_code = %i, message = %s",
+            "ERROR failed: interface_id = %s, error_code = %i, message = %s",
             interface_id,
             int(error_code),
             str(msg),
@@ -77,7 +76,7 @@ class RPCFunctions:
         partners are reported.
         """
         _LOGGER.debug(
-            "updateDevice: interface_id = %s, address = %s, hint = %s",
+            "UPDATEDEVICE: interface_id = %s, address = %s, hint = %s",
             interface_id,
             address,
             str(hint),
@@ -89,7 +88,7 @@ class RPCFunctions:
     ) -> None:
         """Replace a device. Probably irrelevant for us."""
         _LOGGER.debug(
-            "replaceDevice: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
+            "REPLACEDEVICE: interface_id = %s, oldDeviceAddress = %s, newDeviceAddress = %s",
             interface_id,
             old_device_address,
             new_device_address,
@@ -105,7 +104,7 @@ class RPCFunctions:
         while installation mode is active.
         """
         _LOGGER.debug(
-            "readdedDevices: interface_id = %s, addresses = %s",
+            "READDEDDEVICES: interface_id = %s, addresses = %s",
             interface_id,
             str(addresses),
         )
@@ -171,10 +170,8 @@ class XmlRpcServer(threading.Thread):
             logRequests=False,
             allow_none=True,
         )
-        _LOGGER.debug("__init__: Register functions")
         self._simple_xml_rpc_server.register_introspection_functions()
         self._simple_xml_rpc_server.register_multicall_functions()
-        _LOGGER.debug("__init__: Registering RPC instance")
         self._simple_xml_rpc_server.register_instance(RPCFunctions(self), allow_dotted_names=True)
         self._centrals: Final[dict[str, hmcu.CentralUnit]] = {}
 
@@ -187,16 +184,16 @@ class XmlRpcServer(threading.Thread):
 
     def run(self) -> None:
         """Run the XmlRPC-Server thread."""
-        _LOGGER.debug("run: Starting XmlRPC-Server at http://%s:%i", IP_ANY_V4, self.local_port)
+        _LOGGER.debug("RUN: Starting XmlRPC-Server at http://%s:%i", IP_ANY_V4, self.local_port)
         self._simple_xml_rpc_server.serve_forever()
 
     def stop(self) -> None:
         """Stop the XmlRPC-Server."""
-        _LOGGER.debug("stop: Shutting down XmlRPC-Server")
+        _LOGGER.debug("STOP: Shutting down XmlRPC-Server")
         self._simple_xml_rpc_server.shutdown()
-        _LOGGER.debug("stop: Stopping XmlRPC-Server")
+        _LOGGER.debug("STOP: Stopping XmlRPC-Server")
         self._simple_xml_rpc_server.server_close()
-        _LOGGER.debug("stop: XmlRPC-Server stopped")
+        _LOGGER.debug("STOP: XmlRPC-Server stopped")
         if self.local_port in self._instances:
             del self._instances[self.local_port]
 
@@ -233,5 +230,5 @@ def register_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
     xml_rpc = XmlRpcServer(local_port=local_port)
     if not xml_rpc.started:
         xml_rpc.start()
-        _LOGGER.debug("register_xml_rpc_server: Starting XmlRPC-Server.")
+        _LOGGER.debug("REGISTER_XML_RPC_SERVER: Starting XmlRPC-Server")
     return xml_rpc

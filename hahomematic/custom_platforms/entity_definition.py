@@ -533,7 +533,7 @@ def validate_entity_definition() -> Any:
     try:
         return SCHEMA_DEVICE_DESCRIPTION(entity_definition)
     except vol.Invalid as err:
-        _LOGGER.error("The DEVICE_DESCRIPTION could not be validated. %s, %s", err.path, err.msg)
+        _LOGGER.error("The entity definition could not be validated. %s, %s", err.path, err.msg)
         return None
 
 
@@ -589,7 +589,7 @@ def _create_entities(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
     if device.central.has_entity(unique_identifier=unique_identifier):
-        _LOGGER.debug("make_custom_entity: Skipping %s (already exists)", unique_identifier)
+        _LOGGER.debug("CREATE_ENTITIES: Skipping %s (already exists)", unique_identifier)
         return tuple(entities)
     if f"{device.device_address}:{channel_no}" not in device.channels:
         return tuple(entities)

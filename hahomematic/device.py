@@ -93,7 +93,7 @@ class HmDevice:
             interface_id, device_address
         )
         _LOGGER.debug(
-            "__init__: Initializing device: %s, %s",
+            "__INIT__: Initializing device: %s, %s",
             interface_id,
             device_address,
         )
@@ -141,7 +141,7 @@ class HmDevice:
         )
 
         _LOGGER.debug(
-            "__init__: Initialized device: %s, %s, %s, %s",
+            "__INIT__: Initialized device: %s, %s, %s, %s",
             self._attr_interface_id,
             self._attr_device_address,
             self._attr_device_type,
@@ -355,7 +355,7 @@ class HmDevice:
         if len(self.events) > 0:
             await self.value_cache.init_readable_events()
         _LOGGER.debug(
-            "init_data: Skipping load_data, missing entities for %s.",
+            "INIT_DATA: Skipping load_data, missing entities for %s",
             self._attr_device_address,
         )
 
@@ -364,7 +364,7 @@ class HmDevice:
         for channel_address in self.channels:
             if (device_channel := get_channel_no(channel_address)) is None:
                 _LOGGER.warning(
-                    "create_entities failed: Wrong format of channel_address %s.",
+                    "CREATE_ENTITIES failed: Wrong format of channel_address %s",
                     channel_address,
                 )
                 continue
@@ -373,7 +373,7 @@ class HmDevice:
                 interface_id=self._attr_interface_id, channel_address=channel_address
             ):
                 _LOGGER.debug(
-                    "create_entities: Skipping channel %s, missing paramsets.",
+                    "CREATE_ENTITIES: Skipping channel %s, missing paramsets",
                     channel_address,
                 )
                 continue
@@ -421,7 +421,7 @@ class HmDevice:
                         and not parameter_is_un_ignored
                     ):
                         _LOGGER.debug(
-                            "create_entities: Skipping %s (no event or internal)",
+                            "CREATE_ENTITIES: Skipping %s (no event or internal)",
                             parameter,
                         )
                         continue
@@ -439,7 +439,7 @@ class HmDevice:
         # create custom entities
         if self._has_custom_entity_definition:
             _LOGGER.debug(
-                "create_entities: Handling custom entity integration: %s, %s, %s",
+                "CREATE_ENTITIES: Handling custom entity integration: %s, %s, %s",
                 self._attr_interface_id,
                 self._attr_device_address,
                 self._attr_device_type,
@@ -465,7 +465,7 @@ class HmDevice:
         )
 
         _LOGGER.debug(
-            "create_event_and_append_to_device: Creating event for %s, %s, %s",
+            "CREATE_EVENT_AND_APPEND_TO_DEVICE: Creating event for %s, %s, %s",
             channel_address,
             parameter,
             self._attr_interface_id,
@@ -689,7 +689,7 @@ class ValueCache:
                 )
             except BaseHomematicException as bhe:
                 _LOGGER.debug(
-                    "_get_or_load_value: Failed to get data for %s, %s, %s: %s",
+                    "GET_OR_LOAD_VALUE: Failed to get data for %s, %s, %s: %s",
                     self._attr_device.device_type,
                     channel_address,
                     parameter,

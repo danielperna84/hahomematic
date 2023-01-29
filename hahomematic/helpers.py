@@ -104,7 +104,7 @@ def check_or_create_directory(directory: str) -> bool:
             os.makedirs(directory)
         except OSError as ose:
             _LOGGER.error(
-                "check_or_create_directory failed: Unable to create directory %s ('%s')",
+                "CHECK_OR_CREATE_DIRECTORY failed: Unable to create directory %s ('%s')",
                 directory,
                 ose.strerror,
             )
@@ -175,7 +175,7 @@ def get_entity_name(
         return entity_name
 
     _LOGGER.debug(
-        "get_entity_name: Using unique_identifier for %s %s %s",
+        "GET_ENTITY_NAME: Using unique_identifier for %s %s %s",
         device.device_type,
         channel_address,
         parameter,
@@ -214,7 +214,7 @@ def get_event_name(
         return event_name
 
     _LOGGER.debug(
-        "Helper.get_event_name: Using unique_identifier for %s %s %s",
+        "GET_EVENT_NAME: Using unique_identifier for %s %s %s",
         device.device_type,
         channel_address,
         parameter,
@@ -248,7 +248,7 @@ def get_custom_entity_name(
         return EntityNameData(device_name=device.name, channel_name=channel_name)
 
     _LOGGER.debug(
-        "Helper.get_custom_entity_name: Using unique_identifier for %s %s %s",
+        "GET_CUSTOM_ENTITY_NAME: Using unique_identifier for %s %s %s",
         device.device_type,
         device.device_address,
         channel_no,
@@ -274,7 +274,7 @@ def get_device_name(central: hmcu.CentralUnit, device_address: str, device_type:
         return name
 
     _LOGGER.debug(
-        "Helper.get_device_name: Using auto-generated name for %s %s",
+        "GET_DEVICE_NAME: Using auto-generated name for %s %s",
         device_type,
         device_address,
     )

@@ -442,9 +442,9 @@ class ParameterVisibilityCache:
             data = line.split("@")
             if len(data) != 2:
                 _LOGGER.warning(
-                    "add_line_to_cache failed: "
+                    "ADD_LINE_TO_CACHE failed: "
                     "Could not add line '%s' to un ignore cache. "
-                    "Only one @ expected.",
+                    "Only one @ expected",
                     line,
                 )
                 return
@@ -452,9 +452,9 @@ class ParameterVisibilityCache:
             device_data = data[1].split(":")
             if len(device_data) != 3:
                 _LOGGER.warning(
-                    "add_line_to_cache failed: "
+                    "ADD_LINE_TO_CACHE failed: "
                     "Could not add line '%s' to un ignore cache. "
-                    "4 arguments expected: e.g. TEMPERATURE@HmIP-BWTH:1:VALUES.",
+                    "4 arguments expected: e.g. TEMPERATURE@HmIP-BWTH:1:VALUES",
                     line,
                 )
                 return
@@ -493,9 +493,9 @@ class ParameterVisibilityCache:
             data = line.split(":")
             if len(data) != 2:
                 _LOGGER.warning(
-                    "add_line_to_cache failed: "
+                    "ADD_LINE_TO_CACHE failed: "
                     "Could not add line '%s' to un ignore cache. "
-                    "2 arguments expected: e.g. TEMPERATURE:VALUES.",
+                    "2 arguments expected: e.g. TEMPERATURE:VALUES",
                     line,
                 )
                 return
@@ -566,7 +566,7 @@ class ParameterVisibilityCache:
                 os.path.join(self._storage_folder, FILE_CUSTOM_UN_IGNORE_PARAMETERS)
             ):
                 _LOGGER.debug(
-                    "load: No file found in %s",
+                    "LOAD: No file found in %s",
                     self._storage_folder,
                 )
                 return
@@ -584,7 +584,7 @@ class ParameterVisibilityCache:
                             self._raw_un_ignore_list.add(file_line.strip())
             except Exception as ex:
                 _LOGGER.warning(
-                    "load failed: Could not read unignore file %s",
+                    "LOAD failed: Could not read unignore file %s",
                     ex.args,
                 )
 

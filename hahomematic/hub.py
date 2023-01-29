@@ -62,12 +62,12 @@ class HmHub:
             programs = await client.get_all_programs(include_internal=include_internal)
         if not programs:
             _LOGGER.debug(
-                "_update_program_entities: No programs received for %s",
+                "UPDATE_PROGRAM_ENTITIES: No programs received for %s",
                 self._central.name,
             )
             return
         _LOGGER.debug(
-            "_update_entities: %i programs received for %s",
+            "UPDATE_PROGRAM_ENTITIES: %i programs received for %s",
             len(programs),
             self._central.name,
         )
@@ -99,12 +99,12 @@ class HmHub:
             variables = await client.get_all_system_variables(include_internal=include_internal)
         if not variables:
             _LOGGER.debug(
-                "_update_entities: No sysvars received for %s",
+                "UPDATE_SYSVAR_ENTITIES: No sysvars received for %s",
                 self._central.name,
             )
             return
         _LOGGER.debug(
-            "_update_entities: %i sysvars received for %s",
+            "UPDATE_SYSVAR_ENTITIES: %i sysvars received for %s",
             len(variables),
             self._central.name,
         )
