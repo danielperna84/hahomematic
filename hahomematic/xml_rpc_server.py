@@ -32,7 +32,6 @@ class RPCFunctions:
 
     def __init__(self, xml_rpc_server: XmlRpcServer) -> None:
         """Init RPCFunctions."""
-        _LOGGER.debug("__INIT__")
         self._xml_rpc_server: XmlRpcServer = xml_rpc_server
 
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
@@ -171,10 +170,8 @@ class XmlRpcServer(threading.Thread):
             logRequests=False,
             allow_none=True,
         )
-        _LOGGER.debug("__INIT__: Register functions")
         self._simple_xml_rpc_server.register_introspection_functions()
         self._simple_xml_rpc_server.register_multicall_functions()
-        _LOGGER.debug("__INIT__: Registering RPC instance")
         self._simple_xml_rpc_server.register_instance(RPCFunctions(self), allow_dotted_names=True)
         self._centrals: Final[dict[str, hmcu.CentralUnit]] = {}
 

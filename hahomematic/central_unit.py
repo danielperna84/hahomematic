@@ -103,7 +103,6 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
-        _LOGGER.debug("__INIT__")
         self._sema_add_devices = asyncio.Semaphore()
         # Keep the config for the central #CC
         self.config: Final[CentralConfig] = central_config
@@ -301,7 +300,7 @@ class CentralUnit:
         """Stop clients."""
         await self._de_init_clients()
         for client in self._clients.values():
-            _LOGGER.debug("STOP_CLIENT: Stopping %s", client.interface_id)
+            _LOGGER.debug("STOP_CLIENTS: Stopping %s", client.interface_id)
             client.stop()
         _LOGGER.debug("STOP_CLIENTS: Clearing existing clients.")
         self._clients.clear()

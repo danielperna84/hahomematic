@@ -154,7 +154,7 @@ class Client(ABC):
                     device.set_forced_availability(forced_availability=forced_availability)
             self._attr_available = available
             _LOGGER.debug(
-                "MARK_ALL_DEVICES_AVAILABILITY: marked all devices %s for %s",
+                "MARK_ALL_DEVICES_FORCED_AVAILABILITY: marked all devices %s for %s",
                 "available" if available else "unavailable",
                 self.interface_id,
             )
@@ -303,7 +303,7 @@ class Client(ABC):
         try:
             return await self._proxy.listDevices()
         except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_ALL_DEVICES failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning("GET_ALL_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, hhe.args)
         return None
 
     # pylint: disable=invalid-name
@@ -552,7 +552,7 @@ class Client(ABC):
                 )
             except BaseHomematicException as hhe:
                 _LOGGER.warning(
-                    "GET_PARAMSETS failed with %s [%s] for %s address %s",
+                    "GET_PARAMSET_DESCRIPTIONS failed with %s [%s] for %s address %s",
                     hhe.name,
                     hhe.args,
                     paramset_key,
@@ -636,7 +636,7 @@ class ClientCCU(Client):
                     device[ATTR_ADDRESS], device[ATTR_INTERFACE]
                 )
         else:
-            _LOGGER.debug("FETCH_NAMES_JSON: Unable to fetch device details via JSON-RPC")
+            _LOGGER.debug("FETCH_DEVICE_DETAILS: Unable to fetch device details via JSON-RPC")
 
     async def fetch_all_device_data(self) -> None:
         """fetch all device data from CCU."""
@@ -655,7 +655,7 @@ class ClientCCU(Client):
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.debug("PING failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.debug("CHECK_CONNECTION_AVAILABILITY failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
@@ -738,7 +738,7 @@ class ClientHomegear(Client):
 
     async def fetch_device_details(self) -> None:
         """Get all names from metadata (Homegear)."""
-        _LOGGER.debug("FETCH_NAMES_METADATA: Fetching names via Metadata")
+        _LOGGER.debug("FETCH_DEVICE_DETAILS: Fetching names via Metadata")
         for address in self.central.device_descriptions.get_device_descriptions(
             interface_id=self.interface_id
         ):
@@ -762,7 +762,7 @@ class ClientHomegear(Client):
             self.last_updated = datetime.now()
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.debug("PING failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.debug("CHECK_CONNECTION_AVAILABILITY failed: %s [%s]", hhe.name, hhe.args)
         self.last_updated = INIT_DATETIME
         return False
 
