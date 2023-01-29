@@ -228,6 +228,7 @@ ignore = [
     "D203",  # 1 blank line required before class docstring
     "D212",  # Multi-line docstring summary should start at the first line
     "E731",  # do not assign a lambda expression, use a def
+    "PIE804", # Unnecessary `dict` kwargs
     "RET501",  # Do not explicitly return None in function if it is the only possible return value
     "RET502", # Do not implicitly return None in function able to return non-None value
     "RET503", # Missing explicit return at the end of function able to return non-None value

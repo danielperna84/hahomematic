@@ -16,6 +16,11 @@ DEFAULT_TIMEOUT: Final = 60  # default timeout for a connection
 DEFAULT_TLS: Final = False
 DEFAULT_VERIFY_TLS: Final = False
 
+# Password can be empty.
+# Allowed characters: A-Z, a-z, 0-9, .!$():;#-
+# The CCU WebUI also supports ÄäÖöÜüß, but these characters are not supported by the XmlRPC servers
+CCU_PASSWORD_PATTERN: Final = r"[A-Za-z0-9.!$():;#-]{0,}"
+
 INIT_DATETIME: Final = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
 IP_ANY_V4: Final = "0.0.0.0"
 IP_ANY_V6: Final = "::"

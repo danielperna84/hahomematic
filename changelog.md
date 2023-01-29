@@ -8,6 +8,7 @@
 - Cleanup code base with ruff 
 - Ensure the signal handler gets called at most once by @mtdcr
 - JsonRpcAioHttpClient: Allow empty password by @mtdcr
+- Validate password with regex (warning only!)
 
 # Version 2023.1.7 (2023-01-24)
 - Aggregate calls to backend

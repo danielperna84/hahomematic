@@ -1096,7 +1096,7 @@ class _ClientConfig:
             path=interface_config.remote_path,
             tls=central.config.tls,
         )
-        self.xml_rpc_headers: Final[list[tuple[str, str]]] = build_headers(
+        xml_rpc_headers: Final[list[tuple[str, str]]] = build_headers(
             username=central.config.username,
             password=central.config.password,
         )
@@ -1105,7 +1105,7 @@ class _ClientConfig:
             interface_id=self.interface_id,
             connection_state=central.config.connection_state,
             uri=self.xml_rpc_uri,
-            headers=self.xml_rpc_headers,
+            headers=xml_rpc_headers,
             tls=central.config.tls,
             verify_tls=central.config.verify_tls,
         )
@@ -1114,7 +1114,7 @@ class _ClientConfig:
             interface_id=self.interface_id,
             connection_state=central.config.connection_state,
             uri=self.xml_rpc_uri,
-            headers=self.xml_rpc_headers,
+            headers=xml_rpc_headers,
             tls=central.config.tls,
             verify_tls=central.config.verify_tls,
         )

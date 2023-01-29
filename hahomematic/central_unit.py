@@ -79,6 +79,7 @@ from hahomematic.exceptions import (
 from hahomematic.generic_platforms.button import HmProgramButton
 from hahomematic.helpers import (
     check_or_create_directory,
+    check_password,
     get_device_address,
     get_device_channel,
     updated_within_seconds,
@@ -1064,14 +1065,28 @@ class CentralConfig:
 
     def check_config(self) -> bool:
         """Check config."""
+        if not self.username:
+            _LOGGER.warning("Check_config: Username must not be empty")
+            return False
+        if self.password is None:
+            _LOGGER.warning("Check_config: Password is required")  # type: ignore[unreachable]
+            return False
+        if not check_password(self.password):
+            _LOGGER.warning("Check_config: password contains not allowed characters")
+            # Here we only log a warning to get some feedback
+            # no return False
+
         try:
             check_or_create_directory(self.storage_folder)
         except BaseHomematicException:
+            _LOGGER.warning("Check_config: directory % cannot be created", self.storage_folder)
             return False
         return True
 
     async def create_central(self) -> CentralUnit:
         """Return the central."""
+        if not self.check_config():
+            raise HaHomematicException("create_central: Config contains errors. See log files.")
         return CentralUnit(self)
 
     def create_json_rpc_client(self) -> JsonRpcAioHttpClient:

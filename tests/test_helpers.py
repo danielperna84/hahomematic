@@ -28,6 +28,7 @@ from hahomematic.helpers import (
     build_headers,
     build_xml_rpc_uri,
     check_or_create_directory,
+    check_password,
     convert_value,
     element_matches_key,
     find_free_port,
@@ -55,7 +56,7 @@ async def test_generate_unique_identifier(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test generate_unique_identifier."""
-    central, mock_client = await central_local_factory.get_default_central({})
+    central, _ = await central_local_factory.get_default_central({})
     assert (
         generate_unique_identifier(central=central, address="VCU2128127", parameter="LEVEL")
         == "vcu2128127_level"
@@ -72,8 +73,7 @@ async def test_generate_unique_identifier(
     )
 
 
-@pytest.mark.asyncio
-async def test_build_xml_rpc_uri() -> None:
+def test_build_xml_rpc_uri() -> None:
     """Test build_xml_rpc_uri."""
     assert build_xml_rpc_uri(host="1.2.3.4", port=80, path=None) == "http://1.2.3.4:80"
     assert build_xml_rpc_uri(host="1.2.3.4", port=80, path="group") == "http://1.2.3.4:80/group"
@@ -83,18 +83,18 @@ async def test_build_xml_rpc_uri() -> None:
     )
 
 
-@pytest.mark.asyncio
-async def test_build_headers() -> None:
+def test_build_headers() -> None:
     """Test build_xml_rpc_uri."""
-    assert build_headers(username="Martin", password="") == [('Authorization', 'Basic TWFydGluOg==')]
-    assert build_headers(username="", password="asdf") == [('Authorization', 'Basic OmFzZGY=')]
+    assert build_headers(username="Martin", password="") == [
+        ("Authorization", "Basic TWFydGluOg==")
+    ]
+    assert build_headers(username="", password="asdf") == [("Authorization", "Basic OmFzZGY=")]
     assert build_headers(username="Martin", password="asdf") == [
         ("Authorization", "Basic TWFydGluOmFzZGY=")
     ]
 
 
-@pytest.mark.asyncio
-async def test_check_or_create_directory() -> None:
+def test_check_or_create_directory() -> None:
     """Test check_or_create_directory."""
     assert check_or_create_directory(directory="") is False
     with patch(
@@ -118,8 +118,7 @@ async def test_check_or_create_directory() -> None:
         assert exc
 
 
-@pytest.mark.asyncio
-async def test_parse_sys_var() -> None:
+def test_parse_sys_var() -> None:
     """Test parse_sys_var."""
     assert parse_sys_var(data_type=None, raw_value="1.4") == "1.4"
     assert parse_sys_var(data_type=SYSVAR_TYPE_STRING, raw_value="1.4") == "1.4"
@@ -402,3 +401,24 @@ async def test_others() -> None:
     assert _check_channel_name_with_channel_no(name="light:1") is True
     assert _check_channel_name_with_channel_no(name="light:Test") is False
     assert _check_channel_name_with_channel_no(name="light:Test:123") is False
+
+
+def test_password() -> None:
+    """
+    Test the password.
+
+    Password can be empty.
+    Allowed characters:
+        - A-Z, a-z
+        - 0-9
+        - ., !, $, (, ), :, ;, #, -
+    """
+    assert check_password(None) is False
+    assert check_password("") is True
+    assert check_password("t") is True
+    assert check_password("test") is True
+    assert check_password("TEST") is True
+    assert check_password("1234") is True
+    assert check_password("test123TEST") is True
+    assert check_password("test.!$():;#-") is True
+    assert check_password("test%") is False
