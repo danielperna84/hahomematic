@@ -8,8 +8,8 @@ import os
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
-import const
 from aiohttp import ClientSession
+import const
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit

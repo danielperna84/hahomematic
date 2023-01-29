@@ -9,7 +9,12 @@ import const
 import helper
 import pytest
 
-from hahomematic.const import PARAMSET_KEY_VALUES, HmEntityUsage, HmInterfaceEventType, HmPlatform
+from hahomematic.const import (
+    PARAMSET_KEY_VALUES,
+    HmEntityUsage,
+    HmInterfaceEventType,
+    HmPlatform,
+)
 from hahomematic.exceptions import HaHomematicException, NoClients
 from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.switch import HmSwitch

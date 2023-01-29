@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
+import re
 import socket
 import ssl
 from typing import Any
@@ -15,6 +16,7 @@ from typing import Any
 import hahomematic.central_unit as hmcu
 from hahomematic.const import (
     BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
+    CCU_PASSWORD_PATTERN,
     HM_TYPE,
     HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,
@@ -292,6 +294,13 @@ def check_channel_is_the_only_primary_channel(
     if primary_channel == current_channel and device_has_multiple_channels is False:
         return True
     return False
+
+
+def check_password(password: str | None) -> bool:
+    """Check password."""
+    if password is None:
+        return False
+    return re.fullmatch(CCU_PASSWORD_PATTERN, password) is not None
 
 
 def _get_base_name_from_channel_or_device(

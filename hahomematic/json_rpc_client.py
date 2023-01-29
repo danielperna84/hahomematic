@@ -137,15 +137,12 @@ class JsonRpcAioHttpClient:
 
     async def _do_login(self) -> str | None:
         """Login to CCU and return session."""
+        if not self._has_credentials:
+            _LOGGER.warning("_do_login failed: No credentials set.")
+            return None
+
         session_id: str | None = None
         try:
-            if not self._username:
-                _LOGGER.warning("_do_login failed: No username set.")
-                return None
-            if self._password is None:
-                _LOGGER.warning("_do_login failed: No password set.")
-                return None
-
             params = {
                 ATTR_USERNAME: self._username,
                 ATTR_PASSWORD: self._password,
@@ -277,14 +274,10 @@ class JsonRpcAioHttpClient:
             no_session = "_do_post failed: ClientSession not initialized."
             _LOGGER.warning(no_session)
             return {"error": no_session, "result": {}}
-        if not self._username:
-            no_username = "_do_post failed: No username set."
-            _LOGGER.warning(no_username)
-            return {"error": str(no_username), "result": {}}
-        if self._password is None:
-            no_password = "_do_post failed: No password set."
-            _LOGGER.warning(no_password)
-            return {"error": str(no_password), "result": {}}
+        if not self._has_credentials:
+            no_credentials = "_do_post failed: No credentials set."
+            _LOGGER.warning(no_credentials)
+            return {"error": str(no_credentials), "result": {}}
 
         params = _get_params(session_id, extra_params, use_default_params)
 
@@ -368,9 +361,10 @@ class JsonRpcAioHttpClient:
             )
         return
 
+    @property
     def _has_credentials(self) -> bool:
         """Return if credentials are available."""
-        return self._username is not None and self._password is not None
+        return self._username and self._password is not None
 
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
