@@ -108,7 +108,9 @@ async def test_central(central_pydevccu) -> None:
 
     assert len(central_pydevccu._devices) == 374
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
-    await central_pydevccu.delete_devices(const.PYDEVCCU_INTERFACE_ID, virtual_remotes)
+    await central_pydevccu.delete_devices(
+        interface_id=const.PYDEVCCU_INTERFACE_ID, addresses=virtual_remotes
+    )
     assert len(central_pydevccu._devices) == 371
     del_addresses = list(
         central_pydevccu.device_descriptions.get_device_descriptions(const.PYDEVCCU_INTERFACE_ID)

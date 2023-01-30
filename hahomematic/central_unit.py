@@ -56,6 +56,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.decorators import (
+    async_callback_system_event,
     callback_event,
     callback_system_event,
     config_property,
@@ -623,7 +624,7 @@ class CentralUnit:
             and callable(self.callback_system_event)
         ):
             # pylint: disable=not-callable
-            self.callback_system_event(HH_EVENT_DEVICES_CREATED, new_devices)
+            self.callback_system_event(name=HH_EVENT_DEVICES_CREATED, new_devices=new_devices)
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
         """Delete devices from central_unit. #CC."""
@@ -645,9 +646,9 @@ class CentralUnit:
             )
             return
 
-        await self.delete_devices(interface_id, addresses)
+        await self.delete_devices(interface_id=interface_id, addresses=addresses)
 
-    @callback_system_event(HH_EVENT_DELETE_DEVICES)
+    @async_callback_system_event(name=HH_EVENT_DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
@@ -659,7 +660,7 @@ class CentralUnit:
             if device := self._devices.get(address):
                 await self.remove_device(device=device)
 
-    @callback_system_event(HH_EVENT_NEW_DEVICES)
+    @async_callback_system_event(name=HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
@@ -744,7 +745,7 @@ class CentralUnit:
                     ex.args,
                 )
 
-    @callback_system_event(HH_EVENT_LIST_DEVICES)
+    @callback_system_event(name=HH_EVENT_LIST_DEVICES)
     def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
         _LOGGER.debug("list_devices: interface_id = %s", interface_id)

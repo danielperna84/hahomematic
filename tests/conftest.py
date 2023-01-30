@@ -43,8 +43,13 @@ async def central_unit(ccu: pydevccu.Server, client_session: ClientSession) -> C
     global GOT_DEVICES
     GOT_DEVICES = False
 
-    def systemcallback(src, *args):
-        if src == "devicesCreated" and args and args[0] and len(args[0]) > 0:
+    def systemcallback(name, *args, **kwargs):
+        if (
+            name == "devicesCreated"
+            and kwargs
+            and kwargs.get("new_devices")
+            and len(kwargs["new_devices"]) > 0
+        ):
             global GOT_DEVICES
             GOT_DEVICES = True
 
