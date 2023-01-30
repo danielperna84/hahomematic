@@ -362,7 +362,7 @@ class CentralUnit:
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
         for client in self._clients.values():
-            if PROXY_INIT_SUCCESS == await client.proxy_init():
+            if await client.proxy_init() == PROXY_INIT_SUCCESS:
                 _LOGGER.debug("INIT_CLIENTS: client for %s initialized", client.interface_id)
 
     async def _de_init_clients(self) -> None:
@@ -442,18 +442,24 @@ class CentralUnit:
 
     async def validate_config_and_get_serial(self) -> str | None:
         """Validate the central configuration. #CC."""
-        if len(self.config.interface_configs) == 0:
-            raise NoClients("validate_config: No clients defined.")
+        try:
+            if len(self.config.interface_configs) == 0:
+                raise NoClients("validate_config: No clients defined.")
 
-        local_ip = await self._identify_callback_ip(list(self.config.interface_configs)[0].port)
-        serial: str | None = None
-        for interface_config in self.config.interface_configs:
-            client = await hmcl.create_client(
-                central=self, interface_config=interface_config, local_ip=local_ip
+            local_ip = await self._identify_callback_ip(
+                list(self.config.interface_configs)[0].port
             )
-            if not serial:
-                serial = await client.get_serial()
-        return serial
+            serial: str | None = None
+            for interface_config in self.config.interface_configs:
+                client = await hmcl.create_client(
+                    central=self, interface_config=interface_config, local_ip=local_ip
+                )
+                if not serial:
+                    serial = await client.get_serial()
+            return serial
+        except Exception as ex:
+            _LOGGER.warning(ex)
+            raise
 
     def get_client(self, interface_id: str) -> hmcl.Client:
         """Return a client by interface_id. #CC."""

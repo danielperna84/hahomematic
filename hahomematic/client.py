@@ -139,7 +139,7 @@ class Client(ABC):
 
     async def proxy_re_init(self) -> int:
         """Reinit Proxy."""
-        if PROXY_DE_INIT_FAILED != await self.proxy_de_init():
+        if await self.proxy_de_init() != PROXY_DE_INIT_FAILED:
             return await self.proxy_init()
         return PROXY_DE_INIT_FAILED
 
