@@ -389,37 +389,27 @@ class ParameterVisibilityCache:
 
         return False
 
-    def parameter_is_un_ignored(
+    def hidden_parameter_is_un_ignored(
         self,
         device_type: str,
         device_channel: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
-        """Return if parameter is on un_ignore list."""
+        """Return if hidden parameter is on an un_ignore list."""
         device_type_l = device_type.lower()
 
+        # check if parameter is in custom_un_ignore
         if parameter in self._un_ignore_parameters_general[paramset_key]:
             return True
 
-        # also check if parameter is in custom_un_ignore
+        # check if parameter is in custom_un_ignore with paramset_key
         if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
             device_type_l, {}
         ).get(device_channel, {}).get(paramset_key, set()):
             return True  # pragma: no cover
 
-        dt_short = list(
-            filter(
-                device_type_l.startswith,
-                self._un_ignore_parameters_by_device_paramset_key,
-            )
-        )
-
-        if dt_short and parameter in self._un_ignore_parameters_by_device_paramset_key.get(
-            dt_short[0], {}
-        ).get(device_channel, {}).get(paramset_key, set()):
-            return True
-
+        # check if parameter is in _UN_IGNORE_PARAMETERS_BY_DEVICE
         if (
             un_ignore_parameters := get_value_from_dict_by_wildcard_key(
                 search_elements=self._un_ignore_parameters_by_device_lower,
@@ -429,6 +419,34 @@ class ParameterVisibilityCache:
             return True
 
         return False
+
+    def parameter_is_un_ignored(
+        self,
+        device_type: str,
+        device_channel: int,
+        paramset_key: str,
+        parameter: str,
+    ) -> bool:
+        """Return if parameter is on an un_ignore list."""
+        dt_short = list(
+            filter(
+                device_type.lower().startswith,
+                self._un_ignore_parameters_by_device_paramset_key,
+            )
+        )
+
+        # check if parameter is in _RELEVANT_MASTER_PARAMSETS_BY_DEVICE
+        if dt_short and parameter in self._un_ignore_parameters_by_device_paramset_key.get(
+            dt_short[0], {}
+        ).get(device_channel, {}).get(paramset_key, set()):
+            return True
+
+        return self.hidden_parameter_is_un_ignored(
+            device_type=device_type,
+            device_channel=device_channel,
+            paramset_key=paramset_key,
+            parameter=parameter,
+        )
 
     def _add_line_to_cache(self, line: str) -> None:
         """
@@ -515,7 +533,7 @@ class ParameterVisibilityCache:
         parameter: str,
     ) -> bool:
         """Return if parameter should be hidden."""
-        return parameter in _HIDDEN_PARAMETERS and not self.parameter_is_un_ignored(
+        return parameter in _HIDDEN_PARAMETERS and not self.hidden_parameter_is_un_ignored(
             device_type=device_type,
             device_channel=device_channel,
             paramset_key=paramset_key,
