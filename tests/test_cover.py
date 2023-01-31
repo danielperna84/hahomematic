@@ -27,6 +27,7 @@ from hahomematic.custom_platforms.cover import (
 
 TEST_DEVICES: dict[str, str] = {
     "VCU8537918": "HmIP-BROLL.json",
+    "VCU7807849": "HmIPW-DRBL4.json",
     "VCU1223813": "HmIP-FBL.json",
     "VCU0000045": "HM-LC-Bl1-FM.json",
     "VCU3574044": "HmIP-MOD-HO.json",
@@ -47,7 +48,6 @@ async def test_cecover(
 
     assert cover.current_cover_position == 0
     assert cover.channel_level == HM_CLOSED
-    assert cover.channel_operation_mode is None
     assert cover.is_closed is True
     await cover.set_cover_position(81)
     assert mock_client.method_calls[-1] == call.set_value(
@@ -88,6 +88,51 @@ async def test_cecover(
 
 
 @pytest.mark.asyncio
+async def test_ceipblind_dr(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test CeIpBlind DIN Rail."""
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    cover: CeIpBlind = cast(CeIpBlind, await helper.get_custom_entity(central, "VCU7807849", 2))
+    assert cover.usage == HmEntityUsage.CE_PRIMARY
+
+    assert cover.current_cover_position == 0
+    assert cover.channel_level == HM_CLOSED
+    assert cover.channel_operation_mode == "SHUTTER"
+    assert cover.is_closed is True
+    await cover.set_cover_position(81)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU7807849:2",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.81,
+    )
+    assert cover.current_cover_position == 81
+    assert cover.is_closed is False
+    await cover.open_cover()
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU7807849:2", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 1.0}
+    )
+    assert cover.current_cover_position == 100
+    await cover.close_cover()
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU7807849:2", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
+    )
+    assert cover.current_cover_position == 0
+
+    assert cover.is_opening is None
+    assert cover.is_closing is None
+    central.event(const.LOCAL_INTERFACE_ID, "VCU7807849:1", "ACTIVITY_STATE", 1)
+    assert cover.is_opening is True
+    central.event(const.LOCAL_INTERFACE_ID, "VCU7807849:1", "ACTIVITY_STATE", 2)
+    assert cover.is_closing is True
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU7807849:1", "LEVEL", 0.5)
+    assert cover.channel_level == 0.5
+    assert cover.current_cover_position == 50
+
+
+@pytest.mark.asyncio
 async def test_cewindowdrive(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
@@ -100,7 +145,6 @@ async def test_cewindowdrive(
 
     assert cover.current_cover_position == 0
     assert cover.channel_level == HM_WD_CLOSED
-    assert cover.channel_operation_mode is None
     assert cover.is_closed is True
     await cover.set_cover_position(81)
     assert mock_client.method_calls[-1] == call.set_value(
@@ -150,7 +194,6 @@ async def test_ceblind(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     cover: CeBlind = cast(CeBlind, await helper.get_custom_entity(central, "VCU0000145", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
-    assert cover.channel_operation_mode is None
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
     await cover.set_cover_position(81)
