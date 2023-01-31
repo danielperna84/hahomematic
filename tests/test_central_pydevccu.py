@@ -108,9 +108,9 @@ async def test_central_full(central_unit_full) -> None:
     ) as fptr:
         json.dump(addresses, fptr, indent=2)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2756
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2710
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 184
-    assert usage_types[HmEntityUsage.ENTITY] == 3264
+    assert usage_types[HmEntityUsage.ENTITY] == 3310
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 97
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
 
