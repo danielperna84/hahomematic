@@ -520,8 +520,8 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
 
     wrapped: bool = False
 
-    @config_property
-    def channel_operation_mode(self) -> str | None:
+    @property
+    def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
         cop: GenericEntity | None = self.device.generic_entities.get(
             (self._attr_channel_address, PARAM_CHANNEL_OPERATION_MODE)
@@ -533,12 +533,12 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
     @property
     def _force_enabled(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
-        if self.channel_operation_mode is None:
+        if self._channel_operation_mode is None:
             return None
         if (
             self._channel_type in CONFIGURABLE_CHANNEL
             and self._attr_parameter in KEY_CHANNEL_OPERATION_MODE_VISIBILITY
-            and self.channel_operation_mode
+            and self._channel_operation_mode
             in KEY_CHANNEL_OPERATION_MODE_VISIBILITY[self._attr_parameter]
         ):
             return True
