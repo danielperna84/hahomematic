@@ -208,7 +208,7 @@ async def test_add_device(
         == 8
     )
     dev_desc = helper.load_device_description(central=central, filename="HmIP-BSM.json")
-    await central.add_new_devices(const.LOCAL_INTERFACE_ID, dev_desc)
+    await central.add_new_devices(interface_id=const.LOCAL_INTERFACE_ID, device_descriptions=dev_desc)
     assert len(central._devices) == 2
     assert len(central._entities) == 49
     assert (
@@ -219,7 +219,7 @@ async def test_add_device(
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 18
     )
-    await central.add_new_devices("NOT_ANINTERFACE_ID", dev_desc)
+    await central.add_new_devices(interface_id="NOT_ANINTERFACE_ID", device_descriptions=dev_desc)
     assert len(central._devices) == 2
 
 
@@ -240,7 +240,7 @@ async def test_delete_device(
         == 18
     )
 
-    await central.delete_devices(const.LOCAL_INTERFACE_ID, ["VCU2128127"])
+    await central.delete_devices(interface_id=const.LOCAL_INTERFACE_ID, addresses=["VCU2128127"])
     assert len(central._devices) == 1
     assert len(central._entities) == 23
     assert (
@@ -270,19 +270,19 @@ async def test_virtual_remote_delete(
 
     assert central._get_virtual_remote("VCU4264293")
 
-    await central.delete_device(const.LOCAL_INTERFACE_ID, "NOT_A_DEVICE_ID")
+    await central.delete_device(interface_id=const.LOCAL_INTERFACE_ID, device_address="NOT_A_DEVICE_ID")
 
     assert len(central._devices) == 3
     assert len(central._entities) == 350
-    await central.delete_devices(const.LOCAL_INTERFACE_ID, ["VCU4264293", "VCU0000057"])
+    await central.delete_devices(interface_id=const.LOCAL_INTERFACE_ID, addresses=["VCU4264293", "VCU0000057"])
     assert len(central._devices) == 1
     assert len(central._entities) == 100
-    await central.delete_device(const.LOCAL_INTERFACE_ID, "VCU0000001")
+    await central.delete_device(interface_id=const.LOCAL_INTERFACE_ID, device_address="VCU0000001")
     assert len(central._devices) == 0
     assert len(central._entities) == 0
     assert central.get_virtual_remotes() == []
 
-    await central.delete_device(const.LOCAL_INTERFACE_ID, "NOT_A_DEVICE_ID")
+    await central.delete_device(interface_id=const.LOCAL_INTERFACE_ID, device_address="NOT_A_DEVICE_ID")
 
 
 @pytest.mark.asyncio
