@@ -90,7 +90,9 @@ class HmHub:
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
-            self._central.callback_system_event(HH_EVENT_HUB_REFRESHED, new_programs)
+            self._central.callback_system_event(
+                name=HH_EVENT_HUB_REFRESHED, new_hub_entities=new_programs
+            )
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
         """Retrieve all variable data and update hmvariable values."""
@@ -135,7 +137,9 @@ class HmHub:
             and self._central.callback_system_event is not None
             and callable(self._central.callback_system_event)
         ):
-            self._central.callback_system_event(HH_EVENT_HUB_REFRESHED, new_sysvars)
+            self._central.callback_system_event(
+                name=HH_EVENT_HUB_REFRESHED, new_hub_entities=new_sysvars
+            )
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:
         """Create program as entity."""

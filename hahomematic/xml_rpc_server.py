@@ -37,9 +37,14 @@ class RPCFunctions:
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """If a device emits some sort event, we will handle it here."""
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.event(interface_id, channel_address, parameter, value)
+            central.event(
+                interface_id=interface_id,
+                channel_address=channel_address,
+                parameter=parameter,
+                value=value,
+            )
 
-    @callback_system_event(HH_EVENT_ERROR)
+    @callback_system_event(name=HH_EVENT_ERROR)
     def error(self, interface_id: str, error_code: str, msg: str) -> None:
         """When some error occurs the CCU / Homegear will send its error message here."""
         _LOGGER.warning(
@@ -52,22 +57,28 @@ class RPCFunctions:
     def listDevices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
         if central := self._xml_rpc_server.get_central(interface_id):
-            return central.list_devices(interface_id)  # type: ignore[no-any-return]
+            return central.list_devices(interface_id=interface_id)  # type: ignore[no-any-return]
         return []
 
     def newDevices(self, interface_id: str, device_descriptions: list[dict[str, Any]]) -> None:
         """Add new devices send from backend."""
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.create_task(central.add_new_devices(interface_id, device_descriptions))
+            central.create_task(
+                central.add_new_devices(
+                    interface_id=interface_id, device_descriptions=device_descriptions
+                )
+            )
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices send from backend."""
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.create_task(central.delete_devices(interface_id, addresses))
+            central.create_task(
+                central.delete_devices(interface_id=interface_id, addresses=addresses)
+            )
 
-    @callback_system_event(HH_EVENT_UPDATE_DEVICE)
+    @callback_system_event(name=HH_EVENT_UPDATE_DEVICE)
     def updateDevice(self, interface_id: str, address: str, hint: int) -> None:
         """
         Update a device.
@@ -82,7 +93,7 @@ class RPCFunctions:
             str(hint),
         )
 
-    @callback_system_event(HH_EVENT_REPLACE_DEVICE)
+    @callback_system_event(name=HH_EVENT_REPLACE_DEVICE)
     def replaceDevice(
         self, interface_id: str, old_device_address: str, new_device_address: str
     ) -> None:
@@ -94,7 +105,7 @@ class RPCFunctions:
             new_device_address,
         )
 
-    @callback_system_event(HH_EVENT_RE_ADDED_DEVICE)
+    @callback_system_event(name=HH_EVENT_RE_ADDED_DEVICE)
     def readdedDevice(self, interface_id: str, addresses: list[str]) -> None:
         """
         Readd device from backend.

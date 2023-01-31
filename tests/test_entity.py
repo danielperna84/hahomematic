@@ -47,9 +47,11 @@ async def test_custom_entity_callback(
         const.LOCAL_INTERFACE_ID, "VCU2128127:4", "STATE", 0
     )
     assert switch.value is False
-    await central.delete_devices(const.LOCAL_INTERFACE_ID, [switch.device.device_address])
+    await central.delete_devices(
+        interface_id=const.LOCAL_INTERFACE_ID, addresses=[switch.device.device_address]
+    )
     assert central_local_factory.system_event_mock.call_args_list[-1] == call(
-        "deleteDevices", const.LOCAL_INTERFACE_ID, ["VCU2128127"]
+        "deleteDevices", interface_id="CentralTest-Local", addresses=["VCU2128127"]
     )
     switch.unregister_update_callback(device_updated_mock)
     switch.unregister_remove_callback(device_removed_mock)
@@ -88,9 +90,11 @@ async def test_generic_entity_callback(
         const.LOCAL_INTERFACE_ID, "VCU2128127:4", "STATE", 0
     )
     assert switch.value is False
-    await central.delete_devices(const.LOCAL_INTERFACE_ID, [switch.device.device_address])
+    await central.delete_devices(
+        interface_id=const.LOCAL_INTERFACE_ID, addresses=[switch.device.device_address]
+    )
     assert central_local_factory.system_event_mock.call_args_list[-1] == call(
-        "deleteDevices", const.LOCAL_INTERFACE_ID, ["VCU2128127"]
+        "deleteDevices", interface_id="CentralTest-Local", addresses=["VCU2128127"]
     )
     switch.unregister_update_callback(device_updated_mock)
     switch.unregister_remove_callback(device_removed_mock)

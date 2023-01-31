@@ -1,13 +1,12 @@
 """Decorators used within hahomematic."""
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
 from inspect import getfullargspec
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, ParamSpec, TypeVar
 
 import hahomematic.client as hmcl
 import hahomematic.entity as hme
@@ -15,88 +14,95 @@ from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
 
 def callback_system_event(name: str) -> Callable:
     """Check if callback_system is set and call it AFTER original function."""
 
-    def decorator_callback_system_event(func: Callable) -> Callable:
+    def decorator_callback_system_event(func: Callable[P, R]) -> Callable[P, R]:
         """Decorate callback system events."""
 
         @wraps(func)
-        async def async_wrapper_callback_system_event(*args: Any) -> Any:
-            """Wrap async callback system events."""
-            return_value = await func(*args)
-            exec_callback_system_event(*args)
-            return return_value
-
-        @wraps(func)
-        def wrapper_callback_system_event(*args: Any) -> Any:
+        def wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
             """Wrap callback system events."""
-            return_value = func(*args)
-            exec_callback_system_event(*args)
+            return_value = func(*args, **kwargs)
+            _exec_callback_system_event(name, *args, **kwargs)
             return return_value
 
-        def exec_callback_system_event(*args: Any) -> None:
-            """Execute the callback for a system event."""
-            try:
-                # We don't want to pass the function itself
-                args = args[1:]
-                interface_id = args[0]
-                client = hmcl.get_client(interface_id=interface_id)
-            except Exception as err:
-                _LOGGER.warning(
-                    "EXEC_CALLBACK_SYSTEM_EVENT failed: "
-                    "Unable to reduce args for callback_system_event"
-                )
-                raise HaHomematicException("args-exception callback_system_event") from err
-            if client:
-                client.last_updated = datetime.now()
-                if client.central.callback_system_event is not None:
-                    client.central.callback_system_event(name, *args)
-
-        if asyncio.iscoroutinefunction(func):
-            return async_wrapper_callback_system_event
         return wrapper_callback_system_event
 
     return decorator_callback_system_event
 
 
-def callback_event(func: Callable) -> Callable:
+def async_callback_system_event(name: str) -> Callable:
+    """Check if callback_system is set and call it AFTER original function."""
+
+    def async_decorator_callback_system_event(
+        func: Callable[P, Awaitable[R]]
+    ) -> Callable[P, Awaitable[R]]:
+        """Decorate callback system events."""
+
+        @wraps(func)
+        async def async_wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
+            """Wrap async callback system events."""
+            return_value = await func(*args, **kwargs)
+            _exec_callback_system_event(name, *args, **kwargs)
+            return return_value
+
+        return async_wrapper_callback_system_event
+
+    return async_decorator_callback_system_event
+
+
+def _exec_callback_system_event(name: str, *args: Any, **kwargs: dict[str, Any]) -> None:
+    """Execute the callback for a system event."""
+    if len(args) > 1:
+        _LOGGER.warning(
+            "EXEC_CALLBACK_SYSTEM_EVENT failed: *args not supported for callback_system_event"
+        )
+    try:
+        args = args[1:]
+        interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
+        client = hmcl.get_client(interface_id=interface_id)
+    except Exception as err:
+        _LOGGER.warning(
+            "EXEC_CALLBACK_SYSTEM_EVENT failed: Unable to reduce kwargs for callback_system_event"
+        )
+        raise HaHomematicException("args-exception callback_system_event") from err
+    if client:
+        client.last_updated = datetime.now()
+        if client.central.callback_system_event is not None:
+            client.central.callback_system_event(name, **kwargs)
+
+
+def callback_event(func: Callable[P, R]) -> Callable[P, R]:
     """Check if callback_event is set and call it AFTER original function."""
 
     @wraps(func)
-    async def async_wrapper_callback_event(*args: Any) -> Any:
-        """Wrap async callback events."""
-        return_value = await func(*args)
-        exec_callback_entity_event(*args)
-        return return_value
-
-    @wraps(func)
-    def wrapper_callback_event(*args: Any) -> Any:
+    def wrapper_callback_event(*args: P.args, **kwargs: P.kwargs) -> R:
         """Wrap callback events."""
-        return_value = func(*args)
-        exec_callback_entity_event(*args)
+        return_value = func(*args, **kwargs)
+        _exec_callback_entity_event(*args, **kwargs)
         return return_value
 
-    def exec_callback_entity_event(*args: Any) -> None:
+    def _exec_callback_entity_event(*args: Any, **kwargs: dict[str, Any]) -> None:
         """Execute the callback for an entity event."""
         try:
-            # We don't want to pass the function itself
             args = args[1:]
-            interface_id = args[0]
+            interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
             client = hmcl.get_client(interface_id=interface_id)
         except Exception as err:
             _LOGGER.warning(
-                "EXEC_CALLBACK_ENTITY_EVENT failed: Unable to reduce args for callback_event"
+                "EXEC_CALLBACK_ENTITY_EVENT failed: Unable to reduce kwargs for callback_event"
             )
             raise HaHomematicException("args-exception callback_event") from err
         if client:
             client.last_updated = datetime.now()
             if client.central.callback_entity_event is not None:
-                client.central.callback_entity_event(*args)
+                client.central.callback_entity_event(*args, **kwargs)
 
-    if asyncio.iscoroutinefunction(func):
-        return async_wrapper_callback_event
     return wrapper_callback_event
 
 

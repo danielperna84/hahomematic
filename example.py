@@ -30,18 +30,19 @@ class Example:
         self.SLEEPCOUNTER = 0
         self.central = None
 
-    def _systemcallback(self, src, *args):
+    def _systemcallback(self, name, *args, **kwargs):
         self.got_devices = True
-        if src == const.HH_EVENT_NEW_DEVICES and args and args[0] and len(args[0]) > 0:
+        if name == const.HH_EVENT_NEW_DEVICES and kwargs and \
+                kwargs.get('device_descriptions') and len(kwargs['device_descriptions']) > 0:
             self.got_devices = True
             return
-        if src == const.HH_EVENT_DEVICES_CREATED and args and args[0] and len(args[0]) > 0:
-            self.got_devices = True
+        if name == const.HH_EVENT_DEVICES_CREATED and kwargs and \
+                kwargs.get('new_devices') and len(kwargs['new_devices']) > 0:
+            if len(kwargs['new_devices']) > 1:
+                self.got_devices = True
             return
-        for arg in args:
-            pass
 
-    def _eventcallback(self, address, interface_id, key, value):
+    def _eventcallback(self, interface_id, channel_address, parameter, value):
         pass
 
     def _hacallback(self, eventtype, event_data):
