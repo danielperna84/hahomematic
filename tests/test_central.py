@@ -55,6 +55,19 @@ async def test_device_export(
 
 
 @pytest.mark.asyncio
+async def test_identify_callback_ip(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test device export."""
+    assert central_local_factory
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+
+    assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
+    central.config.host = "no_host"
+    assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
+
+
+@pytest.mark.asyncio
 async def test_device_unignore(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
