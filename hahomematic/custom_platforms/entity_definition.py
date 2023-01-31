@@ -33,6 +33,7 @@ FIELD_BOOST_MODE = "boost_mode"
 FIELD_CHANNEL_COLOR = "channel_color"
 FIELD_CHANNEL_LEVEL = "channel_level"
 FIELD_CHANNEL_LEVEL_2 = "channel_level_2"
+FIELD_CHANNEL_OPERATION_MODE = "channel_operation_mode"
 FIELD_CHANNEL_STATE = "channel_state"
 FIELD_COLOR = "color"
 FIELD_COLOR_LEVEL = "color_temp"
@@ -187,6 +188,7 @@ entity_definition: dict[str, dict[int | str | EntityDefinition, vol.Any]] = {
                         FIELD_DIRECTION: "ACTIVITY_STATE",
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                         FIELD_CHANNEL_LEVEL_2: "LEVEL_2",
+                        FIELD_CHANNEL_OPERATION_MODE: "CHANNEL_OPERATION_MODE",
                     },
                 },
             },
