@@ -1,7 +1,7 @@
 # Version 2023.2.0 (2023-02-01)
 - Log validation exceptions in central
 - Add typing to decorators
-- Add tests for decorator
+- Add tests for better code coverage
 
 # Version 2023.1.8 (2023-01-29)
 - Cleanup LOGGER messages
