@@ -128,6 +128,6 @@ async def test_central_full(central_unit_full) -> None:
         central_unit_full.device_descriptions.get_device_descriptions(const.PYDEVCCU_INTERFACE_ID)
     )
     del_addresses = [adr for adr in del_addresses if ":" not in adr]
-    await central_unit_full.delete_devices(const.PYDEVCCU_INTERFACE_ID, del_addresses)
+    await central_unit_full.delete_devices(interface_id=const.PYDEVCCU_INTERFACE_ID, addresses=del_addresses)
     assert len(central_unit_full._devices) == 0
     assert len(central_unit_full._entities) == 0
