@@ -5,7 +5,7 @@ from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -532,7 +532,7 @@ def validate_entity_definition() -> Any:
     """Validate the entity_definition."""
     try:
         return SCHEMA_DEVICE_DESCRIPTION(entity_definition)
-    except vol.Invalid as err:
+    except vol.Invalid as err:  # pragma: no cover
         _LOGGER.error("The entity definition could not be validated. %s, %s", err.path, err.msg)
         return None
 
@@ -588,9 +588,6 @@ def _create_entities(
     unique_identifier = generate_unique_identifier(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
-    if device.central.has_entity(unique_identifier=unique_identifier):
-        _LOGGER.debug("CREATE_ENTITIES: Skipping %s (already exists)", unique_identifier)
-        return tuple(entities)
     if f"{device.device_address}:{channel_no}" not in device.channels:
         return tuple(entities)
     entity = custom_entity_class(
@@ -615,30 +612,21 @@ def get_default_entities() -> dict[int | tuple[int, ...], tuple[str, ...]]:
 
 def get_include_default_entities(device_enum: EntityDefinition) -> bool:
     """Return if default entities should be included."""
-    device = _get_device(device_enum)
-    if device:
-        return device.get(ED_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES)
-    return DEFAULT_INCLUDE_DEFAULT_ENTITIES
+    device = _get_device_definition(device_enum)
+    return device.get(ED_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES)
 
 
-def _get_device(device_enum: EntityDefinition) -> dict[str, vol.Any] | None:
+def _get_device_definition(device_enum: EntityDefinition) -> dict[str, vol.Any]:
     """Return device from entity definitions."""
-    device = entity_definition[ED_DEVICE_DEFINITIONS].get(device_enum)
-    if device:
-        return deepcopy(device)  # type: ignore[no-any-return]
-    return None
+    return cast(dict[str, vol.Any], deepcopy(entity_definition[ED_DEVICE_DEFINITIONS][device_enum]))
 
 
 def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> dict[str, vol.Any]:
     """Return the device group."""
-    device = _get_device(device_enum)
-    group: dict[str, vol.Any] = {}
-    if device:
-        group = deepcopy(device[ED_DEVICE_GROUP])
-        if group and base_channel_no == 0:
-            return group
-        if not group:
-            return {}
+    device = _get_device_definition(device_enum)
+    group = cast(dict[str, vol.Any], deepcopy(device[ED_DEVICE_GROUP]))
+    if group and base_channel_no == 0:
+        return group
 
     # Add base_channel_no to the primary_channel to get the real primary_channel number
     primary_channel = group[ED_PRIMARY_CHANNEL]

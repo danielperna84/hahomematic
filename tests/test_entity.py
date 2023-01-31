@@ -11,6 +11,7 @@ import pytest
 from hahomematic.const import HmCallSource, HmEntityUsage
 from hahomematic.custom_platforms import get_required_parameters
 from hahomematic.custom_platforms.switch import CeSwitch
+from hahomematic.custom_platforms.entity_definition import validate_entity_definition
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
 from hahomematic.parameter_visibility import check_ignore_parameters_is_clean
@@ -20,6 +21,9 @@ TEST_DEVICES: dict[str, str] = {
     "VCU3609622": "HmIP-eTRV-2.json",
 }
 
+def test_validate_entity_definition() -> None:
+    """Test validate_entity_definition."""
+    assert validate_entity_definition() is not None
 
 @pytest.mark.asyncio
 async def test_custom_entity_callback(
