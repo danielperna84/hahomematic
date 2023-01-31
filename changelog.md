@@ -1,5 +1,5 @@
 # Version 2023.2.1 (2023-02-01)
-- Separate check for parameter is un_ignored based on should be hidden or not
+- Separate check for parameter is un_ignored based on if it should be hidden or not
 
 # Version 2023.2.0 (2023-02-01)
 - Log validation exceptions in central
