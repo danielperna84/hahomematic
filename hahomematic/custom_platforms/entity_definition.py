@@ -618,7 +618,9 @@ def get_include_default_entities(device_enum: EntityDefinition) -> bool:
 
 def _get_device_definition(device_enum: EntityDefinition) -> dict[str, vol.Any]:
     """Return device from entity definitions."""
-    return cast(dict[str, vol.Any], deepcopy(entity_definition[ED_DEVICE_DEFINITIONS][device_enum]))
+    return cast(
+        dict[str, vol.Any], deepcopy(entity_definition[ED_DEVICE_DEFINITIONS][device_enum])
+    )
 
 
 def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> dict[str, vol.Any]:
