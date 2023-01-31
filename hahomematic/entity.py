@@ -19,7 +19,7 @@ from hahomematic.const import (
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
     ATTR_VALUE,
-    CHANNEL_OPERATION_MODE_VISIBILITY,
+    KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     CONFIGURABLE_CHANNEL,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
@@ -537,9 +537,9 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
             return None
         if (
             self._channel_type in CONFIGURABLE_CHANNEL
-            and self._attr_parameter in CHANNEL_OPERATION_MODE_VISIBILITY
+            and self._attr_parameter in KEY_CHANNEL_OPERATION_MODE_VISIBILITY
             and self.channel_operation_mode
-            in CHANNEL_OPERATION_MODE_VISIBILITY[self._attr_parameter]
+            in KEY_CHANNEL_OPERATION_MODE_VISIBILITY[self._attr_parameter]
         ):
             return True
         return False
