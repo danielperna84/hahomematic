@@ -410,15 +410,13 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
     @property
     def _enabled_by_channel_operation_mode(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
-        if cop := self._channel_operation_mode is None:
+        if self._channel_type not in CONFIGURABLE_CHANNEL:
             return None
-        if (
-            self._channel_type in CONFIGURABLE_CHANNEL
-            and self._attr_parameter in KEY_CHANNEL_OPERATION_MODE_VISIBILITY
-            and cop in KEY_CHANNEL_OPERATION_MODE_VISIBILITY[self._attr_parameter]
-        ):
-            return True
-        return False
+        if self._attr_parameter not in KEY_CHANNEL_OPERATION_MODE_VISIBILITY:
+            return None
+        if (cop := self._channel_operation_mode) is None:
+            return None
+        return cop in KEY_CHANNEL_OPERATION_MODE_VISIBILITY[self._attr_parameter]
 
     def _fix_unit(self, raw_unit: str | None) -> str | None:
         """replace given unit."""
@@ -535,7 +533,7 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
     @config_property
     def usage(self) -> HmEntityUsage:
         """Return the entity usage."""
-        if force_enabled := self._enabled_by_channel_operation_mode is None:
+        if (force_enabled := self._enabled_by_channel_operation_mode) is None:
             return self._attr_usage
         return HmEntityUsage.ENTITY if force_enabled else HmEntityUsage.ENTITY_NO_CREATE
 
@@ -1038,7 +1036,7 @@ class GenericEvent(BaseParameterEntity[Any]):
     @config_property
     def usage(self) -> HmEntityUsage:
         """Return the entity usage."""
-        if force_enabled := self._enabled_by_channel_operation_mode is None:
+        if (force_enabled := self._enabled_by_channel_operation_mode) is None:
             return self._attr_usage
         return HmEntityUsage.EVENT if force_enabled else HmEntityUsage.ENTITY_NO_CREATE
 
