@@ -15,16 +15,28 @@ from hahomematic.decorators import (
 
 
 @pytest.mark.asyncio
-async def test_central(central_pydevccu) -> None:
+async def test_central_mini(central_unit_mini) -> None:
     """Test the central."""
-    assert central_pydevccu
-    assert central_pydevccu.name == const.CENTRAL_NAME
-    assert central_pydevccu.model == "PyDevCCU"
-    assert central_pydevccu.get_client(const.PYDEVCCU_INTERFACE_ID).model == "PyDevCCU"
-    assert central_pydevccu.get_primary_client().model == "PyDevCCU"
+    assert central_unit_mini
+    assert central_unit_mini.name == const.CENTRAL_NAME
+    assert central_unit_mini.model == "PyDevCCU"
+    assert central_unit_mini.get_client(const.PYDEVCCU_INTERFACE_ID).model == "PyDevCCU"
+    assert central_unit_mini.get_primary_client().model == "PyDevCCU"
+    assert len(central_unit_mini._devices) == 1
+    assert len(central_unit_mini._entities) == 28
+
+
+@pytest.mark.asyncio
+async def test_central_full(central_unit_full) -> None:
+    """Test the central."""
+    assert central_unit_full
+    assert central_unit_full.name == const.CENTRAL_NAME
+    assert central_unit_full.model == "PyDevCCU"
+    assert central_unit_full.get_client(const.PYDEVCCU_INTERFACE_ID).model == "PyDevCCU"
+    assert central_unit_full.get_primary_client().model == "PyDevCCU"
 
     data = {}
-    for device in central_pydevccu.devices:
+    for device in central_unit_full.devices:
         if device.device_type not in data:
             data[device.device_type] = {}
         for entity in device.generic_entities.values():
@@ -36,7 +48,7 @@ async def test_central(central_pydevccu) -> None:
         assert pub_config_props
 
     custom_entities = []
-    for device in central_pydevccu.devices:
+    for device in central_unit_full.devices:
         custom_entities.extend(device.custom_entities.values())
 
     ce_channels = {}
@@ -50,7 +62,7 @@ async def test_central(central_pydevccu) -> None:
         assert pub_config_props
 
     entity_types = {}
-    for entity in central_pydevccu._entities.values():
+    for entity in central_unit_full._entities.values():
         if hasattr(entity, "hmtype"):
             if entity.hmtype not in entity_types:
                 entity_types[entity.hmtype] = {}
@@ -64,7 +76,7 @@ async def test_central(central_pydevccu) -> None:
         assert pub_config_props
 
     parameters: list[tuple[str, int]] = []
-    for entity in central_pydevccu._entities.values():
+    for entity in central_unit_full._entities.values():
         if (
             hasattr(entity, "parameter")
             and (entity.parameter, entity._attr_operations) not in parameters
@@ -73,12 +85,12 @@ async def test_central(central_pydevccu) -> None:
     parameters = sorted(parameters)
 
     units = set()
-    for entity in central_pydevccu._entities.values():
+    for entity in central_unit_full._entities.values():
         if hasattr(entity, "unit"):
             units.add(entity.unit)
 
     usage_types: dict[HmEntityUsage, int] = {}
-    for entity in central_pydevccu._entities.values():
+    for entity in central_unit_full._entities.values():
         if hasattr(entity, "usage"):
             if entity.usage not in usage_types:
                 usage_types[entity.usage] = 0
@@ -86,11 +98,11 @@ async def test_central(central_pydevccu) -> None:
             usage_types[entity.usage] = counter + 1
 
     addresses: dict[str, str] = {}
-    for address, device in central_pydevccu._devices.items():
+    for address, device in central_unit_full._devices.items():
         addresses[address] = f"{device.device_type}.json"
 
     with open(
-        file=os.path.join(central_pydevccu.config.storage_folder, "all_devices.json"),
+        file=os.path.join(central_unit_full.config.storage_folder, "all_devices.json"),
         mode="w",
         encoding=DEFAULT_ENCODING,
     ) as fptr:
@@ -106,16 +118,16 @@ async def test_central(central_pydevccu) -> None:
     assert len(entity_types) == 6
     assert len(parameters) == 167
 
-    assert len(central_pydevccu._devices) == 374
+    assert len(central_unit_full._devices) == 374
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
-    await central_pydevccu.delete_devices(
+    await central_unit_full.delete_devices(
         interface_id=const.PYDEVCCU_INTERFACE_ID, addresses=virtual_remotes
     )
-    assert len(central_pydevccu._devices) == 371
+    assert len(central_unit_full._devices) == 371
     del_addresses = list(
-        central_pydevccu.device_descriptions.get_device_descriptions(const.PYDEVCCU_INTERFACE_ID)
+        central_unit_full.device_descriptions.get_device_descriptions(const.PYDEVCCU_INTERFACE_ID)
     )
     del_addresses = [adr for adr in del_addresses if ":" not in adr]
-    await central_pydevccu.delete_devices(const.PYDEVCCU_INTERFACE_ID, del_addresses)
-    assert len(central_pydevccu._devices) == 0
-    assert len(central_pydevccu._entities) == 0
+    await central_unit_full.delete_devices(const.PYDEVCCU_INTERFACE_ID, del_addresses)
+    assert len(central_unit_full._devices) == 0
+    assert len(central_unit_full._entities) == 0
