@@ -146,6 +146,15 @@ async def test_cecolordimmer(
         address="VCU9973336:9", paramset_key="VALUES", value={"LEVEL": 1.0}
     )
     assert light.hs_color == (0.0, 100.0)
+    await light.turn_on(**{"hs_color": (0, 1)})
+    assert mock_client.method_calls[-2] == call.put_paramset(
+        address="VCU9973336:15", paramset_key="VALUES", value={"COLOR": 200}
+    )
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU9973336:9", paramset_key="VALUES", value={"LEVEL": 1.0}
+    )
+
+    assert light.hs_color == (0.0, 0.0)
     central.event(const.LOCAL_INTERFACE_ID, "VCU9973336:15", "COLOR", 201)
     assert light.hs_color == (0.0, 0.0)
     central.event(const.LOCAL_INTERFACE_ID, "VCU9973336:15", "COLOR", None)

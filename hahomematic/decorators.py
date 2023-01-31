@@ -66,7 +66,7 @@ def _exec_callback_system_event(name: str, *args: Any, **kwargs: dict[str, Any])
         args = args[1:]
         interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
         client = hmcl.get_client(interface_id=interface_id)
-    except Exception as err:
+    except Exception as err:  # pragma: no cover
         _LOGGER.warning(
             "EXEC_CALLBACK_SYSTEM_EVENT failed: Unable to reduce kwargs for callback_system_event"
         )
@@ -93,7 +93,7 @@ def callback_event(func: Callable[P, R]) -> Callable[P, R]:
             args = args[1:]
             interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
             client = hmcl.get_client(interface_id=interface_id)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             _LOGGER.warning(
                 "EXEC_CALLBACK_ENTITY_EVENT failed: Unable to reduce kwargs for callback_event"
             )
@@ -155,16 +155,13 @@ class generic_property(Generic[G, S], property):
     ) -> None:
         """Init the generic property."""
         super().__init__(fget, fset, fdel, doc)
-        # self.fget = fget
-        # self.fset = fset
-        # self.fdel = fdel
         if doc is None and fget is not None:
             doc = fget.__doc__
         self.__doc__ = doc
 
     def getter(self, __fget: Callable[[Any], G]) -> generic_property:
         """Return generic getter."""
-        return type(self)(__fget, self.fset, self.fdel, self.__doc__)
+        return type(self)(__fget, self.fset, self.fdel, self.__doc__)  # pragma: no cover
 
     def setter(self, __fset: Callable[[Any, S], None]) -> generic_property:
         """Return generic setter."""
@@ -179,19 +176,19 @@ class generic_property(Generic[G, S], property):
         if __obj is None:
             return self  # type: ignore[return-value]
         if self.fget is None:
-            raise AttributeError("unreadable attribute")
+            raise AttributeError("unreadable attribute")  # pragma: no cover
         return self.fget(__obj)
 
     def __set__(self, __obj: Any, __value: Any) -> None:
         """Set the attribute."""
         if self.fset is None:
-            raise AttributeError("can't set attribute")
+            raise AttributeError("can't set attribute")  # pragma: no cover
         self.fset(__obj, __value)
 
     def __delete__(self, __obj: Any) -> None:
         """Delete the attribute."""
         if self.fdel is None:
-            raise AttributeError("can't delete attribute")
+            raise AttributeError("can't delete attribute")  # pragma: no cover
         self.fdel(__obj)
 
 

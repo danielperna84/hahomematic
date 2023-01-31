@@ -9,6 +9,7 @@ from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
+    FIELD_CHANNEL_OPERATION_MODE,
     FIELD_DIRECTION,
     FIELD_DOOR_COMMAND,
     FIELD_DOOR_STATE,
@@ -27,6 +28,7 @@ import hahomematic.entity as hme
 from hahomematic.entity import CallParameterCollector, CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.number import HmFloat
+from hahomematic.generic_platforms.select import HmSelect
 from hahomematic.generic_platforms.sensor import HmSensor
 
 HM_OPEN: float = 1.0  # must be float!
@@ -85,13 +87,6 @@ class CeCover(CustomEntity):
     def current_cover_position(self) -> int:
         """Return current position of cover."""
         return int(self.channel_level * 100)
-
-    @value_property
-    def channel_operation_mode(self) -> str | None:
-        """Return channel_operation_mode of cover."""
-        if self._e_channel_level.value is not None:
-            return self._e_channel_level.channel_operation_mode
-        return None
 
     async def set_cover_position(
         self, position: float, collector: CallParameterCollector | None = None
@@ -214,6 +209,18 @@ class CeBlind(CeCover):
 
 class CeIpBlind(CeBlind):
     """Class for HomematicIP blind entities."""
+
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_channel_operation_mode: HmSelect = self._get_entity(
+            field_name=FIELD_CHANNEL_OPERATION_MODE, entity_type=HmSelect
+        )
+
+    @value_property
+    def channel_operation_mode(self) -> str | None:
+        """Return channel_operation_mode of cover."""
+        return self._e_channel_operation_mode.value
 
     @bind_collector
     async def open_cover(self, collector: CallParameterCollector | None = None) -> None:

@@ -89,21 +89,6 @@ def make_ip_switch(
     )
 
 
-def make_rf_switch(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
-    """Create HomematicIP switch entities."""
-    return make_custom_entity(
-        device=device,
-        custom_entity_class=CeSwitch,
-        device_enum=EntityDefinition.RF_SWITCH,
-        group_base_channels=group_base_channels,
-        extended=extended,
-    )
-
-
 # Case for device model is not relevant
 DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
@@ -149,8 +134,6 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         ),
     ),
     "HmIPW-FIO6": CustomConfig(func=make_ip_switch, channels=(7, 11, 15, 19, 23, 27)),
-    # "HM-LC-Sw": CustomEntityConfig(make_rf_switch, group_base_channels=(1, 2, 3, 4)),
-    # "HM-ES-PM": CustomEntityConfig(make_rf_switch, group_base_channels=(1,))),
 }
 
 # Devices are better supported without custom entities:

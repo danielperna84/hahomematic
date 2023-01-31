@@ -404,9 +404,10 @@ class CentralUnit:
             """Get local_ip from socket."""
             try:
                 socket.gethostbyname(host)
-            except Exception:
-                _LOGGER.warning("Can't resolve host for %s", host)
-                return None
+            except Exception as exc:
+                message = f"Can't resolve host for {host}"
+                _LOGGER.warning(message)
+                raise HaHomematicException(message) from exc
             tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             tmp_socket.settimeout(config.TIMEOUT)
             tmp_socket.connect((host, port))
@@ -417,9 +418,13 @@ class CentralUnit:
 
         callback_ip: str | None = None
         while callback_ip is None:
-            if (
-                callback_ip := await self.async_add_executor_job(get_local_ip, self.config.host)
-            ) is None:
+            try:
+                callback_ip = await self.async_add_executor_job(
+                    get_local_ip, self.config.host, timeout=10
+                )
+            except HaHomematicException:
+                callback_ip = "127.0.0.1"
+            if callback_ip is None:
                 _LOGGER.warning("Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL)
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
 
@@ -559,7 +564,7 @@ class CentralUnit:
             await self.paramset_descriptions.load()
             await self.device_details.load()
             await self.device_data.load()
-        except json.decoder.JSONDecodeError:
+        except json.decoder.JSONDecodeError:  # pragma: no cover
             _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._attr_name)
             await self.clear_all()
 
@@ -594,7 +599,7 @@ class CentralUnit:
                         device_address=device_address,
                     )
 
-                except Exception as err:
+                except Exception as err:  # pragma: no cover
                     _LOGGER.error(
                         "CREATE_DEVICES failed: %s [%s] Unable to create device: %s, %s",
                         type(err).__name__,
@@ -608,7 +613,7 @@ class CentralUnit:
                         await device.load_value_cache()
                         new_devices.add(device)
                         self._devices[device_address] = device
-                except Exception as err:
+                except Exception as err:  # pragma: no cover
                     _LOGGER.error(
                         "CREATE_DEVICES failed: %s [%s] Unable to create entities: %s, %s",
                         type(err).__name__,
@@ -698,7 +703,7 @@ class CentralUnit:
                     if dev_desc[HM_ADDRESS] not in known_addresses:
                         self.device_descriptions.add_device_description(interface_id, dev_desc)
                         await client.fetch_paramset_descriptions(dev_desc)
-                except Exception as err:
+                except Exception as err:  # pragma: no cover
                     _LOGGER.error("ADD_NEW_DEVICES failed: %s [%s]", type(err).__name__, err.args)
 
             await self.device_descriptions.save()
@@ -728,7 +733,7 @@ class CentralUnit:
             try:
                 for callback in self._entity_event_subscriptions[(channel_address, parameter)]:
                     callback(value)
-            except RuntimeError as rte:
+            except RuntimeError as rte:  # pragma: no cover
                 _LOGGER.debug(
                     "event: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
                     rte.args,
@@ -736,7 +741,7 @@ class CentralUnit:
                     channel_address,
                     parameter,
                 )
-            except Exception as ex:
+            except Exception as ex:  # pragma: no cover
                 _LOGGER.warning(
                     "EVENT failed: Unable to call callback for: %s, %s, %s, %s",
                     interface_id,
@@ -824,23 +829,28 @@ class CentralUnit:
         """call coroutine from sync."""
         try:
             return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
-        except CancelledError:
+        except CancelledError:  # pragma: no cover
             _LOGGER.debug(
                 "run_coroutine: coroutine interrupted for %s",
                 self._attr_name,
             )
             return None
 
-    async def async_add_executor_job(self, executor_func: Callable[..., T], *args: Any) -> T:
+    async def async_add_executor_job(
+        self, executor_func: Callable[..., T], *args: Any, timeout: int | None = None
+    ) -> T:
         """Add an executor job from within the event_loop."""
         try:
-            return await self._loop.run_in_executor(None, executor_func, *args)
-        except CancelledError as cer:
+            future = self._loop.run_in_executor(None, executor_func, *args)
+            if timeout:
+                return await asyncio.wait_for(future, timeout)
+            return await future
+        except (CancelledError, asyncio.TimeoutError) as err:  # pragma: no cover
             _LOGGER.debug(
                 "async_add_executor_job: task cancelled for %s",
                 self._attr_name,
             )
-            raise HaHomematicException from cer
+            raise HaHomematicException from err
 
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""

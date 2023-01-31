@@ -54,7 +54,7 @@ class DeviceExporter:
         anonymize_device_descriptions: list[Any] = []
         for device_description in device_descriptions.values():
             if device_description == {}:
-                continue
+                continue  # pragma: no cover
             new_device_description = copy(device_description)
             new_device_description[HM_ADDRESS] = self._anonymize_address(
                 address=new_device_description[HM_ADDRESS]
@@ -100,7 +100,7 @@ class DeviceExporter:
 
         def _save() -> HmDataOperationResult:
             if not check_or_create_directory(file_dir):
-                return HmDataOperationResult.NO_SAVE
+                return HmDataOperationResult.NO_SAVE  # pragma: no cover
             with open(
                 file=os.path.join(file_dir, filename),
                 mode="w",

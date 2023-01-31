@@ -19,7 +19,6 @@ from hahomematic.const import (
     ATTR_INTERFACE_ID,
     ATTR_PARAMETER,
     ATTR_VALUE,
-    CHANNEL_OPERATION_MODE_VISIBILITY,
     CONFIGURABLE_CHANNEL,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
@@ -38,6 +37,7 @@ from hahomematic.const import (
     HM_UNIT,
     HM_VALUE_LIST,
     INIT_DATETIME,
+    KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     OPERATION_EVENT,
@@ -201,11 +201,6 @@ class BaseEntity(CallbackEntity):
         """Return the availability of the device."""
         return self.device.available
 
-    @property
-    def _force_enabled(self) -> bool | None:
-        """Return, if the entity/event must be enabled."""
-        return None
-
     @config_property
     def channel_address(self) -> str:
         """Return the channel_address of the entity."""
@@ -234,13 +229,7 @@ class BaseEntity(CallbackEntity):
     @config_property
     def usage(self) -> HmEntityUsage:
         """Return the entity usage."""
-        if self._force_enabled is None:
-            return self._attr_usage
-        if isinstance(self, GenericEntity) and self._force_enabled is True:
-            return HmEntityUsage.ENTITY
-        if isinstance(self, GenericEvent) and self._force_enabled is True:
-            return HmEntityUsage.EVENT
-        return HmEntityUsage.ENTITY_NO_CREATE
+        return self._attr_usage
 
     def set_usage(self, usage: HmEntityUsage) -> None:
         """Set the entity usage."""
@@ -408,6 +397,27 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         """Return the if entity is visible in ccu."""
         return self._attr_visible
 
+    @property
+    def _channel_operation_mode(self) -> str | None:
+        """Return the channel operation mode if available."""
+        cop: GenericEntity | None = self.device.generic_entities.get(
+            (self._attr_channel_address, PARAM_CHANNEL_OPERATION_MODE)
+        )
+        if cop and cop.value:
+            return str(cop.value)
+        return None
+
+    @property
+    def _enabled_by_channel_operation_mode(self) -> bool | None:
+        """Return, if the entity/event must be enabled."""
+        if self._channel_type not in CONFIGURABLE_CHANNEL:
+            return None
+        if self._attr_parameter not in KEY_CHANNEL_OPERATION_MODE_VISIBILITY:
+            return None
+        if (cop := self._channel_operation_mode) is None:
+            return None
+        return cop in KEY_CHANNEL_OPERATION_MODE_VISIBILITY[self._attr_parameter]
+
     def _fix_unit(self, raw_unit: str | None) -> str | None:
         """replace given unit."""
         if new_unit := FIX_UNIT_BY_PARAM.get(self._attr_parameter):
@@ -521,28 +531,11 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
     wrapped: bool = False
 
     @config_property
-    def channel_operation_mode(self) -> str | None:
-        """Return the channel operation mode if available."""
-        cop: GenericEntity | None = self.device.generic_entities.get(
-            (self._attr_channel_address, PARAM_CHANNEL_OPERATION_MODE)
-        )
-        if cop and cop.value:
-            return str(cop.value)
-        return None
-
-    @property
-    def _force_enabled(self) -> bool | None:
-        """Return, if the entity/event must be enabled."""
-        if self.channel_operation_mode is None:
-            return None
-        if (
-            self._channel_type in CONFIGURABLE_CHANNEL
-            and self._attr_parameter in CHANNEL_OPERATION_MODE_VISIBILITY
-            and self.channel_operation_mode
-            in CHANNEL_OPERATION_MODE_VISIBILITY[self._attr_parameter]
-        ):
-            return True
-        return False
+    def usage(self) -> HmEntityUsage:
+        """Return the entity usage."""
+        if (force_enabled := self._enabled_by_channel_operation_mode) is None:
+            return self._attr_usage
+        return HmEntityUsage.ENTITY if force_enabled else HmEntityUsage.ENTITY_NO_CREATE
 
     def event(self, value: Any) -> None:
         """Handle event for which this entity has subscribed."""
@@ -1039,6 +1032,13 @@ class GenericEvent(BaseParameterEntity[Any]):
             parameter=parameter,
             parameter_data=parameter_data,
         )
+
+    @config_property
+    def usage(self) -> HmEntityUsage:
+        """Return the entity usage."""
+        if (force_enabled := self._enabled_by_channel_operation_mode) is None:
+            return self._attr_usage
+        return HmEntityUsage.EVENT if force_enabled else HmEntityUsage.ENTITY_NO_CREATE
 
     @config_property
     def event_type(self) -> HmEventType:

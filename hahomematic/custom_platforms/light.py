@@ -463,16 +463,13 @@ class CeIpFixedColorLight(BaseHmLight):
         await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
 
 
-def _convert_color(color: tuple[float, float] | None) -> str:
+def _convert_color(color: tuple[float, float]) -> str:
     """
     Convert the given color to the reduced color of the device.
 
     Device contains only 8 colors including white and black,
     so a conversion is required.
     """
-    if color is None:
-        return "WHITE"
-
     hue: int = int(color[0])
     saturation: int = int(color[1])
     if saturation < 5:

@@ -18,10 +18,19 @@ logging.basicConfig(level=logging.INFO)
 GOT_DEVICES = False
 
 
-@pytest.fixture(name="ccu")
-def pydev_ccu() -> pydevccu.Server:
+@pytest.fixture
+def pydev_ccu_full() -> pydevccu.Server:
     """Create the virtual ccu."""
     ccu = pydevccu.Server(addr=(const.CCU_HOST, const.CCU_PORT))
+    ccu.start()
+    yield ccu
+    ccu.stop()
+
+
+@pytest.fixture
+def pydev_ccu_mini() -> pydevccu.Server:
+    """Create the virtual ccu."""
+    ccu = pydevccu.Server(addr=(const.CCU_HOST, const.CCU_PORT), devices=["HmIP-BWTH"])
     ccu.start()
     yield ccu
     ccu.stop()
@@ -36,8 +45,29 @@ async def client_session() -> ClientSession:
         await client_session.close()
 
 
-@pytest.fixture(name="central_pydevccu")
-async def central_unit(ccu: pydevccu.Server, client_session: ClientSession) -> CentralUnit:
+@pytest.fixture
+async def central_unit_mini(
+    pydev_ccu_mini: pydevccu.Server, client_session: ClientSession
+) -> CentralUnit:
+    """Create and yield central."""
+    central_unit = await get_pydev_ccu_central_unit_full(client_session, use_caches=True)
+    yield central_unit
+    await central_unit.stop()
+
+
+@pytest.fixture
+async def central_unit_full(
+    pydev_ccu_full: pydevccu.Server, client_session: ClientSession
+) -> CentralUnit:
+    """Create and yield central."""
+    central_unit = await get_pydev_ccu_central_unit_full(client_session, use_caches=False)
+    yield central_unit
+    await central_unit.stop()
+
+
+async def get_pydev_ccu_central_unit_full(
+    client_session: ClientSession, use_caches: bool
+) -> CentralUnit:
     """Create and yield central."""
     sleep_counter = 0
     global GOT_DEVICES
@@ -71,7 +101,7 @@ async def central_unit(ccu: pydevccu.Server, client_session: ClientSession) -> C
         interface_configs=interface_configs,
         default_callback_port=54321,
         client_session=client_session,
-        use_caches=False,
+        use_caches=use_caches,
     ).create_central()
     central_unit.callback_system_event = systemcallback
     await central_unit.start()
@@ -79,9 +109,7 @@ async def central_unit(ccu: pydevccu.Server, client_session: ClientSession) -> C
         sleep_counter += 1
         await asyncio.sleep(1)
 
-    yield central_unit
-
-    await central_unit.stop()
+    return central_unit
 
 
 @pytest.fixture(name="central_local_factory")

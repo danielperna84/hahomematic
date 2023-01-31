@@ -39,6 +39,7 @@ LOCK_TARGET_LEVEL_OPEN = "OPEN"
 
 HM_UNLOCKING = "UP"
 HM_LOCKING = "DOWN"
+HM_NO_ERROR = "NO_ERROR"
 
 
 class BaseLock(CustomEntity):
@@ -167,7 +168,7 @@ class CeRfLock(BaseLock):
     @value_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._e_error.value is not None and self._e_error.value != "NO_ERROR"
+        return self._e_error.value is not None and self._e_error.value != HM_NO_ERROR
 
     async def lock(self) -> None:
         """Lock the lock."""

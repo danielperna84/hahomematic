@@ -374,7 +374,7 @@ class ParameterVisibilityCache:
             if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
                 device_type_l, {}
             ).get(device_channel, {}).get(PARAMSET_KEY_MASTER, []):
-                return False
+                return False  # pragma: no cover
 
             dt_short = list(
                 filter(
@@ -406,7 +406,7 @@ class ParameterVisibilityCache:
         if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
             device_type_l, {}
         ).get(device_channel, {}).get(paramset_key, set()):
-            return True
+            return True  # pragma: no cover
 
         dt_short = list(
             filter(
@@ -561,7 +561,7 @@ class ParameterVisibilityCache:
 
         def _load() -> None:
             if not check_or_create_directory(self._storage_folder):
-                return
+                return  # pragma: no cover
             if not os.path.exists(
                 os.path.join(self._storage_folder, FILE_CUSTOM_UN_IGNORE_PARAMETERS)
             ):
