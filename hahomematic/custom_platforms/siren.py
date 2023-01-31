@@ -62,11 +62,11 @@ class BaseSiren(CustomEntity):
         """Return a list of available lights."""
 
     @abstractmethod
-    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> bool:
+    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> None:
         """Turn the device on."""
 
     @abstractmethod
-    async def turn_off(self) -> bool:
+    async def turn_off(self) -> None:
         """Turn the device off."""
 
 
@@ -120,7 +120,7 @@ class CeIpSiren(BaseSiren):
         optical_alarm: str,
         duration: int = DEFAULT_DURATION_VALUE,
         collector: CallParameterCollector | None = None,
-    ) -> bool:
+    ) -> None:
         """Turn the device on."""
         await self._e_acoustic_alarm_selection.send_value(
             value=acoustic_alarm, collector=collector
@@ -128,10 +128,9 @@ class CeIpSiren(BaseSiren):
         await self._e_optical_alarm_selection.send_value(value=optical_alarm, collector=collector)
         await self._e_duration_unit.send_value(value=DEFAULT_DURATION_UNIT, collector=collector)
         await self._e_duration.send_value(value=duration, collector=collector)
-        return True
 
     @bind_collector
-    async def turn_off(self, collector: CallParameterCollector | None = None) -> bool:
+    async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
         await self._e_acoustic_alarm_selection.send_value(
             value=DISABLE_ACOUSTIC_SIGNAL, collector=collector
@@ -141,19 +140,6 @@ class CeIpSiren(BaseSiren):
         )
         await self._e_duration_unit.send_value(value=DEFAULT_DURATION_UNIT, collector=collector)
         await self._e_duration.send_value(value=1, collector=collector)
-        return True
-
-
-class CeRfSiren(BaseSiren):
-    """Class for classic HomeMatic siren entities."""
-
-    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> bool:
-        """Turn the device on."""
-        return True
-
-    async def turn_off(self) -> bool:
-        """Turn the device off."""
-        return True
 
 
 def make_ip_siren(
@@ -166,21 +152,6 @@ def make_ip_siren(
         device=device,
         custom_entity_class=CeIpSiren,
         device_enum=EntityDefinition.IP_SIREN,
-        group_base_channels=group_base_channels,
-        extended=extended,
-    )
-
-
-def make_rf_siren(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
-    """Create HomeMatic rf siren entities."""
-    return make_custom_entity(
-        device=device,
-        custom_entity_class=CeRfSiren,
-        device_enum=EntityDefinition.RF_SIREN,
         group_base_channels=group_base_channels,
         extended=extended,
     )
