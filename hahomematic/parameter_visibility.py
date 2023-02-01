@@ -31,7 +31,11 @@ from hahomematic.helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# {device_type: channel_no}
+# Define which additional parameters from MASTER paramset should be created as entity.
+# By default these are also on the _HIDDEN_PARAMETERS, which prevents these entities
+# from being display by default. Usually these enties are used within custom entities,
+# and not for general display.
+# {device_type: (channel_no, parameter)}
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[dict[str, tuple[tuple[int, ...], tuple[str, ...]]]] = {
     "HmIP-DRBLI4": (
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
@@ -62,8 +66,11 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[dict[str, tuple[tuple[int, ...], tup
     "HmIPW-WTH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
 }
 
+# Some parameters are marked as INTERNAL in the paramset and not considered by default,
+# but some are required and should be added here.
 ALLOWED_INTERNAL_PARAMETERS: Final = ("DIRECTION",)
 
+# Entities that will be created, but should be hidden.
 _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
@@ -236,8 +243,11 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
     "VALVE_STATE": ("HmIPW-FALMOT-C12", "HmIP-FALMOT-C12"),
 }
 
+# Some devices have parameters on multiple channels,
+# but we want to use it only from a certain channel.
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {"LOWBAT": 0}
 
+# Entities that should be wrapped in a new entity on a new platform.
 _WRAP_ENTITY: Final[dict[str | tuple[str, ...], dict[str, HmPlatform]]] = {
     ("HmIP-eTRV", "HmIP-HEATING"): {"LEVEL": HmPlatform.SENSOR},
 }
@@ -389,14 +399,19 @@ class ParameterVisibilityCache:
 
         return False
 
-    def hidden_parameter_is_un_ignored(
+    def _parameter_is_un_ignored(
         self,
         device_type: str,
         device_channel: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
-        """Return if hidden parameter is on an un_ignore list."""
+        """
+        Return if parameter is on an un_ignore list.
+
+        This can be either be the users unignore file, or in the
+        predefined _UN_IGNORE_PARAMETERS_BY_DEVICE.
+        """
         device_type_l = device_type.lower()
 
         # check if parameter is in custom_un_ignore
@@ -427,7 +442,12 @@ class ParameterVisibilityCache:
         paramset_key: str,
         parameter: str,
     ) -> bool:
-        """Return if parameter is on an un_ignore list."""
+        """
+        Return if parameter is on an un_ignore list.
+
+        Additionally to _parameter_is_un_ignored ehese paramters
+        from _RELEVANT_MASTER_PARAMSETS_BY_DEVICE are unignored.
+        """
         dt_short = list(
             filter(
                 device_type.lower().startswith,
@@ -441,7 +461,7 @@ class ParameterVisibilityCache:
         ).get(device_channel, {}).get(paramset_key, set()):
             return True
 
-        return self.hidden_parameter_is_un_ignored(
+        return self._parameter_is_un_ignored(
             device_type=device_type,
             device_channel=device_channel,
             paramset_key=paramset_key,
@@ -532,8 +552,13 @@ class ParameterVisibilityCache:
         paramset_key: str,
         parameter: str,
     ) -> bool:
-        """Return if parameter should be hidden."""
-        return parameter in _HIDDEN_PARAMETERS and not self.hidden_parameter_is_un_ignored(
+        """
+        Return if parameter should be hidden.
+
+        This is required to determine the entity usage.
+        Return only hidden parameters, that are no defined in the unignore file.
+        """
+        return parameter in _HIDDEN_PARAMETERS and not self._parameter_is_un_ignored(
             device_type=device_type,
             device_channel=device_channel,
             paramset_key=paramset_key,
@@ -546,7 +571,11 @@ class ParameterVisibilityCache:
         paramset_key: str,
         device_channel: int,
     ) -> bool:
-        """Return if a paramset is relevant."""
+        """
+        Return if a paramset is relevant.
+
+        Required to load MASTER paramsets, which are not initialized by default.
+        """
         if paramset_key == PARAMSET_KEY_VALUES:
             return True
         if device_channel is not None and paramset_key == PARAMSET_KEY_MASTER:
