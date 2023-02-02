@@ -345,7 +345,7 @@ class CentralUnit:
                     interface_event_type=HmInterfaceEventType.PROXY,
                     available=False,
                 )
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "CREATE_CLIENTS failed: Unable to create client for central [%s]",
                     ex.args,
                 )
@@ -405,7 +405,7 @@ class CentralUnit:
             try:
                 socket.gethostbyname(host)
             except Exception as exc:
-                message = f"Can't resolve host for {host}"
+                message = f"GET_LOCAL_IP: Can't resolve host for {host}"
                 _LOGGER.warning(message)
                 raise HaHomematicException(message) from exc
             tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -413,7 +413,7 @@ class CentralUnit:
             tmp_socket.connect((host, port))
             local_ip = str(tmp_socket.getsockname()[0])
             tmp_socket.close()
-            _LOGGER.debug("Got local ip: %s", local_ip)
+            _LOGGER.debug("GET_LOCAL_IP: Got local ip: %s", local_ip)
             return local_ip
 
         callback_ip: str | None = None
@@ -425,7 +425,9 @@ class CentralUnit:
             except HaHomematicException:
                 callback_ip = "127.0.0.1"
             if callback_ip is None:
-                _LOGGER.warning("Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL)
+                _LOGGER.warning(
+                    "GET_LOCAL_IP: Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL
+                )
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
 
         return callback_ip
