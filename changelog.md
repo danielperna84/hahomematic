@@ -1,5 +1,7 @@
 # Version 2023.2.2 (2023-02-01)
 - Add comments to parameter_visibility
+- Use put_paramset only when there is more than one parameter to send
+- Use only one implementation for garage doors (HO/TM)
 
 # Version 2023.2.1 (2023-02-01)
 - Separate check for parameter is un_ignored based on if it should be hidden or not

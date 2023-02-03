@@ -44,10 +44,8 @@ GARAGE_DOOR_COMMAND_STOP = "STOP"
 GARAGE_DOOR_COMMAND_CLOSE = "CLOSE"
 GARAGE_DOOR_COMMAND_PARTIAL_OPEN = "PARTIAL_OPEN"
 
-GARAGE_DOOR_HO_SECTION_CLOSING = 2
-GARAGE_DOOR_HO_SECTION_OPENING = 5
-GARAGE_DOOR_TM_SECTION_CLOSING = 5
-GARAGE_DOOR_TM_SECTION_OPENING = 2
+GARAGE_DOOR_SECTION_CLOSING = 5
+GARAGE_DOOR_SECTION_OPENING = 2
 
 GARAGE_DOOR_STATE_CLOSED = "CLOSED"
 GARAGE_DOOR_STATE_OPEN = "OPEN"
@@ -245,12 +243,10 @@ class CeIpBlind(CeBlind):
         )
 
 
-class BaseGarage(CustomEntity):
+class CeGarage(CustomEntity):
     """Class for HomeMatic garage entities."""
 
     _attr_platform = HmPlatform.COVER
-    _attr_section_closing: int
-    _attr_section_opening: int
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -296,14 +292,14 @@ class BaseGarage(CustomEntity):
     def is_opening(self) -> bool | None:
         """Return if the garage door is opening."""
         if self._e_section.value is not None:
-            return int(self._e_section.value) == self._attr_section_opening
+            return int(self._e_section.value) == GARAGE_DOOR_SECTION_OPENING
         return None
 
     @value_property
     def is_closing(self) -> bool | None:
         """Return if the garage door is closing."""
         if self._e_section.value is not None:
-            return int(self._e_section.value) == self._attr_section_closing
+            return int(self._e_section.value) == GARAGE_DOOR_SECTION_CLOSING
         return None
 
     async def open_cover(self) -> None:
@@ -321,20 +317,6 @@ class BaseGarage(CustomEntity):
     async def vent_cover(self) -> None:
         """Move the garage door to vent position."""
         await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
-
-
-class CeGarageHO(BaseGarage):
-    """Class for Hörmann HomeMatic garage entities."""
-
-    _attr_section_closing = GARAGE_DOOR_HO_SECTION_CLOSING
-    _attr_section_opening = GARAGE_DOOR_HO_SECTION_OPENING
-
-
-class CeGarageTM(BaseGarage):
-    """Class for Tormatic HomeMatic garage entities."""
-
-    _attr_section_closing = GARAGE_DOOR_TM_SECTION_CLOSING
-    _attr_section_opening = GARAGE_DOOR_TM_SECTION_OPENING
 
 
 def make_ip_cover(
@@ -382,7 +364,7 @@ def make_ip_blind(
     )
 
 
-def make_ip_garage_ho(
+def make_ip_garage(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
@@ -390,22 +372,7 @@ def make_ip_garage_ho(
     """Create HomematicIP garage entities."""
     return make_custom_entity(
         device=device,
-        custom_entity_class=CeGarageHO,
-        device_enum=EntityDefinition.IP_GARAGE,
-        group_base_channels=group_base_channels,
-        extended=extended,
-    )
-
-
-def make_ip_garage_tm(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
-    """Create HomematicIP garage entities."""
-    return make_custom_entity(
-        device=device,
-        custom_entity_class=CeGarageTM,
+        custom_entity_class=CeGarage,
         device_enum=EntityDefinition.IP_GARAGE,
         group_base_channels=group_base_channels,
         extended=extended,
@@ -487,8 +454,8 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-FBL": CustomConfig(func=make_ip_blind, channels=(3,)),
     "HmIP-FROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
     "HmIP-HDM": CustomConfig(func=make_ip_blind, channels=(0,)),
-    "HmIP-MOD-HO": CustomConfig(func=make_ip_garage_ho, channels=(1,)),
-    "HmIP-MOD-TM": CustomConfig(func=make_ip_garage_tm, channels=(1,)),
+    "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, channels=(1,)),
+    "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, channels=(1,)),
     "HmIPW-DRBL4": CustomConfig(
         func=make_ip_blind,
         channels=(1, 5, 9, 13),

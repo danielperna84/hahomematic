@@ -1137,19 +1137,25 @@ class CallParameterCollector:
 
     def add_entity(self, entity: GenericEntity, value: Any) -> None:
         """Add a generic entity."""
-        # if entity.channel_address != self._custom_entity.channel_address:
-        #    raise HaHomematicException(
-        #        f"add_entity: Mismatch in channel_address for {self._custom_entity.full_name}"
-        #    )
         if entity.channel_address not in self._paramsets:
             self._paramsets[entity.channel_address] = {}
         self._paramsets[entity.channel_address][entity.parameter] = value
 
-    async def put_paramset(self) -> bool:
-        """Send paramset to backend."""
+    async def send_data(self) -> bool:
+        """Send data to backend."""
         for channel_address, paramset in self._paramsets.items():
-            if not await self._custom_entity.device.client.put_paramset(
-                address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
-            ):
-                return False
+            if len(paramset.values()) == 1:
+                parameter, value = list(paramset.items())[0]
+                if not await self._custom_entity.device.client.set_value(
+                    channel_address=channel_address,
+                    paramset_key=PARAMSET_KEY_VALUES,
+                    parameter=parameter,
+                    value=value,
+                ):
+                    return False
+            else:
+                if not await self._custom_entity.device.client.put_paramset(
+                    address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
+                ):
+                    return False
         return True

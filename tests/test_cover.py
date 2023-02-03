@@ -10,17 +10,14 @@ import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.custom_platforms.cover import (
-    GARAGE_DOOR_HO_SECTION_CLOSING,
-    GARAGE_DOOR_HO_SECTION_OPENING,
-    GARAGE_DOOR_TM_SECTION_CLOSING,
-    GARAGE_DOOR_TM_SECTION_OPENING,
+    GARAGE_DOOR_SECTION_CLOSING,
+    GARAGE_DOOR_SECTION_OPENING,
     HM_CLOSED,
     HM_OPEN,
     HM_WD_CLOSED,
     CeBlind,
     CeCover,
-    CeGarageHO,
-    CeGarageTM,
+    CeGarage,
     CeIpBlind,
     CeWindowDrive,
 )
@@ -341,7 +338,7 @@ async def test_cegarageho(
 ) -> None:
     """Test CeGarageHO."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeGarageHO = cast(CeGarageHO, await helper.get_custom_entity(central, "VCU3574044", 1))
+    cover: CeGarage = cast(CeGarage, await helper.get_custom_entity(central, "VCU3574044", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position is None
@@ -402,13 +399,9 @@ async def test_cegarageho(
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
     assert cover.current_cover_position == 100
 
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_HO_SECTION_OPENING
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_OPENING)
     assert cover.is_opening is True
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_HO_SECTION_CLOSING
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", GARAGE_DOOR_SECTION_CLOSING)
     assert cover.is_closing is True
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "SECTION", None)
@@ -425,7 +418,7 @@ async def test_cegaragetm(
 ) -> None:
     """Test CeGarageTM."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeGarageTM = cast(CeGarageTM, await helper.get_custom_entity(central, "VCU6166407", 1))
+    cover: CeGarage = cast(CeGarage, await helper.get_custom_entity(central, "VCU6166407", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_cover_position is None
@@ -486,13 +479,9 @@ async def test_cegaragetm(
     central.event(const.LOCAL_INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 1)
     assert cover.current_cover_position == 100
 
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", GARAGE_DOOR_TM_SECTION_OPENING
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", GARAGE_DOOR_SECTION_OPENING)
     assert cover.is_opening is True
-    central.event(
-        const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", GARAGE_DOOR_TM_SECTION_CLOSING
-    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", GARAGE_DOOR_SECTION_CLOSING)
     assert cover.is_closing is True
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU6166407:1", "SECTION", None)
