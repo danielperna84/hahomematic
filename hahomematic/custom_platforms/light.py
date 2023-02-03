@@ -141,10 +141,8 @@ class BaseHmLight(CustomEntity):
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
             await self.set_on_time_value(on_time=on_time, collector=collector)
         if (
-            (brightness := cast(int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255))
-            and brightness != self.brightness
-            or kwargs
-        ):
+            brightness := cast(int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255)
+        ) or kwargs:
             level = brightness / 255.0
             await self._e_level.send_value(value=level, collector=collector)
 
@@ -246,7 +244,6 @@ class CeColorDimmer(CeDimmer):
                 color = 200
             else:
                 color = int(round(max(min(hue, 1), 0) * 199))
-
             await self._e_color.send_value(value=color, collector=collector)
         await super().turn_on(collector=collector, **kwargs)
 

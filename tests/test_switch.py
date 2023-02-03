@@ -28,8 +28,8 @@ async def test_ceswitch(
     assert switch.value is None
     assert switch.channel_value is False
     await switch.turn_on()
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU2128127:4", paramset_key="VALUES", value={"STATE": True}
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU2128127:4", paramset_key="VALUES", parameter="STATE", value=True
     )
     assert switch.value is True
     await switch.turn_off()

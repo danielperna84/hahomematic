@@ -128,7 +128,7 @@ def bind_collector(func: _CallableT) -> _CallableT:
             collector = hme.CallParameterCollector(custom_entity=args[0])
             kwargs[argument_name] = collector
             return_value = await func(*args, **kwargs)
-            await collector.put_paramset()
+            await collector.send_data()
         return return_value
 
     return wrapper_collector  # type: ignore[return-value]
