@@ -4,13 +4,14 @@ about: Create a report to help us improve.
 
 ---
 
-DONT'T DELETE THIS.
-
 This is for issues only
 If you have a feature request, add it as a new discussion, or add your point of view to an existing discussion.
 
 
-Please answer all questions as good as possible.
+# DON'T DELETE THIS.
+Issue without this template will be closed.
+
+## Please answer all questions as good as possible.
 
 Language: as you like -> english/DEUTSCH 
 
