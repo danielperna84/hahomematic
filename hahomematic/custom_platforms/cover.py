@@ -73,7 +73,7 @@ class CeCover(CustomEntity):
         )
 
     @property
-    def channel_level(self) -> float:
+    def _channel_level(self) -> float:
         """Return the channel level of the cover."""
         if self._e_channel_level.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
             return float(self._e_channel_level.value)
@@ -84,7 +84,7 @@ class CeCover(CustomEntity):
     @value_property
     def current_cover_position(self) -> int:
         """Return current position of cover."""
-        return int(self.channel_level * 100)
+        return int(self._channel_level * 100)
 
     async def set_cover_position(
         self, position: float, collector: CallParameterCollector | None = None
@@ -103,7 +103,7 @@ class CeCover(CustomEntity):
     @value_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self.channel_level == self._attr_hm_closed_state
+        return self._channel_level == self._attr_hm_closed_state
 
     @value_property
     def is_opening(self) -> bool | None:
@@ -163,7 +163,7 @@ class CeBlind(CeCover):
         )
 
     @property
-    def channel_tilt_level(self) -> float:
+    def _channel_tilt_level(self) -> float:
         """Return the channel level of the tilt."""
         if self._e_channel_level_2.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
             return float(self._e_channel_level_2.value)
@@ -176,7 +176,7 @@ class CeBlind(CeCover):
     @value_property
     def current_cover_tilt_position(self) -> int:
         """Return current tilt position of cover."""
-        return int(self.channel_tilt_level * 100)
+        return int(self._channel_tilt_level * 100)
 
     async def set_cover_tilt_position(
         self, position: float, collector: CallParameterCollector | None = None
