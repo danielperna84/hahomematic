@@ -40,6 +40,10 @@ async def test_hmbutton(
         value=True,
     )
 
+    call_count = len(mock_client.method_calls)
+    await button.press()
+    assert (call_count + 1) == len(mock_client.method_calls)
+
 
 @pytest.mark.asyncio
 async def test_hmprogrambutton(
