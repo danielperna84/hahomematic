@@ -270,10 +270,7 @@ class CeColorDimmer(CeDimmer):
             khue, ksaturation = kwargs[HM_ARG_HS_COLOR]
             hue = khue / 360
             saturation = ksaturation / 100
-            if saturation < 0.1:  # Special case (white)
-                color = 200
-            else:
-                color = int(round(max(min(hue, 1), 0) * 199))
+            color = 200 if saturation < 0.1 else int(round(max(min(hue, 1), 0) * 199))
             await self._e_color.send_value(value=color, collector=collector)
         await super().turn_on(collector=collector, **kwargs)
 
