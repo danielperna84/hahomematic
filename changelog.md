@@ -1,9 +1,5 @@
 # Version 2023.2.5 (2023-02-05)
 - Fix GitHub build/publish
-- Update tests to ensure lock, siren, action and button send service call if parameter doesn't change
-- Update tests to ensure select and number send service call only if parameter changes
-
-# Version 2023.2.3 (2023-02-05)
 - Add comments to parameter_visibility
 - Use `put_paramset` only when there is more than one parameter to sent
 - Use only one implementation for garage doors (HO/TM)
