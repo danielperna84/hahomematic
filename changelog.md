@@ -11,6 +11,9 @@
     - platforms: lock and siren.
     - services: `stop_cover`, `stop_cover_tilt`, `enable_away_mode_*`, `disable_away_mode`, `set_on_time_value`
     - system variables
+  - Add virtual channels for cover:
+    - Channel no as examples from HmIP-BROLL. The implementation of the first actor channel (4) remains unchanged, which means that this channel (4) shows the correct cover position from sensor channel (3). 
+      The other actor channels (5+6) are generated as initially deactivated and only use the cover position from their own channel after activation.
 
 # Version 2023.2.1 (2023-02-01)
 - Separate check for parameter is un_ignored based on if it should be hidden or not
