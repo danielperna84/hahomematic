@@ -5,6 +5,9 @@ See https://www.home-assistant.io/integrations/cover/.
 """
 from __future__ import annotations
 
+import logging
+from typing import Any
+
 from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
     FIELD_CHANNEL_LEVEL,
@@ -31,6 +34,14 @@ from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.select import HmSelect
 from hahomematic.generic_platforms.sensor import HmSensor
 
+HM_ARG_POSITION = "position"
+HM_ARG_TILT_POSITION = "tilt_position"
+HM_ARG_OPEN = "open"
+HM_ARG_CLOSE = "close"
+HM_ARG_TILT_OPEN = "tilt_open"
+HM_ARG_TILT_CLOSE = "tilt_close"
+HM_ARG_VENT = "vent"
+
 HM_OPEN: float = 1.0  # must be float!
 HM_CLOSED: float = 0.0  # must be float!
 HM_WD_CLOSED: float = -0.005  # must be float! HM-Sec-Win
@@ -51,6 +62,11 @@ GARAGE_DOOR_STATE_CLOSED = "CLOSED"
 GARAGE_DOOR_STATE_OPEN = "OPEN"
 GARAGE_DOOR_STATE_VENTILATION_POSITION = "VENTILATION_POSITION"
 GARAGE_DOOR_STATE_POSITION_UNKNOWN = "POSITION_UNKNOWN"
+POSITION_OPEN = 100
+POSITION_VENT = 10
+POSITION_CLOSED = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CeCover(CustomEntity):
@@ -73,7 +89,7 @@ class CeCover(CustomEntity):
         )
 
     @property
-    def channel_level(self) -> float:
+    def _channel_level(self) -> float:
         """Return the channel level of the cover."""
         if self._e_channel_level.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
             return float(self._e_channel_level.value)
@@ -84,12 +100,14 @@ class CeCover(CustomEntity):
     @value_property
     def current_cover_position(self) -> int:
         """Return current position of cover."""
-        return int(self.channel_level * 100)
+        return int(self._channel_level * 100)
 
     async def set_cover_position(
         self, position: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Move the cover to a specific position."""
+        if not self.is_state_change(position=position):
+            return
         position = min(100.0, max(0.0, position))
         level = position / 100.0
         await self._set_cover_level(level=level, collector=collector)
@@ -103,7 +121,7 @@ class CeCover(CustomEntity):
     @value_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self.channel_level == self._attr_hm_closed_state
+        return self._channel_level == self._attr_hm_closed_state
 
     @value_property
     def is_opening(self) -> bool | None:
@@ -121,15 +139,31 @@ class CeCover(CustomEntity):
 
     async def open_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Open the cover."""
+        if not self.is_state_change(open=True):
+            return
         await self._set_cover_level(level=self._attr_hm_open_state, collector=collector)
 
     async def close_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover."""
+        if not self.is_state_change(close=True):
+            return
         await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
 
     async def stop_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         await self._e_stop.send_value(value=True, collector=collector)
+
+    def is_state_change(self, **kwargs: Any) -> bool:
+        """Check if the state changes due to kwargs."""
+        if kwargs.get(HM_ARG_OPEN) is not None and self._channel_level != HM_OPEN:
+            return True
+        if kwargs.get(HM_ARG_CLOSE) is not None and self._channel_level != HM_CLOSED:
+            return True
+        if (
+            position := kwargs.get(HM_ARG_POSITION)
+        ) is not None and position != self.current_cover_position:
+            return True
+        return super().is_state_change(**kwargs)
 
 
 class CeWindowDrive(CeCover):
@@ -137,6 +171,18 @@ class CeWindowDrive(CeCover):
 
     _attr_hm_closed_state: float = HM_WD_CLOSED
     _attr_hm_open_state: float = HM_OPEN
+
+    @value_property
+    def current_cover_position(self) -> int:
+        """Return current position of cover."""
+        level = (
+            self._e_level.value if self._e_level.value is not None else self._attr_hm_closed_state
+        )
+        if level == HM_WD_CLOSED:
+            level = HM_CLOSED
+        elif level == HM_CLOSED:
+            level = 0.01
+        return int(level * 100)
 
     async def _set_cover_level(
         self, level: float, collector: CallParameterCollector | None = None
@@ -163,7 +209,7 @@ class CeBlind(CeCover):
         )
 
     @property
-    def channel_tilt_level(self) -> float:
+    def _channel_tilt_level(self) -> float:
         """Return the channel level of the tilt."""
         if self._e_channel_level_2.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
             return float(self._e_channel_level_2.value)
@@ -176,12 +222,14 @@ class CeBlind(CeCover):
     @value_property
     def current_cover_tilt_position(self) -> int:
         """Return current tilt position of cover."""
-        return int(self.channel_tilt_level * 100)
+        return int(self._channel_tilt_level * 100)
 
     async def set_cover_tilt_position(
         self, position: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Move the cover to a specific tilt position."""
+        if not self.is_state_change(tilt_position=position):
+            return
         position = min(100.0, max(0.0, position))
         level = position / 100.0
         await self._set_cover_tilt_level(level=level, collector=collector)
@@ -194,15 +242,37 @@ class CeBlind(CeCover):
 
     async def open_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Open the tilt."""
+        if not self.is_state_change(tilt_open=True):
+            return
         await self._set_cover_tilt_level(level=self._attr_hm_open_state, collector=collector)
 
     async def close_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
+        if not self.is_state_change(tilt_close=True):
+            return
         await self._set_cover_tilt_level(level=self._attr_hm_closed_state, collector=collector)
 
     async def stop_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         await self._e_stop.send_value(value=True, collector=collector)
+
+    def is_state_change(self, **kwargs: Any) -> bool:
+        """Check if the state changes due to kwargs."""
+        if (
+            tilt_position := kwargs.get(HM_ARG_TILT_POSITION)
+        ) is not None and tilt_position != self.current_cover_tilt_position:
+            return True
+        if (
+            kwargs.get(HM_ARG_TILT_OPEN) is not None
+            and self.current_cover_tilt_position != POSITION_OPEN
+        ):
+            return True
+        if (
+            kwargs.get(HM_ARG_TILT_CLOSE) is not None
+            and self.current_cover_tilt_position != POSITION_CLOSED
+        ):
+            return True
+        return super().is_state_change(**kwargs)
 
 
 class CeIpBlind(CeBlind):
@@ -223,12 +293,16 @@ class CeIpBlind(CeBlind):
     @bind_collector
     async def open_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Open the cover and open the tilt."""
+        if not self.is_state_change(open=True, tilt_open=True):
+            return
         await super()._set_cover_tilt_level(level=self._attr_hm_open_state, collector=collector)
         await self._set_cover_level(level=self._attr_hm_open_state, collector=collector)
 
     @bind_collector
     async def close_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover and close the tilt."""
+        if not self.is_state_change(close=True, tilt_close=True):
+            return
         await super()._set_cover_tilt_level(level=self._attr_hm_closed_state, collector=collector)
         await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
 
@@ -238,9 +312,7 @@ class CeIpBlind(CeBlind):
     ) -> None:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
         await super()._set_cover_tilt_level(level=level, collector=collector)
-        await self.set_cover_position(
-            position=self.current_cover_position or 0, collector=collector
-        )
+        await self._set_cover_level(level=self._channel_level or 0.0, collector=collector)
 
 
 class CeGarage(CustomEntity):
@@ -265,11 +337,11 @@ class CeGarage(CustomEntity):
     def current_cover_position(self) -> int | None:
         """Return current position of the garage door ."""
         if self._e_door_state.value == GARAGE_DOOR_STATE_OPEN:
-            return 100
+            return POSITION_OPEN
         if self._e_door_state.value == GARAGE_DOOR_STATE_VENTILATION_POSITION:
-            return 10
+            return POSITION_VENT
         if self._e_door_state.value == GARAGE_DOOR_STATE_CLOSED:
-            return 0
+            return POSITION_CLOSED
         return None
 
     async def set_cover_position(self, position: float) -> None:
@@ -304,10 +376,14 @@ class CeGarage(CustomEntity):
 
     async def open_cover(self) -> None:
         """Open the garage door."""
+        if not self.is_state_change(open=True):
+            return
         await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_OPEN)
 
     async def close_cover(self) -> None:
         """Close the garage door."""
+        if not self.is_state_change(close=True):
+            return
         await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_CLOSE)
 
     async def stop_cover(self) -> None:
@@ -316,7 +392,19 @@ class CeGarage(CustomEntity):
 
     async def vent_cover(self) -> None:
         """Move the garage door to vent position."""
+        if not self.is_state_change(vent=True):
+            return
         await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
+
+    def is_state_change(self, **kwargs: Any) -> bool:
+        """Check if the state changes due to kwargs."""
+        if kwargs.get(HM_ARG_OPEN) is not None and self.current_cover_position != POSITION_OPEN:
+            return True
+        if kwargs.get(HM_ARG_VENT) is not None and self.current_cover_position != POSITION_VENT:
+            return True
+        if kwargs.get(HM_ARG_CLOSE) is not None and self.current_cover_position != POSITION_CLOSED:
+            return True
+        return super().is_state_change(**kwargs)
 
 
 def make_ip_cover(

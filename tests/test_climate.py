@@ -44,7 +44,7 @@ async def test_cesimplerfthermostat(
     assert climate.usage == HmEntityUsage.CE_PRIMARY
 
     assert climate.is_valid is False
-    assert climate.state_uncertain is True
+    assert climate.state_uncertain is False
     assert climate.temperature_unit == "°C"
     assert climate.min_temp == 6.0
     assert climate.max_temp == 30.0
@@ -186,6 +186,16 @@ async def test_cerfthermostat(
         parameter="LOWERING_MODE",
         value=True,
     )
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 3)
+    call_count = len(mock_client.method_calls)
+    await climate.set_preset_mode(HmPresetMode.BOOST)
+    assert call_count == len(mock_client.method_calls)
+
+    await climate.set_hvac_mode(HmHvacMode.AUTO)
+    call_count = len(mock_client.method_calls)
+    await climate.set_hvac_mode(HmHvacMode.AUTO)
+    assert call_count == len(mock_client.method_calls)
 
 
 @pytest.mark.asyncio
@@ -333,3 +343,18 @@ async def test_ceipthermostat(
             "PARTY_TIME_END": "2000_01_01 00:00",
         },
     )
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)
+    call_count = len(mock_client.method_calls)
+    await climate.set_preset_mode(HmPresetMode.BOOST)
+    assert call_count == len(mock_client.method_calls)
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1769958:1", "ACTUAL_TEMPERATURE", 12.0)
+    call_count = len(mock_client.method_calls)
+    await climate.set_temperature(12.0)
+    assert call_count == len(mock_client.method_calls)
+
+    await climate.set_hvac_mode(HmHvacMode.AUTO)
+    call_count = len(mock_client.method_calls)
+    await climate.set_hvac_mode(HmHvacMode.AUTO)
+    assert call_count == len(mock_client.method_calls)

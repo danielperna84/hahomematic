@@ -5,9 +5,10 @@ See https://www.home-assistant.io/integrations/switch/.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, cast
 
-from hahomematic.const import HM_ARG_ON_TIME, HmPlatform
+from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
     FIELD_CHANNEL_STATE,
     FIELD_ON_TIME_VALUE,
@@ -24,6 +25,8 @@ from hahomematic.entity import CallParameterCollector, CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.switch import HmSwitch
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CeSwitch(CustomEntity):
@@ -54,17 +57,20 @@ class CeSwitch(CustomEntity):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
+        self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the switch on."""
+        if not self.is_state_change(on=True, **kwargs):
+            return
         if HM_ARG_ON_TIME in kwargs and isinstance(self._e_on_time_value, HmAction):
             on_time: float = float(cast(float, kwargs[HM_ARG_ON_TIME]))
             await self._e_on_time_value.send_value(value=on_time, collector=collector)
-
         await self._e_state.turn_on(collector=collector, **kwargs)
 
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the switch off."""
+        if not self.is_state_change(off=True):
+            return
         await self._e_state.turn_off(collector=collector)
 
     async def set_on_time_value(
@@ -72,6 +78,16 @@ class CeSwitch(CustomEntity):
     ) -> None:
         """Set the on time value in seconds."""
         await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
+
+    def is_state_change(self, **kwargs: Any) -> bool:
+        """Check if the state changes due to kwargs."""
+        if kwargs.get(HM_ARG_ON) is not None and self.value is not True and len(kwargs) == 1:
+            return True
+        if kwargs.get(HM_ARG_OFF) is not None and self.value is not False and len(kwargs) == 1:
+            return True
+        if kwargs.get(HM_ARG_ON_TIME) is not None:
+            return True
+        return super().is_state_change(**kwargs)
 
 
 def make_ip_switch(

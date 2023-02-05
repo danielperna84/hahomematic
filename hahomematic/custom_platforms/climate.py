@@ -6,6 +6,8 @@ See https://www.home-assistant.io/integrations/climate/.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import logging
+from typing import Any
 
 from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
@@ -63,6 +65,12 @@ PARTY_DATE_FORMAT = "%Y_%m_%d %H:%M"
 
 HM_PRESET_MODE_PREFIX = "week_program_"
 TEMP_CELSIUS = "°C"
+
+HM_ARG_TEMPERATURE = "temperature"
+HM_ARG_HVAC_MODE = "hvac_mode"
+HM_ARG_PRESET_MODE = "preset_mode"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HmHvacAction(StrEnum):
@@ -212,6 +220,8 @@ class BaseClimateEntity(CustomEntity):
         do_validate: bool = True,
     ) -> None:
         """Set new target temperature."""
+        if not self.is_state_change(temperature=temperature):
+            return
         await self._e_setpoint.send_value(
             value=temperature, collector=collector, do_validate=do_validate
         )
@@ -236,6 +246,20 @@ class BaseClimateEntity(CustomEntity):
 
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
+
+    def is_state_change(self, **kwargs: Any) -> bool:
+        """Check if the state changes due to kwargs."""
+        if (
+            temperature := kwargs.get(HM_ARG_TEMPERATURE)
+        ) is not None and temperature != self.current_temperature:
+            return True
+        if (hvac_mode := kwargs.get(HM_ARG_HVAC_MODE)) is not None and hvac_mode != self.hvac_mode:
+            return True
+        if (
+            preset_mode := kwargs.get(HM_ARG_PRESET_MODE)
+        ) is not None and preset_mode != self.preset_mode:
+            return True
+        return super().is_state_change(**kwargs)
 
 
 class CeSimpleRfThermostat(BaseClimateEntity):
@@ -326,6 +350,8 @@ class CeRfThermostat(BaseClimateEntity):
         self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new target hvac mode."""
+        if not self.is_state_change(hvac_mode=hvac_mode):
+            return
         if hvac_mode == HmHvacMode.AUTO:
             await self._e_auto_mode.send_value(value=True, collector=collector)
         elif hvac_mode == HmHvacMode.HEAT:
@@ -344,6 +370,8 @@ class CeRfThermostat(BaseClimateEntity):
         self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new preset mode."""
+        if not self.is_state_change(preset_mode=preset_mode):
+            return
         if preset_mode == HmPresetMode.BOOST:
             await self._e_boost_mode.send_value(value=True, collector=collector)
         elif preset_mode == HmPresetMode.COMFORT:
@@ -450,6 +478,8 @@ class CeIpThermostat(BaseClimateEntity):
         self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new target hvac mode."""
+        if not self.is_state_change(hvac_mode=hvac_mode):
+            return
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
             await self.set_preset_mode(preset_mode=HmPresetMode.NONE, collector=collector)
@@ -470,6 +500,8 @@ class CeIpThermostat(BaseClimateEntity):
         self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new preset mode."""
+        if not self.is_state_change(preset_mode=preset_mode):
+            return
         if preset_mode == HmPresetMode.BOOST:
             await self._e_boost_mode.send_value(value=True, collector=collector)
         elif preset_mode == HmPresetMode.NONE:

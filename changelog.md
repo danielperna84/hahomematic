@@ -1,7 +1,16 @@
-# Version 2023.2.2 (2023-02-01)
+# Version 2023.2.2 (2023-02-05)
 - Add comments to parameter_visibility
-- Use put_paramset only when there is more than one parameter to send
+- Use `put_paramset` only when there is more than one parameter to sent
 - Use only one implementation for garage doors (HO/TM)
+- Avoid backend calls if value/state doesn't change
+  - If an entity (e.g. `switch`) has only **one** parameter that represents its state, then a call to the backend will be made, 
+    if the parameter value sent is not identical to the current state.
+  - If an entity (e.g. `cover`, `climate`, `light`) has **multiple** parameters that represent its state, then a call to the backend will be made, 
+    if one of these parameter values sent is not identical to its current state.
+  - Not covered by this approach:
+    - platforms: lock and siren.
+    - services: `stop_cover`, `stop_cover_tilt`, `enable_away_mode_*`, `disable_away_mode`, `set_on_time_value`
+    - system variables
 
 # Version 2023.2.1 (2023-02-01)
 - Separate check for parameter is un_ignored based on if it should be hidden or not

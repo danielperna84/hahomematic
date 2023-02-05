@@ -25,7 +25,8 @@ async def test_ceswitch(
     switch: CeSwitch = cast(CeSwitch, await helper.get_custom_entity(central, "VCU2128127", 4))
     assert switch.usage == HmEntityUsage.CE_PRIMARY
 
-    assert switch.value is None
+    await switch.turn_off()
+    assert switch.value is False
     assert switch.channel_value is False
     await switch.turn_on()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -46,6 +47,16 @@ async def test_ceswitch(
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU2128127:4", paramset_key="VALUES", parameter="ON_TIME", value=35.4
     )
+
+    await switch.turn_on()
+    call_count = len(mock_client.method_calls)
+    await switch.turn_on()
+    assert call_count == len(mock_client.method_calls)
+
+    await switch.turn_off()
+    call_count = len(mock_client.method_calls)
+    await switch.turn_off()
+    assert call_count == len(mock_client.method_calls)
 
 
 @pytest.mark.asyncio
@@ -97,6 +108,16 @@ async def test_hmswitch(
         parameter="ON_TIME",
         value=35.4,
     )
+
+    await switch.turn_on()
+    call_count = len(mock_client.method_calls)
+    await switch.turn_on()
+    assert call_count == len(mock_client.method_calls)
+
+    await switch.turn_off()
+    call_count = len(mock_client.method_calls)
+    await switch.turn_off()
+    assert call_count == len(mock_client.method_calls)
 
 
 @pytest.mark.asyncio
