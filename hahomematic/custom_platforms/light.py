@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Any, cast
 
-from hahomematic.const import HM_ARG_ON_TIME, HmPlatform
+from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
     FIELD_CHANNEL_COLOR,
     FIELD_CHANNEL_LEVEL,
@@ -131,12 +131,14 @@ class BaseHmLight(CustomEntity):
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
-        **kwargs: dict[str, Any] | None,
+        **kwargs: Any,
     ) -> None:
         """Turn the light on."""
+        if not self.is_state_change(on=True, **kwargs):
+            return
         if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
-            await self.set_ramp_time_value(ramp_time=ramp_time, collector=collector)
+            await self._set_ramp_time_value(ramp_time=ramp_time, collector=collector)
         if HM_ARG_ON_TIME in kwargs:
             on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
             await self.set_on_time_value(on_time=on_time, collector=collector)
@@ -148,12 +150,14 @@ class BaseHmLight(CustomEntity):
 
     @bind_collector
     async def turn_off(
-        self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
+        self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the light off."""
+        if not self.is_state_change(off=True, **kwargs):
+            return
         if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
-            await self.set_ramp_time_value(ramp_time=ramp_time, collector=collector)
+            await self._set_ramp_time_value(ramp_time=ramp_time, collector=collector)
 
         await self._e_level.send_value(value=HM_DIMMER_OFF, collector=collector)
 
@@ -163,11 +167,35 @@ class BaseHmLight(CustomEntity):
         """Set the on time value in seconds."""
         await self._e_on_time_value.send_value(value=on_time, collector=collector)
 
-    async def set_ramp_time_value(
+    async def _set_ramp_time_value(
         self, ramp_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the ramp time value in seconds."""
         await self._e_ramp_time_value.send_value(value=ramp_time, collector=collector)
+
+    def is_state_change(self, **kwargs: Any) -> bool:
+        """Check if the state changes due to kwargs."""
+        if kwargs.get(HM_ARG_ON) is not None and self.is_on is not True and len(kwargs) == 1:
+            return True
+        if kwargs.get(HM_ARG_OFF) is not None and self.is_on is not False and len(kwargs) == 1:
+            return True
+        if (
+            brightness := kwargs.get(HM_ARG_BRIGHTNESS)
+        ) is not None and brightness != self.brightness:
+            return True
+        if (hs_color := kwargs.get(HM_ARG_HS_COLOR)) is not None and hs_color != self.hs_color:
+            return True
+        if (
+            color_temp := kwargs.get(HM_ARG_COLOR_TEMP)
+        ) is not None and color_temp != self.color_temp:
+            return True
+        if (effect := kwargs.get(HM_ARG_EFFECT)) is not None and effect != self.effect:
+            return True
+        if kwargs.get(HM_ARG_RAMP_TIME) is not None:
+            return True
+        if kwargs.get(HM_ARG_ON_TIME) is not None:
+            return True
+        return super().is_state_change(**kwargs)
 
 
 class CeDimmer(BaseHmLight):
@@ -236,6 +264,8 @@ class CeColorDimmer(CeDimmer):
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the light on."""
+        if not self.is_state_change(on=True, **kwargs):
+            return
         if HM_ARG_HS_COLOR in kwargs:
             khue, ksaturation = kwargs[HM_ARG_HS_COLOR]
             hue = khue / 360
@@ -290,6 +320,8 @@ class CeColorDimmerEffect(CeColorDimmer):
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the light on."""
+        if not self.is_state_change(on=True, **kwargs):
+            return
         if HM_ARG_HS_COLOR in kwargs and self.supports_effects and self.effect != HM_EFFECT_OFF:
             await self._e_effect.send_value(value=0, collector=collector)
 
@@ -329,6 +361,8 @@ class CeColorTempDimmer(CeDimmer):
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the light on."""
+        if not self.is_state_change(on=True, **kwargs):
+            return
         if HM_ARG_COLOR_TEMP in kwargs:
             color_level = (HM_MAX_MIREDS - kwargs[HM_ARG_COLOR_TEMP]) / (
                 HM_MAX_MIREDS - HM_MIN_MIREDS
@@ -399,8 +433,11 @@ class CeIpFixedColorLight(BaseHmLight):
     @value_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
-        if self._e_color.value is not None:
-            return self._color_switcher.get(self._e_color.value, (0.0, 0.0))
+        if (
+            self._e_color.value is not None
+            and (hs_color := self._color_switcher.get(self._e_color.value)) is not None
+        ):
+            return hs_color
         return 0.0, 0.0
 
     @property
@@ -420,6 +457,8 @@ class CeIpFixedColorLight(BaseHmLight):
         self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the light on."""
+        if not self.is_state_change(on=True, **kwargs):
+            return
         if HM_ARG_HS_COLOR in kwargs:
             hs_color = kwargs[HM_ARG_HS_COLOR]
             simple_rgb_color = _convert_color(hs_color)
@@ -444,7 +483,7 @@ class CeIpFixedColorLight(BaseHmLight):
         await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
     @bind_collector
-    async def set_ramp_time_value(
+    async def _set_ramp_time_value(
         self, ramp_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the ramp time value in seconds."""

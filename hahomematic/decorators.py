@@ -56,7 +56,7 @@ def async_callback_system_event(name: str) -> Callable:
     return async_decorator_callback_system_event
 
 
-def _exec_callback_system_event(name: str, *args: Any, **kwargs: dict[str, Any]) -> None:
+def _exec_callback_system_event(name: str, *args: Any, **kwargs: Any) -> None:
     """Execute the callback for a system event."""
     if len(args) > 1:
         _LOGGER.warning(
@@ -87,7 +87,7 @@ def callback_event(func: Callable[P, R]) -> Callable[P, R]:
         _exec_callback_entity_event(*args, **kwargs)
         return return_value
 
-    def _exec_callback_entity_event(*args: Any, **kwargs: dict[str, Any]) -> None:
+    def _exec_callback_entity_event(*args: Any, **kwargs: Any) -> None:
         """Execute the callback for an entity event."""
         try:
             args = args[1:]

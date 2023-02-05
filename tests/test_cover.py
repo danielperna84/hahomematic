@@ -78,10 +78,26 @@ async def test_cecover(
     assert cover.is_opening is True
     central.event(const.LOCAL_INTERFACE_ID, "VCU8537918:3", "ACTIVITY_STATE", 2)
     assert cover.is_closing is True
+    central.event(const.LOCAL_INTERFACE_ID, "VCU8537918:3", "ACTIVITY_STATE", 0)
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU8537918:3", "LEVEL", 0.5)
     assert cover._channel_level == 0.5
     assert cover.current_cover_position == 50
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU8537918:3", "LEVEL", 0.0)
+    call_count = len(mock_client.method_calls)
+    await cover.close_cover()
+    assert call_count == len(mock_client.method_calls)
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU8537918:3", "LEVEL", 1.0)
+    call_count = len(mock_client.method_calls)
+    await cover.open_cover()
+    assert call_count == len(mock_client.method_calls)
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU8537918:3", "LEVEL", 0.4)
+    call_count = len(mock_client.method_calls)
+    await cover.set_cover_position(40)
+    assert call_count == len(mock_client.method_calls)
 
 
 @pytest.mark.asyncio
@@ -173,7 +189,7 @@ async def test_cewindowdrive(
     assert cover.is_closed is True
 
     await cover.set_cover_position(1)
-    assert cover.current_cover_position == 0
+    assert cover.current_cover_position == 1
     assert cover._channel_level == HM_CLOSED
     assert cover.is_closed is False
 
@@ -262,6 +278,21 @@ async def test_ceblind(
         parameter="STOP",
         value=True,
     )
+
+    await cover.open_cover_tilt()
+    call_count = len(mock_client.method_calls)
+    await cover.open_cover_tilt()
+    assert call_count == len(mock_client.method_calls)
+
+    await cover.close_cover_tilt()
+    call_count = len(mock_client.method_calls)
+    await cover.close_cover_tilt()
+    assert call_count == len(mock_client.method_calls)
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.4)
+    call_count = len(mock_client.method_calls)
+    await cover.set_cover_tilt_position(40)
+    assert call_count == len(mock_client.method_calls)
 
 
 @pytest.mark.asyncio
@@ -410,6 +441,21 @@ async def test_cegarageho(
     assert cover.is_closing is None
     central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", None)
     assert cover.is_closed is None
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 0)
+    call_count = len(mock_client.method_calls)
+    await cover.close_cover()
+    assert call_count == len(mock_client.method_calls)
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
+    call_count = len(mock_client.method_calls)
+    await cover.open_cover()
+    assert call_count == len(mock_client.method_calls)
+
+    central.event(const.LOCAL_INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 2)
+    call_count = len(mock_client.method_calls)
+    await cover.vent_cover()
+    assert call_count == len(mock_client.method_calls)
 
 
 @pytest.mark.asyncio

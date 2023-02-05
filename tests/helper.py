@@ -216,6 +216,9 @@ async def get_custom_entity(
                 await custom_entity.load_entity_value(
                     call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
                 )
+
+            for data_entities in custom_entity.data_entities.values():
+                data_entities._attr_state_uncertain = False
             return custom_entity
     return None
 

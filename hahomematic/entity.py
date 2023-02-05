@@ -497,7 +497,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             return convert_value(  # type: ignore[no-any-return]
                 value=value, target_type=self._attr_type, value_list=self.value_list
             )
-        except ValueError:
+        except ValueError:  # pragma: no cover
             _LOGGER.debug(
                 "CONVERT_VALUE: conversion failed for %s, %s, %s, value: [%s]",
                 self.device.interface_id,
@@ -574,6 +574,9 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
             collector.add_entity(self, self._convert_value(value))
             return
 
+        if not self.is_state_change(value=value):
+            return
+
         await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
@@ -606,6 +609,19 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
             else HmEntityUsage.ENTITY
         )
 
+    def is_state_change(self, value: ParameterT) -> bool:
+        """
+        Check if the state/value changes.
+
+        If the state is uncertain, the state should also marked as changed.
+        """
+        if value != self._attr_value:
+            return True
+        if self.state_uncertain:
+            return True
+        _LOGGER.debug("NO_STATE_CHANGE: %s", self.name)
+        return False
+
 
 class WrapperEntity(BaseEntity):
     """Base class for entities that switch type of generic entities."""
@@ -613,7 +629,7 @@ class WrapperEntity(BaseEntity):
     def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform) -> None:
         """Initialize the entity."""
         if wrapped_entity.platform == new_platform:
-            raise HaHomematicException(
+            raise HaHomematicException(  # pragma: no cover
                 "Cannot create wrapped entity. platform must not be equivalent."
             )
         self._wrapped_entity: Final[GenericEntity] = wrapped_entity
@@ -752,6 +768,17 @@ class CustomEntity(BaseEntity):
                 )
         self.update_entity()
 
+    def is_state_change(self, **kwargs: Any) -> bool:
+        """
+        Check if the state changes due to kwargs.
+
+        If the state is uncertain, the state should also marked as changed.
+        """
+        if self.state_uncertain:
+            return True
+        _LOGGER.debug("NO_STATE_CHANGE: %s", self.name)
+        return False
+
     def _init_entities(self) -> None:
         """init entity collection."""
         # Add repeating fields
@@ -859,7 +886,7 @@ class CustomEntity(BaseEntity):
     ) -> None:
         """Mark entities to be created in HA."""
         if not un_ignore_params_by_paramset_key:
-            return
+            return  # pragma: no cover
         for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
             for entity in self.device.generic_entities.values():
                 if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
@@ -869,7 +896,7 @@ class CustomEntity(BaseEntity):
         """get entity."""
         if entity := self.data_entities.get(field_name):
             if not isinstance(entity, entity_type):
-                _LOGGER.debug(
+                _LOGGER.debug(  # pragma: no cover
                     "GET_ENTITY: type mismatch for requested sub entity: "
                     "expected: %s, but is %s for field name %s of enitity %s",
                     entity_type.name,
@@ -1124,7 +1151,7 @@ class NoneTypeEntity:
 
     def send_value(self, value: Any) -> bool:
         """Send value dummy method."""
-        return True
+        return True  # pragma: no cover
 
 
 class CallParameterCollector:
@@ -1134,9 +1161,12 @@ class CallParameterCollector:
         """Init the generator."""
         self._custom_entity = custom_entity
         self._paramsets: dict[str, dict[str, Any]] = {}
+        self._paramsets_changed: dict[str, bool] = {}
 
     def add_entity(self, entity: GenericEntity, value: Any) -> None:
         """Add a generic entity."""
+        if entity.is_state_change(value=value):
+            self._paramsets_changed[entity.channel_address] = True
         if entity.channel_address not in self._paramsets:
             self._paramsets[entity.channel_address] = {}
         self._paramsets[entity.channel_address][entity.parameter] = value
@@ -1152,10 +1182,10 @@ class CallParameterCollector:
                     parameter=parameter,
                     value=value,
                 ):
-                    return False
+                    return False  # pragma: no cover
             else:
                 if not await self._custom_entity.device.client.put_paramset(
                     address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
                 ):
-                    return False
+                    return False  # pragma: no cover
         return True

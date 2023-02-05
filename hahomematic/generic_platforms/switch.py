@@ -35,7 +35,7 @@ class HmSwitch(GenericEntity[bool]):
         return self._attr_value
 
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: dict[str, Any] | None
+        self, collector: CallParameterCollector | None = None, **kwargs: Any
     ) -> None:
         """Turn the switch on."""
         if HM_ARG_ON_TIME in kwargs:
