@@ -424,7 +424,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             return new_unit
         if not raw_unit:
             return None
-        for (check, fix) in FIX_UNIT_REPLACE.items():
+        for check, fix in FIX_UNIT_REPLACE.items():
             if check in raw_unit:
                 return fix
         return raw_unit
@@ -782,16 +782,14 @@ class CustomEntity(BaseEntity):
     def _init_entities(self) -> None:
         """init entity collection."""
         # Add repeating fields
-        for (field_name, parameter) in self._device_desc.get(
-            hmed.ED_REPEATABLE_FIELDS, {}
-        ).items():
+        for field_name, parameter in self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {}).items():
             entity = self.device.get_generic_entity(
                 channel_address=self._attr_channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity)
 
         # Add visible repeating fields
-        for (field_name, parameter) in self._device_desc.get(
+        for field_name, parameter in self._device_desc.get(
             hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
         ).items():
             entity = self.device.get_generic_entity(
@@ -838,7 +836,7 @@ class CustomEntity(BaseEntity):
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
         for channel_no, channel in fields.items():
-            for (field_name, parameter) in channel.items():
+            for field_name, parameter in channel.items():
                 channel_address = f"{self.device.device_address}:{channel_no}"
                 if entity := self.device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
@@ -1161,12 +1159,9 @@ class CallParameterCollector:
         """Init the generator."""
         self._custom_entity = custom_entity
         self._paramsets: dict[str, dict[str, Any]] = {}
-        self._paramsets_changed: dict[str, bool] = {}
 
     def add_entity(self, entity: GenericEntity, value: Any) -> None:
         """Add a generic entity."""
-        if entity.is_state_change(value=value):
-            self._paramsets_changed[entity.channel_address] = True
         if entity.channel_address not in self._paramsets:
             self._paramsets[entity.channel_address] = {}
         self._paramsets[entity.channel_address][entity.parameter] = value

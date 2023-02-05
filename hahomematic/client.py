@@ -1057,7 +1057,6 @@ class ClientLocal(Client):  # pragma: no cover
         package_path = str(importlib.resources.files(package=package))
 
         def _load() -> Any | None:
-
             with open(
                 file=os.path.join(package_path, resource, filename),
                 encoding=DEFAULT_ENCODING,
