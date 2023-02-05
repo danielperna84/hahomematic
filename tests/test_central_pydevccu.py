@@ -112,7 +112,7 @@ async def test_central_full(central_unit_full) -> None:
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 184
     assert usage_types[HmEntityUsage.ENTITY] == 3264
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 97
-    assert usage_types[HmEntityUsage.CE_SECONDARY] == 132
+    assert usage_types[HmEntityUsage.CE_SECONDARY] == 146
 
     assert len(ce_channels) == 112
     assert len(entity_types) == 6
