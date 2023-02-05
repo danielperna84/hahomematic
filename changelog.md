@@ -1,4 +1,4 @@
-# Version 2023.2.2 (2023-02-01)
+# Version 2023.2.2 (2023-02-05)
 - Add comments to parameter_visibility
 - Use `put_paramset` only when there is more than one parameter to sent
 - Use only one implementation for garage doors (HO/TM)
@@ -10,6 +10,7 @@
   - Not covered by this approach:
     - platforms: lock and siren.
     - services: `stop_cover`, `stop_cover_tilt`, `enable_away_mode_*`, `disable_away_mode`, `set_on_time_value`
+    - system variables
 
 # Version 2023.2.1 (2023-02-01)
 - Separate check for parameter is un_ignored based on if it should be hidden or not
