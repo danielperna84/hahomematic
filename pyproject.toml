@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2023.2.4"
+version     = "2023.2.5"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
@@ -39,12 +39,17 @@ dependencies    = [
 [options.entry_points."console_scripts"]
 hahomematic = "hahomematic.hmcli:main"
 
+[tool.setuptools]
+platforms = ["any"]
+zip-safe  = false
+include-package-data = true
+
 [tool.setuptools.packages.find]
 include = ["hahomematic*"]
 exclude = ["tests", "tests.*", "dist", "build"]
 
 [tool.setuptools.package-data]
-myModule = ["py.typed", "rega_scripts/*.fn"]
+hahomematic = ["py.typed", "rega_scripts/*.fn"]
 
 [tool.black]
 target-version = ["py310", "py311"]

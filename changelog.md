@@ -1,3 +1,6 @@
+# Version 2023.2.5 (2023-02-05)
+- Fix GitHub build/publish
+
 # Version 2023.2.3 (2023-02-05)
 - Add comments to parameter_visibility
 - Use `put_paramset` only when there is more than one parameter to sent
