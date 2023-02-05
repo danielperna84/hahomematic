@@ -666,7 +666,6 @@ class ValueCache:
     ) -> Any:
         """Load data."""
         async with self._sema_get_or_load_value:
-
             if (
                 cached_value := self._get_value_from_cache(
                     channel_address=channel_address,

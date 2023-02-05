@@ -74,3 +74,8 @@ async def test_ceipsiren(
             "DURATION_VALUE": 1,
         },
     )
+
+    await siren.turn_off()
+    call_count = len(mock_client.method_calls)
+    await siren.turn_off()
+    assert (call_count + 1) == len(mock_client.method_calls)

@@ -57,6 +57,10 @@ async def test_hmselect(
     # do not write. value above max
     assert select.value == "OPEN"
 
+    call_count = len(mock_client.method_calls)
+    await select.send_value(1)
+    assert call_count == len(mock_client.method_calls)
+
 
 @pytest.mark.asyncio
 async def test_hmsysvarselect(

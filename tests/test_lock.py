@@ -67,6 +67,13 @@ async def test_cerflock(
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000146:1", "ERROR", 2)
     assert lock.is_jammed is True
 
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000146:1", "ERROR", 0)
+
+    await lock.open()
+    call_count = len(mock_client.method_calls)
+    await lock.open()
+    assert (call_count + 1) == len(mock_client.method_calls)
+
 
 @pytest.mark.asyncio
 async def test_ceiplock(
@@ -117,3 +124,8 @@ async def test_ceiplock(
     assert lock.is_unlocking is False
 
     assert lock.is_jammed is False
+
+    await lock.open()
+    call_count = len(mock_client.method_calls)
+    await lock.open()
+    assert (call_count + 1) == len(mock_client.method_calls)
