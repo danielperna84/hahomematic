@@ -45,6 +45,10 @@ async def test_hmfloat(
     await efloat.send_value(45.0)
     assert efloat.value == 0.5
 
+    call_count = len(mock_client.method_calls)
+    await efloat.send_value(45.0)
+    assert call_count == len(mock_client.method_calls)
+
 
 @pytest.mark.asyncio
 async def test_hminteger(
@@ -81,6 +85,10 @@ async def test_hminteger(
     )
     # do not write. value above max
     assert einteger.value == 2
+
+    call_count = len(mock_client.method_calls)
+    await einteger.send_value(6)
+    assert call_count == len(mock_client.method_calls)
 
 
 @pytest.mark.asyncio
