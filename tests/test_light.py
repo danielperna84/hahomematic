@@ -462,26 +462,25 @@ async def test_ceipfixedcolorlight(
         paramset_key="VALUES",
         value={"DURATION_UNIT": 2, "DURATION_VALUE": 277},
     )
-
-    await light._set_ramp_time_value(18)
+    await light.turn_on(**{"ramp_time": 18})
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8",
         paramset_key="VALUES",
-        value={"RAMP_TIME_UNIT": 0, "RAMP_TIME_VALUE": 18},
+        value={"RAMP_TIME_UNIT": 0, "RAMP_TIME_VALUE": 18, "LEVEL": 1.0},
     )
 
-    await light._set_ramp_time_value(17000)
+    await light.turn_on(**{"ramp_time": 17000})
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8",
         paramset_key="VALUES",
-        value={"RAMP_TIME_UNIT": 1, "RAMP_TIME_VALUE": 283},
+        value={"RAMP_TIME_UNIT": 1, "RAMP_TIME_VALUE": 283, "LEVEL": 1.0},
     )
 
-    await light._set_ramp_time_value(1000000)
+    await light.turn_on(**{"ramp_time": 1000000})
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8",
         paramset_key="VALUES",
-        value={"RAMP_TIME_UNIT": 2, "RAMP_TIME_VALUE": 277},
+        value={"RAMP_TIME_UNIT": 2, "RAMP_TIME_VALUE": 277, "LEVEL": 1.0},
     )
 
     await light.turn_on()
