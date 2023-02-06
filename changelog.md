@@ -1,6 +1,7 @@
 # Version 2023.2.6 (2023-02-06)
 - Add missing bind_collector
-- 
+- Add more `Final` typing
+
 # Version 2023.2.5 (2023-02-05)
 - Fix GitHub build/publish
 - Add comments to parameter_visibility

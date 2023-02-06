@@ -16,8 +16,8 @@ from hahomematic.helpers import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CONTEXT = "context"
-ATTR_ENCODING_ISO_8859_1 = "ISO-8859-1"
+ATTR_CONTEXT: Final = "context"
+ATTR_ENCODING_ISO_8859_1: Final = "ISO-8859-1"
 
 PROXY_GET_VERSION: Final = "getVersion"
 PROXY_INIT: Final = "init"

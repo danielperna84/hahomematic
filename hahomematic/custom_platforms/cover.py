@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/cover/.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -34,37 +34,37 @@ from hahomematic.generic_platforms.number import HmFloat
 from hahomematic.generic_platforms.select import HmSelect
 from hahomematic.generic_platforms.sensor import HmSensor
 
-HM_ARG_POSITION = "position"
-HM_ARG_TILT_POSITION = "tilt_position"
-HM_ARG_OPEN = "open"
-HM_ARG_CLOSE = "close"
-HM_ARG_TILT_OPEN = "tilt_open"
-HM_ARG_TILT_CLOSE = "tilt_close"
-HM_ARG_VENT = "vent"
+HM_ARG_POSITION: Final = "position"
+HM_ARG_TILT_POSITION: Final = "tilt_position"
+HM_ARG_OPEN: Final = "open"
+HM_ARG_CLOSE: Final = "close"
+HM_ARG_TILT_OPEN: Final = "tilt_open"
+HM_ARG_TILT_CLOSE: Final = "tilt_close"
+HM_ARG_VENT: Final = "vent"
 
-HM_OPEN: float = 1.0  # must be float!
-HM_CLOSED: float = 0.0  # must be float!
-HM_WD_CLOSED: float = -0.005  # must be float! HM-Sec-Win
+HM_OPEN: Final = 1.0  # must be float!
+HM_CLOSED: Final = 0.0  # must be float!
+HM_WD_CLOSED: Final = -0.005  # must be float! HM-Sec-Win
 
-HM_OPENING = "UP"
-HM_CLOSING = "DOWN"
+HM_OPENING: Final = "UP"
+HM_CLOSING: Final = "DOWN"
 
-GARAGE_DOOR_COMMAND_NOP = "NOP"
-GARAGE_DOOR_COMMAND_OPEN = "OPEN"
-GARAGE_DOOR_COMMAND_STOP = "STOP"
-GARAGE_DOOR_COMMAND_CLOSE = "CLOSE"
-GARAGE_DOOR_COMMAND_PARTIAL_OPEN = "PARTIAL_OPEN"
+GARAGE_DOOR_COMMAND_NOP: Final = "NOP"
+GARAGE_DOOR_COMMAND_OPEN: Final = "OPEN"
+GARAGE_DOOR_COMMAND_STOP: Final = "STOP"
+GARAGE_DOOR_COMMAND_CLOSE: Final = "CLOSE"
+GARAGE_DOOR_COMMAND_PARTIAL_OPEN: Final = "PARTIAL_OPEN"
 
-GARAGE_DOOR_SECTION_CLOSING = 5
-GARAGE_DOOR_SECTION_OPENING = 2
+GARAGE_DOOR_SECTION_CLOSING: Final = 5
+GARAGE_DOOR_SECTION_OPENING: Final = 2
 
-GARAGE_DOOR_STATE_CLOSED = "CLOSED"
-GARAGE_DOOR_STATE_OPEN = "OPEN"
-GARAGE_DOOR_STATE_VENTILATION_POSITION = "VENTILATION_POSITION"
-GARAGE_DOOR_STATE_POSITION_UNKNOWN = "POSITION_UNKNOWN"
-POSITION_OPEN = 100
-POSITION_VENT = 10
-POSITION_CLOSED = 0
+GARAGE_DOOR_STATE_CLOSED: Final = "CLOSED"
+GARAGE_DOOR_STATE_OPEN: Final = "OPEN"
+GARAGE_DOOR_STATE_VENTILATION_POSITION: Final = "VENTILATION_POSITION"
+GARAGE_DOOR_STATE_POSITION_UNKNOWN: Final = "POSITION_UNKNOWN"
+POSITION_OPEN: Final = 100
+POSITION_VENT: Final = 10
+POSITION_CLOSED: Final = 0
 
 _LOGGER = logging.getLogger(__name__)
 

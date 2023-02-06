@@ -103,7 +103,10 @@ def test_check_or_create_directory() -> None:
     ):
         assert check_or_create_directory(directory="tmpdir_1") is True
 
-    with patch("os.path.exists", return_value=False,), patch(
+    with patch(
+        "os.path.exists",
+        return_value=False,
+    ), patch(
         "os.makedirs",
         return_value=None,
     ):

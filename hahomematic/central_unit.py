@@ -95,7 +95,7 @@ _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
 # {instance_name, central_unit}
-CENTRAL_INSTANCES: dict[str, CentralUnit] = {}
+CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
 ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 
 
