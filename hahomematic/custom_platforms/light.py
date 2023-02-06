@@ -161,6 +161,7 @@ class BaseHmLight(CustomEntity):
 
         await self._e_level.send_value(value=HM_DIMMER_OFF, collector=collector)
 
+    @bind_collector
     async def set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
@@ -479,7 +480,6 @@ class CeIpFixedColorLight(BaseHmLight):
         await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
         await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
-    @bind_collector
     async def _set_ramp_time_value(
         self, ramp_time: float, collector: CallParameterCollector | None = None
     ) -> None:
@@ -651,14 +651,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
             channels=(7, 8),
             extended=ExtendedConfig(
                 additional_entities={
-                    (
-                        1,
-                        2,
-                        3,
-                        4,
-                        5,
-                        6,
-                    ): (
+                    (1, 2, 3, 4, 5, 6,): (
                         "PRESS_LONG",
                         "PRESS_SHORT",
                         "SENSOR",

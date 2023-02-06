@@ -102,6 +102,7 @@ class CeCover(CustomEntity):
         """Return current position of cover."""
         return int(self._channel_level * 100)
 
+    @bind_collector
     async def set_cover_position(
         self, position: float, collector: CallParameterCollector | None = None
     ) -> None:
@@ -137,18 +138,21 @@ class CeCover(CustomEntity):
             return str(self._e_direction.value) == HM_CLOSING
         return None
 
+    @bind_collector
     async def open_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Open the cover."""
         if not self.is_state_change(open=True):
             return
         await self._set_cover_level(level=self._attr_hm_open_state, collector=collector)
 
+    @bind_collector
     async def close_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover."""
         if not self.is_state_change(close=True):
             return
         await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
 
+    @bind_collector
     async def stop_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         await self._e_stop.send_value(value=True, collector=collector)
@@ -224,6 +228,7 @@ class CeBlind(CeCover):
         """Return current tilt position of cover."""
         return int(self._channel_tilt_level * 100)
 
+    @bind_collector
     async def set_cover_tilt_position(
         self, position: float, collector: CallParameterCollector | None = None
     ) -> None:
@@ -240,18 +245,21 @@ class CeBlind(CeCover):
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
         await self._e_level_2.send_value(value=level, collector=collector)
 
+    @bind_collector
     async def open_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
         await self._set_cover_tilt_level(level=self._attr_hm_open_state, collector=collector)
 
+    @bind_collector
     async def close_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
         if not self.is_state_change(tilt_close=True):
             return
         await self._set_cover_tilt_level(level=self._attr_hm_closed_state, collector=collector)
 
+    @bind_collector
     async def stop_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         await self._e_stop.send_value(value=True, collector=collector)
@@ -344,14 +352,17 @@ class CeGarage(CustomEntity):
             return POSITION_CLOSED
         return None
 
-    async def set_cover_position(self, position: float) -> None:
+    @bind_collector
+    async def set_cover_position(
+        self, position: float, collector: CallParameterCollector | None = None
+    ) -> None:
         """Move the garage door to a specific position."""
         if 50.0 < position <= 100.0:
-            await self.open_cover()
+            await self.open_cover(collector=collector)
         if 10.0 < position <= 50.0:
-            await self.vent_cover()
+            await self.vent_cover(collector=collector)
         if HM_CLOSED <= position <= 10.0:
-            await self.close_cover()
+            await self.close_cover(collector=collector)
 
     @value_property
     def is_closed(self) -> bool | None:
@@ -374,27 +385,33 @@ class CeGarage(CustomEntity):
             return int(self._e_section.value) == GARAGE_DOOR_SECTION_CLOSING
         return None
 
-    async def open_cover(self) -> None:
+    @bind_collector
+    async def open_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Open the garage door."""
         if not self.is_state_change(open=True):
             return
-        await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_OPEN)
+        await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_OPEN, collector=collector)
 
-    async def close_cover(self) -> None:
+    @bind_collector
+    async def close_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Close the garage door."""
         if not self.is_state_change(close=True):
             return
-        await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_CLOSE)
+        await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_CLOSE, collector=collector)
 
-    async def stop_cover(self) -> None:
+    @bind_collector
+    async def stop_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
-        await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_STOP)
+        await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_STOP, collector=collector)
 
-    async def vent_cover(self) -> None:
+    @bind_collector
+    async def vent_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Move the garage door to vent position."""
         if not self.is_state_change(vent=True):
             return
-        await self._e_door_command.send_value(value=GARAGE_DOOR_COMMAND_PARTIAL_OPEN)
+        await self._e_door_command.send_value(
+            value=GARAGE_DOOR_COMMAND_PARTIAL_OPEN, collector=collector
+        )
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
