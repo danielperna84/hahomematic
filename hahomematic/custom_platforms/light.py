@@ -469,14 +469,7 @@ class CeIpFixedColorLight(BaseHmLight):
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the on time value in seconds."""
-        on_time_unit = TIME_UNIT_SECONDS
-        if on_time > 16343:
-            on_time /= 60
-            on_time_unit = TIME_UNIT_MINUTES
-        if on_time > 16343:
-            on_time /= 60
-            on_time_unit = TIME_UNIT_HOURS
-
+        on_time, on_time_unit = _recalc_unit_timer(time=on_time)
         await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
         await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
@@ -484,16 +477,21 @@ class CeIpFixedColorLight(BaseHmLight):
         self, ramp_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the ramp time value in seconds."""
-        ramp_time_unit = TIME_UNIT_SECONDS
-        if ramp_time > 16343:
-            ramp_time /= 60
-            ramp_time_unit = TIME_UNIT_MINUTES
-        if ramp_time > 16343:
-            ramp_time /= 60
-            ramp_time_unit = TIME_UNIT_HOURS
-
+        ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
         await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
         await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
+
+
+def _recalc_unit_timer(time: float) -> tuple[float, int]:
+    """Recalculate unit and value of timer."""
+    ramp_time_unit = TIME_UNIT_SECONDS
+    if time > 16343:
+        time /= 60
+        ramp_time_unit = TIME_UNIT_MINUTES
+    if time > 16343:
+        time /= 60
+        ramp_time_unit = TIME_UNIT_HOURS
+    return time, ramp_time_unit
 
 
 def _convert_color(color: tuple[float, float]) -> str:

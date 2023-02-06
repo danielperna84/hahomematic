@@ -63,11 +63,17 @@ class BaseSiren(CustomEntity):
         """Return a list of available lights."""
 
     @abstractmethod
-    async def turn_on(self, acoustic_alarm: str, optical_alarm: str, duration: int) -> None:
+    async def turn_on(
+        self,
+        acoustic_alarm: str,
+        optical_alarm: str,
+        duration: int = DEFAULT_DURATION_VALUE,
+        collector: CallParameterCollector | None = None,
+    ) -> None:
         """Turn the device on."""
 
     @abstractmethod
-    async def turn_off(self) -> None:
+    async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
 
 
