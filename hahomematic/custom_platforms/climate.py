@@ -213,6 +213,7 @@ class BaseClimateEntity(CustomEntity):
             return self.min_temp
         return temperature
 
+    @bind_collector
     async def set_temperature(
         self,
         temperature: float,
@@ -366,6 +367,7 @@ class CeRfThermostat(BaseClimateEntity):
                 temperature=HM_OFF_TEMPERATURE, collector=collector, do_validate=False
             )
 
+    @bind_collector
     async def set_preset_mode(
         self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
     ) -> None:

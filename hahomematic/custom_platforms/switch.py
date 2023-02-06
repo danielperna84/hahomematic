@@ -62,17 +62,19 @@ class CeSwitch(CustomEntity):
         """Turn the switch on."""
         if not self.is_state_change(on=True, **kwargs):
             return
-        if HM_ARG_ON_TIME in kwargs and isinstance(self._e_on_time_value, HmAction):
+        if HM_ARG_ON_TIME in kwargs:
             on_time: float = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            await self._e_on_time_value.send_value(value=on_time, collector=collector)
+            await self.set_on_time_value(on_time=on_time, collector=collector)
         await self._e_state.turn_on(collector=collector, **kwargs)
 
+    @bind_collector
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the switch off."""
         if not self.is_state_change(off=True):
             return
         await self._e_state.turn_off(collector=collector)
 
+    @bind_collector
     async def set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:

@@ -20,10 +20,10 @@ from hahomematic.custom_platforms.entity_definition import (
     ExtendedConfig,
     make_custom_entity,
 )
-from hahomematic.decorators import value_property
+from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.entity import CustomEntity
+from hahomematic.entity import CallParameterCollector, CustomEntity
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
@@ -68,15 +68,15 @@ class BaseLock(CustomEntity):
         """Return true if the lock is unlocking."""
 
     @abstractmethod
-    async def lock(self) -> None:
+    async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
 
     @abstractmethod
-    async def unlock(self) -> None:
+    async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
 
     @abstractmethod
-    async def open(self) -> None:
+    async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
 
 
@@ -120,17 +120,26 @@ class CeIpLock(BaseLock):
         """Return true if lock is jammed."""
         return False
 
-    async def lock(self) -> None:
+    @bind_collector
+    async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
-        await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_LOCKED)
+        await self._e_lock_target_level.send_value(
+            value=LOCK_TARGET_LEVEL_LOCKED, collector=collector
+        )
 
-    async def unlock(self) -> None:
+    @bind_collector
+    async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
-        await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_UNLOCKED)
+        await self._e_lock_target_level.send_value(
+            value=LOCK_TARGET_LEVEL_UNLOCKED, collector=collector
+        )
 
-    async def open(self) -> None:
+    @bind_collector
+    async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
-        await self._e_lock_target_level.send_value(value=LOCK_TARGET_LEVEL_OPEN)
+        await self._e_lock_target_level.send_value(
+            value=LOCK_TARGET_LEVEL_OPEN, collector=collector
+        )
 
 
 class CeRfLock(BaseLock):
@@ -170,17 +179,20 @@ class CeRfLock(BaseLock):
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value != HM_NO_ERROR
 
-    async def lock(self) -> None:
+    @bind_collector
+    async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
-        await self._e_state.send_value(value=False)
+        await self._e_state.send_value(value=False, collector=collector)
 
-    async def unlock(self) -> None:
+    @bind_collector
+    async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
-        await self._e_state.send_value(value=True)
+        await self._e_state.send_value(value=True, collector=collector)
 
-    async def open(self) -> None:
+    @bind_collector
+    async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
-        await self._e_open.send_value(value=True)
+        await self._e_open.send_value(value=True, collector=collector)
 
 
 def make_ip_lock(
