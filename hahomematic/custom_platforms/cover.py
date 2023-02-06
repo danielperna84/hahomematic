@@ -314,7 +314,6 @@ class CeIpBlind(CeBlind):
         await super()._set_cover_tilt_level(level=self._attr_hm_closed_state, collector=collector)
         await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
 
-    @bind_collector
     async def _set_cover_tilt_level(
         self, level: float, collector: CallParameterCollector | None = None
     ) -> None:
