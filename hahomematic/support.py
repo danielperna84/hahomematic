@@ -20,9 +20,10 @@ from hahomematic.const import (
 )
 from hahomematic.helpers import check_or_create_directory
 
+DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
+PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
+
 _LOGGER = logging.getLogger(__name__)
-DEVICE_DESCRIPTIONS_DIR = "export_device_descriptions"
-PARAMSET_DESCRIPTIONS_DIR = "export_paramset_descriptions"
 
 
 class DeviceExporter:

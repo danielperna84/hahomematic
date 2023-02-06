@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/light/.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -35,25 +35,25 @@ from hahomematic.generic_platforms.select import HmSelect
 from hahomematic.generic_platforms.sensor import HmSensor
 
 # HM constants
-HM_ARG_BRIGHTNESS = "brightness"
-HM_ARG_COLOR_NAME = "color_name"
-HM_ARG_COLOR_TEMP = "color_temp"
-HM_ARG_CHANNEL_COLOR = "channel_color"
-HM_ARG_CHANNEL_LEVEL = "channel_level"
-HM_ARG_EFFECT = "effect"
-HM_ARG_HS_COLOR = "hs_color"
-HM_ARG_RAMP_TIME = "ramp_time"
+HM_ARG_BRIGHTNESS: Final = "brightness"
+HM_ARG_COLOR_NAME: Final = "color_name"
+HM_ARG_COLOR_TEMP: Final = "color_temp"
+HM_ARG_CHANNEL_COLOR: Final = "channel_color"
+HM_ARG_CHANNEL_LEVEL: Final = "channel_level"
+HM_ARG_EFFECT: Final = "effect"
+HM_ARG_HS_COLOR: Final = "hs_color"
+HM_ARG_RAMP_TIME: Final = "ramp_time"
 
-HM_EFFECT_OFF = "Off"
+HM_EFFECT_OFF: Final = "Off"
 
-HM_MAX_MIREDS: int = 500
-HM_MIN_MIREDS: int = 153
+HM_MAX_MIREDS: Final = 500
+HM_MIN_MIREDS: Final = 153
 
-HM_DIMMER_OFF: float = 0.0
+HM_DIMMER_OFF: Final = 0.0
 
-TIME_UNIT_SECONDS = 0
-TIME_UNIT_MINUTES = 1
-TIME_UNIT_HOURS = 2
+TIME_UNIT_SECONDS: Final = 0
+TIME_UNIT_MINUTES: Final = 1
+TIME_UNIT_HOURS: Final = 2
 
 
 class BaseHmLight(CustomEntity):
@@ -469,14 +469,7 @@ class CeIpFixedColorLight(BaseHmLight):
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the on time value in seconds."""
-        on_time_unit = TIME_UNIT_SECONDS
-        if on_time > 16343:
-            on_time /= 60
-            on_time_unit = TIME_UNIT_MINUTES
-        if on_time > 16343:
-            on_time /= 60
-            on_time_unit = TIME_UNIT_HOURS
-
+        on_time, on_time_unit = _recalc_unit_timer(time=on_time)
         await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
         await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
@@ -484,16 +477,21 @@ class CeIpFixedColorLight(BaseHmLight):
         self, ramp_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the ramp time value in seconds."""
-        ramp_time_unit = TIME_UNIT_SECONDS
-        if ramp_time > 16343:
-            ramp_time /= 60
-            ramp_time_unit = TIME_UNIT_MINUTES
-        if ramp_time > 16343:
-            ramp_time /= 60
-            ramp_time_unit = TIME_UNIT_HOURS
-
+        ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
         await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
         await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
+
+
+def _recalc_unit_timer(time: float) -> tuple[float, int]:
+    """Recalculate unit and value of timer."""
+    ramp_time_unit = TIME_UNIT_SECONDS
+    if time > 16343:
+        time /= 60
+        ramp_time_unit = TIME_UNIT_MINUTES
+    if time > 16343:
+        time /= 60
+        ramp_time_unit = TIME_UNIT_HOURS
+    return time, ramp_time_unit
 
 
 def _convert_color(color: tuple[float, float]) -> str:
@@ -651,7 +649,14 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
             channels=(7, 8),
             extended=ExtendedConfig(
                 additional_entities={
-                    (1, 2, 3, 4, 5, 6,): (
+                    (
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                    ): (
                         "PRESS_LONG",
                         "PRESS_SHORT",
                         "SENSOR",

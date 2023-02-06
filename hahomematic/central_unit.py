@@ -95,7 +95,7 @@ _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T")
 
 # {instance_name, central_unit}
-CENTRAL_INSTANCES: dict[str, CentralUnit] = {}
+CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
 ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 
 
@@ -398,6 +398,7 @@ class CentralUnit:
 
     async def _identify_callback_ip(self, port: int) -> str:
         """Identify local IP used for callbacks."""
+
         # Do not add: pylint disable=no-member
         # This is only an issue on macOS
         def get_local_ip(host: str) -> str | None:

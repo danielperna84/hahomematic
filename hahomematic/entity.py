@@ -1155,10 +1155,11 @@ class NoneTypeEntity:
 class CallParameterCollector:
     """Create a Paramset based on given generic entities."""
 
-    def __init__(self, custom_entity: CustomEntity) -> None:
+    def __init__(self, custom_entity: CustomEntity, use_put_paramset: bool = True) -> None:
         """Init the generator."""
-        self._custom_entity = custom_entity
-        self._paramsets: dict[str, dict[str, Any]] = {}
+        self._custom_entity: Final = custom_entity
+        self._use_put_paramset: Final = use_put_paramset
+        self._paramsets: Final[dict[str, dict[str, Any]]] = {}
 
     def add_entity(self, entity: GenericEntity, value: Any) -> None:
         """Add a generic entity."""
@@ -1169,15 +1170,15 @@ class CallParameterCollector:
     async def send_data(self) -> bool:
         """Send data to backend."""
         for channel_address, paramset in self._paramsets.items():
-            if len(paramset.values()) == 1:
-                parameter, value = list(paramset.items())[0]
-                if not await self._custom_entity.device.client.set_value(
-                    channel_address=channel_address,
-                    paramset_key=PARAMSET_KEY_VALUES,
-                    parameter=parameter,
-                    value=value,
-                ):
-                    return False  # pragma: no cover
+            if len(paramset.values()) == 1 or self._use_put_paramset is False:
+                for parameter, value in paramset.items():
+                    if not await self._custom_entity.device.client.set_value(
+                        channel_address=channel_address,
+                        paramset_key=PARAMSET_KEY_VALUES,
+                        parameter=parameter,
+                        value=value,
+                    ):
+                        return False  # pragma: no cover
             else:
                 if not await self._custom_entity.device.client.put_paramset(
                     address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset

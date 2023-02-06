@@ -28,7 +28,7 @@ from hahomematic.helpers import ProgramData, SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
 
-EXCLUDED = [
+EXCLUDED: Final = [
     "OldVal",
     "pcCCUID",
 ]

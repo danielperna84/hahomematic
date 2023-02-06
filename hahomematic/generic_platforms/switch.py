@@ -5,7 +5,7 @@ See https://www.home-assistant.io/integrations/switch/.
 """
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Final, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
 from hahomematic.decorators import value_property
@@ -15,7 +15,7 @@ from hahomematic.entity import (
     GenericSystemVariable,
 )
 
-PARAM_ON_TIME = "ON_TIME"
+PARAM_ON_TIME: Final = "ON_TIME"
 
 
 class HmSwitch(GenericEntity[bool]):

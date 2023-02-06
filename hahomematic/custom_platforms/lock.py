@@ -6,6 +6,7 @@ See https://www.home-assistant.io/integrations/lock/.
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import Final
 
 from hahomematic.const import HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -29,17 +30,17 @@ from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
 
 # HM constants
-LOCK_STATE_UNKNOWN = "UNKNOWN"
-LOCK_STATE_LOCKED = "LOCKED"
-LOCK_STATE_UNLOCKED = "UNLOCKED"
+LOCK_STATE_UNKNOWN: Final = "UNKNOWN"
+LOCK_STATE_LOCKED: Final = "LOCKED"
+LOCK_STATE_UNLOCKED: Final = "UNLOCKED"
 
-LOCK_TARGET_LEVEL_LOCKED = "LOCKED"
-LOCK_TARGET_LEVEL_UNLOCKED = "UNLOCKED"
-LOCK_TARGET_LEVEL_OPEN = "OPEN"
+LOCK_TARGET_LEVEL_LOCKED: Final = "LOCKED"
+LOCK_TARGET_LEVEL_UNLOCKED: Final = "UNLOCKED"
+LOCK_TARGET_LEVEL_OPEN: Final = "OPEN"
 
-HM_UNLOCKING = "UP"
-HM_LOCKING = "DOWN"
-HM_NO_ERROR = "NO_ERROR"
+HM_UNLOCKING: Final = "UP"
+HM_LOCKING: Final = "DOWN"
+HM_NO_ERROR: Final = "NO_ERROR"
 
 
 class BaseLock(CustomEntity):

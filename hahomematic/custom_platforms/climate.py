@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
 from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
@@ -46,29 +46,29 @@ from hahomematic.generic_platforms.select import HmSelect
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
 
-CLOSED_LEVEL = 0.0
+CLOSED_LEVEL: Final = 0.0
 
 # HA constants
-HM_MODE_AUTO = "AUTO-MODE"  # 0
-HM_MODE_MANU = "MANU-MODE"  # 1
-HM_MODE_AWAY = "PARTY-MODE"  # 2
-HM_MODE_BOOST = "BOOST-MODE"  # 3
+HM_MODE_AUTO: Final = "AUTO-MODE"  # 0
+HM_MODE_MANU: Final = "MANU-MODE"  # 1
+HM_MODE_AWAY: Final = "PARTY-MODE"  # 2
+HM_MODE_BOOST: Final = "BOOST-MODE"  # 3
 
-HM_OFF_TEMPERATURE = 4.5
+HM_OFF_TEMPERATURE: Final = 4.5
 
-HMIP_MODE_AUTO = 0
-HMIP_MODE_MANU = 1
-HMIP_MODE_AWAY = 2
+HMIP_MODE_AUTO: Final = 0
+HMIP_MODE_MANU: Final = 1
+HMIP_MODE_AWAY: Final = 2
 
-PARTY_INIT_DATE = "2000_01_01 00:00"
-PARTY_DATE_FORMAT = "%Y_%m_%d %H:%M"
+PARTY_INIT_DATE: Final = "2000_01_01 00:00"
+PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
 
-HM_PRESET_MODE_PREFIX = "week_program_"
-TEMP_CELSIUS = "°C"
+HM_PRESET_MODE_PREFIX: Final = "week_program_"
+TEMP_CELSIUS: Final = "°C"
 
-HM_ARG_TEMPERATURE = "temperature"
-HM_ARG_HVAC_MODE = "hvac_mode"
-HM_ARG_PRESET_MODE = "preset_mode"
+HM_ARG_TEMPERATURE: Final = "temperature"
+HM_ARG_HVAC_MODE: Final = "hvac_mode"
+HM_ARG_PRESET_MODE: Final = "preset_mode"
 
 _LOGGER = logging.getLogger(__name__)
 
