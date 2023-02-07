@@ -20,6 +20,7 @@ class HmAction(GenericEntity[None]):
     """
 
     _attr_platform = HmPlatform.ACTION
+    _attr_validate_state_change = False
 
     async def send_value(
         self, value: Any, collector: CallParameterCollector | None = None

@@ -22,6 +22,7 @@ class HmButton(GenericEntity[None]):
     """
 
     _attr_platform = HmPlatform.BUTTON
+    _attr_validate_state_change = False
 
     async def press(self) -> None:
         """Handle the button press."""
