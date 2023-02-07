@@ -1155,14 +1155,16 @@ class NoneTypeEntity:
 class CallParameterCollector:
     """Create a Paramset based on given generic entities."""
 
-    def __init__(self, custom_entity: CustomEntity, use_put_paramset: bool = True) -> None:
+    def __init__(self, custom_entity: CustomEntity) -> None:
         """Init the generator."""
         self._custom_entity: Final = custom_entity
-        self._use_put_paramset: Final = use_put_paramset
+        self._use_put_paramset: bool = True
         self._paramsets: Final[dict[str, dict[str, Any]]] = {}
 
-    def add_entity(self, entity: GenericEntity, value: Any) -> None:
+    def add_entity(self, entity: GenericEntity, value: Any, use_put_paramset: bool = True) -> None:
         """Add a generic entity."""
+        if use_put_paramset is False:
+            self._use_put_paramset = False
         if entity.channel_address not in self._paramsets:
             self._paramsets[entity.channel_address] = {}
         self._paramsets[entity.channel_address][entity.parameter] = value
