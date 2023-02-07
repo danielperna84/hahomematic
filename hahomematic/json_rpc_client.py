@@ -691,7 +691,7 @@ def _get_params(
 def _convert_to_values_cache(
     all_device_data: dict[str, Any]
 ) -> dict[str, dict[str, dict[str, Any]]]:
-    """Covert all device data o separated value list."""
+    """Convert all device data o separated value list."""
     values_cache: dict[str, dict[str, dict[str, Any]]] = {}
     for device_adr, value in all_device_data.items():
         device_adr = device_adr.replace("%3A", ":")

@@ -22,7 +22,7 @@ async def test_clickevent(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test ClickEvent."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     event: ClickEvent = cast(
         ClickEvent, await helper.get_event(central, "VCU2128127:1", "PRESS_SHORT")
     )
@@ -47,7 +47,7 @@ async def test_impulseevent(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test ImpulseEvent."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     event: ImpulseEvent = cast(
         ImpulseEvent, await helper.get_event(central, "VCU0000263:1", "SEQUENCE_OK")
     )
@@ -72,7 +72,7 @@ async def test_deviceerrorevent(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test DeviceErrorEvent."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     event: DeviceErrorEvent = cast(
         DeviceErrorEvent,
         await helper.get_event(central, "VCU2128127:0", "ERROR_OVERHEAT"),

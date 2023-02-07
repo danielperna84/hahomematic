@@ -50,7 +50,7 @@ def generate_unique_identifier(
     """
     Build unique identifier from address and parameter.
 
-    Central id is addionally used for heating groups.
+    Central id is additionally used for heating groups.
     Prefix is used for events and buttons.
     """
     unique_identifier = address.replace(":", "_").replace("-", "_")
@@ -452,7 +452,7 @@ def get_value_from_dict_by_wildcard_key(
 
 @dataclass
 class HubData:
-    """Dataclass for hub entitites."""
+    """Dataclass for hub entities."""
 
     name: str
 

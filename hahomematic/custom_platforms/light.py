@@ -649,7 +649,14 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
             channels=(7, 8),
             extended=ExtendedConfig(
                 additional_entities={
-                    (1, 2, 3, 4, 5, 6,): (
+                    (
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                    ): (
                         "PRESS_LONG",
                         "PRESS_SHORT",
                         "SENSOR",

@@ -32,13 +32,21 @@ class Example:
 
     def _systemcallback(self, name, *args, **kwargs):
         self.got_devices = True
-        if name == const.HH_EVENT_NEW_DEVICES and kwargs and \
-                kwargs.get('device_descriptions') and len(kwargs['device_descriptions']) > 0:
+        if (
+            name == const.HH_EVENT_NEW_DEVICES
+            and kwargs
+            and kwargs.get("device_descriptions")
+            and len(kwargs["device_descriptions"]) > 0
+        ):
             self.got_devices = True
             return
-        if name == const.HH_EVENT_DEVICES_CREATED and kwargs and \
-                kwargs.get('new_devices') and len(kwargs['new_devices']) > 0:
-            if len(kwargs['new_devices']) > 1:
+        if (
+            name == const.HH_EVENT_DEVICES_CREATED
+            and kwargs
+            and kwargs.get("new_devices")
+            and len(kwargs["new_devices"]) > 0
+        ):
+            if len(kwargs["new_devices"]) > 1:
                 self.got_devices = True
             return
 
@@ -106,7 +114,7 @@ class Example:
         await self.central.stop()
 
 
-# valdate the device description
+# validate the device description
 if validate_entity_definition():
     example = Example()
     asyncio.run(example.example_run())

@@ -1,4 +1,4 @@
-"""Test supprt for hahomematic."""
+"""Test support for hahomematic."""
 from __future__ import annotations
 
 import asyncio

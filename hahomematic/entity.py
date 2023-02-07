@@ -896,7 +896,7 @@ class CustomEntity(BaseEntity):
             if not isinstance(entity, entity_type):
                 _LOGGER.debug(  # pragma: no cover
                     "GET_ENTITY: type mismatch for requested sub entity: "
-                    "expected: %s, but is %s for field name %s of enitity %s",
+                    "expected: %s, but is %s for field name %s of entity %s",
                     entity_type.name,
                     type(entity),
                     field_name,

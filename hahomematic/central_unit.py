@@ -810,7 +810,7 @@ class CentralUnit:
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
 
     def has_entity(self, unique_identifier: str) -> bool:
-        """Check if unique_identifier is alread added."""
+        """Check if unique_identifier is already added."""
         return unique_identifier in self._entities
 
     def create_task(self, target: Awaitable) -> None:

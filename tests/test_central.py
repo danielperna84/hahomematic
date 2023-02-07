@@ -30,7 +30,7 @@ async def test_central_basics(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test central basics."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
 
     assert central.central_url == "http://127.0.0.1"
     assert central.is_alive is True
@@ -49,7 +49,7 @@ async def test_device_export(
 ) -> None:
     """Test device export."""
     assert central_local_factory
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     device = helper.get_device(central_unit=central, address="VCU6354483")
     await device.export_device_definition()
 
@@ -138,7 +138,7 @@ async def test_all_parameters(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device export."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     parameters = central.paramset_descriptions.get_all_readable_parameters()
     assert parameters
     assert len(parameters) == 43
@@ -149,7 +149,7 @@ async def test_entities_by_platform(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device export."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     ebp_sensor = central.get_entities_by_platform(platform=HmPlatform.SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 12
@@ -166,7 +166,7 @@ async def test_hub_entities_by_platform(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device export."""
-    central, mock_client = await central_local_factory.get_default_central(
+    central, _ = await central_local_factory.get_default_central(
         {}, add_programs=True, add_sysvars=True
     )
     ebp_sensor = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_SENSOR)
@@ -194,7 +194,7 @@ async def test_add_device(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device export."""
-    central, mock_client = await central_local_factory.get_default_central(
+    central, _ = await central_local_factory.get_default_central(
         TEST_DEVICES, ignore_devices_on_create=["HmIP-BSM.json"]
     )
     assert len(central._devices) == 1
@@ -230,7 +230,7 @@ async def test_delete_device(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test device export."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     assert len(central._devices) == 2
     assert len(central._entities) == 49
     assert (
