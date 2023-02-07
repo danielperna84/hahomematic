@@ -102,7 +102,10 @@ class CentralUnitLocalFactory:
             un_ignore_list=un_ignore_list,
         )
 
-        with patch("hahomematic.client.create_client", return_value=client,), patch(
+        with patch(
+            "hahomematic.client.create_client",
+            return_value=client,
+        ), patch(
             "hahomematic.client.ClientLocal.get_all_system_variables",
             return_value=const.SYSVAR_DATA if add_sysvars else [],
         ), patch(

@@ -108,7 +108,7 @@ class RPCFunctions:
     @callback_system_event(name=HH_EVENT_RE_ADDED_DEVICE)
     def readdedDevice(self, interface_id: str, addresses: list[str]) -> None:
         """
-        Readd device from backend.
+        Re-Add device from backend.
 
         Probably irrelevant for us.
         Gets called when a known devices is put into learn-mode

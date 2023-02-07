@@ -140,7 +140,7 @@ S = TypeVar("S")
 
 # pylint: disable=invalid-name
 class generic_property(Generic[G, S], property):
-    """Generic property implemantation."""
+    """Generic property implementation."""
 
     fget: Callable[[Any], G] | None
     fset: Callable[[Any, S], None] | None

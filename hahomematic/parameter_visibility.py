@@ -296,7 +296,7 @@ class ParameterVisibilityCache:
         self._init()
 
     def _init(self) -> None:
-        """Process cache initilisation."""
+        """Process cache initialisation."""
         for (
             device_type,
             channels_parameter,
@@ -445,7 +445,7 @@ class ParameterVisibilityCache:
         """
         Return if parameter is on an un_ignore list.
 
-        Additionally to _parameter_is_un_ignored ehese paramters
+        Additionally to _parameter_is_un_ignored these parameters
         from _RELEVANT_MASTER_PARAMSETS_BY_DEVICE are unignored.
         """
         dt_short = list(

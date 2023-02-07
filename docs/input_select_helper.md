@@ -1,6 +1,7 @@
 # input_select Helper
 
 ## Siren
+
 ```yaml
 input_select:
   acoustic_alarm_selection:

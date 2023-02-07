@@ -24,14 +24,14 @@ This is probably because of wrong datatypes used for the conversion and internal
 
 These are the exact conversions that are applied in Home Assistant:
 
-| Range | Converted value | Reason |
-|--------------------|----------------|---------------------------------|
-| <= -256             | None/unknown   | Invalid                                |
-| > -256 and < -129 | (value * -1) - 256 | Translates to > -127 and < 0 |
-| >= -129 and <= -127   | None/unknown   | Invalid                                |
-| > -127 and < 0      | value          | The real range, used as is                  |
-| >= 0 and <= 1   | None/unknown   | Translates to None/unknown                               |
-| > 1 and < 127               | value * -1    | Translates to > -127 and < -1                               |
-| >= 127 and <= 129     | None/unknown   | Invalid                                |
-| > 129 and < 256 | value - 256 | Translates to > -127 and < 0 |
-| >= 256     | None/unknown   | Invalid                                |
+| Range               | Converted value     | Reason                        |
+| ------------------- | ------------------- | ----------------------------- |
+| <= -256             | None/unknown        | Invalid                       |
+| > -256 and < -129   | (value \* -1) - 256 | Translates to > -127 and < 0  |
+| >= -129 and <= -127 | None/unknown        | Invalid                       |
+| > -127 and < 0      | value               | The real range, used as is    |
+| >= 0 and <= 1       | None/unknown        | Translates to None/unknown    |
+| > 1 and < 127       | value \* -1         | Translates to > -127 and < -1 |
+| >= 127 and <= 129   | None/unknown        | Invalid                       |
+| > 129 and < 256     | value - 256         | Translates to > -127 and < 0  |
+| >= 256              | None/unknown        | Invalid                       |
