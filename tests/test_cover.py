@@ -33,6 +33,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000350": "HM-Sec-Win.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_cecover(

@@ -15,6 +15,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU6354483": "HmIP-STHD.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_hmselect(

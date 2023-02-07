@@ -8,6 +8,8 @@ from hahomematic.decorators import (
     value_property,
 )
 
+# pylint: disable=protected-access
+
 
 def test_generic_property() -> None:
     """Test CeSwitch."""

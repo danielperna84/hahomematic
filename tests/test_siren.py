@@ -15,6 +15,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU8249617": "HmIP-ASIR-2.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_ceipsiren(

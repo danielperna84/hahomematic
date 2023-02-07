@@ -24,6 +24,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU6354483": "HmIP-STHD.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_central_basics(
@@ -73,7 +75,7 @@ async def test_device_unignore(
 ) -> None:
     """Test device un ignore."""
     assert central_local_factory
-    central1, mock_client1 = await central_local_factory.get_default_central(
+    central1, _ = await central_local_factory.get_default_central(
         {"VCU3609622": "HmIP-eTRV-2.json"},
     )
     assert (
@@ -99,7 +101,7 @@ async def test_device_unignore(
         )
     assert switch1 is None
 
-    central2, mock_client2 = await central_local_factory.get_default_central(
+    central2, _ = await central_local_factory.get_default_central(
         {"VCU3609622": "HmIP-eTRV-2.json"},
         un_ignore_list=[
             "LEVEL",  # parameter exists, but hidden
@@ -261,7 +263,7 @@ async def test_virtual_remote_delete(
 ) -> None:
     """Test device delete."""
     assert central_local_factory
-    central, mock_client = await central_local_factory.get_default_central(
+    central, _ = await central_local_factory.get_default_central(
         {
             "VCU4264293": "HmIP-RCV-50.json",
             "VCU0000057": "HM-RCV-50.json",
@@ -322,7 +324,7 @@ async def test_central_callbacks(
 ) -> None:
     """Test central other methods."""
     assert central_local_factory
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     central.fire_interface_event(
         interface_id="SOME_ID",
         interface_event_type=HmInterfaceEventType.CALLBACK,
@@ -439,7 +441,7 @@ async def test_central_direct(
 
     with patch("hahomematic.client.create_client", return_value=mock_client):
         await central.start_direct()
-    await central._create_clients() is False
+    assert await central._create_clients() is False
 
     assert central.available is False
     assert central.serial == "0"
