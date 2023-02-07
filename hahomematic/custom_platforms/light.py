@@ -28,7 +28,7 @@ from hahomematic.custom_platforms.entity_definition import (
 from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.entity import CallParameterCollector, CustomEntity
+from hahomematic.entity import CallParameterCollector, CustomEntity, OnTimeMixin
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.number import HmFloat, HmInteger
 from hahomematic.generic_platforms.select import HmSelect
@@ -56,13 +56,14 @@ TIME_UNIT_MINUTES: Final = 1
 TIME_UNIT_HOURS: Final = 2
 
 
-class BaseHmLight(CustomEntity):
+class BaseHmLight(CustomEntity, OnTimeMixin):
     """Base class for HomeMatic light entities."""
 
     _attr_platform = HmPlatform.LIGHT
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
+        OnTimeMixin.__init__(self)
         super()._init_entity_fields()
         self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
         self._e_on_time_value: HmAction = self._get_entity(
@@ -139,9 +140,8 @@ class BaseHmLight(CustomEntity):
         if HM_ARG_RAMP_TIME in kwargs:
             ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
             await self._set_ramp_time_value(ramp_time=ramp_time, collector=collector)
-        if HM_ARG_ON_TIME in kwargs:
-            on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            await self.set_on_time_value(on_time=on_time, collector=collector)
+        if (on_time := kwargs.get(HM_ARG_ON_TIME)) or (on_time := self.get_on_time_and_cleanup()):
+            await self._set_on_time_value(on_time=on_time, collector=collector)
         if (
             brightness := cast(int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255)
         ) or kwargs:
@@ -162,7 +162,7 @@ class BaseHmLight(CustomEntity):
         await self._e_level.send_value(value=HM_DIMMER_OFF, collector=collector)
 
     @bind_collector
-    async def set_on_time_value(
+    async def _set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the on time value in seconds."""
@@ -465,7 +465,7 @@ class CeIpFixedColorLight(BaseHmLight):
         await super().turn_on(collector=collector, **kwargs)
 
     @bind_collector
-    async def set_on_time_value(
+    async def _set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the on time value in seconds."""
@@ -649,14 +649,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
             channels=(7, 8),
             extended=ExtendedConfig(
                 additional_entities={
-                    (
-                        1,
-                        2,
-                        3,
-                        4,
-                        5,
-                        6,
-                    ): (
+                    (1, 2, 3, 4, 5, 6,): (
                         "PRESS_LONG",
                         "PRESS_SHORT",
                         "SENSOR",

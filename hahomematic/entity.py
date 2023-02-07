@@ -1185,3 +1185,31 @@ class CallParameterCollector:
                 ):
                     return False  # pragma: no cover
         return True
+
+
+class OnTimeMixin:
+    """Mixin to add on_time support."""
+
+    def __init__(self) -> None:
+        """Init OnTimeMixin."""
+        self._on_time: int | None = None
+        self._on_time_updated: datetime = INIT_DATETIME
+
+    def set_on_time(self, on_time: int) -> None:
+        """Set the on_time."""
+        self._on_time = on_time
+        self._on_time_updated = datetime.now()
+
+    def get_on_time_and_cleanup(self) -> int | None:
+        """Return the on_time and cleanup afterwards."""
+        if self._on_time is None:
+            return None
+        # save values
+        on_time = self._on_time
+        on_time_updated = self._on_time_updated
+        # cleanup values
+        self._on_time = None
+        self._on_time_updated = INIT_DATETIME
+        if not updated_within_seconds(last_update=on_time_updated, max_age_seconds=5):
+            return None
+        return on_time
