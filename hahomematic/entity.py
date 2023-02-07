@@ -590,6 +590,10 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self, value: Any, collector: CallParameterCollector | None = None
     ) -> None:
         """send value to ccu."""
+        if not self.is_writeable:
+            raise HaHomematicException(
+                f"SEND_VALUE: writing to non-writable entity {self.full_name} is not possible"
+            )
         if collector:
             collector.add_entity(self, self._convert_value(value))
             return
