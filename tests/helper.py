@@ -21,6 +21,8 @@ from hahomematic.helpers import get_device_address
 
 _LOGGER = logging.getLogger(__name__)
 
+# pylint: disable=protected-access
+
 
 class CentralUnitLocalFactory:
     """Factory for a central_unit with one local client."""
@@ -252,7 +254,7 @@ def load_device_description(central: CentralUnit, filename: str) -> Any:
 def get_mock(instance, **kwargs):
     """Create a mock and copy instance attributes over mock."""
     if isinstance(instance, Mock):
-        instance.__dict__.update(instance._mock_wraps.__dict__)  # pylint: disable=protected-access
+        instance.__dict__.update(instance._mock_wraps.__dict__)
         return instance
 
     mock = MagicMock(spec=instance, wraps=instance, **kwargs)

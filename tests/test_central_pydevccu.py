@@ -13,6 +13,8 @@ from hahomematic.decorators import (
     get_public_attributes_for_value_property,
 )
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_central_mini(central_unit_mini) -> None:

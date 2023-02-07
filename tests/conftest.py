@@ -17,6 +17,8 @@ logging.basicConfig(level=logging.INFO)
 
 GOT_DEVICES = False
 
+# pylint: disable=protected-access, redefined-outer-name
+
 
 @pytest.fixture
 def pydev_ccu_full() -> pydevccu.Server:
@@ -39,10 +41,10 @@ def pydev_ccu_mini() -> pydevccu.Server:
 @pytest.fixture
 async def client_session() -> ClientSession:
     """Create ClientSession for json client."""
-    client_session = ClientSession(connector=TCPConnector(limit=3))
-    yield client_session
-    if not client_session.closed:
-        await client_session.close()
+    session = ClientSession(connector=TCPConnector(limit=3))
+    yield session
+    if not session.closed:
+        await session.close()
 
 
 @pytest.fixture
@@ -70,7 +72,7 @@ async def get_pydev_ccu_central_unit_full(
 ) -> CentralUnit:
     """Create and yield central."""
     sleep_counter = 0
-    global GOT_DEVICES
+    global GOT_DEVICES  # pylint: disable=global-statement
     GOT_DEVICES = False
 
     def systemcallback(name, *args, **kwargs):
@@ -80,7 +82,7 @@ async def get_pydev_ccu_central_unit_full(
             and kwargs.get("new_devices")
             and len(kwargs["new_devices"]) > 0
         ):
-            global GOT_DEVICES
+            global GOT_DEVICES  # pylint: disable=global-statement
             GOT_DEVICES = True
 
     interface_configs = {

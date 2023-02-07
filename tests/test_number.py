@@ -16,6 +16,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000011": "HMW-LC-Bl1-DR.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_hmfloat(

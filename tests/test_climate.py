@@ -31,6 +31,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000050": "HM-CC-RT-DN.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_cesimplerfthermostat(

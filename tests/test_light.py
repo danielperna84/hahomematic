@@ -28,6 +28,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_cedimmer(

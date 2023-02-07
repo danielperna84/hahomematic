@@ -86,7 +86,8 @@ init-hook = """\
 
     sys.path.append( \
         str(Path(next(find_default_config_files())).parent.joinpath('pylint/plugins'))
-    ) \
+    ); \
+    sys.path.append(".") \
     """
 load-plugins = [
     "pylint.extensions.code_style",

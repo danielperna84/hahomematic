@@ -16,6 +16,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000263": "HM-Sen-EP.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_clickevent(

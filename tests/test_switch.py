@@ -15,6 +15,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_ceswitch(

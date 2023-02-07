@@ -21,6 +21,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU3609622": "HmIP-eTRV-2.json",
 }
 
+# pylint: disable=protected-access
+
 
 def test_validate_entity_definition() -> None:
     """Test validate_entity_definition."""

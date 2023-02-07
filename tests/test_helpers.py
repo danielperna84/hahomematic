@@ -50,6 +50,8 @@ TEST_DEVICES: dict[str, str] = {
     "VCU3609622": "HmIP-eTRV-2.json",
 }
 
+# pylint: disable=protected-access
+
 
 @pytest.mark.asyncio
 async def test_generate_unique_identifier(
@@ -160,7 +162,7 @@ async def test_get_entity_name(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test get_entity_name."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     device = helper.get_device(central_unit=central, address="VCU2128127")
     name_data = get_entity_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
@@ -187,7 +189,7 @@ async def test_get_event_name(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test get_event_name."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     device = helper.get_device(central_unit=central, address="VCU2128127")
     name_data = get_event_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Channel 4 Level"
@@ -212,7 +214,7 @@ async def test_custom_entity_name(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test get_custom_entity_name."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     device = helper.get_device(central_unit=central, address="VCU2128127")
     name_data = get_custom_entity_name(
         central=central,
@@ -275,7 +277,7 @@ async def test_get_device_name(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test get_device_name."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     assert (
         get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "HmIP-BSM_VCU2128127"
