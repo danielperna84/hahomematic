@@ -1192,15 +1192,15 @@ class OnTimeMixin:
 
     def __init__(self) -> None:
         """Init OnTimeMixin."""
-        self._on_time: int | None = None
+        self._on_time: float | None = None
         self._on_time_updated: datetime = INIT_DATETIME
 
-    def set_on_time(self, on_time: int) -> None:
+    def set_on_time(self, on_time: float) -> None:
         """Set the on_time."""
         self._on_time = on_time
         self._on_time_updated = datetime.now()
 
-    def get_on_time_and_cleanup(self) -> int | None:
+    def get_on_time_and_cleanup(self) -> float | None:
         """Return the on_time and cleanup afterwards."""
         if self._on_time is None:
             return None

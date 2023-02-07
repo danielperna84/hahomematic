@@ -104,7 +104,7 @@ async def test_hmswitch(
         value=True,
     )
     assert switch.value is True
-    await switch.set_on_time_value(35.4)
+    await switch.set_on_time(35.4)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
