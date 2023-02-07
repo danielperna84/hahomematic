@@ -1,4 +1,9 @@
-# Version 2023.2.6 (2023-02-06)
+# Version 2023.2.7 (2023-02-07)
+
+- Disable validation of state change for action and button
+- Check if entity is writable on send
+
+# Version 2023.2.6 (2023-02-07)
 
 - Add missing bind_collector
 - Add more `Final` typing

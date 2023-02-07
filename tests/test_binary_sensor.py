@@ -8,6 +8,7 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.generic_platforms.binary_sensor import (
     HmBinarySensor,
     HmSysvarBinarySensor,
@@ -25,7 +26,7 @@ async def test_hmbinarysensor(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
     """Test HmBinarySensor."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     binary_sensor: HmBinarySensor = cast(
         HmBinarySensor,
         await helper.get_generic_entity(central, "VCU5864966:1", "STATE"),
@@ -40,6 +41,9 @@ async def test_hmbinarysensor(
     assert binary_sensor.value is False
     central.event(const.LOCAL_INTERFACE_ID, "VCU5864966:1", "STATE", None)
     assert binary_sensor.value is False
+
+    with pytest.raises(HaHomematicException):
+        await binary_sensor.send_value(True)
 
 
 @pytest.mark.asyncio

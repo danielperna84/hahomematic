@@ -528,7 +528,27 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
 class GenericEntity(BaseParameterEntity[ParameterT]):
     """Base class for generic entities."""
 
-    wrapped: bool = False
+    _attr_validate_state_change: bool = True
+
+    def __init__(
+        self,
+        device: hmd.HmDevice,
+        unique_identifier: str,
+        channel_address: str,
+        paramset_key: str,
+        parameter: str,
+        parameter_data: dict[str, Any],
+    ) -> None:
+        """Init the generic entity."""
+        super().__init__(
+            device=device,
+            unique_identifier=unique_identifier,
+            channel_address=channel_address,
+            paramset_key=paramset_key,
+            parameter=parameter,
+            parameter_data=parameter_data,
+        )
+        self.wrapped: bool = False
 
     @config_property
     def usage(self) -> HmEntityUsage:
@@ -570,11 +590,15 @@ class GenericEntity(BaseParameterEntity[ParameterT]):
         self, value: Any, collector: CallParameterCollector | None = None
     ) -> None:
         """send value to ccu."""
+        if not self.is_writeable:
+            raise HaHomematicException(
+                f"SEND_VALUE: writing to non-writable entity {self.full_name} is not possible"
+            )
         if collector:
             collector.add_entity(self, self._convert_value(value))
             return
 
-        if not self.is_state_change(value=value):
+        if self._attr_validate_state_change and not self.is_state_change(value=value):
             return
 
         await self._client.set_value(
