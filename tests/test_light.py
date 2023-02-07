@@ -92,9 +92,11 @@ async def test_cedimmer(
         channel_address="VCU1399816:4", paramset_key="VALUES", parameter="LEVEL", value=0.0
     )
 
-    await light.set_on_time_value(0.5)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU1399816:4", paramset_key="VALUES", parameter="ON_TIME", value=0.5
+    await light.turn_off()
+    light.set_on_time(0.5)
+    await light.turn_on()
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU1399816:4", paramset_key="VALUES", value={"ON_TIME": 0.5, "LEVEL": 1.0}
     )
 
     await light._set_ramp_time_value(5.0)
@@ -442,25 +444,31 @@ async def test_ceipfixedcolorlight(
     assert light.channel_hs_color == (240.0, 100.0)
     assert light.channel_color_name == "BLUE"
 
-    await light.set_on_time_value(18)
+    await light.turn_off()
+    light.set_on_time(18)
+    await light.turn_on()
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8",
         paramset_key="VALUES",
-        value={"DURATION_UNIT": 0, "DURATION_VALUE": 18},
+        value={"DURATION_UNIT": 0, "DURATION_VALUE": 18, "LEVEL": 1.0},
     )
 
-    await light.set_on_time_value(17000)
+    await light.turn_off()
+    light.set_on_time(17000)
+    await light.turn_on()
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8",
         paramset_key="VALUES",
-        value={"DURATION_UNIT": 1, "DURATION_VALUE": 283},
+        value={"DURATION_UNIT": 1, "DURATION_VALUE": 283, "LEVEL": 1.0},
     )
 
-    await light.set_on_time_value(1000000)
+    await light.turn_off()
+    light.set_on_time(1000000)
+    await light.turn_on()
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8",
         paramset_key="VALUES",
-        value={"DURATION_UNIT": 2, "DURATION_VALUE": 277},
+        value={"DURATION_UNIT": 2, "DURATION_VALUE": 277, "LEVEL": 1.0},
     )
     await light.turn_on(**{"ramp_time": 18})
     assert mock_client.method_calls[-1] == call.put_paramset(

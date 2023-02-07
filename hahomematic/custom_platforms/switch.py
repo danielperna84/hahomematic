@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/switch/.
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
 from hahomematic.custom_platforms.entity_definition import (
@@ -21,7 +21,7 @@ from hahomematic.custom_platforms.entity_definition import (
 from hahomematic.decorators import bind_collector, value_property
 import hahomematic.device as hmd
 import hahomematic.entity as hme
-from hahomematic.entity import CallParameterCollector, CustomEntity
+from hahomematic.entity import CallParameterCollector, CustomEntity, OnTimeMixin
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.switch import HmSwitch
@@ -29,13 +29,14 @@ from hahomematic.generic_platforms.switch import HmSwitch
 _LOGGER = logging.getLogger(__name__)
 
 
-class CeSwitch(CustomEntity):
+class CeSwitch(CustomEntity, OnTimeMixin):
     """Class for HomeMatic switch entities."""
 
     _attr_platform = HmPlatform.SWITCH
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
+        OnTimeMixin.__init__(self)
         super()._init_entity_fields()
         self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
         self._e_on_time_value: HmAction = self._get_entity(
@@ -62,9 +63,8 @@ class CeSwitch(CustomEntity):
         """Turn the switch on."""
         if not self.is_state_change(on=True, **kwargs):
             return
-        if HM_ARG_ON_TIME in kwargs:
-            on_time: float = float(cast(float, kwargs[HM_ARG_ON_TIME]))
-            await self.set_on_time_value(on_time=on_time, collector=collector)
+        if (on_time := kwargs.get(HM_ARG_ON_TIME)) or (on_time := self.get_on_time_and_cleanup()):
+            await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
         await self._e_state.turn_on(collector=collector, **kwargs)
 
     @bind_collector
@@ -73,13 +73,6 @@ class CeSwitch(CustomEntity):
         if not self.is_state_change(off=True):
             return
         await self._e_state.turn_off(collector=collector)
-
-    @bind_collector
-    async def set_on_time_value(
-        self, on_time: float, collector: CallParameterCollector | None = None
-    ) -> None:
-        """Set the on time value in seconds."""
-        await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""

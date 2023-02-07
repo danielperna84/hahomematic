@@ -2,6 +2,7 @@
 - Add missing bind_collector
 - Add more `Final` typing
 - Add option to collector to disable put_paramset
+- Add on_time Mixin to temporary store on_time
 
 # Version 2023.2.5 (2023-02-05)
 - Fix GitHub build/publish
