@@ -1,3 +1,7 @@
+# Version 2023.2.8 (2023-02-09)
+
+- Add project setup script
+
 # Version 2023.2.7 (2023-02-07)
 
 - Disable validation of state change for action and button
