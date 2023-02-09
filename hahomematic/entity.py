@@ -10,6 +10,7 @@ from typing import Any, Final, Generic, TypeVar, cast
 from slugify import slugify
 import voluptuous as vol
 
+from hahomematic import PayloadMixin
 import hahomematic.central_unit as hmcu
 import hahomematic.client as hmcl
 from hahomematic.const import (
@@ -98,7 +99,7 @@ class CallbackEntity(ABC):
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
 
-    @value_property
+    @property
     @abstractmethod
     def available(self) -> bool:
         """Return the availability of the device."""
@@ -168,7 +169,7 @@ class CallbackEntity(ABC):
             _callback(*args)
 
 
-class BaseEntity(CallbackEntity):
+class BaseEntity(CallbackEntity, PayloadMixin):
     """Base class for regular entities."""
 
     def __init__(
@@ -178,6 +179,7 @@ class BaseEntity(CallbackEntity):
         channel_no: int,
     ) -> None:
         """Initialize the entity."""
+        PayloadMixin.__init__(self)
         super().__init__(unique_identifier=unique_identifier)
         self.device: Final[hmd.HmDevice] = device
         self._attr_channel_no: Final[int] = channel_no
@@ -196,7 +198,12 @@ class BaseEntity(CallbackEntity):
         self._attr_full_name: Final[str] = entity_name_data.full_name
         self._attr_name: Final[str | None] = entity_name_data.entity_name
 
-    @value_property
+    @property
+    def address_path(self) -> str:
+        """Return the address pass of the entity."""
+        return f"{self._attr_platform}/{self.device.interface_id}/{self._attr_unique_identifier}/"
+
+    @property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.device.available
@@ -235,6 +242,14 @@ class BaseEntity(CallbackEntity):
         """Set the entity usage."""
         self._attr_usage = usage
 
+    def update_entity(self, *args: Any) -> None:
+        """Do what is needed when the value of the entity has been updated."""
+        super().update_entity(*args)
+        if callable(self._central.callback_entity_data_event):
+            self._central.callback_entity_data_event(
+                interface_id=self.device.interface_id, entity=self
+            )
+
     @abstractmethod
     async def load_entity_value(
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
@@ -252,7 +267,7 @@ class BaseEntity(CallbackEntity):
     def __str__(self) -> str:
         """Provide some useful information."""
         return (
-            f"address: {self._attr_channel_address}, type: {self.device.device_type}, "
+            f"address_path: {self.address_path}, type: {self.device.device_type}, "
             f"name: {self.full_name}"
         )
 
@@ -989,7 +1004,7 @@ class GenericSystemVariable(GenericHubEntity):
         self._attr_unit: Final[str | None] = data.unit
         self._attr_value: bool | float | int | str | None = data.value
 
-    @value_property
+    @property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.central.available

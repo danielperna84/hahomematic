@@ -20,7 +20,7 @@ from typing import Any, Final, TypeVar
 
 from aiohttp import ClientSession
 
-from hahomematic import config
+from hahomematic import PayloadMixin, config
 import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_INTERFACE_ID,
@@ -99,11 +99,12 @@ CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
 ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 
 
-class CentralUnit:
+class CentralUnit(PayloadMixin):
     """Central unit that collects everything to handle communication from/to CCU/Homegear."""
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
+        PayloadMixin.__init__(self)
         self._sema_add_devices = asyncio.Semaphore()
         # Keep the config for the central #CC
         self.config: Final[CentralConfig] = central_config
@@ -152,6 +153,8 @@ class CentralUnit:
         self.callback_system_event: Callable | None = None
         # Signature: (interface_id, channel_address, value_key, value) #CC
         self.callback_entity_event: Callable | None = None
+        # Signature: (interface_id, entity) #CC
+        self.callback_entity_data_event: Callable | None = None
         # Signature: (event_type, event_data) #CC
         self.callback_ha_event: Callable | None = None
 

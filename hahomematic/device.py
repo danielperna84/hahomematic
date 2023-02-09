@@ -8,6 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
+from hahomematic import PayloadMixin
 import hahomematic.central_unit as hmcu
 import hahomematic.client as hmcl
 from hahomematic.const import (
@@ -79,11 +80,12 @@ import hahomematic.support as hm_support
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmDevice:
+class HmDevice(PayloadMixin):
     """Object to hold information about a device and associated entities."""
 
     def __init__(self, central: hmcu.CentralUnit, interface_id: str, device_address: str) -> None:
         """Initialize the device object."""
+        PayloadMixin.__init__(self)
         self.central: Final[hmcu.CentralUnit] = central
         self._attr_interface_id: Final[str] = interface_id
         self._attr_interface: Final[str] = central.device_details.get_interface(device_address)

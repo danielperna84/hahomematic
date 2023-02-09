@@ -388,7 +388,7 @@ class CeIpFixedColorLight(BaseHmLight):
         """Return the name of the color."""
         return self._e_color.value
 
-    @property
+    @value_property
     def channel_color_name(self) -> str | None:
         """Return the name of the channel color."""
         return self._e_channel_color.value
@@ -421,7 +421,7 @@ class CeIpFixedColorLight(BaseHmLight):
         """Return the brightness of this light between 0..255."""
         return int((self._e_level.value or 0.0) * 255)
 
-    @property
+    @value_property
     def channel_brightness(self) -> int | None:
         """Return the channel brightness of this light between 0..255."""
         if self._e_channel_level.value is not None:
@@ -438,7 +438,7 @@ class CeIpFixedColorLight(BaseHmLight):
             return hs_color
         return 0.0, 0.0
 
-    @property
+    @value_property
     def channel_hs_color(self) -> tuple[float, float] | None:
         """Return the channel hue and saturation color value [float, float]."""
         if self._e_channel_color.value is not None:
