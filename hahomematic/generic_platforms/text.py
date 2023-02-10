@@ -1,12 +1,13 @@
-"""Module for entities implemented using text."""
+"""
+Module for entities implemented using the text platform.
+
+See https://www.home-assistant.io/integrations/text/.
+"""
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.entity import (
-    CallParameterCollector,
-    GenericEntity,
-    GenericSystemVariable,
-)
+from hahomematic.entity import CallParameterCollector
+from hahomematic.generic_platforms.entity import GenericEntity
 
 
 class HmText(GenericEntity[str]):
@@ -23,14 +24,3 @@ class HmText(GenericEntity[str]):
     ) -> None:
         """Set the value of the entity."""
         await super().send_value(value=value, collector=collector)
-
-
-class HmSysvarText(GenericSystemVariable):
-    """Implementation of a sysvar text entity."""
-
-    _attr_platform = HmPlatform.HUB_TEXT
-    _attr_is_extended = True
-
-    async def send_variable(self, value: str | None) -> None:
-        """Set the value of the entity."""
-        await super().send_variable(value)

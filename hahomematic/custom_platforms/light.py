@@ -8,8 +8,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Any, Final, cast
 
-from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
-from hahomematic.custom_platforms.entity_definition import (
+from hahomematic.const import (
     FIELD_CHANNEL_COLOR,
     FIELD_CHANNEL_LEVEL,
     FIELD_COLOR,
@@ -20,15 +19,23 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_PROGRAM,
     FIELD_RAMP_TIME_UNIT,
     FIELD_RAMP_TIME_VALUE,
-    CustomConfig,
+    HM_ARG_OFF,
+    HM_ARG_ON,
+    HM_ARG_ON_TIME,
     EntityDefinition,
-    ExtendedConfig,
-    make_custom_entity,
+    HmPlatform,
 )
-from hahomematic.decorators import bind_collector, value_property
+from hahomematic.custom_platforms.entity import CustomEntity
+import hahomematic.custom_platforms.entity_definition as hmed
+from hahomematic.decorators import bind_collector
 import hahomematic.device as hmd
-import hahomematic.entity as hme
-from hahomematic.entity import CallParameterCollector, CustomEntity, OnTimeMixin
+from hahomematic.entity import CallParameterCollector
+from hahomematic.entity_support import (
+    CustomConfig,
+    ExtendedConfig,
+    OnTimeMixin,
+    value_property,
+)
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.number import HmFloat, HmInteger
 from hahomematic.generic_platforms.select import HmSelect
@@ -388,7 +395,7 @@ class CeIpFixedColorLight(BaseHmLight):
         """Return the name of the color."""
         return self._e_color.value
 
-    @property
+    @value_property
     def channel_color_name(self) -> str | None:
         """Return the name of the channel color."""
         return self._e_channel_color.value
@@ -421,7 +428,7 @@ class CeIpFixedColorLight(BaseHmLight):
         """Return the brightness of this light between 0..255."""
         return int((self._e_level.value or 0.0) * 255)
 
-    @property
+    @value_property
     def channel_brightness(self) -> int | None:
         """Return the channel brightness of this light between 0..255."""
         if self._e_channel_level.value is not None:
@@ -438,7 +445,7 @@ class CeIpFixedColorLight(BaseHmLight):
             return hs_color
         return 0.0, 0.0
 
-    @property
+    @value_property
     def channel_hs_color(self) -> tuple[float, float] | None:
         """Return the channel hue and saturation color value [float, float]."""
         if self._e_channel_color.value is not None:
@@ -522,9 +529,9 @@ def make_ip_dimmer(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomematicIP dimmer entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.IP_DIMMER,
@@ -537,9 +544,9 @@ def make_rf_dimmer(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomeMatic classic dimmer entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.RF_DIMMER,
@@ -552,9 +559,9 @@ def make_rf_dimmer_color(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomeMatic classic dimmer with color entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeColorDimmer,
         device_enum=EntityDefinition.RF_DIMMER_COLOR,
@@ -567,9 +574,9 @@ def make_rf_dimmer_color_effect(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomeMatic classic dimmer and effect with color entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeColorDimmerEffect,
         device_enum=EntityDefinition.RF_DIMMER_COLOR,
@@ -582,9 +589,9 @@ def make_rf_dimmer_color_temp(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomeMatic classic dimmer with color temperature entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeColorTempDimmer,
         device_enum=EntityDefinition.RF_DIMMER_COLOR_TEMP,
@@ -597,9 +604,9 @@ def make_rf_dimmer_with_virt_channel(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomeMatic classic dimmer entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
         device_enum=EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL,
@@ -612,9 +619,9 @@ def make_ip_fixed_color_light(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create fixed color light entities like HmIP-BSL."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpFixedColorLight,
         device_enum=EntityDefinition.IP_FIXED_COLOR_LIGHT,
@@ -627,9 +634,9 @@ def make_ip_simple_fixed_color_light(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create simple fixed color light entities like HmIPW-WRC6."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpFixedColorLight,
         device_enum=EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT,
@@ -639,110 +646,110 @@ def make_ip_simple_fixed_color_light(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "263 132": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "263 133": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "263 134": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HBW-LC-RGBWW-IN6-DR": (
-        CustomConfig(
-            func=make_rf_dimmer,
-            channels=(7, 8),
-            extended=ExtendedConfig(
-                additional_entities={
-                    (
-                        1,
-                        2,
-                        3,
-                        4,
-                        5,
-                        6,
-                    ): (
-                        "PRESS_LONG",
-                        "PRESS_SHORT",
-                        "SENSOR",
-                    )
-                },
+hmed.ALL_DEVICES.append(
+    {
+        "263 132": CustomConfig(func=make_rf_dimmer, channels=(1,)),
+        "263 133": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "263 134": CustomConfig(func=make_rf_dimmer, channels=(1,)),
+        "HBW-LC-RGBWW-IN6-DR": (
+            CustomConfig(
+                func=make_rf_dimmer,
+                channels=(7, 8),
+                extended=ExtendedConfig(
+                    additional_entities={
+                        (
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                        ): (
+                            "PRESS_LONG",
+                            "PRESS_SHORT",
+                            "SENSOR",
+                        )
+                    },
+                ),
+            ),
+            CustomConfig(
+                func=make_rf_dimmer_color,
+                channels=(9, 10, 11),
+                extended=ExtendedConfig(fixed_channels={15: {FIELD_COLOR: "COLOR"}}),
+            ),
+            CustomConfig(
+                func=make_rf_dimmer_color,
+                channels=(12, 13, 14),
+                extended=ExtendedConfig(fixed_channels={16: {FIELD_COLOR: "COLOR"}}),
             ),
         ),
-        CustomConfig(
-            func=make_rf_dimmer_color,
-            channels=(9, 10, 11),
-            extended=ExtendedConfig(fixed_channels={15: {FIELD_COLOR: "COLOR"}}),
+        "HM-DW-WM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4)),
+        "HM-LC-AO-SM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-DW-WM": CustomConfig(func=make_rf_dimmer_color_temp, channels=(1, 3, 5)),
+        "HM-LC-Dim1L-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1L-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1L-Pl": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1L-Pl-2": CustomConfig(func=make_rf_dimmer, channels=(1,)),
+        "HM-LC-Dim1L-Pl-3": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1PWM-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1PWM-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1T-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1T-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1T-DR": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3)),
+        "HM-LC-Dim1T-FM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1T-FM-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1T-FM-LF": CustomConfig(func=make_rf_dimmer, channels=(1,)),
+        "HM-LC-Dim1T-Pl": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1T-Pl-2": CustomConfig(func=make_rf_dimmer, channels=(1,)),
+        "HM-LC-Dim1T-Pl-3": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1TPBU-FM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim1TPBU-FM-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
+        "HM-LC-Dim2L-CV": CustomConfig(func=make_rf_dimmer, channels=(1, 2)),
+        "HM-LC-Dim2L-SM": CustomConfig(func=make_rf_dimmer, channels=(1, 2)),
+        "HM-LC-Dim2L-SM-2": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
+        "HM-LC-Dim2T-SM": CustomConfig(func=make_rf_dimmer, channels=(1, 2)),
+        "HM-LC-Dim2T-SM-2": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
+        "HM-LC-RGBW-WM": CustomConfig(func=make_rf_dimmer_color_effect, channels=(1,)),
+        "HMW-LC-Dim1L-DR": CustomConfig(func=make_rf_dimmer, channels=(3,)),
+        "HSS-DX": CustomConfig(func=make_rf_dimmer, channels=(1,)),
+        "HmIP-BDT": CustomConfig(func=make_ip_dimmer, channels=(3,)),
+        "HmIP-BSL": CustomConfig(func=make_ip_fixed_color_light, channels=(7, 11)),
+        "HmIP-DRDI3": CustomConfig(
+            func=make_ip_dimmer,
+            channels=(4, 8, 12),
+            extended=ExtendedConfig(
+                additional_entities={
+                    0: ("ACTUAL_TEMPERATURE",),
+                }
+            ),
         ),
-        CustomConfig(
-            func=make_rf_dimmer_color,
-            channels=(12, 13, 14),
-            extended=ExtendedConfig(fixed_channels={16: {FIELD_COLOR: "COLOR"}}),
+        "HmIP-FDT": CustomConfig(func=make_ip_dimmer, channels=(1,)),
+        "HmIP-PDT": CustomConfig(func=make_ip_dimmer, channels=(2,)),
+        "HmIP-SCTH230": CustomConfig(
+            func=make_ip_dimmer,
+            channels=(11,),
+            extended=ExtendedConfig(
+                additional_entities={
+                    1: ("CONCENTRATION",),
+                    4: (
+                        "HUMIDITY",
+                        "ACTUAL_TEMPERATURE",
+                    ),
+                }
+            ),
         ),
-    ),
-    "HM-DW-WM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4)),
-    "HM-LC-AO-SM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-DW-WM": CustomConfig(func=make_rf_dimmer_color_temp, channels=(1, 3, 5)),
-    "HM-LC-Dim1L-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1L-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1L-Pl": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1L-Pl-2": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HM-LC-Dim1L-Pl-3": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1PWM-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1PWM-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1T-CV": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1T-CV-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1T-DR": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3)),
-    "HM-LC-Dim1T-FM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1T-FM-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1T-FM-LF": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HM-LC-Dim1T-Pl": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1T-Pl-2": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HM-LC-Dim1T-Pl-3": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1TPBU-FM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim1TPBU-FM-2": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
-    "HM-LC-Dim2L-CV": CustomConfig(func=make_rf_dimmer, channels=(1, 2)),
-    "HM-LC-Dim2L-SM": CustomConfig(func=make_rf_dimmer, channels=(1, 2)),
-    "HM-LC-Dim2L-SM-2": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
-    "HM-LC-Dim2T-SM": CustomConfig(func=make_rf_dimmer, channels=(1, 2)),
-    "HM-LC-Dim2T-SM-2": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
-    "HM-LC-RGBW-WM": CustomConfig(func=make_rf_dimmer_color_effect, channels=(1,)),
-    "HMW-LC-Dim1L-DR": CustomConfig(func=make_rf_dimmer, channels=(3,)),
-    "HSS-DX": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HmIP-BDT": CustomConfig(func=make_ip_dimmer, channels=(3,)),
-    "HmIP-BSL": CustomConfig(func=make_ip_fixed_color_light, channels=(7, 11)),
-    "HmIP-DRDI3": CustomConfig(
-        func=make_ip_dimmer,
-        channels=(4, 8, 12),
-        extended=ExtendedConfig(
-            additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
-            }
+        "HmIPW-DRD3": CustomConfig(
+            func=make_ip_dimmer,
+            channels=(1, 5, 9),
+            extended=ExtendedConfig(
+                additional_entities={
+                    0: ("ACTUAL_TEMPERATURE",),
+                }
+            ),
         ),
-    ),
-    "HmIP-FDT": CustomConfig(func=make_ip_dimmer, channels=(1,)),
-    "HmIP-PDT": CustomConfig(func=make_ip_dimmer, channels=(2,)),
-    "HmIP-SCTH230": CustomConfig(
-        func=make_ip_dimmer,
-        channels=(11,),
-        extended=ExtendedConfig(
-            additional_entities={
-                1: ("CONCENTRATION",),
-                4: (
-                    "HUMIDITY",
-                    "ACTUAL_TEMPERATURE",
-                ),
-            }
+        "HmIPW-WRC6": CustomConfig(
+            func=make_ip_simple_fixed_color_light, channels=(7, 8, 9, 10, 11, 12)
         ),
-    ),
-    "HmIPW-DRD3": CustomConfig(
-        func=make_ip_dimmer,
-        channels=(1, 5, 9),
-        extended=ExtendedConfig(
-            additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
-            }
-        ),
-    ),
-    "HmIPW-WRC6": CustomConfig(
-        func=make_ip_simple_fixed_color_light, channels=(7, 8, 9, 10, 11, 12)
-    ),
-    "OLIGO.smart.iq.HM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
-}
-
-BLACKLISTED_DEVICES: tuple[str, ...] = ()
+        "OLIGO.smart.iq.HM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
+    }
+)

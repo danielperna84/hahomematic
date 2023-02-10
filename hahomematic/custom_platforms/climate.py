@@ -10,8 +10,7 @@ import logging
 from typing import Any, Final
 
 from hahomematic.backport import StrEnum
-from hahomematic.const import HmPlatform
-from hahomematic.custom_platforms.entity_definition import (
+from hahomematic.const import (
     FIELD_ACTIVE_PROFILE,
     FIELD_AUTO_MODE,
     FIELD_BOOST_MODE,
@@ -30,15 +29,15 @@ from hahomematic.custom_platforms.entity_definition import (
     FIELD_TEMPERATURE_MAXIMUM,
     FIELD_TEMPERATURE_MINIMUM,
     FIELD_VALVE_STATE,
-    CustomConfig,
     EntityDefinition,
-    ExtendedConfig,
-    make_custom_entity,
+    HmPlatform,
 )
-from hahomematic.decorators import bind_collector, value_property
+from hahomematic.custom_platforms.entity import CustomEntity
+import hahomematic.custom_platforms.entity_definition as hmed
+from hahomematic.decorators import bind_collector
 import hahomematic.device as hmd
-import hahomematic.entity as hme
-from hahomematic.entity import CallParameterCollector, CustomEntity
+from hahomematic.entity import CallParameterCollector
+from hahomematic.entity_support import CustomConfig, ExtendedConfig, value_property
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.number import HmFloat, HmInteger
@@ -585,9 +584,9 @@ def make_simple_thermostat(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create SimpleRfThermostat entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeSimpleRfThermostat,
         device_enum=EntityDefinition.SIMPLE_RF_THERMOSTAT,
@@ -600,9 +599,9 @@ def make_thermostat(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create RfThermostat entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeRfThermostat,
         device_enum=EntityDefinition.RF_THERMOSTAT,
@@ -615,9 +614,9 @@ def make_thermostat_group(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create RfThermostat group entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeRfThermostat,
         device_enum=EntityDefinition.RF_THERMOSTAT_GROUP,
@@ -630,9 +629,9 @@ def make_ip_thermostat(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create IPThermostat entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpThermostat,
         device_enum=EntityDefinition.IP_THERMOSTAT,
@@ -645,9 +644,9 @@ def make_ip_thermostat_group(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create IPThermostat group entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpThermostat,
         device_enum=EntityDefinition.IP_THERMOSTAT_GROUP,
@@ -657,24 +656,26 @@ def make_ip_thermostat_group(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-    "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, channels=(1,)),
-    "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, channels=(1,)),
-    "BC-TC-C-WM": CustomConfig(func=make_thermostat, channels=(1,)),
-    "HM-CC-RT-DN": CustomConfig(func=make_thermostat, channels=(4,)),
-    "HM-CC-TC": CustomConfig(func=make_simple_thermostat, channels=(1,)),
-    "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, channels=(1,)),
-    "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, channels=(2,)),
-    "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-    "HmIP-HEATING": CustomConfig(func=make_ip_thermostat_group, channels=(1,)),
-    "HmIP-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-    "HmIP-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-    "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-    "HmIPW-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-    "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-    "Thermostat AA": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-    "ZEL STG RM FWT": CustomConfig(func=make_simple_thermostat, channels=(1,)),
-}
+hmed.ALL_DEVICES.append(
+    {
+        "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+        "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, channels=(1,)),
+        "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, channels=(1,)),
+        "BC-TC-C-WM": CustomConfig(func=make_thermostat, channels=(1,)),
+        "HM-CC-RT-DN": CustomConfig(func=make_thermostat, channels=(4,)),
+        "HM-CC-TC": CustomConfig(func=make_simple_thermostat, channels=(1,)),
+        "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, channels=(1,)),
+        "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, channels=(2,)),
+        "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+        "HmIP-HEATING": CustomConfig(func=make_ip_thermostat_group, channels=(1,)),
+        "HmIP-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+        "HmIP-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+        "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+        "HmIPW-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+        "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+        "Thermostat AA": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+        "ZEL STG RM FWT": CustomConfig(func=make_simple_thermostat, channels=(1,)),
+    }
+)
 
-BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)
+hmed.BLACKLISTED_DEVICES.append(("HmIP-STHO",))

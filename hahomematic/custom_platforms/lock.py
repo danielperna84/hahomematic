@@ -8,23 +8,22 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Final
 
-from hahomematic.const import HmPlatform
-from hahomematic.custom_platforms.entity_definition import (
+from hahomematic.const import (
     FIELD_DIRECTION,
     FIELD_ERROR,
     FIELD_LOCK_STATE,
     FIELD_LOCK_TARGET_LEVEL,
     FIELD_OPEN,
     FIELD_STATE,
-    CustomConfig,
     EntityDefinition,
-    ExtendedConfig,
-    make_custom_entity,
+    HmPlatform,
 )
-from hahomematic.decorators import bind_collector, value_property
+from hahomematic.custom_platforms.entity import CustomEntity
+import hahomematic.custom_platforms.entity_definition as hmed
+from hahomematic.decorators import bind_collector
 import hahomematic.device as hmd
-import hahomematic.entity as hme
-from hahomematic.entity import CallParameterCollector, CustomEntity
+from hahomematic.entity import CallParameterCollector
+from hahomematic.entity_support import CustomConfig, ExtendedConfig, value_property
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
@@ -200,9 +199,9 @@ def make_ip_lock(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomematicIP lock entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpLock,
         device_enum=EntityDefinition.IP_LOCK,
@@ -215,9 +214,9 @@ def make_rf_lock(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomeMatic rf lock entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeRfLock,
         device_enum=EntityDefinition.RF_LOCK,
@@ -227,28 +226,28 @@ def make_rf_lock(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "HM-Sec-Key": CustomConfig(
-        func=make_rf_lock,
-        channels=(1,),
-        extended=ExtendedConfig(
-            additional_entities={
-                1: (
-                    "DIRECTION",
-                    "ERROR",
-                ),
-            }
+hmed.ALL_DEVICES.append(
+    {
+        "HM-Sec-Key": CustomConfig(
+            func=make_rf_lock,
+            channels=(1,),
+            extended=ExtendedConfig(
+                additional_entities={
+                    1: (
+                        "DIRECTION",
+                        "ERROR",
+                    ),
+                }
+            ),
         ),
-    ),
-    "HmIP-DLD": CustomConfig(
-        func=make_ip_lock,
-        channels=(0,),
-        extended=ExtendedConfig(
-            additional_entities={
-                0: ("ERROR_JAMMED",),
-            }
+        "HmIP-DLD": CustomConfig(
+            func=make_ip_lock,
+            channels=(0,),
+            extended=ExtendedConfig(
+                additional_entities={
+                    0: ("ERROR_JAMMED",),
+                }
+            ),
         ),
-    ),
-}
-
-BLACKLISTED_DEVICES: tuple[str, ...] = ()
+    }
+)

@@ -55,29 +55,23 @@ from hahomematic.const import (
     HmInterfaceEventType,
     HmPlatform,
 )
+from hahomematic.custom_platforms.entity import CustomEntity
 from hahomematic.decorators import (
     async_callback_system_event,
     callback_event,
     callback_system_event,
-    config_property,
-    value_property,
 )
 from hahomematic.device import HmDevice
-from hahomematic.entity import (
-    BaseEntity,
-    CustomEntity,
-    GenericEntity,
-    GenericEvent,
-    GenericHubEntity,
-    GenericSystemVariable,
-)
+from hahomematic.entity import BaseEntity
+from hahomematic.entity_support import PayloadMixin, config_property, value_property
+from hahomematic.event import GenericEvent
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
     NoClients,
     NoConnection,
 )
-from hahomematic.generic_platforms.button import HmProgramButton
+from hahomematic.generic_platforms.entity import GenericEntity
 from hahomematic.helpers import (
     check_or_create_directory,
     check_password,
@@ -85,7 +79,9 @@ from hahomematic.helpers import (
     get_device_channel,
     updated_within_seconds,
 )
-from hahomematic.hub import HmHub
+from hahomematic.hub_platforms import HmHub
+from hahomematic.hub_platforms.button import HmProgramButton
+from hahomematic.hub_platforms.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.parameter_visibility import ParameterVisibilityCache
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
@@ -99,11 +95,12 @@ CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
 ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 
 
-class CentralUnit:
+class CentralUnit(PayloadMixin):
     """Central unit that collects everything to handle communication from/to CCU/Homegear."""
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
+        PayloadMixin.__init__(self)
         self._sema_add_devices = asyncio.Semaphore()
         # Keep the config for the central #CC
         self.config: Final[CentralConfig] = central_config
@@ -152,6 +149,8 @@ class CentralUnit:
         self.callback_system_event: Callable | None = None
         # Signature: (interface_id, channel_address, value_key, value) #CC
         self.callback_entity_event: Callable | None = None
+        # Signature: (interface_id, entity) #CC
+        self.callback_entity_data_event: Callable | None = None
         # Signature: (event_type, event_data) #CC
         self.callback_ha_event: Callable | None = None
 

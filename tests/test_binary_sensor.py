@@ -9,10 +9,8 @@ import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.exceptions import HaHomematicException
-from hahomematic.generic_platforms.binary_sensor import (
-    HmBinarySensor,
-    HmSysvarBinarySensor,
-)
+from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
+from hahomematic.hub_platforms.binary_sensor import HmSysvarBinarySensor
 
 TEST_DEVICES: dict[str, str] = {
     "VCU5864966": "HmIP-SWDO-I.json",
