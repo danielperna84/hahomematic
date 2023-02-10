@@ -10,13 +10,8 @@ import asyncio
 import logging
 import signal
 import sys
-from typing import Any
 
 import hahomematic.central_unit as hmcu
-from hahomematic.decorators import (
-    get_public_attributes_for_config_property,
-    get_public_attributes_for_value_property,
-)
 
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.DEBUG)
@@ -36,17 +31,3 @@ def signal_handler(sig, frame):  # type: ignore[no-untyped-def]
 
 if sys.stdout.isatty():
     signal.signal(signal.SIGINT, signal_handler)
-
-
-class PayloadMixin:
-    """Mixin to add payload methods to class."""
-
-    @property
-    def config_payload(self) -> dict[str, Any]:
-        """Return the config payload."""
-        return get_public_attributes_for_config_property(data_object=self)
-
-    @property
-    def value_payload(self) -> dict[str, Any]:
-        """Return the value payload."""
-        return get_public_attributes_for_value_property(data_object=self)

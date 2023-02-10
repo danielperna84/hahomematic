@@ -1,11 +1,11 @@
-"""Module for the hub."""
+"""Here we provide access to the hub."""
 from __future__ import annotations
 
 import asyncio
 import logging
 from typing import Final
 
-import hahomematic.central_unit as hmcu
+from hahomematic import central_unit as hmcu
 from hahomematic.const import (
     BACKEND_CCU,
     HH_EVENT_HUB_REFRESHED,
@@ -16,18 +16,17 @@ from hahomematic.const import (
     SYSVAR_TYPE_LOGIC,
     SYSVAR_TYPE_STRING,
 )
-from hahomematic.entity import GenericSystemVariable
-from hahomematic.generic_platforms.binary_sensor import HmSysvarBinarySensor
-from hahomematic.generic_platforms.button import HmProgramButton
-from hahomematic.generic_platforms.number import HmSysvarNumber
-from hahomematic.generic_platforms.select import HmSysvarSelect
-from hahomematic.generic_platforms.sensor import HmSysvarSensor
-from hahomematic.generic_platforms.switch import HmSysvarSwitch
-from hahomematic.generic_platforms.text import HmSysvarText
 from hahomematic.helpers import ProgramData, SystemVariableData
+from hahomematic.hub_platforms.binary_sensor import HmSysvarBinarySensor
+from hahomematic.hub_platforms.button import HmProgramButton
+from hahomematic.hub_platforms.entity import GenericSystemVariable
+from hahomematic.hub_platforms.number import HmSysvarNumber
+from hahomematic.hub_platforms.select import HmSysvarSelect
+from hahomematic.hub_platforms.sensor import HmSysvarSensor
+from hahomematic.hub_platforms.switch import HmSysvarSwitch
+from hahomematic.hub_platforms.text import HmSysvarText
 
 _LOGGER = logging.getLogger(__name__)
-
 EXCLUDED: Final = [
     "OldVal",
     "pcCCUID",

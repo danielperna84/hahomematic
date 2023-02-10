@@ -9,8 +9,10 @@ import helper
 import pytest
 
 from hahomematic.const import HmCallSource, HmEntityUsage
-from hahomematic.custom_platforms import get_required_parameters
-from hahomematic.custom_platforms.entity_definition import validate_entity_definition
+from hahomematic.custom_platforms.entity_definition import (
+    get_required_parameters,
+    validate_entity_definition,
+)
 from hahomematic.custom_platforms.switch import CeSwitch
 from hahomematic.generic_platforms.sensor import HmSensor
 from hahomematic.generic_platforms.switch import HmSwitch
@@ -44,7 +46,10 @@ async def test_custom_entity_callback(
     switch.register_update_callback(device_updated_mock)
     switch.register_remove_callback(device_removed_mock)
     assert switch.value is None
-    assert str(switch) == "address: VCU2128127:4, type: HmIP-BSM, name: HmIP-BSM_VCU2128127"
+    assert (
+        str(switch) == "address_path: switch/CentralTest-Local/vcu2128127_4/, "
+        "type: HmIP-BSM, name: HmIP-BSM_VCU2128127"
+    )
     central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:4", "STATE", 1)
     assert central_local_factory.entity_event_mock.call_args_list[-1] == call(
         const.LOCAL_INTERFACE_ID, "VCU2128127:4", "STATE", 1
@@ -86,7 +91,8 @@ async def test_generic_entity_callback(
     switch.register_remove_callback(device_removed_mock)
     assert switch.value is None
     assert (
-        str(switch) == "address: VCU2128127:4, type: HmIP-BSM, name: HmIP-BSM_VCU2128127 State ch4"
+        str(switch) == "address_path: switch/CentralTest-Local/vcu2128127_4_state/, "
+        "type: HmIP-BSM, name: HmIP-BSM_VCU2128127 State ch4"
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:4", "STATE", 1)
     assert central_local_factory.entity_event_mock.call_args_list[-1] == call(

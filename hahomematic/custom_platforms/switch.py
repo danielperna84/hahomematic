@@ -8,20 +8,27 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
-from hahomematic.custom_platforms.entity_definition import (
+from hahomematic.const import (
     FIELD_CHANNEL_STATE,
     FIELD_ON_TIME_VALUE,
     FIELD_STATE,
-    CustomConfig,
+    HM_ARG_OFF,
+    HM_ARG_ON,
+    HM_ARG_ON_TIME,
     EntityDefinition,
-    ExtendedConfig,
-    make_custom_entity,
+    HmPlatform,
 )
-from hahomematic.decorators import bind_collector, value_property
+from hahomematic.custom_platforms.entity import CustomEntity
+import hahomematic.custom_platforms.entity_definition as hmed
+from hahomematic.decorators import bind_collector
 import hahomematic.device as hmd
-import hahomematic.entity as hme
-from hahomematic.entity import CallParameterCollector, CustomEntity, OnTimeMixin
+from hahomematic.entity import CallParameterCollector
+from hahomematic.entity_support import (
+    CustomConfig,
+    ExtendedConfig,
+    OnTimeMixin,
+    value_property,
+)
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 from hahomematic.generic_platforms.switch import HmSwitch
@@ -89,9 +96,9 @@ def make_ip_switch(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomematicIP switch entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeSwitch,
         device_enum=EntityDefinition.IP_SWITCH,
@@ -101,54 +108,52 @@ def make_ip_switch(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
-    "HmIP-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
-    "HmIP-BSL": CustomConfig(func=make_ip_switch, channels=(3,)),
-    "HmIP-BSM": CustomConfig(func=make_ip_switch, channels=(3,)),
-    "HmIP-DRSI1": CustomConfig(
-        func=make_ip_switch,
-        channels=(2,),
-        extended=ExtendedConfig(
-            additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
-            }
+hmed.ALL_DEVICES.append(
+    {
+        "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+        "HmIP-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+        "HmIP-BSL": CustomConfig(func=make_ip_switch, channels=(3,)),
+        "HmIP-BSM": CustomConfig(func=make_ip_switch, channels=(3,)),
+        "HmIP-DRSI1": CustomConfig(
+            func=make_ip_switch,
+            channels=(2,),
+            extended=ExtendedConfig(
+                additional_entities={
+                    0: ("ACTUAL_TEMPERATURE",),
+                }
+            ),
         ),
-    ),
-    "HmIP-DRSI4": CustomConfig(
-        func=make_ip_switch,
-        channels=(5, 9, 13, 17),
-        extended=ExtendedConfig(
-            additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
-            }
+        "HmIP-DRSI4": CustomConfig(
+            func=make_ip_switch,
+            channels=(5, 9, 13, 17),
+            extended=ExtendedConfig(
+                additional_entities={
+                    0: ("ACTUAL_TEMPERATURE",),
+                }
+            ),
         ),
-    ),
-    "HmIP-FSI": CustomConfig(func=make_ip_switch, channels=(2,)),
-    "HmIP-FSM": CustomConfig(func=make_ip_switch, channels=(1,)),
-    "HmIP-MOD-OC8": CustomConfig(func=make_ip_switch, channels=(9, 13, 17, 21, 25, 29, 33, 37)),
-    "HmIP-PCBS": CustomConfig(func=make_ip_switch, channels=(2,)),
-    "HmIP-PCBS-BAT": CustomConfig(func=make_ip_switch, channels=(2,)),
-    "HmIP-PCBS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
-    "HmIP-PS": CustomConfig(func=make_ip_switch, channels=(2,)),
-    "HmIP-SCTH230": CustomConfig(func=make_ip_switch, channels=(7,)),
-    "HmIP-USBSM": CustomConfig(func=make_ip_switch, channels=(2,)),
-    "HmIP-WGC": CustomConfig(func=make_ip_switch, channels=(2,)),
-    "HmIP-WHS2": CustomConfig(func=make_ip_switch, channels=(1, 5)),
-    "HmIPW-DRS": CustomConfig(
-        func=make_ip_switch,
-        channels=(1, 5, 9, 13, 17, 21, 25, 29),
-        extended=ExtendedConfig(
-            additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
-            }
+        "HmIP-FSI": CustomConfig(func=make_ip_switch, channels=(2,)),
+        "HmIP-FSM": CustomConfig(func=make_ip_switch, channels=(1,)),
+        "HmIP-MOD-OC8": CustomConfig(
+            func=make_ip_switch, channels=(9, 13, 17, 21, 25, 29, 33, 37)
         ),
-    ),
-    "HmIPW-FIO6": CustomConfig(func=make_ip_switch, channels=(7, 11, 15, 19, 23, 27)),
-}
-
-# Devices are better supported without custom entities:
-# HmIP-MIO16-PCB : Don't add it. Too much functionality.
-# HmIP-MIOB : Don't add it. Too much functionality.
-
-BLACKLISTED_DEVICES: tuple[str, ...] = ()
+        "HmIP-PCBS": CustomConfig(func=make_ip_switch, channels=(2,)),
+        "HmIP-PCBS-BAT": CustomConfig(func=make_ip_switch, channels=(2,)),
+        "HmIP-PCBS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+        "HmIP-PS": CustomConfig(func=make_ip_switch, channels=(2,)),
+        "HmIP-SCTH230": CustomConfig(func=make_ip_switch, channels=(7,)),
+        "HmIP-USBSM": CustomConfig(func=make_ip_switch, channels=(2,)),
+        "HmIP-WGC": CustomConfig(func=make_ip_switch, channels=(2,)),
+        "HmIP-WHS2": CustomConfig(func=make_ip_switch, channels=(1, 5)),
+        "HmIPW-DRS": CustomConfig(
+            func=make_ip_switch,
+            channels=(1, 5, 9, 13, 17, 21, 25, 29),
+            extended=ExtendedConfig(
+                additional_entities={
+                    0: ("ACTUAL_TEMPERATURE",),
+                }
+            ),
+        ),
+        "HmIPW-FIO6": CustomConfig(func=make_ip_switch, channels=(7, 11, 15, 19, 23, 27)),
+    }
+)

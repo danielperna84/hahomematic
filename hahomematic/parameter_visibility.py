@@ -21,8 +21,8 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmPlatform,
 )
-from hahomematic.custom_platforms import get_required_parameters
-import hahomematic.entity as hme
+from hahomematic.custom_platforms.entity_definition import get_required_parameters
+import hahomematic.generic_platforms.entity as hmge
 from hahomematic.helpers import (
     check_or_create_directory,
     element_matches_key,
@@ -590,7 +590,7 @@ class ParameterVisibilityCache:
                     return True
         return False
 
-    def wrap_entity(self, wrapped_entity: hme.GenericEntity) -> HmPlatform | None:
+    def wrap_entity(self, wrapped_entity: hmge.GenericEntity) -> HmPlatform | None:
         """Check if parameter of a device should be wrapped to a different platform."""
         for devices, wrapper_def in _WRAP_ENTITY.items():
             if (

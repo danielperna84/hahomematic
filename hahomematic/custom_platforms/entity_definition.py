@@ -1,18 +1,65 @@
 """The module contains device descriptions for custom entities."""
 from __future__ import annotations
 
-from collections.abc import Callable
 from copy import deepcopy
-from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
 import voluptuous as vol
 
-from hahomematic.backport import StrEnum
+from hahomematic.const import (
+    FIELD_ACOUSTIC_ALARM_ACTIVE,
+    FIELD_ACOUSTIC_ALARM_SELECTION,
+    FIELD_ACTIVE_PROFILE,
+    FIELD_AUTO_MODE,
+    FIELD_BOOST_MODE,
+    FIELD_CHANNEL_COLOR,
+    FIELD_CHANNEL_LEVEL,
+    FIELD_CHANNEL_LEVEL_2,
+    FIELD_CHANNEL_OPERATION_MODE,
+    FIELD_CHANNEL_STATE,
+    FIELD_COLOR,
+    FIELD_COLOR_LEVEL,
+    FIELD_COMFORT_MODE,
+    FIELD_CONTROL_MODE,
+    FIELD_DIRECTION,
+    FIELD_DOOR_COMMAND,
+    FIELD_DOOR_STATE,
+    FIELD_DURATION,
+    FIELD_DURATION_UNIT,
+    FIELD_ERROR,
+    FIELD_HEATING_COOLING,
+    FIELD_HUMIDITY,
+    FIELD_LEVEL,
+    FIELD_LEVEL_2,
+    FIELD_LOCK_STATE,
+    FIELD_LOCK_TARGET_LEVEL,
+    FIELD_LOWERING_MODE,
+    FIELD_MANU_MODE,
+    FIELD_ON_TIME_UNIT,
+    FIELD_ON_TIME_VALUE,
+    FIELD_OPEN,
+    FIELD_OPTICAL_ALARM_ACTIVE,
+    FIELD_OPTICAL_ALARM_SELECTION,
+    FIELD_PARTY_MODE,
+    FIELD_PROGRAM,
+    FIELD_RAMP_TIME_UNIT,
+    FIELD_RAMP_TIME_VALUE,
+    FIELD_SECTION,
+    FIELD_SET_POINT_MODE,
+    FIELD_SETPOINT,
+    FIELD_STATE,
+    FIELD_STOP,
+    FIELD_TEMPERATURE,
+    FIELD_TEMPERATURE_MAXIMUM,
+    FIELD_TEMPERATURE_MINIMUM,
+    FIELD_VALVE_STATE,
+    EntityDefinition,
+)
+import hahomematic.custom_platforms.entity as hmce
 import hahomematic.device as hmd
-import hahomematic.entity as hme
-from hahomematic.helpers import generate_unique_identifier
+from hahomematic.entity_support import CustomConfig, ExtendedConfig
+from hahomematic.helpers import element_matches_key, generate_unique_identifier
 
 ED_DEFAULT_ENTITIES: Final = "default_entities"
 ED_INCLUDE_DEFAULT_ENTITIES: Final = "include_default_entities"
@@ -27,99 +74,10 @@ ED_SECONDARY_CHANNELS: Final = "secondary_channels"
 ED_VISIBLE_FIELDS: Final = "visible_fields"
 DEFAULT_INCLUDE_DEFAULT_ENTITIES: Final = True
 
-FIELD_ACTIVE_PROFILE: Final = "active_profile"
-FIELD_AUTO_MODE: Final = "auto_mode"
-FIELD_BOOST_MODE: Final = "boost_mode"
-FIELD_CHANNEL_COLOR: Final = "channel_color"
-FIELD_CHANNEL_LEVEL: Final = "channel_level"
-FIELD_CHANNEL_LEVEL_2: Final = "channel_level_2"
-FIELD_CHANNEL_OPERATION_MODE: Final = "channel_operation_mode"
-FIELD_CHANNEL_STATE: Final = "channel_state"
-FIELD_COLOR: Final = "color"
-FIELD_COLOR_LEVEL: Final = "color_temp"
-FIELD_COMFORT_MODE: Final = "comfort_mode"
-FIELD_CONTROL_MODE: Final = "control_mode"
-FIELD_CURRENT: Final = "current"
-FIELD_DIRECTION: Final = "direction"
-FIELD_DOOR_COMMAND: Final = "door_command"
-FIELD_DOOR_STATE: Final = "door_state"
-FIELD_DURATION_UNIT: Final = "duration_unit"
-FIELD_DURATION: Final = "duration"
-FIELD_DUTY_CYCLE: Final = "duty_cycle"
-FIELD_DUTYCYCLE: Final = "dutycycle"
-FIELD_ERROR: Final = "error"
-FIELD_ENERGY_COUNTER: Final = "energy_counter"
-FIELD_FREQUENCY: Final = "frequency"
-FIELD_HEATING_COOLING: Final = "heating_cooling"
-FIELD_HUMIDITY: Final = "humidity"
-FIELD_INHIBIT: Final = "inhibit"
-FIELD_LEVEL: Final = "level"
-FIELD_LEVEL_2: Final = "level_2"
-FIELD_LOCK_STATE: Final = "lock_state"
-FIELD_LOCK_TARGET_LEVEL: Final = "lock_target_level"
-FIELD_LOW_BAT: Final = "low_bat"
-FIELD_LOWBAT: Final = "lowbat"
-FIELD_LOWERING_MODE: Final = "lowering_mode"
-FIELD_MANU_MODE: Final = "manu_mode"
-FIELD_ON_TIME_VALUE: Final = "on_time_value"
-FIELD_ON_TIME_UNIT: Final = "on_time_unit"
-FIELD_OPERATING_VOLTAGE: Final = "operating_voltage"
-FIELD_OPEN: Final = "open"
-FIELD_PARTY_MODE: Final = "party_mode"
-FIELD_PROGRAM: Final = "program"
-FIELD_POWER: Final = "power"
-FIELD_RAMP_TIME_VALUE: Final = "ramp_time_value"
-FIELD_RAMP_TIME_UNIT: Final = "ramp_time_unit"
-FIELD_RSSI_DEVICE: Final = "rssi_device"
-FIELD_RSSI_PEER: Final = "rssi_peer"
-FIELD_SABOTAGE: Final = "sabotage"
-FIELD_SECTION: Final = "section"
-FIELD_SET_POINT_MODE: Final = "set_point_mode"
-FIELD_SETPOINT: Final = "setpoint"
-FIELD_STATE: Final = "state"
-FIELD_STOP: Final = "stop"
-FIELD_SWITCH_MAIN: Final = "switch_main"
-FIELD_SWITCH_V1: Final = "vswitch_1"
-FIELD_SWITCH_V2: Final = "vswitch_2"
-FIELD_TEMPERATURE: Final = "temperature"
-FIELD_TEMPERATURE_MAXIMUM: Final = "temperature_maximum"
-FIELD_TEMPERATURE_MINIMUM: Final = "temperature_minimum"
-FIELD_VALVE_STATE: Final = "valve_state"
-FIELD_VOLTAGE: Final = "voltage"
-
-FIELD_ACOUSTIC_ALARM_ACTIVE: Final = "acoustic_alarm_active"
-FIELD_ACOUSTIC_ALARM_SELECTION: Final = "acoustic_alarm_selection"
-FIELD_OPTICAL_ALARM_ACTIVE: Final = "optical_alarm_active"
-FIELD_OPTICAL_ALARM_SELECTION: Final = "optical_alarm_selection"
+ALL_DEVICES: list[dict[str, CustomConfig | tuple[CustomConfig, ...]]] = []
+BLACKLISTED_DEVICES: list[tuple[str, ...]] = []
 
 _LOGGER = logging.getLogger(__name__)
-
-
-class EntityDefinition(StrEnum):
-    """Enum for entity definitions."""
-
-    IP_COVER = "IPCover"
-    IP_DIMMER = "IPDimmer"
-    IP_GARAGE = "IPGarage"
-    IP_SWITCH = "IPSwitch"
-    IP_FIXED_COLOR_LIGHT = "IPFixedColorLight"
-    IP_SIMPLE_FIXED_COLOR_LIGHT = "IPSimpleFixedColorLight"
-    IP_LOCK = "IPLock"
-    IP_THERMOSTAT = "IPThermostat"
-    IP_THERMOSTAT_GROUP = "IPThermostatGroup"
-    IP_SIREN = "IPSiren"
-    RF_COVER = "RfCover"
-    RF_DIMMER = "RfDimmer"
-    RF_DIMMER_COLOR = "RfDimmer_Color"
-    RF_DIMMER_COLOR_TEMP = "RfDimmer_Color_Temp"
-    RF_DIMMER_WITH_VIRT_CHANNEL = "RfDimmerWithVirtChannel"
-    RF_LOCK = "RfLock"
-    RF_THERMOSTAT = "RfThermostat"
-    RF_THERMOSTAT_GROUP = "RfThermostatGroup"
-    RF_SIREN = "RfSiren"
-    RF_SWITCH = "RfSwitch"
-    SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
-
 
 SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
     {vol.Required(vol.Any(int, tuple[int, ...])): vol.Schema((vol.Optional(str),))}
@@ -546,13 +504,13 @@ def make_custom_entity(
     device_enum: EntityDefinition,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[hmce.CustomEntity, ...]:
     """
     Create custom_entities.
 
     We use a helper-function to avoid raising exceptions during object-init.
     """
-    entities: list[hme.BaseEntity] = []
+    entities: list[hmce.CustomEntity] = []
 
     entity_def = _get_device_entities(device_enum, group_base_channels[0])
 
@@ -585,9 +543,9 @@ def _create_entities(
     entity_def: dict[int, tuple[str, ...]],
     channel_no: int | None = None,
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[hmce.CustomEntity, ...]:
     """Create custom entities."""
-    entities: list[hme.BaseEntity] = []
+    entities: list[hmce.CustomEntity] = []
     unique_identifier = generate_unique_identifier(
         central=device.central, address=f"{device.device_address}:{channel_no}"
     )
@@ -678,32 +636,87 @@ def _get_device_entities(
     return new_entities
 
 
-@dataclass
-class CustomConfig:
-    """Data for custom entity creation."""
+def get_entity_configs(
+    device_type: str,
+) -> list[CustomConfig | tuple[CustomConfig, ...]]:
+    """Return the entity configs to create custom entities."""
+    device_type = device_type.lower().replace("hb-", "hm-")
+    funcs = []
+    for platform_blacklisted_devices in BLACKLISTED_DEVICES:
+        if element_matches_key(
+            search_elements=platform_blacklisted_devices,
+            compare_with=device_type,
+        ):
+            return []
 
-    func: Callable
-    channels: tuple[int, ...]
-    extended: ExtendedConfig | None = None
+    for platform_devices in ALL_DEVICES:
+        if func := _get_entity_config_by_platform(
+            platform_devices=platform_devices,
+            device_type=device_type,
+        ):
+            funcs.append(func)
+    return funcs
 
 
-@dataclass
-class ExtendedConfig:
-    """Extended data for custom entity creation."""
+def _get_entity_config_by_platform(
+    platform_devices: dict[str, CustomConfig | tuple[CustomConfig, ...]],
+    device_type: str,
+) -> CustomConfig | tuple[CustomConfig, ...] | None:
+    """Return the entity configs to create custom entities."""
+    for d_type, custom_configs in platform_devices.items():
+        if device_type.lower() == d_type.lower():
+            return custom_configs
 
-    fixed_channels: dict[int, dict[str, str]] | None = None
-    additional_entities: dict[int | tuple[int, ...], tuple[str, ...]] | None = None
+    for d_type, custom_configs in platform_devices.items():
+        if device_type.lower().startswith(d_type.lower()):
+            return custom_configs
 
-    @property
-    def required_parameters(self) -> tuple[str, ...]:
-        """Return vol.Required parameters from extended config."""
-        required_parameters: list[str] = []
-        if fixed_channels := self.fixed_channels:
-            for mapping in fixed_channels.values():
-                required_parameters.extend(mapping.values())
+    return None
 
-        if additional_entities := self.additional_entities:
-            for parameters in additional_entities.values():
-                required_parameters.extend(parameters)
 
-        return tuple(required_parameters)
+def is_multi_channel_device(device_type: str) -> bool:
+    """Return true, if device has multiple channels."""
+    channels: list[int] = []
+    for entity_configs in get_entity_configs(device_type=device_type):
+        if isinstance(entity_configs, CustomConfig):
+            channels.extend(entity_configs.channels)
+        else:
+            for entity_config in entity_configs:
+                channels.extend(entity_config.channels)
+
+    return len(channels) > 1
+
+
+def entity_definition_exists(device_type: str) -> bool:
+    """Check if device desc exits."""
+    return len(get_entity_configs(device_type)) > 0
+
+
+def get_required_parameters() -> tuple[str, ...]:
+    """Return all required parameters for custom entities."""
+    required_parameters: list[str] = []
+    for channel in entity_definition[ED_DEFAULT_ENTITIES]:
+        required_parameters.extend(entity_definition[ED_DEFAULT_ENTITIES][channel])
+    for device in entity_definition[ED_DEVICE_DEFINITIONS]:
+        device_def = entity_definition[ED_DEVICE_DEFINITIONS][device][ED_DEVICE_GROUP]
+        required_parameters.extend(list(device_def.get(ED_REPEATABLE_FIELDS, {}).values()))
+        required_parameters.extend(list(device_def.get(ED_VISIBLE_REPEATABLE_FIELDS, {}).values()))
+        required_parameters.extend(list(device_def.get(ED_REPEATABLE_FIELDS, {}).values()))
+        for additional_entities in list(
+            entity_definition[ED_DEVICE_DEFINITIONS][device]
+            .get(ED_ADDITIONAL_ENTITIES, {})
+            .values()
+        ):
+            required_parameters.extend(additional_entities)
+
+    for platform_spec in ALL_DEVICES:
+        for custom_configs in platform_spec.values():
+            if isinstance(custom_configs, CustomConfig):
+                if extended := custom_configs.extended:
+                    required_parameters.extend(extended.required_parameters)
+            else:
+                for custom_config in custom_configs:
+                    if extended := custom_config.extended:
+                        required_parameters.extend(extended.required_parameters)
+
+    return tuple(sorted(set(required_parameters)))

@@ -6,8 +6,8 @@ See https://www.home-assistant.io/integrations/binary_sensor/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.decorators import value_property
-from hahomematic.entity import GenericEntity, GenericSystemVariable
+from hahomematic.entity_support import value_property
+from hahomematic.generic_platforms.entity import GenericEntity
 
 
 class HmBinarySensor(GenericEntity[bool]):
@@ -25,16 +25,3 @@ class HmBinarySensor(GenericEntity[bool]):
         if self._attr_value is not None:
             return self._attr_value
         return self._attr_default
-
-
-class HmSysvarBinarySensor(GenericSystemVariable):
-    """Implementation of a sysvar binary_sensor."""
-
-    _attr_platform = HmPlatform.HUB_BINARY_SENSOR
-
-    @value_property
-    def value(self) -> bool | None:
-        """Return the value of the entity."""
-        if self._attr_value is not None:
-            return bool(self._attr_value)
-        return None

@@ -8,10 +8,11 @@ import const
 import pytest
 
 from hahomematic.const import DEFAULT_ENCODING, HmEntityUsage
-from hahomematic.decorators import (
+from hahomematic.entity_support import (
     get_public_attributes_for_config_property,
     get_public_attributes_for_value_property,
 )
+from hahomematic.generic_platforms.entity import GenericEntity
 
 # pylint: disable=protected-access
 
@@ -72,10 +73,12 @@ async def test_central_full(central_unit_full) -> None:
                 entity_types[entity.hmtype][type(entity).__name__] = []
 
             entity_types[entity.hmtype][type(entity).__name__].append(entity)
-        pub_value_props = get_public_attributes_for_value_property(data_object=entity)
-        assert pub_value_props
-        pub_config_props = get_public_attributes_for_config_property(data_object=entity)
-        assert pub_config_props
+
+        if isinstance(entity, GenericEntity):
+            pub_value_props = get_public_attributes_for_value_property(data_object=entity)
+            assert pub_value_props
+            pub_config_props = get_public_attributes_for_config_property(data_object=entity)
+            assert pub_config_props
 
     parameters: list[tuple[str, int]] = []
     for entity in central_unit_full._entities.values():

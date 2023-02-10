@@ -8,12 +8,9 @@ from __future__ import annotations
 from typing import Any, Final, cast
 
 from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
-from hahomematic.decorators import value_property
-from hahomematic.entity import (
-    CallParameterCollector,
-    GenericEntity,
-    GenericSystemVariable,
-)
+from hahomematic.entity import CallParameterCollector
+from hahomematic.entity_support import value_property
+from hahomematic.generic_platforms.entity import GenericEntity
 
 PARAM_ON_TIME: Final = "ON_TIME"
 
@@ -55,10 +52,3 @@ class HmSwitch(GenericEntity[bool]):
             parameter=PARAM_ON_TIME,
             value=float(on_time),
         )
-
-
-class HmSysvarSwitch(GenericSystemVariable):
-    """Implementation of a sysvar switch entity."""
-
-    _attr_platform = HmPlatform.HUB_SWITCH
-    _attr_is_extended = True

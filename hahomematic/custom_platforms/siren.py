@@ -8,23 +8,22 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Final
 
-from hahomematic.const import HmPlatform
-from hahomematic.custom_platforms.entity_definition import (
+from hahomematic.const import (
     FIELD_ACOUSTIC_ALARM_ACTIVE,
     FIELD_ACOUSTIC_ALARM_SELECTION,
     FIELD_DURATION,
     FIELD_DURATION_UNIT,
     FIELD_OPTICAL_ALARM_ACTIVE,
     FIELD_OPTICAL_ALARM_SELECTION,
-    CustomConfig,
     EntityDefinition,
-    ExtendedConfig,
-    make_custom_entity,
+    HmPlatform,
 )
-from hahomematic.decorators import bind_collector, value_property
+from hahomematic.custom_platforms.entity import CustomEntity
+import hahomematic.custom_platforms.entity_definition as hmed
+from hahomematic.decorators import bind_collector
 import hahomematic.device as hmd
-import hahomematic.entity as hme
-from hahomematic.entity import CallParameterCollector, CustomEntity
+from hahomematic.entity import CallParameterCollector
+from hahomematic.entity_support import CustomConfig, ExtendedConfig, value_property
 from hahomematic.generic_platforms.action import HmAction
 from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
 
@@ -153,9 +152,9 @@ def make_ip_siren(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
-) -> tuple[hme.BaseEntity, ...]:
+) -> tuple[CustomEntity, ...]:
     """Create HomematicIP siren entities."""
-    return make_custom_entity(
+    return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpSiren,
         device_enum=EntityDefinition.IP_SIREN,
@@ -165,8 +164,8 @@ def make_ip_siren(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "HmIP-ASIR": CustomConfig(func=make_ip_siren, channels=(0,)),
-}
-
-BLACKLISTED_DEVICES: tuple[str, ...] = ()
+hmed.ALL_DEVICES.append(
+    {
+        "HmIP-ASIR": CustomConfig(func=make_ip_siren, channels=(0,)),
+    }
+)

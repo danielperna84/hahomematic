@@ -9,7 +9,8 @@ import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.custom_platforms.switch import CeSwitch
-from hahomematic.generic_platforms.switch import HmSwitch, HmSysvarSwitch
+from hahomematic.generic_platforms.switch import HmSwitch
+from hahomematic.hub_platforms.switch import HmSysvarSwitch
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

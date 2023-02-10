@@ -3,6 +3,7 @@
 - Add project setup script
 - Add entity_data event
 - Add payload mixin
+- Cleanup packages
 
 # Version 2023.2.7 (2023-02-07)
 

@@ -20,7 +20,7 @@ from typing import Any, Final, TypeVar
 
 from aiohttp import ClientSession
 
-from hahomematic import PayloadMixin, config
+from hahomematic import config
 import hahomematic.client as hmcl
 from hahomematic.const import (
     ATTR_INTERFACE_ID,
@@ -55,29 +55,23 @@ from hahomematic.const import (
     HmInterfaceEventType,
     HmPlatform,
 )
+from hahomematic.custom_platforms.entity import CustomEntity
 from hahomematic.decorators import (
     async_callback_system_event,
     callback_event,
     callback_system_event,
-    config_property,
-    value_property,
 )
 from hahomematic.device import HmDevice
-from hahomematic.entity import (
-    BaseEntity,
-    CustomEntity,
-    GenericEntity,
-    GenericEvent,
-    GenericHubEntity,
-    GenericSystemVariable,
-)
+from hahomematic.entity import BaseEntity
+from hahomematic.entity_support import PayloadMixin, config_property, value_property
+from hahomematic.event import GenericEvent
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
     NoClients,
     NoConnection,
 )
-from hahomematic.generic_platforms.button import HmProgramButton
+from hahomematic.generic_platforms.entity import GenericEntity
 from hahomematic.helpers import (
     check_or_create_directory,
     check_password,
@@ -85,7 +79,9 @@ from hahomematic.helpers import (
     get_device_channel,
     updated_within_seconds,
 )
-from hahomematic.hub import HmHub
+from hahomematic.hub_platforms import HmHub
+from hahomematic.hub_platforms.button import HmProgramButton
+from hahomematic.hub_platforms.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.parameter_visibility import ParameterVisibilityCache
 from hahomematic.xml_rpc_proxy import XmlRpcProxy

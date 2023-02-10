@@ -8,11 +8,9 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-from hahomematic import PayloadMixin
 import hahomematic.central_unit as hmcu
 import hahomematic.client as hmcl
 from hahomematic.const import (
-    BUTTON_ACTIONS,
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
     EVENT_CONFIG_PENDING,
@@ -24,7 +22,6 @@ from hahomematic.const import (
     HM_OPERATIONS,
     HM_SUBTYPE,
     HM_TYPE,
-    HM_VIRTUAL_REMOTE_TYPES,
     IMPULSE_EVENTS,
     INIT_DATETIME,
     MAX_CACHE_AGE,
@@ -34,46 +31,21 @@ from hahomematic.const import (
     PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
     RELEVANT_INIT_PARAMETERS,
-    TYPE_ACTION,
-    TYPE_BOOL,
-    TYPE_ENUM,
-    TYPE_FLOAT,
-    TYPE_INTEGER,
-    TYPE_STRING,
     HmCallSource,
     HmForcedDeviceAvailability,
 )
-from hahomematic.custom_platforms import entity_definition_exists, get_entity_configs
-from hahomematic.custom_platforms.entity_definition import CustomConfig
-from hahomematic.decorators import config_property, value_property
-from hahomematic.entity import (
-    BaseEntity,
-    CallbackEntity,
-    ClickEvent,
-    CustomEntity,
-    DeviceErrorEvent,
-    GenericEntity,
-    GenericEvent,
-    ImpulseEvent,
-    WrapperEntity,
+from hahomematic.custom_platforms import (
+    create_custom_entity_and_append_to_device,
+    has_custom_entity_definition,
 )
+from hahomematic.custom_platforms.entity import CustomEntity
+from hahomematic.entity import BaseEntity, CallbackEntity
+from hahomematic.entity_support import PayloadMixin, config_property, value_property
+from hahomematic.event import GenericEvent, create_event_and_append_to_device
 from hahomematic.exceptions import BaseHomematicException
-from hahomematic.generic_platforms.action import HmAction
-from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
-from hahomematic.generic_platforms.button import HmButton
-from hahomematic.generic_platforms.number import HmFloat, HmInteger
-from hahomematic.generic_platforms.select import HmSelect
-from hahomematic.generic_platforms.sensor import HmSensor
-from hahomematic.generic_platforms.switch import HmSwitch
-from hahomematic.generic_platforms.text import HmText
-from hahomematic.helpers import (
-    generate_unique_identifier,
-    get_channel_no,
-    get_device_channel,
-    get_device_name,
-    is_binary_sensor,
-    updated_within_seconds,
-)
+from hahomematic.generic_platforms import create_entity_and_append_to_device
+from hahomematic.generic_platforms.entity import GenericEntity, WrapperEntity
+from hahomematic.helpers import get_channel_no, get_device_name, updated_within_seconds
 from hahomematic.parameter_visibility import ALLOWED_INTERNAL_PARAMETERS
 import hahomematic.support as hm_support
 
@@ -121,9 +93,7 @@ class HmDevice(PayloadMixin):
             )
         )
         # marker if device will be created as custom entity
-        self._has_custom_entity_definition: Final[bool] = entity_definition_exists(
-            self._attr_device_type
-        )
+        self._has_custom_entity_definition: Final[bool] = has_custom_entity_definition(device=self)
         self._attr_firmware: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
@@ -409,7 +379,8 @@ class HmDevice(PayloadMixin):
                         or parameter.startswith(DEVICE_ERROR_EVENTS)
                         or parameter in IMPULSE_EVENTS
                     ):
-                        self._create_event_and_append_to_device(
+                        create_event_and_append_to_device(
+                            device=self,
                             channel_address=channel_address,
                             parameter=parameter,
                             parameter_data=parameter_data,
@@ -431,160 +402,15 @@ class HmDevice(PayloadMixin):
                     if parameter not in IMPULSE_EVENTS and (
                         not parameter.startswith(DEVICE_ERROR_EVENTS) or parameter_is_un_ignored
                     ):
-                        self._create_entity_and_append_to_device(
+                        create_entity_and_append_to_device(
+                            device=self,
                             channel_address=channel_address,
                             paramset_key=paramset_key,
                             parameter=parameter,
                             parameter_data=parameter_data,
                         )
 
-        # create custom entities
-        if self._has_custom_entity_definition:
-            _LOGGER.debug(
-                "CREATE_ENTITIES: Handling custom entity integration: %s, %s, %s",
-                self._attr_interface_id,
-                self._attr_device_address,
-                self._attr_device_type,
-            )
-
-            # Call the custom creation function.
-            for entity_configs in get_entity_configs(self._attr_device_type):
-                if isinstance(entity_configs, CustomConfig):
-                    entity_configs.func(self, entity_configs.channels, entity_configs.extended)
-                else:
-                    for entity_config in entity_configs:
-                        entity_config.func(self, entity_config.channels, entity_config.extended)
-
-    def _create_event_and_append_to_device(
-        self, channel_address: str, parameter: str, parameter_data: dict[str, Any]
-    ) -> None:
-        """Create action event entity."""
-        unique_identifier = generate_unique_identifier(
-            central=self.central,
-            address=channel_address,
-            parameter=parameter,
-            prefix=f"event_{self.central.name}",
-        )
-
-        _LOGGER.debug(
-            "CREATE_EVENT_AND_APPEND_TO_DEVICE: Creating event for %s, %s, %s",
-            channel_address,
-            parameter,
-            self._attr_interface_id,
-        )
-        event_t: type[GenericEvent] | None = None
-        if parameter_data[HM_OPERATIONS] & OPERATION_EVENT:
-            if parameter in CLICK_EVENTS:
-                event_t = ClickEvent
-            if parameter.startswith(DEVICE_ERROR_EVENTS):
-                event_t = DeviceErrorEvent
-            if parameter in IMPULSE_EVENTS:
-                event_t = ImpulseEvent
-        if event_t:
-            event = event_t(
-                device=self,
-                unique_identifier=unique_identifier,
-                channel_address=channel_address,
-                parameter=parameter,
-                parameter_data=parameter_data,
-            )
-            self.add_entity(event)
-
-    def _create_entity_and_append_to_device(
-        self,
-        channel_address: str,
-        paramset_key: str,
-        parameter: str,
-        parameter_data: dict[str, Any],
-    ) -> None:
-        """Decides which default platform should be used, and creates the required entities."""
-        if self.central.parameter_visibility.ignore_parameter(
-            device_type=self._attr_device_type,
-            device_channel=get_device_channel(channel_address),
-            paramset_key=paramset_key,
-            parameter=parameter,
-        ):
-            _LOGGER.debug(
-                "create_entity_and_append_to_device: Ignoring parameter: %s [%s]",
-                parameter,
-                channel_address,
-            )
-            return
-
-        unique_identifier = generate_unique_identifier(
-            central=self.central, address=channel_address, parameter=parameter
-        )
-        if self.central.has_entity(unique_identifier=unique_identifier):
-            _LOGGER.debug(
-                "create_entity_and_append_to_device: Skipping %s (already exists)",
-                unique_identifier,
-            )
-            return
-        _LOGGER.debug(
-            "create_entity_and_append_to_device: Creating entity for %s, %s, %s",
-            channel_address,
-            parameter,
-            self._attr_interface_id,
-        )
-        entity_t: type[GenericEntity] | None = None
-        if parameter_data[HM_OPERATIONS] & OPERATION_WRITE:
-            if parameter_data[HM_TYPE] == TYPE_ACTION:
-                if parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
-                    if (
-                        parameter in BUTTON_ACTIONS
-                        or self._attr_device_type in HM_VIRTUAL_REMOTE_TYPES
-                    ):
-                        entity_t = HmButton
-                    else:
-                        entity_t = HmAction
-                else:
-                    if parameter in CLICK_EVENTS:
-                        entity_t = HmButton
-                    else:
-                        entity_t = HmSwitch
-            else:
-                if parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
-                    entity_t = HmAction
-                elif parameter_data[HM_TYPE] == TYPE_BOOL:
-                    entity_t = HmSwitch
-                elif parameter_data[HM_TYPE] == TYPE_ENUM:
-                    entity_t = HmSelect
-                elif parameter_data[HM_TYPE] == TYPE_FLOAT:
-                    entity_t = HmFloat
-                elif parameter_data[HM_TYPE] == TYPE_INTEGER:
-                    entity_t = HmInteger
-                elif parameter_data[HM_TYPE] == TYPE_STRING:
-                    entity_t = HmText
-        else:
-            if parameter not in CLICK_EVENTS:
-                # Also check, if sensor could be a binary_sensor due to value_list.
-                if is_binary_sensor(parameter_data):
-                    parameter_data[HM_TYPE] = TYPE_BOOL
-                    entity_t = HmBinarySensor
-                else:
-                    entity_t = HmSensor
-
-        if entity_t:
-            entity = entity_t(
-                device=self,
-                unique_identifier=unique_identifier,
-                channel_address=channel_address,
-                paramset_key=paramset_key,
-                parameter=parameter,
-                parameter_data=parameter_data,
-            )
-            _LOGGER.debug(
-                "create_entity_and_append_to_device: %s: %s %s",
-                entity.platform,
-                channel_address,
-                parameter,
-            )
-            self.add_entity(entity)
-            if new_platform := self.central.parameter_visibility.wrap_entity(
-                wrapped_entity=entity
-            ):
-                wrapper_entity = WrapperEntity(wrapped_entity=entity, new_platform=new_platform)
-                self.add_entity(wrapper_entity)
+        create_custom_entity_and_append_to_device(device=self)
 
 
 class ValueCache:
