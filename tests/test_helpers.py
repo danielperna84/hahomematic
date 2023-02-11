@@ -36,7 +36,6 @@ from hahomematic.helpers import (
     to_bool,
     updated_within_seconds,
 )
-from hahomematic.parameter_visibility import _get_value_from_dict_by_wildcard_key
 from hahomematic.platforms.support import (
     _check_channel_name_with_channel_no,
     convert_value,
@@ -46,6 +45,7 @@ from hahomematic.platforms.support import (
     get_entity_name,
     get_event_name,
 )
+from hahomematic.platforms.visibility import _get_value_from_dict_by_wildcard_key
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

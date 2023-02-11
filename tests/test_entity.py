@@ -9,7 +9,6 @@ import helper
 import pytest
 
 from hahomematic.const import HmCallSource, HmEntityUsage
-from hahomematic.parameter_visibility import check_ignore_parameters_is_clean
 from hahomematic.platforms.custom.definition import (
     get_required_parameters,
     validate_entity_definition,
@@ -17,6 +16,7 @@ from hahomematic.platforms.custom.definition import (
 from hahomematic.platforms.custom.switch import CeSwitch
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
+from hahomematic.platforms.visibility import check_ignore_parameters_is_clean
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

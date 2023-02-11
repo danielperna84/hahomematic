@@ -14,11 +14,11 @@ from hahomematic.const import (
     OPERATION_EVENT,
     OPERATION_WRITE,
 )
-from hahomematic.parameter_visibility import ALLOWED_INTERNAL_PARAMETERS
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import create_custom_entity_and_append_to_device
 from hahomematic.platforms.event import create_event_and_append_to_device
 from hahomematic.platforms.generic import create_entity_and_append_to_device
+from hahomematic.platforms.visibility import ALLOWED_INTERNAL_PARAMETERS
 
 _LOGGER = logging.getLogger(__name__)
 
