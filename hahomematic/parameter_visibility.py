@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Final
+from typing import Any, Final
 
 import hahomematic.central_unit as hmcu
 from hahomematic.const import (
@@ -21,13 +21,9 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmPlatform,
 )
-from hahomematic.custom_platforms.entity_definition import get_required_parameters
-import hahomematic.generic_platforms.entity as hmge
-from hahomematic.helpers import (
-    check_or_create_directory,
-    element_matches_key,
-    get_value_from_dict_by_wildcard_key,
-)
+import hahomematic.helpers as hm_helpers
+from hahomematic.platforms.custom.entity_definition import get_required_parameters
+import hahomematic.platforms.generic.entity as hmge
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -370,7 +366,7 @@ class ParameterVisibilityCache:
                     or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
                 )
                 and parameter not in self._required_parameters
-            ) or element_matches_key(
+            ) or hm_helpers.element_matches_key(
                 search_elements=self._ignore_parameters_by_device_lower.get(parameter, []),
                 compare_with=device_type_l,
             ):
@@ -426,7 +422,7 @@ class ParameterVisibilityCache:
 
         # check if parameter is in _UN_IGNORE_PARAMETERS_BY_DEVICE
         if (
-            un_ignore_parameters := get_value_from_dict_by_wildcard_key(
+            un_ignore_parameters := _get_value_from_dict_by_wildcard_key(
                 search_elements=self._un_ignore_parameters_by_device_lower,
                 compare_with=device_type_l,
             )
@@ -583,7 +579,7 @@ class ParameterVisibilityCache:
                 d_type,
                 channel_nos,
             ) in self._relevant_master_paramsets_by_device.items():
-                if device_channel in channel_nos and element_matches_key(
+                if device_channel in channel_nos and hm_helpers.element_matches_key(
                     search_elements=d_type,
                     compare_with=device_type,
                 ):
@@ -594,7 +590,7 @@ class ParameterVisibilityCache:
         """Check if parameter of a device should be wrapped to a different platform."""
         for devices, wrapper_def in _WRAP_ENTITY.items():
             if (
-                element_matches_key(
+                hm_helpers.element_matches_key(
                     search_elements=devices,
                     compare_with=wrapped_entity.device.device_type,
                 )
@@ -607,7 +603,7 @@ class ParameterVisibilityCache:
         """Load custom un ignore parameters from disk."""
 
         def _load() -> None:
-            if not check_or_create_directory(self._storage_folder):
+            if not hm_helpers.check_or_create_directory(self._storage_folder):
                 return  # pragma: no cover
             if not os.path.exists(
                 os.path.join(self._storage_folder, FILE_CUSTOM_UN_IGNORE_PARAMETERS)
@@ -654,3 +650,22 @@ def check_ignore_parameters_is_clean() -> bool:
         ):
             should_not_be_ignored.append(parameter)
     return len(should_not_be_ignored) == 0
+
+
+def _get_value_from_dict_by_wildcard_key(
+    search_elements: dict[str, Any],
+    compare_with: str | None,
+    do_wildcard_search: bool = True,
+) -> Any | None:
+    """Return the dict value by wildcard type."""
+    if compare_with is None:
+        return None
+
+    for key, value in search_elements.items():
+        if do_wildcard_search:
+            if key.lower().startswith(compare_with.lower()):
+                return value
+        else:
+            if key.lower() == compare_with.lower():
+                return value
+    return None

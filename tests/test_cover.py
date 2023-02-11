@@ -9,7 +9,7 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.custom_platforms.cover import (
+from hahomematic.platforms.custom.cover import (
     GARAGE_DOOR_SECTION_CLOSING,
     GARAGE_DOOR_SECTION_OPENING,
     HM_CLOSED,

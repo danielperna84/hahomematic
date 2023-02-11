@@ -8,7 +8,7 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.generic_platforms.action import HmAction
+from hahomematic.platforms.generic.action import HmAction
 
 TEST_DEVICES: dict[str, str] = {
     "VCU9724704": "HmIP-DLD.json",

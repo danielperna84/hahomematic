@@ -8,8 +8,8 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.generic_platforms.sensor import HmSensor
-from hahomematic.hub_platforms.sensor import HmSysvarSensor
+from hahomematic.platforms.generic.sensor import HmSensor
+from hahomematic.platforms.hub.sensor import HmSysvarSensor
 
 TEST_DEVICES: dict[str, str] = {
     "VCU7981740": "HmIP-SRH.json",

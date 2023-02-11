@@ -8,11 +8,11 @@ import const
 import pytest
 
 from hahomematic.const import DEFAULT_ENCODING, HmEntityUsage
-from hahomematic.entity_support import (
+from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.platforms.support import (
     get_public_attributes_for_config_property,
     get_public_attributes_for_value_property,
 )
-from hahomematic.generic_platforms.entity import GenericEntity
 
 # pylint: disable=protected-access
 
