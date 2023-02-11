@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import logging
 
+from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom.const import CustomConfig
 from hahomematic.platforms.custom.entity_definition import (
     entity_definition_exists,
     get_entity_configs,
 )
-import hahomematic.platforms.device as hmd
 
 _LOGGER = logging.getLogger(__name__)
 

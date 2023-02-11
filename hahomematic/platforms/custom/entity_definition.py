@@ -7,7 +7,9 @@ from typing import Any, Final, cast
 
 import voluptuous as vol
 
-import hahomematic.helpers as hm_helpers
+from hahomematic import helpers as hm_helpers
+from hahomematic.platforms import device as hmd
+from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.custom.const import (
     FIELD_ACOUSTIC_ALARM_ACTIVE,
     FIELD_ACOUSTIC_ALARM_SELECTION,
@@ -59,8 +61,6 @@ from hahomematic.platforms.custom.const import (
     ExtendedConfig,
     HmEntityDefinition,
 )
-import hahomematic.platforms.custom.entity as hmce
-import hahomematic.platforms.device as hmd
 from hahomematic.platforms.support import generate_unique_identifier
 
 ED_DEFAULT_ENTITIES: Final = "default_entities"

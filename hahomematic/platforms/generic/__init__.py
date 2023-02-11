@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from hahomematic import helpers as hm_helpers
 from hahomematic.const import (
     BUTTON_ACTIONS,
     CLICK_EVENTS,
@@ -18,12 +19,11 @@ from hahomematic.const import (
     TYPE_INTEGER,
     TYPE_STRING,
 )
-import hahomematic.helpers as hm_helpers
-import hahomematic.platforms.device as hmd
+from hahomematic.platforms import device as hmd
+from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.button import HmButton
-import hahomematic.platforms.generic.entity as hmge
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor

@@ -8,8 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-import hahomematic.central_unit as hmcu
-import hahomematic.client as hmcl
+from hahomematic import central_unit as hmcu, client as hmcl, support as hm_support
 from hahomematic.const import (
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
@@ -28,8 +27,8 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.helpers import updated_within_seconds
-import hahomematic.platforms.custom as cep
-import hahomematic.platforms.custom.entity as hmce
+from hahomematic.platforms import custom as cep
+from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.entity import BaseEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
@@ -39,7 +38,6 @@ from hahomematic.platforms.support import (
     get_device_name,
     value_property,
 )
-import hahomematic.support as hm_support
 
 _LOGGER = logging.getLogger(__name__)
 

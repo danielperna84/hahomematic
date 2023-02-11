@@ -11,7 +11,7 @@ import threading
 from typing import Any, Final
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
-import hahomematic.central_unit as hmcu
+from hahomematic import central_unit as hmcu
 from hahomematic.const import (
     HH_EVENT_ERROR,
     HH_EVENT_RE_ADDED_DEVICE,

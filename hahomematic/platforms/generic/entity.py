@@ -15,8 +15,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.exceptions import HaHomematicException
-import hahomematic.platforms.device as hmd
-import hahomematic.platforms.entity as hme
+from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.support import (
     EntityNameData,
     config_property,

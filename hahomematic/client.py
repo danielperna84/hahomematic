@@ -11,8 +11,7 @@ import logging
 import os
 from typing import Any, Final, cast
 
-from hahomematic import config
-import hahomematic.central_unit as hmcu
+from hahomematic import central_unit as hmcu, config
 from hahomematic.config import CHECK_INTERVAL
 from hahomematic.const import (
     ATTR_ADDRESS,

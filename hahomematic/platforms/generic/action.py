@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from hahomematic.const import HmPlatform
-import hahomematic.platforms.entity as hme
+from hahomematic.platforms import entity as hme
 from hahomematic.platforms.generic.entity import GenericEntity
 
 

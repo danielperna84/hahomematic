@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 
+from hahomematic import helpers as hm_helpers
 from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
@@ -13,10 +14,9 @@ from hahomematic.const import (
     OPERATION_EVENT,
     OPERATION_WRITE,
 )
-import hahomematic.helpers as hm_helpers
 from hahomematic.parameter_visibility import ALLOWED_INTERNAL_PARAMETERS
+from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import create_custom_entity_and_append_to_device
-import hahomematic.platforms.device as hmd
 from hahomematic.platforms.event import create_event_and_append_to_device
 from hahomematic.platforms.generic import create_entity_and_append_to_device
 

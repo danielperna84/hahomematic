@@ -8,8 +8,7 @@ import os
 import random
 from typing import Any, Final
 
-import hahomematic.central_unit as hmcu
-import hahomematic.client as hmcl
+from hahomematic import central_unit as hmcu, client as hmcl
 from hahomematic.const import (
     DEFAULT_ENCODING,
     HM_ADDRESS,

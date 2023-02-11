@@ -9,8 +9,7 @@ from typing import Any, Final, Generic, TypeVar, cast
 
 import voluptuous as vol
 
-import hahomematic.central_unit as hmcu
-import hahomematic.client as hmcl
+from hahomematic import central_unit as hmcu, client as hmcl, helpers as hm_helpers
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNEL_NO,
@@ -46,8 +45,7 @@ from hahomematic.const import (
     HmEntityUsage,
     HmPlatform,
 )
-import hahomematic.helpers as hm_helpers
-import hahomematic.platforms.device as hmd
+from hahomematic.platforms import device as hmd
 from hahomematic.platforms.support import (
     EntityNameData,
     PayloadMixin,

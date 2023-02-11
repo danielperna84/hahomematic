@@ -20,8 +20,7 @@ from typing import Any, Final, TypeVar
 
 from aiohttp import ClientSession
 
-from hahomematic import config
-import hahomematic.client as hmcl
+from hahomematic import client as hmcl, config
 from hahomematic.const import (
     ATTR_INTERFACE_ID,
     ATTR_TYPE,
