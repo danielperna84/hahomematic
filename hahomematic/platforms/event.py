@@ -15,7 +15,7 @@ from hahomematic.const import (
     HmEventType,
     HmPlatform,
 )
-import hahomematic.platforms.device as hmd
+from hahomematic.platforms import device as hmd
 from hahomematic.platforms.entity import BaseParameterEntity
 from hahomematic.platforms.support import (
     EntityNameData,

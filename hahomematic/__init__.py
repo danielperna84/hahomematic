@@ -11,7 +11,7 @@ import logging
 import signal
 import sys
 
-import hahomematic.central_unit as hmcu
+from hahomematic import central_unit as hmcu
 
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.DEBUG)

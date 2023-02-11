@@ -5,7 +5,7 @@ import logging
 import os
 from typing import Any, Final
 
-import hahomematic.central_unit as hmcu
+from hahomematic import central_unit as hmcu
 from hahomematic.const import (
     DEFAULT_ENCODING,
     EVENT_CONFIG_PENDING,

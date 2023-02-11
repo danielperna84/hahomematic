@@ -12,8 +12,7 @@ from typing import Any, Final
 
 from aiohttp import ClientConnectorError, ClientError, ClientSession
 
-from hahomematic import config
-import hahomematic.central_unit as hmcu
+from hahomematic import central_unit as hmcu, config
 from hahomematic.const import (
     ATTR_ERROR,
     ATTR_NAME,

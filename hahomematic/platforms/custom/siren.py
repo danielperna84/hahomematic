@@ -10,6 +10,8 @@ from typing import Final
 
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import bind_collector
+from hahomematic.platforms import device as hmd
+from hahomematic.platforms.custom import entity_definition as hmed
 from hahomematic.platforms.custom.const import (
     FIELD_ACOUSTIC_ALARM_ACTIVE,
     FIELD_ACOUSTIC_ALARM_SELECTION,
@@ -22,8 +24,6 @@ from hahomematic.platforms.custom.const import (
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
-import hahomematic.platforms.custom.entity_definition as hmed
-import hahomematic.platforms.device as hmd
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
