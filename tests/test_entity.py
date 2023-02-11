@@ -8,9 +8,9 @@ import const
 import helper
 import pytest
 
+from hahomematic.caches.visibility import check_ignore_parameters_is_clean
 from hahomematic.const import HmCallSource, HmEntityUsage
-from hahomematic.parameter_visibility import check_ignore_parameters_is_clean
-from hahomematic.platforms.custom.entity_definition import (
+from hahomematic.platforms.custom.definition import (
     get_required_parameters,
     validate_entity_definition,
 )

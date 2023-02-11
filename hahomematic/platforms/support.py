@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any, Generic, TypeVar
 
-from hahomematic import central_unit as hmcu, helpers as hm_helpers
+from hahomematic import central_unit as hmcu, support as hm_helpers
 from hahomematic.const import (
     BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
     HM_TYPE,
@@ -20,9 +20,9 @@ from hahomematic.const import (
     TYPE_STRING,
     HmEntityUsage,
 )
-from hahomematic.helpers import to_bool
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
+from hahomematic.support import to_bool
 
 G = TypeVar("G")  # think about variance
 S = TypeVar("S")

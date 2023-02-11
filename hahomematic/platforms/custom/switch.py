@@ -11,16 +11,15 @@ from typing import Any
 from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_STATE,
     FIELD_ON_TIME_VALUE,
     FIELD_STATE,
-    CustomConfig,
-    ExtendedConfig,
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor

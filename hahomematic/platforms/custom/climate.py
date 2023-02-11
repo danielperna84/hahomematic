@@ -13,7 +13,7 @@ from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
     FIELD_ACTIVE_PROFILE,
     FIELD_AUTO_MODE,
@@ -33,11 +33,10 @@ from hahomematic.platforms.custom.const import (
     FIELD_TEMPERATURE_MAXIMUM,
     FIELD_TEMPERATURE_MINIMUM,
     FIELD_VALVE_STATE,
-    CustomConfig,
-    ExtendedConfig,
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor

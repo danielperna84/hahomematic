@@ -8,13 +8,13 @@ from slugify import slugify
 
 from hahomematic import central_unit as hmcu
 from hahomematic.const import SYSVAR_ADDRESS
-from hahomematic.helpers import HubData, SystemVariableData, parse_sys_var
 from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import (
     config_property,
     generate_unique_identifier,
     value_property,
 )
+from hahomematic.support import HubData, SystemVariableData, parse_sys_var
 
 
 class GenericHubEntity(CallbackEntity):

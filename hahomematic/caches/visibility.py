@@ -5,7 +5,7 @@ import logging
 import os
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central_unit as hmcu, support as hm_helpers
 from hahomematic.const import (
     DEFAULT_ENCODING,
     EVENT_CONFIG_PENDING,
@@ -21,9 +21,8 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmPlatform,
 )
-import hahomematic.helpers as hm_helpers
-from hahomematic.platforms.custom.entity_definition import get_required_parameters
-import hahomematic.platforms.generic.entity as hmge
+from hahomematic.platforms.custom.definition import get_required_parameters
+from hahomematic.platforms.generic import entity as hmge
 
 _LOGGER = logging.getLogger(__name__)
 

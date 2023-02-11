@@ -1,8 +1,6 @@
 """Constants used by hahomematic custom entities."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Final
 
 from hahomematic.backport import StrEnum
@@ -97,34 +95,3 @@ FIELD_ACOUSTIC_ALARM_ACTIVE: Final = "acoustic_alarm_active"
 FIELD_ACOUSTIC_ALARM_SELECTION: Final = "acoustic_alarm_selection"
 FIELD_OPTICAL_ALARM_ACTIVE: Final = "optical_alarm_active"
 FIELD_OPTICAL_ALARM_SELECTION: Final = "optical_alarm_selection"
-
-
-@dataclass
-class CustomConfig:
-    """Data for custom entity creation."""
-
-    func: Callable
-    channels: tuple[int, ...]
-    extended: ExtendedConfig | None = None
-
-
-@dataclass
-class ExtendedConfig:
-    """Extended data for custom entity creation."""
-
-    fixed_channels: dict[int, dict[str, str]] | None = None
-    additional_entities: dict[int | tuple[int, ...], tuple[str, ...]] | None = None
-
-    @property
-    def required_parameters(self) -> tuple[str, ...]:
-        """Return vol.Required parameters from extended config."""
-        required_parameters: list[str] = []
-        if fixed_channels := self.fixed_channels:
-            for mapping in fixed_channels.values():
-                required_parameters.extend(mapping.values())
-
-        if additional_entities := self.additional_entities:
-            for parameters in additional_entities.values():
-                required_parameters.extend(parameters)
-
-        return tuple(required_parameters)

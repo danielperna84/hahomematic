@@ -47,15 +47,15 @@ from hahomematic.const import (
     HmInterfaceEventType,
 )
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
-from hahomematic.helpers import (
+from hahomematic.json_rpc_client import JsonRpcAioHttpClient
+from hahomematic.platforms.device import HmDevice
+from hahomematic.support import (
     ProgramData,
     SystemVariableData,
     build_headers,
     build_xml_rpc_uri,
     get_channel_no,
 )
-from hahomematic.json_rpc_client import JsonRpcAioHttpClient
-from hahomematic.platforms.device import HmDevice
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
 _LOGGER = logging.getLogger(__name__)

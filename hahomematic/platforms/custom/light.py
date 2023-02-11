@@ -11,7 +11,7 @@ from typing import Any, Final, cast
 from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_COLOR,
     FIELD_CHANNEL_LEVEL,
@@ -23,11 +23,10 @@ from hahomematic.platforms.custom.const import (
     FIELD_PROGRAM,
     FIELD_RAMP_TIME_UNIT,
     FIELD_RAMP_TIME_VALUE,
-    CustomConfig,
-    ExtendedConfig,
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat, HmInteger

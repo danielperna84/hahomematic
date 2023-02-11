@@ -11,7 +11,7 @@ from hahomematic.const import (
     SYSVAR_TYPE_LOGIC,
     SYSVAR_TYPE_STRING,
 )
-from hahomematic.helpers import ProgramData, SystemVariableData
+from hahomematic.support import ProgramData, SystemVariableData
 
 CENTRAL_NAME = "CentralTest"
 CCU_HOST = "127.0.0.1"

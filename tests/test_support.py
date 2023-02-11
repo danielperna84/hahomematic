@@ -7,6 +7,7 @@ from unittest.mock import patch
 import helper
 import pytest
 
+from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
 from hahomematic.const import (
     INIT_DATETIME,
     SYSVAR_HM_TYPE_FLOAT,
@@ -23,7 +24,16 @@ from hahomematic.const import (
     HmEntityUsage,
 )
 from hahomematic.exceptions import HaHomematicException
-from hahomematic.helpers import (
+from hahomematic.platforms.support import (
+    _check_channel_name_with_channel_no,
+    convert_value,
+    generate_unique_identifier,
+    get_custom_entity_name,
+    get_device_name,
+    get_entity_name,
+    get_event_name,
+)
+from hahomematic.support import (
     build_headers,
     build_xml_rpc_uri,
     check_or_create_directory,
@@ -35,16 +45,6 @@ from hahomematic.helpers import (
     parse_sys_var,
     to_bool,
     updated_within_seconds,
-)
-from hahomematic.parameter_visibility import _get_value_from_dict_by_wildcard_key
-from hahomematic.platforms.support import (
-    _check_channel_name_with_channel_no,
-    convert_value,
-    generate_unique_identifier,
-    get_custom_entity_name,
-    get_device_name,
-    get_entity_name,
-    get_event_name,
 )
 
 TEST_DEVICES: dict[str, str] = {

@@ -11,7 +11,7 @@ from typing import Any, Final
 from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
@@ -23,11 +23,10 @@ from hahomematic.platforms.custom.const import (
     FIELD_LEVEL_2,
     FIELD_SECTION,
     FIELD_STOP,
-    CustomConfig,
-    ExtendedConfig,
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat

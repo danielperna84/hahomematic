@@ -8,9 +8,9 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.helpers import ProgramData
 from hahomematic.platforms.generic.button import HmButton
 from hahomematic.platforms.hub.button import HmProgramButton
+from hahomematic.support import ProgramData
 
 TEST_DEVICES: dict[str, str] = {
     "VCU1437294": "HmIP-SMI.json",

@@ -21,7 +21,7 @@ from hahomematic.const import (
     PORT_ANY,
 )
 from hahomematic.decorators import callback_system_event
-from hahomematic.helpers import find_free_port
+from hahomematic.support import find_free_port
 
 _LOGGER = logging.getLogger(__name__)
 
