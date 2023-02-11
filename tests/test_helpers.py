@@ -7,6 +7,7 @@ from unittest.mock import patch
 import helper
 import pytest
 
+from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
 from hahomematic.const import (
     INIT_DATETIME,
     SYSVAR_HM_TYPE_FLOAT,
@@ -45,7 +46,6 @@ from hahomematic.platforms.support import (
     get_entity_name,
     get_event_name,
 )
-from hahomematic.platforms.visibility import _get_value_from_dict_by_wildcard_key
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 from hahomematic import helpers as hm_helpers
+from hahomematic.caches.visibility import ALLOWED_INTERNAL_PARAMETERS
 from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
@@ -18,7 +19,6 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import create_custom_entity_and_append_to_device
 from hahomematic.platforms.event import create_event_and_append_to_device
 from hahomematic.platforms.generic import create_entity_and_append_to_device
-from hahomematic.platforms.visibility import ALLOWED_INTERNAL_PARAMETERS
 
 _LOGGER = logging.getLogger(__name__)
 
