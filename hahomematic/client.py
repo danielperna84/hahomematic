@@ -11,8 +11,8 @@ import logging
 import os
 from typing import Any, Final, cast
 
-from hahomematic import central_unit as hmcu, config
-from hahomematic.config import CHECK_INTERVAL
+from hahomematic import central_unit as hmcu
+from hahomematic.config import CHECK_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
@@ -169,9 +169,9 @@ class Client(ABC):
             _LOGGER.debug(
                 "RECONNECT: waiting to re-connect client %s for %is",
                 self.interface_id,
-                int(config.RECONNECT_WAIT),
+                int(RECONNECT_WAIT),
             )
-            await asyncio.sleep(config.RECONNECT_WAIT)
+            await asyncio.sleep(RECONNECT_WAIT)
 
             await self.proxy_re_init()
             _LOGGER.info(
