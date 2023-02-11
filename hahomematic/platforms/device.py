@@ -37,7 +37,7 @@ from hahomematic.platforms.support import (
     get_device_name,
     value_property,
 )
-from hahomematic.support import updated_within_seconds
+from hahomematic.support import Channel, updated_within_seconds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class HmDevice(PayloadMixin):
         self._attr_interface: Final[str] = central.device_details.get_interface(device_address)
         self.client: Final[hmcl.Client] = central.get_client(interface_id=interface_id)
         self._attr_device_address: Final[str] = device_address
-        self.channels: Final[dict[str, hmcu.Channel]] = central.device_descriptions.get_channels(
+        self.channels: Final[dict[str, Channel]] = central.device_descriptions.get_channels(
             interface_id, device_address
         )
         _LOGGER.debug(

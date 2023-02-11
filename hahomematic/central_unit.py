@@ -8,11 +8,9 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from concurrent.futures._base import CancelledError
-from dataclasses import dataclass
 from datetime import datetime
 import json
 import logging
-import os
 import socket
 import threading
 from typing import Any, Final, TypeVar
@@ -32,8 +30,6 @@ from hahomematic.const import (
     ATTR_VALUE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
-    FILE_DEVICES,
-    FILE_PARAMSETS,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_DEVICES_CREATED,
     HH_EVENT_LIST_DEVICES,
@@ -1155,23 +1151,3 @@ class CentralConnectionState:
             return self._json_issue
         if isinstance(issuer, XmlRpcProxy):
             return issuer.interface_id in self._xml_proxy_issues
-
-
-def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
-    """Clean up the used cached directories."""
-    cache_dir = f"{storage_folder}/cache"
-    files_to_delete = [FILE_DEVICES, FILE_PARAMSETS]
-
-    def _delete_file(file_name: str) -> None:
-        if os.path.exists(os.path.join(cache_dir, file_name)):
-            os.unlink(os.path.join(cache_dir, file_name))
-
-    for file_to_delete in files_to_delete:
-        _delete_file(file_name=f"{instance_name}_{file_to_delete}")
-
-
-@dataclass
-class Channel:
-    """dataclass for a device channel."""
-
-    type: str

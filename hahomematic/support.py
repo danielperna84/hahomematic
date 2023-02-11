@@ -15,6 +15,8 @@ from typing import Any
 
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
+    FILE_DEVICES,
+    FILE_PARAMSETS,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     SYSVAR_HM_TYPE_FLOAT,
@@ -208,3 +210,23 @@ class SystemVariableData(HubData):
     max_value: float | int | None = None
     min_value: float | int | None = None
     extended_sysvar: bool = False
+
+
+def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
+    """Clean up the used cached directories."""
+    cache_dir = f"{storage_folder}/cache"
+    files_to_delete = [FILE_DEVICES, FILE_PARAMSETS]
+
+    def _delete_file(file_name: str) -> None:
+        if os.path.exists(os.path.join(cache_dir, file_name)):
+            os.unlink(os.path.join(cache_dir, file_name))
+
+    for file_to_delete in files_to_delete:
+        _delete_file(file_name=f"{instance_name}_{file_to_delete}")
+
+
+@dataclass
+class Channel:
+    """dataclass for a device channel."""
+
+    type: str
