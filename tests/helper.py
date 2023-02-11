@@ -14,12 +14,12 @@ import const
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
-from hahomematic.helpers import get_device_address
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericSystemVariable
+from hahomematic.support import get_device_address
 
 _LOGGER = logging.getLogger(__name__)
 

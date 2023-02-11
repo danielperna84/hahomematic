@@ -59,11 +59,6 @@ from hahomematic.exceptions import (
     NoClients,
     NoConnection,
 )
-from hahomematic.helpers import (
-    check_or_create_directory,
-    check_password,
-    get_device_address,
-)
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.platforms import create_entities_and_append_to_device
 from hahomematic.platforms.custom.entity import CustomEntity
@@ -74,6 +69,11 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import HmHub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
+from hahomematic.support import (
+    check_or_create_directory,
+    check_password,
+    get_device_address,
+)
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 import hahomematic.xml_rpc_server as xml_rpc
 

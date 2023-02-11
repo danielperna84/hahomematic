@@ -7,7 +7,7 @@ from typing import Any, Final, cast
 
 import voluptuous as vol
 
-from hahomematic import helpers as hm_helpers
+from hahomematic import support as hm_helpers
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.custom.const import (
@@ -57,10 +57,9 @@ from hahomematic.platforms.custom.const import (
     FIELD_TEMPERATURE_MAXIMUM,
     FIELD_TEMPERATURE_MINIMUM,
     FIELD_VALVE_STATE,
-    CustomConfig,
-    ExtendedConfig,
     HmEntityDefinition,
 )
+from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.support import generate_unique_identifier
 
 ED_DEFAULT_ENTITIES: Final = "default_entities"

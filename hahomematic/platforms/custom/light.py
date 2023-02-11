@@ -23,11 +23,10 @@ from hahomematic.platforms.custom.const import (
     FIELD_PROGRAM,
     FIELD_RAMP_TIME_UNIT,
     FIELD_RAMP_TIME_VALUE,
-    CustomConfig,
-    ExtendedConfig,
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat, HmInteger

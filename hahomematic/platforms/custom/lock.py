@@ -19,11 +19,10 @@ from hahomematic.platforms.custom.const import (
     FIELD_LOCK_TARGET_LEVEL,
     FIELD_OPEN,
     FIELD_STATE,
-    CustomConfig,
-    ExtendedConfig,
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.sensor import HmSensor

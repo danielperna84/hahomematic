@@ -22,12 +22,12 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmDataOperationResult,
 )
-from hahomematic.helpers import (
+from hahomematic.platforms.device import HmDevice
+from hahomematic.support import (
     check_or_create_directory,
     get_device_address,
     get_device_channel,
 )
-from hahomematic.platforms.device import HmDevice
 
 _LOGGER = logging.getLogger(__name__)
 

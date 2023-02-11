@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hahomematic import helpers as hm_helpers
+from hahomematic import support as hm_helpers
 from hahomematic.const import (
     BUTTON_ACTIONS,
     CLICK_EVENTS,

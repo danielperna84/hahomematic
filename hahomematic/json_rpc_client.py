@@ -48,7 +48,7 @@ from hahomematic.const import (
     SYSVAR_VALUE_LIST,
 )
 from hahomematic.exceptions import BaseHomematicException, ClientException
-from hahomematic.helpers import (
+from hahomematic.support import (
     ProgramData,
     SystemVariableData,
     get_tls_context,

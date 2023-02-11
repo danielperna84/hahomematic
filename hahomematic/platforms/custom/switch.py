@@ -16,11 +16,10 @@ from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_STATE,
     FIELD_ON_TIME_VALUE,
     FIELD_STATE,
-    CustomConfig,
-    ExtendedConfig,
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor

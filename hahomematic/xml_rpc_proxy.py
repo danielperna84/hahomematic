@@ -12,7 +12,7 @@ import xmlrpc.client
 from hahomematic import central_unit as hmcu
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
 from hahomematic.exceptions import AuthFailure, ClientException, NoConnection
-from hahomematic.helpers import get_tls_context
+from hahomematic.support import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
 

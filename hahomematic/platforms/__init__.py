@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic import helpers as hm_helpers
+from hahomematic import support as hm_helpers
 from hahomematic.caches.visibility import ALLOWED_INTERNAL_PARAMETERS
 from hahomematic.const import (
     CLICK_EVENTS,

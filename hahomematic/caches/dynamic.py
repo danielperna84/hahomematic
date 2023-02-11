@@ -13,9 +13,9 @@ from hahomematic.const import (
     NO_CACHE_ENTRY,
     HmCallSource,
 )
-from hahomematic.helpers import get_device_address, updated_within_seconds
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.support import get_device_address, updated_within_seconds
 
 _LOGGER = logging.getLogger(__name__)
 

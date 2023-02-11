@@ -1,122 +1,210 @@
-"""Module to support hahomematic eco system."""
+"""Helper functions used within hahomematic."""
 from __future__ import annotations
 
-from copy import copy
-import json
+import base64
+from collections.abc import Collection
+from contextlib import closing
+from dataclasses import dataclass
+from datetime import datetime
 import logging
 import os
-import random
-from typing import Any, Final
+import re
+import socket
+import ssl
+from typing import Any
 
-from hahomematic import central_unit as hmcu, client as hmcl
 from hahomematic.const import (
-    DEFAULT_ENCODING,
-    HM_ADDRESS,
-    HM_CHILDREN,
-    HM_PARENT,
-    HM_TYPE,
-    HmDataOperationResult,
+    CCU_PASSWORD_PATTERN,
+    INIT_DATETIME,
+    MAX_CACHE_AGE,
+    SYSVAR_HM_TYPE_FLOAT,
+    SYSVAR_HM_TYPE_INTEGER,
+    SYSVAR_TYPE_ALARM,
+    SYSVAR_TYPE_LIST,
+    SYSVAR_TYPE_LOGIC,
 )
-from hahomematic.helpers import check_or_create_directory
-
-DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
-PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
+from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DeviceExporter:
-    """Export Devices from Cache."""
+def build_xml_rpc_uri(
+    host: str,
+    port: int,
+    path: str | None,
+    tls: bool = False,
+) -> str:
+    """Build XML-RPC API URL from components."""
+    scheme = "http"
+    if not path:
+        path = ""
+    if path and not path.startswith("/"):
+        path = f"/{path}"
+    if tls:
+        scheme += "s"
+    return f"{scheme}://{host}:{port}{path}"
 
-    def __init__(self, client: hmcl.Client, interface_id: str, device_address: str) -> None:
-        """Init the device exporter."""
-        self._client: Final[hmcl.Client] = client
-        self._central: Final[hmcu.CentralUnit] = client.central
-        self._storage_folder: Final[str] = self._central.config.storage_folder
-        self._interface_id: Final[str] = interface_id
-        self._device_address: Final[str] = device_address
-        self._random_id: Final[str] = "VCU%i" % random.randint(1000000, 9999999)
 
-    async def export_data(self) -> None:
-        """Export data."""
-        device_descriptions: dict[
-            str, Any
-        ] = self._central.device_descriptions.get_device_with_channels(
-            interface_id=self._interface_id, device_address=self._device_address
-        )
-        paramset_descriptions: dict[str, Any] = await self._client.get_all_paramset_descriptions(
-            list(device_descriptions.values())
-        )
-        device_type = device_descriptions[self._device_address][HM_TYPE]
-        filename = f"{device_type}.json"
+def build_headers(
+    username: str,
+    password: str,
+) -> list[tuple[str, str]]:
+    """Build XML-RPC API header."""
+    cred_bytes = f"{username}:{password}".encode()
+    base64_message = base64.b64encode(cred_bytes).decode("utf-8")
+    return [("Authorization", f"Basic {base64_message}")]
 
-        # anonymize device_descriptions
-        anonymize_device_descriptions: list[Any] = []
-        for device_description in device_descriptions.values():
-            if device_description == {}:
-                continue  # pragma: no cover
-            new_device_description = copy(device_description)
-            new_device_description[HM_ADDRESS] = self._anonymize_address(
-                address=new_device_description[HM_ADDRESS]
+
+def check_or_create_directory(directory: str) -> bool:
+    """Check / create directory."""
+    if not directory:
+        return False
+    if not os.path.exists(directory):
+        try:
+            os.makedirs(directory)
+        except OSError as ose:
+            _LOGGER.error(
+                "CHECK_OR_CREATE_DIRECTORY failed: Unable to create directory %s ('%s')",
+                directory,
+                ose.strerror,
             )
-            if new_device_description.get(HM_PARENT):
-                new_device_description[HM_PARENT] = new_device_description[HM_ADDRESS].split(":")[
-                    0
-                ]
-            elif new_device_description.get(HM_CHILDREN):
-                new_device_description[HM_CHILDREN] = [
-                    self._anonymize_address(a) for a in new_device_description[HM_CHILDREN]
-                ]
-            anonymize_device_descriptions.append(new_device_description)
+            raise HaHomematicException from ose
 
-        # anonymize paramset_descriptions
-        anonymize_paramset_descriptions: dict[str, Any] = {}
-        for address, paramset_description in paramset_descriptions.items():
-            anonymize_paramset_descriptions[
-                self._anonymize_address(address=address)
-            ] = paramset_description
-
-        # Save device_descriptions for device to file.
-        await self._save(
-            file_dir=f"{self._storage_folder}/{DEVICE_DESCRIPTIONS_DIR}",
-            filename=filename,
-            data=anonymize_device_descriptions,
-        )
-
-        # Save device_descriptions for device to file.
-        await self._save(
-            file_dir=f"{self._storage_folder}/{PARAMSET_DESCRIPTIONS_DIR}",
-            filename=filename,
-            data=anonymize_paramset_descriptions,
-        )
-
-    def _anonymize_address(self, address: str) -> str:
-        address_parts = address.split(":")
-        address_parts[0] = self._random_id
-        return ":".join(address_parts)
-
-    async def _save(self, file_dir: str, filename: str, data: Any) -> HmDataOperationResult:
-        """Save file to disk."""
-
-        def _save() -> HmDataOperationResult:
-            if not check_or_create_directory(file_dir):
-                return HmDataOperationResult.NO_SAVE  # pragma: no cover
-            with open(
-                file=os.path.join(file_dir, filename),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
-            ) as fptr:
-                json.dump(data, fptr, indent=2)
-            return HmDataOperationResult.SAVE_SUCCESS
-
-        return await self._central.async_add_executor_job(_save)
+    return True
 
 
-async def save_device_definition(
-    client: hmcl.Client, interface_id: str, device_address: str
-) -> None:
-    """Save device to file."""
-    device_exporter = DeviceExporter(
-        client=client, interface_id=interface_id, device_address=device_address
-    )
-    await device_exporter.export_data()
+def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
+    """Parse system variables to fix type."""
+    # pylint: disable=no-else-return
+    if not data_type:
+        return raw_value
+    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
+        return to_bool(raw_value)
+    if data_type == SYSVAR_HM_TYPE_FLOAT:
+        return float(raw_value)
+    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
+        return int(raw_value)
+    return raw_value
+
+
+def to_bool(value: Any) -> bool:
+    """Convert defined string values to bool."""
+    if isinstance(value, bool):
+        return value
+
+    if not isinstance(value, str):
+        raise TypeError("invalid literal for boolean. Not a string.")
+
+    lower_value = value.lower()
+    return lower_value in ["y", "yes", "t", "true", "on", "1"]
+
+
+def check_password(password: str | None) -> bool:
+    """Check password."""
+    if password is None:
+        return False
+    return re.fullmatch(CCU_PASSWORD_PATTERN, password) is not None
+
+
+def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
+    """Return tls verified/unverified ssl/tls context."""
+    if verify_tls:
+        ssl_context = ssl.create_default_context()
+    else:
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+    return ssl_context
+
+
+def get_device_address(address: str) -> str:
+    """Return the device part of an address."""
+    if ":" in address:
+        return address.split(":")[0]
+    return address
+
+
+def get_device_channel(address: str) -> int:
+    """Return the channel part of an address."""
+    if ":" not in address:
+        raise HaHomematicException("Address has no channel part.")
+    return int(address.split(":")[1])
+
+
+def get_channel_no(address: str) -> int | None:
+    """Return the channel part of an address."""
+    if ":" not in address:
+        return None
+    return int(address.split(":")[1])
+
+
+def updated_within_seconds(last_update: datetime, max_age_seconds: int = MAX_CACHE_AGE) -> bool:
+    """Entity has been updated within X minutes."""
+    if last_update == INIT_DATETIME:
+        return False
+    delta = datetime.now() - last_update
+    if delta.seconds < max_age_seconds:
+        return True
+    return False
+
+
+def find_free_port() -> int:
+    """Find a free port for XmlRpc server default port."""
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+        sock.bind(("", 0))
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return int(sock.getsockname()[1])
+
+
+def element_matches_key(
+    search_elements: str | Collection[str],
+    compare_with: str | None,
+    do_wildcard_search: bool = True,
+) -> bool:
+    """Return if collection element is key."""
+    if compare_with is None:
+        return False
+
+    if isinstance(search_elements, str):
+        if do_wildcard_search:
+            return compare_with.lower().startswith(search_elements.lower())
+        return compare_with.lower() == search_elements.lower()
+    if isinstance(search_elements, Collection):
+        for element in search_elements:
+            if do_wildcard_search:
+                if compare_with.lower().startswith(element.lower()):
+                    return True
+            else:
+                if compare_with.lower() == element.lower():
+                    return True
+    return False
+
+
+@dataclass
+class HubData:
+    """Dataclass for hub entities."""
+
+    name: str
+
+
+@dataclass
+class ProgramData(HubData):
+    """Dataclass for programs."""
+
+    pid: str
+    is_active: bool
+    is_internal: bool
+    last_execute_time: str
+
+
+@dataclass
+class SystemVariableData(HubData):
+    """Dataclass for system variables."""
+
+    data_type: str | None = None
+    unit: str | None = None
+    value: bool | float | int | str | None = None
+    value_list: list[str] | None = None
+    max_value: float | int | None = None
+    min_value: float | int | None = None
+    extended_sysvar: bool = False
