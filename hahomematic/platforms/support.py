@@ -22,7 +22,7 @@ from hahomematic.const import (
 )
 from hahomematic.helpers import to_bool
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
 
 G = TypeVar("G")  # think about variance
 S = TypeVar("S")

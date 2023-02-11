@@ -8,7 +8,7 @@ from typing import Any, Final, TypeVar, cast
 
 from hahomematic.const import INIT_DATETIME, MAX_CACHE_AGE, HmCallSource, HmEntityUsage
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import ExtendedConfig, HmEntityDefinition
 from hahomematic.platforms.entity import BaseEntity
 from hahomematic.platforms.generic import entity as hmge

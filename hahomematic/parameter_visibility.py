@@ -22,7 +22,7 @@ from hahomematic.const import (
     HmPlatform,
 )
 import hahomematic.helpers as hm_helpers
-from hahomematic.platforms.custom.entity_definition import get_required_parameters
+from hahomematic.platforms.custom.definition import get_required_parameters
 import hahomematic.platforms.generic.entity as hmge
 
 _LOGGER = logging.getLogger(__name__)

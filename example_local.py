@@ -7,7 +7,7 @@ import sys
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig
 from hahomematic.client import InterfaceConfig, LocalRessources
-from hahomematic.platforms.custom.entity_definition import validate_entity_definition
+from hahomematic.platforms.custom.definition import validate_entity_definition
 
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)

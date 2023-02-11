@@ -11,7 +11,7 @@ from typing import Any, Final
 from hahomematic.const import HmEntityUsage, HmPlatform
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,

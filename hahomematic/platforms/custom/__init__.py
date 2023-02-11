@@ -5,7 +5,7 @@ import logging
 
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom.const import CustomConfig
-from hahomematic.platforms.custom.entity_definition import (
+from hahomematic.platforms.custom.definition import (
     entity_definition_exists,
     get_entity_configs,
 )

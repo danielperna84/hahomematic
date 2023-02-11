@@ -13,7 +13,7 @@ from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import entity_definition as hmed
+from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
     FIELD_ACTIVE_PROFILE,
     FIELD_AUTO_MODE,
