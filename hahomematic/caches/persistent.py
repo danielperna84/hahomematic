@@ -24,6 +24,7 @@ from hahomematic.const import (
 )
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
+    Channel,
     check_or_create_directory,
     get_device_address,
     get_device_channel,
@@ -176,9 +177,9 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Return the addresses by interface."""
         return self._addresses.get(interface_id, {})
 
-    def get_channels(self, interface_id: str, device_address: str) -> dict[str, hmcu.Channel]:
+    def get_channels(self, interface_id: str, device_address: str) -> dict[str, Channel]:
         """Return the device channels by interface and device_address."""
-        channels: dict[str, hmcu.Channel] = {}
+        channels: dict[str, Channel] = {}
         for channel_address in self._addresses.get(interface_id, {}).get(device_address, []):
             channel_name = str(
                 self.get_device_parameter(
@@ -187,7 +188,7 @@ class DeviceDescriptionCache(BasePersistentCache):
                     parameter=HM_TYPE,
                 )
             )
-            channels[channel_address] = hmcu.Channel(type=channel_name)
+            channels[channel_address] = Channel(type=channel_name)
 
         return channels
 
