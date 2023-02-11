@@ -55,23 +55,17 @@ from hahomematic.const import (
     HmInterfaceEventType,
     HmPlatform,
 )
-from hahomematic.custom_platforms.entity import CustomEntity
 from hahomematic.decorators import (
     async_callback_system_event,
     callback_event,
     callback_system_event,
 )
-from hahomematic.device import HmDevice
-from hahomematic.entity import BaseEntity
-from hahomematic.entity_support import PayloadMixin, config_property, value_property
-from hahomematic.event import GenericEvent
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
     NoClients,
     NoConnection,
 )
-from hahomematic.generic_platforms.entity import GenericEntity
 from hahomematic.helpers import (
     check_or_create_directory,
     check_password,
@@ -79,11 +73,17 @@ from hahomematic.helpers import (
     get_device_channel,
     updated_within_seconds,
 )
-from hahomematic.hub_platforms import HmHub
-from hahomematic.hub_platforms.button import HmProgramButton
-from hahomematic.hub_platforms.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.parameter_visibility import ParameterVisibilityCache
+from hahomematic.platforms import create_entities_and_append_to_device
+from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.device import HmDevice
+from hahomematic.platforms.entity import BaseEntity
+from hahomematic.platforms.event import GenericEvent
+from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.platforms.hub import HmHub
+from hahomematic.platforms.hub.button import HmProgramButton
+from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 import hahomematic.xml_rpc_server as xml_rpc
 
@@ -95,12 +95,11 @@ CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
 ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 
 
-class CentralUnit(PayloadMixin):
+class CentralUnit:
     """Central unit that collects everything to handle communication from/to CCU/Homegear."""
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
-        PayloadMixin.__init__(self)
         self._sema_add_devices = asyncio.Semaphore()
         # Keep the config for the central #CC
         self.config: Final[CentralConfig] = central_config
@@ -161,7 +160,7 @@ class CentralUnit(PayloadMixin):
         self._hub: HmHub = HmHub(central=self)
         self._attr_version: str | None = None
 
-    @value_property
+    @property
     def available(self) -> bool:
         """Return the availability of the central_unit."""
         return all(client.available for client in self._clients.values())
@@ -194,31 +193,31 @@ class CentralUnit(PayloadMixin):
         """Return all associated interfaces."""
         return list(self._clients)
 
-    @value_property
+    @property
     def is_alive(self) -> bool:
         """Return if XmlRPC-Server is alive."""
         return all(client.is_callback_alive() for client in self._clients.values())
 
-    @config_property
+    @property
     def model(self) -> str | None:
         """Return the model of the backend. #CC."""
         if not self._attr_model and (client := self.get_primary_client()):
             self._attr_model = client.model
         return self._attr_model
 
-    @config_property
+    @property
     def name(self) -> str:
         """Return the name of the backend. #CC."""
         return self._attr_name
 
-    @config_property
+    @property
     def serial(self) -> str | None:
         """Return the serial of the backend."""
         if client := self.get_primary_client():
             return client.serial
         return None
 
-    @config_property
+    @property
     def version(self) -> str | None:
         """Return the version of the backend. #CC."""
         if self._attr_version is None:
@@ -611,7 +610,7 @@ class CentralUnit(PayloadMixin):
                     )
                 try:
                     if device:
-                        device.create_entities_and_append_to_device()
+                        create_entities_and_append_to_device(device=device)
                         await device.load_value_cache()
                         new_devices.add(device)
                         self._devices[device_address] = device

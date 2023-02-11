@@ -10,7 +10,7 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.custom_platforms.climate import (
+from hahomematic.platforms.custom.climate import (
     HMIP_MODE_AUTO,
     HMIP_MODE_AWAY,
     HMIP_MODE_MANU,

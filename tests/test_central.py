@@ -16,8 +16,8 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.exceptions import HaHomematicException, NoClients
-from hahomematic.generic_platforms.number import HmFloat
-from hahomematic.generic_platforms.switch import HmSwitch
+from hahomematic.platforms.generic.number import HmFloat
+from hahomematic.platforms.generic.switch import HmSwitch
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

@@ -1,9 +1,9 @@
-# Version 2023.2.8 (2023-02-09)
+# Version 2023.2.8 (2023-02-11)
 
 - Add project setup script
 - Add entity_data event
 - Add payload mixin
-- Cleanup packages
+- Cleanup module dependencies
 
 # Version 2023.2.7 (2023-02-07)
 
@@ -461,7 +461,7 @@
 - Remove sysvars if deleted from CCU
 - Add check for sysvar type in sensor
 - Remove unused sysvar attributes
-- Refactor EntityDefinition
+- Refactor HmEntityDefinition
 
 # Version 1.8.4 (2022-06-04)
 

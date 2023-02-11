@@ -9,8 +9,8 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.generic_platforms.number import HmFloat, HmInteger
-from hahomematic.hub_platforms.number import HmSysvarNumber
+from hahomematic.platforms.generic.number import HmFloat, HmInteger
+from hahomematic.platforms.hub.number import HmSysvarNumber
 
 TEST_DEVICES: dict[str, str] = {
     "VCU4984404": "HmIPW-STHD.json",

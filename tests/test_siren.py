@@ -9,7 +9,7 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.custom_platforms.siren import CeIpSiren
+from hahomematic.platforms.custom.siren import CeIpSiren
 
 TEST_DEVICES: dict[str, str] = {
     "VCU8249617": "HmIP-ASIR-2.json",

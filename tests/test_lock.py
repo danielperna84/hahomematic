@@ -9,7 +9,7 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.custom_platforms.lock import CeIpLock, CeRfLock
+from hahomematic.platforms.custom.lock import CeIpLock, CeRfLock
 
 TEST_DEVICES: dict[str, str] = {
     "VCU9724704": "HmIP-DLD.json",

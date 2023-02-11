@@ -9,7 +9,7 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.custom_platforms.light import (
+from hahomematic.platforms.custom.light import (
     CeColorDimmer,
     CeColorDimmerEffect,
     CeColorTempDimmer,

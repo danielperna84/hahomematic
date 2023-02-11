@@ -8,8 +8,8 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.generic_platforms.text import HmText
-from hahomematic.hub_platforms.text import HmSysvarText
+from hahomematic.platforms.generic.text import HmText
+from hahomematic.platforms.hub.text import HmSysvarText
 
 TEST_DEVICES: dict[str, str] = {}
 

@@ -9,8 +9,8 @@ import logging
 from typing import Any, ParamSpec, TypeVar
 
 import hahomematic.client as hmcl
-import hahomematic.entity as hme
 from hahomematic.exceptions import HaHomematicException
+import hahomematic.platforms.entity as hme
 
 _LOGGER = logging.getLogger(__name__)
 

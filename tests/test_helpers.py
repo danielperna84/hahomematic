@@ -24,25 +24,27 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.helpers import (
-    _check_channel_name_with_channel_no,
     build_headers,
     build_xml_rpc_uri,
     check_or_create_directory,
     check_password,
-    convert_value,
     element_matches_key,
     find_free_port,
-    generate_unique_identifier,
-    get_custom_entity_name,
     get_device_channel,
-    get_device_name,
-    get_entity_name,
-    get_event_name,
     get_tls_context,
-    get_value_from_dict_by_wildcard_key,
     parse_sys_var,
     to_bool,
     updated_within_seconds,
+)
+from hahomematic.parameter_visibility import _get_value_from_dict_by_wildcard_key
+from hahomematic.platforms.support import (
+    _check_channel_name_with_channel_no,
+    convert_value,
+    generate_unique_identifier,
+    get_custom_entity_name,
+    get_device_name,
+    get_entity_name,
+    get_event_name,
 )
 
 TEST_DEVICES: dict[str, str] = {
@@ -174,7 +176,7 @@ async def test_get_entity_name(
     assert name_data.entity_name == "Roof Level"
 
     with patch(
-        "hahomematic.helpers._get_base_name_from_channel_or_device",
+        "hahomematic.platforms.support._get_base_name_from_channel_or_device",
         return_value=None,
     ):
         name_data = get_entity_name(
@@ -201,7 +203,7 @@ async def test_get_event_name(
     assert name_data.entity_name == "Roof Level"
 
     with patch(
-        "hahomematic.helpers._get_base_name_from_channel_or_device",
+        "hahomematic.platforms.support._get_base_name_from_channel_or_device",
         return_value=None,
     ):
         name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
@@ -258,7 +260,7 @@ async def test_custom_entity_name(
     assert name_data.entity_name == "Roof"
 
     with patch(
-        "hahomematic.helpers._get_base_name_from_channel_or_device",
+        "hahomematic.platforms.support._get_base_name_from_channel_or_device",
         return_value=None,
     ):
         name_data = get_custom_entity_name(
@@ -369,17 +371,19 @@ async def test_element_matches_key() -> None:
 async def test_value_from_dict_by_wildcard_key() -> None:
     """Test value_from_dict_by_wildcard_key."""
     assert (
-        get_value_from_dict_by_wildcard_key(search_elements={"HmIP-eTRV": True}, compare_with=None)
+        _get_value_from_dict_by_wildcard_key(
+            search_elements={"HmIP-eTRV": True}, compare_with=None
+        )
         is None
     )
     assert (
-        get_value_from_dict_by_wildcard_key(
+        _get_value_from_dict_by_wildcard_key(
             search_elements={"HmIP-eTRV-2": True}, compare_with="HmIP-eTRV"
         )
         is True
     )
     assert (
-        get_value_from_dict_by_wildcard_key(
+        _get_value_from_dict_by_wildcard_key(
             search_elements={"HmIP-eTRV-2": False},
             compare_with="HmIP-eTRV",
             do_wildcard_search=False,
@@ -387,7 +391,7 @@ async def test_value_from_dict_by_wildcard_key() -> None:
         is None
     )
     assert (
-        get_value_from_dict_by_wildcard_key(
+        _get_value_from_dict_by_wildcard_key(
             search_elements={"HmIP-eTRV-2": False},
             compare_with="HmIP-eTRV-2",
             do_wildcard_search=False,

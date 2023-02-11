@@ -8,9 +8,8 @@ import helper
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.exceptions import HaHomematicException
-from hahomematic.generic_platforms.binary_sensor import HmBinarySensor
-from hahomematic.hub_platforms.binary_sensor import HmSysvarBinarySensor
+from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
+from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
 
 TEST_DEVICES: dict[str, str] = {
     "VCU5864966": "HmIP-SWDO-I.json",
@@ -40,8 +39,9 @@ async def test_hmbinarysensor(
     central.event(const.LOCAL_INTERFACE_ID, "VCU5864966:1", "STATE", None)
     assert binary_sensor.value is False
 
-    with pytest.raises(HaHomematicException):
-        await binary_sensor.send_value(True)
+    call_count = len(mock_client.method_calls)
+    await binary_sensor.send_value(True)
+    assert call_count == len(mock_client.method_calls)
 
 
 @pytest.mark.asyncio
