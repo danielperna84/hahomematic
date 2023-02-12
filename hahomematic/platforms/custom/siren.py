@@ -6,6 +6,7 @@ See https://www.home-assistant.io/integrations/siren/.
 from __future__ import annotations
 
 from abc import abstractmethod
+import asyncio
 from typing import Final
 
 from hahomematic.const import HmPlatform
@@ -19,6 +20,8 @@ from hahomematic.platforms.custom.const import (
     FIELD_DURATION_UNIT,
     FIELD_OPTICAL_ALARM_ACTIVE,
     FIELD_OPTICAL_ALARM_SELECTION,
+    FIELD_SMOKE_DETECTOR_ALARM_STATUS,
+    FIELD_SMOKE_DETECTOR_COMMAND,
     HmEntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
@@ -26,6 +29,7 @@ from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
+from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.support import value_property
 
 # HM constants
@@ -40,6 +44,10 @@ DISABLE_ACOUSTIC_SIGNAL: Final = "DISABLE_ACOUSTIC_SIGNAL"
 DISABLE_OPTICAL_SIGNAL: Final = "DISABLE_OPTICAL_SIGNAL"
 DEFAULT_DURATION_UNIT: Final = "S"
 DEFAULT_DURATION_VALUE: Final = 60
+
+SMOKE_DETECTOR_COMMAND_OFF = "INTRUSION_ALARM_OFF"
+SMOKE_DETECTOR_COMMAND_ON = "INTRUSION_ALARM"
+SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF = "IDLE_OFF"
 
 
 class BaseSiren(CustomEntity):
@@ -65,8 +73,8 @@ class BaseSiren(CustomEntity):
     @abstractmethod
     async def turn_on(
         self,
-        acoustic_alarm: str,
-        optical_alarm: str,
+        acoustic_alarm: str | None,
+        optical_alarm: str | None,
         duration: int = DEFAULT_DURATION_VALUE,
         collector: CallParameterCollector | None = None,
     ) -> None:
@@ -123,8 +131,8 @@ class CeIpSiren(BaseSiren):
     @bind_collector
     async def turn_on(
         self,
-        acoustic_alarm: str,
-        optical_alarm: str,
+        acoustic_alarm: str | None,
+        optical_alarm: str | None,
         duration: int = DEFAULT_DURATION_VALUE,
         collector: CallParameterCollector | None = None,
     ) -> None:
@@ -149,6 +157,60 @@ class CeIpSiren(BaseSiren):
         await self._e_duration.send_value(value=1, collector=collector)
 
 
+class CeIpSirenSmoke(BaseSiren):
+    """Class for HomematicIP siren smoke entities."""
+
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_smoke_detector_alarm_status: HmSensor = self._get_entity(
+            field_name=FIELD_SMOKE_DETECTOR_ALARM_STATUS, entity_type=HmSensor
+        )
+        self._e_smoke_detector_command: HmAction = self._get_entity(
+            field_name=FIELD_SMOKE_DETECTOR_COMMAND, entity_type=HmAction
+        )
+
+    @value_property
+    def is_on(self) -> bool:
+        """Return true if siren is on."""
+        if not self._e_smoke_detector_alarm_status.value:
+            return False
+        return bool(
+            self._e_smoke_detector_alarm_status.value != SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF
+        )
+
+    @value_property
+    def available_tones(self) -> tuple[str, ...] | None:
+        """Return a list of available tones."""
+        return None
+
+    @value_property
+    def available_lights(self) -> tuple[str, ...] | None:
+        """Return a list of available lights."""
+        return None
+
+    async def turn_on(
+        self,
+        acoustic_alarm: str | None,
+        optical_alarm: str | None,
+        duration: int = DEFAULT_DURATION_VALUE,
+        collector: CallParameterCollector | None = None,
+    ) -> None:
+        """Turn the device on."""
+        await self._e_smoke_detector_command.send_value(
+            value=SMOKE_DETECTOR_COMMAND_ON, collector=collector
+        )
+        if duration and duration > 0:
+            await asyncio.sleep(delay=duration)
+            await self.turn_off()
+
+    async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
+        """Turn the device off."""
+        await self._e_smoke_detector_command.send_value(
+            value=SMOKE_DETECTOR_COMMAND_OFF, collector=collector
+        )
+
+
 def make_ip_siren(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
@@ -164,9 +226,25 @@ def make_ip_siren(
     )
 
 
+def make_ip_siren_smoke(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[CustomEntity, ...]:
+    """Create HomematicIP siren entities."""
+    return hmed.make_custom_entity(
+        device=device,
+        custom_entity_class=CeIpSirenSmoke,
+        device_enum=HmEntityDefinition.IP_SIREN_SMOKE,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
 # Case for device model is not relevant
 hmed.ALL_DEVICES.append(
     {
         "HmIP-ASIR": CustomConfig(func=make_ip_siren, channels=(0,)),
+        "HmIP-SWSD": CustomConfig(func=make_ip_siren_smoke, channels=(0,)),
     }
 )

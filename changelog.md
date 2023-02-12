@@ -7,6 +7,7 @@
 - Use cache decorators for some high-traffic methods
 - Allow that channel_no could be None
 - Add and use get_channel_address
+- Add HmIP-SWSD as siren
 
 # Version 2023.2.7 (2023-02-07)
 
