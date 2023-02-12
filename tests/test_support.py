@@ -404,9 +404,9 @@ async def test_value_from_dict_by_wildcard_key() -> None:
 async def test_others() -> None:
     """Test find_free_port."""
     assert find_free_port()
-    assert get_device_channel(address="12312:1") == 1
+    assert get_device_channel(channel_address="12312:1") == 1
     with pytest.raises(Exception):
-        get_device_channel(address="12312")
+        get_device_channel(channel_address="12312")
     assert _check_channel_name_with_channel_no(name="light:1") is True
     assert _check_channel_name_with_channel_no(name="light:Test") is False
     assert _check_channel_name_with_channel_no(name="light:Test:123") is False

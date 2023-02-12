@@ -6,6 +6,7 @@ from collections.abc import Collection
 from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime
+from functools import cache
 import logging
 import os
 import re
@@ -126,11 +127,11 @@ def get_device_address(address: str) -> str:
     return get_split_channel_address(channel_address=address)[0]
 
 
-def get_device_channel(address: str) -> int:
+def get_device_channel(channel_address: str) -> int:
     """Return the channel part of an address."""
-    if ":" not in address:
+    if ":" not in channel_address:
         raise HaHomematicException("Address has no channel part.")
-    return get_split_channel_address(channel_address=address)[1]
+    return get_split_channel_address(channel_address=channel_address)[1]
 
 
 def get_channel_no(address: str) -> int | None:
@@ -140,6 +141,7 @@ def get_channel_no(address: str) -> int | None:
     return get_split_channel_address(channel_address=address)[1]
 
 
+@cache
 def get_split_channel_address(channel_address: str) -> tuple[str, int]:
     """Return the device part of an address."""
     if ":" not in channel_address:

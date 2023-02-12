@@ -1,6 +1,7 @@
 """Module about parameter visibility within hahomematic."""
 from __future__ import annotations
 
+from functools import lru_cache
 import logging
 import os
 from typing import Any, Final
@@ -339,6 +340,7 @@ class ParameterVisibilityCache:
             for paramset_key, parameters in un_ignore_parameters.items()
         }
 
+    @lru_cache(maxsize=4096)
     def parameter_is_ignored(
         self,
         device_type: str,
@@ -430,6 +432,7 @@ class ParameterVisibilityCache:
 
         return False
 
+    @lru_cache(maxsize=4096)
     def parameter_is_un_ignored(
         self,
         device_type: str,
@@ -540,6 +543,7 @@ class ParameterVisibilityCache:
             # add parameter
             self._un_ignore_parameters_general[PARAMSET_KEY_VALUES].add(line)
 
+    @lru_cache(maxsize=1024)
     def parameter_is_hidden(
         self,
         device_type: str,

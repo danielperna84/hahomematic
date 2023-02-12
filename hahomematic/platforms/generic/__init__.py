@@ -44,7 +44,7 @@ def create_entity_and_append_to_device(
     """Decides which default platform should be used, and creates the required entities."""
     if device.central.parameter_visibility.parameter_is_ignored(
         device_type=device.device_type,
-        device_channel=hm_helpers.get_device_channel(channel_address),
+        device_channel=hm_helpers.get_device_channel(channel_address=channel_address),
         paramset_key=paramset_key,
         parameter=parameter,
     ):
