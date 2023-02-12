@@ -4,6 +4,7 @@
 - Add entity_data event
 - Add payload mixin
 - Cleanup module dependencies
+- Use cache decorators for some high-traffic methods
 
 # Version 2023.2.7 (2023-02-07)
 
