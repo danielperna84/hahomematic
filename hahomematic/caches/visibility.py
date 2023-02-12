@@ -339,7 +339,7 @@ class ParameterVisibilityCache:
             for paramset_key, parameters in un_ignore_parameters.items()
         }
 
-    def ignore_parameter(
+    def parameter_is_ignored(
         self,
         device_type: str,
         device_channel: int,
