@@ -6,8 +6,7 @@ See https://www.home-assistant.io/integrations/siren/.
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
-from typing import Final
+from typing import Any, Final
 
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import bind_collector
@@ -32,18 +31,13 @@ from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.support import value_property
 
-# HM constants
-HMIP_ACOUSTIC_ALARM_SELECTION: Final = "ACOUSTIC_ALARM_SELECTION"
-HMIP_OPTICAL_ALARM_SELECTION: Final = "OPTICAL_ALARM_SELECTION"
-HMIP_DURATION_UNIT: Final = "DURATION_UNIT"
-HMIP_DURATION_VALUE: Final = "DURATION_VALUE"
+HM_ARG_ACOUSTIC_ALARM = "acoustic_alarm"
+HM_ARG_OPTICAL_ALARM = "optical_alarm"
+HM_ARG_DURATION = "duration"
 
-DEFAULT_ACOUSTIC_ALARM_SELECTION: Final = "FREQUENCY_RISING_AND_FALLING"
-DEFAULT_OPTICAL_ALARM_SELECTION: Final = "BLINKING_ALTERNATELY_REPEATING"
 DISABLE_ACOUSTIC_SIGNAL: Final = "DISABLE_ACOUSTIC_SIGNAL"
 DISABLE_OPTICAL_SIGNAL: Final = "DISABLE_OPTICAL_SIGNAL"
-DEFAULT_DURATION_UNIT: Final = "S"
-DEFAULT_DURATION_VALUE: Final = 60
+DEFAULT_DURATION_VALUE: Final = 1
 
 SMOKE_DETECTOR_COMMAND_OFF = "INTRUSION_ALARM_OFF"
 SMOKE_DETECTOR_COMMAND_ON = "INTRUSION_ALARM"
@@ -70,13 +64,26 @@ class BaseSiren(CustomEntity):
     def available_lights(self) -> tuple[str, ...] | None:
         """Return a list of available lights."""
 
+    @value_property
+    @abstractmethod
+    def supports_duration(self) -> bool:
+        """Flag if siren supports duration."""
+
+    @value_property
+    def supports_tones(self) -> bool:
+        """Flag if siren supports tones."""
+        return self.available_tones is not None
+
+    @value_property
+    def supports_lights(self) -> bool:
+        """Flag if siren supports lights."""
+        return self.available_lights is not None
+
     @abstractmethod
     async def turn_on(
         self,
-        acoustic_alarm: str | None,
-        optical_alarm: str | None,
-        duration: int = DEFAULT_DURATION_VALUE,
         collector: CallParameterCollector | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the device on."""
 
@@ -128,20 +135,55 @@ class CeIpSiren(BaseSiren):
         """Return a list of available lights."""
         return self._e_optical_alarm_selection.value_list
 
+    @value_property
+    def supports_duration(self) -> bool:
+        """Flag if siren supports duration."""
+        return True
+
     @bind_collector
     async def turn_on(
         self,
-        acoustic_alarm: str | None,
-        optical_alarm: str | None,
-        duration: int = DEFAULT_DURATION_VALUE,
         collector: CallParameterCollector | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the device on."""
+        if (
+            self.available_tones
+            and (
+                acoustic_alarm := kwargs.get(
+                    HM_ARG_ACOUSTIC_ALARM, self._e_acoustic_alarm_selection.default
+                )
+            )
+            not in self.available_tones
+        ):
+            raise ValueError(
+                f"Invalid tone specified "
+                f"for entity {self.full_name}: {acoustic_alarm}, "
+                "check the available_tones attribute for valid tones to pass in"
+            )
+        if (
+            self.available_lights
+            and (
+                optical_alarm := kwargs.get(
+                    HM_ARG_OPTICAL_ALARM, self._e_optical_alarm_selection.default
+                )
+            )
+            not in self.available_lights
+        ):
+            raise ValueError(
+                f"Invalid light specified "
+                f"for entity {self.full_name}: {optical_alarm}, "
+                "check the available_lights attribute for valid tones to pass in"
+            )
+        duration = kwargs.get(HM_ARG_DURATION, self._e_duration.default)
         await self._e_acoustic_alarm_selection.send_value(
             value=acoustic_alarm, collector=collector
         )
+        optical_alarm = kwargs.get(HM_ARG_OPTICAL_ALARM, DISABLE_OPTICAL_SIGNAL)
         await self._e_optical_alarm_selection.send_value(value=optical_alarm, collector=collector)
-        await self._e_duration_unit.send_value(value=DEFAULT_DURATION_UNIT, collector=collector)
+        await self._e_duration_unit.send_value(
+            value=self._e_duration_unit.default, collector=collector
+        )
         await self._e_duration.send_value(value=duration, collector=collector)
 
     @bind_collector
@@ -153,8 +195,10 @@ class CeIpSiren(BaseSiren):
         await self._e_optical_alarm_selection.send_value(
             value=DISABLE_OPTICAL_SIGNAL, collector=collector
         )
-        await self._e_duration_unit.send_value(value=DEFAULT_DURATION_UNIT, collector=collector)
-        await self._e_duration.send_value(value=1, collector=collector)
+        await self._e_duration_unit.send_value(
+            value=self._e_duration_unit.default, collector=collector
+        )
+        await self._e_duration.send_value(value=DEFAULT_DURATION_VALUE, collector=collector)
 
 
 class CeIpSirenSmoke(BaseSiren):
@@ -189,20 +233,20 @@ class CeIpSirenSmoke(BaseSiren):
         """Return a list of available lights."""
         return None
 
+    @value_property
+    def supports_duration(self) -> bool:
+        """Flag if siren supports duration."""
+        return False
+
     async def turn_on(
         self,
-        acoustic_alarm: str | None,
-        optical_alarm: str | None,
-        duration: int = DEFAULT_DURATION_VALUE,
         collector: CallParameterCollector | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the device on."""
         await self._e_smoke_detector_command.send_value(
             value=SMOKE_DETECTOR_COMMAND_ON, collector=collector
         )
-        if duration and duration > 0:
-            await asyncio.sleep(delay=duration)
-            await self.turn_off()
 
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""

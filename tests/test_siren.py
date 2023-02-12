@@ -38,7 +38,11 @@ async def test_ceipsiren(
     central.event(const.LOCAL_INTERFACE_ID, "VCU8249617:3", "OPTICAL_ALARM_ACTIVE", 0)
     assert siren.is_on is False
 
-    await siren.turn_on("FREQUENCY_RISING_AND_FALLING", "BLINKING_ALTERNATELY_REPEATING", 30)
+    await siren.turn_on(
+        acoustic_alarm="FREQUENCY_RISING_AND_FALLING",
+        optical_alarm="BLINKING_ALTERNATELY_REPEATING",
+        duration=30,
+    )
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU8249617:3",
         paramset_key="VALUES",
@@ -65,6 +69,20 @@ async def test_ceipsiren(
             "DURATION_VALUE": 30,
         },
     )
+
+    with pytest.raises(ValueError):
+        await siren.turn_on(
+            acoustic_alarm="not_in_list",
+            optical_alarm="BLINKING_ALTERNATELY_REPEATING",
+            duration=30,
+        )
+
+    with pytest.raises(ValueError):
+        await siren.turn_on(
+            acoustic_alarm="FREQUENCY_RISING_AND_FALLING",
+            optical_alarm="not_in_list",
+            duration=30,
+        )
 
     await siren.turn_off()
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -105,21 +123,7 @@ async def test_ceipsirensmoke(
     central.event(const.LOCAL_INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 0)
     assert siren.is_on is False
 
-    await siren.turn_on(None, None, 1)
-    assert mock_client.method_calls[-2] == call.set_value(
-        channel_address="VCU2822385:1",
-        paramset_key="VALUES",
-        parameter="SMOKE_DETECTOR_COMMAND",
-        value=2,
-    )
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU2822385:1",
-        paramset_key="VALUES",
-        parameter="SMOKE_DETECTOR_COMMAND",
-        value=1,
-    )
-
-    await siren.turn_on(None, None, 0)
+    await siren.turn_on()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU2822385:1",
         paramset_key="VALUES",
