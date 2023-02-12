@@ -92,7 +92,7 @@ async def test_ceipsiren(
             "ACOUSTIC_ALARM_SELECTION": 0,
             "OPTICAL_ALARM_SELECTION": 0,
             "DURATION_UNIT": 0,
-            "DURATION_VALUE": 1,
+            "DURATION_VALUE": 0,
         },
     )
 
