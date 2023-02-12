@@ -145,7 +145,6 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "SET_SYMBOL_FOR_HEATING_PHASE",
     "SHADING_SPEED",  # ro
     "SHEV_POS",  # ro"
-    "SMOKE_DETECTOR_COMMAND",  # ro
     "SPEED",  # ro"
     "STATE_UNCERTAIN",
     "SUBMIT",
@@ -644,13 +643,17 @@ class ParameterVisibilityCache:
 
 def check_ignore_parameters_is_clean() -> bool:
     """Check if a required parameter is in ignored parameters."""
+    un_ignore_parameters_by_device: list[str] = []
+    for params in _UN_IGNORE_PARAMETERS_BY_DEVICE.values():
+        un_ignore_parameters_by_device.extend(params)
+
     should_not_be_ignored: list[str] = []
     for parameter in get_required_parameters():
         if (
             parameter in _IGNORED_PARAMETERS
             or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
             or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
-        ):
+        ) and parameter not in un_ignore_parameters_by_device:
             should_not_be_ignored.append(parameter)
     return len(should_not_be_ignored) == 0
 
