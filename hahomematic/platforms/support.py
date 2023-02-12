@@ -432,10 +432,10 @@ def _get_binary_sensor_value(value: int, value_list: tuple[str, ...]) -> bool:
 
 
 def check_channel_is_the_only_primary_channel(
-    current_channel: int, device_def: dict[str, Any], device_has_multiple_channels: bool
+    current_channel_no: int, device_def: dict[str, Any], device_has_multiple_channels: bool
 ) -> bool:
     """Check if this channel is the only primary channel."""
     primary_channel: int = device_def[hmed.ED_PRIMARY_CHANNEL]
-    if primary_channel == current_channel and device_has_multiple_channels is False:
+    if primary_channel == current_channel_no and device_has_multiple_channels is False:
         return True
     return False

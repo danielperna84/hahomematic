@@ -86,7 +86,7 @@ class CustomEntity(BaseEntity):
             device_type=self.device.device_type
         )
         is_only_primary_channel = check_channel_is_the_only_primary_channel(
-            current_channel=self.channel_no,
+            current_channel_no=self.channel_no,
             device_def=self._device_desc,
             device_has_multiple_channels=device_has_multiple_channels,
         )
@@ -177,7 +177,7 @@ class CustomEntity(BaseEntity):
         # add custom un_ignore entities
         self._mark_entity_by_custom_un_ignore_parameters(
             un_ignore_params_by_paramset_key=self._central.parameter_visibility.get_un_ignore_parameters(  # noqa: E501
-                device_type=self.device.device_type, device_channel=self.channel_no
+                device_type=self.device.device_type, channel_no=self.channel_no
             )
         )
 

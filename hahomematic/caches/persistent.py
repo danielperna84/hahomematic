@@ -382,9 +382,9 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """
         for channel_paramsets in self._raw_paramset_descriptions.values():
             for channel_address, paramsets in channel_paramsets.items():
-                if ":" not in channel_address:
-                    continue
                 device_address, channel_no = get_split_channel_address(channel_address)
+                if not channel_no:
+                    continue
 
                 for paramset in paramsets.values():
                     if not paramset:

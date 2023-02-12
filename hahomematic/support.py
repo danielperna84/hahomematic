@@ -122,32 +122,21 @@ def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
 
 def get_device_address(address: str) -> str:
     """Return the device part of an address."""
-    if ":" not in address:
-        return address
     return get_split_channel_address(channel_address=address)[0]
-
-
-def get_device_channel(channel_address: str) -> int:
-    """Return the channel part of an address."""
-    if ":" not in channel_address:
-        raise HaHomematicException("Address has no channel part.")
-    return get_split_channel_address(channel_address=channel_address)[1]
 
 
 def get_channel_no(address: str) -> int | None:
     """Return the channel part of an address."""
-    if ":" not in address:
-        return None
     return get_split_channel_address(channel_address=address)[1]
 
 
 @cache
-def get_split_channel_address(channel_address: str) -> tuple[str, int]:
+def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
     """Return the device part of an address."""
-    if ":" not in channel_address:
-        raise HaHomematicException("Address has no channel part.")
-    device_address, channel_no = channel_address.split(":")
-    return device_address, int(channel_no)
+    if ":" in channel_address:
+        device_address, channel_no = channel_address.split(":")
+        return device_address, int(channel_no)
+    return channel_address, None
 
 
 def updated_within_seconds(last_update: datetime, max_age_seconds: int = MAX_CACHE_AGE) -> bool:

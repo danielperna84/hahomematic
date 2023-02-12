@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
     """Create the entities associated to this device."""
     for channel_address in device.channels:
-        if (device_channel := hm_helpers.get_channel_no(channel_address)) is None:
+        if (channel_no := hm_helpers.get_channel_no(channel_address)) is None:
             _LOGGER.warning(
                 "CREATE_ENTITIES failed: Wrong format of channel_address %s",
                 channel_address,
@@ -46,7 +46,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
         ):
             if not device.central.parameter_visibility.is_relevant_paramset(
                 device_type=device.device_type,
-                device_channel=device_channel,
+                channel_no=channel_no,
                 paramset_key=paramset_key,
             ):
                 continue
@@ -61,7 +61,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                 parameter_is_un_ignored: bool = (
                     device.central.parameter_visibility.parameter_is_un_ignored(
                         device_type=device.device_type,
-                        device_channel=device_channel,
+                        channel_no=channel_no,
                         paramset_key=paramset_key,
                         parameter=parameter,
                     )

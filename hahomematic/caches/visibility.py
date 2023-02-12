@@ -318,15 +318,15 @@ class ParameterVisibilityCache:
                     ].add(parameter)
 
     def get_un_ignore_parameters(
-        self, device_type: str, device_channel: int
+        self, device_type: str, channel_no: int
     ) -> dict[str, tuple[str, ...]]:
         """Return un_ignore_parameters."""
         device_type_l = device_type.lower()
         un_ignore_parameters: dict[str, set[str]] = {}
-        if device_type_l is not None and device_channel is not None:
+        if device_type_l is not None and channel_no is not None:
             un_ignore_parameters = self._custom_un_ignore_parameters_by_device_paramset_key.get(
                 device_type_l, {}
-            ).get(device_channel, {})
+            ).get(channel_no, {})
         for (
             paramset_key,
             un_ignore_params,
@@ -344,7 +344,7 @@ class ParameterVisibilityCache:
     def parameter_is_ignored(
         self,
         device_type: str,
-        device_channel: int,
+        channel_no: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
@@ -354,7 +354,7 @@ class ParameterVisibilityCache:
         if paramset_key == PARAMSET_KEY_VALUES:
             if self.parameter_is_un_ignored(
                 device_type=device_type,
-                device_channel=device_channel,
+                channel_no=channel_no,
                 paramset_key=paramset_key,
                 parameter=parameter,
             ):
@@ -375,12 +375,12 @@ class ParameterVisibilityCache:
 
             if (
                 accept_channel := _ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
-            ) is not None and accept_channel != device_channel:
+            ) is not None and accept_channel != channel_no:
                 return True
         if paramset_key == PARAMSET_KEY_MASTER:
             if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
                 device_type_l, {}
-            ).get(device_channel, {}).get(PARAMSET_KEY_MASTER, []):
+            ).get(channel_no, {}).get(PARAMSET_KEY_MASTER, []):
                 return False  # pragma: no cover
 
             dt_short = list(
@@ -391,7 +391,7 @@ class ParameterVisibilityCache:
             )
             if dt_short and parameter not in self._un_ignore_parameters_by_device_paramset_key.get(
                 dt_short[0], {}
-            ).get(device_channel, {}).get(PARAMSET_KEY_MASTER, []):
+            ).get(channel_no, {}).get(PARAMSET_KEY_MASTER, []):
                 return True
 
         return False
@@ -399,7 +399,7 @@ class ParameterVisibilityCache:
     def _parameter_is_un_ignored(
         self,
         device_type: str,
-        device_channel: int,
+        channel_no: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
@@ -418,7 +418,7 @@ class ParameterVisibilityCache:
         # check if parameter is in custom_un_ignore with paramset_key
         if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
             device_type_l, {}
-        ).get(device_channel, {}).get(paramset_key, set()):
+        ).get(channel_no, {}).get(paramset_key, set()):
             return True  # pragma: no cover
 
         # check if parameter is in _UN_IGNORE_PARAMETERS_BY_DEVICE
@@ -436,7 +436,7 @@ class ParameterVisibilityCache:
     def parameter_is_un_ignored(
         self,
         device_type: str,
-        device_channel: int,
+        channel_no: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
@@ -456,12 +456,12 @@ class ParameterVisibilityCache:
         # check if parameter is in _RELEVANT_MASTER_PARAMSETS_BY_DEVICE
         if dt_short and parameter in self._un_ignore_parameters_by_device_paramset_key.get(
             dt_short[0], {}
-        ).get(device_channel, {}).get(paramset_key, set()):
+        ).get(channel_no, {}).get(paramset_key, set()):
             return True
 
         return self._parameter_is_un_ignored(
             device_type=device_type,
-            device_channel=device_channel,
+            channel_no=channel_no,
             paramset_key=paramset_key,
             parameter=parameter,
         )
@@ -547,7 +547,7 @@ class ParameterVisibilityCache:
     def parameter_is_hidden(
         self,
         device_type: str,
-        device_channel: int,
+        channel_no: int,
         paramset_key: str,
         parameter: str,
     ) -> bool:
@@ -559,7 +559,7 @@ class ParameterVisibilityCache:
         """
         return parameter in _HIDDEN_PARAMETERS and not self._parameter_is_un_ignored(
             device_type=device_type,
-            device_channel=device_channel,
+            channel_no=channel_no,
             paramset_key=paramset_key,
             parameter=parameter,
         )
@@ -568,7 +568,7 @@ class ParameterVisibilityCache:
         self,
         device_type: str,
         paramset_key: str,
-        device_channel: int,
+        channel_no: int,
     ) -> bool:
         """
         Return if a paramset is relevant.
@@ -577,12 +577,12 @@ class ParameterVisibilityCache:
         """
         if paramset_key == PARAMSET_KEY_VALUES:
             return True
-        if device_channel is not None and paramset_key == PARAMSET_KEY_MASTER:
+        if channel_no is not None and paramset_key == PARAMSET_KEY_MASTER:
             for (
                 d_type,
                 channel_nos,
             ) in self._relevant_master_paramsets_by_device.items():
-                if device_channel in channel_nos and hm_helpers.element_matches_key(
+                if channel_no in channel_nos and hm_helpers.element_matches_key(
                     search_elements=d_type,
                     compare_with=device_type,
                 ):

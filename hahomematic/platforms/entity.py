@@ -274,7 +274,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         super().__init__(
             device=device,
             unique_identifier=unique_identifier,
-            channel_no=hm_helpers.get_device_channel(channel_address=channel_address),
+            channel_no=hm_helpers.get_channel_no(address=channel_address),  # type: ignore[arg-type]  # noqa: E501
         )
         self._attr_value: ParameterT | None = None
         self._attr_last_update: datetime = INIT_DATETIME
