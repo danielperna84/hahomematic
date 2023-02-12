@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/siren/.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Final
+from typing import Any
 
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import bind_collector
@@ -34,10 +34,6 @@ from hahomematic.platforms.support import value_property
 HM_ARG_ACOUSTIC_ALARM = "acoustic_alarm"
 HM_ARG_OPTICAL_ALARM = "optical_alarm"
 HM_ARG_DURATION = "duration"
-
-DISABLE_ACOUSTIC_SIGNAL: Final = "DISABLE_ACOUSTIC_SIGNAL"
-DISABLE_OPTICAL_SIGNAL: Final = "DISABLE_OPTICAL_SIGNAL"
-DEFAULT_DURATION_VALUE: Final = 1
 
 SMOKE_DETECTOR_COMMAND_OFF = "INTRUSION_ALARM_OFF"
 SMOKE_DETECTOR_COMMAND_ON = "INTRUSION_ALARM"
@@ -179,7 +175,6 @@ class CeIpSiren(BaseSiren):
         await self._e_acoustic_alarm_selection.send_value(
             value=acoustic_alarm, collector=collector
         )
-        optical_alarm = kwargs.get(HM_ARG_OPTICAL_ALARM, DISABLE_OPTICAL_SIGNAL)
         await self._e_optical_alarm_selection.send_value(value=optical_alarm, collector=collector)
         await self._e_duration_unit.send_value(
             value=self._e_duration_unit.default, collector=collector
@@ -190,15 +185,15 @@ class CeIpSiren(BaseSiren):
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
         await self._e_acoustic_alarm_selection.send_value(
-            value=DISABLE_ACOUSTIC_SIGNAL, collector=collector
+            value=self._e_acoustic_alarm_selection.default, collector=collector
         )
         await self._e_optical_alarm_selection.send_value(
-            value=DISABLE_OPTICAL_SIGNAL, collector=collector
+            value=self._e_optical_alarm_selection.default, collector=collector
         )
         await self._e_duration_unit.send_value(
             value=self._e_duration_unit.default, collector=collector
         )
-        await self._e_duration.send_value(value=DEFAULT_DURATION_VALUE, collector=collector)
+        await self._e_duration.send_value(value=self._e_duration.default, collector=collector)
 
 
 class CeIpSirenSmoke(BaseSiren):
