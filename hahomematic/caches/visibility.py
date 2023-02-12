@@ -278,17 +278,17 @@ class ParameterVisibilityCache:
 
         # device_type, channel_no, paramset_key, set[parameter]
         self._un_ignore_parameters_by_device_paramset_key: dict[
-            str, dict[int, dict[str, set[str]]]
+            str, dict[int | None, dict[str, set[str]]]
         ] = {}
 
         # unignore from custom unignore files
         # device_type, channel_no, paramset_key, parameter
         self._custom_un_ignore_parameters_by_device_paramset_key: dict[
-            str, dict[int, dict[str, set[str]]]
+            str, dict[int | None, dict[str, set[str]]]
         ] = {}
 
         # device_type, channel_no
-        self._relevant_master_paramsets_by_device: dict[str, set[int]] = {}
+        self._relevant_master_paramsets_by_device: dict[str, set[int | None]] = {}
         self._init()
 
     def _init(self) -> None:
@@ -318,7 +318,7 @@ class ParameterVisibilityCache:
                     ].add(parameter)
 
     def get_un_ignore_parameters(
-        self, device_type: str, channel_no: int
+        self, device_type: str, channel_no: int | None
     ) -> dict[str, tuple[str, ...]]:
         """Return un_ignore_parameters."""
         device_type_l = device_type.lower()
@@ -344,7 +344,7 @@ class ParameterVisibilityCache:
     def parameter_is_ignored(
         self,
         device_type: str,
-        channel_no: int,
+        channel_no: int | None,
         paramset_key: str,
         parameter: str,
     ) -> bool:
@@ -399,7 +399,7 @@ class ParameterVisibilityCache:
     def _parameter_is_un_ignored(
         self,
         device_type: str,
-        channel_no: int,
+        channel_no: int | None,
         paramset_key: str,
         parameter: str,
     ) -> bool:
@@ -436,7 +436,7 @@ class ParameterVisibilityCache:
     def parameter_is_un_ignored(
         self,
         device_type: str,
-        channel_no: int,
+        channel_no: int | None,
         paramset_key: str,
         parameter: str,
     ) -> bool:
@@ -547,7 +547,7 @@ class ParameterVisibilityCache:
     def parameter_is_hidden(
         self,
         device_type: str,
-        channel_no: int,
+        channel_no: int | None,
         paramset_key: str,
         parameter: str,
     ) -> bool:
@@ -568,7 +568,7 @@ class ParameterVisibilityCache:
         self,
         device_type: str,
         paramset_key: str,
-        channel_no: int,
+        channel_no: int | None,
     ) -> bool:
         """
         Return if a paramset is relevant.

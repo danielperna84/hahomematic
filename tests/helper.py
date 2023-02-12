@@ -213,7 +213,7 @@ async def get_event(
 
 
 async def get_custom_entity(
-    central_unit: CentralUnit, address: str, channel_no: int, do_load: bool = False
+    central_unit: CentralUnit, address: str, channel_no: int | None, do_load: bool = False
 ) -> CustomEntity | None:
     """Return the hm custom_entity."""
     device = get_device(central_unit, address)

@@ -218,9 +218,13 @@ class CustomEntity(BaseEntity):
                 for channel_no in channel_nos:
                     self._mark_entity(channel_no=channel_no, parameters=parameters)
 
-    def _mark_entity(self, channel_no: int, parameters: tuple[str, ...]) -> None:
+    def _mark_entity(self, channel_no: int | None, parameters: tuple[str, ...]) -> None:
         """Mark entity to be created in HA."""
-        channel_address = f"{self.device.device_address}:{channel_no}"
+        channel_address = (
+            self.device.device_address
+            if channel_no is None
+            else f"{self.device.device_address}:{channel_no}"
+        )
         for parameter in parameters:
             entity = self.device.get_generic_entity(
                 channel_address=channel_address, parameter=parameter

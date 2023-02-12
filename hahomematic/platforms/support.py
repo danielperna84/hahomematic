@@ -224,7 +224,7 @@ def _get_generic_device_name(device_address: str, device_type: str) -> str:
 def get_entity_name(
     central: hmcu.CentralUnit,
     device: hmd.HmDevice,
-    channel_no: int,
+    channel_no: int | None,
     parameter: str,
 ) -> EntityNameData:
     """Get name for entity."""
@@ -268,7 +268,7 @@ def get_entity_name(
 def get_event_name(
     central: hmcu.CentralUnit,
     device: hmd.HmDevice,
-    channel_no: int,
+    channel_no: int | None,
     parameter: str,
 ) -> EntityNameData:
     """Get name for event."""
@@ -307,7 +307,7 @@ def get_event_name(
 def get_custom_entity_name(
     central: hmcu.CentralUnit,
     device: hmd.HmDevice,
-    channel_no: int,
+    channel_no: int | None,
     is_only_primary_channel: bool,
     usage: HmEntityUsage,
 ) -> EntityNameData:
@@ -368,14 +368,16 @@ def generate_unique_identifier(
 def _get_base_name_from_channel_or_device(
     central: hmcu.CentralUnit,
     device: hmd.HmDevice,
-    channel_no: int,
+    channel_no: int | None,
 ) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""
-    channel_address = f"{device.device_address}:{channel_no}"
+    channel_address = (
+        device.device_address if channel_no is None else f"{device.device_address}:{channel_no}"
+    )
     default_channel_name = f"{device.device_type} {channel_address}"
     name = central.device_details.get_name(channel_address)
     if name is None or name == default_channel_name:
-        return f"{device.name}:{channel_no}"
+        return device.name if channel_no is None else f"{device.name}:{channel_no}"
     return name
 
 
@@ -432,7 +434,7 @@ def _get_binary_sensor_value(value: int, value_list: tuple[str, ...]) -> bool:
 
 
 def check_channel_is_the_only_primary_channel(
-    current_channel_no: int, device_def: dict[str, Any], device_has_multiple_channels: bool
+    current_channel_no: int | None, device_def: dict[str, Any], device_has_multiple_channels: bool
 ) -> bool:
     """Check if this channel is the only primary channel."""
     primary_channel: int = device_def[hmed.ED_PRIMARY_CHANNEL]

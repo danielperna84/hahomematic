@@ -5,6 +5,7 @@
 - Add payload mixin
 - Cleanup module dependencies
 - Use cache decorators for some high-traffic methods
+- Allow that channel_no could be None
 
 # Version 2023.2.7 (2023-02-07)
 
