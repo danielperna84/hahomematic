@@ -19,6 +19,7 @@ from hahomematic.platforms.support import (
     get_custom_entity_name,
     value_property,
 )
+from hahomematic.support import get_channel_address
 
 _EntityT = TypeVar("_EntityT", bound=hmge.GenericEntity)
 _LOGGER = logging.getLogger(__name__)
@@ -150,7 +151,9 @@ class CustomEntity(BaseEntity):
             if fixed_channels := self._extended.fixed_channels:
                 for channel_no, mapping in fixed_channels.items():
                     for field_name, parameter in mapping.items():
-                        channel_address = f"{self.device.device_address}:{channel_no}"
+                        channel_address = get_channel_address(
+                            device_address=self.device.device_address, channel_no=channel_no
+                        )
                         entity = self.device.get_generic_entity(
                             channel_address=channel_address, parameter=parameter
                         )
@@ -186,7 +189,9 @@ class CustomEntity(BaseEntity):
         fields = self._device_desc.get(field_dict_name, {})
         for channel_no, channel in fields.items():
             for field_name, parameter in channel.items():
-                channel_address = f"{self.device.device_address}:{channel_no}"
+                channel_address = get_channel_address(
+                    device_address=self.device.device_address, channel_no=channel_no
+                )
                 if entity := self.device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
@@ -220,11 +225,10 @@ class CustomEntity(BaseEntity):
 
     def _mark_entity(self, channel_no: int | None, parameters: tuple[str, ...]) -> None:
         """Mark entity to be created in HA."""
-        channel_address = (
-            self.device.device_address
-            if channel_no is None
-            else f"{self.device.device_address}:{channel_no}"
+        channel_address = get_channel_address(
+            device_address=self.device.device_address, channel_no=channel_no
         )
+
         for parameter in parameters:
             entity = self.device.get_generic_entity(
                 channel_address=channel_address, parameter=parameter

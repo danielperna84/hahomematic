@@ -120,6 +120,11 @@ def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
     return ssl_context
 
 
+def get_channel_address(device_address: str, channel_no: int | None) -> str:
+    """Return the channel address."""
+    return device_address if channel_no is None else f"{device_address}:{channel_no}"
+
+
 def get_device_address(address: str) -> str:
     """Return the device part of an address."""
     return get_split_channel_address(channel_address=address)[0]

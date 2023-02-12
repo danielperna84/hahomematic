@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from hahomematic import support as hm_helpers
+from hahomematic import support as hm_support
 from hahomematic.caches.visibility import ALLOWED_INTERNAL_PARAMETERS
 from hahomematic.const import (
     CLICK_EVENTS,
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
     """Create the entities associated to this device."""
     for channel_address in device.channels:
-        if (channel_no := hm_helpers.get_channel_no(channel_address)) is None:
+        if (channel_no := hm_support.get_channel_no(channel_address)) is None:
             _LOGGER.warning(
                 "CREATE_ENTITIES failed: Wrong format of channel_address %s",
                 channel_address,

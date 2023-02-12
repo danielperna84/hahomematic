@@ -6,7 +6,7 @@ import logging
 import os
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu, support as hm_helpers
+from hahomematic import central_unit as hmcu, support as hm_support
 from hahomematic.const import (
     DEFAULT_ENCODING,
     EVENT_CONFIG_PENDING,
@@ -367,7 +367,7 @@ class ParameterVisibilityCache:
                     or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
                 )
                 and parameter not in self._required_parameters
-            ) or hm_helpers.element_matches_key(
+            ) or hm_support.element_matches_key(
                 search_elements=self._ignore_parameters_by_device_lower.get(parameter, []),
                 compare_with=device_type_l,
             ):
@@ -582,7 +582,7 @@ class ParameterVisibilityCache:
                 d_type,
                 channel_nos,
             ) in self._relevant_master_paramsets_by_device.items():
-                if channel_no in channel_nos and hm_helpers.element_matches_key(
+                if channel_no in channel_nos and hm_support.element_matches_key(
                     search_elements=d_type,
                     compare_with=device_type,
                 ):
@@ -593,7 +593,7 @@ class ParameterVisibilityCache:
         """Check if parameter of a device should be wrapped to a different platform."""
         for devices, wrapper_def in _WRAP_ENTITY.items():
             if (
-                hm_helpers.element_matches_key(
+                hm_support.element_matches_key(
                     search_elements=devices,
                     compare_with=wrapped_entity.device.device_type,
                 )
@@ -606,7 +606,7 @@ class ParameterVisibilityCache:
         """Load custom un ignore parameters from disk."""
 
         def _load() -> None:
-            if not hm_helpers.check_or_create_directory(self._storage_folder):
+            if not hm_support.check_or_create_directory(self._storage_folder):
                 return  # pragma: no cover
             if not os.path.exists(
                 os.path.join(self._storage_folder, FILE_CUSTOM_UN_IGNORE_PARAMETERS)
