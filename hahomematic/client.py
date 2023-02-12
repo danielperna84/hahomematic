@@ -526,21 +526,21 @@ class Client(ABC):
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
         for paramset_key in device_description.get(HM_PARAMSETS, []):
-            if (device_channel := get_channel_no(address)) is None:
+            if (channel_no := get_channel_no(address)) is None:
                 # No paramsets at root device
                 continue
 
             device_type = (
                 device_description[HM_TYPE]
-                if device_channel is None
+                if channel_no is None
                 else device_description[HM_PARENT_TYPE]
             )
             if (
                 only_relevant
-                and device_channel
+                and channel_no
                 and not self.central.parameter_visibility.is_relevant_paramset(
                     device_type=device_type,
-                    device_channel=device_channel,
+                    channel_no=channel_no,
                     paramset_key=paramset_key,
                 )
             ):

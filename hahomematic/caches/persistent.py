@@ -27,7 +27,7 @@ from hahomematic.support import (
     Channel,
     check_or_create_directory,
     get_device_address,
-    get_device_channel,
+    get_split_channel_address,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -382,9 +382,9 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """
         for channel_paramsets in self._raw_paramset_descriptions.values():
             for channel_address, paramsets in channel_paramsets.items():
-                if ":" not in channel_address:
+                device_address, channel_no = get_split_channel_address(channel_address)
+                if not channel_no:
                     continue
-                device_address = get_device_address(channel_address)
 
                 for paramset in paramsets.values():
                     if not paramset:
@@ -396,7 +396,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
                         ) not in self._address_parameter_cache:
                             self._address_parameter_cache[(device_address, parameter)] = []
                         self._address_parameter_cache[(device_address, parameter)].append(
-                            get_device_channel(channel_address)
+                            channel_no
                         )
 
     async def load(self) -> HmDataOperationResult:

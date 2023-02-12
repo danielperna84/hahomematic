@@ -9,7 +9,7 @@ from typing import Any, Final, Generic, TypeVar, cast
 
 import voluptuous as vol
 
-from hahomematic import central_unit as hmcu, client as hmcl, support as hm_helpers
+from hahomematic import central_unit as hmcu, client as hmcl, support as hm_support
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNEL_NO,
@@ -156,14 +156,16 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self,
         device: hmd.HmDevice,
         unique_identifier: str,
-        channel_no: int,
+        channel_no: int | None,
     ) -> None:
         """Initialize the entity."""
         PayloadMixin.__init__(self)
         super().__init__(unique_identifier=unique_identifier)
         self.device: Final[hmd.HmDevice] = device
-        self._attr_channel_no: Final[int] = channel_no
-        self._attr_channel_address: Final[str] = f"{device.device_address}:{channel_no}"
+        self._attr_channel_no: Final[int | None] = channel_no
+        self._attr_channel_address: Final[str] = hm_support.get_channel_address(
+            device_address=device.device_address, channel_no=channel_no
+        )
         self._central: Final[hmcu.CentralUnit] = device.central
         self._channel_type: Final[str] = str(device.channels[self._attr_channel_address].type)
         self._attr_function: Final[str | None] = self._central.device_details.get_function_text(
@@ -194,7 +196,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._attr_channel_address
 
     @config_property
-    def channel_no(self) -> int:
+    def channel_no(self) -> int | None:
         """Return the channel_no of the entity."""
         return self._attr_channel_no
 
@@ -274,7 +276,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         super().__init__(
             device=device,
             unique_identifier=unique_identifier,
-            channel_no=hm_helpers.get_device_channel(channel_address),
+            channel_no=hm_support.get_channel_no(address=channel_address),
         )
         self._attr_value: ParameterT | None = None
         self._attr_last_update: datetime = INIT_DATETIME
@@ -435,7 +437,7 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Init the entity data."""
-        if hm_helpers.updated_within_seconds(
+        if hm_support.updated_within_seconds(
             last_update=self._attr_last_update, max_age_seconds=max_age_seconds
         ):
             return

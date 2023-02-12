@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hahomematic import support as hm_helpers
+from hahomematic import support as hm_support
 from hahomematic.const import (
     BUTTON_ACTIONS,
     CLICK_EVENTS,
@@ -42,9 +42,9 @@ def create_entity_and_append_to_device(
     parameter_data: dict[str, Any],
 ) -> None:
     """Decides which default platform should be used, and creates the required entities."""
-    if device.central.parameter_visibility.ignore_parameter(
+    if device.central.parameter_visibility.parameter_is_ignored(
         device_type=device.device_type,
-        device_channel=hm_helpers.get_device_channel(channel_address),
+        channel_no=hm_support.get_channel_no(address=channel_address),
         paramset_key=paramset_key,
         parameter=parameter,
     ):

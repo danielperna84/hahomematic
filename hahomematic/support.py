@@ -6,6 +6,7 @@ from collections.abc import Collection
 from contextlib import closing
 from dataclasses import dataclass
 from datetime import datetime
+from functools import cache
 import logging
 import os
 import re
@@ -119,25 +120,28 @@ def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
     return ssl_context
 
 
+def get_channel_address(device_address: str, channel_no: int | None) -> str:
+    """Return the channel address."""
+    return device_address if channel_no is None else f"{device_address}:{channel_no}"
+
+
 def get_device_address(address: str) -> str:
     """Return the device part of an address."""
-    if ":" in address:
-        return address.split(":")[0]
-    return address
-
-
-def get_device_channel(address: str) -> int:
-    """Return the channel part of an address."""
-    if ":" not in address:
-        raise HaHomematicException("Address has no channel part.")
-    return int(address.split(":")[1])
+    return get_split_channel_address(channel_address=address)[0]
 
 
 def get_channel_no(address: str) -> int | None:
     """Return the channel part of an address."""
-    if ":" not in address:
-        return None
-    return int(address.split(":")[1])
+    return get_split_channel_address(channel_address=address)[1]
+
+
+@cache
+def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
+    """Return the device part of an address."""
+    if ":" in channel_address:
+        device_address, channel_no = channel_address.split(":")
+        return device_address, int(channel_no)
+    return channel_address, None
 
 
 def updated_within_seconds(last_update: datetime, max_age_seconds: int = MAX_CACHE_AGE) -> bool:

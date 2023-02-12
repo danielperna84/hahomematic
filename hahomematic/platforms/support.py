@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any, Generic, TypeVar
 
-from hahomematic import central_unit as hmcu, support as hm_helpers
+from hahomematic import central_unit as hmcu, support as hm_support
 from hahomematic.const import (
     BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
     HM_TYPE,
@@ -158,7 +158,7 @@ class OnTimeMixin:
         # cleanup values
         self._on_time = None
         self._on_time_updated = INIT_DATETIME
-        if not hm_helpers.updated_within_seconds(last_update=on_time_updated, max_age_seconds=5):
+        if not hm_support.updated_within_seconds(last_update=on_time_updated, max_age_seconds=5):
             return None
         return on_time
 
@@ -224,11 +224,13 @@ def _get_generic_device_name(device_address: str, device_type: str) -> str:
 def get_entity_name(
     central: hmcu.CentralUnit,
     device: hmd.HmDevice,
-    channel_no: int,
+    channel_no: int | None,
     parameter: str,
 ) -> EntityNameData:
     """Get name for entity."""
-    channel_address = f"{device.device_address}:{channel_no}"
+    channel_address = hm_support.get_channel_address(
+        device_address=device.device_address, channel_no=channel_no
+    )
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
         device=device,
@@ -242,7 +244,7 @@ def get_entity_name(
             if central.paramset_descriptions.has_multiple_channels(
                 channel_address=channel_address, parameter=parameter
             ):
-                c_postfix = "" if channel_no == 0 else f" ch{channel_no}"
+                c_postfix = "" if channel_no in (0, None) else f" ch{channel_no}"
             entity_name = EntityNameData(
                 device_name=device.name,
                 channel_name=c_name,
@@ -268,11 +270,13 @@ def get_entity_name(
 def get_event_name(
     central: hmcu.CentralUnit,
     device: hmd.HmDevice,
-    channel_no: int,
+    channel_no: int | None,
     parameter: str,
 ) -> EntityNameData:
     """Get name for event."""
-    channel_address = f"{device.device_address}:{channel_no}"
+    channel_address = hm_support.get_channel_address(
+        device_address=device.device_address, channel_no=channel_no
+    )
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
         device=device,
@@ -281,7 +285,7 @@ def get_event_name(
         p_name = parameter.title().replace("_", " ")
         if _check_channel_name_with_channel_no(name=channel_name):
             d_name = channel_name.split(":")[0]
-            c_name = "" if channel_no == 0 else f" Channel {channel_no}"
+            c_name = "" if channel_no in (0, None) else f" Channel {channel_no}"
             event_name = EntityNameData(
                 device_name=device.name,
                 channel_name=d_name,
@@ -307,7 +311,7 @@ def get_event_name(
 def get_custom_entity_name(
     central: hmcu.CentralUnit,
     device: hmd.HmDevice,
-    channel_no: int,
+    channel_no: int | None,
     is_only_primary_channel: bool,
     usage: HmEntityUsage,
 ) -> EntityNameData:
@@ -368,14 +372,16 @@ def generate_unique_identifier(
 def _get_base_name_from_channel_or_device(
     central: hmcu.CentralUnit,
     device: hmd.HmDevice,
-    channel_no: int,
+    channel_no: int | None,
 ) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""
-    channel_address = f"{device.device_address}:{channel_no}"
+    channel_address = hm_support.get_channel_address(
+        device_address=device.device_address, channel_no=channel_no
+    )
     default_channel_name = f"{device.device_type} {channel_address}"
     name = central.device_details.get_name(channel_address)
     if name is None or name == default_channel_name:
-        return f"{device.name}:{channel_no}"
+        return hm_support.get_channel_address(device_address=device.name, channel_no=channel_no)
     return name
 
 
@@ -432,10 +438,10 @@ def _get_binary_sensor_value(value: int, value_list: tuple[str, ...]) -> bool:
 
 
 def check_channel_is_the_only_primary_channel(
-    current_channel: int, device_def: dict[str, Any], device_has_multiple_channels: bool
+    current_channel_no: int | None, device_def: dict[str, Any], device_has_multiple_channels: bool
 ) -> bool:
     """Check if this channel is the only primary channel."""
     primary_channel: int = device_def[hmed.ED_PRIMARY_CHANNEL]
-    if primary_channel == current_channel and device_has_multiple_channels is False:
+    if primary_channel == current_channel_no and device_has_multiple_channels is False:
         return True
     return False

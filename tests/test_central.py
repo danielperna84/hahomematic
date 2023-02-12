@@ -81,7 +81,7 @@ async def test_device_unignore(
     assert (
         central1.parameter_visibility.parameter_is_un_ignored(
             device_type="HmIP-eTRV-2",
-            device_channel=1,
+            channel_no=1,
             paramset_key="VALUES",
             parameter="LEVEL",
         )
@@ -117,7 +117,7 @@ async def test_device_unignore(
     assert (
         central2.parameter_visibility.parameter_is_un_ignored(
             device_type="HmIP-eTRV-2",
-            device_channel=1,
+            channel_no=1,
             paramset_key="VALUES",
             parameter="LEVEL",
         )

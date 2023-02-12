@@ -122,7 +122,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT]):
         """Generate the usage for the entity."""
         if self._central.parameter_visibility.parameter_is_hidden(
             device_type=self.device.device_type,
-            device_channel=self.channel_no,
+            channel_no=self.channel_no,
             paramset_key=self._attr_paramset_key,
             parameter=self._attr_parameter,
         ):

@@ -40,7 +40,7 @@ from hahomematic.support import (
     check_password,
     element_matches_key,
     find_free_port,
-    get_device_channel,
+    get_channel_no,
     get_tls_context,
     parse_sys_var,
     to_bool,
@@ -404,9 +404,8 @@ async def test_value_from_dict_by_wildcard_key() -> None:
 async def test_others() -> None:
     """Test find_free_port."""
     assert find_free_port()
-    assert get_device_channel(address="12312:1") == 1
-    with pytest.raises(Exception):
-        get_device_channel(address="12312")
+    assert get_channel_no(address="12312:1") == 1
+    assert get_channel_no(address="12312") is None
     assert _check_channel_name_with_channel_no(name="light:1") is True
     assert _check_channel_name_with_channel_no(name="light:Test") is False
     assert _check_channel_name_with_channel_no(name="light:Test:123") is False

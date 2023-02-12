@@ -7,7 +7,7 @@ from typing import Any, Final, cast
 
 import voluptuous as vol
 
-from hahomematic import support as hm_helpers
+from hahomematic import support as hm_support
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.custom.const import (
@@ -547,10 +547,11 @@ def _create_entities(
 ) -> tuple[hmce.CustomEntity, ...]:
     """Create custom entities."""
     entities: list[hmce.CustomEntity] = []
-    unique_identifier = generate_unique_identifier(
-        central=device.central, address=f"{device.device_address}:{channel_no}"
+    channel_address = hm_support.get_channel_address(
+        device_address=device.device_address, channel_no=channel_no
     )
-    if f"{device.device_address}:{channel_no}" not in device.channels:
+    unique_identifier = generate_unique_identifier(central=device.central, address=channel_address)
+    if channel_address not in device.channels:
         return tuple(entities)
     entity = custom_entity_class(
         device=device,
@@ -644,7 +645,7 @@ def get_entity_configs(
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
     for platform_blacklisted_devices in BLACKLISTED_DEVICES:
-        if hm_helpers.element_matches_key(
+        if hm_support.element_matches_key(
             search_elements=platform_blacklisted_devices,
             compare_with=device_type,
         ):
