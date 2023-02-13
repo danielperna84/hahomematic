@@ -12,7 +12,7 @@ import os
 from typing import Any, Final, cast
 
 from hahomematic import central_unit as hmcu
-from hahomematic.config import CHECK_INTERVAL, RECONNECT_WAIT
+from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNELS,
@@ -212,7 +212,7 @@ class Client(ABC):
             )
             return False
 
-        if (datetime.now() - self.last_updated).total_seconds() < CHECK_INTERVAL:
+        if (datetime.now() - self.last_updated).total_seconds() < CALLBACK_WARN_INTERVAL:
             return True
         return False
 
@@ -220,7 +220,7 @@ class Client(ABC):
         """Return if XmlRPC-Server is alive based on received events for this client."""
         if last_events_time := self.central.last_events.get(self.interface_id):
             seconds_since_last_event = (datetime.now() - last_events_time).total_seconds()
-            if seconds_since_last_event > CHECK_INTERVAL:
+            if seconds_since_last_event > CALLBACK_WARN_INTERVAL:
                 if self._is_callback_alive:
                     self.central.fire_interface_event(
                         interface_id=self.interface_id,

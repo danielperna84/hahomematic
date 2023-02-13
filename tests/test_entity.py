@@ -172,5 +172,5 @@ async def test_generic_wrapped_entity(
 def test_custom_required_entities() -> None:
     """Test required parameters from entity definitions."""
     required_parameters = get_required_parameters()
-    assert len(required_parameters) == 64
+    assert len(required_parameters) == 66
     assert check_ignore_parameters_is_clean() is True

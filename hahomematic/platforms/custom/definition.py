@@ -51,6 +51,8 @@ from hahomematic.platforms.custom.const import (
     FIELD_SECTION,
     FIELD_SET_POINT_MODE,
     FIELD_SETPOINT,
+    FIELD_SMOKE_DETECTOR_ALARM_STATUS,
+    FIELD_SMOKE_DETECTOR_COMMAND,
     FIELD_STATE,
     FIELD_STOP,
     FIELD_TEMPERATURE,
@@ -267,6 +269,17 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                     FIELD_OPTICAL_ALARM_SELECTION: "OPTICAL_ALARM_SELECTION",
                     FIELD_DURATION: "DURATION_VALUE",
                     FIELD_DURATION_UNIT: "DURATION_UNIT",
+                },
+            },
+        },
+        HmEntityDefinition.IP_SIREN_SMOKE: {
+            ED_DEVICE_GROUP: {
+                ED_PRIMARY_CHANNEL: 1,
+                ED_REPEATABLE_FIELDS: {
+                    FIELD_SMOKE_DETECTOR_COMMAND: "SMOKE_DETECTOR_COMMAND",
+                },
+                ED_VISIBLE_REPEATABLE_FIELDS: {
+                    FIELD_SMOKE_DETECTOR_ALARM_STATUS: "SMOKE_DETECTOR_ALARM_STATUS",
                 },
             },
         },

@@ -113,15 +113,15 @@ async def test_central_full(central_unit_full) -> None:
     ) as fptr:
         json.dump(addresses, fptr, indent=2)
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2756
-    assert usage_types[HmEntityUsage.CE_PRIMARY] == 184
-    assert usage_types[HmEntityUsage.ENTITY] == 3264
-    assert usage_types[HmEntityUsage.CE_VISIBLE] == 97
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2757
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 185
+    assert usage_types[HmEntityUsage.ENTITY] == 3263
+    assert usage_types[HmEntityUsage.CE_VISIBLE] == 98
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 146
 
-    assert len(ce_channels) == 112
+    assert len(ce_channels) == 113
     assert len(entity_types) == 6
-    assert len(parameters) == 167
+    assert len(parameters) == 168
 
     assert len(central_unit_full._devices) == 374
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
