@@ -29,7 +29,7 @@ from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.platforms.support import value_property
+from hahomematic.platforms.support import config_property, value_property
 
 HM_ARG_ACOUSTIC_ALARM = "acoustic_alarm"
 HM_ARG_OPTICAL_ALARM = "optical_alarm"
@@ -60,17 +60,17 @@ class BaseSiren(CustomEntity):
     def available_lights(self) -> tuple[str, ...] | None:
         """Return a list of available lights."""
 
-    @value_property
+    @config_property
     @abstractmethod
     def supports_duration(self) -> bool:
         """Flag if siren supports duration."""
 
-    @value_property
+    @config_property
     def supports_tones(self) -> bool:
         """Flag if siren supports tones."""
         return self.available_tones is not None
 
-    @value_property
+    @config_property
     def supports_lights(self) -> bool:
         """Flag if siren supports lights."""
         return self.available_lights is not None
@@ -131,7 +131,7 @@ class CeIpSiren(BaseSiren):
         """Return a list of available lights."""
         return self._e_optical_alarm_selection.value_list
 
-    @value_property
+    @config_property
     def supports_duration(self) -> bool:
         """Flag if siren supports duration."""
         return True
@@ -228,7 +228,7 @@ class CeIpSirenSmoke(BaseSiren):
         """Return a list of available lights."""
         return None
 
-    @value_property
+    @config_property
     def supports_duration(self) -> bool:
         """Flag if siren supports duration."""
         return False

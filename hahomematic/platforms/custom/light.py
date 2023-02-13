@@ -32,7 +32,7 @@ from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.platforms.support import OnTimeMixin, value_property
+from hahomematic.platforms.support import OnTimeMixin, config_property, value_property
 
 # HM constants
 HM_ARG_BRIGHTNESS: Final = "brightness"
@@ -93,27 +93,27 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         """Return the hue and saturation color value [float, float]."""
         return None
 
-    @value_property
+    @config_property
     def supports_brightness(self) -> bool:
         """Flag if light supports brightness."""
         return isinstance(self._e_level, HmFloat)
 
-    @value_property
+    @config_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
         return False
 
-    @value_property
+    @config_property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
         return False
 
-    @value_property
+    @config_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return False
 
-    @value_property
+    @config_property
     def supports_transition(self) -> bool:
         """Flag if light supports transition."""
         return isinstance(self._e_ramp_time_value, HmAction)
@@ -250,12 +250,12 @@ class CeColorDimmer(CeDimmer):
             return color / 200 * 360, 100
         return 0.0, 0.0
 
-    @value_property
+    @config_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color temperature."""
         return True
 
-    @value_property
+    @config_property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
         return False
@@ -296,7 +296,7 @@ class CeColorDimmerEffect(CeColorDimmer):
             field_name=FIELD_PROGRAM, entity_type=HmInteger
         )
 
-    @value_property
+    @config_property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
         return True
@@ -349,7 +349,7 @@ class CeColorTempDimmer(CeDimmer):
             HM_MAX_MIREDS - (HM_MAX_MIREDS - HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
         )
 
-    @value_property
+    @config_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
         return True
@@ -445,7 +445,7 @@ class CeIpFixedColorLight(BaseHmLight):
             return self._color_switcher.get(self._e_channel_color.value, (0.0, 0.0))
         return None
 
-    @value_property
+    @config_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return True
