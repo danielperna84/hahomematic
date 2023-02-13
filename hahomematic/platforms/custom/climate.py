@@ -678,4 +678,4 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
 }
 hmed.ALL_DEVICES.append(DEVICES)
 BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)
-hmed.BLACKLISTED_DEVICES.append(BLACKLISTED_DEVICES)
+hmed.ALL_BLACKLISTED_DEVICES.append(BLACKLISTED_DEVICES)
