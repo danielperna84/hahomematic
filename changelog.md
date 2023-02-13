@@ -8,6 +8,7 @@
 - Allow that channel_no could be None
 - Add and use get_channel_address
 - Add HmIP-SWSD as siren
+- raise CALLBACK_WARN_INTERVAL to 10 minutes
 
 # Version 2023.2.7 (2023-02-07)
 
