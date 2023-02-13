@@ -1,3 +1,9 @@
+# Version 2023.2. (2023-02-11)
+
+- Fix property types
+- Ensure modules for platforms are loaded
+- Use local dicts for device lists
+
 # Version 2023.2.8 (2023-02-11)
 
 - Add project setup script

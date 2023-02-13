@@ -44,7 +44,7 @@ from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
-from hahomematic.platforms.support import value_property
+from hahomematic.platforms.support import config_property, value_property
 
 CLOSED_LEVEL: Final = 0.0
 
@@ -131,7 +131,7 @@ class BaseClimateEntity(CustomEntity):
             field_name=FIELD_TEMPERATURE_MINIMUM, entity_type=HmFloat
         )
 
-    @value_property
+    @config_property
     def temperature_unit(self) -> str:
         """Return temperature unit."""
         return TEMP_CELSIUS
@@ -170,7 +170,7 @@ class BaseClimateEntity(CustomEntity):
         """Return target temperature."""
         return self._e_setpoint.value
 
-    @value_property
+    @config_property
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return 0.5
@@ -200,7 +200,7 @@ class BaseClimateEntity(CustomEntity):
         """Return the list of available hvac operation modes."""
         return [HmHvacMode.HEAT]
 
-    @value_property
+    @config_property
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return False
@@ -341,7 +341,7 @@ class CeRfThermostat(BaseClimateEntity):
             HmPresetMode.NONE,
         ]
 
-    @value_property
+    @config_property
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return True
@@ -470,7 +470,7 @@ class CeIpThermostat(BaseClimateEntity):
             presets.extend(self._profile_names)
         return presets
 
-    @value_property
+    @config_property
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return True
@@ -657,26 +657,25 @@ def make_ip_thermostat_group(
 
 
 # Case for device model is not relevant
-hmed.ALL_DEVICES.append(
-    {
-        "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-        "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, channels=(1,)),
-        "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, channels=(1,)),
-        "BC-TC-C-WM": CustomConfig(func=make_thermostat, channels=(1,)),
-        "HM-CC-RT-DN": CustomConfig(func=make_thermostat, channels=(4,)),
-        "HM-CC-TC": CustomConfig(func=make_simple_thermostat, channels=(1,)),
-        "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, channels=(1,)),
-        "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, channels=(2,)),
-        "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-        "HmIP-HEATING": CustomConfig(func=make_ip_thermostat_group, channels=(1,)),
-        "HmIP-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-        "HmIP-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-        "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-        "HmIPW-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-        "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-        "Thermostat AA": CustomConfig(func=make_ip_thermostat, channels=(1,)),
-        "ZEL STG RM FWT": CustomConfig(func=make_simple_thermostat, channels=(1,)),
-    }
-)
-
-hmed.BLACKLISTED_DEVICES.append(("HmIP-STHO",))
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+    "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, channels=(1,)),
+    "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, channels=(1,)),
+    "BC-TC-C-WM": CustomConfig(func=make_thermostat, channels=(1,)),
+    "HM-CC-RT-DN": CustomConfig(func=make_thermostat, channels=(4,)),
+    "HM-CC-TC": CustomConfig(func=make_simple_thermostat, channels=(1,)),
+    "HM-CC-VG-1": CustomConfig(func=make_thermostat_group, channels=(1,)),
+    "HM-TC-IT-WM-W-EU": CustomConfig(func=make_thermostat, channels=(2,)),
+    "HmIP-BWTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-HEATING": CustomConfig(func=make_ip_thermostat_group, channels=(1,)),
+    "HmIP-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIPW-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "Thermostat AA": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "ZEL STG RM FWT": CustomConfig(func=make_simple_thermostat, channels=(1,)),
+}
+hmed.ALL_DEVICES.append(DEVICES)
+BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)
+hmed.BLACKLISTED_DEVICES.append(BLACKLISTED_DEVICES)

@@ -1,6 +1,7 @@
 """Module for HaHomematic custom platforms."""
 from __future__ import annotations
 
+import importlib
 import logging
 
 from hahomematic.platforms import device as hmd
@@ -37,3 +38,16 @@ def create_custom_entity_and_append_to_device(
             else:
                 for entity_config in entity_configs:
                     entity_config.func(device, entity_config.channels, entity_config.extended)
+
+
+def _importlibs() -> None:
+    """Ensure that all platforms are loaded."""
+    importlib.import_module("hahomematic.platforms.custom.climate")
+    importlib.import_module("hahomematic.platforms.custom.cover")
+    importlib.import_module("hahomematic.platforms.custom.light")
+    importlib.import_module("hahomematic.platforms.custom.lock")
+    importlib.import_module("hahomematic.platforms.custom.siren")
+    importlib.import_module("hahomematic.platforms.custom.switch")
+
+
+_importlibs()
