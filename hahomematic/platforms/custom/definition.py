@@ -78,7 +78,7 @@ ED_VISIBLE_FIELDS: Final = "visible_fields"
 DEFAULT_INCLUDE_DEFAULT_ENTITIES: Final = True
 
 ALL_DEVICES: list[dict[str, CustomConfig | tuple[CustomConfig, ...]]] = []
-BLACKLISTED_DEVICES: list[tuple[str, ...]] = []
+ALL_BLACKLISTED_DEVICES: list[tuple[str, ...]] = []
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -657,7 +657,7 @@ def get_entity_configs(
     """Return the entity configs to create custom entities."""
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
-    for platform_blacklisted_devices in BLACKLISTED_DEVICES:
+    for platform_blacklisted_devices in ALL_BLACKLISTED_DEVICES:
         if hm_support.element_matches_key(
             search_elements=platform_blacklisted_devices,
             compare_with=device_type,

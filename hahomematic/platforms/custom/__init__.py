@@ -41,7 +41,12 @@ def create_custom_entity_and_append_to_device(
 
 
 def _importlibs() -> None:
-    """Ensure that all platforms are loaded."""
+    """
+    Ensure that all platforms are loaded.
+
+    This ensures that the platform.DEVICES are loaded into ALL_DEVICES,
+    and platform.BLACKLISTED_DEVICES are loaded into ALL_BLACKLISTED_DEVICES.
+    """
     importlib.import_module("hahomematic.platforms.custom.climate")
     importlib.import_module("hahomematic.platforms.custom.cover")
     importlib.import_module("hahomematic.platforms.custom.light")
