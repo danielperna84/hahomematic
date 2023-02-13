@@ -101,52 +101,49 @@ def make_ip_switch(
 
 
 # Case for device model is not relevant
-hmed.ALL_DEVICES.append(
-    {
-        "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
-        "HmIP-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
-        "HmIP-BSL": CustomConfig(func=make_ip_switch, channels=(3,)),
-        "HmIP-BSM": CustomConfig(func=make_ip_switch, channels=(3,)),
-        "HmIP-DRSI1": CustomConfig(
-            func=make_ip_switch,
-            channels=(2,),
-            extended=ExtendedConfig(
-                additional_entities={
-                    0: ("ACTUAL_TEMPERATURE",),
-                }
-            ),
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+    "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+    "HmIP-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+    "HmIP-BSL": CustomConfig(func=make_ip_switch, channels=(3,)),
+    "HmIP-BSM": CustomConfig(func=make_ip_switch, channels=(3,)),
+    "HmIP-DRSI1": CustomConfig(
+        func=make_ip_switch,
+        channels=(2,),
+        extended=ExtendedConfig(
+            additional_entities={
+                0: ("ACTUAL_TEMPERATURE",),
+            }
         ),
-        "HmIP-DRSI4": CustomConfig(
-            func=make_ip_switch,
-            channels=(5, 9, 13, 17),
-            extended=ExtendedConfig(
-                additional_entities={
-                    0: ("ACTUAL_TEMPERATURE",),
-                }
-            ),
+    ),
+    "HmIP-DRSI4": CustomConfig(
+        func=make_ip_switch,
+        channels=(5, 9, 13, 17),
+        extended=ExtendedConfig(
+            additional_entities={
+                0: ("ACTUAL_TEMPERATURE",),
+            }
         ),
-        "HmIP-FSI": CustomConfig(func=make_ip_switch, channels=(2,)),
-        "HmIP-FSM": CustomConfig(func=make_ip_switch, channels=(1,)),
-        "HmIP-MOD-OC8": CustomConfig(
-            func=make_ip_switch, channels=(9, 13, 17, 21, 25, 29, 33, 37)
+    ),
+    "HmIP-FSI": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-FSM": CustomConfig(func=make_ip_switch, channels=(1,)),
+    "HmIP-MOD-OC8": CustomConfig(func=make_ip_switch, channels=(9, 13, 17, 21, 25, 29, 33, 37)),
+    "HmIP-PCBS": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-PCBS-BAT": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-PCBS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
+    "HmIP-PS": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-SCTH230": CustomConfig(func=make_ip_switch, channels=(7,)),
+    "HmIP-USBSM": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-WGC": CustomConfig(func=make_ip_switch, channels=(2,)),
+    "HmIP-WHS2": CustomConfig(func=make_ip_switch, channels=(1, 5)),
+    "HmIPW-DRS": CustomConfig(
+        func=make_ip_switch,
+        channels=(1, 5, 9, 13, 17, 21, 25, 29),
+        extended=ExtendedConfig(
+            additional_entities={
+                0: ("ACTUAL_TEMPERATURE",),
+            }
         ),
-        "HmIP-PCBS": CustomConfig(func=make_ip_switch, channels=(2,)),
-        "HmIP-PCBS-BAT": CustomConfig(func=make_ip_switch, channels=(2,)),
-        "HmIP-PCBS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
-        "HmIP-PS": CustomConfig(func=make_ip_switch, channels=(2,)),
-        "HmIP-SCTH230": CustomConfig(func=make_ip_switch, channels=(7,)),
-        "HmIP-USBSM": CustomConfig(func=make_ip_switch, channels=(2,)),
-        "HmIP-WGC": CustomConfig(func=make_ip_switch, channels=(2,)),
-        "HmIP-WHS2": CustomConfig(func=make_ip_switch, channels=(1, 5)),
-        "HmIPW-DRS": CustomConfig(
-            func=make_ip_switch,
-            channels=(1, 5, 9, 13, 17, 21, 25, 29),
-            extended=ExtendedConfig(
-                additional_entities={
-                    0: ("ACTUAL_TEMPERATURE",),
-                }
-            ),
-        ),
-        "HmIPW-FIO6": CustomConfig(func=make_ip_switch, channels=(7, 11, 15, 19, 23, 27)),
-    }
-)
+    ),
+    "HmIPW-FIO6": CustomConfig(func=make_ip_switch, channels=(7, 11, 15, 19, 23, 27)),
+}
+hmed.ALL_DEVICES.append(DEVICES)

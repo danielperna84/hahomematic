@@ -281,9 +281,8 @@ def make_ip_siren_smoke(
 
 
 # Case for device model is not relevant
-hmed.ALL_DEVICES.append(
-    {
-        "HmIP-ASIR": CustomConfig(func=make_ip_siren, channels=(0,)),
-        "HmIP-SWSD": CustomConfig(func=make_ip_siren_smoke, channels=(0,)),
-    }
-)
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+    "HmIP-ASIR": CustomConfig(func=make_ip_siren, channels=(0,)),
+    "HmIP-SWSD": CustomConfig(func=make_ip_siren_smoke, channels=(0,)),
+}
+hmed.ALL_DEVICES.append(DEVICES)

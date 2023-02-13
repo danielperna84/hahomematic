@@ -227,28 +227,28 @@ def make_rf_lock(
 
 
 # Case for device model is not relevant
-hmed.ALL_DEVICES.append(
-    {
-        "HM-Sec-Key": CustomConfig(
-            func=make_rf_lock,
-            channels=(1,),
-            extended=ExtendedConfig(
-                additional_entities={
-                    1: (
-                        "DIRECTION",
-                        "ERROR",
-                    ),
-                }
-            ),
+DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+    "HM-Sec-Key": CustomConfig(
+        func=make_rf_lock,
+        channels=(1,),
+        extended=ExtendedConfig(
+            additional_entities={
+                1: (
+                    "DIRECTION",
+                    "ERROR",
+                ),
+            }
         ),
-        "HmIP-DLD": CustomConfig(
-            func=make_ip_lock,
-            channels=(0,),
-            extended=ExtendedConfig(
-                additional_entities={
-                    0: ("ERROR_JAMMED",),
-                }
-            ),
+    ),
+    "HmIP-DLD": CustomConfig(
+        func=make_ip_lock,
+        channels=(0,),
+        extended=ExtendedConfig(
+            additional_entities={
+                0: ("ERROR_JAMMED",),
+            }
         ),
-    }
-)
+    ),
+}
+
+hmed.ALL_DEVICES.append(DEVICES)
