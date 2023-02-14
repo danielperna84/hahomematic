@@ -1,0 +1,134 @@
+name: Report an issue with HomematicIP (local)
+description: Report an issue with HomematicIP (local).
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue form is for reporting bugs only!
+  - type: checkboxes
+    attributes:
+      label: I agree to the following
+      options:
+        - label: I have read the [documentation](https://github.com/danielperna84/custom_homematic#custom_homematic)
+          required: true
+        - label: I am aware of the latest [release notes](https://github.com/danielperna84/custom_homematic/releases)
+          required: true
+        - label: The Backend (CCU/Homegear/...) is working as expected and connected devices are controllable by its own UI.
+          required: true
+        - label: I am running the latest version of the custom_component (and Home Assistant)
+          required: false
+  - type: textarea
+    validations:
+      required: true
+    attributes:
+      label: The problem
+      description: >-
+        Describe the issue you are experiencing here, to communicate to the
+        maintainers. Tell us what you were trying to do and what happened.
+
+        Provide a clear and concise description of what the problem is.
+  - type: markdown
+    attributes:
+      value: |
+        ## Environment
+  - type: input
+    id: version
+    validations:
+      required: true
+    attributes:
+      label: What version of HomematicIP (local) has the issue?
+      placeholder: 1.3x.x
+      description: >
+        Can be found in: HACS -> Integrations
+  - type: input
+    attributes:
+      label: What was the last working version of HomematicIP (local)?
+      placeholder: 1.3x.x
+      description: >
+        If known, otherwise leave blank.
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: What type of installation are you running?
+      description: >
+        Can be found in: [Settings -> System-> Repairs -> Three Dots in Upper Right -> System information](https://my.home-assistant.io/redirect/system_health/).
+
+        [![Open your Home Assistant instance and show health information about your system.](https://my.home-assistant.io/badges/system_health.svg)](https://my.home-assistant.io/redirect/system_health/)
+      options:
+        - Home Assistant OS
+        - Home Assistant Container
+        - Home Assistant Supervised
+        - Home Assistant Core
+  - type: dropdown
+    validations:
+      required: true
+    attributes:
+      label: What type of installation are you running for your homematic backend?
+      options:
+        - RaspberryMatic Standalone
+        - RaspberryMatic HA-Addon
+        - Debmatic
+        - CCU3
+        - CCU2
+        - Homegear
+  - type: input
+    attributes:
+      label: Which version of your homematic backend are you running?
+      placeholder: 3.67.x
+      description: >
+        If known, otherwise leave blank.
+  - type: input
+    attributes:
+      label: What hardware are you running for your system?
+      placeholder: Proxmox, Pi3, Pi4
+      description: >
+        If known, otherwise leave blank.
+  - type: markdown
+    attributes:
+      value: |
+        # Details
+  - type: checkboxes
+    attributes:
+      label: Which config details do you use
+      options:
+        - label: Username and password
+          required: false
+        - label: TLS
+          required: false
+        - label: callback data ([see](https://github.com/danielperna84/custom_homematic#callback_host-and-callback_port))
+          required: false
+  - type: checkboxes
+    attributes:
+      label: Which interfaces do you use?
+      options:
+        - label: Homematic IP
+          required: false
+        - label: Homematic (Bidcos-RF)
+          required: false
+        - label: Groups (Heating-Group)
+          required: false
+        - label: BidCos-Wired (HM-Wired)
+          required: false
+
+  - type: textarea
+    attributes:
+      label: Diagnostics information
+      placeholder: "drag-and-drop the diagnostics data file here (do not copy-and-paste the content)"
+      description: >-
+        This integrations provides the ability to [download diagnostic data](https://www.home-assistant.io/docs/configuration/troubleshooting/#debug-logs-and-diagnostics).
+
+        **It would really help if you could download the diagnostics data for the device you are having issues with,
+        and <ins>drag-and-drop that file into the textbox below.</ins>**
+
+        It generally allows pinpointing defects and thus resolving issues faster.
+  - type: textarea
+    attributes:
+      label: Anything in the logs that might be useful for us?
+      description: For example, error message, or stack traces.
+      render: txt
+  - type: textarea
+    attributes:
+      label: Additional information
+      description: >
+        If you have any additional information for us, use the field below. e.g. how to reproduce the issue, screenshots, ...
