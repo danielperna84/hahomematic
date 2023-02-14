@@ -3,6 +3,8 @@
 - Fix property types
 - Ensure modules for platforms are loaded
 - Use local dicts for device lists
+- Clear central data cache if identified as outdated
+- Avoid redundant cache loads within init phase
 
 # Version 2023.2.8 (2023-02-11)
 
