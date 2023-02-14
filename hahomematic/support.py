@@ -144,7 +144,9 @@ def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
     return channel_address, None
 
 
-def updated_within_seconds(last_update: datetime, max_age_seconds: int = MAX_CACHE_AGE) -> bool:
+def updated_within_seconds(
+    last_update: datetime, max_age_seconds: int | float = MAX_CACHE_AGE
+) -> bool:
     """Entity has been updated within X minutes."""
     if last_update == INIT_DATETIME:
         return False

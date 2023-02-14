@@ -33,9 +33,15 @@ class DeviceDetailsCache:
         self._device_room: Final[dict[str, str]] = {}
         self._functions: dict[str, set[str]] = {}
         self._central: Final[hmcu.CentralUnit] = central
+        self._last_updated = INIT_DATETIME
 
     async def load(self) -> None:
         """Fetch names from backend."""
+        if updated_within_seconds(
+            last_update=self._last_updated, max_age_seconds=(MAX_CACHE_AGE / 2)
+        ):
+            return
+        self.clear()
         _LOGGER.debug("load: Loading names for %s", self._central.name)
         if client := self._central.get_primary_client():
             await client.fetch_device_details()
@@ -44,6 +50,7 @@ class DeviceDetailsCache:
         self._identify_device_room()
         _LOGGER.debug("load: Loading functions for %s", self._central.name)
         self._functions = await self._get_all_functions()
+        self._last_updated = datetime.now()
 
     def add_name(self, address: str, name: str) -> None:
         """Add name to cache."""
@@ -102,6 +109,7 @@ class DeviceDetailsCache:
         self._names_cache.clear()
         self._channel_rooms.clear()
         self._functions.clear()
+        self._last_updated = INIT_DATETIME
 
     def _identify_device_room(self) -> None:
         """
@@ -143,10 +151,11 @@ class DeviceDataCache:
 
     async def load(self) -> None:
         """Fetch device data from backend."""
-        self.clear()
-        if not self._central.config.use_caches:
-            _LOGGER.debug("load: not caching device data for %s", self._central.name)
+        if updated_within_seconds(
+            last_update=self._last_updated, max_age_seconds=(MAX_CACHE_AGE / 2)
+        ):
             return
+        self.clear()
         _LOGGER.debug("load: device data for %s", self._central.name)
         if client := self._central.get_primary_client():
             await client.fetch_all_device_data()
@@ -188,3 +197,4 @@ class DeviceDataCache:
     def clear(self) -> None:
         """Clear the cache."""
         self._central_values_cache.clear()
+        self._last_updated = INIT_DATETIME
