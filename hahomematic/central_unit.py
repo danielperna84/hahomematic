@@ -553,7 +553,7 @@ class CentralUnit:
             await self.device_data.load()
         except json.decoder.JSONDecodeError:  # pragma: no cover
             _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._attr_name)
-            await self._clear_all_caches()
+            await self.clear_all_caches()
 
     async def _create_devices(self) -> None:
         """Trigger creation of the objects that expose the functionality."""
@@ -924,7 +924,7 @@ class CentralUnit:
         self.device_details.clear()
         self.device_data.clear()
 
-    async def _clear_all_caches(self) -> None:
+    async def clear_all_caches(self) -> None:
         """Clear all stored data. #CC."""
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()

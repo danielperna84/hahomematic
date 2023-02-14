@@ -138,7 +138,7 @@ class DeviceDataCache:
         self._central_values_cache: dict[str, dict[str, dict[str, Any]]] = {}
         self._last_updated = INIT_DATETIME
 
-    def is_empty(self, max_age_seconds: int = MAX_CACHE_AGE) -> bool:
+    def is_empty(self, max_age_seconds: int) -> bool:
         """Return if cache is empty."""
         if len(self._central_values_cache) == 0:
             return True
