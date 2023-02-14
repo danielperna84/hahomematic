@@ -97,7 +97,7 @@ class DeviceDetailsCache:
             if channel_address in self._names_cache:
                 del self._names_cache[channel_address]
 
-    async def clear(self) -> None:
+    def clear(self) -> None:
         """Clear the cache."""
         self._names_cache.clear()
         self._channel_rooms.clear()
@@ -130,13 +130,20 @@ class DeviceDataCache:
         self._central_values_cache: dict[str, dict[str, dict[str, Any]]] = {}
         self._last_updated = INIT_DATETIME
 
-    @property
-    def is_empty(self) -> bool:
+    def is_empty(self, max_age_seconds: int = MAX_CACHE_AGE) -> bool:
         """Return if cache is empty."""
-        return len(self._central_values_cache) == 0
+        if len(self._central_values_cache) == 0:
+            return True
+        if not updated_within_seconds(
+            last_update=self._last_updated, max_age_seconds=max_age_seconds
+        ):
+            self.clear()
+            return True
+        return False
 
     async def load(self) -> None:
         """Fetch device data from backend."""
+        self.clear()
         if not self._central.config.use_caches:
             _LOGGER.debug("load: not caching device data for %s", self._central.name)
             return
@@ -170,9 +177,7 @@ class DeviceDataCache:
         max_age_seconds: int,
     ) -> Any:
         """Get device data from cache."""
-        if not self.is_empty and updated_within_seconds(
-            last_update=self._last_updated, max_age_seconds=max_age_seconds
-        ):
+        if not self.is_empty(max_age_seconds=max_age_seconds):
             return (
                 self._central_values_cache.get(interface, {})
                 .get(channel_address, {})
@@ -180,6 +185,6 @@ class DeviceDataCache:
             )
         return NO_CACHE_ENTRY
 
-    async def clear(self) -> None:
+    def clear(self) -> None:
         """Clear the cache."""
         self._central_values_cache.clear()

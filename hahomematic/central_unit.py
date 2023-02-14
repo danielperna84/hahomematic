@@ -853,10 +853,12 @@ class CentralUnit:
         """fetch program data for the hub. #CC."""
         await self._hub.fetch_program_data(include_internal=include_internal)
 
-    async def refresh_entity_data(
+    async def load_and_refresh_entity_data(
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data. #CC."""
+        if self.device_data.is_empty(max_age_seconds=max_age_seconds):
+            await self.device_data.load()
         await self.device_data.refresh_entity_data(
             paramset_key=paramset_key, max_age_seconds=max_age_seconds
         )
@@ -921,8 +923,8 @@ class CentralUnit:
         """Clear all stored data. #CC."""
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
-        await self.device_details.clear()
-        await self.device_data.clear()
+        self.device_details.clear()
+        self.device_data.clear()
 
 
 class ConnectionChecker(threading.Thread):

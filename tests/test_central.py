@@ -353,9 +353,9 @@ async def test_central_services(
     assert mock_client.method_calls[-1] == call.get_all_system_variables(include_internal=True)
 
     assert len(mock_client.method_calls) == 41
-    await central.refresh_entity_data(paramset_key="MASTER")
+    await central.load_and_refresh_entity_data(paramset_key="MASTER")
     assert len(mock_client.method_calls) == 41
-    await central.refresh_entity_data(paramset_key="VALUES")
+    await central.load_and_refresh_entity_data(paramset_key="VALUES")
     assert len(mock_client.method_calls) == 73
 
     await central.get_system_variable(name="SysVar_Name")
