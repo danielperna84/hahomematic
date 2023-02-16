@@ -25,7 +25,7 @@ repos:
           - --quiet
         files: ^((hahomematic|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.243
+    rev: v0.0.247
     hooks:
       - id: ruff
         args:

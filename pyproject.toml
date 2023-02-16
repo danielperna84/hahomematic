@@ -216,10 +216,12 @@ select = [
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
     "G",  # flake8-logging-format
+    "ICN001", # import concentions; {name} should be imported as {asname}
     "PGH004",  # Use specific rule codes when using noqa
     "PIE",  # flake8-pie
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "RET",  # unnecessary-return-none
+    "RUF006", # Store a reference to the return value of asyncio.create_task
     "RUF100", # unused-noqa
     "SIM",  # flake8-simplify
     "T20",  # flake8-print
