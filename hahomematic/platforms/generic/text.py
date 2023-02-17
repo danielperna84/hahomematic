@@ -6,11 +6,10 @@ See https://www.home-assistant.io/integrations/text/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
-class HmText(GenericEntity[str]):
+class HmText(GenericEntity[str, str]):
     """
     Implementation of a text.
 
@@ -18,9 +17,3 @@ class HmText(GenericEntity[str]):
     """
 
     _attr_platform = HmPlatform.TEXT
-
-    async def send_value(
-        self, value: str | None, collector: CallParameterCollector | None = None
-    ) -> None:
-        """Set the value of the entity."""
-        await super().send_value(value=value, collector=collector)

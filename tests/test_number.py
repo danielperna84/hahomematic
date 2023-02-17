@@ -15,6 +15,7 @@ from hahomematic.platforms.hub.number import HmSysvarNumber
 TEST_DEVICES: dict[str, str] = {
     "VCU4984404": "HmIPW-STHD.json",
     "VCU0000011": "HMW-LC-Bl1-DR.json",
+    "VCU0000054": "HM-CC-TC.json",
 }
 
 # pylint: disable=protected-access
@@ -51,6 +52,39 @@ async def test_hmfloat(
     call_count = len(mock_client.method_calls)
     await efloat.send_value(45.0)
     assert call_count == len(mock_client.method_calls)
+
+
+@pytest.mark.asyncio
+async def test_hmfloat_special(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test HmFloat."""
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    efloat: HmFloat = cast(
+        HmFloat,
+        await helper.get_generic_entity(central, "VCU0000054:2", "SETPOINT"),
+    )
+    assert efloat.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert efloat.unit == "°C"
+    assert efloat.value_list is None
+    assert efloat.value is None
+    await efloat.send_value(8.0)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000054:2",
+        paramset_key="VALUES",
+        parameter="SETPOINT",
+        value=8.0,
+    )
+    assert efloat.value == 8.0
+
+    await efloat.send_value("VENT_OPEN")
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000054:2",
+        paramset_key="VALUES",
+        parameter="SETPOINT",
+        value=100.0,
+    )
+    assert efloat.value == 100.0
 
 
 @pytest.mark.asyncio

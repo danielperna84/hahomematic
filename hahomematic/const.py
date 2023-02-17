@@ -98,8 +98,8 @@ FLAG_STICKY: Final = 10  # This might be wrong. Documentation says 0x10 # not us
 
 HM_ARG_ON_TIME: Final = "on_time"
 HM_ARG_VALUE: Final = "value"
-HM_ARG_ON = "on"
-HM_ARG_OFF = "off"
+HM_ARG_ON: Final = "on"
+HM_ARG_OFF: Final = "off"
 
 HM_ADDRESS: Final = "ADDRESS"
 HM_CHILDREN: Final = "CHILDREN"
@@ -117,7 +117,6 @@ HM_SPECIAL: Final = "SPECIAL"  # Which has the following keys
 HM_SUBTYPE: Final = "SUBTYPE"
 HM_TYPE: Final = "TYPE"
 HM_UNIT: Final = "UNIT"
-HM_VALUE: Final = "VALUE"  # Float or integer, depending on TYPE
 HM_VALUE_LIST: Final = "VALUE_LIST"
 
 HH_EVENT_DELETE_DEVICES: Final = "deleteDevices"

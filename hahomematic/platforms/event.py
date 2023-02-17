@@ -27,7 +27,7 @@ from hahomematic.platforms.support import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class GenericEvent(BaseParameterEntity[Any]):
+class GenericEvent(BaseParameterEntity[Any, Any]):
     """Base class for events."""
 
     _attr_platform = HmPlatform.EVENT
@@ -108,16 +108,20 @@ class DeviceErrorEvent(GenericEvent):
             return
         self.update_value(value=new_value)
 
-        if isinstance(value, bool):
-            if old_value is None and value is True:
-                self.fire_event(value)
-            elif isinstance(old_value, bool) and old_value != value:
-                self.fire_event(value)
-        if isinstance(value, int):
-            if old_value is None and value > 0:
-                self.fire_event(value)
-            elif isinstance(old_value, int) and old_value != value:
-                self.fire_event(value)
+        if (
+            isinstance(value, bool)
+            and (
+                (old_value is None and value is True)
+                or (isinstance(old_value, bool) and old_value != value)
+            )
+        ) or (
+            isinstance(value, int)
+            and (
+                (old_value is None and value > 0)
+                or (isinstance(old_value, int) and old_value != value)
+            )
+        ):
+            self.fire_event(value)
 
 
 class ImpulseEvent(GenericEvent):

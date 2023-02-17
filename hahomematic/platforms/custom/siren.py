@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/siren/.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Final
 
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import bind_collector
@@ -31,13 +31,13 @@ from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.support import config_property, value_property
 
-HM_ARG_ACOUSTIC_ALARM = "acoustic_alarm"
-HM_ARG_OPTICAL_ALARM = "optical_alarm"
-HM_ARG_DURATION = "duration"
+HM_ARG_ACOUSTIC_ALARM: Final = "acoustic_alarm"
+HM_ARG_OPTICAL_ALARM: Final = "optical_alarm"
+HM_ARG_DURATION: Final = "duration"
 
-SMOKE_DETECTOR_COMMAND_OFF = "INTRUSION_ALARM_OFF"
-SMOKE_DETECTOR_COMMAND_ON = "INTRUSION_ALARM"
-SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF = "IDLE_OFF"
+SMOKE_DETECTOR_COMMAND_OFF: Final = "INTRUSION_ALARM_OFF"
+SMOKE_DETECTOR_COMMAND_ON: Final = "INTRUSION_ALARM"
+SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF: Final = "IDLE_OFF"
 
 
 class BaseSiren(CustomEntity):

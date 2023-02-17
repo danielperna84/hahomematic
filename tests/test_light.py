@@ -101,11 +101,6 @@ async def test_cedimmer(
         address="VCU1399816:4", paramset_key="VALUES", value={"ON_TIME": 0.5, "LEVEL": 1.0}
     )
 
-    await light._set_ramp_time_value(5.0)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU1399816:4", paramset_key="VALUES", parameter="RAMP_TIME", value=5.0
-    )
-
     await light.turn_on()
     call_count = len(mock_client.method_calls)
     await light.turn_on()

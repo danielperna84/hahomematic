@@ -254,10 +254,11 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         )
 
 
+InputParameterT = TypeVar("InputParameterT", bool, int, float, str, int | str, float | str, None)
 ParameterT = TypeVar("ParameterT", bool, int, float, str, int | str, None)
 
 
-class BaseParameterEntity(Generic[ParameterT], BaseEntity):
+class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     """Base class for stateless entities."""
 
     def __init__(
@@ -478,10 +479,10 @@ class BaseParameterEntity(Generic[ParameterT], BaseEntity):
             )
         )
 
-    def _convert_value(self, value: ParameterT) -> ParameterT:
+    def _convert_value(self, value: Any) -> ParameterT:
         """Convert to value to ParameterT."""
         if value is None:
-            return None
+            return None  # type: ignore[return-value]
         try:
             if (
                 self._attr_type == TYPE_BOOL

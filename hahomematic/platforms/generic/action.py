@@ -9,11 +9,10 @@ from __future__ import annotations
 from typing import Any
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms import entity as hme
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
-class HmAction(GenericEntity[None]):
+class HmAction(GenericEntity[None, Any]):
     """
     Implementation of an action.
 
@@ -23,12 +22,13 @@ class HmAction(GenericEntity[None]):
     _attr_platform = HmPlatform.ACTION
     _attr_validate_state_change = False
 
-    async def send_value(
-        self, value: Any, collector: hme.CallParameterCollector | None = None
-    ) -> None:
-        """Set the value of the entity."""
-        # We allow setting the value via index as well, just in case.
-        if value is not None and self._attr_value_list and isinstance(value, str):
-            await super().send_value(value=self._attr_value_list.index(value), collector=collector)
-        else:
-            await super().send_value(value=value, collector=collector)
+    def _prepare_value_for_sending(self, value: Any, do_validate: bool = True) -> Any:
+        """Prepare value before sending."""
+        if (
+            value is not None
+            and self._attr_value_list
+            and isinstance(value, str)
+            and value in self._attr_value_list
+        ):
+            return self._attr_value_list.index(value)
+        return value
