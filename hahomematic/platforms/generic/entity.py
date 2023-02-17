@@ -99,7 +99,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT]):
             )
             return
         try:
-            prepared_value = self._prepare_value(value=value, do_validate=do_validate)
+            prepared_value = self._prepare_value_for_sending(value=value, do_validate=do_validate)
         except ValueError as verr:
             _LOGGER.warning(verr)
             return
@@ -119,7 +119,9 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT]):
             value=converted_value,
         )
 
-    def _prepare_value(self, value: hme.ParameterT, do_validate: bool = True) -> hme.ParameterT:
+    def _prepare_value_for_sending(
+        self, value: hme.ParameterT, do_validate: bool = True
+    ) -> hme.ParameterT:
         """Prepare value, if required, before send."""
         return value
 
