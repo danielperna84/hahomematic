@@ -5,13 +5,9 @@ See https://www.home-assistant.io/integrations/number/.
 """
 from __future__ import annotations
 
-import logging
-
 from hahomematic.const import HM_VALUE, HmPlatform
-from hahomematic.platforms.entity import CallParameterCollector, ParameterT
+from hahomematic.platforms.entity import ParameterT
 from hahomematic.platforms.generic.entity import GenericEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class BaseNumber(GenericEntity[ParameterT]):
@@ -31,28 +27,21 @@ class HmFloat(BaseNumber[float]):
     This is a default platform that gets automatically generated.
     """
 
-    async def send_value(
-        self,
-        value: float,
-        collector: CallParameterCollector | None = None,
-        do_validate: bool = True,
-    ) -> None:
-        """Set the value of the entity."""
+    def _prepare_value_for_sending(self, value: float, do_validate: bool = True) -> float:
+        """Prepare value before sending."""
         if (
-            value is not None and self._attr_min <= float(value) <= self._attr_max
-        ) or not do_validate:
-            await super().send_value(value=value, collector=collector)
-        elif self._attr_special:
-            if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
-                await super().send_value(value=value, collector=collector)
-        else:
-            _LOGGER.warning(
-                "NUMBER.FLOAT failed: Invalid value: %s (min: %s, max: %s, special: %s)",
-                value,
-                self._attr_min,
-                self._attr_max,
-                self._attr_special,
+            not do_validate
+            or (
+                self._attr_special
+                and [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]
             )
+            or (value is not None and self._attr_min <= float(value) <= self._attr_max)
+        ):
+            return value
+        raise ValueError(
+            f"NUMBER.FLOAT failed: Invalid value: {value} (min: {self._attr_min}, "
+            f"max: {self._attr_max}, special:{self._attr_special})"
+        )
 
 
 class HmInteger(BaseNumber[int]):
@@ -62,22 +51,17 @@ class HmInteger(BaseNumber[int]):
     This is a default platform that gets automatically generated.
     """
 
-    async def send_value(
-        self, value: int, collector: CallParameterCollector | None = None, do_validate: bool = True
-    ) -> None:
-        """Set the value of the entity."""
+    def _prepare_value_for_sending(self, value: int, do_validate: bool = True) -> int:
+        """Prepare value before sending."""
         if (
             value is not None and self._attr_min <= int(value) <= self._attr_max
         ) or not do_validate:
-            await super().send_value(value=value, collector=collector)
-        elif self._attr_special:
-            if [sv for sv in self._attr_special.values() if value == sv[HM_VALUE]]:
-                await super().send_value(value=value, collector=collector)
-        else:
-            _LOGGER.warning(
-                "NUMBER.INT failed: Invalid value: %s (min: %s, max: %s, special: %s)",
-                value,
-                self._attr_min,
-                self._attr_max,
-                self._attr_special,
-            )
+            return value
+        if self._attr_special and [
+            sv for sv in self._attr_special.values() if value == sv[HM_VALUE]
+        ]:
+            return value
+        raise ValueError(
+            f"NUMBER.INT failed: Invalid value: {value} (min: {self._attr_min}, "
+            f"max: {self._attr_max}, special:{self._attr_special})"
+        )

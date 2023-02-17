@@ -87,27 +87,41 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT]):
                 )
 
     async def send_value(
-        self, value: Any, collector: hme.CallParameterCollector | None = None
+        self,
+        value: Any,
+        collector: hme.CallParameterCollector | None = None,
+        do_validate: bool = True,
     ) -> None:
-        """send value to ccu."""
+        """send value to ccu, or use collector if set."""
         if not self.is_writeable:
             _LOGGER.error(
                 "SEND_VALUE: writing to non-writable entity %s is not possible", self.full_name
             )
             return
-        if collector:
-            collector.add_entity(self, self._convert_value(value))
+        try:
+            prepared_value = self._prepare_value(value=value, do_validate=do_validate)
+        except ValueError as verr:
+            _LOGGER.warning(verr)
             return
 
-        if self._attr_validate_state_change and not self.is_state_change(value=value):
+        converted_value = self._convert_value(value=prepared_value)
+        if collector:
+            collector.add_entity(self, value=converted_value)
+            return
+
+        if self._attr_validate_state_change and not self.is_state_change(value=converted_value):
             return
 
         await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
             parameter=self._attr_parameter,
-            value=self._convert_value(value),
+            value=converted_value,
         )
+
+    def _prepare_value(self, value: hme.ParameterT, do_validate: bool = True) -> hme.ParameterT:
+        """Prepare value, if required, before send."""
+        return value
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""

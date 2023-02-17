@@ -5,6 +5,7 @@
 - Use local dicts for device lists
 - Clear central data cache if identified as outdated
 - Avoid redundant cache loads within init phase
+- Extract value preparation from send_value
 
 # Version 2023.2.8 (2023-02-11)
 
