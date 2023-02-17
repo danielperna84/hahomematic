@@ -6,6 +6,7 @@
 - Clear central data cache if identified as outdated
 - Avoid redundant cache loads within init phase
 - Extract value preparation from send_value
+- Differentiate between input and default parameter type
 
 # Version 2023.2.8 (2023-02-11)
 
