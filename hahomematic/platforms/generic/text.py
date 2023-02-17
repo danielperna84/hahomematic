@@ -9,7 +9,7 @@ from hahomematic.const import HmPlatform
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
-class HmText(GenericEntity[str]):
+class HmText(GenericEntity[str, str]):
     """
     Implementation of a text.
 

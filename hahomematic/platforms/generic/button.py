@@ -9,7 +9,7 @@ from hahomematic.const import HmPlatform
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
-class HmButton(GenericEntity[None]):
+class HmButton(GenericEntity[None, bool]):
     """
     Implementation of a button.
 

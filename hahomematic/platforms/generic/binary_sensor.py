@@ -10,7 +10,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import value_property
 
 
-class HmBinarySensor(GenericEntity[bool]):
+class HmBinarySensor(GenericEntity[bool, bool]):
     """
     Implementation of a binary_sensor.
 

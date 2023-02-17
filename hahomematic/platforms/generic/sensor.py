@@ -15,7 +15,7 @@ from hahomematic.platforms.support import value_property
 _LOGGER = logging.getLogger(__name__)
 
 
-class HmSensor(GenericEntity[Any]):
+class HmSensor(GenericEntity[Any, None]):
     """
     Implementation of a sensor.
 

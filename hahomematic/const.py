@@ -117,7 +117,6 @@ HM_SPECIAL: Final = "SPECIAL"  # Which has the following keys
 HM_SUBTYPE: Final = "SUBTYPE"
 HM_TYPE: Final = "TYPE"
 HM_UNIT: Final = "UNIT"
-HM_VALUE: Final = "VALUE"  # Float or integer, depending on TYPE
 HM_VALUE_LIST: Final = "VALUE_LIST"
 
 HH_EVENT_DELETE_DEVICES: Final = "deleteDevices"

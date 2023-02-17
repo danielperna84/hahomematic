@@ -15,7 +15,7 @@ from hahomematic.platforms.support import value_property
 PARAM_ON_TIME: Final = "ON_TIME"
 
 
-class HmSwitch(GenericEntity[bool]):
+class HmSwitch(GenericEntity[bool, bool]):
     """
     Implementation of a switch.
 

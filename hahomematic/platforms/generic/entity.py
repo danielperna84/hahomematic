@@ -25,7 +25,7 @@ from hahomematic.platforms.support import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class GenericEntity(hme.BaseParameterEntity[hme.ParameterT]):
+class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]):
     """Base class for generic entities."""
 
     _attr_validate_state_change: bool = True
@@ -88,7 +88,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT]):
 
     async def send_value(
         self,
-        value: Any,
+        value: hme.InputParameterT,
         collector: hme.CallParameterCollector | None = None,
         do_validate: bool = True,
     ) -> None:
@@ -120,10 +120,10 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT]):
         )
 
     def _prepare_value_for_sending(
-        self, value: hme.ParameterT, do_validate: bool = True
+        self, value: hme.InputParameterT, do_validate: bool = True
     ) -> hme.ParameterT:
         """Prepare value, if required, before send."""
-        return value
+        return value  # type: ignore[return-value]
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""

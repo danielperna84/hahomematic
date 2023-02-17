@@ -12,7 +12,7 @@ from hahomematic.const import HmPlatform
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
-class HmAction(GenericEntity[Any]):
+class HmAction(GenericEntity[None, Any]):
     """
     Implementation of an action.
 
@@ -22,7 +22,7 @@ class HmAction(GenericEntity[Any]):
     _attr_platform = HmPlatform.ACTION
     _attr_validate_state_change = False
 
-    def _prepare_value_for_sending(self, value: Any, do_validate: bool = True) -> Any | None:
+    def _prepare_value_for_sending(self, value: Any, do_validate: bool = True) -> Any:
         """Prepare value before sending."""
         if (
             value is not None

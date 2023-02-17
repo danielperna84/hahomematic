@@ -27,7 +27,7 @@ from hahomematic.platforms.support import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class GenericEvent(BaseParameterEntity[Any]):
+class GenericEvent(BaseParameterEntity[Any, Any]):
     """Base class for events."""
 
     _attr_platform = HmPlatform.EVENT

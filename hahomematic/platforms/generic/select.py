@@ -10,7 +10,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import value_property
 
 
-class HmSelect(GenericEntity[int | str]):
+class HmSelect(GenericEntity[int | str, int | str]):
     """
     Implementation of a select entity.
 
