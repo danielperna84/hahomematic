@@ -7,6 +7,7 @@
 - Avoid redundant cache loads within init phase
 - Extract value preparation from send_value
 - Differentiate between input and default parameter type
+- Fix asyncio-dangling-task (RUF006)
 
 # Version 2023.2.8 (2023-02-11)
 
