@@ -74,7 +74,8 @@ from hahomematic.xml_rpc_proxy import XmlRpcProxy
 import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
-T = TypeVar("T")
+_R = TypeVar("_R")
+_T = TypeVar("_T")
 
 # {instance_name, central_unit}
 CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
@@ -87,6 +88,7 @@ class CentralUnit:
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
         self._sema_add_devices = asyncio.Semaphore()
+        self._tasks: set[asyncio.Future[Any]] = set()
         # Keep the config for the central #CC
         self.config: Final[CentralConfig] = central_config
         self._attr_name: Final[str] = central_config.name
@@ -404,9 +406,7 @@ class CentralUnit:
         callback_ip: str | None = None
         while callback_ip is None:
             try:
-                callback_ip = await self.async_add_executor_job(
-                    get_local_ip, self.config.host, timeout=10
-                )
+                callback_ip = await self.async_add_executor_job(get_local_ip, self.config.host)
             except HaHomematicException:
                 callback_ip = "127.0.0.1"
             if callback_ip is None:
@@ -808,9 +808,12 @@ class CentralUnit:
             )
             return
 
-    def _async_create_task(self, target: Coroutine) -> asyncio.Task:
+    def _async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
         """Create a task from within the event_loop. This method must be run in the event_loop."""
-        return self._loop.create_task(target)
+        task = self._loop.create_task(target)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
+        return task
 
     def run_coroutine(self, coro: Coroutine) -> Any:
         """call coroutine from sync."""
@@ -823,15 +826,13 @@ class CentralUnit:
             )
             return None
 
-    async def async_add_executor_job(
-        self, executor_func: Callable[..., T], *args: Any, timeout: int | None = None
-    ) -> T:
+    def async_add_executor_job(self, target: Callable[..., _T], *args: Any) -> asyncio.Future[_T]:
         """Add an executor job from within the event_loop."""
         try:
-            future = self._loop.run_in_executor(None, executor_func, *args)
-            if timeout:
-                return await asyncio.wait_for(future, timeout)
-            return await future
+            task = self._loop.run_in_executor(None, target, *args)
+            self._tasks.add(task)
+            task.add_done_callback(self._tasks.remove)
+            return task
         except (CancelledError, asyncio.TimeoutError) as err:  # pragma: no cover
             _LOGGER.debug(
                 "async_add_executor_job: task cancelled for %s",

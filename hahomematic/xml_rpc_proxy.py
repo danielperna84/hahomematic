@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 import errno
 import logging
-from typing import Any, Final
+from typing import Any, Final, TypeVar
 import xmlrpc.client
 
 from hahomematic import central_unit as hmcu
@@ -15,6 +15,7 @@ from hahomematic.exceptions import AuthFailure, ClientException, NoConnection
 from hahomematic.support import get_tls_context
 
 _LOGGER = logging.getLogger(__name__)
+_T = TypeVar("_T")
 
 ATTR_CONTEXT: Final = "context"
 ATTR_ENCODING_ISO_8859_1: Final = "ISO-8859-1"
@@ -51,6 +52,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         **kwargs: Any,
     ) -> None:
         """Initialize new proxy for server and get local ip."""
+        self._tasks: set[asyncio.Future[Any]] = set()
         self.interface_id = interface_id
         self._connection_state: Final[hmcu.CentralConnectionState] = connection_state
         self._loop: Final[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
@@ -65,9 +67,14 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             self, encoding=ATTR_ENCODING_ISO_8859_1, *args, **kwargs
         )
 
-    async def _async_add_proxy_executor_job(self, func: Callable, *args: Any) -> Awaitable:
+    def _async_add_proxy_executor_job(
+        self, func: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
         """Add an executor job from within the event_loop for all device related interaction."""
-        return await self._loop.run_in_executor(self._proxy_executor, func, *args)
+        task = self._loop.run_in_executor(self._proxy_executor, func, *args)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
+        return task
 
     async def __async_request(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         """Call method on server side."""
