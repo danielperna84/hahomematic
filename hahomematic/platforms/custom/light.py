@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/light/.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Final, cast
+from typing import Any, Final, TypedDict
 
 from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
 from hahomematic.decorators import bind_collector
@@ -34,15 +34,14 @@ from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.support import OnTimeMixin, config_property, value_property
 
-# HM constants
-HM_ARG_BRIGHTNESS: Final = "brightness"
-HM_ARG_COLOR_NAME: Final = "color_name"
-HM_ARG_COLOR_TEMP: Final = "color_temp"
-HM_ARG_CHANNEL_COLOR: Final = "channel_color"
-HM_ARG_CHANNEL_LEVEL: Final = "channel_level"
-HM_ARG_EFFECT: Final = "effect"
-HM_ARG_HS_COLOR: Final = "hs_color"
-HM_ARG_RAMP_TIME: Final = "ramp_time"
+_HM_ARG_BRIGHTNESS: Final = "brightness"
+_HM_ARG_COLOR_NAME: Final = "color_name"
+_HM_ARG_COLOR_TEMP: Final = "color_temp"
+_HM_ARG_CHANNEL_COLOR: Final = "channel_color"
+_HM_ARG_CHANNEL_LEVEL: Final = "channel_level"
+_HM_ARG_EFFECT: Final = "effect"
+_HM_ARG_HS_COLOR: Final = "hs_color"
+_HM_ARG_RAMP_TIME: Final = "ramp_time"
 
 HM_EFFECT_OFF: Final = "Off"
 
@@ -54,6 +53,18 @@ HM_DIMMER_OFF: Final = 0.0
 TIME_UNIT_SECONDS: Final = 0
 TIME_UNIT_MINUTES: Final = 1
 TIME_UNIT_HOURS: Final = 2
+
+
+class HmLightArgs(TypedDict, total=False):
+    """Matcher for the light arguments."""
+
+    brightness: int
+    color_name: str
+    color_temp: int
+    effect: str
+    hs_color: tuple[float, float]
+    on_time: float
+    ramp_time: float
 
 
 class BaseHmLight(CustomEntity, OnTimeMixin):
@@ -137,16 +148,16 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
             return
-        if HM_ARG_RAMP_TIME in kwargs:
-            ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
-            await self._set_ramp_time_value(ramp_time=ramp_time, collector=collector)
+        if ramp_time := kwargs.get(_HM_ARG_RAMP_TIME):
+            await self._set_ramp_time_value(ramp_time=float(ramp_time), collector=collector)
         if (on_time := kwargs.get(HM_ARG_ON_TIME)) or (on_time := self.get_on_time_and_cleanup()):
             await self._set_on_time_value(on_time=on_time, collector=collector)
-        if (
-            brightness := cast(int, (kwargs.get(HM_ARG_BRIGHTNESS, self.brightness)) or 255)
-        ) or kwargs:
-            level = brightness / 255.0
-            await self._e_level.send_value(value=level, collector=collector)
+
+        brightness = kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness)
+        if not brightness:
+            brightness = 255
+        level = brightness / 255.0
+        await self._e_level.send_value(value=level, collector=collector)
 
     @bind_collector
     async def turn_off(
@@ -155,9 +166,8 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         """Turn the light off."""
         if not self.is_state_change(off=True, **kwargs):
             return
-        if HM_ARG_RAMP_TIME in kwargs:
-            ramp_time = float(cast(float, kwargs[HM_ARG_RAMP_TIME]))
-            await self._set_ramp_time_value(ramp_time=ramp_time, collector=collector)
+        if ramp_time := kwargs.get(_HM_ARG_RAMP_TIME):
+            await self._set_ramp_time_value(ramp_time=float(ramp_time), collector=collector)
 
         await self._e_level.send_value(value=HM_DIMMER_OFF, collector=collector)
 
@@ -181,18 +191,18 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         if kwargs.get(HM_ARG_OFF) is not None and self.is_on is not False and len(kwargs) == 1:
             return True
         if (
-            brightness := kwargs.get(HM_ARG_BRIGHTNESS)
+            brightness := kwargs.get(_HM_ARG_BRIGHTNESS)
         ) is not None and brightness != self.brightness:
             return True
-        if (hs_color := kwargs.get(HM_ARG_HS_COLOR)) is not None and hs_color != self.hs_color:
+        if (hs_color := kwargs.get(_HM_ARG_HS_COLOR)) is not None and hs_color != self.hs_color:
             return True
         if (
-            color_temp := kwargs.get(HM_ARG_COLOR_TEMP)
+            color_temp := kwargs.get(_HM_ARG_COLOR_TEMP)
         ) is not None and color_temp != self.color_temp:
             return True
-        if (effect := kwargs.get(HM_ARG_EFFECT)) is not None and effect != self.effect:
+        if (effect := kwargs.get(_HM_ARG_EFFECT)) is not None and effect != self.effect:
             return True
-        if kwargs.get(HM_ARG_RAMP_TIME) is not None:
+        if kwargs.get(_HM_ARG_RAMP_TIME) is not None:
             return True
         if kwargs.get(HM_ARG_ON_TIME) is not None:
             return True
@@ -267,8 +277,8 @@ class CeColorDimmer(CeDimmer):
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
             return
-        if HM_ARG_HS_COLOR in kwargs:
-            khue, ksaturation = kwargs[HM_ARG_HS_COLOR]
+        if (hs_color := kwargs.get(_HM_ARG_HS_COLOR)) is not None:
+            khue, ksaturation = hs_color
             hue = khue / 360
             saturation = ksaturation / 100
             color = 200 if saturation < 0.1 else int(round(max(min(hue, 1), 0) * 199))
@@ -320,11 +330,11 @@ class CeColorDimmerEffect(CeColorDimmer):
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
             return
-        if HM_ARG_HS_COLOR in kwargs and self.supports_effects and self.effect != HM_EFFECT_OFF:
+
+        if _HM_ARG_EFFECT not in kwargs and self.supports_effects and self.effect != HM_EFFECT_OFF:
             await self._e_effect.send_value(value=0, collector=collector)
 
-        if self.supports_effects and HM_ARG_EFFECT in kwargs:
-            effect = str(kwargs[HM_ARG_EFFECT])
+        if self.supports_effects and (effect := kwargs.get(_HM_ARG_EFFECT)) is not None:
             effect_idx = self._effect_list.index(effect)
             if effect_idx is not None:
                 await self._e_effect.send_value(value=effect_idx, collector=collector)
@@ -361,10 +371,8 @@ class CeColorTempDimmer(CeDimmer):
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
             return
-        if HM_ARG_COLOR_TEMP in kwargs:
-            color_level = (HM_MAX_MIREDS - kwargs[HM_ARG_COLOR_TEMP]) / (
-                HM_MAX_MIREDS - HM_MIN_MIREDS
-            )
+        if (color_temp := kwargs.get(_HM_ARG_COLOR_TEMP)) is not None:
+            color_level = (HM_MAX_MIREDS - color_temp) / (HM_MAX_MIREDS - HM_MIN_MIREDS)
             await self._e_color_level.send_value(value=color_level, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
@@ -457,8 +465,7 @@ class CeIpFixedColorLight(BaseHmLight):
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
             return
-        if HM_ARG_HS_COLOR in kwargs:
-            hs_color = kwargs[HM_ARG_HS_COLOR]
+        if (hs_color := kwargs.get(_HM_ARG_HS_COLOR)) is not None:
             simple_rgb_color = _convert_color(hs_color)
             await self._e_color.send_value(value=simple_rgb_color, collector=collector)
 

@@ -5,9 +5,9 @@ See https://www.home-assistant.io/integrations/switch/.
 """
 from __future__ import annotations
 
-from typing import Any, Final, cast
+from typing import Final
 
-from hahomematic.const import HM_ARG_ON_TIME, TYPE_ACTION, HmPlatform
+from hahomematic.const import TYPE_ACTION, HmPlatform
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import value_property
@@ -32,11 +32,10 @@ class HmSwitch(GenericEntity[bool, bool]):
         return self._attr_value
 
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Any
+        self, collector: CallParameterCollector | None = None, on_time: float | None = None
     ) -> None:
         """Turn the switch on."""
-        if HM_ARG_ON_TIME in kwargs:
-            on_time = float(cast(float, kwargs[HM_ARG_ON_TIME]))
+        if on_time is not None:
             await self.set_on_time(on_time=on_time)
         await self.send_value(value=True, collector=collector)
 
