@@ -58,14 +58,14 @@ class CeSwitch(CustomEntity, OnTimeMixin):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Any
+        self, collector: CallParameterCollector | None = None, on_time: float | None = None
     ) -> None:
         """Turn the switch on."""
-        if not self.is_state_change(on=True, **kwargs):
+        if not self.is_state_change(on=True, on_time=on_time):
             return
-        if (on_time := kwargs.get(HM_ARG_ON_TIME)) or (on_time := self.get_on_time_and_cleanup()):
+        if on_time is not None or (on_time := self.get_on_time_and_cleanup()):
             await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
-        await self._e_state.turn_on(collector=collector, **kwargs)
+        await self._e_state.turn_on(collector=collector)
 
     @bind_collector
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
@@ -76,11 +76,11 @@ class CeSwitch(CustomEntity, OnTimeMixin):
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
-        if kwargs.get(HM_ARG_ON) is not None and self.value is not True and len(kwargs) == 1:
-            return True
-        if kwargs.get(HM_ARG_OFF) is not None and self.value is not False and len(kwargs) == 1:
-            return True
         if kwargs.get(HM_ARG_ON_TIME) is not None:
+            return True
+        if kwargs.get(HM_ARG_ON) is not None and self.value is not True:
+            return True
+        if kwargs.get(HM_ARG_OFF) is not None and self.value is not False:
             return True
         return super().is_state_change(**kwargs)
 

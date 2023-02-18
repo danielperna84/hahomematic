@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/siren/.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Final
+from typing import Any, Final, TypedDict
 
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import bind_collector
@@ -31,13 +31,21 @@ from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.support import config_property, value_property
 
-HM_ARG_ACOUSTIC_ALARM: Final = "acoustic_alarm"
-HM_ARG_OPTICAL_ALARM: Final = "optical_alarm"
-HM_ARG_DURATION: Final = "duration"
+_HM_ARG_ACOUSTIC_ALARM: Final = "acoustic_alarm"
+_HM_ARG_OPTICAL_ALARM: Final = "optical_alarm"
+_HM_ARG_DURATION: Final = "duration"
 
 SMOKE_DETECTOR_COMMAND_OFF: Final = "INTRUSION_ALARM_OFF"
 SMOKE_DETECTOR_COMMAND_ON: Final = "INTRUSION_ALARM"
 SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF: Final = "IDLE_OFF"
+
+
+class HmSirenArgs(TypedDict, total=False):
+    """Matcher for the siren arguments."""
+
+    acoustic_alarm: str
+    optical_alarm: str
+    duration: str
 
 
 class BaseSiren(CustomEntity):
@@ -143,35 +151,25 @@ class CeIpSiren(BaseSiren):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        if (
-            self.available_tones
-            and (
-                acoustic_alarm := kwargs.get(
-                    HM_ARG_ACOUSTIC_ALARM, self._e_acoustic_alarm_selection.default
-                )
-            )
-            not in self.available_tones
-        ):
+
+        acoustic_alarm = kwargs.get(
+            _HM_ARG_ACOUSTIC_ALARM, self._e_acoustic_alarm_selection.default
+        )
+        if self.available_tones and acoustic_alarm and acoustic_alarm not in self.available_tones:
             raise ValueError(
                 f"Invalid tone specified "
                 f"for entity {self.full_name}: {acoustic_alarm}, "
                 "check the available_tones attribute for valid tones to pass in"
             )
-        if (
-            self.available_lights
-            and (
-                optical_alarm := kwargs.get(
-                    HM_ARG_OPTICAL_ALARM, self._e_optical_alarm_selection.default
-                )
-            )
-            not in self.available_lights
-        ):
+
+        optical_alarm = kwargs.get(_HM_ARG_OPTICAL_ALARM, self._e_optical_alarm_selection.default)
+        if self.available_lights and optical_alarm and optical_alarm not in self.available_lights:
             raise ValueError(
                 f"Invalid light specified "
                 f"for entity {self.full_name}: {optical_alarm}, "
                 "check the available_lights attribute for valid tones to pass in"
             )
-        duration = kwargs.get(HM_ARG_DURATION, self._e_duration.default)
+
         await self._e_acoustic_alarm_selection.send_value(
             value=acoustic_alarm, collector=collector
         )
@@ -179,6 +177,7 @@ class CeIpSiren(BaseSiren):
         await self._e_duration_unit.send_value(
             value=self._e_duration_unit.default, collector=collector
         )
+        duration = kwargs.get(_HM_ARG_DURATION, self._e_duration.default)
         await self._e_duration.send_value(value=duration, collector=collector)
 
     @bind_collector
