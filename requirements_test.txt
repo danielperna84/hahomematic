@@ -3,7 +3,7 @@
 
 codecov==2.1.12
 coverage==7.1.0
-mypy==1.0.0
+mypy==1.0.1
 pip==23.0
 pre-commit==3.0.4
 pydevccu==0.1.5
