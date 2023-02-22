@@ -57,9 +57,9 @@ class CentralUnitLocalFactory:
             un_ignore_list=un_ignore_list,
         ).create_central()
 
-        central.callback_system_event = self.system_event_mock
-        central.callback_entity_event = self.entity_event_mock
-        central.callback_ha_event = self.ha_event_mock
+        central.register_system_event_callback(self.system_event_mock)
+        central.register_entity_event_callback(self.entity_event_mock)
+        central.register_ha_event_callback(self.ha_event_mock)
 
         return central
 

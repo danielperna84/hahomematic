@@ -79,12 +79,10 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             EVENT_STICKY_UN_REACH,
         ):
             self.device.update_device(self._attr_unique_identifier)
-
-            if callable(self._central.callback_ha_event):
-                self._central.callback_ha_event(
-                    HmEventType.DEVICE_AVAILABILITY,
-                    self.get_event_data(new_value),
-                )
+            self._central.fire_ha_event_callback(
+                event_type=HmEventType.DEVICE_AVAILABILITY,
+                event_data=self.get_event_data(new_value),
+            )
 
     async def send_value(
         self,

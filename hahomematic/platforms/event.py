@@ -69,11 +69,9 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
 
     def fire_event(self, value: Any) -> None:
         """Do what is needed to fire an event."""
-        if callable(self._central.callback_ha_event):
-            self._central.callback_ha_event(
-                self.event_type,
-                self.get_event_data(value=value),
-            )
+        self._central.fire_ha_event_callback(
+            event_type=self.event_type, event_data=self.get_event_data(value=value)
+        )
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""

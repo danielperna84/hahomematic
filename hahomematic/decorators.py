@@ -73,8 +73,7 @@ def _exec_callback_system_event(name: str, *args: Any, **kwargs: Any) -> None:
         raise HaHomematicException("args-exception callback_system_event") from err
     if client:
         client.last_updated = datetime.now()
-        if client.central.callback_system_event is not None:
-            client.central.callback_system_event(name, **kwargs)
+        client.central.fire_system_event_callback(name=name, **kwargs)
 
 
 def callback_event(func: Callable[P, R]) -> Callable[P, R]:
@@ -100,8 +99,7 @@ def callback_event(func: Callable[P, R]) -> Callable[P, R]:
             raise HaHomematicException("args-exception callback_event") from err
         if client:
             client.last_updated = datetime.now()
-            if client.central.callback_entity_event is not None:
-                client.central.callback_entity_event(*args, **kwargs)
+            client.central.fire_entity_event_callback(*args, **kwargs)
 
     return wrapper_callback_event
 

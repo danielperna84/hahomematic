@@ -133,13 +133,13 @@ class CentralUnit:
         # store last event received datetime by interface
         self.last_events: Final[dict[str, datetime]] = {}
         # Signature: (name, *args) #CC
-        self.callback_system_event: Callable | None = None
+        self._callback_system_event: Final[set[Callable]] = set()
         # Signature: (interface_id, channel_address, value_key, value) #CC
-        self.callback_entity_event: Callable | None = None
+        self._callback_entity_event: Final[set[Callable]] = set()
         # Signature: (interface_id, entity) #CC
-        self.callback_entity_data_event: Callable | None = None
+        self._callback_entity_data_event: Final[set[Callable]] = set()
         # Signature: (event_type, event_data) #CC
-        self.callback_ha_event: Callable | None = None
+        self._callback_ha_event: Final[set[Callable]] = set()
 
         self.json_rpc_client: Final[JsonRpcAioHttpClient] = central_config.create_json_rpc_client()
 
@@ -370,17 +370,12 @@ class CentralUnit:
         available: bool,
     ) -> None:
         """Fire an event about the interface status."""
-        event_data = {
+        event_data: dict[str, Any] = {
             ATTR_INTERFACE_ID: interface_id,
             ATTR_TYPE: interface_event_type,
             ATTR_VALUE: available,
         }
-        # pylint: disable=not-callable
-        if callable(self.callback_ha_event):
-            self.callback_ha_event(
-                HmEventType.INTERFACE,
-                event_data,
-            )
+        self.fire_ha_event_callback(event_type=HmEventType.INTERFACE, event_data=event_data)
 
     async def _identify_callback_ip(self, port: int) -> str:
         """Identify local IP used for callbacks."""
@@ -610,13 +605,8 @@ class CentralUnit:
                     )
         _LOGGER.debug("CREATE_DEVICES: Finished creating devices for %s", self._attr_name)
 
-        if (
-            len(new_devices) > 0
-            and self.callback_system_event is not None
-            and callable(self.callback_system_event)
-        ):
-            # pylint: disable=not-callable
-            self.callback_system_event(name=HH_EVENT_DEVICES_CREATED, new_devices=new_devices)
+        if new_devices:
+            self.fire_system_event_callback(name=HH_EVENT_DEVICES_CREATED, new_devices=new_devices)
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
         """Delete devices from central_unit. #CC."""
@@ -930,6 +920,78 @@ class CentralUnit:
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
         self.clear_dynamic_caches()
+
+    def register_ha_event_callback(self, callback_handler: Callable) -> None:
+        """Register ha_event callback in central."""
+        self._callback_ha_event.add(callback_handler)
+
+    def unregister_ha_event_callback(self, callback_handler: Callable) -> None:
+        """RUn register ha_event callback in central."""
+        if callback_handler in self._callback_ha_event:
+            self._callback_ha_event.remove(callback_handler)
+
+    def fire_ha_event_callback(self, event_type: HmEventType, event_data: dict[str, str]) -> None:
+        """Fire ha_event callback in central."""
+        for callback_handler in self._callback_ha_event:
+            try:
+                callback_handler(event_type, event_data)
+            except Exception as ex:
+                _LOGGER.error("FIRE_HA_EVENT_CALLBACK: Unable to call handler: %s", ex.args)
+
+    def register_entity_event_callback(self, callback_handler: Callable) -> None:
+        """Register entity_event callback in central."""
+        self._callback_entity_event.add(callback_handler)
+
+    def unregister_entity_event_callback(self, callback_handler: Callable) -> None:
+        """Un register entity_event callback in central."""
+        if callback_handler in self._callback_entity_event:
+            self._callback_entity_event.remove(callback_handler)
+
+    def fire_entity_event_callback(
+        self, interface_id: str, channel_address: str, value_key: str, value: Any
+    ) -> None:
+        """Fire entity callback in central."""
+        for callback_handler in self._callback_entity_event:
+            try:
+                callback_handler(interface_id, channel_address, value_key, value)
+            except Exception as ex:
+                _LOGGER.error("FIRE_ENTITY_EVENT_CALLBACK: Unable to call handler: %s", ex.args)
+
+    def register_entity_data_event_callback(self, callback_handler: Callable) -> None:
+        """Register entity_event callback in central."""
+        self._callback_entity_data_event.add(callback_handler)
+
+    def unregister_entity_data_event_callback(self, callback_handler: Callable) -> None:
+        """Un register entity_event callback in central."""
+        if callback_handler in self._callback_entity_data_event:
+            self._callback_entity_data_event.remove(callback_handler)
+
+    def fire_entity_data_event_callback(self, interface_id: str, entity: BaseEntity) -> None:
+        """Fire entity_data callback in central."""
+        for callback_handler in self._callback_entity_data_event:
+            try:
+                callback_handler(interface_id, entity)
+            except Exception as ex:
+                _LOGGER.error(
+                    "FIRE_ENTITY_DATA_EVENT_CALLBACK: Unable to call handler: %s", ex.args
+                )
+
+    def register_system_event_callback(self, callback_handler: Callable) -> None:
+        """Register system_event callback in central."""
+        self._callback_system_event.add(callback_handler)
+
+    def unregister_system_event_callback(self, callback_handler: Callable) -> None:
+        """Un register system_event callback in central."""
+        if callback_handler in self._callback_system_event:
+            self._callback_system_event.remove(callback_handler)
+
+    def fire_system_event_callback(self, name: str, **kwargs: Any) -> None:
+        """Fire system_event callback in central."""
+        for callback_handler in self._callback_system_event:
+            try:
+                callback_handler(name, **kwargs)
+            except Exception as ex:
+                _LOGGER.error("FIRE_SYSTEM_EVENT_CALLBACK: Unable to call handler: %s", ex.args)
 
 
 class ConnectionChecker(threading.Thread):
