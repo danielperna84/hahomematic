@@ -462,9 +462,9 @@ class Example:
         # it while initializing.
         config.CACHE_DIR = "cache"
         # Add callbacks to handle the events and see what happens on the system.
-        self.central.callback_system_event = self._systemcallback
-        self.central.callback_entity_event = self._eventcallback
-        self.central.callback_ha_event = self._hacallback
+        self.central.register_system_event_callback(self._systemcallback)
+        self.central.register_entity_event_callback(self._eventcallback)
+        self.central.register_ha_event_callback(self._hacallback)
 
         # Create clients
         await self.central.start()

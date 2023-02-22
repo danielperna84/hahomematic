@@ -84,12 +84,8 @@ class HmHub:
             else:
                 new_programs.append(self._create_program(data=program_data))
 
-        if (
-            new_programs
-            and self._central.callback_system_event is not None
-            and callable(self._central.callback_system_event)
-        ):
-            self._central.callback_system_event(
+        if new_programs:
+            self._central.fire_system_event_callback(
                 name=HH_EVENT_HUB_REFRESHED, new_hub_entities=new_programs
             )
 
@@ -131,12 +127,8 @@ class HmHub:
             else:
                 new_sysvars.append(self._create_system_variable(data=sysvar))
 
-        if (
-            new_sysvars
-            and self._central.callback_system_event is not None
-            and callable(self._central.callback_system_event)
-        ):
-            self._central.callback_system_event(
+        if new_sysvars:
+            self._central.fire_system_event_callback(
                 name=HH_EVENT_HUB_REFRESHED, new_hub_entities=new_sysvars
             )
 

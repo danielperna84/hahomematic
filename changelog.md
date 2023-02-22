@@ -1,3 +1,7 @@
+# Version 2023.2.10 (2023-02-23)
+
+- Use sets for central callbacks
+
 # Version 2023.2.9 (2023-02-18)
 
 - Fix property types

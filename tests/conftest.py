@@ -62,8 +62,32 @@ async def central_unit_full(
     pydev_ccu_full: pydevccu.Server, client_session: ClientSession
 ) -> CentralUnit:
     """Create and yield central."""
+
+    def entity_data_event_callback(*args, **kwargs):
+        """Do dummy entity_data_event_callback."""
+
+    def entity_event_callback(*args, **kwargs):
+        """Do dummy entity_event_callback."""
+
+    def ha_event_callback(*args, **kwargs):
+        """Do dummy ha_event_callback."""
+
+    def system_event_callback(*args, **kwargs):
+        """Do dummy system_event_callback."""
+
     central_unit = await get_pydev_ccu_central_unit_full(client_session, use_caches=False)
+
+    central_unit.register_entity_data_event_callback(entity_data_event_callback)
+    central_unit.register_entity_event_callback(entity_event_callback)
+    central_unit.register_ha_event_callback(ha_event_callback)
+    central_unit.register_system_event_callback(system_event_callback)
+
     yield central_unit
+
+    central_unit.unregister_entity_data_event_callback(entity_data_event_callback)
+    central_unit.unregister_entity_event_callback(entity_event_callback)
+    central_unit.unregister_ha_event_callback(ha_event_callback)
+    central_unit.unregister_system_event_callback(system_event_callback)
     await central_unit.stop()
 
 
@@ -105,7 +129,7 @@ async def get_pydev_ccu_central_unit_full(
         client_session=client_session,
         use_caches=use_caches,
     ).create_central()
-    central_unit.callback_system_event = systemcallback
+    central_unit.register_system_event_callback(systemcallback)
     await central_unit.start()
     while not GOT_DEVICES and sleep_counter < 300:
         sleep_counter += 1

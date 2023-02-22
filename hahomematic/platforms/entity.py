@@ -119,22 +119,22 @@ class CallbackEntity(ABC):
         )
 
     def register_update_callback(self, update_callback: Callable) -> None:
-        """register update callback."""
+        """Register update callback."""
         if callable(update_callback):
             self._update_callbacks.append(update_callback)
 
     def unregister_update_callback(self, update_callback: Callable) -> None:
-        """remove update callback."""
+        """Unregister update callback."""
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
 
     def register_remove_callback(self, remove_callback: Callable) -> None:
-        """register the remove callback."""
+        """Register the remove callback."""
         if callable(remove_callback) and remove_callback not in self._remove_callbacks:
             self._remove_callbacks.append(remove_callback)
 
     def unregister_remove_callback(self, remove_callback: Callable) -> None:
-        """remove the remove callback."""
+        """Unregister the remove callback."""
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
 
@@ -227,10 +227,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def update_entity(self, *args: Any) -> None:
         """Do what is needed when the value of the entity has been updated."""
         super().update_entity(*args)
-        if callable(self._central.callback_entity_data_event):
-            self._central.callback_entity_data_event(
-                interface_id=self.device.interface_id, entity=self
-            )
+        self._central.fire_entity_data_event_callback(
+            interface_id=self.device.interface_id, entity=self
+        )
 
     @abstractmethod
     async def load_entity_value(
