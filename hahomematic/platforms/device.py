@@ -255,6 +255,14 @@ class HmDevice(PayloadMixin):
     def _set_last_update(self) -> None:
         self._attr_last_update = datetime.now()
 
+    def get_all_entities(self) -> list[hmce.CustomEntity | GenericEntity | WrapperEntity]:
+        """Return all entities of a device."""
+        all_entities: list[hmce.CustomEntity | GenericEntity | WrapperEntity] = []
+        all_entities.extend(self.custom_entities.values())
+        all_entities.extend(self.generic_entities.values())
+        all_entities.extend(self.wrapper_entities.values())
+        return all_entities
+
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Return an entity from device."""
         return self.generic_entities.get((channel_address, parameter))
