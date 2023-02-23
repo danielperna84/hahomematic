@@ -806,7 +806,7 @@ class CentralUnit:
         return task
 
     def run_coroutine(self, coro: Coroutine) -> Any:
-        """call coroutine from sync."""
+        """Call coroutine from sync."""
         try:
             return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
         except CancelledError:  # pragma: no cover
@@ -837,11 +837,11 @@ class CentralUnit:
         return False
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
-        """fetch sysvar data for the hub. #CC."""
+        """Fetch sysvar data for the hub. #CC."""
         await self._hub.fetch_sysvar_data(include_internal=include_internal)
 
     async def fetch_program_data(self, include_internal: bool = False) -> None:
-        """fetch program data for the hub. #CC."""
+        """Fetch program data for the hub. #CC."""
         await self._hub.fetch_program_data(include_internal=include_internal)
 
     async def load_and_refresh_entity_data(

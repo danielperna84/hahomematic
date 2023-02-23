@@ -130,7 +130,7 @@ class CustomEntity(BaseEntity):
         return False
 
     def _init_entities(self) -> None:
-        """init entity collection."""
+        """Init entity collection."""
         # Add repeating fields
         for field_name, parameter in self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {}).items():
             entity = self.device.get_generic_entity(
@@ -248,7 +248,7 @@ class CustomEntity(BaseEntity):
                     entity.set_usage(HmEntityUsage.ENTITY)
 
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
-        """get entity."""
+        """Get entity."""
         if entity := self.data_entities.get(field_name):
             if not isinstance(entity, entity_type):
                 _LOGGER.debug(  # pragma: no cover

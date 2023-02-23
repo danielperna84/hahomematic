@@ -210,7 +210,7 @@ class XmlRpcServer(threading.Thread):
 
     @property
     def started(self) -> bool:
-        """return if thread is active."""
+        """Return if thread is active."""
         return self._started.is_set() is True  # type: ignore[attr-defined]
 
     def register_central(self, central: hmcu.CentralUnit) -> None:

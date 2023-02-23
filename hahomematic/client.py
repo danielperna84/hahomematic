@@ -188,7 +188,7 @@ class Client(ABC):
 
     @abstractmethod
     async def fetch_all_device_data(self) -> None:
-        """fetch all device data from CCU."""
+        """Fetch all device data from CCU."""
 
     @abstractmethod
     async def fetch_device_details(self) -> None:
@@ -638,7 +638,7 @@ class ClientCCU(Client):
             _LOGGER.debug("FETCH_DEVICE_DETAILS: Unable to fetch device details via JSON-RPC")
 
     async def fetch_all_device_data(self) -> None:
-        """fetch all device data from CCU."""
+        """Fetch all device data from CCU."""
         if device_data := await self._json_rpc_client.get_all_device_data():
             _LOGGER.debug("FETCH_ALL_DEVICE_DATA: Fetched all device data")
             self.central.device_data.add_device_data(device_data=device_data)
@@ -732,7 +732,7 @@ class ClientHomegear(Client):
         return BACKEND_CCU
 
     async def fetch_all_device_data(self) -> None:
-        """fetch all device data from CCU."""
+        """Fetch all device data from CCU."""
         return
 
     async def fetch_device_details(self) -> None:
@@ -853,7 +853,7 @@ class ClientLocal(Client):  # pragma: no cover
         """Stop depending services."""
 
     async def fetch_all_device_data(self) -> None:
-        """fetch all device data from CCU."""
+        """Fetch all device data from CCU."""
 
     async def fetch_device_details(self) -> None:
         """Fetch names from backend."""

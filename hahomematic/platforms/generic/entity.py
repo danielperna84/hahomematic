@@ -90,7 +90,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         collector: hme.CallParameterCollector | None = None,
         do_validate: bool = True,
     ) -> None:
-        """send value to ccu, or use collector if set."""
+        """Send value to ccu, or use collector if set."""
         if not self.is_writeable:
             _LOGGER.error(
                 "SEND_VALUE: writing to non-writable entity %s is not possible", self.full_name
