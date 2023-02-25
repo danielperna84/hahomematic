@@ -1,6 +1,7 @@
 # Version 2023.2.11 (2023-02-24)
 
 - Update ruff, fix comments
+- Switch to orjson
 
 # Version 2023.2.10 (2023-02-23)
 

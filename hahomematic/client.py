@@ -6,10 +6,11 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import importlib.resources
-import json
 import logging
 import os
 from typing import Any, Final, cast
+
+import orjson
 
 from hahomematic import central_unit as hmcu
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
@@ -1060,7 +1061,7 @@ class ClientLocal(Client):  # pragma: no cover
                 file=os.path.join(package_path, resource, filename),
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
-                return json.load(fptr)
+                return orjson.loads(fptr.read())
 
         return await self.central.async_add_executor_job(_load)
 

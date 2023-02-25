@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from abc import ABC
 from datetime import datetime
-import json
 import logging
 import os
 from typing import Any, Final
+
+import orjson
 
 from hahomematic import central_unit as hmcu
 from hahomematic.const import (
@@ -60,10 +61,9 @@ class BasePersistentCache(ABC):
             if self._central.config.use_caches:
                 with open(
                     file=os.path.join(self._cache_dir, self._filename),
-                    mode="w",
-                    encoding=DEFAULT_ENCODING,
+                    mode="wb",
                 ) as fptr:
-                    json.dump(self._persistant_cache, fptr)
+                    fptr.write(orjson.dumps(self._persistant_cache))
                 return HmDataOperationResult.SAVE_SUCCESS
 
             _LOGGER.debug("save: not saving cache for %s", self._central.name)
@@ -84,7 +84,7 @@ class BasePersistentCache(ABC):
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
                 self._persistant_cache.clear()
-                self._persistant_cache.update(json.load(fptr))
+                self._persistant_cache.update(orjson.loads(fptr.read()))
             return HmDataOperationResult.LOAD_SUCCESS
 
         return await self._central.async_add_executor_job(_load)

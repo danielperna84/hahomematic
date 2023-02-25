@@ -1,13 +1,13 @@
 """Test the HaHomematic central."""
 from __future__ import annotations
 
-import json
 import os
 
 import const
+import orjson
 import pytest
 
-from hahomematic.const import DEFAULT_ENCODING, HmEntityUsage
+from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import (
     get_public_attributes_for_config_property,
@@ -108,10 +108,9 @@ async def test_central_full(central_unit_full) -> None:
 
     with open(
         file=os.path.join(central_unit_full.config.storage_folder, "all_devices.json"),
-        mode="w",
-        encoding=DEFAULT_ENCODING,
+        mode="wb",
     ) as fptr:
-        json.dump(addresses, fptr, indent=2)
+        fptr.write(orjson.dumps(addresses, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS))
 
     assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2757
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 185

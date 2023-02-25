@@ -9,13 +9,13 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from concurrent.futures._base import CancelledError
 from datetime import datetime
-import json
 import logging
 import socket
 import threading
 from typing import Any, Final, TypeVar
 
 from aiohttp import ClientSession
+import orjson
 
 from hahomematic import client as hmcl, config
 from hahomematic.caches.dynamic import DeviceDataCache, DeviceDetailsCache
@@ -546,7 +546,7 @@ class CentralUnit:
             await self.paramset_descriptions.load()
             await self.device_details.load()
             await self.device_data.load()
-        except json.decoder.JSONDecodeError:  # pragma: no cover
+        except orjson.JSONDecodeError:  # pragma: no cover
             _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._attr_name)
             await self.clear_all_caches()
 

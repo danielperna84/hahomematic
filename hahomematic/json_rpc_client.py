@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import json
 import logging
 import os
 from pathlib import Path
@@ -11,6 +10,7 @@ import ssl
 from typing import Any, Final
 
 from aiohttp import ClientConnectorError, ClientError, ClientSession
+import orjson
 
 from hahomematic import central_unit as hmcu, config
 from hahomematic.const import (
@@ -237,7 +237,7 @@ class JsonRpcAioHttpClient:
             extra_params={"script": script},
         )
         if not response[ATTR_ERROR]:
-            response[ATTR_RESULT] = json.loads(response[ATTR_RESULT])
+            response[ATTR_RESULT] = orjson.loads(response[ATTR_RESULT])
         _LOGGER.debug("POST_SCRIPT: Method: %s [%s]", method, script_name)
 
         if not keep_session:
@@ -281,9 +281,7 @@ class JsonRpcAioHttpClient:
         params = _get_params(session_id, extra_params, use_default_params)
 
         try:
-            payload = json.dumps(
-                {"method": method, "params": params, "jsonrpc": "1.1", "id": 0}
-            ).encode("utf-8")
+            payload = orjson.dumps({"method": method, "params": params, "jsonrpc": "1.1", "id": 0})
 
             headers = {
                 "Content-Type": "application/json",
@@ -313,7 +311,7 @@ class JsonRpcAioHttpClient:
                         ver.args,
                     )
                     # Workaround for bug in CCU
-                    return json.loads((await response.json(encoding="utf-8")).replace("\\", ""))
+                    return orjson.loads((await response.json(encoding="utf-8")).replace("\\", ""))
             else:
                 _LOGGER.warning("DO_POST failed: Status: %i", response.status)
                 return {"error": response.status, "result": {}}
