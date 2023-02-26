@@ -2,6 +2,7 @@
 
 - Update ruff, fix comments
 - Switch to orjson
+- Fix climate: compare set temperature to target temperature
 
 # Version 2023.2.10 (2023-02-23)
 

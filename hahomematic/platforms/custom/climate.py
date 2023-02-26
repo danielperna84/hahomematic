@@ -252,7 +252,7 @@ class BaseClimateEntity(CustomEntity):
         """Check if the state changes due to kwargs."""
         if (
             temperature := kwargs.get(HM_ARG_TEMPERATURE)
-        ) is not None and temperature != self.current_temperature:
+        ) is not None and temperature != self.target_temperature:
             return True
         if (hvac_mode := kwargs.get(HM_ARG_HVAC_MODE)) is not None and hvac_mode != self.hvac_mode:
             return True
