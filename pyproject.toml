@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2023.2.10"
+version     = "2023.2.11"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
@@ -26,6 +26,7 @@ classifiers = [
 requires-python = ">=3.10.0"
 dependencies    = [
     "aiohttp>=3.8.1",
+    "orjson>=3.8.6",
     "python-slugify>=4.0.1",
     "voluptuous>=0.13.1",
 ]
@@ -75,6 +76,7 @@ py-version = "3.10"
 ignore = [
     "tests",
 ]
+extension-pkg-whitelist= ["orjson"]
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2

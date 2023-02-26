@@ -419,7 +419,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return cop in KEY_CHANNEL_OPERATION_MODE_VISIBILITY[self._attr_parameter]
 
     def _fix_unit(self, raw_unit: str | None) -> str | None:
-        """replace given unit."""
+        """Replace given unit."""
         if new_unit := FIX_UNIT_BY_PARAM.get(self._attr_parameter):
             return new_unit
         if not raw_unit:

@@ -2,15 +2,15 @@
 from __future__ import annotations
 
 from copy import copy
-import json
 import logging
 import os
 import random
 from typing import Any, Final
 
+import orjson
+
 from hahomematic import central_unit as hmcu, client as hmcl
 from hahomematic.const import (
-    DEFAULT_ENCODING,
     HM_ADDRESS,
     HM_CHILDREN,
     HM_PARENT,
@@ -103,10 +103,11 @@ class DeviceExporter:
                 return HmDataOperationResult.NO_SAVE  # pragma: no cover
             with open(
                 file=os.path.join(file_dir, filename),
-                mode="w",
-                encoding=DEFAULT_ENCODING,
+                mode="wb",
             ) as fptr:
-                json.dump(data, fptr, indent=2)
+                fptr.write(
+                    orjson.dumps(data, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS)
+                )
             return HmDataOperationResult.SAVE_SUCCESS
 
         return await self._central.async_add_executor_job(_save)

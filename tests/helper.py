@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import importlib.resources
-import json
 import logging
 import os
 from typing import Any
@@ -10,6 +9,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
 import const
+import orjson
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
@@ -271,4 +271,4 @@ def _load_json_file(package: str, resource: str, filename: str) -> Any | None:
         file=os.path.join(package_path, resource, filename),
         encoding=hahomematic_const.DEFAULT_ENCODING,
     ) as fptr:
-        return json.load(fptr)
+        return orjson.loads(fptr.read())

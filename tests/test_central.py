@@ -60,7 +60,7 @@ async def test_device_export(
 async def test_identify_callback_ip(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test device export."""
+    """Test identify_callback_ip."""
     assert central_local_factory
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
 
@@ -139,7 +139,7 @@ async def test_device_unignore(
 async def test_all_parameters(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test device export."""
+    """Test all_parameters."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     parameters = central.paramset_descriptions.get_all_readable_parameters()
     assert parameters
@@ -150,7 +150,7 @@ async def test_all_parameters(
 async def test_entities_by_platform(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test device export."""
+    """Test entities_by_platform."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     ebp_sensor = central.get_entities_by_platform(platform=HmPlatform.SENSOR)
     assert ebp_sensor
@@ -167,7 +167,7 @@ async def test_entities_by_platform(
 async def test_hub_entities_by_platform(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test device export."""
+    """Test hub_entities_by_platform."""
     central, _ = await central_local_factory.get_default_central(
         {}, add_programs=True, add_sysvars=True
     )
@@ -195,7 +195,7 @@ async def test_hub_entities_by_platform(
 async def test_add_device(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test device export."""
+    """Test add_device."""
     central, _ = await central_local_factory.get_default_central(
         TEST_DEVICES, ignore_devices_on_create=["HmIP-BSM.json"]
     )
@@ -231,7 +231,7 @@ async def test_add_device(
 async def test_delete_device(
     central_local_factory: helper.CentralUnitLocalFactory,
 ) -> None:
-    """Test device export."""
+    """Test device delete_device."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     assert len(central._devices) == 2
     assert len(central._entities) == 49

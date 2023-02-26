@@ -43,13 +43,13 @@ class HmHub:
         self._central: Final[hmcu.CentralUnit] = central
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
-        """fetch sysvar data for the hub."""
+        """Fetch sysvar data for the hub."""
         async with self._sema_fetch_sysvars:
             if self._central.available:
                 await self._update_sysvar_entities(include_internal=include_internal)
 
     async def fetch_program_data(self, include_internal: bool = False) -> None:
-        """fetch program data for the hub."""
+        """Fetch program data for the hub."""
         async with self._sema_fetch_programs:
             if self._central.available:
                 await self._update_program_entities(include_internal=include_internal)

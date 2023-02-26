@@ -351,7 +351,7 @@ async def test_ceipthermostat(
     await climate.set_preset_mode(HmPresetMode.BOOST)
     assert call_count == len(mock_client.method_calls)
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU1769958:1", "ACTUAL_TEMPERATURE", 12.0)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1769958:1", "SET_POINT_TEMPERATURE", 12.0)
     call_count = len(mock_client.method_calls)
     await climate.set_temperature(12.0)
     assert call_count == len(mock_client.method_calls)
