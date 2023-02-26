@@ -63,7 +63,9 @@ class BasePersistentCache(ABC):
                     file=os.path.join(self._cache_dir, self._filename),
                     mode="wb",
                 ) as fptr:
-                    fptr.write(orjson.dumps(self._persistant_cache))
+                    fptr.write(
+                        orjson.dumps(self._persistant_cache, option=orjson.OPT_NON_STR_KEYS)
+                    )
                 return HmDataOperationResult.SAVE_SUCCESS
 
             _LOGGER.debug("save: not saving cache for %s", self._central.name)
