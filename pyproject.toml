@@ -246,6 +246,19 @@ ignore = [
 [tool.ruff.flake8-pytest-style]
 fixture-parentheses = false
 
+[tool.ruff.flake8-import-conventions.extend-aliases]
+voluptuous = "vol"
+"hahomematic.central_unit" = "hmcu"
+"hahomematic.client" = "hmcl"
+"hahomematic.exporter" = "hmexp"
+"hahomematic.platforms.custom.definition" = "hmed"
+"hahomematic.platforms.custom.entity" = "hmce"
+"hahomematic.platforms.device" = "hmd"
+"hahomematic.platforms.entity" = "hme"
+"hahomematic.platforms.generic.entity" = "hmge"
+"hahomematic.support" = "hms"
+"hahomematic.xml_rpc_server" = "xmlrpc"
+
 [tool.ruff.per-file-ignores]
 "script/*" = ["T20"]
 

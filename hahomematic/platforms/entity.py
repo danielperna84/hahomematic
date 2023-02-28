@@ -9,7 +9,7 @@ from typing import Any, Final, Generic, TypeVar, cast
 
 import voluptuous as vol
 
-from hahomematic import central_unit as hmcu, client as hmcl, support as hm_support
+from hahomematic import central_unit as hmcu, client as hmcl, support as hms
 from hahomematic.const import (
     ATTR_ADDRESS,
     ATTR_CHANNEL_NO,
@@ -163,7 +163,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         super().__init__(unique_identifier=unique_identifier)
         self.device: Final[hmd.HmDevice] = device
         self._attr_channel_no: Final[int | None] = channel_no
-        self._attr_channel_address: Final[str] = hm_support.get_channel_address(
+        self._attr_channel_address: Final[str] = hms.get_channel_address(
             device_address=device.device_address, channel_no=channel_no
         )
         self._central: Final[hmcu.CentralUnit] = device.central
@@ -276,7 +276,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         super().__init__(
             device=device,
             unique_identifier=unique_identifier,
-            channel_no=hm_support.get_channel_no(address=channel_address),
+            channel_no=hms.get_channel_no(address=channel_address),
         )
         self._attr_value: ParameterT | None = None
         self._attr_last_update: datetime = INIT_DATETIME
@@ -437,7 +437,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Init the entity data."""
-        if hm_support.updated_within_seconds(
+        if hms.updated_within_seconds(
             last_update=self._attr_last_update, max_age_seconds=max_age_seconds
         ):
             return

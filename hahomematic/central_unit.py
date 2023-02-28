@@ -17,7 +17,7 @@ from typing import Any, Final, TypeVar
 from aiohttp import ClientSession
 import orjson
 
-from hahomematic import client as hmcl, config
+from hahomematic import client as hmcl, config, xml_rpc_server as xmlrpc
 from hahomematic.caches.dynamic import DeviceDataCache, DeviceDetailsCache
 from hahomematic.caches.persistent import (
     DeviceDescriptionCache,
@@ -71,7 +71,6 @@ from hahomematic.support import (
     get_device_address,
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
-import hahomematic.xml_rpc_server as xml_rpc
 
 _LOGGER = logging.getLogger(__name__)
 _R = TypeVar("_R")
@@ -95,9 +94,9 @@ class CentralUnit:
         self._attr_model: str | None = None
         self._connection_state: Final[CentralConnectionState] = central_config.connection_state
         self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._xml_rpc_server: xml_rpc.XmlRpcServer | None = None
+        self._xml_rpc_server: xmlrpc.XmlRpcServer | None = None
         if central_config.enable_server:
-            self._xml_rpc_server = xml_rpc.register_xml_rpc_server(
+            self._xml_rpc_server = xmlrpc.register_xml_rpc_server(
                 local_port=central_config.callback_port or central_config.default_callback_port
             )
             self._xml_rpc_server.register_central(self)
