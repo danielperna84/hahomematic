@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu, client as hmcl, exporter as hm_support
+from hahomematic import central_unit as hmcu, client as hmcl, exporter as hmexp
 from hahomematic.const import (
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
@@ -276,7 +276,7 @@ class HmDevice(PayloadMixin):
 
     async def export_device_definition(self) -> None:
         """Export the device definition for current device."""
-        await hm_support.save_device_definition(
+        await hmexp.save_device_definition(
             client=self.client,
             interface_id=self._attr_interface_id,
             device_address=self._attr_device_address,

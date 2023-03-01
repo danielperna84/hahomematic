@@ -1,3 +1,7 @@
+# Version 2023.3.0 (2023-03-01)
+
+- Update ruff, adjust module aliases
+
 # Version 2023.2.11 (2023-02-24)
 
 - Update ruff, fix comments

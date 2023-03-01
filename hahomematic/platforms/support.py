@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any, Generic, TypeVar
 
-from hahomematic import central_unit as hmcu, support as hm_support
+from hahomematic import central_unit as hmcu, support as hms
 from hahomematic.const import (
     BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
     HM_TYPE,
@@ -158,7 +158,7 @@ class OnTimeMixin:
         # cleanup values
         self._on_time = None
         self._on_time_updated = INIT_DATETIME
-        if not hm_support.updated_within_seconds(last_update=on_time_updated, max_age_seconds=5):
+        if not hms.updated_within_seconds(last_update=on_time_updated, max_age_seconds=5):
             return None
         return on_time
 
@@ -228,7 +228,7 @@ def get_entity_name(
     parameter: str,
 ) -> EntityNameData:
     """Get name for entity."""
-    channel_address = hm_support.get_channel_address(
+    channel_address = hms.get_channel_address(
         device_address=device.device_address, channel_no=channel_no
     )
     if channel_name := _get_base_name_from_channel_or_device(
@@ -274,7 +274,7 @@ def get_event_name(
     parameter: str,
 ) -> EntityNameData:
     """Get name for event."""
-    channel_address = hm_support.get_channel_address(
+    channel_address = hms.get_channel_address(
         device_address=device.device_address, channel_no=channel_no
     )
     if channel_name := _get_base_name_from_channel_or_device(
@@ -375,13 +375,13 @@ def _get_base_name_from_channel_or_device(
     channel_no: int | None,
 ) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""
-    channel_address = hm_support.get_channel_address(
+    channel_address = hms.get_channel_address(
         device_address=device.device_address, channel_no=channel_no
     )
     default_channel_name = f"{device.device_type} {channel_address}"
     name = central.device_details.get_name(channel_address)
     if name is None or name == default_channel_name:
-        return hm_support.get_channel_address(device_address=device.name, channel_no=channel_no)
+        return hms.get_channel_address(device_address=device.name, channel_no=channel_no)
     return name
 
 
