@@ -133,7 +133,7 @@ class CentralUnit:
         self.last_events: Final[dict[str, datetime]] = {}
         # Signature: (name, *args) #CC
         self._callback_system_event: Final[set[Callable]] = set()
-        # Signature: (interface_id, channel_address, value_key, value) #CC
+        # Signature: (interface_id, channel_address, parameter, value) #CC
         self._callback_entity_event: Final[set[Callable]] = set()
         # Signature: (interface_id, entity) #CC
         self._callback_entity_data_event: Final[set[Callable]] = set()
@@ -947,12 +947,12 @@ class CentralUnit:
             self._callback_entity_event.remove(callback_handler)
 
     def fire_entity_event_callback(
-        self, interface_id: str, channel_address: str, value_key: str, value: Any
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
         """Fire entity callback in central."""
         for callback_handler in self._callback_entity_event:
             try:
-                callback_handler(interface_id, channel_address, value_key, value)
+                callback_handler(interface_id, channel_address, parameter, value)
             except Exception as ex:
                 _LOGGER.error("FIRE_ENTITY_EVENT_CALLBACK: Unable to call handler: %s", ex.args)
 
