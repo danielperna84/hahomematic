@@ -1,6 +1,7 @@
 # Version 2023.3.0 (2023-03-01)
 
 - Update ruff, adjust module aliases
+- Fix spamming CCU logs with errors (#981)
 
 # Version 2023.2.11 (2023-02-24)
 
