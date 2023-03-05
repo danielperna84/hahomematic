@@ -786,10 +786,10 @@ class CentralUnit:
         """Check if unique_identifier is already added."""
         return unique_identifier in self._entities
 
-    def create_task(self, target: Awaitable) -> None:
+    def create_task(self, target: Awaitable, name: str) -> None:
         """Add task to the executor pool."""
         try:
-            self._loop.call_soon_threadsafe(self._async_create_task, target)
+            self._loop.call_soon_threadsafe(self._async_create_task, target, name)
         except CancelledError:
             _LOGGER.debug(
                 "create_task: task cancelled for %s",
@@ -797,9 +797,9 @@ class CentralUnit:
             )
             return
 
-    def _async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
+    def _async_create_task(self, target: Coroutine[Any, Any, _R], name: str) -> asyncio.Task[_R]:
         """Create a task from within the event_loop. This method must be run in the event_loop."""
-        task = self._loop.create_task(target)
+        task = self._loop.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task

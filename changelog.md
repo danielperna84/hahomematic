@@ -1,3 +1,7 @@
+# Version 2023.3.1 (2023-03-06)
+
+- Add name to tasks
+
 # Version 2023.3.0 (2023-03-01)
 
 - Update ruff, adjust module aliases

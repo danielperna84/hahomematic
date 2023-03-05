@@ -67,7 +67,8 @@ class RPCFunctions:
             central.create_task(
                 central.add_new_devices(
                     interface_id=interface_id, device_descriptions=device_descriptions
-                )
+                ),
+                name="newDevices",
             )
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
@@ -75,7 +76,8 @@ class RPCFunctions:
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(
-                central.delete_devices(interface_id=interface_id, addresses=addresses)
+                central.delete_devices(interface_id=interface_id, addresses=addresses),
+                name="deleteDevices",
             )
 
     @callback_system_event(name=HH_EVENT_UPDATE_DEVICE)
