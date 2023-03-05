@@ -32,7 +32,7 @@ class RPCFunctions:
 
     def __init__(self, xml_rpc_server: XmlRpcServer) -> None:
         """Init RPCFunctions."""
-        self._xml_rpc_server: XmlRpcServer = xml_rpc_server
+        self._xml_rpc_server: Final = xml_rpc_server
 
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """If a device emits some sort event, we will handle it here."""
@@ -67,7 +67,8 @@ class RPCFunctions:
             central.create_task(
                 central.add_new_devices(
                     interface_id=interface_id, device_descriptions=device_descriptions
-                )
+                ),
+                name="newDevices",
             )
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
@@ -75,7 +76,8 @@ class RPCFunctions:
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(
-                central.delete_devices(interface_id=interface_id, addresses=addresses)
+                central.delete_devices(interface_id=interface_id, addresses=addresses),
+                name="deleteDevices",
             )
 
     @callback_system_event(name=HH_EVENT_UPDATE_DEVICE)
@@ -170,9 +172,7 @@ class XmlRpcServer(threading.Thread):
         if self._initialized:
             return
         self._initialized = True
-        if local_port == PORT_ANY:
-            local_port = find_free_port()
-        self.local_port: int = local_port
+        self.local_port: Final[int] = find_free_port() if local_port == PORT_ANY else local_port
         self._instances[self.local_port] = self
         threading.Thread.__init__(self, name=f"XmlRpcServer on port {self.local_port}")
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(

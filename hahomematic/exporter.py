@@ -9,7 +9,7 @@ from typing import Any, Final
 
 import orjson
 
-from hahomematic import central_unit as hmcu, client as hmcl
+from hahomematic import client as hmcl
 from hahomematic.const import (
     HM_ADDRESS,
     HM_CHILDREN,
@@ -30,11 +30,11 @@ class DeviceExporter:
 
     def __init__(self, client: hmcl.Client, interface_id: str, device_address: str) -> None:
         """Init the device exporter."""
-        self._client: Final[hmcl.Client] = client
-        self._central: Final[hmcu.CentralUnit] = client.central
-        self._storage_folder: Final[str] = self._central.config.storage_folder
-        self._interface_id: Final[str] = interface_id
-        self._device_address: Final[str] = device_address
+        self._client: Final = client
+        self._central: Final = client.central
+        self._storage_folder: Final = self._central.config.storage_folder
+        self._interface_id: Final = interface_id
+        self._device_address: Final = device_address
         self._random_id: Final[str] = "VCU%i" % random.randint(1000000, 9999999)
 
     async def export_data(self) -> None:

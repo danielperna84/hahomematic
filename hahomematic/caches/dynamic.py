@@ -25,14 +25,13 @@ class DeviceDetailsCache:
 
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device details cache."""
-        # {address, name}
+        self._central: Final = central
         self._names_cache: Final[dict[str, str]] = {}
         self._interface_cache: Final[dict[str, str]] = {}
-        self.device_channel_ids: Final[dict[str, str]] = {}
-        self._channel_rooms: dict[str, set[str]] = {}
+        self._device_channel_ids: Final[dict[str, str]] = {}
+        self._channel_rooms: Final[dict[str, set[str]]] = {}
         self._device_room: Final[dict[str, str]] = {}
-        self._functions: dict[str, set[str]] = {}
-        self._central: Final[hmcu.CentralUnit] = central
+        self._functions: Final[dict[str, set[str]]] = {}
         self._last_updated = INIT_DATETIME
 
     async def load(self) -> None:
@@ -46,11 +45,18 @@ class DeviceDetailsCache:
         if client := self._central.get_primary_client():
             await client.fetch_device_details()
         _LOGGER.debug("load: Loading rooms for %s", self._central.name)
-        self._channel_rooms = await self._get_all_rooms()
+        self._channel_rooms.clear()
+        self._channel_rooms.update(await self._get_all_rooms())
         self._identify_device_room()
         _LOGGER.debug("load: Loading functions for %s", self._central.name)
-        self._functions = await self._get_all_functions()
+        self._functions.clear()
+        self._functions.update(await self._get_all_functions())
         self._last_updated = datetime.now()
+
+    @property
+    def device_channel_ids(self) -> dict[str, str]:
+        """Return device channel ids."""
+        return self._device_channel_ids
 
     def add_name(self, address: str, name: str) -> None:
         """Add name to cache."""
@@ -72,7 +78,7 @@ class DeviceDetailsCache:
 
     def add_device_channel_id(self, address: str, channel_id: str) -> None:
         """Add channel id for a channel."""
-        self.device_channel_ids[address] = channel_id
+        self._device_channel_ids[address] = channel_id
 
     async def _get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms, if available."""
@@ -133,9 +139,9 @@ class DeviceDataCache:
 
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device data cache."""
-        self._central: Final[hmcu.CentralUnit] = central
+        self._central: Final = central
         # { interface, {channel_address, {parameter, CacheEntry}}}
-        self._central_values_cache: dict[str, dict[str, dict[str, Any]]] = {}
+        self._central_values_cache: Final[dict[str, dict[str, dict[str, Any]]]] = {}
         self._last_updated = INIT_DATETIME
 
     def is_empty(self, max_age_seconds: int) -> bool:
@@ -175,7 +181,8 @@ class DeviceDataCache:
 
     def add_device_data(self, device_data: dict[str, dict[str, dict[str, Any]]]) -> None:
         """Add device data to cache."""
-        self._central_values_cache = device_data
+        self._central_values_cache.clear()
+        self._central_values_cache.update(device_data)
         self._last_updated = datetime.now()
 
     def get_device_data(

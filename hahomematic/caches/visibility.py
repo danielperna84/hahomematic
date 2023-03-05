@@ -256,38 +256,38 @@ class ParameterVisibilityCache:
         central: hmcu.CentralUnit,
     ) -> None:
         """Init the parameter visibility cache."""
-        self._central: Final[hmcu.CentralUnit] = central
-        self._storage_folder: Final[str] = central.config.storage_folder
-        self._required_parameters: Final[tuple[str, ...]] = get_required_parameters()
+        self._central = central
+        self._storage_folder: Final = central.config.storage_folder
+        self._required_parameters: Final = get_required_parameters()
         self._raw_un_ignore_list: Final[set[str]] = set(central.config.un_ignore_list or set())
         # paramset_key, parameter
-        self._un_ignore_parameters_general: dict[str, set[str]] = {
+        self._un_ignore_parameters_general: Final[dict[str, set[str]]] = {
             PARAMSET_KEY_MASTER: set(),
             PARAMSET_KEY_VALUES: set(),
         }
-        self._ignore_parameters_by_device_lower: dict[str, tuple[str, ...]] = {
+        self._ignore_parameters_by_device_lower: Final[dict[str, tuple[str, ...]]] = {
             parameter: tuple(device_type.lower() for device_type in device_types)
             for parameter, device_types in _IGNORE_PARAMETERS_BY_DEVICE.items()
         }
 
-        self._un_ignore_parameters_by_device_lower: dict[str, tuple[str, ...]] = {
+        self._un_ignore_parameters_by_device_lower: Final[dict[str, tuple[str, ...]]] = {
             device_type.lower(): parameters
             for device_type, parameters in _UN_IGNORE_PARAMETERS_BY_DEVICE.items()
         }
 
         # device_type, channel_no, paramset_key, set[parameter]
-        self._un_ignore_parameters_by_device_paramset_key: dict[
-            str, dict[int | None, dict[str, set[str]]]
+        self._un_ignore_parameters_by_device_paramset_key: Final[
+            dict[str, dict[int | None, dict[str, set[str]]]]
         ] = {}
 
         # unignore from custom unignore files
         # device_type, channel_no, paramset_key, parameter
-        self._custom_un_ignore_parameters_by_device_paramset_key: dict[
-            str, dict[int | None, dict[str, set[str]]]
+        self._custom_un_ignore_parameters_by_device_paramset_key: Final[
+            dict[str, dict[int | None, dict[str, set[str]]]]
         ] = {}
 
         # device_type, channel_no
-        self._relevant_master_paramsets_by_device: dict[str, set[int | None]] = {}
+        self._relevant_master_paramsets_by_device: Final[dict[str, set[int | None]]] = {}
         self._init()
 
     def _init(self) -> None:

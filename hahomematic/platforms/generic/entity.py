@@ -71,7 +71,9 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             and new_value is False
             and old_value is True
         ):
-            self._central.create_task(self.device.reload_paramset_descriptions())
+            self._central.create_task(
+                self.device.reload_paramset_descriptions(), name="reloadParamsetDescriptions"
+            )
 
         # send device availability events
         if self._attr_parameter in (
@@ -171,7 +173,7 @@ class WrapperEntity(hme.BaseEntity):
             raise HaHomematicException(  # pragma: no cover
                 "Cannot create wrapped entity. platform must not be equivalent."
             )
-        self._wrapped_entity: Final[GenericEntity] = wrapped_entity
+        self._wrapped_entity: Final = wrapped_entity
         super().__init__(
             device=wrapped_entity.device,
             channel_no=wrapped_entity.channel_no,

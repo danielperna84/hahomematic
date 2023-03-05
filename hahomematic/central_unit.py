@@ -86,19 +86,22 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
-        self._sema_add_devices = asyncio.Semaphore()
-        self._tasks: set[asyncio.Future[Any]] = set()
+        self._sema_add_devices: Final = asyncio.Semaphore()
+        self._tasks: Final[set[asyncio.Future[Any]]] = set()
         # Keep the config for the central #CC
-        self.config: Final[CentralConfig] = central_config
-        self._attr_name: Final[str] = central_config.name
+        self.config: Final = central_config
+        self._attr_name: Final = central_config.name
         self._attr_model: str | None = None
-        self._connection_state: Final[CentralConnectionState] = central_config.connection_state
-        self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._xml_rpc_server: xmlrpc.XmlRpcServer | None = None
-        if central_config.enable_server:
-            self._xml_rpc_server = xmlrpc.register_xml_rpc_server(
+        self._connection_state: Final = central_config.connection_state
+        self._loop: Final = asyncio.get_running_loop()
+        self._xml_rpc_server: Final = (
+            xmlrpc.register_xml_rpc_server(
                 local_port=central_config.callback_port or central_config.default_callback_port
             )
+            if central_config.enable_server
+            else None
+        )
+        if self._xml_rpc_server:
             self._xml_rpc_server.register_central(self)
         self.local_port: Final[int] = (
             self._xml_rpc_server.local_port if self._xml_rpc_server else 0
@@ -143,7 +146,7 @@ class CentralUnit:
         self.json_rpc_client: Final[JsonRpcAioHttpClient] = central_config.create_json_rpc_client()
 
         CENTRAL_INSTANCES[self._attr_name] = self
-        self._connection_checker: Final[ConnectionChecker] = ConnectionChecker(self)
+        self._connection_checker: Final = ConnectionChecker(self)
         self._hub: HmHub = HmHub(central=self)
         self._attr_version: str | None = None
 
@@ -745,7 +748,7 @@ class CentralUnit:
                 return
             self._entities[entity.unique_identifier] = entity
 
-        if isinstance(entity, (GenericEntity, GenericEvent)) and entity.supports_events:
+        if isinstance(entity, GenericEntity | GenericEvent) and entity.supports_events:
             if (
                 entity.channel_address,
                 entity.parameter,
@@ -776,7 +779,7 @@ class CentralUnit:
             del self._entities[entity.unique_identifier]
 
         if (
-            isinstance(entity, (GenericEntity, GenericEvent))
+            isinstance(entity, GenericEntity | GenericEvent)
             and entity.supports_events
             and (entity.channel_address, entity.parameter) in self._entity_event_subscriptions
         ):
@@ -786,10 +789,10 @@ class CentralUnit:
         """Check if unique_identifier is already added."""
         return unique_identifier in self._entities
 
-    def create_task(self, target: Awaitable) -> None:
+    def create_task(self, target: Awaitable, name: str) -> None:
         """Add task to the executor pool."""
         try:
-            self._loop.call_soon_threadsafe(self._async_create_task, target)
+            self._loop.call_soon_threadsafe(self._async_create_task, target, name)
         except CancelledError:
             _LOGGER.debug(
                 "create_task: task cancelled for %s",
@@ -797,9 +800,9 @@ class CentralUnit:
             )
             return
 
-    def _async_create_task(self, target: Coroutine[Any, Any, _R]) -> asyncio.Task[_R]:
+    def _async_create_task(self, target: Coroutine[Any, Any, _R], name: str) -> asyncio.Task[_R]:
         """Create a task from within the event_loop. This method must be run in the event_loop."""
-        task = self._loop.create_task(target)
+        task = self._loop.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task
@@ -999,7 +1002,7 @@ class ConnectionChecker(threading.Thread):
     def __init__(self, central: CentralUnit) -> None:
         """Init the connection checker."""
         threading.Thread.__init__(self, name=f"ConnectionChecker for {central.name}")
-        self._central: Final[CentralUnit] = central
+        self._central: Final = central
         self._active = True
         self._central_is_connected = True
 
@@ -1085,24 +1088,24 @@ class CentralConfig:
         load_un_ignore: bool = True,
     ) -> None:
         """Init the client config."""
-        self.connection_state: Final[CentralConnectionState] = CentralConnectionState()
-        self.storage_folder: Final[str] = storage_folder
-        self.name: Final[str] = name
-        self.host: Final[str] = host
-        self.username: Final[str] = username
-        self.password: Final[str] = password
-        self.central_id: Final[str] = central_id
-        self.interface_configs: Final[set[hmcl.InterfaceConfig]] = interface_configs
-        self.default_callback_port: Final[int] = default_callback_port
-        self.client_session: Final[ClientSession | None] = client_session
-        self.tls: Final[bool] = tls
-        self.verify_tls: Final[bool] = verify_tls
-        self.callback_host: Final[str | None] = callback_host
-        self.callback_port: Final[int | None] = callback_port
-        self.json_port: Final[int | None] = json_port
-        self.un_ignore_list: Final[list[str] | None] = un_ignore_list
-        self._use_caches: Final[bool] = use_caches
-        self._load_un_ignore: Final[bool] = load_un_ignore
+        self.connection_state: Final = CentralConnectionState()
+        self.storage_folder: Final = storage_folder
+        self.name: Final = name
+        self.host: Final = host
+        self.username: Final = username
+        self.password: Final = password
+        self.central_id: Final = central_id
+        self.interface_configs: Final = interface_configs
+        self.default_callback_port: Final = default_callback_port
+        self.client_session: Final = client_session
+        self.tls: Final = tls
+        self.verify_tls: Final = verify_tls
+        self.callback_host: Final = callback_host
+        self.callback_port: Final = callback_port
+        self.json_port: Final = json_port
+        self.un_ignore_list: Final = un_ignore_list
+        self._use_caches: Final = use_caches
+        self._load_un_ignore: Final = load_un_ignore
 
     @property
     def central_url(self) -> str:
@@ -1182,7 +1185,7 @@ class CentralConnectionState:
     def __init__(self) -> None:
         """Init the CentralConnectionStatus."""
         self._json_issue: bool = False
-        self._xml_proxy_issues: list[str] = []
+        self._xml_proxy_issues: Final[list[str]] = []
 
     @property
     def outgoing_issue(self) -> bool:

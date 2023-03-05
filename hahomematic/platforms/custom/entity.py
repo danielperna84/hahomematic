@@ -39,17 +39,17 @@ class CustomEntity(BaseEntity):
         extended: ExtendedConfig | None = None,
     ) -> None:
         """Initialize the entity."""
-        self._device_enum: Final[HmEntityDefinition] = device_enum
+        self._device_enum: Final = device_enum
         # required for name in BaseEntity
-        self._device_desc: Final[dict[str, Any]] = device_def
-        self._entity_def: Final[dict[int | tuple[int, ...], tuple[str, ...]]] = entity_def
+        self._device_desc: Final = device_def
+        self._entity_def: Final = entity_def
         super().__init__(
             device=device,
             unique_identifier=unique_identifier,
             channel_no=channel_no,
         )
-        self._extended: Final[ExtendedConfig | None] = extended
-        self.data_entities: dict[str, hmge.GenericEntity] = {}
+        self._extended: Final = extended
+        self.data_entities: Final[dict[str, hmge.GenericEntity]] = {}
         self._init_entities()
         self._init_entity_fields()
 

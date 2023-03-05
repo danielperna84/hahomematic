@@ -48,7 +48,6 @@ from hahomematic.const import (
     HmInterfaceEventType,
 )
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
-from hahomematic.json_rpc_client import JsonRpcAioHttpClient
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
     ProgramData,
@@ -67,16 +66,16 @@ class Client(ABC):
 
     def __init__(self, client_config: _ClientConfig) -> None:
         """Initialize the Client."""
-        self._config: Final[_ClientConfig] = client_config
+        self._config: Final = client_config
         self.central: Final[hmcu.CentralUnit] = client_config.central
 
-        self._json_rpc_client: Final[JsonRpcAioHttpClient] = client_config.central.json_rpc_client
-        self._proxy: Final[XmlRpcProxy] = client_config.xml_rpc_proxy
-        self._proxy_read: Final[XmlRpcProxy] = client_config.xml_rpc_proxy_read
-        self.interface: Final[str] = client_config.interface
-        self.interface_id: Final[str] = client_config.interface_id
-        self.serial: Final[str] = client_config.serial
-        self.version: Final[str] = client_config.version
+        self._json_rpc_client: Final = client_config.central.json_rpc_client
+        self._proxy: Final = client_config.xml_rpc_proxy
+        self._proxy_read: Final = client_config.xml_rpc_proxy_read
+        self.interface: Final = client_config.interface
+        self.interface_id: Final = client_config.interface_id
+        self.serial: Final = client_config.serial
+        self.version: Final = client_config.version
 
         self._attr_available: bool = True
         self._connection_error_count: int = 0
@@ -692,9 +691,8 @@ class ClientCCU(Client):
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from CCU."""
         rooms: dict[str, set[str]] = {}
-        device_channel_ids = self.central.device_details.device_channel_ids
         channel_ids_room = await self._json_rpc_client.get_all_channel_ids_room()
-        for address, channel_id in device_channel_ids.items():
+        for address, channel_id in self.central.device_details.device_channel_ids.items():
             if names := channel_ids_room.get(channel_id):
                 if address not in rooms:
                     rooms[address] = set()
@@ -704,9 +702,8 @@ class ClientCCU(Client):
     async def get_all_functions(self) -> dict[str, set[str]]:
         """Get all functions from CCU."""
         functions: dict[str, set[str]] = {}
-        device_channel_ids = self.central.device_details.device_channel_ids
         channel_ids_function = await self._json_rpc_client.get_all_channel_ids_function()
-        for address, channel_id in device_channel_ids.items():
+        for address, channel_id in self.central.device_details.device_channel_ids.items():
             if sections := channel_ids_function.get(channel_id):
                 if address not in functions:
                     functions[address] = set()
@@ -1075,10 +1072,10 @@ class _ClientConfig:
         interface_config: InterfaceConfig,
         local_ip: str,
     ) -> None:
-        self.central: Final[hmcu.CentralUnit] = central
-        self.interface_config: Final[InterfaceConfig] = interface_config
-        self.interface: Final[str] = interface_config.interface
-        self.interface_id: Final[str] = interface_config.interface_id
+        self.central: Final = central
+        self.interface_config: Final = interface_config
+        self.interface: Final = interface_config.interface
+        self.interface_id: Final = interface_config.interface_id
         self._callback_host: Final[str] = (
             central.config.callback_host if central.config.callback_host else local_ip
         )
@@ -1089,13 +1086,13 @@ class _ClientConfig:
             central.config.username is not None and central.config.password is not None
         )
         self.init_url: Final[str] = f"http://{self._callback_host}:{self._callback_port}"
-        self.xml_rpc_uri: Final[str] = build_xml_rpc_uri(
+        self.xml_rpc_uri: Final = build_xml_rpc_uri(
             host=central.config.host,
             port=interface_config.port,
             path=interface_config.remote_path,
             tls=central.config.tls,
         )
-        xml_rpc_headers: Final[list[tuple[str, str]]] = build_headers(
+        xml_rpc_headers: Final = build_headers(
             username=central.config.username,
             password=central.config.password,
         )
@@ -1162,9 +1159,9 @@ class InterfaceConfig:
         """Init the interface config."""
         self.interface: Final[str] = LOCAL_INTERFACE if local_resources else interface
         self.interface_id: Final[str] = f"{central_name}-{self.interface}"
-        self.port: Final[int] = port
-        self.remote_path: Final[str | None] = remote_path
-        self.local_resources: Final[LocalRessources | None] = local_resources
+        self.port: Final = port
+        self.remote_path: Final = remote_path
+        self.local_resources: Final = local_resources
         self.validate()
 
     def validate(self) -> None:

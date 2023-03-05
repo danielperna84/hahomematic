@@ -44,10 +44,10 @@ class BasePersistentCache(ABC):
         persistant_cache: dict[str, Any],
     ) -> None:
         """Init the base class of the persistent cache."""
-        self._central: Final[hmcu.CentralUnit] = central
-        self._cache_dir: Final[str] = f"{central.config.storage_folder}/cache"
-        self._filename: Final[str] = f"{central.name}_{filename}"
-        self._persistant_cache: Final[dict[str, Any]] = persistant_cache
+        self._central: Final = central
+        self._cache_dir: Final = f"{central.config.storage_folder}/cache"
+        self._filename: Final = f"{central.name}_{filename}"
+        self._persistant_cache: Final = persistant_cache
         self.last_save: datetime = INIT_DATETIME
 
     async def save(self) -> HmDataOperationResult:

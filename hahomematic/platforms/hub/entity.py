@@ -27,15 +27,15 @@ class GenericHubEntity(CallbackEntity):
         data: HubData,
     ) -> None:
         """Initialize the entity."""
-        unique_identifier: Final[str] = generate_unique_identifier(
+        unique_identifier: Final = generate_unique_identifier(
             central=central,
             address=address,
             parameter=slugify(data.name),
         )
         super().__init__(unique_identifier=unique_identifier)
-        self.central: Final[hmcu.CentralUnit] = central
-        self._attr_name: Final[str] = self.get_name(data=data)
-        self._attr_full_name: Final[str] = f"{self.central.name}_{self._attr_name}"
+        self.central: Final = central
+        self._attr_name: Final = self.get_name(data=data)
+        self._attr_full_name: Final = f"{self.central.name}_{self._attr_name}"
 
     @abstractmethod
     def get_name(self, data: HubData) -> str:
@@ -64,15 +64,15 @@ class GenericSystemVariable(GenericHubEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(central=central, address=SYSVAR_ADDRESS, data=data)
-        self.ccu_var_name: Final[str] = data.name
-        self.data_type: Final[str | None] = data.data_type
+        self.ccu_var_name: Final = data.name
+        self.data_type: Final = data.data_type
         self._attr_value_list: Final[tuple[str, ...] | None] = (
             tuple(data.value_list) if data.value_list else None
         )
-        self._attr_max: Final[float | int | None] = data.max_value
-        self._attr_min: Final[float | int | None] = data.min_value
-        self._attr_unit: Final[str | None] = data.unit
-        self._attr_value: bool | float | int | str | None = data.value
+        self._attr_max: Final = data.max_value
+        self._attr_min: Final = data.min_value
+        self._attr_unit: Final = data.unit
+        self._attr_value = data.value
 
     @property
     def available(self) -> bool:
