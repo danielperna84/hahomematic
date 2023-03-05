@@ -49,7 +49,7 @@ class CustomEntity(BaseEntity):
             channel_no=channel_no,
         )
         self._extended: Final[ExtendedConfig | None] = extended
-        self.data_entities: dict[str, hmge.GenericEntity] = {}
+        self.data_entities: Final[dict[str, hmge.GenericEntity]] = {}
         self._init_entities()
         self._init_entity_fields()
 

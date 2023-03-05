@@ -53,10 +53,10 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
     ) -> None:
         """Initialize new proxy for server and get local ip."""
         self._tasks: set[asyncio.Future[Any]] = set()
-        self.interface_id = interface_id
-        self._connection_state: Final[hmcu.CentralConnectionState] = connection_state
+        self.interface_id: Final = interface_id
+        self._connection_state: Final = connection_state
         self._loop: Final[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
-        self._proxy_executor: Final[ThreadPoolExecutor] = ThreadPoolExecutor(
+        self._proxy_executor: Final = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix=interface_id
         )
         self._tls: Final[bool] = kwargs.pop(ATTR_TLS, False)

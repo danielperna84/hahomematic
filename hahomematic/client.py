@@ -692,9 +692,8 @@ class ClientCCU(Client):
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from CCU."""
         rooms: dict[str, set[str]] = {}
-        device_channel_ids = self.central.device_details.device_channel_ids
         channel_ids_room = await self._json_rpc_client.get_all_channel_ids_room()
-        for address, channel_id in device_channel_ids.items():
+        for address, channel_id in self.central.device_details.device_channel_ids.items():
             if names := channel_ids_room.get(channel_id):
                 if address not in rooms:
                     rooms[address] = set()
@@ -704,9 +703,8 @@ class ClientCCU(Client):
     async def get_all_functions(self) -> dict[str, set[str]]:
         """Get all functions from CCU."""
         functions: dict[str, set[str]] = {}
-        device_channel_ids = self.central.device_details.device_channel_ids
         channel_ids_function = await self._json_rpc_client.get_all_channel_ids_function()
-        for address, channel_id in device_channel_ids.items():
+        for address, channel_id in self.central.device_details.device_channel_ids.items():
             if sections := channel_ids_function.get(channel_id):
                 if address not in functions:
                     functions[address] = set()

@@ -173,7 +173,7 @@ class WrapperEntity(hme.BaseEntity):
             raise HaHomematicException(  # pragma: no cover
                 "Cannot create wrapped entity. platform must not be equivalent."
             )
-        self._wrapped_entity: Final[GenericEntity] = wrapped_entity
+        self._wrapped_entity: Final = wrapped_entity
         super().__init__(
             device=wrapped_entity.device,
             channel_no=wrapped_entity.channel_no,

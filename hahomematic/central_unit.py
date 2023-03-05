@@ -86,19 +86,22 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
-        self._sema_add_devices = asyncio.Semaphore()
-        self._tasks: set[asyncio.Future[Any]] = set()
+        self._sema_add_devices: Final = asyncio.Semaphore()
+        self._tasks: Final[set[asyncio.Future[Any]]] = set()
         # Keep the config for the central #CC
         self.config: Final[CentralConfig] = central_config
         self._attr_name: Final[str] = central_config.name
         self._attr_model: str | None = None
         self._connection_state: Final[CentralConnectionState] = central_config.connection_state
-        self._loop: asyncio.AbstractEventLoop = asyncio.get_running_loop()
-        self._xml_rpc_server: xmlrpc.XmlRpcServer | None = None
-        if central_config.enable_server:
-            self._xml_rpc_server = xmlrpc.register_xml_rpc_server(
+        self._loop: Final[asyncio.AbstractEventLoop] = asyncio.get_running_loop()
+        self._xml_rpc_server: Final[xmlrpc.XmlRpcServer | None] = (
+            xmlrpc.register_xml_rpc_server(
                 local_port=central_config.callback_port or central_config.default_callback_port
             )
+            if central_config.enable_server
+            else None
+        )
+        if self._xml_rpc_server:
             self._xml_rpc_server.register_central(self)
         self.local_port: Final[int] = (
             self._xml_rpc_server.local_port if self._xml_rpc_server else 0
@@ -1085,7 +1088,7 @@ class CentralConfig:
         load_un_ignore: bool = True,
     ) -> None:
         """Init the client config."""
-        self.connection_state: Final[CentralConnectionState] = CentralConnectionState()
+        self.connection_state: Final = CentralConnectionState()
         self.storage_folder: Final[str] = storage_folder
         self.name: Final[str] = name
         self.host: Final[str] = host
@@ -1182,7 +1185,7 @@ class CentralConnectionState:
     def __init__(self) -> None:
         """Init the CentralConnectionStatus."""
         self._json_issue: bool = False
-        self._xml_proxy_issues: list[str] = []
+        self._xml_proxy_issues: Final[list[str]] = []
 
     @property
     def outgoing_issue(self) -> bool:

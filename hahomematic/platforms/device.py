@@ -61,13 +61,13 @@ class HmDevice(PayloadMixin):
             interface_id,
             device_address,
         )
-        self.generic_entities: dict[tuple[str, str], GenericEntity] = {}
-        self.wrapper_entities: dict[tuple[str, str], WrapperEntity] = {}
-        self.custom_entities: dict[str, hmce.CustomEntity] = {}
-        self.events: dict[tuple[str, str], GenericEvent] = {}
+        self.generic_entities: Final[dict[tuple[str, str], GenericEntity]] = {}
+        self.wrapper_entities: Final[dict[tuple[str, str], WrapperEntity]] = {}
+        self.custom_entities: Final[dict[str, hmce.CustomEntity]] = {}
+        self.events: Final[dict[tuple[str, str], GenericEvent]] = {}
         self._attr_last_update: datetime = INIT_DATETIME
         self._forced_availability: HmForcedDeviceAvailability = HmForcedDeviceAvailability.NOT_SET
-        self._update_callbacks: list[Callable] = []
+        self._update_callbacks: Final[list[Callable]] = []
         self._attr_device_type: Final[str] = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
@@ -100,7 +100,7 @@ class HmDevice(PayloadMixin):
             device_type=self._attr_device_type,
         )
         self.value_cache: Final[ValueCache] = ValueCache(device=self)
-        self._attr_room: str | None = central.device_details.get_room(
+        self._attr_room: Final[str | None] = central.device_details.get_room(
             device_address=device_address
         )
 

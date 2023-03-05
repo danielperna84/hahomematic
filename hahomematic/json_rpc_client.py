@@ -74,14 +74,14 @@ class JsonRpcAioHttpClient:
         """Session setup."""
         self._client_session: Final[ClientSession | None] = client_session
         self._connection_state: Final[hmcu.CentralConnectionState] = connection_state
-        self._session_id: str | None = None
         self._last_session_id_refresh: datetime | None = None
         self._username: Final[str] = username
         self._password: Final[str] = password
         self._tls: Final[bool] = tls
         self._tls_context: Final[ssl.SSLContext] = get_tls_context(verify_tls)
         self._url: Final[str] = f"{device_url}{PATH_JSON_RPC}"
-        self._script_cache: dict[str, str] = {}
+        self._script_cache: Final[dict[str, str]] = {}
+        self._session_id: str | None = None
 
     @property
     def is_activated(self) -> bool:

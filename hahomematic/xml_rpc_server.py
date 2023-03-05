@@ -32,7 +32,7 @@ class RPCFunctions:
 
     def __init__(self, xml_rpc_server: XmlRpcServer) -> None:
         """Init RPCFunctions."""
-        self._xml_rpc_server: XmlRpcServer = xml_rpc_server
+        self._xml_rpc_server: Final = xml_rpc_server
 
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """If a device emits some sort event, we will handle it here."""
@@ -172,9 +172,7 @@ class XmlRpcServer(threading.Thread):
         if self._initialized:
             return
         self._initialized = True
-        if local_port == PORT_ANY:
-            local_port = find_free_port()
-        self.local_port: int = local_port
+        self.local_port: Final[int] = find_free_port() if local_port == PORT_ANY else local_port
         self._instances[self.local_port] = self
         threading.Thread.__init__(self, name=f"XmlRpcServer on port {self.local_port}")
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
