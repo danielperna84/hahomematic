@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu, client as hmcl, exporter as hmexp
+from hahomematic import central_unit as hmcu, exporter as hmexp
 from hahomematic.const import (
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
@@ -37,7 +37,7 @@ from hahomematic.platforms.support import (
     get_device_name,
     value_property,
 )
-from hahomematic.support import Channel, updated_within_seconds
+from hahomematic.support import updated_within_seconds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +48,12 @@ class HmDevice(PayloadMixin):
     def __init__(self, central: hmcu.CentralUnit, interface_id: str, device_address: str) -> None:
         """Initialize the device object."""
         PayloadMixin.__init__(self)
-        self.central: Final[hmcu.CentralUnit] = central
-        self._attr_interface_id: Final[str] = interface_id
-        self._attr_interface: Final[str] = central.device_details.get_interface(device_address)
-        self.client: Final[hmcl.Client] = central.get_client(interface_id=interface_id)
-        self._attr_device_address: Final[str] = device_address
-        self.channels: Final[dict[str, Channel]] = central.device_descriptions.get_channels(
+        self.central: Final = central
+        self._attr_interface_id: Final = interface_id
+        self._attr_interface: Final = central.device_details.get_interface(device_address)
+        self.client: Final = central.get_client(interface_id=interface_id)
+        self._attr_device_address: Final = device_address
+        self.channels: Final = central.device_descriptions.get_channels(
             interface_id, device_address
         )
         _LOGGER.debug(
@@ -68,14 +68,14 @@ class HmDevice(PayloadMixin):
         self._attr_last_update: datetime = INIT_DATETIME
         self._forced_availability: HmForcedDeviceAvailability = HmForcedDeviceAvailability.NOT_SET
         self._update_callbacks: Final[list[Callable]] = []
-        self._attr_device_type: Final[str] = str(
+        self._attr_device_type: Final = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
                 parameter=HM_TYPE,
             )
         )
-        self._attr_sub_type: Final[str] = str(
+        self._attr_sub_type: Final = str(
             central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
@@ -83,10 +83,10 @@ class HmDevice(PayloadMixin):
             )
         )
         # marker if device will be created as custom entity
-        self._has_custom_entity_definition: Final[
-            bool
-        ] = cep.has_custom_entity_definition_by_device(device=self)
-        self._attr_firmware: Final[str] = str(
+        self._has_custom_entity_definition: Final = cep.has_custom_entity_definition_by_device(
+            device=self
+        )
+        self._attr_firmware: Final = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
@@ -94,15 +94,13 @@ class HmDevice(PayloadMixin):
             )
         )
 
-        self._attr_name: Final[str] = get_device_name(
+        self._attr_name: Final = get_device_name(
             central=central,
             device_address=device_address,
             device_type=self._attr_device_type,
         )
-        self.value_cache: Final[ValueCache] = ValueCache(device=self)
-        self._attr_room: Final[str | None] = central.device_details.get_room(
-            device_address=device_address
-        )
+        self.value_cache: Final = ValueCache(device=self)
+        self._attr_room: Final = central.device_details.get_room(device_address=device_address)
 
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",
@@ -335,13 +333,13 @@ class HmDevice(PayloadMixin):
 class ValueCache:
     """A Cache to temporaily stored values."""
 
-    _NO_VALUE_CACHE_ENTRY: Final[str] = "NO_VALUE_CACHE_ENTRY"
+    _NO_VALUE_CACHE_ENTRY: Final = "NO_VALUE_CACHE_ENTRY"
 
-    _sema_get_or_load_value = asyncio.BoundedSemaphore(1)
+    _sema_get_or_load_value: Final = asyncio.BoundedSemaphore(1)
 
     def __init__(self, device: HmDevice) -> None:
         """Init the value cache."""
-        self._attr_device: Final[HmDevice] = device
+        self._attr_device: Final = device
         # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
         self._attr_value_cache: Final[dict[str, dict[str, dict[str, CacheEntry]]]] = {}
 

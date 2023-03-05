@@ -40,7 +40,7 @@ class HmHub:
         """Initialize HomeMatic hub."""
         self._sema_fetch_sysvars: Final = asyncio.Semaphore()
         self._sema_fetch_programs: Final = asyncio.Semaphore()
-        self._central: Final[hmcu.CentralUnit] = central
+        self._central: Final = central
 
     async def fetch_sysvar_data(self, include_internal: bool = True) -> None:
         """Fetch sysvar data for the hub."""

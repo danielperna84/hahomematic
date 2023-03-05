@@ -25,7 +25,7 @@ class DeviceDetailsCache:
 
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device details cache."""
-        self._central: Final[hmcu.CentralUnit] = central
+        self._central: Final = central
         self._names_cache: Final[dict[str, str]] = {}
         self._interface_cache: Final[dict[str, str]] = {}
         self._device_channel_ids: Final[dict[str, str]] = {}
@@ -139,7 +139,7 @@ class DeviceDataCache:
 
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device data cache."""
-        self._central: Final[hmcu.CentralUnit] = central
+        self._central: Final = central
         # { interface, {channel_address, {parameter, CacheEntry}}}
         self._central_values_cache: Final[dict[str, dict[str, dict[str, Any]]]] = {}
         self._last_updated = INIT_DATETIME

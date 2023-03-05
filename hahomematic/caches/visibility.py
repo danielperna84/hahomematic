@@ -256,9 +256,9 @@ class ParameterVisibilityCache:
         central: hmcu.CentralUnit,
     ) -> None:
         """Init the parameter visibility cache."""
-        self._central: Final[hmcu.CentralUnit] = central
-        self._storage_folder: Final[str] = central.config.storage_folder
-        self._required_parameters: Final[tuple[str, ...]] = get_required_parameters()
+        self._central = central
+        self._storage_folder: Final = central.config.storage_folder
+        self._required_parameters: Final = get_required_parameters()
         self._raw_un_ignore_list: Final[set[str]] = set(central.config.un_ignore_list or set())
         # paramset_key, parameter
         self._un_ignore_parameters_general: Final[dict[str, set[str]]] = {

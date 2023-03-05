@@ -6,7 +6,6 @@ import logging
 import os
 from pathlib import Path
 import re
-import ssl
 from typing import Any, Final
 
 from aiohttp import ClientConnectorError, ClientError, ClientSession
@@ -72,15 +71,15 @@ class JsonRpcAioHttpClient:
         verify_tls: bool = False,
     ) -> None:
         """Session setup."""
-        self._client_session: Final[ClientSession | None] = client_session
-        self._connection_state: Final[hmcu.CentralConnectionState] = connection_state
-        self._last_session_id_refresh: datetime | None = None
-        self._username: Final[str] = username
-        self._password: Final[str] = password
-        self._tls: Final[bool] = tls
-        self._tls_context: Final[ssl.SSLContext] = get_tls_context(verify_tls)
-        self._url: Final[str] = f"{device_url}{PATH_JSON_RPC}"
+        self._client_session: Final = client_session
+        self._connection_state: Final = connection_state
+        self._username: Final = username
+        self._password: Final = password
+        self._tls: Final = tls
+        self._tls_context: Final = get_tls_context(verify_tls)
+        self._url: Final = f"{device_url}{PATH_JSON_RPC}"
         self._script_cache: Final[dict[str, str]] = {}
+        self._last_session_id_refresh: datetime | None = None
         self._session_id: str | None = None
 
     @property

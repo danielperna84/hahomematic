@@ -29,8 +29,8 @@ class HmProgramButton(GenericHubEntity):
             address=PROGRAM_ADDRESS,
             data=data,
         )
-        self.pid: Final[str] = data.pid
-        self.ccu_program_name: Final[str] = data.name
+        self.pid: Final = data.pid
+        self.ccu_program_name: Final = data.name
         self.is_active: bool = data.is_active
         self.is_internal: bool = data.is_internal
         self.last_execute_time: str = data.last_execute_time

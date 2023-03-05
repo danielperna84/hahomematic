@@ -75,7 +75,7 @@ class CallbackEntity(ABC):
 
     def __init__(self, unique_identifier: str) -> None:
         """Init the callback entity."""
-        self._attr_unique_identifier: Final[str] = unique_identifier
+        self._attr_unique_identifier: Final = unique_identifier
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
 
@@ -161,14 +161,14 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Initialize the entity."""
         PayloadMixin.__init__(self)
         super().__init__(unique_identifier=unique_identifier)
-        self.device: Final[hmd.HmDevice] = device
-        self._attr_channel_no: Final[int | None] = channel_no
+        self.device: Final = device
+        self._attr_channel_no: Final = channel_no
         self._attr_channel_address: Final[str] = hms.get_channel_address(
             device_address=device.device_address, channel_no=channel_no
         )
         self._central: Final[hmcu.CentralUnit] = device.central
-        self._channel_type: Final[str] = str(device.channels[self._attr_channel_address].type)
-        self._attr_function: Final[str | None] = self._central.device_details.get_function_text(
+        self._channel_type: Final = str(device.channels[self._attr_channel_address].type)
+        self._attr_function: Final = self._central.device_details.get_function_text(
             address=self._attr_channel_address
         )
         self._client: Final[hmcl.Client] = device.central.get_client(
@@ -176,9 +176,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         )
 
         self._attr_usage: HmEntityUsage = self._get_entity_usage()
-        entity_name_data: Final[EntityNameData] = self._get_entity_name()
-        self._attr_full_name: Final[str] = entity_name_data.full_name
-        self._attr_name: Final[str | None] = entity_name_data.entity_name
+        entity_name_data: Final = self._get_entity_name()
+        self._attr_full_name: Final = entity_name_data.full_name
+        self._attr_name: Final = entity_name_data.entity_name
 
     @property
     def address_path(self) -> str:
@@ -270,9 +270,9 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         parameter_data: dict[str, Any],
     ) -> None:
         """Initialize the entity."""
-        self._attr_paramset_key: Final[str] = paramset_key
+        self._attr_paramset_key: Final = paramset_key
         # required for name in BaseEntity
-        self._attr_parameter: Final[str] = parameter
+        self._attr_parameter: Final = parameter
         super().__init__(
             device=device,
             unique_identifier=unique_identifier,
