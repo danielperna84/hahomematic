@@ -581,9 +581,9 @@ def _create_entities(
     return tuple(entities)
 
 
-def get_default_entities() -> dict[int | tuple[int, ...], tuple[str, ...]]:
+def get_default_entities() -> dict[int | str | HmEntityDefinition, Any]:
     """Return the default entities."""
-    return deepcopy(entity_definition[ED_DEFAULT_ENTITIES])  # type: ignore[arg-type]
+    return entity_definition[ED_DEFAULT_ENTITIES]
 
 
 def get_include_default_entities(device_enum: HmEntityDefinition) -> bool:
@@ -594,18 +594,18 @@ def get_include_default_entities(device_enum: HmEntityDefinition) -> bool:
 
 def _get_device_definition(device_enum: HmEntityDefinition) -> dict[str, vol.Any]:
     """Return device from entity definitions."""
-    return cast(
-        dict[str, vol.Any], deepcopy(entity_definition[ED_DEVICE_DEFINITIONS][device_enum])
-    )
+    return cast(dict[str, vol.Any], entity_definition[ED_DEVICE_DEFINITIONS][device_enum])
 
 
 def _get_device_group(device_enum: HmEntityDefinition, base_channel_no: int) -> dict[str, vol.Any]:
     """Return the device group."""
     device = _get_device_definition(device_enum)
-    group = cast(dict[str, vol.Any], deepcopy(device[ED_DEVICE_GROUP]))
+    group = cast(dict[str, vol.Any], device[ED_DEVICE_GROUP])
     if group and base_channel_no == 0:
         return group
 
+    # Create a deep copy of the group due to channel rebase
+    group = deepcopy(group)
     # Add base_channel_no to the primary_channel to get the real primary_channel number
     primary_channel = group[ED_PRIMARY_CHANNEL]
     group[ED_PRIMARY_CHANNEL] = primary_channel + base_channel_no
@@ -646,7 +646,7 @@ def _get_device_entities(
     )
     new_entities: dict[int, tuple[str, ...]] = {}
     if additional_entities:
-        for channel_no, field in deepcopy(additional_entities).items():
+        for channel_no, field in additional_entities.items():
             new_entities[channel_no + base_channel_no] = field
     return new_entities
 

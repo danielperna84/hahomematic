@@ -119,7 +119,7 @@ class DeviceErrorEvent(GenericEvent):
                 or (isinstance(old_value, int) and old_value != value)
             )
         ):
-            self.fire_event(value)
+            self.fire_event(value=value)
 
 
 class ImpulseEvent(GenericEvent):

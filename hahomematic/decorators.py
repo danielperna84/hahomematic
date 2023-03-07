@@ -65,15 +65,14 @@ def _exec_callback_system_event(name: str, *args: Any, **kwargs: Any) -> None:
     try:
         args = args[1:]
         interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
-        client = hmcl.get_client(interface_id=interface_id)
+        if client := hmcl.get_client(interface_id=interface_id):
+            client.last_updated = datetime.now()
+            client.central.fire_system_event_callback(name=name, **kwargs)
     except Exception as err:  # pragma: no cover
         _LOGGER.warning(
             "EXEC_CALLBACK_SYSTEM_EVENT failed: Unable to reduce kwargs for callback_system_event"
         )
         raise HaHomematicException("args-exception callback_system_event") from err
-    if client:
-        client.last_updated = datetime.now()
-        client.central.fire_system_event_callback(name=name, **kwargs)
 
 
 def callback_event(func: Callable[P, R]) -> Callable[P, R]:
@@ -91,15 +90,14 @@ def callback_event(func: Callable[P, R]) -> Callable[P, R]:
         try:
             args = args[1:]
             interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
-            client = hmcl.get_client(interface_id=interface_id)
+            if client := hmcl.get_client(interface_id=interface_id):
+                client.last_updated = datetime.now()
+                client.central.fire_entity_event_callback(*args, **kwargs)
         except Exception as err:  # pragma: no cover
             _LOGGER.warning(
                 "EXEC_CALLBACK_ENTITY_EVENT failed: Unable to reduce kwargs for callback_event"
             )
             raise HaHomematicException("args-exception callback_event") from err
-        if client:
-            client.last_updated = datetime.now()
-            client.central.fire_entity_event_callback(*args, **kwargs)
 
     return wrapper_callback_event
 
