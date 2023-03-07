@@ -4,6 +4,7 @@
 - Update ruff, fix files
 - Improve typing
 - Move callback calls into exception block
+- Remove avoidable usage of deepcopy
 
 # Version 2023.3.0 (2023-03-01)
 
