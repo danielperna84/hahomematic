@@ -3,12 +3,12 @@
 
 codecov==2.1.12
 coverage==7.2.1
-mypy==1.0.1
+mypy==1.1.1
 pip==23.0.1
 pre-commit==3.1.1
 pydevccu==0.1.5
 pylint-strict-informational==0.1
-pylint==2.16.3
+pylint==2.16.4
 pytest-aiohttp==1.0.4
 pytest-asyncio==0.20.3
 pytest-cov==4.0.0
