@@ -3,6 +3,7 @@
 - Add name to tasks
 - Update ruff, fix files
 - Improve typing
+- Move callback calls into exception block
 
 # Version 2023.3.0 (2023-03-01)
 
