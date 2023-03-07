@@ -748,7 +748,7 @@ class CentralUnit:
                 return
             self._entities[entity.unique_identifier] = entity
 
-        if isinstance(entity, GenericEntity | GenericEvent) and entity.supports_events:
+        if isinstance(entity, (GenericEntity, GenericEvent)) and entity.supports_events:
             if (
                 entity.channel_address,
                 entity.parameter,
@@ -779,7 +779,7 @@ class CentralUnit:
             del self._entities[entity.unique_identifier]
 
         if (
-            isinstance(entity, GenericEntity | GenericEvent)
+            isinstance(entity, (GenericEntity, GenericEvent))
             and entity.supports_events
             and (entity.channel_address, entity.parameter) in self._entity_event_subscriptions
         ):
