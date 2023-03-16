@@ -1,10 +1,11 @@
-# Version 2023.3.1 (2023-03-06)
+# Version 2023.3.1 (2023-03-17)
 
 - Add name to tasks
-- Update ruff, fix files
 - Improve typing
 - Move callback calls into exception block
 - Remove avoidable usage of deepcopy
+- Add dependabot
+- Update requirements
 
 # Version 2023.3.0 (2023-03-01)
 
