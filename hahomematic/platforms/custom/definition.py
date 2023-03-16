@@ -581,9 +581,9 @@ def _create_entities(
     return tuple(entities)
 
 
-def get_default_entities() -> dict[int | str | HmEntityDefinition, Any]:
+def get_default_entities() -> dict[int | tuple[int, ...], tuple[str, ...]]:
     """Return the default entities."""
-    return entity_definition[ED_DEFAULT_ENTITIES]
+    return entity_definition[ED_DEFAULT_ENTITIES]  # type: ignore[return-value]
 
 
 def get_include_default_entities(device_enum: HmEntityDefinition) -> bool:
