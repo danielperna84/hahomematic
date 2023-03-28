@@ -6,6 +6,7 @@
 - Remove avoidable usage of deepcopy
 - Add dependabot
 - Update requirements
+- Drop pyupgrade, autoflake, flake8 in favor of ruff
 
 # Version 2023.3.0 (2023-03-01)
 
