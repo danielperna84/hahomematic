@@ -75,7 +75,7 @@ repos:
           - --branch=devel
           - --branch=master
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.29.0
+    rev: v1.30.0
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier
