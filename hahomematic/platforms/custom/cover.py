@@ -111,13 +111,18 @@ class CeCover(CustomEntity):
             return
         position = min(100.0, max(0.0, position))
         level = position / 100.0
-        await self._set_cover_level(level=level, collector=collector)
+        await self._set_level(height_level=level, collector=collector)
 
-    async def _set_cover_level(
-        self, level: float, collector: CallParameterCollector | None = None
+    async def _set_level(
+        self,
+        height_level: float | None = None,
+        tilt_level: float | None = None,
+        collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the cover to a specific position. Value range is 0.0 to 1.0."""
-        await self._e_level.send_value(value=level, collector=collector)
+        if height_level is None:
+            return
+        await self._e_level.send_value(value=height_level, collector=collector)
 
     @value_property
     def is_closed(self) -> bool | None:
@@ -143,14 +148,14 @@ class CeCover(CustomEntity):
         """Open the cover."""
         if not self.is_state_change(open=True):
             return
-        await self._set_cover_level(level=self._attr_hm_open_state, collector=collector)
+        await self._set_level(height_level=self._attr_hm_open_state, collector=collector)
 
     @bind_collector
     async def close_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover."""
         if not self.is_state_change(close=True):
             return
-        await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
+        await self._set_level(height_level=self._attr_hm_closed_state, collector=collector)
 
     @bind_collector
     async def stop_cover(self, collector: CallParameterCollector | None = None) -> None:
@@ -188,16 +193,22 @@ class CeWindowDrive(CeCover):
             level = 0.01
         return int(level * 100)
 
-    async def _set_cover_level(
-        self, level: float, collector: CallParameterCollector | None = None
+    async def _set_level(
+        self,
+        height_level: float | None = None,
+        tilt_level: float | None = None,
+        collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the window drive to a specific position. Value range is -0.005 to 1.0."""
-        if level == HM_CLOSED:
+        if height_level is None:
+            return
+
+        if height_level == HM_CLOSED:
             wd_level = HM_WD_CLOSED
-        elif HM_CLOSED < level <= 0.01:
+        elif HM_CLOSED < height_level <= 0.01:
             wd_level = 0
         else:
-            wd_level = level
+            wd_level = height_level
         await self._e_level.send_value(value=wd_level, collector=collector, do_validate=False)
 
 
@@ -237,27 +248,32 @@ class CeBlind(CeCover):
             return
         position = min(100.0, max(0.0, position))
         level = position / 100.0
-        await self._set_cover_tilt_level(level=level, collector=collector)
+        await self._set_level(tilt_level=level, collector=collector)
 
-    async def _set_cover_tilt_level(
-        self, level: float, collector: CallParameterCollector | None = None
+    async def _set_level(
+        self,
+        height_level: float | None = None,
+        tilt_level: float | None = None,
+        collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
-        await self._e_level_2.send_value(value=level, collector=collector)
+        if tilt_level is not None:
+            await self._e_level_2.send_value(value=tilt_level, collector=collector)
+        await super()._set_level(height_level=height_level, collector=collector)
 
     @bind_collector
     async def open_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
-        await self._set_cover_tilt_level(level=self._attr_hm_open_state, collector=collector)
+        await self._set_level(tilt_level=self._attr_hm_open_state, collector=collector)
 
     @bind_collector
     async def close_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
         if not self.is_state_change(tilt_close=True):
             return
-        await self._set_cover_tilt_level(level=self._attr_hm_closed_state, collector=collector)
+        await self._set_level(tilt_level=self._attr_hm_closed_state, collector=collector)
 
     @bind_collector
     async def stop_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
@@ -303,23 +319,34 @@ class CeIpBlind(CeBlind):
         """Open the cover and open the tilt."""
         if not self.is_state_change(open=True, tilt_open=True):
             return
-        await super()._set_cover_tilt_level(level=self._attr_hm_open_state, collector=collector)
-        await self._set_cover_level(level=self._attr_hm_open_state, collector=collector)
+        await self._set_level(
+            height_level=self._attr_hm_open_state,
+            tilt_level=self._attr_hm_open_state,
+            collector=collector,
+        )
 
     @bind_collector
     async def close_cover(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover and close the tilt."""
         if not self.is_state_change(close=True, tilt_close=True):
             return
-        await super()._set_cover_tilt_level(level=self._attr_hm_closed_state, collector=collector)
-        await self._set_cover_level(level=self._attr_hm_closed_state, collector=collector)
+        await self._set_level(
+            height_level=self._attr_hm_closed_state,
+            tilt_level=self._attr_hm_closed_state,
+            collector=collector,
+        )
 
-    async def _set_cover_tilt_level(
-        self, level: float, collector: CallParameterCollector | None = None
+    async def _set_level(
+        self,
+        height_level: float | None = None,
+        tilt_level: float | None = None,
+        collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
-        await super()._set_cover_tilt_level(level=level, collector=collector)
-        await self._set_cover_level(level=self._channel_level or 0.0, collector=collector)
+        _height_level = height_level if height_level is not None else self._channel_level or 0.0
+        await super()._set_level(
+            height_level=_height_level, tilt_level=tilt_level, collector=collector
+        )
 
 
 class CeGarage(CustomEntity):
