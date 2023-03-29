@@ -28,7 +28,7 @@ async def test_device_general(
         str(device) == "address: VCU2128127, "
         "type: 8, "
         "name: HmIP-BSM_VCU2128127, "
-        "generic_entities: 23, "
+        "generic_entities: 27, "
         "custom_entities: 3, "
         "wrapper_entities: 0, "
         "events: 6"
