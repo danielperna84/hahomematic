@@ -224,7 +224,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
-        value="0x51,0x0",
+        value="0xa2,0x0",
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -235,7 +235,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
-        value="0x64,0x0",
+        value="0xc8,0x0",
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", HM_OPEN)
     assert cover.current_position == 100
@@ -257,7 +257,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
-        value="0x0,0x64",
+        value="0x0,0xc8",
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_OPEN)
     assert cover.current_position == 0
@@ -268,7 +268,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
-        value="0x0,0x2d",
+        value="0x0,0x5a",
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.45)
     assert cover.current_position == 0
@@ -290,7 +290,7 @@ async def test_ceblind(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
-        value="0xa,0x14",
+        value="0x14,0x28",
     )
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.1)
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.2)

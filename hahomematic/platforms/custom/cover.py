@@ -329,10 +329,11 @@ class CeBlind(CeCover):
         if level is None and tilt_level is None:
             return None
         levels: list[str] = []
+        # the resulting hex value is based on the doubled position
         if level is not None:
-            levels.append(str(hex(int(level * 100))))
+            levels.append(str(hex(int(level * 100 * 2))))
         if tilt_level is not None:
-            levels.append(str(hex(int(tilt_level * 100))))
+            levels.append(str(hex(int(tilt_level * 100 * 2))))
 
         if levels:
             return ",".join(levels)
