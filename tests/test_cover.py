@@ -218,6 +218,7 @@ async def test_ceblind(
     assert cover.usage == HmEntityUsage.CE_PRIMARY
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
+
     await cover.set_position(81)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
@@ -228,6 +229,7 @@ async def test_ceblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.81)
     assert cover.current_position == 81
     assert cover.current_tilt_position == 0
+
     await cover.open()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
@@ -238,6 +240,7 @@ async def test_ceblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", HM_OPEN)
     assert cover.current_position == 100
     assert cover.current_tilt_position == 0
+
     await cover.close()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
@@ -248,6 +251,7 @@ async def test_ceblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", HM_CLOSED)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
+
     await cover.open_tilt()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
@@ -258,6 +262,7 @@ async def test_ceblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_OPEN)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 100
+
     await cover.set_tilt_position(45)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
@@ -268,6 +273,7 @@ async def test_ceblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.45)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 45
+
     await cover.close_tilt()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
@@ -278,6 +284,18 @@ async def test_ceblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_CLOSED)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
+
+    await cover.set_combined_position(position=10, tilt_position=20)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000145:1",
+        paramset_key="VALUES",
+        parameter="LEVEL_COMBINED",
+        value="0xa,0x14",
+    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.1)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.2)
+    assert cover.current_position == 10
+    assert cover.current_tilt_position == 20
 
     await cover.stop()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -335,6 +353,7 @@ async def test_ceipblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.81)
     assert cover.current_position == 81
     assert cover.current_tilt_position == 0
+
     await cover.open()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
@@ -346,6 +365,7 @@ async def test_ceipblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL", 1.0)
     assert cover.current_position == 100
     assert cover.current_tilt_position == 100
+
     await cover.close()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
@@ -357,6 +377,7 @@ async def test_ceipblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.0)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
+
     await cover.open_tilt()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
@@ -367,6 +388,7 @@ async def test_ceipblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 1.0)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 100
+
     await cover.set_tilt_position(45)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
@@ -377,6 +399,7 @@ async def test_ceipblind(
     central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.45)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 45
+
     await cover.close_tilt()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
@@ -389,6 +412,18 @@ async def test_ceipblind(
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
 
+    await cover.set_combined_position(position=10, tilt_position=20)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1223813:4",
+        paramset_key="VALUES",
+        parameter="COMBINED_PARAMETER",
+        value="L2=20,L=10",
+    )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.1)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.2)
+    assert cover.current_position == 10
+    assert cover.current_tilt_position == 20
+
     central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:3", "LEVEL", 0.5)
     assert cover._channel_level == 0.5
     assert cover.current_position == 50
@@ -397,11 +432,11 @@ async def test_ceipblind(
     assert cover._channel_tilt_level == 0.8
     assert cover.current_tilt_position == 80
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:3", "LEVEL", None)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:3", "LEVEL", HM_CLOSED)
     assert cover._channel_level == HM_CLOSED
     assert cover.current_position == 0
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:3", "LEVEL_2", None)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:3", "LEVEL_2", HM_CLOSED)
     assert cover._channel_tilt_level == HM_CLOSED
     assert cover.current_tilt_position == 0
 

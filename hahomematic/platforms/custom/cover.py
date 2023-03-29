@@ -111,20 +111,19 @@ class CeCover(CustomEntity):
         """Move the cover to a specific position."""
         if not self.is_state_change(position=position):
             return
-        position = min(100.0, max(0.0, position))
-        level = position / 100.0
-        await self._set_level(height_level=level, collector=collector)
+        level = min(100.0, max(0.0, position)) / 100.0
+        await self._set_level(level=level, collector=collector)
 
     async def _set_level(
         self,
-        height_level: float | None = None,
+        level: float | None = None,
         tilt_level: float | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the cover to a specific position. Value range is 0.0 to 1.0."""
-        if height_level is None:
+        if level is None:
             return
-        await self._e_level.send_value(value=height_level, collector=collector)
+        await self._e_level.send_value(value=level, collector=collector)
 
     @value_property
     def is_closed(self) -> bool | None:
@@ -150,14 +149,14 @@ class CeCover(CustomEntity):
         """Open the cover."""
         if not self.is_state_change(open=True):
             return
-        await self._set_level(height_level=self._attr_hm_open_state, collector=collector)
+        await self._set_level(level=self._attr_hm_open_state, collector=collector)
 
     @bind_collector
     async def close(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover."""
         if not self.is_state_change(close=True):
             return
-        await self._set_level(height_level=self._attr_hm_closed_state, collector=collector)
+        await self._set_level(level=self._attr_hm_closed_state, collector=collector)
 
     @bind_collector
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
@@ -197,20 +196,20 @@ class CeWindowDrive(CeCover):
 
     async def _set_level(
         self,
-        height_level: float | None = None,
+        level: float | None = None,
         tilt_level: float | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the window drive to a specific position. Value range is -0.005 to 1.0."""
-        if height_level is None:
+        if level is None:
             return
 
-        if height_level == HM_CLOSED:
+        if level == HM_CLOSED:
             wd_level = HM_WD_CLOSED
-        elif HM_CLOSED < height_level <= 0.01:
+        elif HM_CLOSED < level <= 0.01:
             wd_level = 0
         else:
-            wd_level = height_level
+            wd_level = level
         await self._e_level.send_value(value=wd_level, collector=collector, do_validate=False)
 
 
@@ -246,36 +245,45 @@ class CeBlind(CeCover):
 
     @bind_collector
     async def set_tilt_position(
-        self, position: float, collector: CallParameterCollector | None = None
+        self, tilt_position: float, collector: CallParameterCollector | None = None
     ) -> None:
-        """Move the cover to a specific tilt position."""
-        if not self.is_state_change(tilt_position=position):
+        """Move the blind to a specific tilt position."""
+        if not self.is_state_change(tilt_position=tilt_position):
             return
-        position = min(100.0, max(0.0, position))
-        level = position / 100.0
-        await self._set_level(
-            height_level=self.current_position / 100.0, tilt_level=level, collector=collector
-        )
+        tilt_level = min(100.0, max(0.0, tilt_position)) / 100.0
+        await self._set_level(tilt_level=tilt_level, collector=collector)
+
+    @bind_collector
+    async def set_combined_position(
+        self,
+        position: float,
+        tilt_position: float,
+        collector: CallParameterCollector | None = None,
+    ) -> None:
+        """Move the blind to a specific position."""
+        if not self.is_state_change(position=position, tilt_position=tilt_position):
+            return
+        level = min(100.0, max(0.0, position)) / 100.0
+        tilt_level = min(100.0, max(0.0, tilt_position)) / 100.0
+        await self._set_level(level=level, tilt_level=tilt_level, collector=collector)
 
     async def _set_level(
         self,
-        height_level: float | None = None,
+        level: float | None = None,
         tilt_level: float | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
-        _height_level = height_level if height_level is not None else self.current_position / 100.0
+        _level = level if level is not None else self.current_position / 100.0
         _tilt_level = tilt_level if tilt_level is not None else self.current_tilt_position / 100.0
         if self._e_combined and (
-            combined_parameter := self._get_combined_value(
-                height_level=_height_level, tilt_level=_tilt_level
-            )
+            combined_parameter := self._get_combined_value(level=_level, tilt_level=_tilt_level)
         ):
             await self._e_combined.send_value(value=combined_parameter, collector=collector)
             return
 
         await self._e_level_2.send_value(value=_tilt_level, collector=collector)
-        await super()._set_level(height_level=_height_level, collector=collector)
+        await super()._set_level(level=_level, collector=collector)
 
     @bind_collector
     async def open_tilt(self, collector: CallParameterCollector | None = None) -> None:
@@ -315,14 +323,14 @@ class CeBlind(CeCover):
         return super().is_state_change(**kwargs)
 
     def _get_combined_value(
-        self, height_level: float | None = None, tilt_level: float | None = None
+        self, level: float | None = None, tilt_level: float | None = None
     ) -> str | None:
         """Return the combined parameter."""
-        if height_level is None and tilt_level is None:
+        if level is None and tilt_level is None:
             return None
         levels: list[str] = []
-        if height_level is not None:
-            levels.append(str(hex(int(height_level * 100))))
+        if level is not None:
+            levels.append(str(hex(int(level * 100))))
         if tilt_level is not None:
             levels.append(str(hex(int(tilt_level * 100))))
 
@@ -355,7 +363,7 @@ class CeIpBlind(CeBlind):
         if not self.is_state_change(open=True, tilt_open=True):
             return
         await self._set_level(
-            height_level=self._attr_hm_open_state,
+            level=self._attr_hm_open_state,
             tilt_level=self._attr_hm_open_state,
             collector=collector,
         )
@@ -366,22 +374,22 @@ class CeIpBlind(CeBlind):
         if not self.is_state_change(close=True, tilt_close=True):
             return
         await self._set_level(
-            height_level=self._attr_hm_closed_state,
+            level=self._attr_hm_closed_state,
             tilt_level=self._attr_hm_closed_state,
             collector=collector,
         )
 
     def _get_combined_value(
-        self, height_level: float | None = None, tilt_level: float | None = None
+        self, level: float | None = None, tilt_level: float | None = None
     ) -> str | None:
         """Return the combined parameter."""
-        if height_level is None and tilt_level is None:
+        if level is None and tilt_level is None:
             return None
         levels: list[str] = []
         if tilt_level is not None:
             levels.append(f"L2={int(tilt_level*100)}")
-        if height_level is not None:
-            levels.append(f"L={int(height_level * 100)}")
+        if level is not None:
+            levels.append(f"L={int(level * 100)}")
 
         if levels:
             return ",".join(levels)
