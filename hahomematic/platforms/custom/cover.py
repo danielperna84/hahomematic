@@ -224,7 +224,7 @@ class CeBlind(CeCover):
             field_name=FIELD_CHANNEL_LEVEL_2, entity_type=HmSensor
         )
         self._e_level_2: HmFloat = self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmFloat)
-        self._e_level_combined: HmAction = self._get_entity(
+        self._e_combined: HmAction = self._get_entity(
             field_name=FIELD_LEVEL_COMBINED, entity_type=HmAction
         )
 
@@ -270,17 +270,16 @@ class CeBlind(CeCover):
         _tilt_level = (
             tilt_level if tilt_level is not None else self.current_cover_tilt_position / 100.0
         )
-        if self._e_level_combined and (
-            combined_parameter := _get_level_combined_value(
+        if self._e_combined and (
+            combined_parameter := self._get_combined_value(
                 height_level=_height_level, tilt_level=_tilt_level
             )
         ):
-            await self._e_level_combined.send_value(value=combined_parameter, collector=collector)
+            await self._e_combined.send_value(value=combined_parameter, collector=collector)
             return
 
-        if tilt_level is not None:
-            await self._e_level_2.send_value(value=tilt_level, collector=collector)
-        await super()._set_level(height_level=height_level, collector=collector)
+        await self._e_level_2.send_value(value=_tilt_level, collector=collector)
+        await super()._set_level(height_level=_height_level, collector=collector)
 
     @bind_collector
     async def open_cover_tilt(self, collector: CallParameterCollector | None = None) -> None:
@@ -319,22 +318,21 @@ class CeBlind(CeCover):
             return True
         return super().is_state_change(**kwargs)
 
+    def _get_combined_value(
+        self, height_level: float | None = None, tilt_level: float | None = None
+    ) -> str | None:
+        """Return the combined parameter."""
+        if height_level is None and tilt_level is None:
+            return None
+        levels: list[str] = []
+        if height_level is not None:
+            levels.append(str(hex(int(height_level * 100))))
+        if tilt_level is not None:
+            levels.append(str(hex(int(tilt_level * 100))))
 
-def _get_level_combined_value(
-    height_level: float | None = None, tilt_level: float | None = None
-) -> str | None:
-    """Return the combined parameter."""
-    if height_level is None and tilt_level is None:
+        if levels:
+            return ",".join(levels)
         return None
-    levels: list[str] = []
-    if height_level is not None:
-        levels.append(str(hex(int(height_level * 100))))
-    if tilt_level is not None:
-        levels.append(str(hex(int(tilt_level * 100))))
-
-    if levels:
-        return ",".join(levels)
-    return None
 
 
 class CeIpBlind(CeBlind):
@@ -346,7 +344,7 @@ class CeIpBlind(CeBlind):
         self._e_channel_operation_mode: HmSelect = self._get_entity(
             field_name=FIELD_CHANNEL_OPERATION_MODE, entity_type=HmSelect
         )
-        self._e_combined_parameter: HmAction = self._get_entity(
+        self._e_combined: HmAction = self._get_entity(
             field_name=FIELD_COMBINED_PARAMETER, entity_type=HmAction
         )
 
@@ -377,44 +375,21 @@ class CeIpBlind(CeBlind):
             collector=collector,
         )
 
-    async def _set_level(
-        self,
-        height_level: float | None = None,
-        tilt_level: float | None = None,
-        collector: CallParameterCollector | None = None,
-    ) -> None:
-        """Move the blind to a specific level. Value range is 0.0 to 1.0."""
-        if self._e_combined_parameter and (
-            combined_parameter := _get_combined_parameter_value(
-                height_level=height_level, tilt_level=tilt_level
-            )
-        ):
-            await self._e_combined_parameter.send_value(
-                value=combined_parameter, collector=collector
-            )
-            return
+    def _get_combined_value(
+        self, height_level: float | None = None, tilt_level: float | None = None
+    ) -> str | None:
+        """Return the combined parameter."""
+        if height_level is None and tilt_level is None:
+            return None
+        levels: list[str] = []
+        if tilt_level is not None:
+            levels.append(f"L2={int(tilt_level*100)}")
+        if height_level is not None:
+            levels.append(f"L={int(height_level * 100)}")
 
-        _height_level = height_level if height_level is not None else self._channel_level or 0.0
-        await super()._set_level(
-            height_level=_height_level, tilt_level=tilt_level, collector=collector
-        )
-
-
-def _get_combined_parameter_value(
-    height_level: float | None = None, tilt_level: float | None = None
-) -> str | None:
-    """Return the combined parameter."""
-    if height_level is None and tilt_level is None:
+        if levels:
+            return ",".join(levels)
         return None
-    levels: list[str] = []
-    if tilt_level is not None:
-        levels.append(f"L2={int(tilt_level*100)}")
-    if height_level is not None:
-        levels.append(f"L={int(height_level * 100)}")
-
-    if levels:
-        return ",".join(levels)
-    return None
 
 
 class CeGarage(CustomEntity):
