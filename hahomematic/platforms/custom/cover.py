@@ -16,11 +16,13 @@ from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_LEVEL,
     FIELD_CHANNEL_LEVEL_2,
     FIELD_CHANNEL_OPERATION_MODE,
+    FIELD_COMBINED_PARAMETER,
     FIELD_DIRECTION,
     FIELD_DOOR_COMMAND,
     FIELD_DOOR_STATE,
     FIELD_LEVEL,
     FIELD_LEVEL_2,
+    FIELD_LEVEL_COMBINED,
     FIELD_SECTION,
     FIELD_STOP,
     HmEntityDefinition,
@@ -218,9 +220,12 @@ class CeBlind(CeCover):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_level_2: HmFloat = self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmFloat)
         self._e_channel_level_2: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_LEVEL_2, entity_type=HmSensor
+        )
+        self._e_level_2: HmFloat = self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmFloat)
+        self._e_level_combined: HmAction = self._get_entity(
+            field_name=FIELD_LEVEL_COMBINED, entity_type=HmAction
         )
 
     @property
@@ -248,7 +253,9 @@ class CeBlind(CeCover):
             return
         position = min(100.0, max(0.0, position))
         level = position / 100.0
-        await self._set_level(tilt_level=level, collector=collector)
+        await self._set_level(
+            height_level=self.current_cover_position / 100.0, tilt_level=level, collector=collector
+        )
 
     async def _set_level(
         self,
@@ -257,6 +264,20 @@ class CeBlind(CeCover):
         collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
+        _height_level = (
+            height_level if height_level is not None else self.current_cover_position / 100.0
+        )
+        _tilt_level = (
+            tilt_level if tilt_level is not None else self.current_cover_tilt_position / 100.0
+        )
+        if self._e_level_combined and (
+            combined_parameter := _get_level_combined_value(
+                height_level=_height_level, tilt_level=_tilt_level
+            )
+        ):
+            await self._e_level_combined.send_value(value=combined_parameter, collector=collector)
+            return
+
         if tilt_level is not None:
             await self._e_level_2.send_value(value=tilt_level, collector=collector)
         await super()._set_level(height_level=height_level, collector=collector)
@@ -299,6 +320,23 @@ class CeBlind(CeCover):
         return super().is_state_change(**kwargs)
 
 
+def _get_level_combined_value(
+    height_level: float | None = None, tilt_level: float | None = None
+) -> str | None:
+    """Return the combined parameter."""
+    if height_level is None and tilt_level is None:
+        return None
+    levels: list[str] = []
+    if height_level is not None:
+        levels.append(str(hex(int(height_level * 100))))
+    if tilt_level is not None:
+        levels.append(str(hex(int(tilt_level * 100))))
+
+    if levels:
+        return ",".join(levels)
+    return None
+
+
 class CeIpBlind(CeBlind):
     """Class for HomematicIP blind entities."""
 
@@ -307,6 +345,9 @@ class CeIpBlind(CeBlind):
         super()._init_entity_fields()
         self._e_channel_operation_mode: HmSelect = self._get_entity(
             field_name=FIELD_CHANNEL_OPERATION_MODE, entity_type=HmSelect
+        )
+        self._e_combined_parameter: HmAction = self._get_entity(
+            field_name=FIELD_COMBINED_PARAMETER, entity_type=HmAction
         )
 
     @value_property
@@ -342,11 +383,38 @@ class CeIpBlind(CeBlind):
         tilt_level: float | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
-        """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
+        """Move the blind to a specific level. Value range is 0.0 to 1.0."""
+        if self._e_combined_parameter and (
+            combined_parameter := _get_combined_parameter_value(
+                height_level=height_level, tilt_level=tilt_level
+            )
+        ):
+            await self._e_combined_parameter.send_value(
+                value=combined_parameter, collector=collector
+            )
+            return
+
         _height_level = height_level if height_level is not None else self._channel_level or 0.0
         await super()._set_level(
             height_level=_height_level, tilt_level=tilt_level, collector=collector
         )
+
+
+def _get_combined_parameter_value(
+    height_level: float | None = None, tilt_level: float | None = None
+) -> str | None:
+    """Return the combined parameter."""
+    if height_level is None and tilt_level is None:
+        return None
+    levels: list[str] = []
+    if tilt_level is not None:
+        levels.append(f"L2={int(tilt_level*100)}")
+    if height_level is not None:
+        levels.append(f"L={int(height_level * 100)}")
+
+    if levels:
+        return ",".join(levels)
+    return None
 
 
 class CeGarage(CustomEntity):

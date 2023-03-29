@@ -119,22 +119,29 @@ async def test_ceipblind_dr(
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU7807849:2",
         paramset_key="VALUES",
-        parameter="LEVEL",
-        value=0.81,
+        parameter="COMBINED_PARAMETER",
+        value="L=81",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU7807849:1", "LEVEL", 0.81)
     assert cover.current_cover_position == 81
     assert cover.is_closed is False
     await cover.open_cover()
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU7807849:2", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 1.0}
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU7807849:2",
+        paramset_key="VALUES",
+        parameter="COMBINED_PARAMETER",
+        value="L2=100,L=100",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU7807849:1", "LEVEL", HM_OPEN)
     assert cover.current_cover_position == 100
     await cover.close_cover()
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU7807849:2", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU7807849:2",
+        paramset_key="VALUES",
+        parameter="COMBINED_PARAMETER",
+        value="L2=0,L=0",
     )
-    assert cover.current_cover_position == 0
-
+    central.event(const.LOCAL_INTERFACE_ID, "VCU7807849:1", "LEVEL", HM_CLOSED)
     assert cover.is_opening is None
     assert cover.is_closing is None
     central.event(const.LOCAL_INTERFACE_ID, "VCU7807849:1", "ACTIVITY_STATE", 1)
@@ -215,54 +222,60 @@ async def test_ceblind(
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
-        parameter="LEVEL",
-        value=0.81,
+        parameter="LEVEL_COMBINED",
+        value="0x51,0x0",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.81)
     assert cover.current_cover_position == 81
     assert cover.current_cover_tilt_position == 0
     await cover.open_cover()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
-        parameter="LEVEL",
-        value=HM_OPEN,
+        parameter="LEVEL_COMBINED",
+        value="0x64,0x0",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", HM_OPEN)
     assert cover.current_cover_position == 100
     assert cover.current_cover_tilt_position == 0
     await cover.close_cover()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
-        parameter="LEVEL",
-        value=HM_CLOSED,
+        parameter="LEVEL_COMBINED",
+        value="0x0,0x0",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL", HM_CLOSED)
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
     await cover.open_cover_tilt()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
-        parameter="LEVEL_SLATS",
-        value=HM_OPEN,
+        parameter="LEVEL_COMBINED",
+        value="0x0,0x64",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_OPEN)
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 100
     await cover.set_cover_tilt_position(45)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
-        parameter="LEVEL_SLATS",
-        value=0.45,
+        parameter="LEVEL_COMBINED",
+        value="0x0,0x2d",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.45)
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 45
     await cover.close_cover_tilt()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
-        parameter="LEVEL_SLATS",
-        value=HM_CLOSED,
+        parameter="LEVEL_COMBINED",
+        value="0x0,0x0",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_CLOSED)
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
 
@@ -282,13 +295,17 @@ async def test_ceblind(
     )
 
     await cover.open_cover_tilt()
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_OPEN)
     call_count = len(mock_client.method_calls)
     await cover.open_cover_tilt()
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_OPEN)
     assert call_count == len(mock_client.method_calls)
 
     await cover.close_cover_tilt()
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_CLOSED)
     call_count = len(mock_client.method_calls)
     await cover.close_cover_tilt()
+    central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", HM_CLOSED)
     assert call_count == len(mock_client.method_calls)
 
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.4)
@@ -312,39 +329,63 @@ async def test_ceipblind(
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
-        parameter="LEVEL",
-        value=0.81,
+        parameter="COMBINED_PARAMETER",
+        value="L=81",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.81)
     assert cover.current_cover_position == 81
     assert cover.current_cover_tilt_position == 0
     await cover.open_cover()
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 1.0}
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1223813:4",
+        paramset_key="VALUES",
+        parameter="COMBINED_PARAMETER",
+        value="L2=100,L=100",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 1.0)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL", 1.0)
     assert cover.current_cover_position == 100
     assert cover.current_cover_tilt_position == 100
     await cover.close_cover()
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1223813:4",
+        paramset_key="VALUES",
+        parameter="COMBINED_PARAMETER",
+        value="L2=0,L=0",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.0)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.0)
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
     await cover.open_cover_tilt()
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 0.0}
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1223813:4",
+        paramset_key="VALUES",
+        parameter="COMBINED_PARAMETER",
+        value="L2=100",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 1.0)
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 100
     await cover.set_cover_tilt_position(45)
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 0.45, "LEVEL": 0.0}
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1223813:4",
+        paramset_key="VALUES",
+        parameter="COMBINED_PARAMETER",
+        value="L2=45,L=0",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.45)
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 45
     await cover.close_cover_tilt()
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1223813:4", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU1223813:4",
+        paramset_key="VALUES",
+        parameter="COMBINED_PARAMETER",
+        value="L2=0",
     )
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.0)
+    central.event(const.LOCAL_INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.0)
     assert cover.current_cover_position == 0
     assert cover.current_cover_tilt_position == 0
 
