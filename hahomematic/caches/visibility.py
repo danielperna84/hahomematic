@@ -102,7 +102,6 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "BULB",  # ro"
     "CLEAR_WINDOW_OPEN_SYMBOL",  # ro
     "CLOCK",  # ro"
-    "COMBINED_PARAMETER",  # ro
     "CONTROL_DIFFERENTIAL_TEMPERATURE",
     "DATE_TIME_UNKNOWN",
     "DECISION_VALUE",
@@ -125,7 +124,6 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "INHIBIT",
     "INSTALL_MODE",
     "INTERVAL",  # ro
-    "LEVEL_COMBINED",  # ro
     "LEVEL_REAL",
     "OLD_LEVEL",  # ro
     "OVERFLOW",

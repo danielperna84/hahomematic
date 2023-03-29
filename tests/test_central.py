@@ -214,7 +214,7 @@ async def test_add_device(
         interface_id=const.LOCAL_INTERFACE_ID, device_descriptions=dev_desc
     )
     assert len(central._devices) == 2
-    assert len(central._entities) == 49
+    assert len(central._entities) == 53
     assert (
         len(central.device_descriptions._raw_device_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 20
@@ -234,7 +234,7 @@ async def test_delete_device(
     """Test device delete_device."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     assert len(central._devices) == 2
-    assert len(central._entities) == 49
+    assert len(central._entities) == 53
     assert (
         len(central.device_descriptions._raw_device_descriptions.get(const.LOCAL_INTERFACE_ID))
         == 20
@@ -446,7 +446,7 @@ async def test_central_direct(
     assert central.available is False
     assert central.serial == "0"
     assert len(central._devices) == 2
-    assert len(central._entities) == 49
+    assert len(central._entities) == 53
     await central.stop()
 
 
