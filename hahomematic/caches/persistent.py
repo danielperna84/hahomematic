@@ -336,7 +336,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
             .get(parameter)
         )
 
-    def has_multiple_channels(self, channel_address: str, parameter: str) -> bool:
+    def is_in_multiple_channels(self, channel_address: str, parameter: str) -> bool:
         """Check if parameter is in multiple channels per device."""
         if ":" not in channel_address:
             return False

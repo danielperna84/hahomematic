@@ -8,6 +8,7 @@
 - Update requirements
 - Drop pyupgrade, autoflake, flake8 in favor of ruff
 - Refactor cover, add set_combined_position
+- Add is_in_multiple_channels to base entity
 
 # Version 2023.3.0 (2023-03-01)
 

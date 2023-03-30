@@ -47,6 +47,7 @@ class CustomEntity(BaseEntity):
             device=device,
             unique_identifier=unique_identifier,
             channel_no=channel_no,
+            is_in_multiple_channels=hmed.is_multi_channel_device(device_type=device.device_type),
         )
         self._extended: Final = extended
         self.data_entities: Final[dict[str, hmge.GenericEntity]] = {}
@@ -83,13 +84,10 @@ class CustomEntity(BaseEntity):
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
-        device_has_multiple_channels = hmed.is_multi_channel_device(
-            device_type=self.device.device_type
-        )
         is_only_primary_channel = check_channel_is_the_only_primary_channel(
             current_channel_no=self.channel_no,
             device_def=self._device_desc,
-            device_has_multiple_channels=device_has_multiple_channels,
+            device_has_multiple_channels=self.is_in_multiple_channels,
         )
         return get_custom_entity_name(
             central=self._central,

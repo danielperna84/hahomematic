@@ -157,6 +157,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         device: hmd.HmDevice,
         unique_identifier: str,
         channel_no: int | None,
+        is_in_multiple_channels: bool,
     ) -> None:
         """Initialize the entity."""
         PayloadMixin.__init__(self)
@@ -166,6 +167,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._attr_channel_address: Final[str] = hms.get_channel_address(
             device_address=device.device_address, channel_no=channel_no
         )
+        self._attr_is_in_multiple_channels: Final = is_in_multiple_channels
         self._central: Final[hmcu.CentralUnit] = device.central
         self._channel_type: Final = str(device.channels[self._attr_channel_address].type)
         self._attr_function: Final = self._central.device_details.get_function_text(
@@ -209,6 +211,11 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def full_name(self) -> str:
         """Return the full name of the entity."""
         return self._attr_full_name
+
+    @config_property
+    def is_in_multiple_channels(self) -> bool:
+        """Return the parameter/CE is also in multiple channels."""
+        return self._attr_is_in_multiple_channels
 
     @config_property
     def name(self) -> str | None:
@@ -270,13 +277,17 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         parameter_data: dict[str, Any],
     ) -> None:
         """Initialize the entity."""
-        self._attr_paramset_key: Final = paramset_key
+        self._attr_paramset_key: Final[str] = paramset_key
         # required for name in BaseEntity
-        self._attr_parameter: Final = parameter
+        self._attr_parameter: Final[str] = parameter
+
         super().__init__(
             device=device,
             unique_identifier=unique_identifier,
             channel_no=hms.get_channel_no(address=channel_address),
+            is_in_multiple_channels=device.central.paramset_descriptions.is_in_multiple_channels(
+                channel_address=channel_address, parameter=parameter
+            ),
         )
         self._attr_value: ParameterT | None = None
         self._attr_last_update: datetime = INIT_DATETIME

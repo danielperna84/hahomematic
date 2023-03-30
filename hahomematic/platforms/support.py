@@ -241,7 +241,7 @@ def get_entity_name(
         if _check_channel_name_with_channel_no(name=channel_name):
             c_name = channel_name.split(":")[0]
             c_postfix = ""
-            if central.paramset_descriptions.has_multiple_channels(
+            if central.paramset_descriptions.is_in_multiple_channels(
                 channel_address=channel_address, parameter=parameter
             ):
                 c_postfix = "" if channel_no in (0, None) else f" ch{channel_no}"
