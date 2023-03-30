@@ -178,6 +178,7 @@ class WrapperEntity(hme.BaseEntity):
             device=wrapped_entity.device,
             channel_no=wrapped_entity.channel_no,
             unique_identifier=f"{wrapped_entity.unique_identifier}_{new_platform}",
+            is_in_multiple_channels=wrapped_entity.is_in_multiple_channels,
         )
         self._attr_platform = new_platform
         # use callbacks from wrapped entity
