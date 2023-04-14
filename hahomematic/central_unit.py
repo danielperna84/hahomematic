@@ -1149,9 +1149,7 @@ class CentralConfig:
             _LOGGER.warning("CHECK_CONFIG: Password is required")  # type: ignore[unreachable]
             return False
         if not check_password(self.password):
-            _LOGGER.warning("CHECK_CONFIG: password contains not allowed characters")
-            # Here we only log a warning to get some feedback
-            # no return False
+            return False
 
         try:
             check_or_create_directory(self.storage_folder)

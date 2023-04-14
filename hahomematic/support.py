@@ -105,7 +105,14 @@ def check_password(password: str | None) -> bool:
     """Check password."""
     if password is None:
         return False
-    return re.fullmatch(CCU_PASSWORD_PATTERN, password) is not None
+    if re.fullmatch(CCU_PASSWORD_PATTERN, password) is None:
+        _LOGGER.warning(
+            "CHECK_CONFIG: password contains not allowed characters. "
+            "Use only allowed characters. See password regex: %s",
+            CCU_PASSWORD_PATTERN,
+        )
+        return False
+    return True
 
 
 def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
