@@ -1,6 +1,7 @@
 # Version 2023.4.1 (2023-04-21)
 
 - Update requirements
+- Fix cover (HDM2) no longer working
 
 # Version 2023.4.0 (2023-04-16)
 
