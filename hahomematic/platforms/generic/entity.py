@@ -29,6 +29,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
     """Base class for generic entities."""
 
     _attr_validate_state_change: bool = True
+    is_hmtype: Final = True
 
     def __init__(
         self,

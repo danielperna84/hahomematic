@@ -276,7 +276,7 @@ class CeBlind(CeCover):
         """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
         _level = level if level is not None else self.current_position / 100.0
         _tilt_level = tilt_level if tilt_level is not None else self.current_tilt_position / 100.0
-        if self._e_combined and (
+        if self._e_combined.is_hmtype and (
             combined_parameter := self._get_combined_value(level=_level, tilt_level=_tilt_level)
         ):
             await self._e_combined.send_value(value=combined_parameter, collector=collector)

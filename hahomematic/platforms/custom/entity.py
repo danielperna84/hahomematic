@@ -276,6 +276,7 @@ class NoneTypeEntity:
     value_list: list[Any] = []
     visible: Any = None
     channel_operation_mode: str | None = None
+    is_hmtype = False
 
     def send_value(self, value: Any) -> bool:
         """Send value dummy method."""
