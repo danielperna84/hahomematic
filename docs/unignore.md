@@ -3,8 +3,6 @@
 _Hahomematic_ maintains [multiple lists](https://github.com/danielperna84/hahomematic/blob/devel/hahomematic/caches/visibility.py#L86) of parameters that should be ignored when entities are created for _Home-Assistant_.
 These parameters are filtered out to provide a better user experience for the majority of the users.
 
-
-
 But there is also a group of users that wants to do more... _things_.
 
 These advanced users can use the _unignore mechanism_ provided by _hahomematic_.
