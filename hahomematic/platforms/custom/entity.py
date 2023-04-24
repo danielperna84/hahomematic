@@ -11,7 +11,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import HmEntityDefinition
 from hahomematic.platforms.custom.support import ExtendedConfig
-from hahomematic.platforms.entity import BaseEntity
+from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.support import (
     EntityNameData,
@@ -278,6 +278,10 @@ class NoneTypeEntity:
     channel_operation_mode: str | None = None
     is_hmtype = False
 
-    def send_value(self, value: Any) -> bool:
+    async def send_value(
+        self,
+        value: Any,
+        collector: CallParameterCollector | None = None,
+        do_validate: bool = True,
+    ) -> None:
         """Send value dummy method."""
-        return True  # pragma: no cover
