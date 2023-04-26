@@ -112,22 +112,22 @@ async def test_central_full(central_unit_full) -> None:
     ) as fptr:
         fptr.write(orjson.dumps(addresses, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS))
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 2984
-    assert usage_types[HmEntityUsage.CE_PRIMARY] == 185
-    assert usage_types[HmEntityUsage.ENTITY] == 3299
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 3052
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 186
+    assert usage_types[HmEntityUsage.ENTITY] == 3303
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 98
-    assert usage_types[HmEntityUsage.CE_SECONDARY] == 148
+    assert usage_types[HmEntityUsage.CE_SECONDARY] == 150
 
-    assert len(ce_channels) == 113
+    assert len(ce_channels) == 114
     assert len(entity_types) == 6
-    assert len(parameters) == 170
+    assert len(parameters) == 176
 
-    assert len(central_unit_full._devices) == 374
+    assert len(central_unit_full._devices) == 375
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
     await central_unit_full.delete_devices(
         interface_id=const.PYDEVCCU_INTERFACE_ID, addresses=virtual_remotes
     )
-    assert len(central_unit_full._devices) == 371
+    assert len(central_unit_full._devices) == 372
     del_addresses = list(
         central_unit_full.device_descriptions.get_device_descriptions(const.PYDEVCCU_INTERFACE_ID)
     )
