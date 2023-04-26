@@ -15,6 +15,7 @@ from hahomematic.platforms.custom.light import (
     CeColorTempDimmer,
     CeDimmer,
     CeIpFixedColorLight,
+    CeIpRGBWLight,
 )
 
 TEST_DEVICES: dict[str, str] = {
@@ -26,6 +27,7 @@ TEST_DEVICES: dict[str, str] = {
     "VCU4704397": "HmIPW-WRC6.json",
     "VCU0000122": "HM-LC-Dim1L-CV.json",
     "VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
+    "VCU5629873": "HmIP-RGBW.json",
 }
 
 # pylint: disable=protected-access
@@ -497,3 +499,107 @@ async def test_ceipfixedcolorlight(
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
+
+
+async def test_ceiprgbwlight(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test CeIpRGBWLight."""
+    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    light: CeIpRGBWLight = cast(
+        CeIpRGBWLight, await helper.get_custom_entity(central, "VCU5629873", 2)
+    )
+    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.color_temp is None
+    assert light.hs_color is None
+    assert light.supports_brightness is True
+    assert light.supports_color_temperature is True
+    assert light.supports_effects is True
+    assert light.supports_hs_color is True
+    assert light.supports_transition is True
+    assert light.effect is None
+    assert light.effect_list == [
+        "NO_EFFECT",
+        "EFFECT_01_END_CURRENT_PROFILE",
+        "EFFECT_01_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_02_END_CURRENT_PROFILE",
+        "EFFECT_02_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_03_END_CURRENT_PROFILE",
+        "EFFECT_03_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_04_END_CURRENT_PROFILE",
+        "EFFECT_04_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_05_END_CURRENT_PROFILE",
+        "EFFECT_05_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_06_END_CURRENT_PROFILE",
+        "EFFECT_06_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_07_END_CURRENT_PROFILE",
+        "EFFECT_07_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_08_END_CURRENT_PROFILE",
+        "EFFECT_08_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_09_END_CURRENT_PROFILE",
+        "EFFECT_09_INTERRUPT_CURRENT_PROFILE",
+        "EFFECT_10_END_CURRENT_PROFILE",
+        "EFFECT_10_INTERRUPT_CURRENT_PROFILE",
+    ]
+
+    assert light.brightness == 0
+
+    await light.turn_on()
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU5629873:2", paramset_key="VALUES", parameter="LEVEL", value=1.0
+    )
+    assert light.brightness == 255
+    await light.turn_on(**{"brightness": 28})
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU5629873:2",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.10980392156862745,
+    )
+    assert light.brightness == 28
+    await light.turn_off()
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU5629873:2", paramset_key="VALUES", parameter="LEVEL", value=0.0
+    )
+    assert light.brightness == 0
+
+    assert light.color_temp is None
+    await light.turn_on(**{"color_temp": 1433})
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU5629873:2",
+        paramset_key="VALUES",
+        value={"COLOR_TEMPERATURE": 1433, "LEVEL": 1.0},
+    )
+    assert light.color_temp == 1433
+
+    await light.turn_on()
+    call_count = len(mock_client.method_calls)
+    await light.turn_on()
+    assert call_count == len(mock_client.method_calls)
+
+    await light.turn_off()
+    call_count = len(mock_client.method_calls)
+    await light.turn_off()
+    assert call_count == len(mock_client.method_calls)
+
+    assert light.hs_color is None
+    await light.turn_on(**{"hs_color": (44.4, 69.3)})
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU5629873:2",
+        paramset_key="VALUES",
+        value={"HUE": 44, "SATURATION": 0.693, "LEVEL": 1.0},
+    )
+    assert light.hs_color == (44, 69.3)
+
+    await light.turn_on(**{"hs_color": (0, 50)})
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU5629873:2",
+        paramset_key="VALUES",
+        value={"HUE": 0, "SATURATION": 0.5, "LEVEL": 1.0},
+    )
+    assert light.hs_color == (0.0, 50.0)
+
+    await light.turn_on(**{"effect": "EFFECT_01_END_CURRENT_PROFILE"})
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU5629873:2", paramset_key="VALUES", value={"EFFECT": 1, "LEVEL": 1.0}
+    )
