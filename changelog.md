@@ -1,4 +1,9 @@
-# Version 2023.4.2 (2023-04-21)
+# Version 2023.4.3 (2023-04-27)
+
+- Update requirements
+- Add HmIP-RGBW
+
+# Version 2023.4.2 (2023-04-24)
 
 - Update requirements
 - Fix cover (HDM2) no longer working
