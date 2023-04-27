@@ -6,6 +6,7 @@ See https://www.home-assistant.io/integrations/light/.
 from __future__ import annotations
 
 from abc import abstractmethod
+import math
 from typing import Any, Final, TypedDict
 
 from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
@@ -18,6 +19,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_COLOR,
     FIELD_COLOR_LEVEL,
     FIELD_COLOR_TEMPERATURE,
+    FIELD_DEVICE_OPERATION_MODE,
     FIELD_DIRECTION,
     FIELD_EFFECT,
     FIELD_HUE,
@@ -49,6 +51,11 @@ _HM_ARG_CHANNEL_LEVEL: Final = "channel_level"
 _HM_ARG_EFFECT: Final = "effect"
 _HM_ARG_HS_COLOR: Final = "hs_color"
 _HM_ARG_RAMP_TIME: Final = "ramp_time"
+
+_DOM_PWM: Final = "PWM"
+_DOM_RGB: Final = "RGB"
+_DOM_RGBW: Final = "RGBW"
+_DOM_TUNABLE_WHITE: Final = "TUNABLE_WHITE"
 
 HM_EFFECT_OFF: Final = "Off"
 
@@ -400,7 +407,7 @@ class CeIpRGBWLight(BaseHmLight):
         self._e_activity_state: HmSelect = self._get_entity(
             field_name=FIELD_DIRECTION, entity_type=HmSelect
         )
-        self._e_color_temperature: HmInteger = self._get_entity(
+        self._e_color_temperature_kelvin: HmInteger = self._get_entity(
             field_name=FIELD_COLOR_TEMPERATURE, entity_type=HmInteger
         )
         self._e_on_time_value: HmAction = self._get_entity(
@@ -408,6 +415,9 @@ class CeIpRGBWLight(BaseHmLight):
         )
         self._e_on_time_unit: HmAction = self._get_entity(
             field_name=FIELD_ON_TIME_UNIT, entity_type=HmAction
+        )
+        self._e_device_operation_mode: HmSelect = self._get_entity(
+            field_name=FIELD_DEVICE_OPERATION_MODE, entity_type=HmSelect
         )
         self._e_effect: HmAction = self._get_entity(field_name=FIELD_EFFECT, entity_type=HmAction)
         self._e_hue: HmInteger = self._get_entity(field_name=FIELD_HUE, entity_type=HmInteger)
@@ -441,7 +451,9 @@ class CeIpRGBWLight(BaseHmLight):
     @value_property
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between 153..500."""
-        return self._e_color_temperature.value
+        if self._e_color_temperature_kelvin.value is None:
+            return None
+        return math.floor(1000000 / self._e_color_temperature_kelvin.value)
 
     @value_property
     def hs_color(self) -> tuple[float, float] | None:
@@ -458,7 +470,7 @@ class CeIpRGBWLight(BaseHmLight):
     @config_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
-        return True
+        return self._e_device_operation_mode.value in (_DOM_RGBW, _DOM_TUNABLE_WHITE)
 
     @config_property
     def supports_effects(self) -> bool:
@@ -468,7 +480,7 @@ class CeIpRGBWLight(BaseHmLight):
     @config_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
-        return True
+        return self._e_device_operation_mode.value in (_DOM_RGBW, _DOM_RGB)
 
     @config_property
     def supports_transition(self) -> bool:
@@ -504,7 +516,10 @@ class CeIpRGBWLight(BaseHmLight):
             await self._e_hue.send_value(value=int(hue), collector=collector)
             await self._e_saturation.send_value(value=saturation, collector=collector)
         if (color_temp := kwargs.get(_HM_ARG_COLOR_TEMP)) is not None:
-            await self._e_color_temperature.send_value(value=color_temp, collector=collector)
+            color_temp_kelvin = math.floor(1000000 / color_temp)
+            await self._e_color_temperature_kelvin.send_value(
+                value=color_temp_kelvin, collector=collector
+            )
         if self.supports_effects and (effect := kwargs.get(_HM_ARG_EFFECT)) is not None:
             await self._e_effect.send_value(value=effect, collector=collector)
 
@@ -937,7 +952,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     ),
     "HmIP-FDT": CustomConfig(func=make_ip_dimmer, channels=(1,)),
     "HmIP-PDT": CustomConfig(func=make_ip_dimmer, channels=(2,)),
-    "HmIP-RGBW": CustomConfig(func=make_ip_rgbw_light, channels=(2,)),
+    "HmIP-RGBW": CustomConfig(func=make_ip_rgbw_light, channels=(0,)),
     "HmIP-SCTH230": CustomConfig(
         func=make_ip_dimmer,
         channels=(11,),

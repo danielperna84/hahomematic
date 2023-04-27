@@ -112,7 +112,7 @@ async def test_central_full(central_unit_full) -> None:
     ) as fptr:
         fptr.write(orjson.dumps(addresses, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS))
 
-    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 3052
+    assert usage_types[HmEntityUsage.ENTITY_NO_CREATE] == 3053
     assert usage_types[HmEntityUsage.CE_PRIMARY] == 186
     assert usage_types[HmEntityUsage.ENTITY] == 3303
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 98
@@ -120,7 +120,7 @@ async def test_central_full(central_unit_full) -> None:
 
     assert len(ce_channels) == 114
     assert len(entity_types) == 6
-    assert len(parameters) == 176
+    assert len(parameters) == 177
 
     assert len(central_unit_full._devices) == 375
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]

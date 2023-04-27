@@ -27,6 +27,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_COMBINED_PARAMETER,
     FIELD_COMFORT_MODE,
     FIELD_CONTROL_MODE,
+    FIELD_DEVICE_OPERATION_MODE,
     FIELD_DIRECTION,
     FIELD_DOOR_COMMAND,
     FIELD_DOOR_STATE,
@@ -230,8 +231,8 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
         },
         HmEntityDefinition.IP_RGBW_LIGHT: {
             ED_DEVICE_GROUP: {
-                ED_PRIMARY_CHANNEL: 0,
-                ED_SECONDARY_CHANNELS: (1, 2),
+                ED_PRIMARY_CHANNEL: 2,
+                ED_SECONDARY_CHANNELS: (3, 4),
                 ED_REPEATABLE_FIELDS: {
                     FIELD_DIRECTION: "ACTIVITY_STATE",
                     FIELD_COLOR_TEMPERATURE: "COLOR_TEMPERATURE",
@@ -245,6 +246,11 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                     FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
                     FIELD_RAMP_TIME_VALUE: "RAMP_TIME_VALUE",
                     FIELD_SATURATION: "SATURATION",
+                },
+                ED_FIELDS: {
+                    0: {
+                        FIELD_DEVICE_OPERATION_MODE: "DEVICE_OPERATION_MODE",
+                    },
                 },
             },
         },
