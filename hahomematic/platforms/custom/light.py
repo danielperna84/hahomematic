@@ -6,6 +6,7 @@ See https://www.home-assistant.io/integrations/light/.
 from __future__ import annotations
 
 from abc import abstractmethod
+import math
 from typing import Any, Final, TypedDict
 
 from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
@@ -400,7 +401,7 @@ class CeIpRGBWLight(BaseHmLight):
         self._e_activity_state: HmSelect = self._get_entity(
             field_name=FIELD_DIRECTION, entity_type=HmSelect
         )
-        self._e_color_temperature: HmInteger = self._get_entity(
+        self._e_color_temperature_kelvin: HmInteger = self._get_entity(
             field_name=FIELD_COLOR_TEMPERATURE, entity_type=HmInteger
         )
         self._e_on_time_value: HmAction = self._get_entity(
@@ -441,7 +442,9 @@ class CeIpRGBWLight(BaseHmLight):
     @value_property
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between 153..500."""
-        return self._e_color_temperature.value
+        if self._e_color_temperature_kelvin.value is None:
+            return None
+        return math.floor(1000000 / self._e_color_temperature_kelvin.value)
 
     @value_property
     def hs_color(self) -> tuple[float, float] | None:
@@ -504,7 +507,10 @@ class CeIpRGBWLight(BaseHmLight):
             await self._e_hue.send_value(value=int(hue), collector=collector)
             await self._e_saturation.send_value(value=saturation, collector=collector)
         if (color_temp := kwargs.get(_HM_ARG_COLOR_TEMP)) is not None:
-            await self._e_color_temperature.send_value(value=color_temp, collector=collector)
+            color_temp_kelvin = math.floor(1000000 / color_temp)
+            await self._e_color_temperature_kelvin.send_value(
+                value=color_temp_kelvin, collector=collector
+            )
         if self.supports_effects and (effect := kwargs.get(_HM_ARG_EFFECT)) is not None:
             await self._e_effect.send_value(value=effect, collector=collector)
 

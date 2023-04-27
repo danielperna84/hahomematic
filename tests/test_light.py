@@ -564,13 +564,13 @@ async def test_ceiprgbwlight(
     assert light.brightness == 0
 
     assert light.color_temp is None
-    await light.turn_on(**{"color_temp": 1433})
+    await light.turn_on(**{"color_temp": 300})
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU5629873:2",
         paramset_key="VALUES",
-        value={"COLOR_TEMPERATURE": 1433, "LEVEL": 1.0},
+        value={"COLOR_TEMPERATURE": 3333, "LEVEL": 1.0},
     )
-    assert light.color_temp == 1433
+    assert light.color_temp == 300
 
     await light.turn_on()
     call_count = len(mock_client.method_calls)
