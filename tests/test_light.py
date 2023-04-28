@@ -507,7 +507,7 @@ async def test_ceiprgbwlight(
     """Test CeIpRGBWLight."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeIpRGBWLight = cast(
-        CeIpRGBWLight, await helper.get_custom_entity(central, "VCU5629873", 2)
+        CeIpRGBWLight, await helper.get_custom_entity(central, "VCU5629873", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -546,12 +546,12 @@ async def test_ceiprgbwlight(
 
     await light.turn_on()
     assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU5629873:2", paramset_key="VALUES", parameter="LEVEL", value=1.0
+        channel_address="VCU5629873:1", paramset_key="VALUES", parameter="LEVEL", value=1.0
     )
     assert light.brightness == 255
     await light.turn_on(**{"brightness": 28})
     assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU5629873:2",
+        channel_address="VCU5629873:1",
         paramset_key="VALUES",
         parameter="LEVEL",
         value=0.10980392156862745,
@@ -559,14 +559,14 @@ async def test_ceiprgbwlight(
     assert light.brightness == 28
     await light.turn_off()
     assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU5629873:2", paramset_key="VALUES", parameter="LEVEL", value=0.0
+        channel_address="VCU5629873:1", paramset_key="VALUES", parameter="LEVEL", value=0.0
     )
     assert light.brightness == 0
 
     assert light.color_temp is None
     await light.turn_on(**{"color_temp": 300})
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU5629873:2",
+        address="VCU5629873:1",
         paramset_key="VALUES",
         value={"COLOR_TEMPERATURE": 3333, "LEVEL": 1.0},
     )
@@ -585,7 +585,7 @@ async def test_ceiprgbwlight(
     assert light.hs_color is None
     await light.turn_on(**{"hs_color": (44.4, 69.3)})
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU5629873:2",
+        address="VCU5629873:1",
         paramset_key="VALUES",
         value={"HUE": 44, "SATURATION": 0.693, "LEVEL": 1.0},
     )
@@ -593,7 +593,7 @@ async def test_ceiprgbwlight(
 
     await light.turn_on(**{"hs_color": (0, 50)})
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU5629873:2",
+        address="VCU5629873:1",
         paramset_key="VALUES",
         value={"HUE": 0, "SATURATION": 0.5, "LEVEL": 1.0},
     )
@@ -601,5 +601,5 @@ async def test_ceiprgbwlight(
 
     await light.turn_on(**{"effect": "EFFECT_01_END_CURRENT_PROFILE"})
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU5629873:2", paramset_key="VALUES", value={"EFFECT": 1, "LEVEL": 1.0}
+        address="VCU5629873:1", paramset_key="VALUES", value={"EFFECT": 1, "LEVEL": 1.0}
     )
