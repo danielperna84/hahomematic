@@ -513,7 +513,7 @@ async def test_ceiprgbwlight(
     assert light.color_temp is None
     assert light.hs_color is None
     assert light.supports_brightness is True
-    assert light.supports_color_temperature is True
+    assert light.supports_color_temperature is False
     assert light.supports_effects is True
     assert light.supports_hs_color is True
     assert light.supports_transition is True
