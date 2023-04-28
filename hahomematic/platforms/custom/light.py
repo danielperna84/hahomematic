@@ -470,7 +470,7 @@ class CeIpRGBWLight(BaseHmLight):
     @config_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
-        return self._e_device_operation_mode.value in (_DOM_RGBW, _DOM_TUNABLE_WHITE)
+        return self._e_device_operation_mode.value == _DOM_TUNABLE_WHITE
 
     @config_property
     def supports_effects(self) -> bool:
