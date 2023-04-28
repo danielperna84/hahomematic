@@ -1,4 +1,4 @@
-# Version 2023.5.0 (2023-05-01)
+# Version 2023.4.4 (2023-04-28)
 
 - Add missing channel for HmIP-RGBW
 
