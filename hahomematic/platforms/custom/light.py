@@ -451,7 +451,7 @@ class CeIpRGBWLight(BaseHmLight):
     @value_property
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between 153..500."""
-        if self._e_color_temperature_kelvin.value is None:
+        if not self._e_color_temperature_kelvin.value:
             return None
         return math.floor(1000000 / self._e_color_temperature_kelvin.value)
 
@@ -515,7 +515,7 @@ class CeIpRGBWLight(BaseHmLight):
             saturation = ksaturation / 100
             await self._e_hue.send_value(value=int(hue), collector=collector)
             await self._e_saturation.send_value(value=saturation, collector=collector)
-        if (color_temp := kwargs.get(_HM_ARG_COLOR_TEMP)) is not None:
+        if color_temp := kwargs.get(_HM_ARG_COLOR_TEMP):
             color_temp_kelvin = math.floor(1000000 / color_temp)
             await self._e_color_temperature_kelvin.send_value(
                 value=color_temp_kelvin, collector=collector
