@@ -1,6 +1,7 @@
 # Version 2023.4.5 (2023-04-28)
 
 - Fix division by zero for HmIP-RGBM
+- Remove color_temperature from RGBW
 
 # Version 2023.4.4 (2023-04-28)
 
