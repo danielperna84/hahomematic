@@ -231,8 +231,8 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
         },
         HmEntityDefinition.IP_RGBW_LIGHT: {
             ED_DEVICE_GROUP: {
-                ED_PRIMARY_CHANNEL: 2,
-                ED_SECONDARY_CHANNELS: (3, 4),
+                ED_PRIMARY_CHANNEL: 1,
+                ED_SECONDARY_CHANNELS: (2, 3, 4),
                 ED_REPEATABLE_FIELDS: {
                     FIELD_DIRECTION: "ACTIVITY_STATE",
                     FIELD_COLOR_TEMPERATURE: "COLOR_TEMPERATURE",
