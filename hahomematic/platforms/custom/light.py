@@ -403,33 +403,23 @@ class CeIpRGBWLight(BaseHmLight):
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
-        OnTimeMixin.__init__(self)
+        super()._init_entity_fields()
         self._e_activity_state: HmSelect = self._get_entity(
             field_name=FIELD_DIRECTION, entity_type=HmSelect
         )
         self._e_color_temperature_kelvin: HmInteger = self._get_entity(
             field_name=FIELD_COLOR_TEMPERATURE, entity_type=HmInteger
         )
-        self._e_on_time_value: HmAction = self._get_entity(
-            field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
-        )
-        self._e_on_time_unit: HmAction = self._get_entity(
-            field_name=FIELD_ON_TIME_UNIT, entity_type=HmAction
-        )
         self._e_device_operation_mode: HmSelect = self._get_entity(
             field_name=FIELD_DEVICE_OPERATION_MODE, entity_type=HmSelect
         )
         self._e_effect: HmAction = self._get_entity(field_name=FIELD_EFFECT, entity_type=HmAction)
         self._e_hue: HmInteger = self._get_entity(field_name=FIELD_HUE, entity_type=HmInteger)
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
         self._e_ramp_time_to_off_unit: HmAction = self._get_entity(
             field_name=FIELD_RAMP_TIME_TO_OFF_UNIT, entity_type=HmAction
         )
         self._e_ramp_time_to_off_value: HmAction = self._get_entity(
             field_name=FIELD_RAMP_TIME_TO_OFF_VALUE, entity_type=HmAction
-        )
-        self._e_ramp_time_value: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction
         )
         self._e_ramp_time_unit: HmAction = self._get_entity(
             field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction
@@ -463,11 +453,6 @@ class CeIpRGBWLight(BaseHmLight):
         return None
 
     @config_property
-    def supports_brightness(self) -> bool:
-        """Flag if light supports brightness."""
-        return True
-
-    @config_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
         return self._e_device_operation_mode.value == _DOM_TUNABLE_WHITE
@@ -488,11 +473,6 @@ class CeIpRGBWLight(BaseHmLight):
         return True
 
     @value_property
-    def effect(self) -> str | None:
-        """Return the current effect."""
-        return None
-
-    @value_property
     def effect_list(self) -> list[str] | None:
         """Return the list of supported effects."""
         return list(self._e_effect.value_list or ())
@@ -506,10 +486,6 @@ class CeIpRGBWLight(BaseHmLight):
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
             return
-        if ramp_time := kwargs.get(_HM_ARG_RAMP_TIME):
-            await self._set_ramp_time_on_value(ramp_time=float(ramp_time), collector=collector)
-        if (on_time := kwargs.get(HM_ARG_ON_TIME)) or (on_time := self.get_on_time_and_cleanup()):
-            await self._set_on_time_value(on_time=on_time, collector=collector)
         if (hs_color := kwargs.get(_HM_ARG_HS_COLOR)) is not None:
             hue, ksaturation = hs_color
             saturation = ksaturation / 100
@@ -523,32 +499,7 @@ class CeIpRGBWLight(BaseHmLight):
         if self.supports_effects and (effect := kwargs.get(_HM_ARG_EFFECT)) is not None:
             await self._e_effect.send_value(value=effect, collector=collector)
 
-        brightness = kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness)
-        if not brightness:
-            brightness = 255
-        level = brightness / 255.0
-        await self._e_level.send_value(value=level, collector=collector)
-
-    @bind_collector
-    async def turn_off(
-        self, collector: CallParameterCollector | None = None, **kwargs: Any
-    ) -> None:
-        """Turn the light off."""
-        if not self.is_state_change(off=True, **kwargs):
-            return
-        if ramp_time := kwargs.get(_HM_ARG_RAMP_TIME):
-            await self._set_ramp_time_off_value(ramp_time=float(ramp_time), collector=collector)
-
-        await self._e_level.send_value(value=HM_DIMMER_OFF, collector=collector)
-
-    @bind_collector
-    async def _set_on_time_value(
-        self, on_time: float, collector: CallParameterCollector | None = None
-    ) -> None:
-        """Set the on time value in seconds."""
-        on_time, on_time_unit = _recalc_unit_timer(time=on_time)
-        await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
-        await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
+        await super().turn_on(collector=collector, **kwargs)
 
     async def _set_ramp_time_on_value(
         self, ramp_time: float, collector: CallParameterCollector | None = None
@@ -567,28 +518,6 @@ class CeIpRGBWLight(BaseHmLight):
         await self._e_ramp_time_to_off_value.send_value(
             value=float(ramp_time), collector=collector
         )
-
-    def is_state_change(self, **kwargs: Any) -> bool:
-        """Check if the state changes due to kwargs."""
-        if kwargs.get(HM_ARG_ON) is not None and self.is_on is not True and len(kwargs) == 1:
-            return True
-        if kwargs.get(HM_ARG_OFF) is not None and self.is_on is not False and len(kwargs) == 1:
-            return True
-        if (
-            brightness := kwargs.get(_HM_ARG_BRIGHTNESS)
-        ) is not None and brightness != self.brightness:
-            return True
-        if (hs_color := kwargs.get(_HM_ARG_HS_COLOR)) is not None and hs_color != self.hs_color:
-            return True
-        if (
-            color_temp := kwargs.get(_HM_ARG_COLOR_TEMP)
-        ) is not None and color_temp != self.color_temp:
-            return True
-        if kwargs.get(_HM_ARG_RAMP_TIME) is not None:
-            return True
-        if kwargs.get(HM_ARG_ON_TIME) is not None:
-            return True
-        return super().is_state_change(**kwargs)
 
 
 class CeIpFixedColorLight(BaseHmLight):

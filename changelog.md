@@ -1,3 +1,7 @@
+# Version 2023.5.0 (2023-05-01)
+
+- Remove unsupported on_time / refactor HmIP-RGBW
+
 # Version 2023.4.5 (2023-04-28)
 
 - Fix division by zero for HmIP-RGBM
