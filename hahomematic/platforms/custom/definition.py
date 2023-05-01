@@ -236,8 +236,6 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 ED_REPEATABLE_FIELDS: {
                     FIELD_DIRECTION: "ACTIVITY_STATE",
                     FIELD_COLOR_TEMPERATURE: "COLOR_TEMPERATURE",
-                    FIELD_ON_TIME_UNIT: "DURATION_UNIT",
-                    FIELD_ON_TIME_VALUE: "DURATION_VALUE",
                     FIELD_EFFECT: "EFFECT",
                     FIELD_HUE: "HUE",
                     FIELD_LEVEL: "LEVEL",

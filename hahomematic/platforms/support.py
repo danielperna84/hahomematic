@@ -150,7 +150,7 @@ class OnTimeMixin:
 
     def get_on_time_and_cleanup(self) -> float | None:
         """Return the on_time and cleanup afterwards."""
-        if self._on_time is None:
+        if not hasattr(self, "_on_time") or self._on_time is None:
             return None
         # save values
         on_time = self._on_time
