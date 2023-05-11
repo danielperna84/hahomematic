@@ -322,6 +322,10 @@ class HmDevice(PayloadMixin):
             device_address=self._attr_device_address,
         )
 
+    async def update_firmware(self) -> bool:
+        """Update the firmware of the homematic device."""
+        return await self.client.update_device_firmware(device_address=self._attr_device_address)
+
     async def load_value_cache(self) -> None:
         """Init the parameter cache."""
         if len(self.generic_entities) > 0:
