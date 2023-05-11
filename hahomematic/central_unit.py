@@ -679,8 +679,8 @@ class CentralUnit:
             client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
+                    self.device_descriptions.add_device_description(interface_id, dev_desc)
                     if dev_desc[HM_ADDRESS] not in known_addresses:
-                        self.device_descriptions.add_device_description(interface_id, dev_desc)
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:  # pragma: no cover
                     _LOGGER.error("ADD_NEW_DEVICES failed: %s [%s]", type(err).__name__, err.args)

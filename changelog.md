@@ -1,3 +1,7 @@
+# Version 2023.5.1 (2023-05-11)
+
+- Refactor device description cache handling
+
 # Version 2023.5.0 (2023-05-01)
 
 - Remove unsupported on_time / refactor HmIP-RGBW
