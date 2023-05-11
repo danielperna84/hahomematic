@@ -578,7 +578,7 @@ class Client(ABC):
 
     async def update_device_firmware(self, device_address: str) -> bool:
         """Update the firmware of a homematic device."""
-        return bool(await self._proxy_read.updateFirmware(device_address))
+        return bool(await self._proxy.updateFirmware(device_address))
 
     async def update_paramset_descriptions(self, device_address: str) -> None:
         """Update paramsets descriptions for provided device_address."""
