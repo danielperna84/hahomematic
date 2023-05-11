@@ -13,7 +13,10 @@ from hahomematic.const import (
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
+    HM_AVAILABLE_FIRMWARE,
     HM_FIRMWARE,
+    HM_FIRMWARE_UPDATABLE,
+    HM_FIRMWARE_UPDATE_STATE,
     HM_SUBTYPE,
     HM_TYPE,
     INIT_DATETIME,
@@ -86,13 +89,6 @@ class HmDevice(PayloadMixin):
         self._has_custom_entity_definition: Final = cep.has_custom_entity_definition_by_device(
             device=self
         )
-        self._attr_firmware: Final = str(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=interface_id,
-                device_address=device_address,
-                parameter=HM_FIRMWARE,
-            )
-        )
 
         self._attr_name: Final = get_device_name(
             central=central,
@@ -101,13 +97,44 @@ class HmDevice(PayloadMixin):
         )
         self.value_cache: Final = ValueCache(device=self)
         self._attr_room: Final = central.device_details.get_room(device_address=device_address)
-
+        self._update_firmware_data()
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",
             self._attr_interface_id,
             self._attr_device_address,
             self._attr_device_type,
             self._attr_name,
+        )
+
+    def _update_firmware_data(self) -> None:
+        """Update firmware related data from device descriptions."""
+        self._attr_available_firmware = str(
+            self.central.device_descriptions.get_device_parameter(
+                interface_id=self._attr_interface_id,
+                device_address=self._attr_device_address,
+                parameter=HM_AVAILABLE_FIRMWARE,
+            )
+        )
+        self._attr_firmware = str(
+            self.central.device_descriptions.get_device_parameter(
+                interface_id=self._attr_interface_id,
+                device_address=self._attr_device_address,
+                parameter=HM_FIRMWARE,
+            )
+        )
+        self._attr_firmware_update_state = str(
+            self.central.device_descriptions.get_device_parameter(
+                interface_id=self._attr_interface_id,
+                device_address=self._attr_device_address,
+                parameter=HM_FIRMWARE_UPDATE_STATE,
+            )
+        )
+        self._attr_firmware_updatable = bool(
+            self.central.device_descriptions.get_device_parameter(
+                interface_id=self._attr_interface_id,
+                device_address=self._attr_device_address,
+                parameter=HM_FIRMWARE_UPDATABLE,
+            )
         )
 
     @value_property
@@ -121,6 +148,11 @@ class HmDevice(PayloadMixin):
         if un_reach is not None and un_reach.value is not None:
             return not un_reach.value
         return True
+
+    @config_property
+    def available_firmware(self) -> str:
+        """Return the available firmware of the device."""
+        return self._attr_available_firmware
 
     @property
     def config_pending(self) -> bool:
@@ -143,6 +175,16 @@ class HmDevice(PayloadMixin):
     def firmware(self) -> str:
         """Return the firmware of the device."""
         return self._attr_firmware
+
+    @config_property
+    def firmware_updatable(self) -> bool:
+        """Return the firmware update state of the device."""
+        return self._attr_firmware_updatable
+
+    @config_property
+    def firmware_update_state(self) -> str:
+        """Return the firmware update state of the device."""
+        return self._attr_firmware_update_state
 
     @config_property
     def interface(self) -> str:
