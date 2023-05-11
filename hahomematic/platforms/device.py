@@ -26,6 +26,7 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     RELEVANT_INIT_PARAMETERS,
     HmCallSource,
+    HmDeviceFirmwareState,
     HmForcedDeviceAvailability,
 )
 from hahomematic.exceptions import BaseHomematicException
@@ -122,13 +123,20 @@ class HmDevice(PayloadMixin):
                 parameter=HM_FIRMWARE,
             )
         )
-        self._attr_firmware_update_state = str(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=self._attr_interface_id,
-                device_address=self._attr_device_address,
-                parameter=HM_FIRMWARE_UPDATE_STATE,
+
+        try:
+            self._attr_firmware_update_state = HmDeviceFirmwareState(
+                str(
+                    self.central.device_descriptions.get_device_parameter(
+                        interface_id=self._attr_interface_id,
+                        device_address=self._attr_device_address,
+                        parameter=HM_FIRMWARE_UPDATE_STATE,
+                    )
+                )
             )
-        )
+        except ValueError:
+            self._attr_firmware_update_state = HmDeviceFirmwareState.UP_TO_DATE
+
         self._attr_firmware_updatable = bool(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._attr_interface_id,
@@ -182,7 +190,7 @@ class HmDevice(PayloadMixin):
         return self._attr_firmware_updatable
 
     @config_property
-    def firmware_update_state(self) -> str:
+    def firmware_update_state(self) -> HmDeviceFirmwareState:
         """Return the firmware update state of the device."""
         return self._attr_firmware_update_state
 
@@ -321,6 +329,11 @@ class HmDevice(PayloadMixin):
             interface_id=self._attr_interface_id,
             device_address=self._attr_device_address,
         )
+
+    def refresh_firmware_data(self) -> None:
+        """Refresh firmware data of the device."""
+        self._update_firmware_data()
+        self.update_device()
 
     async def update_firmware(self) -> bool:
         """Update the firmware of the homematic device."""

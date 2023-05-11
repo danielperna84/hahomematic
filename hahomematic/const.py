@@ -339,6 +339,20 @@ class HmEntityUsage(StrEnum):
     EVENT: Final = "event"
 
 
+class HmDeviceFirmwareState(StrEnum):
+    """Enum with homematic device firmware states."""
+
+    UP_TO_DATE: Final = "UP_TO_DATE"
+    NEW_FIRMWARE_AVAILABLE: Final = "NEW_FIRMWARE_AVAILABLE"
+    DELIVER_FIRMWARE_IMAGE: Final = "DELIVER_FIRMWARE_IMAGE"
+    READY_FOR_UPDATE: Final = "READY_FOR_UPDATE"
+    DO_UPDATE_PENDING: Final = "DO_UPDATE_PENDING"
+    PERFORMING_UPDATE: Final = "PERFORMING_UPDATE"
+    LIVE_UP_TO_DATE: Final = "LIVE_UP_TO_DATE"
+    LIVE_NEW_FIRMWARE_AVAILABLE: Final = "LIVE_NEW_FIRMWARE_AVAILABLE"
+    LIVE_DELIVER_FIRMWARE_IMAGE: Final = "LIVE_DELIVER_FIRMWARE_IMAGE"
+
+
 class HmPlatform(StrEnum):
     """Enum with platforms relevant for Home Assistant."""
 
