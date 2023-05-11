@@ -228,22 +228,13 @@ class CentralUnit:
             local_interface_id = f"{self.name}-{LOCAL_INTERFACE}"
             if self.has_client(interface_id=local_interface_id):
                 client = self.get_client(interface_id=local_interface_id)
-                if device_descriptions := await client.get_all_device_descriptions():
-                    await self._add_new_devices(
-                        interface_id=client.interface_id,
-                        device_descriptions=device_descriptions,
-                    )
+                await self._refresh_device_descriptions(client=client)
 
     async def start_direct(self) -> None:
         """Start the central unit for temporary usage. #CC."""
         await self.parameter_visibility.load()
         await self._create_clients()
-        for client in self._clients.values():
-            if device_descriptions := await client.get_all_device_descriptions():
-                await self._add_new_devices(
-                    interface_id=client.interface_id,
-                    device_descriptions=device_descriptions,
-                )
+        await self.refresh_all_device_descriptions()
 
     async def stop(self) -> None:
         """Stop processing of the central unit. #CC."""
@@ -276,6 +267,19 @@ class CentralUnit:
         """Restart clients."""
         await self._stop_clients()
         await self._start_clients()
+
+    async def refresh_all_device_descriptions(self) -> None:
+        """Refresh all device descriptions."""
+        for client in self._clients.values():
+            await self._refresh_device_descriptions(client=client)
+
+    async def _refresh_device_descriptions(self, client: hmcl.Client) -> None:
+        """Refresh all device descriptions."""
+        if device_descriptions := await client.get_all_device_descriptions():
+            await self._add_new_devices(
+                interface_id=client.interface_id,
+                device_descriptions=device_descriptions,
+            )
 
     async def _start_clients(self) -> None:
         """Start clients ."""
