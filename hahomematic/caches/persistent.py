@@ -231,10 +231,13 @@ class DeviceDescriptionCache(BasePersistentCache):
 
         address = device_description[HM_ADDRESS]
         self._device_descriptions[interface_id][address] = device_description
+
         if ":" not in address and address not in self._addresses[interface_id]:
             self._addresses[interface_id][address] = []
         if ":" in address:
             device_address = get_device_address(address)
+            if device_address not in self._addresses[interface_id]:
+                self._addresses[interface_id][device_address] = []
             self._addresses[interface_id][device_address].append(address)
 
     async def load(self) -> HmDataOperationResult:
