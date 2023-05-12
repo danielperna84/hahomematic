@@ -308,7 +308,8 @@ class Client(ABC):
     async def get_device_descriptions(self, device_address: str) -> Any:
         """Get device descriptions from CCU / Homegear."""
         try:
-            return await self._proxy.getDeviceDescription(device_address)
+            if device_descriptions := await self._proxy_read.getDeviceDescription(device_address):
+                return [device_descriptions]
         except BaseHomematicException as hhe:
             _LOGGER.warning("GET_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, hhe.args)
         return None
