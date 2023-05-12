@@ -101,5 +101,4 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
-
     create_custom_entity_and_append_to_device(device=device)

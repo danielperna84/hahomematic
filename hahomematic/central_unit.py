@@ -65,6 +65,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import HmHub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
+from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
     check_or_create_directory,
     check_password,
@@ -126,6 +127,8 @@ class CentralUnit:
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
         # {unique_identifier, entity}
         self._entities: Final[dict[str, BaseEntity]] = {}
+        # {unique_identifier, update_entity}
+        self._firmware_update_entities: Final[dict[str, HmUpdate]] = {}
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
@@ -228,22 +231,14 @@ class CentralUnit:
             local_interface_id = f"{self.name}-{LOCAL_INTERFACE}"
             if self.has_client(interface_id=local_interface_id):
                 client = self.get_client(interface_id=local_interface_id)
-                if device_descriptions := await client.get_all_device_descriptions():
-                    await self._add_new_devices(
-                        interface_id=client.interface_id,
-                        device_descriptions=device_descriptions,
-                    )
+                await self._refresh_device_descriptions(client=client)
 
     async def start_direct(self) -> None:
         """Start the central unit for temporary usage. #CC."""
         await self.parameter_visibility.load()
         await self._create_clients()
         for client in self._clients.values():
-            if device_descriptions := await client.get_all_device_descriptions():
-                await self._add_new_devices(
-                    interface_id=client.interface_id,
-                    device_descriptions=device_descriptions,
-                )
+            await self._refresh_device_descriptions(client=client)
 
     async def stop(self) -> None:
         """Stop processing of the central unit. #CC."""
@@ -276,6 +271,22 @@ class CentralUnit:
         """Restart clients."""
         await self._stop_clients()
         await self._start_clients()
+
+    async def refresh_firmware_data(self) -> None:
+        """Refresh all device descriptions."""
+        for client in self._clients.values():
+            await self._refresh_device_descriptions(client=client)
+
+        for device in self._devices.values():
+            device.refresh_firmware_data()
+
+    async def _refresh_device_descriptions(self, client: hmcl.Client) -> None:
+        """Refresh all device descriptions."""
+        if device_descriptions := await client.get_all_device_descriptions():
+            await self._add_new_devices(
+                interface_id=client.interface_id,
+                device_descriptions=device_descriptions,
+            )
 
     async def _start_clients(self) -> None:
         """Start clients ."""
@@ -679,8 +690,8 @@ class CentralUnit:
             client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
+                    self.device_descriptions.add_device_description(interface_id, dev_desc)
                     if dev_desc[HM_ADDRESS] not in known_addresses:
-                        self.device_descriptions.add_device_description(interface_id, dev_desc)
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:  # pragma: no cover
                     _LOGGER.error("ADD_NEW_DEVICES failed: %s [%s]", type(err).__name__, err.args)

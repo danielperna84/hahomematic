@@ -102,9 +102,12 @@ HM_ARG_ON: Final = "on"
 HM_ARG_OFF: Final = "off"
 
 HM_ADDRESS: Final = "ADDRESS"
+HM_AVAILABLE_FIRMWARE: Final = "AVAILABLE_FIRMWARE"
 HM_CHILDREN: Final = "CHILDREN"
 HM_DEFAULT: Final = "DEFAULT"
 HM_FIRMWARE: Final = "FIRMWARE"
+HM_FIRMWARE_UPDATABLE: Final = "UPDATABLE"
+HM_FIRMWARE_UPDATE_STATE: Final = "FIRMWARE_UPDATE_STATE"
 HM_FLAGS: Final = "FLAGS"
 HM_MAX: Final = "MAX"
 HM_MIN: Final = "MIN"
@@ -336,6 +339,20 @@ class HmEntityUsage(StrEnum):
     EVENT: Final = "event"
 
 
+class HmDeviceFirmwareState(StrEnum):
+    """Enum with homematic device firmware states."""
+
+    UP_TO_DATE: Final = "UP_TO_DATE"
+    NEW_FIRMWARE_AVAILABLE: Final = "NEW_FIRMWARE_AVAILABLE"
+    DELIVER_FIRMWARE_IMAGE: Final = "DELIVER_FIRMWARE_IMAGE"
+    READY_FOR_UPDATE: Final = "READY_FOR_UPDATE"
+    DO_UPDATE_PENDING: Final = "DO_UPDATE_PENDING"
+    PERFORMING_UPDATE: Final = "PERFORMING_UPDATE"
+    LIVE_UP_TO_DATE: Final = "LIVE_UP_TO_DATE"
+    LIVE_NEW_FIRMWARE_AVAILABLE: Final = "LIVE_NEW_FIRMWARE_AVAILABLE"
+    LIVE_DELIVER_FIRMWARE_IMAGE: Final = "LIVE_DELIVER_FIRMWARE_IMAGE"
+
+
 class HmPlatform(StrEnum):
     """Enum with platforms relevant for Home Assistant."""
 
@@ -360,6 +377,7 @@ class HmPlatform(StrEnum):
     SIREN: Final = "siren"
     SWITCH: Final = "switch"
     TEXT: Final = "text"
+    UPDATE: Final = "update"
 
 
 class HmEventType(StrEnum):
@@ -408,6 +426,7 @@ AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.SIREN,
     HmPlatform.SWITCH,
     HmPlatform.TEXT,
+    HmPlatform.UPDATE,
 )
 
 AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
