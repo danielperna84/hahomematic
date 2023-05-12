@@ -377,6 +377,7 @@ class HmPlatform(StrEnum):
     SIREN: Final = "siren"
     SWITCH: Final = "switch"
     TEXT: Final = "text"
+    UPDATE: Final = "update"
 
 
 class HmEventType(StrEnum):
@@ -425,6 +426,7 @@ AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.SIREN,
     HmPlatform.SWITCH,
     HmPlatform.TEXT,
+    HmPlatform.UPDATE,
 )
 
 AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (

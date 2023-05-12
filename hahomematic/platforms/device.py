@@ -41,6 +41,7 @@ from hahomematic.platforms.support import (
     get_device_name,
     value_property,
 )
+from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import updated_within_seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +73,7 @@ class HmDevice(PayloadMixin):
         self._attr_last_update: datetime = INIT_DATETIME
         self._forced_availability: HmForcedDeviceAvailability = HmForcedDeviceAvailability.NOT_SET
         self._update_callbacks: Final[list[Callable]] = []
+        self._firmware_update_callbacks: Final[list[Callable]] = []
         self._attr_device_type: Final = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
@@ -99,6 +101,7 @@ class HmDevice(PayloadMixin):
         self.value_cache: Final = ValueCache(device=self)
         self._attr_room: Final = central.device_details.get_room(device_address=device_address)
         self._update_firmware_data()
+        self._attr_update_entity: Final = HmUpdate(device=self)
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",
             self._attr_interface_id,
@@ -109,12 +112,13 @@ class HmDevice(PayloadMixin):
 
     def _update_firmware_data(self) -> None:
         """Update firmware related data from device descriptions."""
-        self._attr_available_firmware = str(
+        self._attr_available_firmware: str | None = (
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._attr_interface_id,
                 device_address=self._attr_device_address,
                 parameter=HM_AVAILABLE_FIRMWARE,
             )
+            or None
         )
         self._attr_firmware = str(
             self.central.device_descriptions.get_device_parameter(
@@ -158,7 +162,7 @@ class HmDevice(PayloadMixin):
         return True
 
     @config_property
-    def available_firmware(self) -> str:
+    def available_firmware(self) -> str | None:
         """Return the available firmware of the device."""
         return self._attr_available_firmware
 
@@ -223,6 +227,11 @@ class HmDevice(PayloadMixin):
     def sub_type(self) -> str:
         """Return the sub_type of the device."""
         return self._attr_sub_type
+
+    @property
+    def update_entity(self) -> HmUpdate:
+        """Return the device firmware update entity of the device."""
+        return self._attr_update_entity
 
     @property
     def _e_unreach(self) -> GenericEntity | None:
@@ -300,6 +309,19 @@ class HmDevice(PayloadMixin):
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
 
+    def register_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
+        """Register firmware update callback."""
+        if (
+            callable(firmware_update_callback)
+            and firmware_update_callback not in self._firmware_update_callbacks
+        ):
+            self._firmware_update_callbacks.append(firmware_update_callback)
+
+    def unregister_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
+        """Remove firmware update callback."""
+        if firmware_update_callback in self._firmware_update_callbacks:
+            self._firmware_update_callbacks.remove(firmware_update_callback)
+
     def _set_last_update(self) -> None:
         self._attr_last_update = datetime.now()
 
@@ -332,8 +354,21 @@ class HmDevice(PayloadMixin):
 
     def refresh_firmware_data(self) -> None:
         """Refresh firmware data of the device."""
+        old_available_firmware = self._attr_available_firmware
+        old_firmware = self._attr_firmware
+        old_firmware_update_state = self._attr_firmware_update_state
+        old_firmware_updatable = self._attr_firmware_updatable
+
         self._update_firmware_data()
-        self.update_device()
+
+        if (
+            old_available_firmware != self._attr_available_firmware
+            or old_firmware != self._attr_firmware
+            or old_firmware_update_state != self._attr_firmware_update_state
+            or old_firmware_updatable != self._attr_firmware_updatable
+        ):
+            for _firmware_callback in self._firmware_update_callbacks:
+                _firmware_callback()
 
     async def update_firmware(self) -> bool:
         """Update the firmware of the homematic device."""

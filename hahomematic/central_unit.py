@@ -65,6 +65,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import HmHub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
+from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
     check_or_create_directory,
     check_password,
@@ -126,6 +127,8 @@ class CentralUnit:
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
         # {unique_identifier, entity}
         self._entities: Final[dict[str, BaseEntity]] = {}
+        # {unique_identifier, update_entity}
+        self._firmware_update_entities: Final[dict[str, HmUpdate]] = {}
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
@@ -234,7 +237,8 @@ class CentralUnit:
         """Start the central unit for temporary usage. #CC."""
         await self.parameter_visibility.load()
         await self._create_clients()
-        await self.refresh_all_device_descriptions()
+        for client in self._clients.values():
+            await self._refresh_device_descriptions(client=client)
 
     async def stop(self) -> None:
         """Stop processing of the central unit. #CC."""
@@ -268,10 +272,13 @@ class CentralUnit:
         await self._stop_clients()
         await self._start_clients()
 
-    async def refresh_all_device_descriptions(self) -> None:
+    async def refresh_firmware_data(self) -> None:
         """Refresh all device descriptions."""
         for client in self._clients.values():
             await self._refresh_device_descriptions(client=client)
+
+        for device in self._devices.values():
+            device.refresh_firmware_data()
 
     async def _refresh_device_descriptions(self, client: hmcl.Client) -> None:
         """Refresh all device descriptions."""
