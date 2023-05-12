@@ -77,3 +77,7 @@ class HmUpdate(CallbackEntity):
     async def update_firmware(self) -> None:
         """Turn the update on."""
         await self.device.update_firmware()
+
+    async def refresh_firmware_data(self) -> None:
+        """Refresh device firmware data."""
+        await self.device.central.refresh_firmware_data(device_address=self.device.device_address)

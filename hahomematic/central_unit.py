@@ -272,17 +272,28 @@ class CentralUnit:
         await self._stop_clients()
         await self._start_clients()
 
-    async def refresh_firmware_data(self) -> None:
-        """Refresh all device descriptions."""
+    async def refresh_firmware_data(self, device_address: str | None = None) -> None:
+        """Refresh device firmware data."""
         for client in self._clients.values():
-            await self._refresh_device_descriptions(client=client)
+            await self._refresh_device_descriptions(client=client, device_address=device_address)
 
-        for device in self._devices.values():
+        if device_address and (device := self.get_device(device_address=device_address)):
             device.refresh_firmware_data()
+        else:
+            for device in self._devices.values():
+                device.refresh_firmware_data()
 
-    async def _refresh_device_descriptions(self, client: hmcl.Client) -> None:
-        """Refresh all device descriptions."""
-        if device_descriptions := await client.get_all_device_descriptions():
+    async def _refresh_device_descriptions(
+        self, client: hmcl.Client, device_address: str | None = None
+    ) -> None:
+        """Refresh device descriptions."""
+        if (
+            device_descriptions := await client.get_device_descriptions(
+                device_address=device_address
+            )
+            if device_address
+            else await client.get_all_device_descriptions()
+        ):
             await self._add_new_devices(
                 interface_id=client.interface_id,
                 device_descriptions=device_descriptions,

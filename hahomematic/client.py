@@ -305,6 +305,14 @@ class Client(ABC):
             _LOGGER.warning("GET_ALL_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, hhe.args)
         return None
 
+    async def get_device_descriptions(self, device_address: str) -> Any:
+        """Get device descriptions from CCU / Homegear."""
+        try:
+            return await self._proxy.getDeviceDescription(device_address)
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("GET_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, hhe.args)
+        return None
+
     # pylint: disable=invalid-name
     async def set_install_mode(
         self,
