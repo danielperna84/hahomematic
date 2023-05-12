@@ -1,7 +1,7 @@
 # Version 2023.5.1 (2023-05-11)
 
 - Refactor device description cache handling
-- Add device firmware update entity
+- Add device firmware update handling
 
 # Version 2023.5.0 (2023-05-01)
 
