@@ -2,6 +2,8 @@
 
 - Refactor device description cache handling
 - Add device firmware update handling
+- Make interface an enum
+- Add product group to device
 
 # Version 2023.5.0 (2023-05-01)
 

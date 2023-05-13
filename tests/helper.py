@@ -134,7 +134,7 @@ def get_local_client_interface_config(
 
     return InterfaceConfig(
         central_name=const.CENTRAL_NAME,
-        interface="Local",
+        interface=hahomematic_const.HmInterface.LOCAL,
         port=2002,
         local_resources=LocalRessources(
             address_device_translation=address_device_translation,

@@ -28,6 +28,8 @@ from hahomematic.const import (
     HmCallSource,
     HmDeviceFirmwareState,
     HmForcedDeviceAvailability,
+    HmInterface,
+    HmProductGroup,
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.platforms import custom as cep
@@ -88,6 +90,7 @@ class HmDevice(PayloadMixin):
                 parameter=HM_SUBTYPE,
             )
         )
+        self._attr_product_group: Final = self._identify_product_group()
         # marker if device will be created as custom entity
         self._has_custom_entity_definition: Final = cep.has_custom_entity_definition_by_device(
             device=self
@@ -148,6 +151,22 @@ class HmDevice(PayloadMixin):
                 parameter=HM_FIRMWARE_UPDATABLE,
             )
         )
+
+    def _identify_product_group(self) -> HmProductGroup:
+        """Identify the product group of the homematic device."""
+        if self.interface == HmInterface.HMIP:
+            l_device_type = self.device_type.lower()
+            if l_device_type.startswith("hmipw"):
+                return HmProductGroup.HMIPW
+            if l_device_type.startswith("hmip"):
+                return HmProductGroup.HMIP
+        if self.interface == HmInterface.HMW:
+            return HmProductGroup.HMW
+        if self.interface == HmInterface.HM:
+            return HmProductGroup.HM
+        if self.interface == HmInterface.VIRTUAL:
+            return HmProductGroup.VIRTUAL
+        return HmProductGroup.UNKNOWN
 
     @value_property
     def available(self) -> bool:
@@ -217,6 +236,11 @@ class HmDevice(PayloadMixin):
     def name(self) -> str:
         """Return the name of the device."""
         return self._attr_name
+
+    @config_property
+    def product_group(self) -> HmProductGroup:
+        """Return the product group of the device."""
+        return self._attr_product_group
 
     @config_property
     def room(self) -> str | None:

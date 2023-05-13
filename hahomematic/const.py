@@ -316,6 +316,13 @@ BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[dict[tuple[str, ...], str]] 
     ("STABLE", "NOT_STABLE"): "NOT_STABLE",
 }
 
+PG_BIDCOS_RF: Final = "BidCos-RF"
+PG_BIDCOS_WIRED: Final = "BidCos-Wired"
+PG_HMIP_RF: Final = "HmIP-RF"
+PG_HMIP_WIRED: Final = "HmIP-Wired"
+PG_UNKNOWN: Final = "unknown"
+PG_VIRTUAL_DEVICES: Final = "VirtualDevices"
+
 
 class HmDataOperationResult(IntEnum):
     """Enum with data operation results."""
@@ -378,6 +385,27 @@ class HmPlatform(StrEnum):
     SWITCH: Final = "switch"
     TEXT: Final = "text"
     UPDATE: Final = "update"
+
+
+class HmProductGroup(StrEnum):
+    """Enum with homematic product groups."""
+
+    UNKNOWN: Final = PG_UNKNOWN
+    HMIPW: Final = PG_HMIP_WIRED
+    HMIP: Final = PG_HMIP_RF
+    HMW: Final = PG_BIDCOS_WIRED
+    HM: Final = PG_BIDCOS_RF
+    VIRTUAL: Final = PG_VIRTUAL_DEVICES
+
+
+class HmInterface(StrEnum):
+    """Enum with homematic product groups."""
+
+    HMIP: Final = IF_HMIP_RF_NAME
+    HMW: Final = IF_BIDCOS_WIRED_NAME
+    HM: Final = IF_BIDCOS_RF_NAME
+    VIRTUAL: Final = IF_VIRTUAL_DEVICES_NAME
+    LOCAL: Final = LOCAL_INTERFACE
 
 
 class HmEventType(StrEnum):

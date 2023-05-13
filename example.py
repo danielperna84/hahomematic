@@ -62,17 +62,17 @@ class Example:
         interface_configs = {
             InterfaceConfig(
                 central_name=central_name,
-                interface="HmIP-Rf",
+                interface=const.HmInterface.HMIP,
                 port=2010,
             ),
             InterfaceConfig(
                 central_name=central_name,
-                interface="BidCos-RF",
+                interface=const.HmInterface.HM,
                 port=2001,
             ),
             InterfaceConfig(
                 central_name=central_name,
-                interface="VirtualDevices",
+                interface=const.HmInterface.VIRTUAL,
                 port=9292,
                 remote_path="/groups",
             ),
