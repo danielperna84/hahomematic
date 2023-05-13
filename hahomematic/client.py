@@ -45,7 +45,9 @@ from hahomematic.const import (
     PROXY_INIT_SUCCESS,
     HmCallSource,
     HmForcedDeviceAvailability,
+    HmInterface,
     HmInterfaceEventType,
+    HmProductGroup,
 )
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
 from hahomematic.platforms.device import HmDevice
@@ -587,7 +589,14 @@ class Client(ABC):
 
     async def update_device_firmware(self, device_address: str) -> bool:
         """Update the firmware of a homematic device."""
-        return bool(await self._proxy.updateFirmware(device_address))
+        if device := self.central.get_device(device_address=device_address):
+            return bool(
+                await self._proxy.installFirmware(device_address)
+                if device.product_group in (HmProductGroup.HMIPW, HmProductGroup.HMIP)
+                else await self._proxy.updateFirmware(device_address)
+            )
+
+        return False
 
     async def update_paramset_descriptions(self, device_address: str) -> None:
         """Update paramsets descriptions for provided device_address."""
@@ -1164,13 +1173,13 @@ class InterfaceConfig:
     def __init__(
         self,
         central_name: str,
-        interface: str,
+        interface: HmInterface,
         port: int,
         remote_path: str | None = None,
         local_resources: LocalRessources | None = None,
     ) -> None:
         """Init the interface config."""
-        self.interface: Final[str] = LOCAL_INTERFACE if local_resources else interface
+        self.interface: Final[HmInterface] = HmInterface.LOCAL if local_resources else interface
         self.interface_id: Final[str] = f"{central_name}-{self.interface}"
         self.port: Final = port
         self.remote_path: Final = remote_path

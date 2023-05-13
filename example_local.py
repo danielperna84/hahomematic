@@ -61,7 +61,7 @@ class Example:
         interface_configs = {
             InterfaceConfig(
                 central_name=CENTRAL_NAME,
-                interface=const.LOCAL_INTERFACE,
+                interface=const.HmInterface.LOCAL,
                 port=2010,
                 local_resources=LocalRessources(
                     address_device_translation={

@@ -12,6 +12,7 @@ import pytest
 
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import InterfaceConfig
+from hahomematic.const import HmInterface
 
 logging.basicConfig(level=logging.INFO)
 
@@ -112,7 +113,7 @@ async def get_pydev_ccu_central_unit_full(
     interface_configs = {
         InterfaceConfig(
             central_name=const.CENTRAL_NAME,
-            interface="BidCos-RF",
+            interface=HmInterface.HM,
             port=const.CCU_PORT,
         )
     }
