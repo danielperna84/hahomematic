@@ -590,17 +590,27 @@ class Client(ABC):
     async def update_device_firmware(self, device_address: str) -> bool:
         """Update the firmware of a homematic device."""
         if device := self.central.get_device(device_address=device_address):
+            _LOGGER.info(
+                "UPDATE_DEVICE_FIRMWARE: Trying firmware update for %s",
+                device_address,
+            )
             try:
                 update_result = (
                     await self._proxy.installFirmware(device_address)
                     if device.product_group in (HmProductGroup.HMIPW, HmProductGroup.HMIP)
                     else await self._proxy.updateFirmware(device_address)
                 )
-                return (
+                result = (
                     bool(update_result)
                     if isinstance(update_result, bool)
                     else bool(update_result[0])
                 )
+                _LOGGER.info(
+                    "UPDATE_DEVICE_FIRMWARE: Executed firmware update for %s with result '%s'",
+                    device_address,
+                    "success" if result else "failed",
+                )
+                return result
             except BaseHomematicException as bex:
                 _LOGGER.warning(
                     "UPDATE_DEVICE_FIRMWARE failed: %s [%s]",
