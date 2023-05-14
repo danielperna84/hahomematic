@@ -74,9 +74,9 @@ class HmUpdate(CallbackEntity):
         """Unregister update callback."""
         self.device.unregister_firmware_update_callback(update_callback)
 
-    async def update_firmware(self) -> None:
+    async def update_firmware(self) -> bool:
         """Turn the update on."""
-        await self.device.update_firmware()
+        return await self.device.update_firmware()
 
     async def refresh_firmware_data(self) -> None:
         """Refresh device firmware data."""
