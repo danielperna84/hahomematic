@@ -591,11 +591,16 @@ class Client(ABC):
         """Update the firmware of a homematic device."""
         if device := self.central.get_device(device_address=device_address):
             try:
-                if device.product_group in (HmProductGroup.HMIPW, HmProductGroup.HMIP):
+                update_result = (
                     await self._proxy.installFirmware(device_address)
-                else:
-                    await self._proxy.updateFirmware(device_address)
-                return True
+                    if device.product_group in (HmProductGroup.HMIPW, HmProductGroup.HMIP)
+                    else await self._proxy.updateFirmware(device_address)
+                )
+                return (
+                    bool(update_result)
+                    if isinstance(update_result, bool)
+                    else bool(update_result[0])
+                )
             except BaseHomematicException as bex:
                 _LOGGER.warning(
                     "UPDATE_DEVICE_FIRMWARE failed: %s [%s]",
