@@ -39,6 +39,7 @@ from hahomematic.const import (
     LOCAL_INTERFACE,
     MAX_CACHE_AGE,
     PROXY_INIT_SUCCESS,
+    HmDeviceFirmwareState,
     HmEntityUsage,
     HmEventType,
     HmInterfaceEventType,
@@ -284,6 +285,17 @@ class CentralUnit:
                 await self._refresh_device_descriptions(client=client)
             for device in self._devices.values():
                 device.refresh_firmware_data()
+
+    async def refresh_firmware_data_by_state(
+        self, device_firmware_states: tuple[HmDeviceFirmwareState, ...]
+    ) -> None:
+        """Refresh device firmware data for processing devices."""
+        for device in [
+            device_in_state
+            for device_in_state in self._devices.values()
+            if device_in_state.firmware_update_state in device_firmware_states
+        ]:
+            await self.refresh_firmware_data(device_address=device.device_address)
 
     async def _refresh_device_descriptions(
         self, client: hmcl.Client, device_address: str | None = None
