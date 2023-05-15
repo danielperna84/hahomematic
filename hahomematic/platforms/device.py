@@ -394,17 +394,19 @@ class HmDevice(PayloadMixin):
             for _firmware_callback in self._firmware_update_callbacks:
                 _firmware_callback()
 
-    async def update_firmware(self) -> bool:
+    async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Update the firmware of the homematic device."""
         update_result = await self.client.update_device_firmware(
             device_address=self._attr_device_address
         )
 
         async def refresh_data() -> None:
-            await asyncio.sleep(5)
-            await self.central.refresh_firmware_data(device_address=self._attr_device_address)
+            for refresh_interval in refresh_after_update_intervals:
+                await asyncio.sleep(refresh_interval)
+                await self.central.refresh_firmware_data(device_address=self._attr_device_address)
 
-        self.central.create_task(target=refresh_data(), name="refresh_firmware_data")
+        if refresh_after_update_intervals:
+            self.central.create_task(target=refresh_data(), name="refresh_firmware_data")
 
         return update_result
 
