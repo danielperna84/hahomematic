@@ -399,8 +399,13 @@ class HmDevice(PayloadMixin):
         update_result = await self.client.update_device_firmware(
             device_address=self._attr_device_address
         )
-        await asyncio.sleep(3)
-        await self.central.refresh_firmware_data(device_address=self._attr_device_address)
+
+        async def refresh_data() -> None:
+            await asyncio.sleep(5)
+            await self.central.refresh_firmware_data(device_address=self._attr_device_address)
+
+        self.central.create_task(target=refresh_data(), name="refresh_firmware_data")
+
         return update_result
 
     async def load_value_cache(self) -> None:
