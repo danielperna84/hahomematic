@@ -1,3 +1,7 @@
+# Version 2023.5.2 (2023-05-14)
+
+- Improve update_device_firmware
+
 # Version 2023.5.1 (2023-05-11)
 
 - Refactor device description cache handling
