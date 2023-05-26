@@ -1,3 +1,7 @@
+# Version 2023.6.0 (2023-06-01)
+
+- Update requirements
+
 # Version 2023.5.2 (2023-05-14)
 
 - Improve update_device_firmware
