@@ -1,6 +1,7 @@
 # Version 2023.6.0 (2023-06-01)
 
 - Update requirements
+- Do not create update entities for virtual remotes
 
 # Version 2023.5.2 (2023-05-14)
 
@@ -20,7 +21,7 @@
 
 # Version 2023.4.5 (2023-04-28)
 
-- Fix division by zero for HmIP-RGBM
+- Fix division by zero for HmIP-RGBW
 - Remove color_temperature from RGBW
 
 # Version 2023.4.4 (2023-04-28)
