@@ -19,6 +19,7 @@ from hahomematic.const import (
     HM_FIRMWARE_UPDATE_STATE,
     HM_SUBTYPE,
     HM_TYPE,
+    HM_VIRTUAL_REMOTE_TYPES,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
@@ -104,7 +105,9 @@ class HmDevice(PayloadMixin):
         self.value_cache: Final = ValueCache(device=self)
         self._attr_room: Final = central.device_details.get_room(device_address=device_address)
         self._update_firmware_data()
-        self._attr_update_entity: Final = HmUpdate(device=self)
+        self._attr_update_entity: Final = (
+            HmUpdate(device=self) if self.device_type not in HM_VIRTUAL_REMOTE_TYPES else None
+        )
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",
             self._attr_interface_id,
@@ -253,7 +256,7 @@ class HmDevice(PayloadMixin):
         return self._attr_sub_type
 
     @property
-    def update_entity(self) -> HmUpdate:
+    def update_entity(self) -> HmUpdate | None:
         """Return the device firmware update entity of the device."""
         return self._attr_update_entity
 
