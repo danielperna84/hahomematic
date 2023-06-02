@@ -2,6 +2,7 @@
 
 - Update requirements
 - Do not create update entities for virtual remotes
+- Cleanup FIX_UNIT_BY_PARAM
 
 # Version 2023.5.2 (2023-05-14)
 
