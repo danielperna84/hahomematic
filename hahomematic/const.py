@@ -244,7 +244,6 @@ FIX_UNIT_BY_PARAM: Final[dict[str, str]] = {
     "RSSI_DEVICE": "dBm",
     "RSSI_PEER": "dBm",
     "SUNSHINEDURATION": "min",
-    "VALVE_STATE": "%",
     "WIND_DIRECTION": "°",
     "WIND_DIRECTION_RANGE": "°",
 }
