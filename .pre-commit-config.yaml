@@ -11,13 +11,13 @@ repos:
           - --quiet
         files: ^((hahomematic|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.270
+    rev: v0.0.272
     hooks:
       - id: ruff
         args:
           - --fix
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
+    rev: v2.2.5
     hooks:
       - id: codespell
         args:

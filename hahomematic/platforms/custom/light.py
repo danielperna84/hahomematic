@@ -52,10 +52,10 @@ _HM_ARG_EFFECT: Final = "effect"
 _HM_ARG_HS_COLOR: Final = "hs_color"
 _HM_ARG_RAMP_TIME: Final = "ramp_time"
 
-_DOM_PWM: Final = "PWM"
+_DOM_PWM: Final = "4_PWM"
 _DOM_RGB: Final = "RGB"
 _DOM_RGBW: Final = "RGBW"
-_DOM_TUNABLE_WHITE: Final = "TUNABLE_WHITE"
+_DOM_TUNABLE_WHITE: Final = "2_TUNABLE_WHITE"
 
 HM_EFFECT_OFF: Final = "Off"
 
