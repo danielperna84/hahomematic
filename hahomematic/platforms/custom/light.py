@@ -9,7 +9,13 @@ from abc import abstractmethod
 import math
 from typing import Any, Final, TypedDict
 
-from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
+from hahomematic.const import (
+    HM_ARG_OFF,
+    HM_ARG_ON,
+    HM_ARG_ON_TIME,
+    HmEntityUsage,
+    HmPlatform,
+)
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
@@ -471,6 +477,22 @@ class CeIpRGBWLight(BaseHmLight):
     def supports_transition(self) -> bool:
         """Flag if light supports transition."""
         return True
+
+    @config_property
+    def usage(self) -> HmEntityUsage:
+        """
+        Return the entity usage.
+
+        Avoid creating entities that are not usable in selected device operation mode.
+        """
+        if (
+            self._e_device_operation_mode.value in (_DOM_RGB, _DOM_RGBW)
+            and self.channel_no in (2, 3, 4)
+        ) or (
+            self._e_device_operation_mode.value == _DOM_TUNABLE_WHITE and self.channel_no in (3, 4)
+        ):
+            return HmEntityUsage.ENTITY_NO_CREATE
+        return self._attr_usage
 
     @value_property
     def effect_list(self) -> list[str] | None:

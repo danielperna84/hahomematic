@@ -1,6 +1,7 @@
 # Version 2023.6.1 (2023-06-23)
 
 - Fix tunable white support for hmIP-RGBW
+- Avoid creating entities that are not usable in selected device operation mode for hmIP-RGBW
 - Update requirements
 
 # Version 2023.6.0 (2023-06-01)
