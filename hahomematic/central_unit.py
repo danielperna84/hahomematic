@@ -491,7 +491,7 @@ class CentralUnit:
         """Return a client by interface_id. #CC."""
         if not self.has_client(interface_id=interface_id):
             raise HaHomematicException(
-                f"get_client: interface_id {interface_id} " f"does not exist on {self._attr_name}"
+                f"get_client: interface_id {interface_id} does not exist on {self._attr_name}"
             )
         return self._clients[interface_id]
 

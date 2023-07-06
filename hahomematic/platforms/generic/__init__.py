@@ -78,32 +78,29 @@ def create_entity_and_append_to_device(
                     entity_t = HmButton
                 else:
                     entity_t = HmAction
+            elif parameter in CLICK_EVENTS:
+                entity_t = HmButton
             else:
-                if parameter in CLICK_EVENTS:
-                    entity_t = HmButton
-                else:
-                    entity_t = HmSwitch
-        else:
-            if parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
-                entity_t = HmAction
-            elif parameter_data[HM_TYPE] == TYPE_BOOL:
                 entity_t = HmSwitch
-            elif parameter_data[HM_TYPE] == TYPE_ENUM:
-                entity_t = HmSelect
-            elif parameter_data[HM_TYPE] == TYPE_FLOAT:
-                entity_t = HmFloat
-            elif parameter_data[HM_TYPE] == TYPE_INTEGER:
-                entity_t = HmInteger
-            elif parameter_data[HM_TYPE] == TYPE_STRING:
-                entity_t = HmText
-    else:
-        if parameter not in CLICK_EVENTS:
-            # Also check, if sensor could be a binary_sensor due to value_list.
-            if is_binary_sensor(parameter_data):
-                parameter_data[HM_TYPE] = TYPE_BOOL
-                entity_t = HmBinarySensor
-            else:
-                entity_t = HmSensor
+        elif parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
+            entity_t = HmAction
+        elif parameter_data[HM_TYPE] == TYPE_BOOL:
+            entity_t = HmSwitch
+        elif parameter_data[HM_TYPE] == TYPE_ENUM:
+            entity_t = HmSelect
+        elif parameter_data[HM_TYPE] == TYPE_FLOAT:
+            entity_t = HmFloat
+        elif parameter_data[HM_TYPE] == TYPE_INTEGER:
+            entity_t = HmInteger
+        elif parameter_data[HM_TYPE] == TYPE_STRING:
+            entity_t = HmText
+    elif parameter not in CLICK_EVENTS:
+        # Also check, if sensor could be a binary_sensor due to value_list.
+        if is_binary_sensor(parameter_data):
+            parameter_data[HM_TYPE] = TYPE_BOOL
+            entity_t = HmBinarySensor
+        else:
+            entity_t = HmSensor
 
     if entity_t:
         entity = entity_t(

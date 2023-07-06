@@ -4,13 +4,13 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
-import const
-import helper
-import pytest
-
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.hub.number import HmSysvarNumber
+import pytest
+
+import const
+import helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU4984404": "HmIPW-STHD.json",

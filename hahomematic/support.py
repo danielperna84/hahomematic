@@ -186,9 +186,8 @@ def element_matches_key(
             if do_wildcard_search:
                 if compare_with.lower().startswith(element.lower()):
                     return True
-            else:
-                if compare_with.lower() == element.lower():
-                    return True
+            elif compare_with.lower() == element.lower():
+                return True
     return False
 
 

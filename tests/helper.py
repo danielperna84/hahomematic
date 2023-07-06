@@ -8,9 +8,6 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
-import const
-import orjson
-
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
@@ -20,6 +17,9 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 from hahomematic.support import get_device_address
+import orjson
+
+import const
 
 _LOGGER = logging.getLogger(__name__)
 

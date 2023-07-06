@@ -4,12 +4,12 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
-import const
-import helper
-import pytest
-
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.custom.siren import CeIpSiren, CeIpSirenSmoke
+import pytest
+
+import const
+import helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU8249617": "HmIP-ASIR-2.json",

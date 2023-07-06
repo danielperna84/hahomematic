@@ -1,4 +1,4 @@
 aiohttp>=3.8.4
-orjson>=3.8.10
+orjson>=3.9.1
 python-slugify>=4.0.1
 voluptuous>=0.13.1

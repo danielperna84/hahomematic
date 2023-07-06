@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 import const
 import helper
-import pytest
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

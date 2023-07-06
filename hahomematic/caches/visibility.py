@@ -671,7 +671,6 @@ def _get_value_from_dict_by_wildcard_key(
         if do_wildcard_search:
             if key.lower().startswith(compare_with.lower()):
                 return value
-        else:
-            if key.lower() == compare_with.lower():
-                return value
+        elif key.lower() == compare_with.lower():
+            return value
     return None

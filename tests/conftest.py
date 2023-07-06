@@ -5,14 +5,14 @@ import asyncio
 import logging
 
 from aiohttp import ClientSession, TCPConnector
-import const
-import helper
-import pydevccu
-import pytest
-
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import InterfaceConfig
 from hahomematic.const import HmInterface
+import pydevccu
+import pytest
+
+import const
+import helper
 
 logging.basicConfig(level=logging.INFO)
 

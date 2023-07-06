@@ -4,13 +4,13 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
-import helper
-import pytest
-
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.custom.switch import CeSwitch
 from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.hub.switch import HmSysvarSwitch
+import pytest
+
+import helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
@@ -41,7 +41,7 @@ async def test_ceswitch(
         channel_address="VCU2128127:4", paramset_key="VALUES", parameter="STATE", value=False
     )
     assert switch.value is False
-    await switch.turn_on(**{"on_time": 60})
+    await switch.turn_on(on_time=60)
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU2128127:4", paramset_key="VALUES", value={"ON_TIME": 60.0, "STATE": True}
     )
@@ -93,7 +93,7 @@ async def test_hmswitch(
         value=False,
     )
     assert switch.value is False
-    await switch.turn_on(**{"on_time": 60})
+    await switch.turn_on(on_time=60)
     assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",

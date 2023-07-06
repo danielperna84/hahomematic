@@ -1,3 +1,9 @@
+# Version 2023.7.0 (2023-07-XX)
+
+- Project file maintenance
+  - Replace isort with ruff
+  - Move overlapping pylint rules to ruff, disable mypy overlap
+
 # Version 2023.6.1 (2023-06-23)
 
 - Fix tunable white support for hmIP-RGBW

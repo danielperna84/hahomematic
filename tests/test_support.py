@@ -4,9 +4,6 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from unittest.mock import patch
 
-import helper
-import pytest
-
 from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
 from hahomematic.const import (
     INIT_DATETIME,
@@ -46,6 +43,9 @@ from hahomematic.support import (
     to_bool,
     updated_within_seconds,
 )
+import pytest
+
+import helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
