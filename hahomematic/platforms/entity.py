@@ -567,9 +567,8 @@ class CallParameterCollector:
                         value=value,
                     ):
                         return False  # pragma: no cover
-            else:
-                if not await self._client.put_paramset(
-                    address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
-                ):
-                    return False  # pragma: no cover
+            elif not await self._client.put_paramset(
+                address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
+            ):
+                return False  # pragma: no cover
         return True

@@ -5,10 +5,6 @@ from contextlib import suppress
 from typing import cast
 from unittest.mock import call, patch
 
-import const
-import helper
-import pytest
-
 from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmEntityUsage,
@@ -18,6 +14,10 @@ from hahomematic.const import (
 from hahomematic.exceptions import HaHomematicException, NoClients
 from hahomematic.platforms.generic.number import HmFloat
 from hahomematic.platforms.generic.switch import HmSwitch
+import pytest
+
+import const
+import helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

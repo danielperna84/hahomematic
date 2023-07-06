@@ -5,10 +5,6 @@ from datetime import datetime
 from typing import cast
 from unittest.mock import call
 
-import const
-import helper
-import pytest
-
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.custom.climate import (
     HMIP_MODE_AUTO,
@@ -21,6 +17,10 @@ from hahomematic.platforms.custom.climate import (
     HmHvacMode,
     HmPresetMode,
 )
+import pytest
+
+import const
+import helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU1769958": "HmIP-BWTH.json",
