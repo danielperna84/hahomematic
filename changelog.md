@@ -1,4 +1,4 @@
-# Version 2023.7.0 (2023-07-XX)
+# Version 2023.7.0 (2023-07-07)
 
 - Project file maintenance
   - Replace isort with ruff
