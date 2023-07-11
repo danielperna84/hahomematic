@@ -695,6 +695,7 @@ class ClientCCU(Client):
         try:
             await self._proxy.ping(self.interface_id)
             self.last_updated = datetime.now()
+            self.central.increase_ping_count(interface_id=self.interface_id)
             return True
         except BaseHomematicException as hhe:
             _LOGGER.debug("CHECK_CONNECTION_AVAILABILITY failed: %s [%s]", hhe.name, hhe.args)
@@ -800,6 +801,7 @@ class ClientHomegear(Client):
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
             self.last_updated = datetime.now()
+            self.central.increase_ping_count(interface_id=self.interface_id)
             return True
         except BaseHomematicException as hhe:
             _LOGGER.debug("CHECK_CONNECTION_AVAILABILITY failed: %s [%s]", hhe.name, hhe.args)
