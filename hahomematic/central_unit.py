@@ -30,6 +30,7 @@ from hahomematic.const import (
     ATTR_VALUE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
+    EVENT_PONG,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_DEVICES_CREATED,
     HH_EVENT_LIST_DEVICES,
@@ -746,8 +747,9 @@ class CentralUnit:
 
         self.last_events[interface_id] = datetime.now()
         # No need to check the response of a XmlRPC-PING
-        if parameter == "PONG":
-            self._reduce_ping_count(interface_id=interface_id)
+        if parameter == EVENT_PONG:
+            if value == interface_id:
+                self._reduce_ping_count(interface_id=interface_id)
             return
         if (channel_address, parameter) in self._entity_event_subscriptions:
             try:
