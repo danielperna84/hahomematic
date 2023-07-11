@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2023.7.0"
+version     = "2023.7.1"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
@@ -26,7 +26,7 @@ classifiers = [
 requires-python = ">=3.10.0"
 dependencies    = [
     "aiohttp>=3.8.4",
-    "orjson>=3.8.7",
+    "orjson>=3.9.1",
     "python-slugify>=4.0.1",
     "voluptuous>=0.13.1",
 ]

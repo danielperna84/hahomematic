@@ -30,6 +30,7 @@ from hahomematic.const import (
     ATTR_VALUE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
+    EVENT_PONG,
     HH_EVENT_DELETE_DEVICES,
     HH_EVENT_DEVICES_CREATED,
     HH_EVENT_LIST_DEVICES,
@@ -88,6 +89,10 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
+        self._ping_count: Final[dict[str, int]] = {}
+        self._ping_pong_error_logged: bool = False
+        self._sema_ping_count: Final = asyncio.Semaphore()
+
         self._sema_add_devices: Final = asyncio.Semaphore()
         self._tasks: Final[set[asyncio.Future[Any]]] = set()
         # Keep the config for the central #CC
@@ -742,7 +747,9 @@ class CentralUnit:
 
         self.last_events[interface_id] = datetime.now()
         # No need to check the response of a XmlRPC-PING
-        if parameter == "PONG":
+        if parameter == EVENT_PONG:
+            if value == interface_id:
+                self._reduce_ping_count(interface_id=interface_id)
             return
         if (channel_address, parameter) in self._entity_event_subscriptions:
             try:
@@ -824,6 +831,40 @@ class CentralUnit:
     def has_entity(self, unique_identifier: str) -> bool:
         """Check if unique_identifier is already added."""
         return unique_identifier in self._entities
+
+    def increase_ping_count(self, interface_id: str) -> None:
+        """Increase the number of send ping events."""
+        if (ping_count := self._ping_count.get(interface_id)) is not None:
+            ping_count += 1
+            self._ping_count[interface_id] = ping_count
+            if ping_count > 5:
+                self._log_ping_pong_error_once()
+            _LOGGER.debug("Increase Ping count: %s, %i", interface_id, ping_count)
+        else:
+            self._ping_count[interface_id] = 1
+
+    def _reduce_ping_count(self, interface_id: str) -> None:
+        """Reduce the number of send ping events, by a received pong event."""
+        if (ping_count := self._ping_count.get(interface_id)) is not None:
+            ping_count -= 1
+            self._ping_count[interface_id] = ping_count
+            if ping_count < -5:
+                self._log_ping_pong_error_once()
+            _LOGGER.debug("Reduce Ping count: %s, %i", interface_id, ping_count)
+        else:
+            self._ping_count[interface_id] = 0
+
+    def _log_ping_pong_error_once(self) -> None:
+        """Log an error about the ping/pong count mismatch."""
+        if self._ping_pong_error_logged:
+            return
+        _LOGGER.error(
+            "There is a mismatch between send ping events and received pong events for HA instance %s. "
+            "Looks like you are running multiple instances of HA with the same instance name configured for this integration. "
+            "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU.",
+            self.config.name,
+        )
+        self._ping_pong_error_logged = True
 
     def create_task(self, target: Awaitable, name: str) -> None:
         """Add task to the executor pool."""
