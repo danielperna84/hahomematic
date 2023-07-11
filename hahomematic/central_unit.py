@@ -837,7 +837,7 @@ class CentralUnit:
         if (ping_count := self._ping_count.get(interface_id)) is not None:
             ping_count += 1
             self._ping_count[interface_id] = ping_count
-            if ping_count > 3:
+            if ping_count > 5:
                 self._log_ping_pong_error_once()
             _LOGGER.debug("Increase Ping count: %s, %i", interface_id, ping_count)
         else:
@@ -848,7 +848,7 @@ class CentralUnit:
         if (ping_count := self._ping_count.get(interface_id)) is not None:
             ping_count -= 1
             self._ping_count[interface_id] = ping_count
-            if ping_count < -3:
+            if ping_count < -5:
                 self._log_ping_pong_error_once()
             _LOGGER.debug("Reduce Ping count: %s, %i", interface_id, ping_count)
         else:
