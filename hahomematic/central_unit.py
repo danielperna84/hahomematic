@@ -91,7 +91,7 @@ class CentralUnit:
         """Init the central unit."""
         self._ping_count: Final[dict[str, int]] = {}
         self._ping_pong_error_logged: bool = False
-        self._sema_ping_count: Final = asyncio.Semaphore()
+        self._sema_ping_count: Final = threading.Semaphore()
 
         self._sema_add_devices: Final = asyncio.Semaphore()
         self._tasks: Final[set[asyncio.Future[Any]]] = set()
@@ -834,25 +834,27 @@ class CentralUnit:
 
     def increase_ping_count(self, interface_id: str) -> None:
         """Increase the number of send ping events."""
-        if (ping_count := self._ping_count.get(interface_id)) is not None:
-            ping_count += 1
-            self._ping_count[interface_id] = ping_count
-            if ping_count > 5:
-                self._log_ping_pong_error_once()
-            _LOGGER.debug("Increase Ping count: %s, %i", interface_id, ping_count)
-        else:
-            self._ping_count[interface_id] = 1
+        with self._sema_ping_count:
+            if (ping_count := self._ping_count.get(interface_id)) is not None:
+                ping_count += 1
+                self._ping_count[interface_id] = ping_count
+                if ping_count > 5:
+                    self._log_ping_pong_error_once()
+                _LOGGER.debug("Increase Ping count: %s, %i", interface_id, ping_count)
+            else:
+                self._ping_count[interface_id] = 1
 
     def _reduce_ping_count(self, interface_id: str) -> None:
         """Reduce the number of send ping events, by a received pong event."""
-        if (ping_count := self._ping_count.get(interface_id)) is not None:
-            ping_count -= 1
-            self._ping_count[interface_id] = ping_count
-            if ping_count < -5:
-                self._log_ping_pong_error_once()
-            _LOGGER.debug("Reduce Ping count: %s, %i", interface_id, ping_count)
-        else:
-            self._ping_count[interface_id] = 0
+        with self._sema_ping_count:
+            if (ping_count := self._ping_count.get(interface_id)) is not None:
+                ping_count -= 1
+                self._ping_count[interface_id] = ping_count
+                if ping_count < -5:
+                    self._log_ping_pong_error_once()
+                _LOGGER.debug("Reduce Ping count: %s, %i", interface_id, ping_count)
+            else:
+                self._ping_count[interface_id] = 0
 
     def _log_ping_pong_error_once(self) -> None:
         """Log an error about the ping/pong count mismatch."""
