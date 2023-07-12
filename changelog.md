@@ -1,3 +1,8 @@
+# Version 2023.7.2 (2023-07-12)
+
+- Add new Events PRESS_LOCK and PRESS_UNLOCK for HmIP-WKP
+- Cleanup parameters used by HmIP-WKP
+
 # Version 2023.7.1 (2023-07-11)
 
 - Log an error about the ping/pong count mismatch
