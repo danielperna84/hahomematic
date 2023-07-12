@@ -88,22 +88,22 @@ _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
 _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "ACCESS_AUTHORIZATION",
     "ACOUSTIC_NOTIFICATION_SELECTION",  # ro
-    "ADAPTION_DRIVE",  # ro"
+    "ADAPTION_DRIVE",  # ro
     "AES_KEY",
-    "ALARM_COUNT",  # ro"
-    "ALL_LEDS",  # ro"
-    "ARROW_DOWN",  # ro"
+    "ALARM_COUNT",  # ro
+    "ALL_LEDS",  # ro
+    "ARROW_DOWN",  # ro
     "ARROW_UP",  # ro
     "BACKLIGHT",  # ro
-    "BEEP",  # ro"
-    "BELL",  # ro"
-    "BLIND",  # ro"
+    "BEEP",  # ro
+    "BELL",  # ro
+    "BLIND",  # ro
     "BOOST_STATE",
     "BOOST_TIME",
     "BOOT",
-    "BULB",  # ro"
+    "BULB",  # ro
     "CLEAR_WINDOW_OPEN_SYMBOL",  # ro
-    "CLOCK",  # ro"
+    "CLOCK",  # ro
     "CONTROL_DIFFERENTIAL_TEMPERATURE",
     "DATE_TIME_UNKNOWN",
     "DECISION_VALUE",
@@ -116,7 +116,7 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "DISPLAY_DATA_ID",  # ro
     "DISPLAY_DATA_STRING",  # ro
     "DISPLAY_DATA_TEXT_COLOR",  # ro
-    "DOOR",  # ro"
+    "DOOR",  # ro
     "EXTERNAL_CLOCK",
     "FROST_PROTECTION",
     "HUMIDITY_LIMITER",
@@ -134,18 +134,18 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "PARTY_TEMPERATURE",
     "PARTY_TIME_END",
     "PARTY_TIME_START",
-    "PHONE",  # ro"
+    "PHONE",  # ro
     "PROCESS",
     "QUICK_VETO_TIME",
     "RAMP_STOP",
     "RELOCK_DELAY",
-    "SCENE",  # ro"
+    "SCENE",  # ro
     "SELF_CALIBRATION",
-    "SERVICE_COUNT",  # ro"
+    "SERVICE_COUNT",  # ro
     "SET_SYMBOL_FOR_HEATING_PHASE",
     "SHADING_SPEED",  # ro
-    "SHEV_POS",  # ro"
-    "SPEED",  # ro"
+    "SHEV_POS",  # ro
+    "SPEED",  # ro
     "STATE_UNCERTAIN",
     "SUBMIT",
     "SWITCH_POINT_OCCURED",
@@ -153,12 +153,12 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "TEMPERATURE_OUT_OF_RANGE",
     "TEXT",
     "TIME_OF_OPERATION",
-    "USER_COLOR",  # ro"
-    "USER_PROGRAM",  # ro"
+    "USER_COLOR",  # ro
+    "USER_PROGRAM",  # ro
     "VALVE_ADAPTION",
     "WINDOW",  # ro
     "WIN_RELEASE",
-    "WIN_RELEASE_ACT",  # ro"
+    "WIN_RELEASE_ACT",  # ro
 )
 
 # Ignore Parameter that end with
