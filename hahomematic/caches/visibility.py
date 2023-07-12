@@ -139,7 +139,6 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "QUICK_VETO_TIME",
     "RAMP_STOP",
     "RELOCK_DELAY",
-    "SABOTAGE_STICKY",  # ro
     "SCENE",  # ro
     "SELF_CALIBRATION",
     "SERVICE_COUNT",  # ro
