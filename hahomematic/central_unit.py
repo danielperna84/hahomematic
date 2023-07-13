@@ -371,13 +371,16 @@ class CentralUnit:
                     )
                     self._clients[client.interface_id] = client
             except BaseHomematicException as ex:
+                message = f"No connection to interface {interface_config.interface_id}"
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
                     interface_event_type=HmInterfaceEventType.PROXY,
+                    message=message,
                     available=False,
                 )
                 _LOGGER.warning(
-                    "CREATE_CLIENTS failed: Unable to create client for central [%s]",
+                    "CREATE_CLIENTS failed: %s [%s]",
+                    message,
                     ex.args,
                 )
 
@@ -412,12 +415,14 @@ class CentralUnit:
         self,
         interface_id: str,
         interface_event_type: HmInterfaceEventType,
+        message: str,
         available: bool,
     ) -> None:
         """Fire an event about the interface status."""
         event_data: dict[str, Any] = {
             ATTR_INTERFACE_ID: interface_id,
             ATTR_TYPE: interface_event_type,
+            ATTR_MESSAGE: message,
             ATTR_VALUE: available,
         }
         self.fire_ha_event_callback(event_type=HmEventType.INTERFACE, event_data=event_data)

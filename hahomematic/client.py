@@ -159,9 +159,11 @@ class Client(ABC):
                 "available" if available else "unavailable",
                 self.interface_id,
             )
+        message = f"No connection to interface {self.interface_id}"
         self.central.fire_interface_event(
             interface_id=self.interface_id,
             interface_event_type=HmInterfaceEventType.PROXY,
+            message=message,
             available=available,
         )
 
@@ -223,25 +225,25 @@ class Client(ABC):
         if last_events_time := self.central.last_events.get(self.interface_id):
             seconds_since_last_event = (datetime.now() - last_events_time).total_seconds()
             if seconds_since_last_event > CALLBACK_WARN_INTERVAL:
+                message = (
+                    f"Callback for {self.interface_id} has not received events for {seconds_since_last_event}s",
+                )
                 if self._is_callback_alive:
                     self.central.fire_interface_event(
                         interface_id=self.interface_id,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
+                        message=f"Callback for {self.interface_id} has not received events for {seconds_since_last_event}s",
                         available=False,
                     )
                     self._is_callback_alive = False
-                _LOGGER.warning(
-                    "IS_CALLBACK_ALIVE: "
-                    "Callback for %s has not received events for %i seconds')",
-                    self.interface_id,
-                    seconds_since_last_event,
-                )
+                _LOGGER.warning("IS_CALLBACK_ALIVE: %s", message)
                 return False
 
             if not self._is_callback_alive:
                 self.central.fire_interface_event(
                     interface_id=self.interface_id,
                     interface_event_type=HmInterfaceEventType.CALLBACK,
+                    message="",
                     available=True,
                 )
                 self._is_callback_alive = True

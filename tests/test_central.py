@@ -328,11 +328,17 @@ async def test_central_callbacks(
     central.fire_interface_event(
         interface_id="SOME_ID",
         interface_event_type=HmInterfaceEventType.CALLBACK,
+        message="error message",
         available=False,
     )
     assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.interface",
-        {"interface_id": "SOME_ID", "type": "callback", "value": False},
+        {
+            "interface_id": "SOME_ID",
+            "type": "callback",
+            "message": "error message",
+            "value": False,
+        },
     )
 
 
