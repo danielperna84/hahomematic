@@ -867,7 +867,6 @@ class CentralUnit:
             f"Looks like you are running multiple instances of HA with the same instance name configured for this integration. "
             f"Re-add one instance! Otherwise one HA instance will not receive update events from your CCU."
         )
-        _LOGGER.warning(message)
         event_data: dict[str, Any] = {
             ATTR_INTERFACE_ID: interface_id,
             ATTR_TYPE: HmInterfaceEventType.PINGPONG,
