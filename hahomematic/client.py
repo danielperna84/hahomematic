@@ -225,14 +225,12 @@ class Client(ABC):
         if last_events_time := self.central.last_events.get(self.interface_id):
             seconds_since_last_event = (datetime.now() - last_events_time).total_seconds()
             if seconds_since_last_event > CALLBACK_WARN_INTERVAL:
-                message = (
-                    f"Callback for {self.interface_id} has not received events for {seconds_since_last_event}s",
-                )
+                message = f"Callback for {self.interface_id} has not received events for {seconds_since_last_event:.0f}s"
                 if self._is_callback_alive:
                     self.central.fire_interface_event(
                         interface_id=self.interface_id,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
-                        message=f"Callback for {self.interface_id} has not received events for {seconds_since_last_event}s",
+                        message=message,
                         available=False,
                     )
                     self._is_callback_alive = False
