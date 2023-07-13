@@ -1,3 +1,7 @@
+# Version 2023.7.3 (2023-07-13)
+
+- Fire interface event about ping/pong mismatch
+
 # Version 2023.7.2 (2023-07-12)
 
 - Add new Events PRESS_LOCK and PRESS_UNLOCK for HmIP-WKP

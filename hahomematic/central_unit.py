@@ -24,8 +24,10 @@ from hahomematic.caches.persistent import (
     ParamsetDescriptionCache,
 )
 from hahomematic.caches.visibility import ParameterVisibilityCache
+from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     ATTR_INTERFACE_ID,
+    ATTR_MESSAGE,
     ATTR_TYPE,
     ATTR_VALUE,
     DEFAULT_TLS,
@@ -90,7 +92,7 @@ class CentralUnit:
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
         self._ping_count: Final[dict[str, int]] = {}
-        self._ping_pong_error_logged: bool = False
+        self._ping_pong_fired: bool = False
         self._sema_ping_count: Final = threading.Semaphore()
 
         self._sema_add_devices: Final = asyncio.Semaphore()
@@ -838,8 +840,8 @@ class CentralUnit:
             if (ping_count := self._ping_count.get(interface_id)) is not None:
                 ping_count += 1
                 self._ping_count[interface_id] = ping_count
-                if ping_count > 5:
-                    self._log_ping_pong_error_once()
+                if ping_count > PING_PONG_MISMATCH_COUNT:
+                    self._fire_ping_pong_event(interface_id=interface_id)
                 _LOGGER.debug("Increase Ping count: %s, %i", interface_id, ping_count)
             else:
                 self._ping_count[interface_id] = 1
@@ -850,23 +852,29 @@ class CentralUnit:
             if (ping_count := self._ping_count.get(interface_id)) is not None:
                 ping_count -= 1
                 self._ping_count[interface_id] = ping_count
-                if ping_count < -5:
-                    self._log_ping_pong_error_once()
+                if ping_count < -PING_PONG_MISMATCH_COUNT:
+                    self._fire_ping_pong_event(interface_id=interface_id)
                 _LOGGER.debug("Reduce Ping count: %s, %i", interface_id, ping_count)
             else:
                 self._ping_count[interface_id] = 0
 
-    def _log_ping_pong_error_once(self) -> None:
-        """Log an error about the ping/pong count mismatch."""
-        if self._ping_pong_error_logged:
+    def _fire_ping_pong_event(self, interface_id: str) -> None:
+        """Fire an event about the ping pong status."""
+        if self._ping_pong_fired:
             return
-        _LOGGER.error(
-            "There is a mismatch between send ping events and received pong events for HA instance %s. "
-            "Looks like you are running multiple instances of HA with the same instance name configured for this integration. "
-            "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU.",
-            self.config.name,
+        message = (
+            f"There is a mismatch between send ping events and received pong events for HA instance {self.config.name}. "
+            f"Looks like you are running multiple instances of HA with the same instance name configured for this integration. "
+            f"Re-add one instance! Otherwise one HA instance will not receive update events from your CCU."
         )
-        self._ping_pong_error_logged = True
+        _LOGGER.warning(message)
+        event_data: dict[str, Any] = {
+            ATTR_INTERFACE_ID: interface_id,
+            ATTR_TYPE: HmInterfaceEventType.PINGPONG,
+            ATTR_MESSAGE: message,
+        }
+        self.fire_ha_event_callback(event_type=HmEventType.INTERFACE, event_data=event_data)
+        self._ping_pong_fired = True
 
     def create_task(self, target: Awaitable, name: str) -> None:
         """Add task to the executor pool."""

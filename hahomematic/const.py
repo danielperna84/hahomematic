@@ -11,6 +11,7 @@ DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = (
     15  # check if connection is available via rpc ping every:
 )
 DEFAULT_ENCODING: Final = "UTF-8"
+DEFAULT_PING_PONG_MISMATCH_COUNT: Final = 10
 DEFAULT_RECONNECT_WAIT: Final = 120  # wait with reconnect after a first ping was successful
 DEFAULT_TIMEOUT: Final = 60  # default timeout for a connection
 DEFAULT_TLS: Final = False
@@ -55,6 +56,7 @@ ATTR_INTERFACE: Final = "interface"
 ATTR_INTERFACE_ID: Final = "interface_id"
 ATTR_IP: Final = "ip"
 ATTR_JSON_PORT: Final = "json_port"
+ATTR_MESSAGE: Final = "message"
 ATTR_MODEL: Final = "model"
 ATTR_NAME: Final = "name"
 ATTR_PARAMETER: Final = "parameter"
@@ -433,6 +435,7 @@ class HmInterfaceEventType(StrEnum):
     """Enum with hahomematic event types."""
 
     CALLBACK: Final = "callback"
+    PINGPONG: Final = "pingpong"
     PROXY: Final = "proxy"
 
 
