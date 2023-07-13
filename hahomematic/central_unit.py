@@ -878,6 +878,7 @@ class CentralUnit:
             ATTR_MESSAGE: message,
         }
         self.fire_ha_event_callback(event_type=HmEventType.INTERFACE, event_data=event_data)
+        _LOGGER.warning("PING/PONG MISMATCH: %s", message)
         self._ping_pong_fired = True
 
     def create_task(self, target: Awaitable, name: str) -> None:
