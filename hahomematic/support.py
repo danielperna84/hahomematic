@@ -14,7 +14,13 @@ import socket
 import ssl
 from typing import Any
 
+import voluptuous as vol
+
 from hahomematic.const import (
+    ATTR_INTERFACE_ID,
+    ATTR_MESSAGE,
+    ATTR_TYPE,
+    ATTR_VALUE,
     CCU_PASSWORD_PATTERN,
     FILE_DEVICES,
     FILE_PARAMSETS,
@@ -24,10 +30,21 @@ from hahomematic.const import (
     SYSVAR_TYPE_ALARM,
     SYSVAR_TYPE_LIST,
     SYSVAR_TYPE_LOGIC,
+    HmInterfaceEventType,
 )
 from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
+
+
+HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_INTERFACE_ID): str,
+        vol.Required(ATTR_TYPE): HmInterfaceEventType,
+        vol.Required(ATTR_MESSAGE): str,
+        vol.Optional(ATTR_VALUE): bool,
+    }
+)
 
 
 def build_xml_rpc_uri(

@@ -54,7 +54,7 @@ from hahomematic.platforms.support import (
     value_property,
 )
 
-HM_EVENT_SCHEMA = vol.Schema(
+HM_EVENT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ADDRESS): str,
         vol.Required(ATTR_CHANNEL_NO): int,
@@ -529,7 +529,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         }
         if value is not None:
             event_data[ATTR_VALUE] = value
-        return cast(dict[str, Any], HM_EVENT_SCHEMA(event_data))
+        return cast(dict[str, Any], HM_EVENT_DATA_SCHEMA(event_data))
 
     def _set_last_update(self) -> None:
         """Set last_update to current datetime."""
