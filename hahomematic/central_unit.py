@@ -12,7 +12,7 @@ from datetime import datetime
 import logging
 import socket
 import threading
-from typing import Any, Final, TypeVar
+from typing import Any, Final, TypeVar, cast
 
 from aiohttp import ClientSession
 import orjson
@@ -71,6 +71,7 @@ from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
+    HM_INTERFACE_EVENT_SCHEMA,
     check_or_create_directory,
     check_password,
     get_device_address,
@@ -425,7 +426,11 @@ class CentralUnit:
             ATTR_MESSAGE: message,
             ATTR_VALUE: available,
         }
-        self.fire_ha_event_callback(event_type=HmEventType.INTERFACE, event_data=event_data)
+
+        self.fire_ha_event_callback(
+            event_type=HmEventType.INTERFACE,
+            event_data=cast(dict[str, Any], HM_INTERFACE_EVENT_SCHEMA(event_data)),
+        )
 
     async def _identify_callback_ip(self, port: int) -> str:
         """Identify local IP used for callbacks."""
@@ -877,7 +882,10 @@ class CentralUnit:
             ATTR_TYPE: HmInterfaceEventType.PINGPONG,
             ATTR_MESSAGE: message,
         }
-        self.fire_ha_event_callback(event_type=HmEventType.INTERFACE, event_data=event_data)
+        self.fire_ha_event_callback(
+            event_type=HmEventType.INTERFACE,
+            event_data=cast(dict[str, Any], HM_INTERFACE_EVENT_SCHEMA(event_data)),
+        )
         _LOGGER.warning("PING/PONG MISMATCH: %s", message)
         self._ping_pong_fired = True
 

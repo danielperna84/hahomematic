@@ -2,6 +2,7 @@
 
 - Fire interface event about ping/pong mismatch
 - Add message to fire_interface_event
+- Add schema for interface event
 
 # Version 2023.7.2 (2023-07-12)
 
