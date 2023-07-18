@@ -1,5 +1,5 @@
 bandit==1.7.5
-black==23.3.0
+black==23.7.0
 codespell==2.2.5
-ruff==0.0.277
+ruff==0.0.278
 yamllint==1.32.0
