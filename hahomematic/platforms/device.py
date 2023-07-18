@@ -20,6 +20,7 @@ from hahomematic.const import (
     HM_SUBTYPE,
     HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
+    IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
@@ -219,6 +220,11 @@ class HmDevice(PayloadMixin):
     def firmware_update_state(self) -> HmDeviceFirmwareState:
         """Return the firmware update state of the device."""
         return self._attr_firmware_update_state
+
+    @config_property
+    def identifier(self) -> str:
+        """Return the identifier of the device."""
+        return f"{self._attr_device_address}{IDENTIFIER_SEPARATOR}{self._attr_interface_id}"
 
     @config_property
     def interface(self) -> str:
