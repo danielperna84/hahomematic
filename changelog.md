@@ -1,3 +1,8 @@
+# Version 2023.7.4 (2023-07-18)
+
+- Update requirements
+- Add identifier to device
+
 # Version 2023.7.3 (2023-07-13)
 
 - Fire interface event about ping/pong mismatch
