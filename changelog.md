@@ -2,6 +2,8 @@
 
 - Update requirements
 - Add identifier to device
+- Rename ENTITY_NO_CREATE to NO_CREATE
+- Extend Channel
 
 # Version 2023.7.3 (2023-07-13)
 
