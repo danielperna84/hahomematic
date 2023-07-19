@@ -56,7 +56,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         """Return the entity usage."""
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
             return self._attr_usage
-        return HmEntityUsage.EVENT if force_enabled else HmEntityUsage.ENTITY_NO_CREATE
+        return HmEntityUsage.EVENT if force_enabled else HmEntityUsage.NO_CREATE
 
     @config_property
     def event_type(self) -> HmEventType:

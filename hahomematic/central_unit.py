@@ -526,7 +526,7 @@ class CentralUnit:
         for entity in self._entities.values():
             if (
                 entity.unique_identifier not in existing_unique_ids
-                and entity.usage != HmEntityUsage.ENTITY_NO_CREATE
+                and entity.usage != HmEntityUsage.NO_CREATE
                 and entity.platform == platform
             ):
                 entities.append(entity)

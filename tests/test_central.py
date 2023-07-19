@@ -90,7 +90,7 @@ async def test_device_unignore(
     level1: HmFloat = cast(
         HmFloat, await helper.get_generic_entity(central1, "VCU3609622:1", "LEVEL")
     )
-    assert level1.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert level1.usage == HmEntityUsage.NO_CREATE
     assert len(level1.device.generic_entities) == 22
 
     switch1: HmSwitch | None = None

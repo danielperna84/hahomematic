@@ -74,7 +74,7 @@ async def test_hmswitch(
     switch: HmSwitch = cast(
         HmSwitch, await helper.get_generic_entity(central, "VCU2128127:4", "STATE")
     )
-    assert switch.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert switch.usage == HmEntityUsage.NO_CREATE
 
     assert switch.value is None
     await switch.turn_on()
