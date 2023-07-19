@@ -70,10 +70,10 @@ class HmDevice(PayloadMixin):
             interface_id,
             device_address,
         )
-        self.generic_entities: Final[dict[tuple[str, str], GenericEntity]] = {}
-        self.wrapper_entities: Final[dict[tuple[str, str], WrapperEntity]] = {}
         self.custom_entities: Final[dict[str, hmce.CustomEntity]] = {}
-        self.events: Final[dict[tuple[str, str], GenericEvent]] = {}
+        self.generic_entities: Final[dict[tuple[str, str], GenericEntity]] = {}
+        self.generic_events: Final[dict[tuple[str, str], GenericEvent]] = {}
+        self.wrapper_entities: Final[dict[tuple[str, str], WrapperEntity]] = {}
         self._attr_last_update: datetime = INIT_DATETIME
         self._forced_availability: HmForcedDeviceAvailability = HmForcedDeviceAvailability.NOT_SET
         self._update_callbacks: Final[list[Callable]] = []
@@ -294,7 +294,7 @@ class HmDevice(PayloadMixin):
         if isinstance(entity, hmce.CustomEntity):
             self.custom_entities[entity.unique_identifier] = entity
         if isinstance(entity, GenericEvent):
-            self.events[(entity.channel_address, entity.parameter)] = entity
+            self.generic_events[(entity.channel_address, entity.parameter)] = entity
 
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
@@ -309,14 +309,14 @@ class HmDevice(PayloadMixin):
         if isinstance(entity, hmce.CustomEntity):
             del self.custom_entities[entity.unique_identifier]
         if isinstance(entity, GenericEvent):
-            del self.events[(entity.channel_address, entity.parameter)]
+            del self.generic_events[(entity.channel_address, entity.parameter)]
         entity.remove_entity()
 
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
-        for event in list(self.events.values()):
+        for event in list(self.generic_events.values()):
             self.remove_entity(event)
-        self.events.clear()
+        self.generic_events.clear()
 
         for entity in list(self.generic_entities.values()):
             self.remove_entity(entity)
@@ -330,7 +330,7 @@ class HmDevice(PayloadMixin):
             self.remove_entity(wrapper_entity)
         self.wrapper_entities.clear()
 
-        self.events.clear()
+        self.generic_events.clear()
 
     def register_update_callback(self, update_callback: Callable) -> None:
         """Register update callback."""
@@ -369,6 +369,10 @@ class HmDevice(PayloadMixin):
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Return an entity from device."""
         return self.generic_entities.get((channel_address, parameter))
+
+    def get_generic_event(self, channel_address: str, parameter: str) -> GenericEvent | None:
+        """Return a generic event from device."""
+        return self.generic_events.get((channel_address, parameter))
 
     def set_forced_availability(self, forced_availability: HmForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
@@ -423,7 +427,7 @@ class HmDevice(PayloadMixin):
         """Init the parameter cache."""
         if len(self.generic_entities) > 0:
             await self.value_cache.init_base_entities()
-        if len(self.events) > 0:
+        if len(self.generic_events) > 0:
             await self.value_cache.init_readable_events()
         _LOGGER.debug(
             "INIT_DATA: Skipping load_data, missing entities for %s",
@@ -465,7 +469,7 @@ class HmDevice(PayloadMixin):
             f"generic_entities: {len(self.generic_entities)}, "
             f"custom_entities: {len(self.custom_entities)}, "
             f"wrapper_entities: {len(self.wrapper_entities)}, "
-            f"events: {len(self.events)}"
+            f"events: {len(self.generic_events)}"
         )
 
 
@@ -535,7 +539,7 @@ class ValueCache:
     def _get_readable_events(self) -> set[GenericEvent]:
         """Get readable events."""
         events: list[GenericEvent] = []
-        for event in self._attr_device.events.values():
+        for event in self._attr_device.generic_events.values():
             if event.is_readable:
                 events.append(event)
         return set(events)

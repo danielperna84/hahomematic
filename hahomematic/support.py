@@ -256,3 +256,9 @@ class Channel:
     """dataclass for a device channel."""
 
     type: str
+    address: str
+
+    @property
+    def no(self) -> int | None:
+        """Return the channel no."""
+        return get_channel_no(self.address)
