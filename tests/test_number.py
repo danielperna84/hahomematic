@@ -31,7 +31,7 @@ async def test_hmfloat(
         HmFloat,
         await helper.get_generic_entity(central, "VCU0000011:3", "LEVEL"),
     )
-    assert efloat.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert efloat.usage == HmEntityUsage.NO_CREATE
     assert efloat.unit == "%"
     assert efloat.value_list is None
     assert efloat.value is None
@@ -64,7 +64,7 @@ async def test_hmfloat_special(
         HmFloat,
         await helper.get_generic_entity(central, "VCU0000054:2", "SETPOINT"),
     )
-    assert efloat.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert efloat.usage == HmEntityUsage.NO_CREATE
     assert efloat.unit == "°C"
     assert efloat.value_list is None
     assert efloat.value is None
@@ -97,7 +97,7 @@ async def test_hminteger(
         HmInteger,
         await helper.get_generic_entity(central, "VCU4984404:1", "SET_POINT_MODE"),
     )
-    assert einteger.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert einteger.usage == HmEntityUsage.NO_CREATE
     assert einteger.unit is None
     assert einteger.min == 0
     assert einteger.max == 3

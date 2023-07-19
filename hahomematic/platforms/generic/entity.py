@@ -56,7 +56,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         """Return the entity usage."""
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
             return self._attr_usage
-        return HmEntityUsage.ENTITY if force_enabled else HmEntityUsage.ENTITY_NO_CREATE
+        return HmEntityUsage.ENTITY if force_enabled else HmEntityUsage.NO_CREATE
 
     def event(self, value: Any) -> None:
         """Handle event for which this entity has subscribed."""
@@ -143,10 +143,10 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             paramset_key=self._attr_paramset_key,
             parameter=self._attr_parameter,
         ):
-            return HmEntityUsage.ENTITY_NO_CREATE
+            return HmEntityUsage.NO_CREATE
 
         return (
-            HmEntityUsage.ENTITY_NO_CREATE
+            HmEntityUsage.NO_CREATE
             if self.device.has_custom_entity_definition
             else HmEntityUsage.ENTITY
         )
@@ -186,7 +186,7 @@ class WrapperEntity(hme.BaseEntity):
         self._update_callbacks = wrapped_entity._update_callbacks
         self._remove_callbacks = wrapped_entity._remove_callbacks
         # hide wrapped entity from HA
-        wrapped_entity.set_usage(HmEntityUsage.ENTITY_NO_CREATE)
+        wrapped_entity.set_usage(HmEntityUsage.NO_CREATE)
         wrapped_entity.wrapped = True
 
     async def load_entity_value(

@@ -27,7 +27,7 @@ async def test_hmaction(
         HmAction,
         await helper.get_generic_entity(central, "VCU9724704:1", "LOCK_TARGET_LEVEL"),
     )
-    assert action.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert action.usage == HmEntityUsage.NO_CREATE
     assert action.is_readable is False
     assert action.value is None
     assert action.value_list == ("LOCKED", "UNLOCKED", "OPEN")

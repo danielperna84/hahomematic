@@ -491,7 +491,7 @@ class CeIpRGBWLight(BaseHmLight):
         ) or (
             self._e_device_operation_mode.value == _DOM_TUNABLE_WHITE and self.channel_no in (3, 4)
         ):
-            return HmEntityUsage.ENTITY_NO_CREATE
+            return HmEntityUsage.NO_CREATE
         return self._attr_usage
 
     @value_property

@@ -29,7 +29,7 @@ async def test_hmselect(
         HmSelect,
         await helper.get_generic_entity(central, "VCU6354483:1", "WINDOW_STATE"),
     )
-    assert select.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert select.usage == HmEntityUsage.NO_CREATE
     assert select.unit is None
     assert select.min == "CLOSED"
     assert select.max == "OPEN"

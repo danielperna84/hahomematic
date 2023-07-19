@@ -348,8 +348,8 @@ class HmEntityUsage(StrEnum):
     CE_SECONDARY: Final = "ce_secondary"
     CE_VISIBLE: Final = "ce_visible"
     ENTITY: Final = "entity"
-    ENTITY_NO_CREATE: Final = "entity_no_create"
     EVENT: Final = "event"
+    NO_CREATE: Final = "entity_no_create"
 
 
 class HmDeviceFirmwareState(StrEnum):

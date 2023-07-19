@@ -207,7 +207,7 @@ async def get_event(
 ) -> GenericEntity | None:
     """Return the hm event."""
     device = get_device(central_unit=central_unit, address=address)
-    event = device.events.get((address, parameter))
+    event = device.generic_events.get((address, parameter))
     assert event
     return event
 

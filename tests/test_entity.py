@@ -82,7 +82,7 @@ async def test_generic_entity_callback(
     switch: HmSwitch = cast(
         HmSwitch, await helper.get_generic_entity(central, "VCU2128127:4", "STATE")
     )
-    assert switch.usage == HmEntityUsage.ENTITY_NO_CREATE
+    assert switch.usage == HmEntityUsage.NO_CREATE
 
     device_updated_mock = MagicMock()
     device_removed_mock = MagicMock()

@@ -179,7 +179,7 @@ class DeviceDescriptionCache(BasePersistentCache):
                     parameter=HM_TYPE,
                 )
             )
-            channels[channel_address] = Channel(type=channel_name)
+            channels[channel_address] = Channel(type=channel_name, address=channel_address)
 
         return channels
 
