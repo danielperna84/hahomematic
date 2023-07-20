@@ -453,6 +453,7 @@ AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.BUTTON,
     HmPlatform.CLIMATE,
     HmPlatform.COVER,
+    HmPlatform.EVENT,
     HmPlatform.LIGHT,
     HmPlatform.LOCK,
     HmPlatform.NUMBER,

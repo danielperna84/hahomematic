@@ -174,6 +174,18 @@ class EntityNameData:
         self._channel_name = channel_name
         self._parameter_name = parameter_name
 
+    @property
+    def channel_name(self) -> str:
+        """Return the channel_name of the entity only name."""
+        if (
+            self._device_name
+            and self._channel_name
+            and self._channel_name.startswith(self._device_name)
+        ):
+            return self._channel_name.replace(self._device_name, "").strip()
+
+        return self._channel_name
+
     @staticmethod
     def empty() -> EntityNameData:
         """Return an empty EntityNameData."""
@@ -284,12 +296,11 @@ def get_event_name(
     ):
         p_name = parameter.title().replace("_", " ")
         if _check_channel_name_with_channel_no(name=channel_name):
-            d_name = channel_name.split(":")[0]
-            c_name = "" if channel_no in (0, None) else f" Channel {channel_no}"
+            c_name = "" if channel_no in (0, None) else f" ch{channel_no}"
             event_name = EntityNameData(
                 device_name=device.name,
-                channel_name=d_name,
-                parameter_name=f"{c_name} {p_name}",
+                channel_name=c_name,
+                parameter_name=p_name,
             )
         else:
             event_name = EntityNameData(
@@ -367,6 +378,13 @@ def generate_unique_identifier(
     ):
         return f"{central.config.central_id}_{unique_identifier}".lower()
     return f"{unique_identifier}".lower()
+
+
+def generate_channel_unique_identifier(
+    address: str,
+) -> str:
+    """Build unique identifier for a channel from address."""
+    return address.replace(":", "_").replace("-", "_").lower()
 
 
 def _get_base_name_from_channel_or_device(

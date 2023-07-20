@@ -51,6 +51,7 @@ from hahomematic.platforms.support import (
     PayloadMixin,
     config_property,
     convert_value,
+    generate_channel_unique_identifier,
     value_property,
 )
 
@@ -167,6 +168,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._attr_channel_address: Final[str] = hms.get_channel_address(
             device_address=device.device_address, channel_no=channel_no
         )
+        self._attr_channel_unique_identifier: Final = generate_channel_unique_identifier(
+            address=self._attr_channel_address
+        )
         self._attr_is_in_multiple_channels: Final = is_in_multiple_channels
         self._central: Final[hmcu.CentralUnit] = device.central
         self._channel_type: Final = str(device.channels[self._attr_channel_address].type)
@@ -179,6 +183,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
 
         self._attr_usage: HmEntityUsage = self._get_entity_usage()
         entity_name_data: Final = self._get_entity_name()
+        self._attr_channel_name: Final = entity_name_data.channel_name
         self._attr_full_name: Final = entity_name_data.full_name
         self._attr_name: Final = entity_name_data.entity_name
 
@@ -198,9 +203,19 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._attr_channel_address
 
     @config_property
+    def channel_name(self) -> str:
+        """Return the channel_name of the entity."""
+        return self._attr_channel_name
+
+    @config_property
     def channel_no(self) -> int | None:
         """Return the channel_no of the entity."""
         return self._attr_channel_no
+
+    @config_property
+    def channel_unique_identifier(self) -> str:
+        """Return the channel_unique_identifier of the entity."""
+        return self._attr_channel_unique_identifier
 
     @config_property
     def function(self) -> str | None:

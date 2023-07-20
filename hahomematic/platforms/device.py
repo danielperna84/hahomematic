@@ -29,6 +29,7 @@ from hahomematic.const import (
     RELEVANT_INIT_PARAMETERS,
     HmCallSource,
     HmDeviceFirmwareState,
+    HmEventType,
     HmForcedDeviceAvailability,
     HmInterface,
     HmProductGroup,
@@ -365,6 +366,17 @@ class HmDevice(PayloadMixin):
         all_entities.extend(self.generic_entities.values())
         all_entities.extend(self.wrapper_entities.values())
         return all_entities
+
+    def get_channel_events(self, event_type: HmEventType) -> dict[int, list[GenericEvent]]:
+        """Return a list of specific events of a channel."""
+        event_dict: dict[int, list[GenericEvent]] = {}
+        for event in self.generic_events.values():
+            if event.event_type == event_type and event.channel_no is not None:
+                if event.channel_no not in event_dict:
+                    event_dict[event.channel_no] = []
+                event_dict[event.channel_no].append(event)
+
+        return event_dict
 
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Return an entity from device."""
