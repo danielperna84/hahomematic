@@ -10,6 +10,7 @@ from typing import Any, Final
 
 from hahomematic import central_unit as hmcu, exporter as hmexp
 from hahomematic.const import (
+    ENTITY_EVENTS,
     EVENT_CONFIG_PENDING,
     EVENT_STICKY_UN_REACH,
     EVENT_UN_REACH,
@@ -370,6 +371,8 @@ class HmDevice(PayloadMixin):
     def get_channel_events(self, event_type: HmEventType) -> dict[int, list[GenericEvent]]:
         """Return a list of specific events of a channel."""
         event_dict: dict[int, list[GenericEvent]] = {}
+        if event_type not in ENTITY_EVENTS:
+            return event_dict
         for event in self.generic_events.values():
             if event.event_type == event_type and event.channel_no is not None:
                 if event.channel_no not in event_dict:

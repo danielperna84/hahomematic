@@ -228,7 +228,6 @@ IMPULSE_EVENTS: Final[tuple[str, ...]] = (EVENT_SEQUENCE_OK,)
 
 BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
 
-
 FIX_UNIT_REPLACE: Final[dict[str, str]] = {
     '"': "",
     "100%": "%",
@@ -473,4 +472,9 @@ AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.HUB_SENSOR,
     HmPlatform.HUB_SWITCH,
     HmPlatform.HUB_TEXT,
+)
+
+ENTITY_EVENTS: Final = (
+    HmEventType.IMPULSE,
+    HmEventType.KEYPRESS,
 )
