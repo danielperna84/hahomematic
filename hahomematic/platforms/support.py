@@ -381,10 +381,14 @@ def generate_unique_identifier(
 
 
 def generate_channel_unique_identifier(
+    central: hmcu.CentralUnit,
     address: str,
 ) -> str:
     """Build unique identifier for a channel from address."""
-    return address.replace(":", "_").replace("-", "_").lower()
+    unique_identifier = address.replace(":", "_").replace("-", "_")
+    if address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES:
+        return f"{central.config.central_id}_{unique_identifier}".lower()
+    return unique_identifier.lower()
 
 
 def _get_base_name_from_channel_or_device(

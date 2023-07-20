@@ -169,7 +169,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
             device_address=device.device_address, channel_no=channel_no
         )
         self._attr_channel_unique_identifier: Final = generate_channel_unique_identifier(
-            address=self._attr_channel_address
+            central=device.central, address=self._attr_channel_address
         )
         self._attr_is_in_multiple_channels: Final = is_in_multiple_channels
         self._central: Final[hmcu.CentralUnit] = device.central
