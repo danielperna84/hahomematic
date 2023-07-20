@@ -534,7 +534,7 @@ class CentralUnit:
         return entities
 
     def get_readable_entities(self) -> list[BaseEntity]:
-        """Return a list of readable entities. This also includes custom entities."""
+        """Return a list of readable entities."""
         readable_entities: list[BaseEntity] = []
         for entity in self._entities.values():
             if (isinstance(entity, GenericEntity) and entity.is_readable) or isinstance(
