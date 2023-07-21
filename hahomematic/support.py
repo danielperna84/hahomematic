@@ -188,17 +188,36 @@ def find_free_port() -> int:
 def element_matches_key(
     search_elements: str | Collection[str],
     compare_with: str | None,
+    search_key: str | None = None,
     do_wildcard_search: bool = True,
 ) -> bool:
-    """Return if collection element is key."""
-    if compare_with is None:
+    """
+    Return if collection element is key.
+
+    A set search_key assumes that search_elements is initially a dict,
+    and it tries to identify a matching key (wildcard) in the dict keys to use it on the dict.
+    """
+    if compare_with is None or not search_elements:
         return False
 
     if isinstance(search_elements, str):
         if do_wildcard_search:
-            return compare_with.lower().startswith(search_elements.lower())
+            return compare_with.lower().startswith(
+                search_elements.lower()
+            )  # or search_elements.lower().startswith(compare_with.lower())
         return compare_with.lower() == search_elements.lower()
     if isinstance(search_elements, Collection):
+        if isinstance(search_elements, dict):
+            if (
+                match_key := _get_search_key(
+                    search_elements=search_elements, search_key=search_key
+                )
+                if search_key
+                else None
+            ):
+                if (elements := search_elements.get(match_key)) is None:
+                    return False
+                search_elements = elements
         for element in search_elements:
             if do_wildcard_search:
                 if compare_with.lower().startswith(element.lower()):
@@ -206,6 +225,14 @@ def element_matches_key(
             elif compare_with.lower() == element.lower():
                 return True
     return False
+
+
+def _get_search_key(search_elements: Collection[str], search_key: str) -> str | None:
+    """Search for a matching key in a collection."""
+    for element in search_elements:
+        if search_key.startswith(element):
+            return element
+    return None
 
 
 @dataclass

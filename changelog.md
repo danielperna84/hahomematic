@@ -7,6 +7,7 @@
 - Add channel related attributes to entity
 - Add kwargs to update_entity
 - Call update_entity for ENTITY_EVENTS
+- Ignore click events on plugs
 
 # Version 2023.7.3 (2023-07-13)
 

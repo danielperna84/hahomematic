@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from hahomematic import support as hms
 from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
@@ -135,6 +136,18 @@ def create_event_and_append_to_device(
     device: hmd.HmDevice, channel_address: str, parameter: str, parameter_data: dict[str, Any]
 ) -> None:
     """Create action event entity."""
+    if device.central.parameter_visibility.parameter_is_ignored(
+        device_type=device.device_type,
+        channel_no=hms.get_channel_no(address=channel_address),
+        paramset_key=PARAMSET_KEY_VALUES,
+        parameter=parameter,
+    ):
+        _LOGGER.debug(
+            "create_event_and_append_to_device: Ignoring parameter: %s [%s]",
+            parameter,
+            channel_address,
+        )
+        return
     unique_identifier = generate_unique_identifier(
         central=device.central,
         address=channel_address,
