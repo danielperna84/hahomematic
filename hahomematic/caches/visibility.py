@@ -8,6 +8,7 @@ from typing import Any, Final
 
 from hahomematic import central_unit as hmcu, support as hms
 from hahomematic.const import (
+    CLICK_EVENTS,
     DEFAULT_ENCODING,
     EVENT_CONFIG_PENDING,
     EVENT_ERROR,
@@ -67,6 +68,13 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[dict[str, tuple[tuple[int, ...], tup
 # Some parameters are marked as INTERNAL in the paramset and not considered by default,
 # but some are required and should be added here.
 ALLOWED_INTERNAL_PARAMETERS: Final = ("DIRECTION",)
+
+
+# Ignore events for some devices
+_IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[dict[str, tuple[str, ...]]] = {
+    "HmIP-PS": CLICK_EVENTS,
+}
+
 
 # Entities that will be created, but should be hidden.
 _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
@@ -270,6 +278,11 @@ class ParameterVisibilityCache:
             for parameter, device_types in _IGNORE_PARAMETERS_BY_DEVICE.items()
         }
 
+        self._ignore_devices_for_entity_events_lower: Final[dict[str, tuple[str, ...]]] = {
+            device_type.lower(): tuple(event for event in events)
+            for device_type, events in _IGNORE_DEVICES_FOR_ENTITY_EVENTS.items()
+        }
+
         self._un_ignore_parameters_by_device_lower: Final[dict[str, tuple[str, ...]]] = {
             device_type.lower(): parameters
             for device_type, parameters in _UN_IGNORE_PARAMETERS_BY_DEVICE.items()
@@ -361,14 +374,23 @@ class ParameterVisibilityCache:
 
             if (
                 (
-                    parameter in _IGNORED_PARAMETERS
-                    or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
-                    or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
+                    (
+                        parameter in _IGNORED_PARAMETERS
+                        or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
+                        or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
+                    )
+                    and parameter not in self._required_parameters
                 )
-                and parameter not in self._required_parameters
-            ) or hms.element_matches_key(
-                search_elements=self._ignore_parameters_by_device_lower.get(parameter, []),
-                compare_with=device_type_l,
+                or hms.element_matches_key(
+                    search_elements=self._ignore_parameters_by_device_lower.get(parameter, []),
+                    compare_with=device_type_l,
+                )
+                or hms.element_matches_key(
+                    search_elements=self._ignore_devices_for_entity_events_lower,
+                    compare_with=parameter,
+                    search_key=device_type_l,
+                    do_wildcard_search=False,
+                )
             ):
                 return True
 
