@@ -146,13 +146,17 @@ class CentralUnit:
         self.program_entities: Final[dict[str, HmProgramButton]] = {}
         # store last event received datetime by interface
         self.last_events: Final[dict[str, datetime]] = {}
-        # Signature: (name, *args) #CC
+        # Signature: (name, *args)
+        # e.g. DEVICES_CREATED, HUB_REFRESHED
         self._callback_system_event: Final[set[Callable]] = set()
-        # Signature: (interface_id, channel_address, parameter, value) #CC
+        # Signature: (interface_id, channel_address, parameter, value)
+        # Re-Fired events from CCU for parameter updates
         self._callback_entity_event: Final[set[Callable]] = set()
-        # Signature: (interface_id, entity) #CC
+        # Signature: (interface_id, entity)
+        # Fires parameter data updates as events with entity.
         self._callback_entity_data_event: Final[set[Callable]] = set()
-        # Signature: (event_type, event_data) #CC
+        # Signature: (event_type, event_data)
+        # Events like INTERFACE, KEYPRESS, ...
         self._callback_ha_event: Final[set[Callable]] = set()
 
         self.json_rpc_client: Final[JsonRpcAioHttpClient] = central_config.create_json_rpc_client()
@@ -1033,7 +1037,11 @@ class CentralUnit:
             self._callback_ha_event.remove(callback_handler)
 
     def fire_ha_event_callback(self, event_type: HmEventType, event_data: dict[str, str]) -> None:
-        """Fire ha_event callback in central."""
+        """
+        Fire ha_event callback in central.
+
+        # Events like INTERFACE, KEYPRESS, ...
+        """
         for callback_handler in self._callback_ha_event:
             try:
                 callback_handler(event_type, event_data)
@@ -1052,7 +1060,12 @@ class CentralUnit:
     def fire_entity_event_callback(
         self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
-        """Fire entity callback in central."""
+        """
+        Fire entity callback in central.
+
+        Not used by HA.
+        Re-Fired events from CCU for parameter updates.
+        """
         for callback_handler in self._callback_entity_event:
             try:
                 callback_handler(interface_id, channel_address, parameter, value)
@@ -1069,7 +1082,12 @@ class CentralUnit:
             self._callback_entity_data_event.remove(callback_handler)
 
     def fire_entity_data_event_callback(self, interface_id: str, entity: BaseEntity) -> None:
-        """Fire entity_data callback in central."""
+        """
+        Fire entity_data callback in central.
+
+        Not used by HA.
+        Fires parameter data updates as events with entity.
+        """
         for callback_handler in self._callback_entity_data_event:
             try:
                 callback_handler(interface_id, entity)
@@ -1088,7 +1106,11 @@ class CentralUnit:
             self._callback_system_event.remove(callback_handler)
 
     def fire_system_event_callback(self, name: str, **kwargs: Any) -> None:
-        """Fire system_event callback in central."""
+        """
+        Fire system_event callback in central.
+
+        e.g. DEVICES_CREATED, HUB_REFRESHED
+        """
         for callback_handler in self._callback_system_event:
             try:
                 callback_handler(name, **kwargs)
