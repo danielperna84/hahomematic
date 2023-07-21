@@ -194,13 +194,15 @@ async def test_get_event_name(
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     device = helper.get_device(central_unit=central, address="VCU2128127")
     name_data = get_event_name(central=central, device=device, channel_no=4, parameter="LEVEL")
-    assert name_data.full_name == "HmIP-BSM_VCU2128127 Channel 4 Level"
-    assert name_data.entity_name == "Channel 4 Level"
+    assert name_data.channel_name == "ch4"
+    assert name_data.entity_name == "ch4 Level"
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 ch4 Level"
 
     central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
     name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
-    assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
+    assert name_data.channel_name == "Roof"
     assert name_data.entity_name == "Roof Level"
+    assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
 
     with patch(
         "hahomematic.platforms.support._get_base_name_from_channel_or_device",

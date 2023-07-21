@@ -139,10 +139,10 @@ class CallbackEntity(ABC):
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
 
-    def update_entity(self, *args: Any) -> None:
+    def update_entity(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated."""
         for _callback in self._update_callbacks:
-            _callback(*args)
+            _callback(*args, **kwargs)
 
     def remove_entity(self, *args: Any) -> None:
         """Do what is needed when the entity has been removed."""
@@ -246,9 +246,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Set the entity usage."""
         self._attr_usage = usage
 
-    def update_entity(self, *args: Any) -> None:
+    def update_entity(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated."""
-        super().update_entity(*args)
+        super().update_entity(*args, **kwargs)
         self._central.fire_entity_data_event_callback(
             interface_id=self.device.interface_id, entity=self
         )

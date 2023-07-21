@@ -184,7 +184,7 @@ class EntityNameData:
         ):
             return self._channel_name.replace(self._device_name, "").strip()
 
-        return self._channel_name
+        return self._channel_name.strip()
 
     @staticmethod
     def empty() -> EntityNameData:

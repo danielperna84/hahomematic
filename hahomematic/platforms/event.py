@@ -7,6 +7,7 @@ from typing import Any
 from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
+    ENTITY_EVENTS,
     HM_OPERATIONS,
     IMPULSE_EVENTS,
     OPERATION_EVENT,
@@ -65,6 +66,8 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
 
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
+        if self.event_type in ENTITY_EVENTS:
+            self.update_entity(parameter=self.parameter.lower())
         self.fire_event(value)
 
     def fire_event(self, value: Any) -> None:
