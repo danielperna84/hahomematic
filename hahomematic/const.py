@@ -30,6 +30,10 @@ IP_LOCALHOST_V4: Final = "127.0.0.1"
 IP_LOCALHOST_V6: Final = "::1"
 PORT_ANY: Final = 0
 
+MANUFACTURER_EQ3: Final = "eQ-3"
+MANUFACTURER_HB: Final = "Homebrew"
+MANUFACTURER_MOEHLENHOFF: Final = "Möhlenhoff"
+
 PATH_JSON_RPC: Final = "/api/homematic.cgi"
 
 BACKEND_CCU: Final = "CCU"
