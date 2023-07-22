@@ -23,6 +23,9 @@ from hahomematic.const import (
     HM_VIRTUAL_REMOTE_TYPES,
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
+    MANUFACTURER_EQ3,
+    MANUFACTURER_HB,
+    MANUFACTURER_MOEHLENHOFF,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     PARAMSET_KEY_MASTER,
@@ -94,12 +97,12 @@ class HmDevice(PayloadMixin):
                 parameter=HM_SUBTYPE,
             )
         )
+        self._attr_manufacturer = self._identify_manufacturer()
         self._attr_product_group: Final = self._identify_product_group()
         # marker if device will be created as custom entity
         self._has_custom_entity_definition: Final = cep.has_custom_entity_definition_by_device(
             device=self
         )
-
         self._attr_name: Final = get_device_name(
             central=central,
             device_address=device_address,
@@ -157,6 +160,14 @@ class HmDevice(PayloadMixin):
                 parameter=HM_FIRMWARE_UPDATABLE,
             )
         )
+
+    def _identify_manufacturer(self) -> str:
+        """Identify the manufacturer of a device."""
+        if self.device_type.lower().startswith("hb"):
+            return MANUFACTURER_HB
+        if self.device_type.lower().startswith("alpha"):
+            return MANUFACTURER_MOEHLENHOFF
+        return MANUFACTURER_EQ3
 
     def _identify_product_group(self) -> HmProductGroup:
         """Identify the product group of the homematic device."""
@@ -242,6 +253,11 @@ class HmDevice(PayloadMixin):
     def has_custom_entity_definition(self) -> bool:
         """Return if custom_entity definition is available for the device."""
         return self._has_custom_entity_definition
+
+    @config_property
+    def manufacturer(self) -> str:
+        """Return the manufacturer of the device."""
+        return self._attr_manufacturer
 
     @config_property
     def name(self) -> str:
