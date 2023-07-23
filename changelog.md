@@ -1,7 +1,8 @@
-# Version 2023.7.5 (2023-08-01)
+# Version 2023.7.5 (2023-07-26)
 
 - Add SystemInformation to client api
 - Send credentials on XmlRPC api only when authentication is enabled in CCU
+- Remove support for python 3.10
 
 # Version 2023.7.4 (2023-07-18)
 

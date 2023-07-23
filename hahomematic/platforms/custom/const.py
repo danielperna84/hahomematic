@@ -1,9 +1,8 @@
 """Constants used by hahomematic custom entities."""
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Final
-
-from hahomematic.backport import StrEnum
 
 
 class HmEntityDefinition(StrEnum):

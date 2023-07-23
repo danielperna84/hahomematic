@@ -6,10 +6,10 @@ See https://www.home-assistant.io/integrations/climate/.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from enum import StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.backport import StrEnum
 from hahomematic.const import HmPlatform
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd

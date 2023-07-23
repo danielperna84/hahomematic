@@ -19,11 +19,10 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Topic :: Home Automation",
 ]
-requires-python = ">=3.10.0"
+requires-python = ">=3.11.0"
 dependencies    = [
     "aiohttp>=3.8.4",
     "orjson>=3.9.1",
@@ -53,12 +52,12 @@ exclude = ["tests", "tests.*", "dist", "build"]
 hahomematic = ["py.typed", "rega_scripts/*.fn"]
 
 [tool.black]
-target-version = ["py310", "py311"]
+target-version = ["py311"]
 exclude = 'generated'
 line-length = 99
 
 [tool.pylint.MAIN]
-py-version = "3.10"
+py-version = "3.11"
 ignore = [
     "tests",
 ]
@@ -398,7 +397,7 @@ norecursedirs = [
 asyncio_mode = "auto"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 line-length = 99
 
 
