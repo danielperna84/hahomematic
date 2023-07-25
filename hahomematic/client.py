@@ -284,10 +284,6 @@ class Client(ABC):
         """Get all system variables from CCU / Homegear."""
 
     @abstractmethod
-    async def get_available_interfaces(self) -> list[str]:
-        """Get all available interfaces from CCU / Homegear."""
-
-    @abstractmethod
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get all programs, if available."""
 
@@ -736,10 +732,6 @@ class ClientCCU(Client):
             include_internal=include_internal
         )
 
-    async def get_available_interfaces(self) -> list[str]:
-        """Get all available interfaces from CCU / Homegear."""
-        return await self._json_rpc_client.get_available_interfaces()
-
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get all programs, if available."""
         return await self._json_rpc_client.get_all_programs(include_internal=include_internal)
@@ -769,6 +761,7 @@ class ClientCCU(Client):
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
         return SystemInformation(
+            available_interfaces=await self._json_rpc_client.get_available_interfaces(),
             auth_enabled=await self._json_rpc_client.get_auth_enabled(),
             https_redirect_enabled=await self._json_rpc_client.get_https_redirect_enabled(),
             serial=await self._json_rpc_client.get_serial(),
@@ -864,10 +857,6 @@ class ClientHomegear(Client):
             _LOGGER.warning("GET_ALL_SYSTEM_VARIABLES failed: %s [%s]", hhe.name, hhe.args)
         return variables
 
-    async def get_available_interfaces(self) -> list[str]:
-        """Get all available interfaces from CCU / Homegear."""
-        return [IF_BIDCOS_RF_NAME]
-
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get all programs, if available."""
         return []
@@ -882,7 +871,9 @@ class ClientHomegear(Client):
 
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
-        return SystemInformation(serial="Homegear_SN0815")
+        return SystemInformation(
+            available_interfaces=[IF_BIDCOS_RF_NAME], serial="Homegear_SN0815"
+        )
 
 
 class ClientLocal(Client):  # pragma: no cover
@@ -954,10 +945,6 @@ class ClientLocal(Client):  # pragma: no cover
         """Get all system variables from CCU / Homegear."""
         return []
 
-    async def get_available_interfaces(self) -> list[str]:
-        """Get all available interfaces from CCU / Homegear."""
-        return [LOCAL_INTERFACE]
-
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get all programs, if available."""
         return []
@@ -972,7 +959,7 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
-        return SystemInformation(serial=LOCAL_SERIAL)
+        return SystemInformation(available_interfaces=[LOCAL_INTERFACE], serial=LOCAL_SERIAL)
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
