@@ -2,10 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from typing import Final
-
-from hahomematic.backport import StrEnum
 
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = (
     15  # check if connection is available via rpc ping every:
