@@ -656,6 +656,34 @@ class JsonRpcAioHttpClient:
 
         return all_programs
 
+    async def get_auth_enabled(self) -> bool | None:
+        """Get the auth_enabled flag of the backend."""
+        auth_enabled: bool | None = None
+        _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled via JSON-RPC")
+        try:
+            response = await self._post(method="CCU.getAuthEnabled")
+            if (json_result := response[ATTR_RESULT]) is not None:
+                auth_enabled = bool(json_result)
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("GET_AUTH_ENABLED failed: %s [%s]", hhe.name, hhe.args)
+
+        return auth_enabled
+
+    async def get_https_redirect_enabled(self) -> bool | None:
+        """Get the auth_enabled flag of the backend."""
+        https_redirect_enabled: bool | None = None
+        _LOGGER.debug(
+            "GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled via JSON-RPC"
+        )
+        try:
+            response = await self._post(method="CCU.getHttpsRedirectEnabled")
+            if (json_result := response[ATTR_RESULT]) is not None:
+                https_redirect_enabled = bool(json_result)
+        except BaseHomematicException as hhe:
+            _LOGGER.warning("GET_HTTPS_REDIRECT_ENABLED failed: %s [%s]", hhe.name, hhe.args)
+
+        return https_redirect_enabled
+
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
         serial = "unknown"

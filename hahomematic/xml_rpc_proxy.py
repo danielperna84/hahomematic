@@ -56,8 +56,10 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         self.interface_id: Final = interface_id
         self._connection_state: Final = connection_state
         self._loop: Final = asyncio.get_running_loop()
-        self._proxy_executor: Final = ThreadPoolExecutor(
-            max_workers=max_workers, thread_name_prefix=interface_id
+        self._proxy_executor: Final = (
+            ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix=interface_id)
+            if max_workers > 0
+            else None
         )
         self._tls: Final[bool] = kwargs.pop(ATTR_TLS, False)
         self._verify_tls: Final[bool] = kwargs.pop(ATTR_VERIFY_TLS, True)
@@ -123,4 +125,5 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
 
     def stop(self) -> None:
         """Stop depending services."""
-        self._proxy_executor.shutdown()
+        if self._proxy_executor:
+            self._proxy_executor.shutdown()

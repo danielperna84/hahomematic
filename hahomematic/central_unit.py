@@ -72,6 +72,7 @@ from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVari
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
     HM_INTERFACE_EVENT_SCHEMA,
+    SystemInformation,
     check_or_create_directory,
     check_password,
     get_device_address,
@@ -217,11 +218,11 @@ class CentralUnit:
         return self._attr_name
 
     @property
-    def serial(self) -> str | None:
-        """Return the serial of the backend."""
+    def system_information(self) -> SystemInformation:
+        """Return the system_information of the backend."""
         if client := self.get_primary_client():
-            return client.serial
-        return None
+            return client.system_information
+        return SystemInformation()
 
     @property
     def version(self) -> str | None:
@@ -487,7 +488,7 @@ class CentralUnit:
             self._attr_name,
         )
 
-    async def validate_config_and_get_serial(self) -> str | None:
+    async def validate_config_and_get_system_information(self) -> SystemInformation:
         """Validate the central configuration. #CC."""
         try:
             if len(self.config.interface_configs) == 0:
@@ -496,14 +497,14 @@ class CentralUnit:
             local_ip = await self._identify_callback_ip(
                 list(self.config.interface_configs)[0].port
             )
-            serial: str | None = None
+            system_information = SystemInformation()
             for interface_config in self.config.interface_configs:
                 client = await hmcl.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 )
-                if not serial:
-                    serial = await client.get_serial()
-            return serial
+                if not system_information.serial:
+                    system_information = client.system_information
+            return system_information
         except Exception as ex:
             _LOGGER.warning(ex)
             raise

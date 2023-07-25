@@ -36,9 +36,10 @@ async def test_central_basics(
 
     assert central.central_url == "http://127.0.0.1"
     assert central.is_alive is True
-    assert central.serial == "0"
+    assert central.system_information.serial == "0815_4711"
     assert central.version == "0"
-    assert await central.validate_config_and_get_serial() == "0815_4711"
+    system_information = await central.validate_config_and_get_system_information()
+    assert system_information.serial == "0815_4711"
     device = central.get_device("VCU2128127")
     assert device
     entities = central.get_readable_entities()
@@ -306,7 +307,7 @@ async def test_central_not_alive(
     )
     mock_client = helper.get_mock(instance=client, available=False)
 
-    assert central.serial is None
+    assert central.system_information.serial is None
     assert central.is_alive is True
 
     mock_client.is_callback_alive.return_value = False
@@ -314,7 +315,7 @@ async def test_central_not_alive(
         await central.start()
 
     assert central.available is False
-    assert central.serial == "0"
+    assert central.system_information.serial == "0815_4711"
     assert central.is_alive is False
 
 
@@ -442,7 +443,7 @@ async def test_central_direct(
     )
     mock_client = helper.get_mock(instance=client, available=False)
 
-    assert central.serial is None
+    assert central.system_information.serial is None
     assert central.is_alive is True
 
     with patch("hahomematic.client.create_client", return_value=mock_client):
@@ -450,7 +451,7 @@ async def test_central_direct(
     assert await central._create_clients() is False
 
     assert central.available is False
-    assert central.serial == "0"
+    assert central.system_information.serial == "0815_4711"
     assert len(central._devices) == 2
     assert len(central._entities) == 53
     await central.stop()
@@ -466,7 +467,7 @@ async def test_central_without_interface_config(
     assert central.has_clients is False
 
     with pytest.raises(NoClients):
-        await central.validate_config_and_get_serial()
+        await central.validate_config_and_get_system_information()
 
     with pytest.raises(HaHomematicException):
         central.get_client("NOT_A_VALID_INTERFACE_ID")
@@ -478,7 +479,7 @@ async def test_central_without_interface_config(
     assert central.has_clients is False
 
     assert central.available is True
-    assert central.serial is None
+    assert central.system_information.serial is None
     assert len(central._devices) == 0
     assert len(central._entities) == 0
 
