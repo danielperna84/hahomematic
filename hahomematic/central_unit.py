@@ -364,7 +364,10 @@ class CentralUnit:
                 if client := await hmcl.create_client(
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
-                    if interface_config.interface not in await client.get_available_interfaces():
+                    if (
+                        interface_config.interface
+                        not in client.system_information.available_interfaces
+                    ):
                         _LOGGER.debug(
                             "CREATE_CLIENTS failed: Interface: %s is not available for backend",
                             interface_config.interface,

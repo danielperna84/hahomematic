@@ -4,7 +4,7 @@ from __future__ import annotations
 import base64
 from collections.abc import Collection
 from contextlib import closing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cache
 import logging
@@ -269,6 +269,7 @@ class SystemVariableData(HubData):
 class SystemInformation:
     """System information of the backend."""
 
+    available_interfaces: list[str] = field(default_factory=list)
     auth_enabled: bool | None = None
     https_redirect_enabled: bool | None = None
     serial: str | None = None

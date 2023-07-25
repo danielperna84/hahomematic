@@ -3,6 +3,7 @@
 - Add SystemInformation to client api
 - Send credentials on XmlRPC api only when authentication is enabled in CCU
 - Remove support for python 3.10
+- Add available_interfaces to SystemInformation
 
 # Version 2023.7.4 (2023-07-18)
 
