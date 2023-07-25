@@ -503,7 +503,7 @@ class CentralUnit:
                     central=self, interface_config=interface_config, local_ip=local_ip
                 )
                 if not system_information.serial:
-                    system_information = await client.get_system_information()
+                    system_information = client.system_information
             return system_information
         except Exception as ex:
             _LOGGER.warning(ex)

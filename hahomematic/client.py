@@ -88,7 +88,7 @@ class Client(ABC):
 
     async def init_client(self) -> None:
         """Init the client."""
-        self.system_information = await self.get_system_information()
+        self.system_information = await self._get_system_information()
         self._proxy = self._config.get_xml_rpc_proxy(
             auth_enabled=self.system_information.auth_enabled
         )
@@ -300,7 +300,7 @@ class Client(ABC):
         """Get all functions, if available."""
 
     @abstractmethod
-    async def get_system_information(self) -> SystemInformation:
+    async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
 
     def get_virtual_remote(self) -> HmDevice | None:
@@ -766,7 +766,7 @@ class ClientCCU(Client):
                 functions[address].update(sections)
         return functions
 
-    async def get_system_information(self) -> SystemInformation:
+    async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
         return SystemInformation(
             auth_enabled=await self._json_rpc_client.get_auth_enabled(),
@@ -880,7 +880,7 @@ class ClientHomegear(Client):
         """Get all functions from Homegear."""
         return {}
 
-    async def get_system_information(self) -> SystemInformation:
+    async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
         return SystemInformation(serial="Homegear_SN0815")
 
@@ -970,7 +970,7 @@ class ClientLocal(Client):  # pragma: no cover
         """Get all functions, if available."""
         return {}
 
-    async def get_system_information(self) -> SystemInformation:
+    async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
         return SystemInformation(serial=LOCAL_SERIAL)
 
