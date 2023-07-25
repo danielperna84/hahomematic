@@ -265,6 +265,15 @@ class SystemVariableData(HubData):
     extended_sysvar: bool = False
 
 
+@dataclass
+class SystemInformation:
+    """System information of the backend."""
+
+    auth_enabled: bool | None = None
+    https_redirect_enabled: bool | None = None
+    serial: str | None = None
+
+
 def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
     """Clean up the used cached directories."""
     cache_dir = f"{storage_folder}/cache"

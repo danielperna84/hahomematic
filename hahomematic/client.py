@@ -53,6 +53,7 @@ from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnec
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
     ProgramData,
+    SystemInformation,
     SystemVariableData,
     build_headers,
     build_xml_rpc_uri,
@@ -72,17 +73,28 @@ class Client(ABC):
         self.central: Final[hmcu.CentralUnit] = client_config.central
 
         self._json_rpc_client: Final = client_config.central.json_rpc_client
-        self._proxy: Final = client_config.xml_rpc_proxy
-        self._proxy_read: Final = client_config.xml_rpc_proxy_read
+
         self.interface: Final = client_config.interface
         self.interface_id: Final = client_config.interface_id
-        self.serial: Final = client_config.serial
         self.version: Final = client_config.version
-
         self._attr_available: bool = True
         self._connection_error_count: int = 0
         self._is_callback_alive: bool = True
         self.last_updated: datetime = INIT_DATETIME
+
+        self._proxy: XmlRpcProxy
+        self._proxy_read: XmlRpcProxy
+        self.system_information: SystemInformation
+
+    async def init_client(self) -> None:
+        """Init the client."""
+        self.system_information = await self.get_system_information()
+        self._proxy = self._config.get_xml_rpc_proxy(
+            auth_enabled=self.system_information.auth_enabled
+        )
+        self._proxy_read = self._config.get_xml_rpc_proxy(
+            auth_enabled=self.system_information.auth_enabled
+        )
 
     @property
     def available(self) -> bool:
@@ -288,8 +300,8 @@ class Client(ABC):
         """Get all functions, if available."""
 
     @abstractmethod
-    async def get_serial(self) -> str:
-        """Get the serial of the backend."""
+    async def get_system_information(self) -> SystemInformation:
+        """Get system information of the backend."""
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
@@ -754,9 +766,13 @@ class ClientCCU(Client):
                 functions[address].update(sections)
         return functions
 
-    async def get_serial(self) -> str:
-        """Get the serial of the backend."""
-        return await self._json_rpc_client.get_serial()
+    async def get_system_information(self) -> SystemInformation:
+        """Get system information of the backend."""
+        return SystemInformation(
+            auth_enabled=await self._json_rpc_client.get_auth_enabled(),
+            https_redirect_enabled=await self._json_rpc_client.get_https_redirect_enabled(),
+            serial=await self._json_rpc_client.get_serial(),
+        )
 
 
 class ClientHomegear(Client):
@@ -864,9 +880,9 @@ class ClientHomegear(Client):
         """Get all functions from Homegear."""
         return {}
 
-    async def get_serial(self) -> str:
-        """Get the serial of the backend."""
-        return "Homegear_SN0815"
+    async def get_system_information(self) -> SystemInformation:
+        """Get system information of the backend."""
+        return SystemInformation(serial="Homegear_SN0815")
 
 
 class ClientLocal(Client):  # pragma: no cover
@@ -954,9 +970,9 @@ class ClientLocal(Client):  # pragma: no cover
         """Get all functions, if available."""
         return {}
 
-    async def get_serial(self) -> str:
-        """Get the serial of the backend."""
-        return LOCAL_SERIAL
+    async def get_system_information(self) -> SystemInformation:
+        """Get system information of the backend."""
+        return SystemInformation(serial=LOCAL_SERIAL)
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
@@ -1118,6 +1134,8 @@ class _ClientConfig:
         local_ip: str,
     ) -> None:
         self.central: Final = central
+        self.version: str = "0"
+        self.system_information = SystemInformation()
         self.interface_config: Final = interface_config
         self.interface: Final = interface_config.interface
         self.interface_id: Final = interface_config.interface_id
@@ -1137,50 +1155,30 @@ class _ClientConfig:
             path=interface_config.remote_path,
             tls=central.config.tls,
         )
-        xml_rpc_headers: Final = build_headers(
-            username=central.config.username,
-            password=central.config.password,
-        )
-        self.xml_rpc_proxy: Final[XmlRpcProxy] = XmlRpcProxy(
-            max_workers=1,
-            interface_id=self.interface_id,
-            connection_state=central.config.connection_state,
-            uri=self.xml_rpc_uri,
-            headers=xml_rpc_headers,
-            tls=central.config.tls,
-            verify_tls=central.config.verify_tls,
-        )
-        self.xml_rpc_proxy_read: Final[XmlRpcProxy] = XmlRpcProxy(
-            max_workers=1,
-            interface_id=self.interface_id,
-            connection_state=central.config.connection_state,
-            uri=self.xml_rpc_uri,
-            headers=xml_rpc_headers,
-            tls=central.config.tls,
-            verify_tls=central.config.verify_tls,
-        )
-        self.version: str = "0"
-        self.serial: str = "0"
 
     async def get_client(self) -> Client:
         """Identify the used client."""
+        client: Client | None = None
+        if self.interface_config.local_resources:
+            client = ClientLocal(client_config=self)
+            await client.init_client()
+            return client
+        check_proxy = self._get_simple_xml_rpc_proxy()
         try:
-            client: Client | None = None
-            if self.interface_config.local_resources:
-                return ClientLocal(client_config=self)
-            methods = await self.xml_rpc_proxy.system.listMethods()
-            if methods and "getVersion" not in methods:
+            if methods := await check_proxy.system.listMethods():
                 # BidCos-Wired does not support getVersion()
-                client = ClientCCU(client_config=self)
-            elif version := await self.xml_rpc_proxy.getVersion():
-                self.version = cast(str, version)
-                if "Homegear" in version or "pydevccu" in version:
-                    client = ClientHomegear(client_config=self)
-            if not client:
-                client = ClientCCU(client_config=self)
-            if await client.check_connection_availability():
-                self.serial = await client.get_serial()
-                return client
+                self.version = (
+                    cast(str, await check_proxy.getVersion()) if "getVersion" in methods else "0"
+                )
+
+            if client := (
+                ClientHomegear(client_config=self)
+                if "Homegear" in self.version or "pydevccu" in self.version
+                else ClientCCU(client_config=self)
+            ):
+                await client.init_client()
+                if await client.check_connection_availability():
+                    return client
             raise NoConnection(f"No connection to {self.interface_id}")
         except AuthFailure as auf:
             raise AuthFailure(f"Unable to authenticate {auf.args}.") from auf
@@ -1188,6 +1186,44 @@ class _ClientConfig:
             raise noc
         except Exception as exc:
             raise NoConnection(f"Unable to connect {exc.args}.") from exc
+
+    def get_xml_rpc_proxy(self, auth_enabled: bool | None = None) -> XmlRpcProxy:
+        """Return a XmlRPC proxy for backend communication."""
+        central_config = self.central.config
+        xml_rpc_headers = (
+            build_headers(
+                username=central_config.username,
+                password=central_config.password,
+            )
+            if auth_enabled
+            else []
+        )
+        return XmlRpcProxy(
+            max_workers=1,
+            interface_id=self.interface_id,
+            connection_state=central_config.connection_state,
+            uri=self.xml_rpc_uri,
+            headers=xml_rpc_headers,
+            tls=central_config.tls,
+            verify_tls=central_config.verify_tls,
+        )
+
+    def _get_simple_xml_rpc_proxy(self) -> XmlRpcProxy:
+        """Return a XmlRPC proxy for backend communication."""
+        central_config = self.central.config
+        xml_rpc_headers = build_headers(
+            username=central_config.username,
+            password=central_config.password,
+        )
+        return XmlRpcProxy(
+            max_workers=0,
+            interface_id=self.interface_id,
+            connection_state=central_config.connection_state,
+            uri=self.xml_rpc_uri,
+            headers=xml_rpc_headers,
+            tls=central_config.tls,
+            verify_tls=central_config.verify_tls,
+        )
 
 
 class InterfaceConfig:
