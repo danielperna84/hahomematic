@@ -8,7 +8,12 @@ from pathlib import Path
 import re
 from typing import Any, Final
 
-from aiohttp import ClientConnectorError, ClientError, ClientSession
+from aiohttp import (
+    ClientConnectorCertificateError,
+    ClientConnectorError,
+    ClientError,
+    ClientSession,
+)
 import orjson
 
 from hahomematic import central_unit as hmcu, config
@@ -76,7 +81,7 @@ class JsonRpcAioHttpClient:
         self._username: Final = username
         self._password: Final = password
         self._tls: Final = tls
-        self._tls_context: Final = get_tls_context(verify_tls)
+        self._tls_context: Final = get_tls_context(verify_tls) if tls else None
         self._url: Final = f"{device_url}{PATH_JSON_RPC}"
         self._script_cache: Final[dict[str, str]] = {}
         self._last_session_id_refresh: datetime | None = None
@@ -314,6 +319,10 @@ class JsonRpcAioHttpClient:
             else:
                 _LOGGER.warning("DO_POST failed: Status: %i", response.status)
                 return {"error": response.status, "result": {}}
+        except ClientConnectorCertificateError as cccerr:
+            self._connection_state.add_issue(issuer=self)
+            _LOGGER.error("DO_POST failed: ClientConnectorCertificateError: %s", cccerr)
+            return {"error": str(cccerr), "result": {}}
         except ClientConnectorError as err:
             self._connection_state.add_issue(issuer=self)
             _LOGGER.error("DO_POST failed: ClientConnectorError: %s", err)
