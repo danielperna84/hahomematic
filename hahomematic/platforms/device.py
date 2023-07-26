@@ -658,7 +658,7 @@ class ValueCache:
         return NO_CACHE_ENTRY
 
 
-@dataclass
+@dataclass(slots=True)
 class CacheEntry:
     """An entry for the value cache."""
 

@@ -235,14 +235,14 @@ def _get_search_key(search_elements: Collection[str], search_key: str) -> str | 
     return None
 
 
-@dataclass
+@dataclass(slots=True)
 class HubData:
     """Dataclass for hub entities."""
 
     name: str
 
 
-@dataclass
+@dataclass(slots=True)
 class ProgramData(HubData):
     """Dataclass for programs."""
 
@@ -252,20 +252,20 @@ class ProgramData(HubData):
     last_execute_time: str
 
 
-@dataclass
+@dataclass(slots=True)
 class SystemVariableData(HubData):
     """Dataclass for system variables."""
 
+    value: bool | float | int | str | None
     data_type: str | None = None
     unit: str | None = None
-    value: bool | float | int | str | None = None
     value_list: list[str] | None = None
     max_value: float | int | None = None
     min_value: float | int | None = None
     extended_sysvar: bool = False
 
 
-@dataclass
+@dataclass(slots=True)
 class SystemInformation:
     """System information of the backend."""
 
@@ -288,7 +288,7 @@ def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
         _delete_file(file_name=f"{instance_name}_{file_to_delete}")
 
 
-@dataclass
+@dataclass(slots=True)
 class Channel:
     """dataclass for a device channel."""
 

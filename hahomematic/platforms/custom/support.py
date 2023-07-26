@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(slots=True)
 class CustomConfig:
     """Data for custom entity creation."""
 
@@ -14,7 +14,7 @@ class CustomConfig:
     extended: ExtendedConfig | None = None
 
 
-@dataclass
+@dataclass(slots=True)
 class ExtendedConfig:
     """Extended data for custom entity creation."""
 
