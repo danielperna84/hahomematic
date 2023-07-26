@@ -882,8 +882,9 @@ class CentralUnit:
             return
         message = (
             f"There is a mismatch between send ping events and received pong events for HA instance {self.config.name}. "
-            f"Looks like you are running multiple instances of HA with the same instance name configured for this integration. "
-            f"Re-add one instance! Otherwise one HA instance will not receive update events from your CCU."
+            f"Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
+            f"Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
+            f"Possible reason 2: Something is stuck on CCU, so try a restart."
         )
         event_data: dict[str, Any] = {
             ATTR_INTERFACE_ID: interface_id,

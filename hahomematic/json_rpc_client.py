@@ -322,6 +322,11 @@ class JsonRpcAioHttpClient:
         except ClientConnectorCertificateError as cccerr:
             self._connection_state.add_issue(issuer=self)
             _LOGGER.error("DO_POST failed: ClientConnectorCertificateError: %s", cccerr)
+            if self._tls is False and cccerr.ssl is True:
+                _LOGGER.warning(
+                    "Possible reason: 'Automatic forwarding to HTTPS' is enabled in backend, "
+                    "but this integration is not configured to use TLS."
+                )
             return {"error": str(cccerr), "result": {}}
         except ClientConnectorError as err:
             self._connection_state.add_issue(issuer=self)
