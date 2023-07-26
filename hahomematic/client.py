@@ -1261,7 +1261,7 @@ def get_client(interface_id: str) -> Client | None:
     return None
 
 
-@dataclass
+@dataclass(slots=True)
 class LocalRessources:
     """Dataclass with information for local client."""
 
