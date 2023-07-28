@@ -136,7 +136,7 @@ class GenericSystemVariable(GenericHubEntity):
 
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        if client := self.central.get_primary_client():
+        if client := self.central.primary_client:
             await client.set_system_variable(
                 name=self.ccu_var_name, value=parse_sys_var(self.data_type, value)
             )
