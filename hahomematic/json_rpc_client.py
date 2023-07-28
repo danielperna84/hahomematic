@@ -18,11 +18,8 @@ import orjson
 
 from hahomematic import central_unit as hmcu, config
 from hahomematic.const import (
-    ATTR_ERROR,
     ATTR_NAME,
     ATTR_PASSWORD,
-    ATTR_RESULT,
-    ATTR_SESSION_ID,
     ATTR_USERNAME,
     DEFAULT_ENCODING,
     MAX_JSON_SESSION_AGE,
@@ -51,13 +48,19 @@ from hahomematic.const import (
     SYSVAR_VALUE,
     SYSVAR_VALUE_LIST,
 )
-from hahomematic.exceptions import BaseHomematicException, ClientException
+from hahomematic.exceptions import ClientException
 from hahomematic.support import (
     ProgramData,
     SystemVariableData,
     get_tls_context,
     parse_sys_var,
 )
+
+P_ERROR = "error"
+P_RESULT = "result"
+SESSION_ID: Final = "_session_id_"
+
+ALLOWED_METHOD_ON_FAILURE = ("Session.login",)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,30 +107,21 @@ class JsonRpcAioHttpClient:
 
     async def _do_renew_login(self, session_id: str) -> str | None:
         """Renew JSON-RPC session or perform login."""
-        try:
-            if self._updated_within_seconds():
-                return session_id
-            method = "Session.renew"
-            response = await self._do_post(
-                session_id=session_id,
-                method=method,
-                extra_params={ATTR_SESSION_ID: session_id},
-            )
-            if (
-                response[ATTR_ERROR] is None
-                and response[ATTR_RESULT]
-                and response[ATTR_RESULT] is True
-            ):
-                self._last_session_id_refresh = datetime.now()
-                _LOGGER.debug("DO_RENEW_LOGIN: Method: %s [%s]", method, session_id)
-                return session_id
-            return await self._do_login()
-        except ClientError as cer:
-            _LOGGER.error(
-                "DO_RENEW_LOGIN failed: ClientError [%s] while renewing JSON-RPC session",
-                cer.args,
-            )
-            return None
+        if self._updated_within_seconds():
+            return session_id
+        method = "Session.renew"
+        response = await self._do_post(
+            session_id=session_id,
+            method=method,
+            extra_params={SESSION_ID: session_id},
+        )
+
+        if response[P_RESULT] and response[P_RESULT] is True:
+            self._last_session_id_refresh = datetime.now()
+            _LOGGER.debug("DO_RENEW_LOGIN: Method: %s [%s]", method, session_id)
+            return session_id
+
+        return await self._do_login()
 
     def _updated_within_seconds(self, max_age_seconds: int = MAX_JSON_SESSION_AGE) -> bool:
         """Check if session id has been updated within 90 seconds."""
@@ -145,34 +139,25 @@ class JsonRpcAioHttpClient:
             return None
 
         session_id: str | None = None
-        try:
-            params = {
-                ATTR_USERNAME: self._username,
-                ATTR_PASSWORD: self._password,
-            }
-            method = "Session.login"
-            response = await self._do_post(
-                session_id=False,
-                method=method,
-                extra_params=params,
-                use_default_params=False,
-            )
-            if response[ATTR_ERROR] is None and response[ATTR_RESULT]:
-                session_id = response[ATTR_RESULT]
 
-            _LOGGER.debug("DO_LOGIN: Method: %s [%s]", method, session_id)
+        params = {
+            ATTR_USERNAME: self._username,
+            ATTR_PASSWORD: self._password,
+        }
+        method = "Session.login"
+        response = await self._do_post(
+            session_id=False,
+            method=method,
+            extra_params=params,
+            use_default_params=False,
+        )
 
-            if not session_id:
-                _LOGGER.debug("DO_LOGIN failed: Unable to open session: %s", response[ATTR_ERROR])
-                return None
-            return session_id
-        except BaseHomematicException as hhe:
-            _LOGGER.error(
-                "DO_LOGIN failed: %s [%s] while logging in via JSON-RPC",
-                hhe.name,
-                hhe.args,
-            )
-            return None
+        _LOGGER.debug("DO_LOGIN: Method: %s [%s]", method, session_id)
+
+        if result := response[P_RESULT]:
+            session_id = result
+
+        return session_id
 
     async def _post(
         self,
@@ -189,10 +174,8 @@ class JsonRpcAioHttpClient:
             session_id = await self._do_login()
 
         if not session_id:
-            _LOGGER.warning("POST failed: Error while logging in via JSON-RPC")
-            return {"error": "Unable to open session", "result": {}}
+            raise ClientException("Error while logging in")
 
-        _LOGGER.debug("POST: Method: %s, [%s]", method, extra_params)
         response = await self._do_post(
             session_id=session_id,
             method=method,
@@ -200,10 +183,14 @@ class JsonRpcAioHttpClient:
             use_default_params=use_default_params,
         )
 
+        if extra_params:
+            _LOGGER.debug("POST method: %s, [%s]", method, extra_params)
+        else:
+            _LOGGER.debug("POST method: %s", method)
+
         if not keep_session:
             await self._do_logout(session_id=session_id)
-        if (error := response["error"]) is not None:
-            raise ClientException(f"POST: error: {error}")
+
         return response
 
     async def _post_script(
@@ -220,15 +207,10 @@ class JsonRpcAioHttpClient:
             session_id = await self._do_login()
 
         if not session_id:
-            _LOGGER.debug("POST_SCRIPT failed: Error while logging in via JSON-RPC.")
-            return {"error": "Unable to open session", "result": {}}
+            raise ClientException("Error while logging in")
 
         if (script := self._get_script(script_name=script_name)) is None:
-            _LOGGER.warning("POST_SCRIPT failed: Script file for %s does not exist", script_name)
-            return {
-                "error": f"Script file for {script_name} does not exist",
-                "result": {},
-            }
+            raise ClientException(f"Script file for {script_name} does not exist")
 
         if extra_params:
             for variable, value in extra_params.items():
@@ -240,15 +222,14 @@ class JsonRpcAioHttpClient:
             method=method,
             extra_params={"script": script},
         )
-        if not response[ATTR_ERROR]:
-            response[ATTR_RESULT] = orjson.loads(response[ATTR_RESULT])
+
+        if not response[P_ERROR]:
+            response[P_RESULT] = orjson.loads(response[P_RESULT])
         _LOGGER.debug("POST_SCRIPT: Method: %s [%s]", method, script_name)
 
         if not keep_session:
             await self._do_logout(session_id=session_id)
 
-        if (error := response["error"]) is not None:
-            raise ClientException(f"post_script: error: {error}")
         return response
 
     def _get_script(self, script_name: str) -> str | None:
@@ -270,17 +251,10 @@ class JsonRpcAioHttpClient:
         use_default_params: bool = True,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST function."""
-        if self._connection_state.outgoing_issue:
-            # Report 'Service Unavailable' if there is an outgoing issue
-            return {"error": "503", "result": {}}
         if not self._client_session:
-            no_session = "DO_POST failed: ClientSession not initialized."
-            _LOGGER.warning(no_session)
-            return {"error": no_session, "result": {}}
+            raise ClientException("ClientSession not initialized")
         if not self._has_credentials:
-            no_credentials = "DO_POST failed: No credentials set."
-            _LOGGER.warning(no_credentials)
-            return {"error": str(no_credentials), "result": {}}
+            raise ClientException("No credentials set")
 
         params = _get_params(session_id, extra_params, use_default_params)
 
@@ -305,71 +279,59 @@ class JsonRpcAioHttpClient:
                     self._url, data=payload, headers=headers, timeout=config.TIMEOUT
                 )
             if response.status == 200:
+                self._connection_state.remove_issue(issuer=self)
                 try:
-                    self._connection_state.remove_issue(issuer=self)
                     return await response.json(encoding="utf-8")
                 except ValueError as ver:
-                    _LOGGER.error(
-                        "DO_POST failed: ValueError [%s] Unable to parse JSON. "
-                        "Trying workaround",
+                    _LOGGER.debug(
+                        "DO_POST: ValueError [%s] Unable to parse JSON. Trying workaround",
                         ver.args,
                     )
                     # Workaround for bug in CCU
                     return orjson.loads((await response.json(encoding="utf-8")).replace("\\", ""))
             else:
-                _LOGGER.warning("DO_POST failed: Status: %i", response.status)
-                return {"error": response.status, "result": {}}
+                json_response = await response.json(encoding="utf-8")
+                message = f"Status: {response.status}"
+                if error := json_response[P_ERROR]:
+                    message = f"{message}: {error}"
+                raise ClientException(message)
         except ClientConnectorCertificateError as cccerr:
-            self._connection_state.add_issue(issuer=self)
-            _LOGGER.error("DO_POST failed: ClientConnectorCertificateError: %s", cccerr)
+            message = f"ClientConnectorCertificateError[{cccerr}]"
             if self._tls is False and cccerr.ssl is True:
-                _LOGGER.warning(
-                    "Possible reason: 'Automatic forwarding to HTTPS' is enabled in backend, "
-                    "but this integration is not configured to use TLS."
+                message = (
+                    f"{message}. Possible reason: 'Automatic forwarding to HTTPS' is enabled in backend, "
+                    f"but this integration is not configured to use TLS"
                 )
-            return {"error": str(cccerr), "result": {}}
+            raise ClientException(message) from cccerr
         except ClientConnectorError as err:
-            self._connection_state.add_issue(issuer=self)
-            _LOGGER.error("DO_POST failed: ClientConnectorError: %s", err)
-            return {"error": str(err), "result": {}}
+            raise ClientException from err
         except ClientError as cce:
-            _LOGGER.error("DO_POST failed: ClientError: %s", cce)
-            return {"error": str(cce), "result": {}}
-        except TypeError as ter:
-            _LOGGER.error("DO_POST failed: TypeError: %s", ter)
-            return {"error": str(ter), "result": {}}
-        except OSError as oer:
-            _LOGGER.error("DO_POST failed: OSError: %s", oer)
-            return {"error": str(oer), "result": {}}
-        except Exception as ex:
+            raise ClientException from cce
+        except (OSError, TypeError, Exception) as ex:
             raise ClientException from ex
 
     async def logout(self) -> None:
         """Logout of CCU."""
-        await self._do_logout(self._session_id)
+        try:
+            await self._do_logout(self._session_id)
+        except ClientException as clex:
+            self._handle_client_exception(method="LOGOUT", clex=clex)
+            return
 
     async def _do_logout(self, session_id: str | None) -> None:
         """Logout of CCU."""
         if not session_id:
             _LOGGER.debug("DO_LOGOUT: Not logged in. Not logging out.")
             return
-        try:
-            method = "Session.logout"
-            params = {"_session_id_": session_id}
-            response = await self._do_post(
-                session_id=session_id,
-                method=method,
-                extra_params=params,
-            )
-            _LOGGER.debug("DO_LOGOUT: Method: %s [%s]", method, session_id)
-            if response[ATTR_ERROR]:
-                _LOGGER.warning("DO_LOGOUT failed: Logout error: %s", response[ATTR_RESULT])
-        except ClientError as cer:
-            _LOGGER.error(
-                "LOGOUT failed: ClientError [%s] while logging in via JSON-RPC",
-                cer.args,
-            )
-        return
+
+        method = "Session.logout"
+        params = {"_session_id_": session_id}
+        await self._do_post(
+            session_id=session_id,
+            method=method,
+            extra_params=params,
+        )
+        _LOGGER.debug("DO_LOGOUT: Method: %s [%s]", method, session_id)
 
     @property
     def _has_credentials(self) -> bool:
@@ -378,32 +340,32 @@ class JsonRpcAioHttpClient:
 
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
-        _LOGGER.debug("EXECUTE_PROGRAM: Executing a program via JSON-RPC")
+        params = {
+            PROGRAM_ID: pid,
+        }
         try:
-            params = {
-                PROGRAM_ID: pid,
-            }
             response = await self._post("Program.execute", params)
+            _LOGGER.debug("EXECUTE_PROGRAM: Executing a program")
 
-            if json_result := response[ATTR_RESULT]:
-                res = json_result
+            if json_result := response[P_RESULT]:
                 _LOGGER.debug(
                     "EXECUTE_PROGRAM: Result while executing program: %s",
-                    str(res),
+                    str(json_result),
                 )
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("EXECUTE_PROGRAM failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="EXECUTE_PROGRAM", clex=clex)
             return False
+
         return True
 
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
-        _LOGGER.debug("SET_SYSTEM_VARIABLE: Setting System variable via JSON-RPC")
+
+        params = {
+            SYSVAR_NAME: name,
+            SYSVAR_VALUE: value,
+        }
         try:
-            params = {
-                SYSVAR_NAME: name,
-                SYSVAR_VALUE: value,
-            }
             if isinstance(value, bool):
                 params[SYSVAR_VALUE] = int(value)
                 response = await self._post("SysVar.setBool", params)
@@ -421,64 +383,71 @@ class JsonRpcAioHttpClient:
             else:
                 response = await self._post("SysVar.setFloat", params)
 
-            if json_result := response[ATTR_RESULT]:
-                res = json_result
+            _LOGGER.debug("SET_SYSTEM_VARIABLE: Setting System variable")
+            if json_result := response[P_RESULT]:
                 _LOGGER.debug(
                     "SET_SYSTEM_VARIABLE: Result while setting variable: %s",
-                    str(res),
+                    str(json_result),
                 )
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("SET_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="SET_SYSTEM_VARIABLE failed", clex=clex)
             return False
+
         return True
 
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
-        _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Getting System variable via JSON-RPC")
+        params = {SYSVAR_NAME: name}
         try:
-            params = {SYSVAR_NAME: name}
             response = await self._post(
                 "SysVar.deleteSysVarByName",
                 params,
             )
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Getting System variable")
+            if json_result := response[P_RESULT]:
                 deleted = json_result
                 _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Deleted: %s", str(deleted))
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("DELETE_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="DELETE_SYSTEM_VARIABLE", clex=clex)
             return False
+
         return True
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
         var = None
-        _LOGGER.debug("GET_SYSTEM_VARIABLE: Getting System variable via JSON-RPC")
+
         try:
             params = {SYSVAR_NAME: name}
             response = await self._post(
                 "SysVar.getValueByName",
                 params,
             )
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_SYSTEM_VARIABLE: Getting System variable")
+            if json_result := response[P_RESULT]:
                 # This does not yet support strings
                 try:
                     var = float(json_result)
                 except Exception:
                     var = json_result == "true"
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="DELETE_SYSTEM_VARIABLE", clex=clex)
+            return None
 
         return var
 
     async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
         variables: list[SystemVariableData] = []
-        _LOGGER.debug("GET_ALL_SYSTEM_VARIABLES: Getting all system variables via JSON-RPC")
         try:
             response = await self._post(
                 "SysVar.getAll",
             )
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_ALL_SYSTEM_VARIABLES: Getting all system variables")
+            if json_result := response[P_RESULT]:
                 ext_markers = await self._get_system_variables_ext_markers()
                 for var in json_result:
                     is_internal = var[SYSVAR_ISINTERNAL]
@@ -526,38 +495,36 @@ class JsonRpcAioHttpClient:
                             verr.args,
                             name,
                         )
-
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_ALL_SYSTEM_VARIABLES failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_ALL_SYSTEM_VARIABLES", clex=clex)
+            return []
 
         return variables
 
     async def _get_system_variables_ext_markers(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
         ext_markers: dict[str, Any] = {}
-        _LOGGER.debug(
-            "GET_SYSTEM_VARIABLES_EXT_MARKERS: Getting system variables ext markersvia JSON-RPC"
-        )
-        try:
-            response = await self._post_script(script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER)
-            if json_result := response[ATTR_RESULT]:
-                for data in json_result:
-                    ext_markers[data[SYSVAR_ID]] = data[SYSVAR_HASEXTMARKER]
 
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_SYSTEM_VARIABLES_EXT_MARKERS failed: %s [%s]", hhe.name, hhe.args)
+        response = await self._post_script(script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER)
+
+        _LOGGER.debug("GET_SYSTEM_VARIABLES_EXT_MARKERS: Getting system variables ext markers")
+        if json_result := response[P_RESULT]:
+            for data in json_result:
+                ext_markers[data[SYSVAR_ID]] = data[SYSVAR_HASEXTMARKER]
 
         return ext_markers
 
     async def get_all_channel_ids_room(self) -> dict[str, set[str]]:
         """Get all channel_ids per room from CCU / Homegear."""
         channel_ids_room: dict[str, set[str]] = {}
-        _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_ROOM: Getting all rooms via JSON-RPC")
+
         try:
             response = await self._post(
                 "Room.getAll",
             )
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_ROOM: Getting all rooms")
+            if json_result := response[P_RESULT]:
                 for room in json_result:
                     if room["id"] not in channel_ids_room:
                         channel_ids_room[room["id"]] = set()
@@ -566,20 +533,23 @@ class JsonRpcAioHttpClient:
                         if channel_id not in channel_ids_room:
                             channel_ids_room[channel_id] = set()
                         channel_ids_room[channel_id].add(room["name"])
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_ALL_CHANNEL_IDS_PER_ROOM failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_ALL_CHANNEL_IDS_PER_ROOM", clex=clex)
+            return {}
 
         return channel_ids_room
 
     async def get_all_channel_ids_function(self) -> dict[str, set[str]]:
         """Get all channel_ids per function from CCU / Homegear."""
         channel_ids_function: dict[str, set[str]] = {}
-        _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_FUNCTION: Getting all functions via JSON-RPC")
+
         try:
             response = await self._post(
                 "Subsection.getAll",
             )
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_FUNCTION: Getting all functions")
+            if json_result := response[P_RESULT]:
                 for function in json_result:
                     if function["id"] not in channel_ids_function:
                         channel_ids_function[function["id"]] = set()
@@ -588,64 +558,76 @@ class JsonRpcAioHttpClient:
                         if channel_id not in channel_ids_function:
                             channel_ids_function[channel_id] = set()
                         channel_ids_function[channel_id].add(function["name"])
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_ALL_CHANNEL_IDS_PER_FUNCTION failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_ALL_CHANNEL_IDS_PER_FUNCTION", clex=clex)
+            return {}
 
         return channel_ids_function
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
         interfaces: list[str] = []
-        _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces via JSON-RPC")
+
         try:
             response = await self._post(
                 "Interface.listInterfaces",
             )
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces")
+            if json_result := response[P_RESULT]:
                 for interface in json_result:
                     interfaces.append(interface[ATTR_NAME])
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_AVAILABLE_INTERFACES failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_AVAILABLE_INTERFACES", clex=clex)
+            return []
 
         return interfaces
 
     async def get_device_details(self) -> list[dict[str, Any]]:
         """Get the device details of the backend."""
-        device_details = []
-        _LOGGER.debug("GET_DEVICE_DETAILS: Getting the device details via JSON-RPC")
+        device_details: list[dict[str, Any]] = []
+
         try:
             response = await self._post(
                 method="Device.listAllDetail",
             )
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_DEVICE_DETAILS: Getting the device details")
+            if json_result := response[P_RESULT]:
                 device_details = json_result
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_DEVICE_DETAILS failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_DEVICE_DETAILS", clex=clex)
+            return []
 
         return device_details
 
     async def get_all_device_data(self) -> dict[str, dict[str, dict[str, Any]]]:
         """Get the all device data of the backend."""
         all_device_data: dict[str, dict[str, dict[str, Any]]] = {}
-        _LOGGER.debug("GET_ALL_DEVICE_DATA: Getting all device data via JSON-RPC")
+
         try:
             response = await self._post_script(script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA)
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_ALL_DEVICE_DATA: Getting all device data")
+            if json_result := response[P_RESULT]:
                 all_device_data = _convert_to_values_cache(json_result)
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_ALL_DEVICE_DATA failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_ALL_DEVICE_DATA", clex=clex)
+            return {}
 
         return all_device_data
 
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get the all programs of the backend."""
         all_programs: list[ProgramData] = []
-        _LOGGER.debug("GET_ALL_PROGRAMS: Getting all programs via JSON-RPC")
+
         try:
             response = await self._post(
                 method="Program.getAll",
             )
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_ALL_PROGRAMS: Getting all programs")
+            if json_result := response[P_RESULT]:
                 for prog in json_result:
                     is_internal = prog[PROGRAM_ISINTERNAL]
                     if include_internal is False and is_internal is True:
@@ -664,54 +646,68 @@ class JsonRpcAioHttpClient:
                             last_execute_time=last_execute_time,
                         )
                     )
-
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_ALL_PROGRAMS failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_ALL_PROGRAMS", clex=clex)
+            return []
 
         return all_programs
 
     async def get_auth_enabled(self) -> bool | None:
         """Get the auth_enabled flag of the backend."""
         auth_enabled: bool | None = None
-        _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled via JSON-RPC")
+
         try:
             response = await self._post(method="CCU.getAuthEnabled")
-            if (json_result := response[ATTR_RESULT]) is not None:
-                auth_enabled = bool(json_result)
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_AUTH_ENABLED failed: %s [%s]", hhe.name, hhe.args)
 
+            _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
+            if (json_result := response[P_RESULT]) is not None:
+                auth_enabled = bool(json_result)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_AUTH_ENABLED", clex=clex)
+            return None
         return auth_enabled
 
     async def get_https_redirect_enabled(self) -> bool | None:
         """Get the auth_enabled flag of the backend."""
         https_redirect_enabled: bool | None = None
-        _LOGGER.debug(
-            "GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled via JSON-RPC"
-        )
+
         try:
             response = await self._post(method="CCU.getHttpsRedirectEnabled")
-            if (json_result := response[ATTR_RESULT]) is not None:
+
+            _LOGGER.debug("GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled")
+            if (json_result := response[P_RESULT]) is not None:
                 https_redirect_enabled = bool(json_result)
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_HTTPS_REDIRECT_ENABLED failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_HTTPS_REDIRECT_ENABLED", clex=clex)
+            return None
 
         return https_redirect_enabled
 
     async def get_serial(self) -> str:
         """Get the serial of the backend."""
         serial = "unknown"
-        _LOGGER.debug("GET_SERIAL: Getting the backend serial via JSON-RPC")
+
         try:
             response = await self._post_script(script_name=REGA_SCRIPT_GET_SERIAL)
-            if json_result := response[ATTR_RESULT]:
+
+            _LOGGER.debug("GET_SERIAL: Getting the backend serial")
+            if json_result := response[P_RESULT]:
                 serial = json_result["serial"]
                 if len(serial) > 10:
                     serial = serial[-10:]
-        except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_SERIAL failed: %s [%s]", hhe.name, hhe.args)
+        except ClientException as clex:
+            self._handle_client_exception(method="GET_SERIAL", clex=clex)
+            return serial
 
         return serial
+
+    def _handle_client_exception(self, method: str, clex: ClientException) -> None:
+        """Handle ClientException."""
+        if self._connection_state.json_issue:
+            _LOGGER.debug("%s failed: %s [%s]", method, clex.name, clex.args)
+        else:
+            self._connection_state.add_issue(issuer=self)
+            _LOGGER.error("%s failed: %s [%s]", method, clex.name, clex.args)
 
 
 def _get_params(

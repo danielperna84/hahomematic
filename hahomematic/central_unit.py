@@ -400,7 +400,7 @@ class CentralUnit:
             )
             return True
 
-        _LOGGER.warning("CREATE_CLIENTS failed for %s", self._attr_name)
+        _LOGGER.debug("CREATE_CLIENTS failed for %s", self._attr_name)
         return False
 
     async def _init_clients(self) -> None:
@@ -1313,9 +1313,9 @@ class CentralConnectionState:
         self._xml_proxy_issues: Final[list[str]] = []
 
     @property
-    def outgoing_issue(self) -> bool:
+    def json_issue(self) -> bool:
         """Return if there is an outgoing connection issue."""
-        return len(self._xml_proxy_issues) > 0
+        return self._json_issue
 
     def add_issue(self, issuer: ConnectionProblemIssuer) -> bool:
         """Add issue to collection."""
