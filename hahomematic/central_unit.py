@@ -131,7 +131,7 @@ class CentralUnit:
         self.parameter_visibility: Final[ParameterVisibilityCache] = ParameterVisibilityCache(
             central=self
         )
-
+        self._primary_client: hmcl.Client | None = None
         # {interface_id, client}
         self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
@@ -207,9 +207,18 @@ class CentralUnit:
         return all(client.is_callback_alive() for client in self._clients.values())
 
     @property
+    def primary_client(self) -> hmcl.Client | None:
+        """Return the primary client of the backend."""
+        if self._primary_client is not None:
+            return self._primary_client
+        if client := self._get_primary_client():
+            self._primary_client = client
+        return self._primary_client
+
+    @property
     def model(self) -> str | None:
         """Return the model of the backend. #CC."""
-        if not self._attr_model and (client := self.get_primary_client()):
+        if not self._attr_model and (client := self.primary_client):
             self._attr_model = client.model
         return self._attr_model
 
@@ -223,14 +232,15 @@ class CentralUnit:
         """Return the backend supports ping pong."""
         if self._supports_ping_pong is not None:
             return self._supports_ping_pong
-        if primary_client := self.get_primary_client():
+        if primary_client := self.primary_client:
             self._supports_ping_pong = isinstance(primary_client, hmcl.ClientCCU)
+            return self._supports_ping_pong
         return False
 
     @property
     def system_information(self) -> SystemInformation:
         """Return the system_information of the backend."""
-        if client := self.get_primary_client():
+        if client := self.primary_client:
             return client.system_information
         return SystemInformation()
 
@@ -561,7 +571,7 @@ class CentralUnit:
                 readable_entities.append(entity)
         return readable_entities
 
-    def get_primary_client(self) -> hmcl.Client | None:
+    def _get_primary_client(self) -> hmcl.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hmcl.Client | None = None
         for client in self._clients.values():
@@ -864,7 +874,7 @@ class CentralUnit:
 
     def increase_ping_count(self, interface_id: str) -> None:
         """Increase the number of send ping events."""
-        if self._supports_ping_pong is True:
+        if self.supports_ping_pong is True:
             with self._sema_ping_count:
                 if (ping_count := self._ping_count.get(interface_id)) is not None:
                     ping_count += 1
@@ -877,7 +887,7 @@ class CentralUnit:
 
     def _reduce_ping_count(self, interface_id: str) -> None:
         """Reduce the number of send ping events, by a received pong event."""
-        if self._supports_ping_pong is True:
+        if self.supports_ping_pong is True:
             with self._sema_ping_count:
                 if (ping_count := self._ping_count.get(interface_id)) is not None:
                     ping_count -= 1
@@ -955,7 +965,7 @@ class CentralUnit:
 
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
-        if client := self.get_primary_client():
+        if client := self.primary_client:
             return await client.execute_program(pid=pid)
         return False
 
@@ -979,7 +989,7 @@ class CentralUnit:
 
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""
-        if client := self.get_primary_client():
+        if client := self.primary_client:
             return await client.get_system_variable(name)
         return None
 

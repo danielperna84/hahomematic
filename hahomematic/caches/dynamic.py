@@ -42,7 +42,7 @@ class DeviceDetailsCache:
             return
         self.clear()
         _LOGGER.debug("load: Loading names for %s", self._central.name)
-        if client := self._central.get_primary_client():
+        if client := self._central.primary_client:
             await client.fetch_device_details()
         _LOGGER.debug("load: Loading rooms for %s", self._central.name)
         self._channel_rooms.clear()
@@ -82,7 +82,7 @@ class DeviceDetailsCache:
 
     async def _get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms, if available."""
-        if client := self._central.get_primary_client():
+        if client := self._central.primary_client:
             return await client.get_all_rooms()
         return {}
 
@@ -92,7 +92,7 @@ class DeviceDetailsCache:
 
     async def _get_all_functions(self) -> dict[str, set[str]]:
         """Get all functions, if available."""
-        if client := self._central.get_primary_client():
+        if client := self._central.primary_client:
             return await client.get_all_functions()
         return {}
 
@@ -163,7 +163,7 @@ class DeviceDataCache:
             return
         self.clear()
         _LOGGER.debug("load: device data for %s", self._central.name)
-        if client := self._central.get_primary_client():
+        if client := self._central.primary_client:
             await client.fetch_all_device_data()
 
     async def refresh_entity_data(

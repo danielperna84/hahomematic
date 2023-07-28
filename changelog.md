@@ -2,6 +2,7 @@
 
 - Refactor Json error handling / logging
 - Use ping pong only for CCU
+- Add primary_client attribute to central_unit
 
 # Version 2023.7.5 (2023-07-26)
 

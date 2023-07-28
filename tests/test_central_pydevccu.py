@@ -24,7 +24,7 @@ async def test_central_mini(central_unit_mini) -> None:
     assert central_unit_mini.name == const.CENTRAL_NAME
     assert central_unit_mini.model == "PyDevCCU"
     assert central_unit_mini.get_client(const.PYDEVCCU_INTERFACE_ID).model == "PyDevCCU"
-    assert central_unit_mini.get_primary_client().model == "PyDevCCU"
+    assert central_unit_mini.primary_client.model == "PyDevCCU"
     assert len(central_unit_mini._devices) == 1
     assert len(central_unit_mini._entities) == 28
 
@@ -36,7 +36,7 @@ async def test_central_full(central_unit_full) -> None:
     assert central_unit_full.name == const.CENTRAL_NAME
     assert central_unit_full.model == "PyDevCCU"
     assert central_unit_full.get_client(const.PYDEVCCU_INTERFACE_ID).model == "PyDevCCU"
-    assert central_unit_full.get_primary_client().model == "PyDevCCU"
+    assert central_unit_full.primary_client.model == "PyDevCCU"
 
     data = {}
     for device in central_unit_full.devices:
