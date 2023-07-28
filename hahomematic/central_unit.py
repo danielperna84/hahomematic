@@ -96,6 +96,7 @@ class CentralUnit:
         self._ping_count: Final[dict[str, int]] = {}
         self._ping_pong_fired: bool = False
         self._sema_ping_count: Final = threading.Semaphore()
+        self._supports_ping_pong: bool | None = None
 
         self._sema_add_devices: Final = asyncio.Semaphore()
         self._tasks: Final[set[asyncio.Future[Any]]] = set()
@@ -216,6 +217,15 @@ class CentralUnit:
     def name(self) -> str:
         """Return the name of the backend. #CC."""
         return self._attr_name
+
+    @property
+    def supports_ping_pong(self) -> bool:
+        """Return the backend supports ping pong."""
+        if self._supports_ping_pong is not None:
+            return self._supports_ping_pong
+        if primary_client := self.get_primary_client():
+            self._supports_ping_pong = isinstance(primary_client, hmcl.ClientCCU)
+        return False
 
     @property
     def system_information(self) -> SystemInformation:
@@ -854,27 +864,29 @@ class CentralUnit:
 
     def increase_ping_count(self, interface_id: str) -> None:
         """Increase the number of send ping events."""
-        with self._sema_ping_count:
-            if (ping_count := self._ping_count.get(interface_id)) is not None:
-                ping_count += 1
-                self._ping_count[interface_id] = ping_count
-                if ping_count > PING_PONG_MISMATCH_COUNT:
-                    self._fire_ping_pong_event(interface_id=interface_id)
-                _LOGGER.debug("Increase Ping count: %s, %i", interface_id, ping_count)
-            else:
-                self._ping_count[interface_id] = 1
+        if self._supports_ping_pong is True:
+            with self._sema_ping_count:
+                if (ping_count := self._ping_count.get(interface_id)) is not None:
+                    ping_count += 1
+                    self._ping_count[interface_id] = ping_count
+                    if ping_count > PING_PONG_MISMATCH_COUNT:
+                        self._fire_ping_pong_event(interface_id=interface_id)
+                    _LOGGER.debug("Increase Ping count: %s, %i", interface_id, ping_count)
+                else:
+                    self._ping_count[interface_id] = 1
 
     def _reduce_ping_count(self, interface_id: str) -> None:
         """Reduce the number of send ping events, by a received pong event."""
-        with self._sema_ping_count:
-            if (ping_count := self._ping_count.get(interface_id)) is not None:
-                ping_count -= 1
-                self._ping_count[interface_id] = ping_count
-                if ping_count < -PING_PONG_MISMATCH_COUNT:
-                    self._fire_ping_pong_event(interface_id=interface_id)
-                _LOGGER.debug("Reduce Ping count: %s, %i", interface_id, ping_count)
-            else:
-                self._ping_count[interface_id] = 0
+        if self._supports_ping_pong is True:
+            with self._sema_ping_count:
+                if (ping_count := self._ping_count.get(interface_id)) is not None:
+                    ping_count -= 1
+                    self._ping_count[interface_id] = ping_count
+                    if ping_count < -PING_PONG_MISMATCH_COUNT:
+                        self._fire_ping_pong_event(interface_id=interface_id)
+                    _LOGGER.debug("Reduce Ping count: %s, %i", interface_id, ping_count)
+                else:
+                    self._ping_count[interface_id] = 0
 
     def _fire_ping_pong_event(self, interface_id: str) -> None:
         """Fire an event about the ping pong status."""
