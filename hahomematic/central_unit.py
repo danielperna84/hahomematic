@@ -96,7 +96,6 @@ class CentralUnit:
         self._ping_count: Final[dict[str, int]] = {}
         self._ping_pong_fired: bool = False
         self._sema_ping_count: Final = threading.Semaphore()
-        self._supports_ping_pong: bool | None = None
 
         self._sema_add_devices: Final = asyncio.Semaphore()
         self._tasks: Final[set[asyncio.Future[Any]]] = set()
@@ -230,11 +229,8 @@ class CentralUnit:
     @property
     def supports_ping_pong(self) -> bool:
         """Return the backend supports ping pong."""
-        if self._supports_ping_pong is not None:
-            return self._supports_ping_pong
         if primary_client := self.primary_client:
-            self._supports_ping_pong = isinstance(primary_client, hmcl.ClientCCU)
-            return self._supports_ping_pong
+            return primary_client.supports_ping_pong
         return False
 
     @property
