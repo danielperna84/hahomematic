@@ -1,4 +1,4 @@
-# Version 2023.8.0 (2023-08-01)
+# Version 2023.7.6 (2023-07-29)
 
 - Refactor Json error handling / logging
 - Use ping pong only for CCU
