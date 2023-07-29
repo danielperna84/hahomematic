@@ -944,9 +944,6 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def check_connection_availability(self) -> bool:
         """Send ping to CCU to generate PONG event."""
-        self.last_updated = datetime.now()
-        if self.supports_ping_pong:
-            self.central.increase_ping_count(interface_id=self.interface_id)
         return True
 
     async def execute_program(self, pid: str) -> bool:
