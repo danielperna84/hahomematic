@@ -106,6 +106,11 @@ class Client(ABC):
     def model(self) -> str:
         """Return the model of the backend."""
 
+    @property
+    @abstractmethod
+    def supports_ping_pong(self) -> bool:
+        """Return the supports_ping_pong info of the backend."""
+
     async def proxy_init(self) -> int:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
         try:
@@ -665,6 +670,11 @@ class ClientCCU(Client):
         """Return the model of the backend."""
         return BACKEND_CCU
 
+    @property
+    def supports_ping_pong(self) -> bool:
+        """Return the supports_ping_pong info of the backend."""
+        return True
+
     async def fetch_device_details(self) -> None:
         """Get all names via JSON-RPS and store in data.NAMES."""
         if json_result := await self._json_rpc_client.get_device_details():
@@ -782,6 +792,11 @@ class ClientHomegear(Client):
             )
         return BACKEND_CCU
 
+    @property
+    def supports_ping_pong(self) -> bool:
+        """Return the supports_ping_pong info of the backend."""
+        return False
+
     async def fetch_all_device_data(self) -> None:
         """Fetch all device data from CCU."""
         return
@@ -810,7 +825,8 @@ class ClientHomegear(Client):
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
             self.last_updated = datetime.now()
-            self.central.increase_ping_count(interface_id=self.interface_id)
+            if self.supports_ping_pong:
+                self.central.increase_ping_count(interface_id=self.interface_id)
             return True
         except BaseHomematicException as hhe:
             _LOGGER.debug("CHECK_CONNECTION_AVAILABILITY failed: %s [%s]", hhe.name, hhe.args)
@@ -891,6 +907,11 @@ class ClientLocal(Client):  # pragma: no cover
         """Return the model of the backend."""
         return BACKEND_LOCAL
 
+    @property
+    def supports_ping_pong(self) -> bool:
+        """Return the supports_ping_pong info of the backend."""
+        return False
+
     async def proxy_init(self) -> int:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
         return PROXY_INIT_SUCCESS
@@ -923,6 +944,9 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def check_connection_availability(self) -> bool:
         """Send ping to CCU to generate PONG event."""
+        self.last_updated = datetime.now()
+        if self.supports_ping_pong:
+            self.central.increase_ping_count(interface_id=self.interface_id)
         return True
 
     async def execute_program(self, pid: str) -> bool:
