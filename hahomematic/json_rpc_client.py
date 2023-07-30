@@ -325,7 +325,7 @@ class JsonRpcAioHttpClient:
             return
 
         method = "Session.logout"
-        params = {"_session_id_": session_id}
+        params = {SESSION_ID: session_id}
         await self._do_post(
             session_id=session_id,
             method=method,
@@ -716,7 +716,7 @@ def _get_params(
     use_default_params: bool,
 ) -> dict[str, Any]:
     """Add additional params to default prams."""
-    params: dict[str, Any] = {"_session_id_": session_id} if use_default_params else {}
+    params: dict[str, Any] = {SESSION_ID: session_id} if use_default_params else {}
     if extra_params:
         params.update(extra_params)
     return params
