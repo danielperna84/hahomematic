@@ -111,7 +111,7 @@ class GenericSystemVariable(GenericHubEntity):
 
     def get_name(self, data: HubData) -> str:
         """Return the name of the sysvar entity."""
-        if data.name.lower().startswith(tuple({"v_", "sv_"})):
+        if data.name.lower().startswith(tuple({"v_", "sv_", "sv"})):
             return data.name
         return f"Sv_{data.name}"
 
