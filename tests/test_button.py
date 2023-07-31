@@ -83,4 +83,4 @@ async def test_hmprogrambutton(
     assert button2.is_active is False
     assert button2.is_internal is False
     assert button2.ccu_program_name == "p_2"
-    assert button2.name == "P_2"
+    assert button2.name == "p_2"
