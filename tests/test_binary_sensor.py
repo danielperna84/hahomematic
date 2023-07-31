@@ -54,8 +54,8 @@ async def test_hmsysvarbinarysensor(
         HmSysvarBinarySensor,
         await helper.get_sysvar_entity(central, "sv_logic"),
     )
-    assert binary_sensor.name == "Sv_Logic"
-    assert binary_sensor.full_name == "CentralTest_Sv_Logic"
+    assert binary_sensor.name == "sv_logic"
+    assert binary_sensor.full_name == "CentralTest_sv_logic"
     assert binary_sensor.value is False
     assert binary_sensor.is_extended is False
     assert binary_sensor.data_type == "LOGIC"
