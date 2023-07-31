@@ -43,8 +43,8 @@ class HmProgramButton(GenericHubEntity):
     def get_name(self, data: HubData) -> str:
         """Return the name of the program button entity."""
         if data.name.lower().startswith(tuple({"p_", "prg_"})):
-            return data.name.title()
-        return f"P_{data.name}".title()
+            return data.name
+        return f"P_{data.name}"
 
     def update_data(self, data: ProgramData) -> None:
         """Set variable value on CCU/Homegear."""
