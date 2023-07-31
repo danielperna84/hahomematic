@@ -1,3 +1,8 @@
+# Version 2023.8.0 (2023-08-01)
+
+- Remove only the starting device name from entity name
+- Remove title from program and sysvar names
+
 # Version 2023.7.6 (2023-07-29)
 
 - Refactor Json error handling / logging
