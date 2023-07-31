@@ -195,7 +195,7 @@ class EntityNameData:
     def entity_name(self) -> str | None:
         """Return the name of the entity only name."""
         if self._device_name and self._name and self._name.startswith(self._device_name):
-            return self._name.replace(self._device_name, "").strip()
+            return self._name[len(self._device_name) :].lstrip()
         return self._name
 
     @property
