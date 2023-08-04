@@ -17,10 +17,9 @@ from typing import Any
 import voluptuous as vol
 
 from hahomematic.const import (
+    ATTR_DATA,
     ATTR_INTERFACE_ID,
-    ATTR_MESSAGE,
     ATTR_TYPE,
-    ATTR_VALUE,
     CCU_PASSWORD_PATTERN,
     FILE_DEVICES,
     FILE_PARAMSETS,
@@ -41,8 +40,9 @@ HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_INTERFACE_ID): str,
         vol.Required(ATTR_TYPE): HmInterfaceEventType,
-        vol.Required(ATTR_MESSAGE): str,
-        vol.Optional(ATTR_VALUE): bool,
+        vol.Required(ATTR_DATA): vol.Schema(
+            {vol.Required(vol.Any(str)): vol.Schema(vol.Any(str, int, bool))}
+        ),
     }
 )
 

@@ -1,3 +1,7 @@
+# Version 2023.8.1 (2023-08-04)
+
+- Prepare backend for HA issue usage
+
 # Version 2023.8.0 (2023-08-01)
 
 - Remove only the starting device name from entity name

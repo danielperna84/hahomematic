@@ -195,7 +195,7 @@ class HmHub:
             if sysvar_entity.data_type == SYSVAR_TYPE_STRING:
                 continue
             ccu_name = sysvar_entity.ccu_var_name
-            if ccu_name not in variable_names.keys() or (
+            if ccu_name not in variable_names or (
                 sysvar_entity.is_extended is not variable_names.get(ccu_name)
             ):
                 missing_variables.add(ccu_name)
