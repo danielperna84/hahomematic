@@ -16,10 +16,12 @@ from hahomematic import central_unit as hmcu
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
     ATTR_ADDRESS,
+    ATTR_AVAILABLE,
     ATTR_CHANNELS,
     ATTR_ID,
     ATTR_INTERFACE,
     ATTR_NAME,
+    ATTR_SECONDS_SINCE_LAST_EVENT,
     BACKEND_CCU,
     BACKEND_HOMEGEAR,
     BACKEND_LOCAL,
@@ -176,12 +178,10 @@ class Client(ABC):
                 "available" if available else "unavailable",
                 self.interface_id,
             )
-        message = f"No connection to interface {self.interface_id}"
         self.central.fire_interface_event(
             interface_id=self.interface_id,
             interface_event_type=HmInterfaceEventType.PROXY,
-            message=message,
-            available=available,
+            data={ATTR_AVAILABLE: available},
         )
 
     async def reconnect(self) -> bool:
@@ -242,24 +242,28 @@ class Client(ABC):
         if last_events_time := self.central.last_events.get(self.interface_id):
             seconds_since_last_event = (datetime.now() - last_events_time).total_seconds()
             if seconds_since_last_event > CALLBACK_WARN_INTERVAL:
-                message = f"Callback for {self.interface_id} has not received events for {seconds_since_last_event:.0f}s"
                 if self._is_callback_alive:
                     self.central.fire_interface_event(
                         interface_id=self.interface_id,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
-                        message=message,
-                        available=False,
+                        data={
+                            ATTR_AVAILABLE: False,
+                            ATTR_SECONDS_SINCE_LAST_EVENT: int(seconds_since_last_event),
+                        },
                     )
                     self._is_callback_alive = False
-                _LOGGER.warning("IS_CALLBACK_ALIVE: %s", message)
+                _LOGGER.warning(
+                    "IS_CALLBACK_ALIVE: Callback for %s has not received events for %is",
+                    self.interface_id,
+                    seconds_since_last_event,
+                )
                 return False
 
             if not self._is_callback_alive:
                 self.central.fire_interface_event(
                     interface_id=self.interface_id,
                     interface_event_type=HmInterfaceEventType.CALLBACK,
-                    message="",
-                    available=True,
+                    data={ATTR_AVAILABLE: True},
                 )
                 self._is_callback_alive = True
         return True

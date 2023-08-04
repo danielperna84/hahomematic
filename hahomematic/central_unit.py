@@ -26,10 +26,11 @@ from hahomematic.caches.persistent import (
 from hahomematic.caches.visibility import ParameterVisibilityCache
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
+    ATTR_AVAILABLE,
+    ATTR_DATA,
+    ATTR_INSTANCE_NAME,
     ATTR_INTERFACE_ID,
-    ATTR_MESSAGE,
     ATTR_TYPE,
-    ATTR_VALUE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
     EVENT_PONG,
@@ -396,16 +397,14 @@ class CentralUnit:
                     )
                     self._clients[client.interface_id] = client
             except BaseHomematicException as ex:
-                message = f"No connection to interface {interface_config.interface_id}"
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
                     interface_event_type=HmInterfaceEventType.PROXY,
-                    message=message,
-                    available=False,
+                    data={ATTR_AVAILABLE: False},
                 )
                 _LOGGER.warning(
-                    "CREATE_CLIENTS failed: %s [%s]",
-                    message,
+                    "CREATE_CLIENTS failed: No connection to interface %s [%s]",
+                    interface_config.interface_id,
                     ex.args,
                 )
 
@@ -440,15 +439,14 @@ class CentralUnit:
         self,
         interface_id: str,
         interface_event_type: HmInterfaceEventType,
-        message: str,
-        available: bool,
+        data: dict[str, Any] | None = None,
     ) -> None:
         """Fire an event about the interface status."""
+        data = data or {}
         event_data: dict[str, Any] = {
             ATTR_INTERFACE_ID: interface_id,
             ATTR_TYPE: interface_event_type,
-            ATTR_MESSAGE: message,
-            ATTR_VALUE: available,
+            ATTR_DATA: data,
         }
 
         self.fire_ha_event_callback(
@@ -898,22 +896,22 @@ class CentralUnit:
         """Fire an event about the ping pong status."""
         if self._ping_pong_fired:
             return
-        message = (
-            f"There is a mismatch between send ping events and received pong events for HA instance {self.config.name}. "
-            f"Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
-            f"Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
-            f"Possible reason 2: Something is stuck on CCU, so try a restart."
-        )
         event_data: dict[str, Any] = {
             ATTR_INTERFACE_ID: interface_id,
             ATTR_TYPE: HmInterfaceEventType.PINGPONG,
-            ATTR_MESSAGE: message,
+            ATTR_DATA: {ATTR_INSTANCE_NAME: self.config.name},
         }
         self.fire_ha_event_callback(
             event_type=HmEventType.INTERFACE,
             event_data=cast(dict[str, Any], HM_INTERFACE_EVENT_SCHEMA(event_data)),
         )
-        _LOGGER.warning("PING/PONG MISMATCH: %s", message)
+        _LOGGER.warning(
+            "PING/PONG MISMATCH: There is a mismatch between send ping events and received pong events for HA instance %s. "
+            "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
+            "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
+            "Possible reason 2: Something is stuck on CCU, so try a restart.",
+            self.config.name,
+        )
         self._ping_pong_fired = True
 
     def create_task(self, target: Awaitable, name: str) -> None:
