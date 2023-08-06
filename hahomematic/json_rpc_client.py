@@ -316,10 +316,10 @@ class JsonRpcAioHttpClient:
             raise ClientException(message) from cccerr
         except (ClientConnectorError, ClientError) as cce:
             self.clear_session()
-            raise ClientException(reduce_args(cce.args)) from cce
+            raise ClientException(reduce_args(args=cce.args)) from cce
         except (OSError, TypeError, Exception) as ex:
             self.clear_session()
-            raise ClientException(reduce_args(ex.args)) from ex
+            raise ClientException(reduce_args(args=ex.args)) from ex
 
     async def _get_json_reponse(self, response: ClientResponse) -> dict[str, Any] | Any:
         """Return the json object from response."""

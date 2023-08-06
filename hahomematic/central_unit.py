@@ -523,6 +523,8 @@ class CentralUnit:
                 if not system_information.serial:
                     system_information = client.system_information
             return system_information
+        except NoClients:
+            raise
         except Exception as ex:
             _LOGGER.warning(ex)
             raise
@@ -955,7 +957,7 @@ class CentralUnit:
             task.add_done_callback(self._tasks.remove)
             return task
         except (CancelledError, asyncio.TimeoutError) as err:  # pragma: no cover
-            message = f"async_add_executor_job: task cancelled for {self._attr_name}"
+            message = f"async_add_executor_job: task cancelled for {self._attr_name} [{reduce_args(args=err.args)}]"
             _LOGGER.debug(message)
             raise HaHomematicException(message) from err
 
