@@ -77,6 +77,7 @@ from hahomematic.support import (
     check_or_create_directory,
     check_password,
     get_device_address,
+    reduce_args,
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
@@ -405,7 +406,7 @@ class CentralUnit:
                 _LOGGER.warning(
                     "CREATE_CLIENTS failed: No connection to interface %s [%s]",
                     interface_config.interface_id,
-                    ex.args,
+                    reduce_args(args=ex.args),
                 )
 
         if self.has_clients:
@@ -631,8 +632,7 @@ class CentralUnit:
         """Trigger creation of the objects that expose the functionality."""
         if not self._clients:
             raise HaHomematicException(
-                f"create_devices: "
-                f"No clients initialized. Not starting central {self._attr_name}."
+                f"CREATE_DEVICES failed: No clients initialized. Not starting central {self._attr_name}."
             )
         _LOGGER.debug("CREATE_DEVICES: Starting to create devices for %s", self._attr_name)
 
@@ -662,7 +662,7 @@ class CentralUnit:
                     _LOGGER.error(
                         "CREATE_DEVICES failed: %s [%s] Unable to create device: %s, %s",
                         type(err).__name__,
-                        err.args,
+                        reduce_args(args=err.args),
                         interface_id,
                         device_address,
                     )
@@ -676,7 +676,7 @@ class CentralUnit:
                     _LOGGER.error(
                         "CREATE_DEVICES failed: %s [%s] Unable to create entities: %s, %s",
                         type(err).__name__,
-                        err.args,
+                        reduce_args(args=err.args),
                         interface_id,
                         device_address,
                     )
@@ -758,7 +758,11 @@ class CentralUnit:
                     if dev_desc[HM_ADDRESS] not in known_addresses:
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:  # pragma: no cover
-                    _LOGGER.error("ADD_NEW_DEVICES failed: %s [%s]", type(err).__name__, err.args)
+                    _LOGGER.error(
+                        "ADD_NEW_DEVICES failed: %s [%s]",
+                        type(err).__name__,
+                        reduce_args(args=err.args),
+                    )
 
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
@@ -792,7 +796,7 @@ class CentralUnit:
             except RuntimeError as rte:  # pragma: no cover
                 _LOGGER.debug(
                     "event: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
-                    rte.args,
+                    reduce_args(args=rte.args),
                     interface_id,
                     channel_address,
                     parameter,
@@ -803,7 +807,7 @@ class CentralUnit:
                     interface_id,
                     channel_address,
                     parameter,
-                    ex.args,
+                    reduce_args(args=ex.args),
                 )
 
     @callback_system_event(name=HH_EVENT_LIST_DEVICES)
@@ -951,11 +955,9 @@ class CentralUnit:
             task.add_done_callback(self._tasks.remove)
             return task
         except (CancelledError, asyncio.TimeoutError) as err:  # pragma: no cover
-            _LOGGER.debug(
-                "async_add_executor_job: task cancelled for %s",
-                self._attr_name,
-            )
-            raise HaHomematicException from err
+            message = f"async_add_executor_job: task cancelled for {self._attr_name}"
+            _LOGGER.debug(message)
+            raise HaHomematicException(message) from err
 
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
@@ -1067,7 +1069,9 @@ class CentralUnit:
             try:
                 callback_handler(event_type, event_data)
             except Exception as ex:
-                _LOGGER.error("FIRE_HA_EVENT_CALLBACK: Unable to call handler: %s", ex.args)
+                _LOGGER.error(
+                    "FIRE_HA_EVENT_CALLBACK: Unable to call handler: %s", reduce_args(args=ex.args)
+                )
 
     def register_entity_event_callback(self, callback_handler: Callable) -> None:
         """Register entity_event callback in central."""
@@ -1091,7 +1095,10 @@ class CentralUnit:
             try:
                 callback_handler(interface_id, channel_address, parameter, value)
             except Exception as ex:
-                _LOGGER.error("FIRE_ENTITY_EVENT_CALLBACK: Unable to call handler: %s", ex.args)
+                _LOGGER.error(
+                    "FIRE_ENTITY_EVENT_CALLBACK: Unable to call handler: %s",
+                    reduce_args(args=ex.args),
+                )
 
     def register_entity_data_event_callback(self, callback_handler: Callable) -> None:
         """Register entity_event callback in central."""
@@ -1114,7 +1121,8 @@ class CentralUnit:
                 callback_handler(interface_id, entity)
             except Exception as ex:
                 _LOGGER.error(
-                    "FIRE_ENTITY_DATA_EVENT_CALLBACK: Unable to call handler: %s", ex.args
+                    "FIRE_ENTITY_DATA_EVENT_CALLBACK: Unable to call handler: %s",
+                    reduce_args(args=ex.args),
                 )
 
     def register_system_event_callback(self, callback_handler: Callable) -> None:
@@ -1136,7 +1144,10 @@ class CentralUnit:
             try:
                 callback_handler(name, **kwargs)
             except Exception as ex:
-                _LOGGER.error("FIRE_SYSTEM_EVENT_CALLBACK: Unable to call handler: %s", ex.args)
+                _LOGGER.error(
+                    "FIRE_SYSTEM_EVENT_CALLBACK: Unable to call handler: %s",
+                    reduce_args(args=ex.args),
+                )
 
 
 class ConnectionChecker(threading.Thread):
@@ -1199,10 +1210,16 @@ class ConnectionChecker(threading.Thread):
                             # refresh entity data
                             await self._central.device_data.refresh_entity_data()
             except NoConnection as nex:
-                _LOGGER.error("CHECK_CONNECTION failed: no connection: %s", nex.args)
+                _LOGGER.error(
+                    "CHECK_CONNECTION failed: no connection: %s", reduce_args(args=nex.args)
+                )
                 continue
             except Exception as err:
-                _LOGGER.error("CHECK_CONNECTION failed: %s [%s]", type(err).__name__, err.args)
+                _LOGGER.error(
+                    "CHECK_CONNECTION failed: %s [%s]",
+                    type(err).__name__,
+                    reduce_args(args=err.args),
+                )
             if self._active:
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
 

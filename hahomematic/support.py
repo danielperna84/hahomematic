@@ -47,6 +47,11 @@ HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
 )
 
 
+def reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:
+    """Return the first arg, if there is only one arg."""
+    return args[0] if len(args) == 1 else args
+
+
 def build_xml_rpc_uri(
     host: str,
     port: int,
@@ -82,12 +87,9 @@ def check_or_create_directory(directory: str) -> bool:
         try:
             os.makedirs(directory)
         except OSError as ose:
-            _LOGGER.error(
-                "CHECK_OR_CREATE_DIRECTORY failed: Unable to create directory %s ('%s')",
-                directory,
-                ose.strerror,
-            )
-            raise HaHomematicException from ose
+            message = f"CHECK_OR_CREATE_DIRECTORY failed: Unable to create directory {directory} ('{ose.strerror}')"
+            _LOGGER.error(message)
+            raise HaHomematicException(message) from ose
 
     return True
 

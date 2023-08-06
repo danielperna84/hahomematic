@@ -1,3 +1,7 @@
+# Version 2023.8.2 (2023-08-06)
+
+- Improve exception and log handling
+
 # Version 2023.8.1 (2023-08-04)
 
 - Prepare backend for HA issue usage

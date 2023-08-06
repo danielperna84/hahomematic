@@ -26,6 +26,7 @@ from hahomematic.const import (
 )
 from hahomematic.platforms.custom.definition import get_required_parameters
 from hahomematic.platforms.generic import entity as hmge
+from hahomematic.support import reduce_args
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -652,7 +653,7 @@ class ParameterVisibilityCache:
             except Exception as ex:
                 _LOGGER.warning(
                     "LOAD failed: Could not read unignore file %s",
-                    ex.args,
+                    reduce_args(args=ex.args),
                 )
 
         if self._central.config.load_un_ignore:

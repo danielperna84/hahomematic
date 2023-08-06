@@ -12,7 +12,7 @@ import xmlrpc.client
 from hahomematic import central_unit as hmcu
 from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
 from hahomematic.exceptions import AuthFailure, ClientException, NoConnection
-from hahomematic.support import get_tls_context
+from hahomematic.support import get_tls_context, reduce_args
 
 _LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")
@@ -98,7 +98,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                 return result
             raise NoConnection(f"No connection to {self.interface_id}")
         except OSError as ose:
-            message = f"OSError on {self.interface_id}: {ose.args}"
+            message = f"OSError on {self.interface_id}: {reduce_args(args=ose.args)}"
             if ose.args[0] in NO_CONNECTION_ERROR_CODES:
                 if self._connection_state.add_issue(issuer=self):
                     _LOGGER.error(message)
@@ -108,16 +108,16 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                 _LOGGER.error(message)
             raise NoConnection(message) from ose
         except xmlrpc.client.Fault as fex:
-            raise ClientException(fex) from fex
+            raise ClientException(reduce_args(fex.args)) from fex
         except xmlrpc.client.ProtocolError as per:
             if not self._connection_state.has_issue(issuer=self):
                 if per.errmsg == "Unauthorized":
-                    raise AuthFailure(per) from per
-                raise NoConnection(per) from per
-        except NoConnection as noc:
-            raise noc
+                    raise AuthFailure(reduce_args(per.args)) from per
+                raise NoConnection(reduce_args(per.args)) from per
+        except NoConnection:
+            raise
         except Exception as ex:
-            raise ClientException(ex) from ex
+            raise ClientException(reduce_args(ex.args)) from ex
 
     def __getattr__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         """Magic method dispatcher."""
