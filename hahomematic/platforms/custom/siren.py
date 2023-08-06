@@ -157,16 +157,14 @@ class CeIpSiren(BaseSiren):
         )
         if self.available_tones and acoustic_alarm and acoustic_alarm not in self.available_tones:
             raise ValueError(
-                f"Invalid tone specified "
-                f"for entity {self.full_name}: {acoustic_alarm}, "
+                f"Invalid tone specified for entity {self.full_name}: {acoustic_alarm}, "
                 "check the available_tones attribute for valid tones to pass in"
             )
 
         optical_alarm = kwargs.get(_HM_ARG_OPTICAL_ALARM, self._e_optical_alarm_selection.default)
         if self.available_lights and optical_alarm and optical_alarm not in self.available_lights:
             raise ValueError(
-                f"Invalid light specified "
-                f"for entity {self.full_name}: {optical_alarm}, "
+                f"Invalid light specified for entity {self.full_name}: {optical_alarm}, "
                 "check the available_lights attribute for valid tones to pass in"
             )
 

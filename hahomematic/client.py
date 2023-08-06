@@ -60,6 +60,7 @@ from hahomematic.support import (
     build_headers,
     build_xml_rpc_uri,
     get_channel_no,
+    reduce_args,
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
@@ -126,7 +127,7 @@ class Client(ABC):
             _LOGGER.warning(
                 "PROXY_INIT failed: %s [%s] Unable to initialize proxy for %s",
                 hhe.name,
-                hhe.args,
+                reduce_args(args=hhe.args),
                 self.interface_id,
             )
             self.last_updated = INIT_DATETIME
@@ -149,7 +150,7 @@ class Client(ABC):
             _LOGGER.warning(
                 "PROXY_DE_INIT failed: %s [%s] Unable to de-initialize proxy for %s",
                 hhe.name,
-                hhe.args,
+                reduce_args(args=hhe.args),
                 self.interface_id,
             )
             return PROXY_DE_INIT_FAILED
@@ -321,7 +322,9 @@ class Client(ABC):
         try:
             return await self._proxy.listDevices()
         except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_ALL_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "GET_ALL_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
+            )
         return None
 
     async def get_device_descriptions(self, device_address: str) -> Any:
@@ -330,7 +333,9 @@ class Client(ABC):
             if device_descriptions := await self._proxy_read.getDeviceDescription(device_address):
                 return [device_descriptions]
         except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "GET_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
+            )
         return None
 
     # pylint: disable=invalid-name
@@ -353,7 +358,9 @@ class Client(ABC):
 
             await self._proxy.setInstallMode(*args)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("SET_INSTALL_MODE failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "SET_INSTALL_MODE failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
+            )
             return False
         return True
 
@@ -362,7 +369,9 @@ class Client(ABC):
         try:
             return await self._proxy.getInstallMode()
         except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_INSTALL_MODE failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "GET_INSTALL_MODE failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
+            )
         return 0
 
     async def get_value(
@@ -391,12 +400,12 @@ class Client(ABC):
             _LOGGER.debug(
                 "GET_VALUE failed with %s [%s]: %s, %s, %s",
                 hhe.name,
-                hhe.args,
+                reduce_args(args=hhe.args),
                 channel_address,
                 parameter,
                 paramset_key,
             )
-            raise hhe
+            raise
 
     async def _set_value(
         self,
@@ -416,7 +425,7 @@ class Client(ABC):
             _LOGGER.warning(
                 "SET_VALUE failed with %s [%s]: %s, %s, %s",
                 hhe.name,
-                hhe.args,
+                reduce_args(args=hhe.args),
                 channel_address,
                 parameter,
                 value,
@@ -465,11 +474,11 @@ class Client(ABC):
             _LOGGER.debug(
                 "GET_PARAMSET failed with %s [%s]: %s, %s",
                 hhe.name,
-                hhe.args,
+                reduce_args(args=hhe.args),
                 address,
                 paramset_key,
             )
-            raise hhe
+            raise
 
     async def put_paramset(
         self,
@@ -494,7 +503,7 @@ class Client(ABC):
             _LOGGER.warning(
                 "PUT_PARAMSET failed: %s [%s] %s, %s, %s",
                 hhe.name,
-                hhe.args,
+                reduce_args(args=hhe.args),
                 address,
                 paramset_key,
                 value,
@@ -523,7 +532,7 @@ class Client(ABC):
                 "FETCH_PARAMSET_DESCRIPTION failed: "
                 "%s [%s] Unable to get paramset %s for channel_address %s",
                 hhe.name,
-                hhe.args,
+                reduce_args(args=hhe.args),
                 paramset_key,
                 channel_address,
             )
@@ -581,7 +590,7 @@ class Client(ABC):
                 _LOGGER.warning(
                     "GET_PARAMSET_DESCRIPTIONS failed with %s [%s] for %s address %s",
                     hhe.name,
-                    hhe.args,
+                    reduce_args(args=hhe.args),
                     paramset_key,
                     address,
                 )
@@ -632,7 +641,7 @@ class Client(ABC):
                 _LOGGER.warning(
                     "UPDATE_DEVICE_FIRMWARE failed: %s [%s]",
                     bex.name,
-                    bex.args,
+                    reduce_args(args=bex.args),
                 )
         return False
 
@@ -720,7 +729,11 @@ class ClientCCU(Client):
             self.central.increase_ping_count(interface_id=self.interface_id)
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.debug("CHECK_CONNECTION_AVAILABILITY failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.debug(
+                "CHECK_CONNECTION_AVAILABILITY failed: %s [%s]",
+                hhe.name,
+                reduce_args(args=hhe.args),
+            )
         self.last_updated = INIT_DATETIME
         return False
 
@@ -820,7 +833,7 @@ class ClientHomegear(Client):
                 _LOGGER.warning(
                     "%s [%s] Failed to fetch name for device %s",
                     hhe.name,
-                    hhe.args,
+                    reduce_args(args=hhe.args),
                     address,
                 )
 
@@ -833,7 +846,11 @@ class ClientHomegear(Client):
                 self.central.increase_ping_count(interface_id=self.interface_id)
             return True
         except BaseHomematicException as hhe:
-            _LOGGER.debug("CHECK_CONNECTION_AVAILABILITY failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.debug(
+                "CHECK_CONNECTION_AVAILABILITY failed: %s [%s]",
+                hhe.name,
+                reduce_args(args=hhe.args),
+            )
         self.last_updated = INIT_DATETIME
         return False
 
@@ -846,7 +863,9 @@ class ClientHomegear(Client):
         try:
             await self._proxy.setSystemVariable(name, value)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("SET_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "SET_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
+            )
             return False
         return True
 
@@ -855,7 +874,9 @@ class ClientHomegear(Client):
         try:
             await self._proxy.deleteSystemVariable(name)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("DELETE_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "DELETE_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
+            )
             return False
         return True
 
@@ -864,7 +885,9 @@ class ClientHomegear(Client):
         try:
             return await self._proxy.getSystemVariable(name)
         except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "GET_SYSTEM_VARIABLE failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
+            )
 
     async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
@@ -874,7 +897,9 @@ class ClientHomegear(Client):
                 for name, value in hg_variables.items():
                     variables.append(SystemVariableData(name=name, value=value))
         except BaseHomematicException as hhe:
-            _LOGGER.warning("GET_ALL_SYSTEM_VARIABLES failed: %s [%s]", hhe.name, hhe.args)
+            _LOGGER.warning(
+                "GET_ALL_SYSTEM_VARIABLES failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
+            )
         return variables
 
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
@@ -1192,12 +1217,10 @@ class _ClientConfig:
                 if await client.check_connection_availability():
                     return client
             raise NoConnection(f"No connection to {self.interface_id}")
-        except AuthFailure as auf:
-            raise AuthFailure(f"Unable to authenticate {auf.args}.") from auf
-        except NoConnection as noc:
-            raise noc
+        except (AuthFailure, NoConnection):
+            raise
         except Exception as exc:
-            raise NoConnection(f"Unable to connect {exc.args}.") from exc
+            raise NoConnection(f"Unable to connect {reduce_args(args=exc.args)}.") from exc
 
     def get_xml_rpc_proxy(self, auth_enabled: bool | None = None) -> XmlRpcProxy:
         """Return a XmlRPC proxy for backend communication."""

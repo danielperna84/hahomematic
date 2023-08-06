@@ -11,6 +11,7 @@ from typing import Any, ParamSpec, TypeVar
 from hahomematic import client as hmcl
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import entity as hme
+from hahomematic.support import reduce_args
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +73,9 @@ def _exec_callback_system_event(name: str, *args: Any, **kwargs: Any) -> None:
         _LOGGER.warning(
             "EXEC_CALLBACK_SYSTEM_EVENT failed: Unable to reduce kwargs for callback_system_event"
         )
-        raise HaHomematicException("args-exception callback_system_event") from err
+        raise HaHomematicException(
+            f"args-exception callback_system_event [{reduce_args(args=err.args)}]"
+        ) from err
 
 
 def callback_event(func: Callable[P, R]) -> Callable[P, R]:
@@ -97,7 +100,9 @@ def callback_event(func: Callable[P, R]) -> Callable[P, R]:
             _LOGGER.warning(
                 "EXEC_CALLBACK_ENTITY_EVENT failed: Unable to reduce kwargs for callback_event"
             )
-            raise HaHomematicException("args-exception callback_event") from err
+            raise HaHomematicException(
+                f"args-exception callback_event [{reduce_args(args=err.args)}]"
+            ) from err
 
     return wrapper_callback_event
 

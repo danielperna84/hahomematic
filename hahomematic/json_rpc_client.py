@@ -12,6 +12,7 @@ from aiohttp import (
     ClientConnectorCertificateError,
     ClientConnectorError,
     ClientError,
+    ClientResponse,
     ClientSession,
 )
 import orjson
@@ -48,16 +49,18 @@ from hahomematic.const import (
     SYSVAR_VALUE,
     SYSVAR_VALUE_LIST,
 )
-from hahomematic.exceptions import ClientException
+from hahomematic.exceptions import AuthFailure, BaseHomematicException, ClientException
 from hahomematic.support import (
     ProgramData,
     SystemVariableData,
     get_tls_context,
     parse_sys_var,
+    reduce_args,
 )
 
 P_ERROR = "error"
 P_RESULT = "result"
+P_MESSAGE = "message"
 SESSION_ID: Final = "_session_id_"
 
 ALLOWED_METHOD_ON_FAILURE = ("Session.login",)
@@ -184,7 +187,7 @@ class JsonRpcAioHttpClient:
         )
 
         if extra_params:
-            _LOGGER.debug("POST method: %s, [%s]", method, extra_params)
+            _LOGGER.debug("POST method: %s [%s]", method, extra_params)
         else:
             _LOGGER.debug("POST method: %s", method)
 
@@ -280,22 +283,30 @@ class JsonRpcAioHttpClient:
                 )
             if response.status == 200:
                 self._connection_state.remove_issue(issuer=self)
-                try:
-                    return await response.json(encoding="utf-8")
-                except ValueError as ver:
-                    _LOGGER.debug(
-                        "DO_POST: ValueError [%s] Unable to parse JSON. Trying workaround",
-                        ver.args,
-                    )
-                    # Workaround for bug in CCU
-                    return orjson.loads((await response.json(encoding="utf-8")).replace("\\", ""))
-            else:
-                json_response = await response.json(encoding="utf-8")
-                message = f"Status: {response.status}"
+                json_response = await self._get_json_reponse(response=response)
+
                 if error := json_response[P_ERROR]:
-                    message = f"{message}: {error}"
-                raise ClientException(message)
+                    error_message = error[P_MESSAGE]
+                    message = f"POST method '{method}' failed: {error_message}"
+                    _LOGGER.debug(message)
+                    if error_message.startswith("access denied"):
+                        raise AuthFailure(message)
+                    raise ClientException(message)
+
+                return json_response
+
+            json_response = await self._get_json_reponse(response=response)
+            message = f"Status: {response.status}"
+            if error := json_response[P_ERROR]:
+                error_message = error[P_MESSAGE]
+                message = f"{message}: {error_message}"
+            raise ClientException(message)
+        except (AuthFailure, ClientException):
+            self._connection_state.add_issue(issuer=self)
+            await self.logout()
+            raise
         except ClientConnectorCertificateError as cccerr:
+            self.clear_session()
             message = f"ClientConnectorCertificateError[{cccerr}]"
             if self._tls is False and cccerr.ssl is True:
                 message = (
@@ -303,19 +314,31 @@ class JsonRpcAioHttpClient:
                     f"but this integration is not configured to use TLS"
                 )
             raise ClientException(message) from cccerr
-        except ClientConnectorError as err:
-            raise ClientException from err
-        except ClientError as cce:
-            raise ClientException from cce
+        except (ClientConnectorError, ClientError) as cce:
+            self.clear_session()
+            raise ClientException(reduce_args(args=cce.args)) from cce
         except (OSError, TypeError, Exception) as ex:
-            raise ClientException from ex
+            self.clear_session()
+            raise ClientException(reduce_args(args=ex.args)) from ex
+
+    async def _get_json_reponse(self, response: ClientResponse) -> dict[str, Any] | Any:
+        """Return the json object from response."""
+        try:
+            return await response.json(encoding="utf-8")
+        except ValueError as ver:
+            _LOGGER.debug(
+                "DO_POST: ValueError [%s] Unable to parse JSON. Trying workaround",
+                reduce_args(args=ver.args),
+            )
+            # Workaround for bug in CCU
+            return orjson.loads((await response.json(encoding="utf-8")).replace("\\", ""))
 
     async def logout(self) -> None:
         """Logout of CCU."""
         try:
             await self._do_logout(self._session_id)
         except ClientException as clex:
-            self._handle_client_exception(method="LOGOUT", clex=clex)
+            self._handle_exception_log(method="LOGOUT", exception=clex)
             return
 
     async def _do_logout(self, session_id: str | None) -> None:
@@ -326,12 +349,15 @@ class JsonRpcAioHttpClient:
 
         method = "Session.logout"
         params = {SESSION_ID: session_id}
-        await self._do_post(
-            session_id=session_id,
-            method=method,
-            extra_params=params,
-        )
-        _LOGGER.debug("DO_LOGOUT: Method: %s [%s]", method, session_id)
+        try:
+            await self._do_post(
+                session_id=session_id,
+                method=method,
+                extra_params=params,
+            )
+            _LOGGER.debug("DO_LOGOUT: Method: %s [%s]", method, session_id)
+        finally:
+            self.clear_session()
 
     @property
     def _has_credentials(self) -> bool:
@@ -353,7 +379,7 @@ class JsonRpcAioHttpClient:
                     str(json_result),
                 )
         except ClientException as clex:
-            self._handle_client_exception(method="EXECUTE_PROGRAM", clex=clex)
+            self._handle_exception_log(method="EXECUTE_PROGRAM", exception=clex)
             return False
 
         return True
@@ -390,10 +416,14 @@ class JsonRpcAioHttpClient:
                     str(json_result),
                 )
         except ClientException as clex:
-            self._handle_client_exception(method="SET_SYSTEM_VARIABLE failed", clex=clex)
+            self._handle_exception_log(method="SET_SYSTEM_VARIABLE failed", exception=clex)
             return False
 
         return True
+
+    def clear_session(self) -> None:
+        """Clear the current session."""
+        self._session_id = None
 
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
@@ -409,7 +439,7 @@ class JsonRpcAioHttpClient:
                 deleted = json_result
                 _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Deleted: %s", str(deleted))
         except ClientException as clex:
-            self._handle_client_exception(method="DELETE_SYSTEM_VARIABLE", clex=clex)
+            self._handle_exception_log(method="DELETE_SYSTEM_VARIABLE", exception=clex)
             return False
 
         return True
@@ -433,7 +463,7 @@ class JsonRpcAioHttpClient:
                 except Exception:
                     var = json_result == "true"
         except ClientException as clex:
-            self._handle_client_exception(method="DELETE_SYSTEM_VARIABLE", clex=clex)
+            self._handle_exception_log(method="DELETE_SYSTEM_VARIABLE", exception=clex)
             return None
 
         return var
@@ -492,11 +522,11 @@ class JsonRpcAioHttpClient:
                         _LOGGER.warning(
                             "GET_ALL_SYSTEM_VARIABLES failed: "
                             "ValueError [%s] Failed to parse SysVar %s ",
-                            verr.args,
+                            reduce_args(args=verr.args),
                             name,
                         )
         except ClientException as clex:
-            self._handle_client_exception(method="GET_ALL_SYSTEM_VARIABLES", clex=clex)
+            self._handle_exception_log(method="GET_ALL_SYSTEM_VARIABLES", exception=clex)
             return []
 
         return variables
@@ -534,7 +564,7 @@ class JsonRpcAioHttpClient:
                             channel_ids_room[channel_id] = set()
                         channel_ids_room[channel_id].add(room["name"])
         except ClientException as clex:
-            self._handle_client_exception(method="GET_ALL_CHANNEL_IDS_PER_ROOM", clex=clex)
+            self._handle_exception_log(method="GET_ALL_CHANNEL_IDS_PER_ROOM", exception=clex)
             return {}
 
         return channel_ids_room
@@ -559,7 +589,7 @@ class JsonRpcAioHttpClient:
                             channel_ids_function[channel_id] = set()
                         channel_ids_function[channel_id].add(function["name"])
         except ClientException as clex:
-            self._handle_client_exception(method="GET_ALL_CHANNEL_IDS_PER_FUNCTION", clex=clex)
+            self._handle_exception_log(method="GET_ALL_CHANNEL_IDS_PER_FUNCTION", exception=clex)
             return {}
 
         return channel_ids_function
@@ -578,7 +608,7 @@ class JsonRpcAioHttpClient:
                 for interface in json_result:
                     interfaces.append(interface[ATTR_NAME])
         except ClientException as clex:
-            self._handle_client_exception(method="GET_AVAILABLE_INTERFACES", clex=clex)
+            self._handle_exception_log(method="GET_AVAILABLE_INTERFACES", exception=clex)
             return []
 
         return interfaces
@@ -596,7 +626,7 @@ class JsonRpcAioHttpClient:
             if json_result := response[P_RESULT]:
                 device_details = json_result
         except ClientException as clex:
-            self._handle_client_exception(method="GET_DEVICE_DETAILS", clex=clex)
+            self._handle_exception_log(method="GET_DEVICE_DETAILS", exception=clex)
             return []
 
         return device_details
@@ -612,7 +642,7 @@ class JsonRpcAioHttpClient:
             if json_result := response[P_RESULT]:
                 all_device_data = _convert_to_values_cache(json_result)
         except ClientException as clex:
-            self._handle_client_exception(method="GET_ALL_DEVICE_DATA", clex=clex)
+            self._handle_exception_log(method="GET_ALL_DEVICE_DATA", exception=clex)
             return {}
 
         return all_device_data
@@ -647,7 +677,7 @@ class JsonRpcAioHttpClient:
                         )
                     )
         except ClientException as clex:
-            self._handle_client_exception(method="GET_ALL_PROGRAMS", clex=clex)
+            self._handle_exception_log(method="GET_ALL_PROGRAMS", exception=clex)
             return []
 
         return all_programs
@@ -663,7 +693,7 @@ class JsonRpcAioHttpClient:
             if (json_result := response[P_RESULT]) is not None:
                 auth_enabled = bool(json_result)
         except ClientException as clex:
-            self._handle_client_exception(method="GET_AUTH_ENABLED", clex=clex)
+            self._handle_exception_log(method="GET_AUTH_ENABLED", exception=clex)
             return None
         return auth_enabled
 
@@ -678,7 +708,7 @@ class JsonRpcAioHttpClient:
             if (json_result := response[P_RESULT]) is not None:
                 https_redirect_enabled = bool(json_result)
         except ClientException as clex:
-            self._handle_client_exception(method="GET_HTTPS_REDIRECT_ENABLED", clex=clex)
+            self._handle_exception_log(method="GET_HTTPS_REDIRECT_ENABLED", exception=clex)
             return None
 
         return https_redirect_enabled
@@ -696,18 +726,22 @@ class JsonRpcAioHttpClient:
                 if len(serial) > 10:
                     serial = serial[-10:]
         except ClientException as clex:
-            self._handle_client_exception(method="GET_SERIAL", clex=clex)
+            self._handle_exception_log(method="GET_SERIAL", exception=clex)
             return serial
 
         return serial
 
-    def _handle_client_exception(self, method: str, clex: ClientException) -> None:
-        """Handle ClientException."""
+    def _handle_exception_log(self, method: str, exception: BaseHomematicException) -> None:
+        """Handle BaseHomematicException and derivates logging."""
         if self._connection_state.json_issue:
-            _LOGGER.debug("%s failed: %s [%s]", method, clex.name, clex.args)
+            _LOGGER.debug(
+                "%s failed: %s [%s]", method, exception.name, reduce_args(args=exception.args)
+            )
         else:
             self._connection_state.add_issue(issuer=self)
-            _LOGGER.error("%s failed: %s [%s]", method, clex.name, clex.args)
+            _LOGGER.error(
+                "%s failed: %s [%s]", method, exception.name, reduce_args(args=exception.args)
+            )
 
 
 def _get_params(
