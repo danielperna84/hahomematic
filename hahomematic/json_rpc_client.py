@@ -286,7 +286,6 @@ class JsonRpcAioHttpClient:
                 json_response = await self._get_json_reponse(response=response)
 
                 if error := json_response[P_ERROR]:
-                    self._connection_state.add_issue(issuer=self)
                     error_message = error[P_MESSAGE]
                     message = f"POST method '{method}' failed: {error_message}"
                     _LOGGER.debug(message)
@@ -296,7 +295,6 @@ class JsonRpcAioHttpClient:
 
                 return json_response
 
-            self._connection_state.add_issue(issuer=self)
             json_response = await self._get_json_reponse(response=response)
             message = f"Status: {response.status}"
             if error := json_response[P_ERROR]:
@@ -304,8 +302,11 @@ class JsonRpcAioHttpClient:
                 message = f"{message}: {error_message}"
             raise ClientException(message)
         except (AuthFailure, ClientException):
+            self._connection_state.add_issue(issuer=self)
+            await self.logout()
             raise
         except ClientConnectorCertificateError as cccerr:
+            await self.logout()
             message = f"ClientConnectorCertificateError[{cccerr}]"
             if self._tls is False and cccerr.ssl is True:
                 message = (
@@ -314,8 +315,10 @@ class JsonRpcAioHttpClient:
                 )
             raise ClientException(message) from cccerr
         except (ClientConnectorError, ClientError) as cce:
+            await self.logout()
             raise ClientException(reduce_args(cce.args)) from cce
         except (OSError, TypeError, Exception) as ex:
+            await self.logout()
             raise ClientException(reduce_args(ex.args)) from ex
 
     async def _get_json_reponse(self, response: ClientResponse) -> dict[str, Any] | Any:
@@ -346,12 +349,15 @@ class JsonRpcAioHttpClient:
 
         method = "Session.logout"
         params = {SESSION_ID: session_id}
-        await self._do_post(
-            session_id=session_id,
-            method=method,
-            extra_params=params,
-        )
-        _LOGGER.debug("DO_LOGOUT: Method: %s [%s]", method, session_id)
+        try:
+            await self._do_post(
+                session_id=session_id,
+                method=method,
+                extra_params=params,
+            )
+            _LOGGER.debug("DO_LOGOUT: Method: %s [%s]", method, session_id)
+        finally:
+            self._session_id = None
 
     @property
     def _has_credentials(self) -> bool:
@@ -722,7 +728,7 @@ class JsonRpcAioHttpClient:
         return serial
 
     def _handle_exception_log(self, method: str, exception: BaseHomematicException) -> None:
-        """Handle ClientException."""
+        """Handle BaseHomematicException and derivates logging."""
         if self._connection_state.json_issue:
             _LOGGER.debug(
                 "%s failed: %s [%s]", method, exception.name, reduce_args(args=exception.args)
