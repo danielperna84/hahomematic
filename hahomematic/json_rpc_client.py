@@ -306,7 +306,7 @@ class JsonRpcAioHttpClient:
             await self.logout()
             raise
         except ClientConnectorCertificateError as cccerr:
-            await self.logout()
+            self.clear_session()
             message = f"ClientConnectorCertificateError[{cccerr}]"
             if self._tls is False and cccerr.ssl is True:
                 message = (
@@ -315,10 +315,10 @@ class JsonRpcAioHttpClient:
                 )
             raise ClientException(message) from cccerr
         except (ClientConnectorError, ClientError) as cce:
-            await self.logout()
+            self.clear_session()
             raise ClientException(reduce_args(cce.args)) from cce
         except (OSError, TypeError, Exception) as ex:
-            await self.logout()
+            self.clear_session()
             raise ClientException(reduce_args(ex.args)) from ex
 
     async def _get_json_reponse(self, response: ClientResponse) -> dict[str, Any] | Any:
@@ -357,7 +357,7 @@ class JsonRpcAioHttpClient:
             )
             _LOGGER.debug("DO_LOGOUT: Method: %s [%s]", method, session_id)
         finally:
-            self._session_id = None
+            self.clear_session()
 
     @property
     def _has_credentials(self) -> bool:
@@ -420,6 +420,10 @@ class JsonRpcAioHttpClient:
             return False
 
         return True
+
+    def clear_session(self) -> None:
+        """Clear the current session."""
+        self._session_id = None
 
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
