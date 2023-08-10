@@ -19,10 +19,7 @@ import orjson
 
 from hahomematic import client as hmcl, config, xml_rpc_server as xmlrpc
 from hahomematic.caches.dynamic import DeviceDataCache, DeviceDetailsCache
-from hahomematic.caches.persistent import (
-    DeviceDescriptionCache,
-    ParamsetDescriptionCache,
-)
+from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescriptionCache
 from hahomematic.caches.visibility import ParameterVisibilityCache
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
