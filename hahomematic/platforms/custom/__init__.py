@@ -5,10 +5,7 @@ import importlib
 import logging
 
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom.definition import (
-    entity_definition_exists,
-    get_entity_configs,
-)
+from hahomematic.platforms.custom.definition import entity_definition_exists, get_entity_configs
 from hahomematic.platforms.custom.support import CustomConfig
 
 _LOGGER = logging.getLogger(__name__)

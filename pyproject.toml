@@ -512,7 +512,7 @@ force-sort-within-sections = true
 required-imports = ["from __future__ import annotations"]
 known-first-party = ["hahomematic",]
 combine-as-imports = true
-
+split-on-trailing-comma = false
 
 [tool.ruff.mccabe]
 max-complexity = 25
