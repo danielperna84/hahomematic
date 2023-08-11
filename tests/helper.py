@@ -177,56 +177,60 @@ async def get_value_from_generic_entity(
 def get_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
     """Return the device."""
     d_address = get_device_address(address=address)
-    device = central_unit.get_device(device_address=d_address)
-    assert device
-    return device
+    if device := central_unit.get_device(device_address=d_address):
+        assert device
+        return device
+    return None
 
 
 async def get_generic_entity(
     central_unit: CentralUnit, address: str, parameter: str
 ) -> GenericEntity | None:
     """Return the hm generic_entity."""
-    device = get_device(central_unit=central_unit, address=address)
-    entity = device.generic_entities.get((address, parameter))
-    assert entity
-    return entity
+    if device := get_device(central_unit=central_unit, address=address):
+        entity = device.generic_entities.get((address, parameter))
+        assert entity
+        return entity
+    return None
 
 
 async def get_wrapper_entity(
     central_unit: CentralUnit, address: str, parameter: str
 ) -> GenericEntity | None:
     """Return the hm wrapper_entity."""
-    device = get_device(central_unit=central_unit, address=address)
-    entity = device.wrapper_entities.get((address, parameter))
-    assert entity
-    return entity
+    if device := get_device(central_unit=central_unit, address=address):
+        entity = device.wrapper_entities.get((address, parameter))
+        assert entity
+        return entity
+    return None
 
 
 async def get_event(
     central_unit: CentralUnit, address: str, parameter: str
 ) -> GenericEntity | None:
     """Return the hm event."""
-    device = get_device(central_unit=central_unit, address=address)
-    event = device.generic_events.get((address, parameter))
-    assert event
-    return event
+    if device := get_device(central_unit=central_unit, address=address):
+        event = device.generic_events.get((address, parameter))
+        assert event
+        return event
+    return None
 
 
 async def get_custom_entity(
     central_unit: CentralUnit, address: str, channel_no: int | None, do_load: bool = False
 ) -> CustomEntity | None:
     """Return the hm custom_entity."""
-    device = get_device(central_unit, address)
-    for custom_entity in device.custom_entities.values():
-        if custom_entity.channel_no == channel_no:
-            if do_load:
-                await custom_entity.load_entity_value(
-                    call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
-                )
+    if device := get_device(central_unit, address):
+        for custom_entity in device.custom_entities.values():
+            if custom_entity.channel_no == channel_no:
+                if do_load:
+                    await custom_entity.load_entity_value(
+                        call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
+                    )
 
-            for data_entities in custom_entity.data_entities.values():
-                data_entities._attr_state_uncertain = False
-            return custom_entity
+                for data_entities in custom_entity.data_entities.values():
+                    data_entities._attr_state_uncertain = False
+                return custom_entity
     return None
 
 
