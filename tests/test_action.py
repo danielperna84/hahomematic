@@ -25,7 +25,7 @@ async def test_hmaction(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     action: HmAction = cast(
         HmAction,
-        await helper.get_generic_entity(central, "VCU9724704:1", "LOCK_TARGET_LEVEL"),
+        central.get_generic_entity("VCU9724704:1", "LOCK_TARGET_LEVEL"),
     )
     assert action.usage == HmEntityUsage.NO_CREATE
     assert action.is_readable is False

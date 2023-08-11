@@ -39,7 +39,7 @@ async def test_cedimmer(
 ) -> None:
     """Test CeDimmer."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    light: CeDimmer = cast(CeDimmer, await helper.get_custom_entity(central, "VCU1399816", 4))
+    light: CeDimmer = cast(CeDimmer, helper.get_prepared_custom_entity(central, "VCU1399816", 4))
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color is None
@@ -120,7 +120,7 @@ async def test_cecolordimmer(
     """Test CeColorDimmer."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeColorDimmer = cast(
-        CeColorDimmer, await helper.get_custom_entity(central, "VCU9973336", 9)
+        CeColorDimmer, helper.get_prepared_custom_entity(central, "VCU9973336", 9)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -201,7 +201,7 @@ async def test_cecolordimmereffect(
     """Test CeColorDimmerEffect."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeColorDimmerEffect = cast(
-        CeColorDimmerEffect, await helper.get_custom_entity(central, "VCU3747418", 1)
+        CeColorDimmerEffect, helper.get_prepared_custom_entity(central, "VCU3747418", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -293,7 +293,7 @@ async def test_cecolortempdimmer(
     """Test CeColorTempDimmer."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeColorTempDimmer = cast(
-        CeColorTempDimmer, await helper.get_custom_entity(central, "VCU0000115", 1)
+        CeColorTempDimmer, helper.get_prepared_custom_entity(central, "VCU0000115", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp == 500
@@ -356,7 +356,7 @@ async def test_ceipfixedcolorlight(
     """Test CeIpFixedColorLight."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeIpFixedColorLight = cast(
-        CeIpFixedColorLight, await helper.get_custom_entity(central, "VCU3716619", 8)
+        CeIpFixedColorLight, helper.get_prepared_custom_entity(central, "VCU3716619", 8)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -507,7 +507,7 @@ async def test_ceiprgbwlight(
     """Test CeIpRGBWLight."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     light: CeIpRGBWLight = cast(
-        CeIpRGBWLight, await helper.get_custom_entity(central, "VCU5629873", 1)
+        CeIpRGBWLight, helper.get_prepared_custom_entity(central, "VCU5629873", 1)
     )
     assert light.usage == HmEntityUsage.CE_PRIMARY
     assert light.color_temp is None

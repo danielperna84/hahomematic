@@ -27,7 +27,7 @@ async def test_hmselect(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     select: HmSelect = cast(
         HmSelect,
-        await helper.get_generic_entity(central, "VCU6354483:1", "WINDOW_STATE"),
+        central.get_generic_entity("VCU6354483:1", "WINDOW_STATE"),
     )
     assert select.usage == HmEntityUsage.NO_CREATE
     assert select.unit is None
@@ -71,9 +71,7 @@ async def test_hmsysvarselect(
 ) -> None:
     """Test HmSysvarSelect."""
     central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
-    select: HmSysvarSelect = cast(
-        HmSysvarSelect, await helper.get_sysvar_entity(central, "sv_list_ext")
-    )
+    select: HmSysvarSelect = cast(HmSysvarSelect, central.get_sysvar_entity("sv_list_ext"))
     assert select.usage == HmEntityUsage.ENTITY
     assert select.unit is None
     assert select.min is None

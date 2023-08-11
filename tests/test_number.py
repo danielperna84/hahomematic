@@ -29,7 +29,7 @@ async def test_hmfloat(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     efloat: HmFloat = cast(
         HmFloat,
-        await helper.get_generic_entity(central, "VCU0000011:3", "LEVEL"),
+        central.get_generic_entity("VCU0000011:3", "LEVEL"),
     )
     assert efloat.usage == HmEntityUsage.NO_CREATE
     assert efloat.unit == "%"
@@ -62,7 +62,7 @@ async def test_hmfloat_special(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     efloat: HmFloat = cast(
         HmFloat,
-        await helper.get_generic_entity(central, "VCU0000054:2", "SETPOINT"),
+        central.get_generic_entity("VCU0000054:2", "SETPOINT"),
     )
     assert efloat.usage == HmEntityUsage.NO_CREATE
     assert efloat.unit == "°C"
@@ -95,7 +95,7 @@ async def test_hminteger(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     einteger: HmInteger = cast(
         HmInteger,
-        await helper.get_generic_entity(central, "VCU4984404:1", "SET_POINT_MODE"),
+        central.get_generic_entity("VCU4984404:1", "SET_POINT_MODE"),
     )
     assert einteger.usage == HmEntityUsage.NO_CREATE
     assert einteger.unit is None
@@ -136,7 +136,7 @@ async def test_hmsysvarnumber(
     central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
     enumber: HmSysvarNumber = cast(
         HmSysvarNumber,
-        await helper.get_sysvar_entity(central, "sv_float_ext"),
+        central.get_sysvar_entity("sv_float_ext"),
     )
     assert enumber.usage == HmEntityUsage.ENTITY
     assert enumber.unit == "°C"

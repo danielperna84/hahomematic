@@ -165,7 +165,7 @@ async def test_get_entity_name(
 ) -> None:
     """Test get_entity_name."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
-    device = helper.get_device(central_unit=central, address="VCU2128127")
+    device = central.get_device(address="VCU2128127")
     name_data = get_entity_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
     assert name_data.entity_name == "Level"
@@ -192,7 +192,7 @@ async def test_get_event_name(
 ) -> None:
     """Test get_event_name."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
-    device = helper.get_device(central_unit=central, address="VCU2128127")
+    device = central.get_device(address="VCU2128127")
     name_data = get_event_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.channel_name == "ch4"
     assert name_data.entity_name == "ch4 Level"
@@ -219,7 +219,7 @@ async def test_custom_entity_name(
 ) -> None:
     """Test get_custom_entity_name."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
-    device = helper.get_device(central_unit=central, address="VCU2128127")
+    device = central.get_device(address="VCU2128127")
     name_data = get_custom_entity_name(
         central=central,
         device=device,

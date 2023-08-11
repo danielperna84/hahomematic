@@ -63,7 +63,7 @@ from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.entity import BaseEntity
 from hahomematic.platforms.event import GenericEvent
-from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
 from hahomematic.platforms.hub import HmHub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
@@ -303,7 +303,7 @@ class CentralUnit:
 
     async def refresh_firmware_data(self, device_address: str | None = None) -> None:
         """Refresh device firmware data."""
-        if device_address and (device := self.get_device(device_address=device_address)):
+        if device_address and (device := self.get_device(address=device_address)):
             await self._refresh_device_descriptions(
                 client=device.client, device_address=device_address
             )
@@ -534,9 +534,10 @@ class CentralUnit:
             )
         return self._clients[interface_id]
 
-    def get_device(self, device_address: str) -> HmDevice | None:
+    def get_device(self, address: str) -> HmDevice | None:
         """Return homematic device. #CC."""
-        return self._devices.get(device_address)
+        d_address = get_device_address(address=address)
+        return self._devices.get(d_address)
 
     def get_entities_by_platform(
         self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
@@ -1025,18 +1026,38 @@ class CentralUnit:
         return None
 
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
-        """Get entity by channel_address and parameter. #CC."""
-        if (
-            ":" in channel_address
-            and (device := self._devices.get(get_device_address(channel_address)))
-            and (
-                entity := device.get_generic_entity(
-                    channel_address=channel_address, parameter=parameter
-                )
-            )
-        ):
-            return entity
+        """Get entity by channel_address and parameter."""
+        if device := self.get_device(address=channel_address):
+            return device.generic_entities.get((channel_address, parameter))
         return None
+
+    def get_wrapper_entity(self, channel_address: str, parameter: str) -> WrapperEntity | None:
+        """Return the hm wrapper_entity."""
+        if device := self.get_device(address=channel_address):
+            return device.wrapper_entities.get((channel_address, parameter))
+        return None
+
+    def get_event(self, channel_address: str, parameter: str) -> GenericEvent | None:
+        """Return the hm event."""
+        if device := self.get_device(address=channel_address):
+            return device.generic_events.get((channel_address, parameter))
+        return None
+
+    def get_custom_entity(self, address: str, channel_no: int | None) -> CustomEntity | None:
+        """Return the hm custom_entity."""
+        if device := self.get_device(address=address):
+            for custom_entity in device.custom_entities.values():
+                if custom_entity.channel_no == channel_no:
+                    return custom_entity
+        return None
+
+    def get_sysvar_entity(self, name: str) -> GenericSystemVariable | None:
+        """Return the sysvar entity."""
+        return self.sysvar_entities.get(name)
+
+    def get_program_button(self, pid: str) -> HmProgramButton | None:
+        """Return the program button."""
+        return self.program_entities.get(pid)
 
     def clear_dynamic_caches(self) -> None:
         """Clear all stored data. #CC."""

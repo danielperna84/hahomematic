@@ -25,7 +25,7 @@ async def test_ceswitch(
 ) -> None:
     """Test CeSwitch."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    switch: CeSwitch = cast(CeSwitch, await helper.get_custom_entity(central, "VCU2128127", 4))
+    switch: CeSwitch = cast(CeSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
     assert switch.usage == HmEntityUsage.CE_PRIMARY
 
     await switch.turn_off()
@@ -71,9 +71,7 @@ async def test_hmswitch(
 ) -> None:
     """Test HmSwitch."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    switch: HmSwitch = cast(
-        HmSwitch, await helper.get_generic_entity(central, "VCU2128127:4", "STATE")
-    )
+    switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
     assert switch.usage == HmEntityUsage.NO_CREATE
 
     assert switch.value is None
@@ -132,9 +130,7 @@ async def test_hmsysvarswitch(
 ) -> None:
     """Test HmSysvarSwitch."""
     central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
-    switch: HmSysvarSwitch = cast(
-        HmSysvarSwitch, await helper.get_sysvar_entity(central, "sv_alarm_ext")
-    )
+    switch: HmSysvarSwitch = cast(HmSysvarSwitch, central.get_sysvar_entity("sv_alarm_ext"))
     assert switch.usage == HmEntityUsage.ENTITY
 
     assert switch.value is False

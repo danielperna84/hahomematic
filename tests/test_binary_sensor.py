@@ -26,7 +26,7 @@ async def test_hmbinarysensor(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     binary_sensor: HmBinarySensor = cast(
         HmBinarySensor,
-        await helper.get_generic_entity(central, "VCU5864966:1", "STATE"),
+        central.get_generic_entity("VCU5864966:1", "STATE"),
     )
     assert binary_sensor.usage == HmEntityUsage.ENTITY
     assert binary_sensor.value is False
@@ -52,7 +52,7 @@ async def test_hmsysvarbinarysensor(
     central, _ = await central_local_factory.get_default_central({}, add_sysvars=True)
     binary_sensor: HmSysvarBinarySensor = cast(
         HmSysvarBinarySensor,
-        await helper.get_sysvar_entity(central, "sv_logic"),
+        central.get_sysvar_entity("sv_logic"),
     )
     assert binary_sensor.name == "sv_logic"
     assert binary_sensor.full_name == "CentralTest_sv_logic"

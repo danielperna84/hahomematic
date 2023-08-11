@@ -615,7 +615,7 @@ class Client(ABC):
 
     async def update_device_firmware(self, device_address: str) -> bool:
         """Update the firmware of a homematic device."""
-        if device := self.central.get_device(device_address=device_address):
+        if device := self.central.get_device(address=device_address):
             _LOGGER.info(
                 "UPDATE_DEVICE_FIRMWARE: Trying firmware update for %s",
                 device_address,
