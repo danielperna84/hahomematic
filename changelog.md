@@ -1,6 +1,7 @@
 # Version 2023.8.3 (2023-08-11)
 
 - Update project setup
+- Restructure test helper
 
 # Version 2023.8.2 (2023-08-06)
 
