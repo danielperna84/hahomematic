@@ -41,7 +41,7 @@ async def test_cesimplerfthermostat(
     """Test CeSimpleRfThermostat."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     climate: CeSimpleRfThermostat = cast(
-        CeSimpleRfThermostat, await helper.get_custom_entity(central, "VCU0000054", 1)
+        CeSimpleRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000054", 1)
     )
     assert climate.usage == HmEntityUsage.CE_PRIMARY
 
@@ -101,7 +101,7 @@ async def test_cerfthermostat(
     """Test CeRfThermostat."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     climate: CeRfThermostat = cast(
-        CeRfThermostat, await helper.get_custom_entity(central, "VCU0000050", 4)
+        CeRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000050", 4)
     )
     assert climate.usage == HmEntityUsage.CE_PRIMARY
     assert climate.min_temp == 5.0
@@ -207,7 +207,7 @@ async def test_ceipthermostat(
     """Test CeIpThermostat."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     climate: CeIpThermostat = cast(
-        CeIpThermostat, await helper.get_custom_entity(central, "VCU1769958", 1)
+        CeIpThermostat, helper.get_prepared_custom_entity(central, "VCU1769958", 1)
     )
     assert climate.usage == HmEntityUsage.CE_PRIMARY
     assert climate.min_temp == 5.0

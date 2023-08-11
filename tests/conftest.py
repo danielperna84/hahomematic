@@ -1,22 +1,18 @@
 """Test support for hahomematic."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from aiohttp import ClientSession, TCPConnector
-from hahomematic.central_unit import CentralConfig, CentralUnit
-from hahomematic.client import InterfaceConfig
-from hahomematic.const import HmInterface
+from hahomematic.central_unit import CentralUnit
 import pydevccu
 import pytest
 
 import const
 import helper
+from helper import get_pydev_ccu_central_unit_full
 
 logging.basicConfig(level=logging.INFO)
-
-GOT_DEVICES = False
 
 # pylint: disable=protected-access, redefined-outer-name
 
@@ -90,53 +86,6 @@ async def central_unit_full(
     central_unit.unregister_ha_event_callback(ha_event_callback)
     central_unit.unregister_system_event_callback(system_event_callback)
     await central_unit.stop()
-
-
-async def get_pydev_ccu_central_unit_full(
-    client_session: ClientSession, use_caches: bool
-) -> CentralUnit:
-    """Create and yield central."""
-    sleep_counter = 0
-    global GOT_DEVICES  # pylint: disable=global-statement
-    GOT_DEVICES = False
-
-    def systemcallback(name, *args, **kwargs):
-        if (
-            name == "devicesCreated"
-            and kwargs
-            and kwargs.get("new_devices")
-            and len(kwargs["new_devices"]) > 0
-        ):
-            global GOT_DEVICES  # pylint: disable=global-statement
-            GOT_DEVICES = True
-
-    interface_configs = {
-        InterfaceConfig(
-            central_name=const.CENTRAL_NAME,
-            interface=HmInterface.HM,
-            port=const.CCU_PORT,
-        )
-    }
-
-    central_unit = await CentralConfig(
-        name=const.CENTRAL_NAME,
-        host=const.CCU_HOST,
-        username=const.CCU_USERNAME,
-        password=const.CCU_PASSWORD,
-        central_id="test1234",
-        storage_folder="homematicip_local",
-        interface_configs=interface_configs,
-        default_callback_port=54321,
-        client_session=client_session,
-        use_caches=use_caches,
-    ).create_central()
-    central_unit.register_system_event_callback(systemcallback)
-    await central_unit.start()
-    while not GOT_DEVICES and sleep_counter < 300:
-        sleep_counter += 1
-        await asyncio.sleep(1)
-
-    return central_unit
 
 
 @pytest.fixture(name="central_local_factory")

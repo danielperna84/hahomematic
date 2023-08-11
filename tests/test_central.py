@@ -54,7 +54,7 @@ async def test_device_export(
     """Test device export."""
     assert central_local_factory
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
-    device = helper.get_device(central_unit=central, address="VCU6354483")
+    device = central.get_device(address="VCU6354483")
     await device.export_device_definition()
 
 
@@ -89,9 +89,7 @@ async def test_device_unignore(
         )
         is False
     )
-    level1: HmFloat = cast(
-        HmFloat, await helper.get_generic_entity(central1, "VCU3609622:1", "LEVEL")
-    )
+    level1: HmFloat = cast(HmFloat, central1.get_generic_entity("VCU3609622:1", "LEVEL"))
     assert level1.usage == HmEntityUsage.NO_CREATE
     assert len(level1.device.generic_entities) == 22
 
@@ -99,7 +97,7 @@ async def test_device_unignore(
     with suppress(AssertionError):
         switch1: HmSwitch = cast(
             HmSwitch,
-            await helper.get_generic_entity(central1, "VCU3609622:1", "VALVE_ADAPTION"),
+            central1.get_generic_entity("VCU3609622:1", "VALVE_ADAPTION"),
         )
     assert switch1 is None
 
@@ -125,14 +123,12 @@ async def test_device_unignore(
         )
         is True
     )
-    level2: HmFloat = cast(
-        HmFloat, await helper.get_generic_entity(central2, "VCU3609622:1", "LEVEL")
-    )
+    level2: HmFloat = cast(HmFloat, central2.get_generic_entity("VCU3609622:1", "LEVEL"))
     assert level2.usage == HmEntityUsage.ENTITY
     assert len(level2.device.generic_entities) == 23
     switch2: HmSwitch = cast(
         HmSwitch,
-        await helper.get_generic_entity(central2, "VCU3609622:1", "VALVE_ADAPTION"),
+        central2.get_generic_entity("VCU3609622:1", "VALVE_ADAPTION"),
     )
     assert switch2.usage == HmEntityUsage.ENTITY
 

@@ -25,7 +25,7 @@ async def test_ceipsiren(
 ) -> None:
     """Test CeIpSiren."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    siren: CeIpSiren = cast(CeIpSiren, await helper.get_custom_entity(central, "VCU8249617", 3))
+    siren: CeIpSiren = cast(CeIpSiren, helper.get_prepared_custom_entity(central, "VCU8249617", 3))
     assert siren.usage == HmEntityUsage.CE_PRIMARY
 
     assert siren.is_on is False
@@ -109,7 +109,7 @@ async def test_ceipsirensmoke(
     """Test CeIpSirenSmoke."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     siren: CeIpSirenSmoke = cast(
-        CeIpSirenSmoke, await helper.get_custom_entity(central, "VCU2822385", 1)
+        CeIpSirenSmoke, helper.get_prepared_custom_entity(central, "VCU2822385", 1)
     )
     assert siren.usage == HmEntityUsage.CE_PRIMARY
 

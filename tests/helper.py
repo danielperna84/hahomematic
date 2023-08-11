@@ -1,6 +1,7 @@
 """Helpers for tests."""
 from __future__ import annotations
 
+import asyncio
 import importlib.resources
 import logging
 import os
@@ -11,17 +12,15 @@ from aiohttp import ClientSession
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
+from hahomematic.const import HmInterface
 from hahomematic.platforms.custom.entity import CustomEntity
-from hahomematic.platforms.device import HmDevice
-from hahomematic.platforms.generic.entity import GenericEntity
-from hahomematic.platforms.hub.button import HmProgramButton
-from hahomematic.platforms.hub.entity import GenericSystemVariable
-from hahomematic.support import get_device_address
 import orjson
 
 import const
 
 _LOGGER = logging.getLogger(__name__)
+
+GOT_DEVICES = False
 
 # pylint: disable=protected-access
 
@@ -50,7 +49,7 @@ class CentralUnitLocalFactory:
             password=const.CCU_PASSWORD,
             central_id="test1234",
             storage_folder="homematicip_local",
-            interface_configs=interface_configs,
+            interface_configs=set(interface_configs),
             default_callback_port=54321,
             client_session=self._client_session,
             load_un_ignore=un_ignore_list is not None,
@@ -71,14 +70,14 @@ class CentralUnitLocalFactory:
         un_ignore_list: list[str] | None = None,
     ) -> tuple[CentralUnit, Client | Mock]:
         """Return a central based on give address_device_translation."""
-        interface_config = get_local_client_interface_config(
+        interface_config = _get_local_client_interface_config(
             address_device_translation=address_device_translation,
             ignore_devices_on_create=ignore_devices_on_create,
         )
         central = await self.get_raw_central(
             interface_config=interface_config, un_ignore_list=un_ignore_list
         )
-        client = await get_client(
+        client = await _get_client(
             central=central,
             interface_config=interface_config,
             do_mock_client=do_mock_client,
@@ -123,7 +122,7 @@ class CentralUnitLocalFactory:
         return central, client
 
 
-def get_local_client_interface_config(
+def _get_local_client_interface_config(
     address_device_translation: dict[str, str],
     ignore_devices_on_create: list[str] | None = None,
 ) -> InterfaceConfig:
@@ -143,7 +142,7 @@ def get_local_client_interface_config(
     )
 
 
-async def get_client(
+async def _get_client(
     central: CentralUnit,
     interface_config: InterfaceConfig,
     do_mock_client: bool = True,
@@ -162,90 +161,15 @@ async def get_client(
     return client
 
 
-async def get_value_from_generic_entity(
-    central_unit: CentralUnit, address: str, parameter: str
-) -> Any:
-    """Return the device value."""
-    entity = await get_generic_entity(
-        central_unit=central_unit, address=address, parameter=parameter
-    )
-    assert entity
-    await entity.load_entity_value(call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED)
-    return entity.value
-
-
-def get_device(central_unit: CentralUnit, address: str) -> HmDevice | None:
-    """Return the device."""
-    d_address = get_device_address(address=address)
-    if device := central_unit.get_device(device_address=d_address):
-        assert device
-        return device
-    return None
-
-
-async def get_generic_entity(
-    central_unit: CentralUnit, address: str, parameter: str
-) -> GenericEntity | None:
-    """Return the hm generic_entity."""
-    if device := get_device(central_unit=central_unit, address=address):
-        entity = device.generic_entities.get((address, parameter))
-        assert entity
-        return entity
-    return None
-
-
-async def get_wrapper_entity(
-    central_unit: CentralUnit, address: str, parameter: str
-) -> GenericEntity | None:
-    """Return the hm wrapper_entity."""
-    if device := get_device(central_unit=central_unit, address=address):
-        entity = device.wrapper_entities.get((address, parameter))
-        assert entity
-        return entity
-    return None
-
-
-async def get_event(
-    central_unit: CentralUnit, address: str, parameter: str
-) -> GenericEntity | None:
-    """Return the hm event."""
-    if device := get_device(central_unit=central_unit, address=address):
-        event = device.generic_events.get((address, parameter))
-        assert event
-        return event
-    return None
-
-
-async def get_custom_entity(
-    central_unit: CentralUnit, address: str, channel_no: int | None, do_load: bool = False
+def get_prepared_custom_entity(
+    central_unit: CentralUnit, address: str, channel_no: int | None
 ) -> CustomEntity | None:
     """Return the hm custom_entity."""
-    if device := get_device(central_unit, address):
-        for custom_entity in device.custom_entities.values():
-            if custom_entity.channel_no == channel_no:
-                if do_load:
-                    await custom_entity.load_entity_value(
-                        call_source=hahomematic_const.HmCallSource.MANUAL_OR_SCHEDULED
-                    )
-
-                for data_entities in custom_entity.data_entities.values():
-                    data_entities._attr_state_uncertain = False
-                return custom_entity
+    if custom_entity := central_unit.get_custom_entity(address=address, channel_no=channel_no):
+        for data_entity in custom_entity.data_entities.values():
+            data_entity._attr_state_uncertain = False
+        return custom_entity
     return None
-
-
-async def get_sysvar_entity(central: CentralUnit, name: str) -> GenericSystemVariable | None:
-    """Return the sysvar entity."""
-    entity = central.sysvar_entities.get(name)
-    assert entity
-    return entity
-
-
-async def get_program_button(central: CentralUnit, pid: str) -> HmProgramButton | None:
-    """Return the program button."""
-    entity = central.program_entities.get(pid)
-    assert entity
-    return entity
 
 
 def load_device_description(central: CentralUnit, filename: str) -> Any:
@@ -276,3 +200,50 @@ def _load_json_file(package: str, resource: str, filename: str) -> Any | None:
         encoding=hahomematic_const.DEFAULT_ENCODING,
     ) as fptr:
         return orjson.loads(fptr.read())
+
+
+async def get_pydev_ccu_central_unit_full(
+    client_session: ClientSession, use_caches: bool
+) -> CentralUnit:
+    """Create and yield central."""
+    sleep_counter = 0
+    global GOT_DEVICES  # pylint: disable=global-statement
+    GOT_DEVICES = False
+
+    def systemcallback(name, *args, **kwargs):
+        if (
+            name == "devicesCreated"
+            and kwargs
+            and kwargs.get("new_devices")
+            and len(kwargs["new_devices"]) > 0
+        ):
+            global GOT_DEVICES  # pylint: disable=global-statement
+            GOT_DEVICES = True
+
+    interface_configs = {
+        InterfaceConfig(
+            central_name=const.CENTRAL_NAME,
+            interface=HmInterface.HM,
+            port=const.CCU_PORT,
+        )
+    }
+
+    central_unit = await CentralConfig(
+        name=const.CENTRAL_NAME,
+        host=const.CCU_HOST,
+        username=const.CCU_USERNAME,
+        password=const.CCU_PASSWORD,
+        central_id="test1234",
+        storage_folder="homematicip_local",
+        interface_configs=interface_configs,
+        default_callback_port=54321,
+        client_session=client_session,
+        use_caches=use_caches,
+    ).create_central()
+    central_unit.register_system_event_callback(systemcallback)
+    await central_unit.start()
+    while not GOT_DEVICES and sleep_counter < 300:
+        sleep_counter += 1
+        await asyncio.sleep(1)
+
+    return central_unit

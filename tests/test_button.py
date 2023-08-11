@@ -27,7 +27,7 @@ async def test_hmbutton(
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     button: HmButton = cast(
         HmButton,
-        await helper.get_generic_entity(central, "VCU1437294:1", "RESET_MOTION"),
+        central.get_generic_entity("VCU1437294:1", "RESET_MOTION"),
     )
     assert button.usage == HmEntityUsage.ENTITY
     assert button.available is True
@@ -54,9 +54,7 @@ async def test_hmprogrambutton(
 ) -> None:
     """Test HmProgramButton."""
     central, mock_client = await central_local_factory.get_default_central({}, add_programs=True)
-    button: HmProgramButton = cast(
-        HmProgramButton, await helper.get_program_button(central, "pid1")
-    )
+    button: HmProgramButton = cast(HmProgramButton, central.get_program_button("pid1"))
     assert button.usage == HmEntityUsage.ENTITY
     assert button.available is True
     assert button.is_active is True
@@ -76,9 +74,7 @@ async def test_hmprogrambutton(
     assert button.is_active is False
     assert button.is_internal is True
 
-    button2: HmProgramButton = cast(
-        HmProgramButton, await helper.get_program_button(central, "pid2")
-    )
+    button2: HmProgramButton = cast(HmProgramButton, central.get_program_button("pid2"))
     assert button2.usage == HmEntityUsage.ENTITY
     assert button2.is_active is False
     assert button2.is_internal is False

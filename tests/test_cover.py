@@ -42,7 +42,7 @@ async def test_cecover(
 ) -> None:
     """Test CeCover."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeCover = cast(CeCover, await helper.get_custom_entity(central, "VCU8537918", 4))
+    cover: CeCover = cast(CeCover, helper.get_prepared_custom_entity(central, "VCU8537918", 4))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_position == 0
@@ -108,7 +108,7 @@ async def test_ceipblind_dr(
 ) -> None:
     """Test CeIpBlind DIN Rail."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeIpBlind = cast(CeIpBlind, await helper.get_custom_entity(central, "VCU7807849", 2))
+    cover: CeIpBlind = cast(CeIpBlind, helper.get_prepared_custom_entity(central, "VCU7807849", 2))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_position == 0
@@ -161,7 +161,7 @@ async def test_cewindowdrive(
     """Test CeWindowDrive."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
     cover: CeWindowDrive = cast(
-        CeWindowDrive, await helper.get_custom_entity(central, "VCU0000350", 1)
+        CeWindowDrive, helper.get_prepared_custom_entity(central, "VCU0000350", 1)
     )
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
@@ -214,7 +214,7 @@ async def test_ceblind(
 ) -> None:
     """Test CeBlind."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeBlind = cast(CeBlind, await helper.get_custom_entity(central, "VCU0000145", 1))
+    cover: CeBlind = cast(CeBlind, helper.get_prepared_custom_entity(central, "VCU0000145", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
@@ -338,7 +338,7 @@ async def test_ceipblind(
 ) -> None:
     """Test CeIpBlind."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeIpBlind = cast(CeIpBlind, await helper.get_custom_entity(central, "VCU1223813", 4))
+    cover: CeIpBlind = cast(CeIpBlind, helper.get_prepared_custom_entity(central, "VCU1223813", 4))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_position == 0
@@ -447,7 +447,7 @@ async def test_cegarageho(
 ) -> None:
     """Test CeGarageHO."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeGarage = cast(CeGarage, await helper.get_custom_entity(central, "VCU3574044", 1))
+    cover: CeGarage = cast(CeGarage, helper.get_prepared_custom_entity(central, "VCU3574044", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_position is None
@@ -542,7 +542,7 @@ async def test_cegaragetm(
 ) -> None:
     """Test CeGarageTM."""
     central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
-    cover: CeGarage = cast(CeGarage, await helper.get_custom_entity(central, "VCU6166407", 1))
+    cover: CeGarage = cast(CeGarage, helper.get_prepared_custom_entity(central, "VCU6166407", 1))
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_position is None

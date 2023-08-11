@@ -25,9 +25,7 @@ async def test_clickevent(
 ) -> None:
     """Test ClickEvent."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
-    event: ClickEvent = cast(
-        ClickEvent, await helper.get_event(central, "VCU2128127:1", "PRESS_SHORT")
-    )
+    event: ClickEvent = cast(ClickEvent, central.get_event("VCU2128127:1", "PRESS_SHORT"))
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.KEYPRESS
     central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:1", "PRESS_SHORT", True)
@@ -50,9 +48,7 @@ async def test_impulseevent(
 ) -> None:
     """Test ImpulseEvent."""
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
-    event: ImpulseEvent = cast(
-        ImpulseEvent, await helper.get_event(central, "VCU0000263:1", "SEQUENCE_OK")
-    )
+    event: ImpulseEvent = cast(ImpulseEvent, central.get_event("VCU0000263:1", "SEQUENCE_OK"))
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.IMPULSE
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000263:1", "SEQUENCE_OK", True)
@@ -77,7 +73,7 @@ async def test_deviceerrorevent(
     central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
     event: DeviceErrorEvent = cast(
         DeviceErrorEvent,
-        await helper.get_event(central, "VCU2128127:0", "ERROR_OVERHEAT"),
+        central.get_event("VCU2128127:0", "ERROR_OVERHEAT"),
     )
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.DEVICE_ERROR
