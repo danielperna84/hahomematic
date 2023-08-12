@@ -515,6 +515,7 @@ async def test_ping_failure(
     interface_id = client.interface_id
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 1
+    assert central._ping_pong_fired is False
     while count < max_count:
         await client.check_connection_availability()
         count += 1
@@ -527,6 +528,11 @@ async def test_ping_failure(
             "type": HmInterfaceEventType.PINGPONG,
         },
     )
+    assert central._ping_pong_fired is True
+    assert len(central_local_factory.ha_event_mock.mock_calls) == 2
+    # Check event fired only once
+    central.event(interface_id, "", EVENT_PONG, interface_id)
+    assert len(central_local_factory.ha_event_mock.mock_calls) == 2
 
 
 @pytest.mark.asyncio
@@ -541,6 +547,7 @@ async def test_pong_failure(
     interface_id = client.interface_id
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 2
+    assert central._ping_pong_fired is False
     while count < max_count:
         central.event(interface_id, "", EVENT_PONG, interface_id)
         count += 1
@@ -553,3 +560,37 @@ async def test_pong_failure(
             "type": HmInterfaceEventType.PINGPONG,
         },
     )
+    assert central._ping_pong_fired is True
+    assert len(central_local_factory.ha_event_mock.mock_calls) == 2
+    # Check event fired only once
+    central.event(interface_id, "", EVENT_PONG, interface_id)
+    assert len(central_local_factory.ha_event_mock.mock_calls) == 2
+
+
+@pytest.mark.asyncio
+async def test_central_caches(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central cache."""
+    central, client = await central_local_factory.get_default_central(TEST_DEVICES)
+    assert len(central.device_descriptions._raw_device_descriptions[client.interface_id]) == 20
+    assert len(central.paramset_descriptions._raw_paramset_descriptions[client.interface_id]) == 18
+    await central.clear_all_caches()
+    assert central.device_descriptions._raw_device_descriptions.get(client.interface_id) is None
+    assert (
+        central.paramset_descriptions._raw_paramset_descriptions.get(client.interface_id) is None
+    )
+
+
+@pytest.mark.asyncio
+async def test_central_getter(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central getter."""
+    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    assert central.get_device("123") is None
+    assert central.get_custom_entity("123", 1) is None
+    assert central.get_generic_entity("123", 1) is None
+    assert central.get_event("123", 1) is None
+    assert central.get_program_button("123") is None
+    assert central.get_sysvar_entity("123") is None
