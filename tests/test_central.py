@@ -7,6 +7,7 @@ from unittest.mock import call, patch
 
 from hahomematic.const import (
     ATTR_AVAILABLE,
+    EVENT_PONG,
     PARAMSET_KEY_VALUES,
     HmEntityUsage,
     HmInterfaceEventType,
@@ -482,3 +483,19 @@ async def test_central_without_interface_config(
     assert central._get_virtual_remote("VCU4264293") is None
 
     await central.stop()
+
+
+@pytest.mark.asyncio
+async def test_ping_pong(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central other methods."""
+    assert central_local_factory
+    central, client = await central_local_factory.get_default_central(
+        TEST_DEVICES, do_mock_client=False
+    )
+    interface_id = client.interface_id
+    await client.check_connection_availability()
+    assert central._ping_count[interface_id] == 1
+    central.event(interface_id, "", EVENT_PONG, interface_id)
+    assert central._ping_count[interface_id] == 0

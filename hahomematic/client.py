@@ -939,7 +939,7 @@ class ClientLocal(Client):  # pragma: no cover
     @property
     def supports_ping_pong(self) -> bool:
         """Return the supports_ping_pong info of the backend."""
-        return False
+        return True
 
     async def proxy_init(self) -> int:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
@@ -973,6 +973,7 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def check_connection_availability(self) -> bool:
         """Send ping to CCU to generate PONG event."""
+        self.central.increase_ping_count(interface_id=self.interface_id)
         return True
 
     async def execute_program(self, pid: str) -> bool:
