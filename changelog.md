@@ -1,7 +1,8 @@
-# Version 2023.8.3 (2023-08-11)
+# Version 2023.8.3 (2023-08-12)
 
 - Update project setup
 - Restructure test helper
+- Add ping pong tests
 
 # Version 2023.8.2 (2023-08-06)
 
