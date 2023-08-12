@@ -10,7 +10,6 @@ import pytest
 
 import const
 import helper
-from helper import get_pydev_ccu_central_unit_full
 
 logging.basicConfig(level=logging.INFO)
 
@@ -49,7 +48,7 @@ async def central_unit_mini(
     pydev_ccu_mini: pydevccu.Server, client_session: ClientSession
 ) -> CentralUnit:
     """Create and yield central."""
-    central_unit = await get_pydev_ccu_central_unit_full(client_session, use_caches=True)
+    central_unit = await helper.get_pydev_ccu_central_unit_full(client_session, use_caches=True)
     yield central_unit
     await central_unit.stop()
 
@@ -72,7 +71,7 @@ async def central_unit_full(
     def system_event_callback(*args, **kwargs):
         """Do dummy system_event_callback."""
 
-    central_unit = await get_pydev_ccu_central_unit_full(client_session, use_caches=False)
+    central_unit = await helper.get_pydev_ccu_central_unit_full(client_session, use_caches=False)
 
     central_unit.register_entity_data_event_callback(entity_data_event_callback)
     central_unit.register_entity_event_callback(entity_event_callback)
