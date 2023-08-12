@@ -5,11 +5,13 @@ from contextlib import suppress
 from typing import cast
 from unittest.mock import call, patch
 
+from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     ATTR_AVAILABLE,
     EVENT_PONG,
     PARAMSET_KEY_VALUES,
     HmEntityUsage,
+    HmEventType,
     HmInterfaceEventType,
     HmPlatform,
 )
@@ -499,3 +501,55 @@ async def test_ping_pong(
     assert central._ping_count[interface_id] == 1
     central.event(interface_id, "", EVENT_PONG, interface_id)
     assert central._ping_count[interface_id] == 0
+
+
+@pytest.mark.asyncio
+async def test_ping_failure(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central other methods."""
+    assert central_local_factory
+    central, client = await central_local_factory.get_default_central(
+        TEST_DEVICES, do_mock_client=False
+    )
+    interface_id = client.interface_id
+    count = 0
+    max_count = PING_PONG_MISMATCH_COUNT + 1
+    while count < max_count:
+        await client.check_connection_availability()
+        count += 1
+    assert central._ping_count[interface_id] == max_count
+    assert central_local_factory.ha_event_mock.mock_calls[-1] == call(
+        HmEventType.INTERFACE,
+        {
+            "data": {"instance_name": "CentralTest"},
+            "interface_id": "CentralTest-Local",
+            "type": HmInterfaceEventType.PINGPONG,
+        },
+    )
+
+
+@pytest.mark.asyncio
+async def test_pong_failure(
+    central_local_factory: helper.CentralUnitLocalFactory,
+) -> None:
+    """Test central other methods."""
+    assert central_local_factory
+    central, client = await central_local_factory.get_default_central(
+        TEST_DEVICES, do_mock_client=False
+    )
+    interface_id = client.interface_id
+    count = 0
+    max_count = PING_PONG_MISMATCH_COUNT + 2
+    while count < max_count:
+        central.event(interface_id, "", EVENT_PONG, interface_id)
+        count += 1
+    assert central._ping_count[interface_id] == -max_count + 1
+    assert central_local_factory.ha_event_mock.mock_calls[-1] == call(
+        HmEventType.INTERFACE,
+        {
+            "data": {"instance_name": "CentralTest"},
+            "interface_id": "CentralTest-Local",
+            "type": HmInterfaceEventType.PINGPONG,
+        },
+    )
