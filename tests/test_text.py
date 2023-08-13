@@ -18,21 +18,17 @@ TEST_DEVICES: dict[str, str] = {}
 
 
 @pytest.mark.asyncio
-async def no_test_hmtext(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def no_test_hmtext(factory: helper.Factory) -> None:
     """Test HmText. There are currently no text entities."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     text: HmText = cast(HmText, central.get_generic_entity("VCU7981740:1", "STATE"))
     assert text.usage == HmEntityUsage.ENTITY
 
 
 @pytest.mark.asyncio
-async def test_hmsysvartext(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmsysvartext(factory: helper.Factory) -> None:
     """Test HmSysvarText. There are currently no text entities."""
-    central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
+    central, mock_client = await factory.get_default_central({}, add_sysvars=True)
     text: HmSysvarText = cast(HmSysvarText, central.get_sysvar_entity("sv_string_ext"))
     assert text.usage == HmEntityUsage.ENTITY
 

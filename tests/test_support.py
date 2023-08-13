@@ -57,11 +57,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_generate_unique_identifier(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_generate_unique_identifier(factory: helper.Factory) -> None:
     """Test generate_unique_identifier."""
-    central, _ = await central_local_factory.get_default_central({})
+    central, _ = await factory.get_default_central({})
     assert (
         generate_unique_identifier(central=central, address="VCU2128127", parameter="LEVEL")
         == "vcu2128127_level"
@@ -161,11 +159,9 @@ async def test_to_bool() -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_entity_name(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_get_entity_name(factory: helper.Factory) -> None:
     """Test get_entity_name."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU2128127")
     name_data = get_entity_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
@@ -188,11 +184,9 @@ async def test_get_entity_name(
 
 
 @pytest.mark.asyncio
-async def test_get_event_name(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_get_event_name(factory: helper.Factory) -> None:
     """Test get_event_name."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU2128127")
     name_data = get_event_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.channel_name == "ch4"
@@ -215,11 +209,9 @@ async def test_get_event_name(
 
 
 @pytest.mark.asyncio
-async def test_custom_entity_name(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_custom_entity_name(factory: helper.Factory) -> None:
     """Test get_custom_entity_name."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU2128127")
     name_data = get_custom_entity_name(
         central=central,
@@ -278,11 +270,9 @@ async def test_custom_entity_name(
 
 
 @pytest.mark.asyncio
-async def test_get_device_name(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_get_device_name(factory: helper.Factory) -> None:
     """Test get_device_name."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     assert (
         get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "HmIP-BSM_VCU2128127"

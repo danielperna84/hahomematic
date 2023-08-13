@@ -20,16 +20,14 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_clickevent(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_clickevent(factory: helper.Factory) -> None:
     """Test ClickEvent."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     event: ClickEvent = cast(ClickEvent, central.get_event("VCU2128127:1", "PRESS_SHORT"))
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.KEYPRESS
     central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:1", "PRESS_SHORT", True)
-    assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
+    assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.keypress",
         {
             "interface_id": const.LOCAL_INTERFACE_ID,
@@ -43,16 +41,14 @@ async def test_clickevent(
 
 
 @pytest.mark.asyncio
-async def test_impulseevent(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_impulseevent(factory: helper.Factory) -> None:
     """Test ImpulseEvent."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     event: ImpulseEvent = cast(ImpulseEvent, central.get_event("VCU0000263:1", "SEQUENCE_OK"))
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.IMPULSE
     central.event(const.LOCAL_INTERFACE_ID, "VCU0000263:1", "SEQUENCE_OK", True)
-    assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
+    assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.impulse",
         {
             "interface_id": const.LOCAL_INTERFACE_ID,
@@ -66,11 +62,9 @@ async def test_impulseevent(
 
 
 @pytest.mark.asyncio
-async def test_deviceerrorevent(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_deviceerrorevent(factory: helper.Factory) -> None:
     """Test DeviceErrorEvent."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     event: DeviceErrorEvent = cast(
         DeviceErrorEvent,
         central.get_event("VCU2128127:0", "ERROR_OVERHEAT"),
@@ -78,7 +72,7 @@ async def test_deviceerrorevent(
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.DEVICE_ERROR
     central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:0", "ERROR_OVERHEAT", True)
-    assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
+    assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.device_error",
         {
             "interface_id": const.LOCAL_INTERFACE_ID,

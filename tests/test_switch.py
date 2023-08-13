@@ -21,11 +21,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_ceswitch(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_ceswitch(factory: helper.Factory) -> None:
     """Test CeSwitch."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     switch: CeSwitch = cast(CeSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
     assert switch.usage == HmEntityUsage.CE_PRIMARY
 
@@ -67,11 +65,9 @@ async def test_ceswitch(
 
 
 @pytest.mark.asyncio
-async def test_hmswitch(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmswitch(factory: helper.Factory) -> None:
     """Test HmSwitch."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
     assert switch.usage == HmEntityUsage.NO_CREATE
 
@@ -126,11 +122,9 @@ async def test_hmswitch(
 
 
 @pytest.mark.asyncio
-async def test_hmsysvarswitch(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmsysvarswitch(factory: helper.Factory) -> None:
     """Test HmSysvarSwitch."""
-    central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
+    central, mock_client = await factory.get_default_central({}, add_sysvars=True)
     switch: HmSysvarSwitch = cast(HmSysvarSwitch, central.get_sysvar_entity("sv_alarm_ext"))
     assert switch.usage == HmEntityUsage.ENTITY
 

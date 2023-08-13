@@ -21,11 +21,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_hmsensor_psm(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmsensor_psm(factory: helper.Factory) -> None:
     """Test HmSensor."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3941846:6", "VOLTAGE"))
     assert sensor.usage == HmEntityUsage.ENTITY
     assert sensor.unit == "V"
@@ -66,11 +64,9 @@ async def test_hmsensor_psm(
 
 
 @pytest.mark.asyncio
-async def test_hmsensor_srh(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmsensor_srh(factory: helper.Factory) -> None:
     """Test HmSensor."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU7981740:1", "STATE"))
     assert sensor.usage == HmEntityUsage.ENTITY
     assert sensor.unit is None
@@ -83,11 +79,9 @@ async def test_hmsensor_srh(
 
 
 @pytest.mark.asyncio
-async def test_hmsysvarsensor(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmsysvarsensor(factory: helper.Factory) -> None:
     """Test HmSysvarSensor."""
-    central, _ = await central_local_factory.get_default_central({}, add_sysvars=True)
+    central, _ = await factory.get_default_central({}, add_sysvars=True)
     sensor: HmSysvarSensor = cast(HmSysvarSensor, central.get_sysvar_entity("sv_list"))
     assert sensor.usage == HmEntityUsage.ENTITY
     assert sensor.available is True
