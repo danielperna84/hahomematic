@@ -3,6 +3,7 @@
 - Update project setup
 - Restructure test helper
 - Add ping pong tests
+- Avoid multiple central starts
 
 # Version 2023.8.2 (2023-08-06)
 

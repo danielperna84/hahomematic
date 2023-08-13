@@ -92,6 +92,7 @@ class CentralUnit:
 
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
+        self._started: bool = False
         self._ping_count: Final[dict[str, int]] = {}
         self._ping_pong_fired: bool = False
         self._sema_ping_count: Final = threading.Semaphore()
@@ -252,6 +253,9 @@ class CentralUnit:
 
     async def start(self) -> None:
         """Start processing of the central unit. #CC."""
+        if self._started:
+            _LOGGER.debug("START_: Cental %s already started", self._attr_name)
+            return
         await self.parameter_visibility.load()
         await self._start_clients()
         if self.config.enable_server:
@@ -261,16 +265,24 @@ class CentralUnit:
             if self.has_client(interface_id=local_interface_id):
                 client = self.get_client(interface_id=local_interface_id)
                 await self._refresh_device_descriptions(client=client)
+        self._started = True
 
     async def start_direct(self) -> None:
         """Start the central unit for temporary usage. #CC."""
+        if self._started:
+            _LOGGER.debug("START_DIRECT: Cental %s already started", self._attr_name)
+            return
         await self.parameter_visibility.load()
         await self._create_clients()
         for client in self._clients.values():
             await self._refresh_device_descriptions(client=client)
+        self._started = True
 
     async def stop(self) -> None:
         """Stop processing of the central unit. #CC."""
+        if not self._started:
+            _LOGGER.debug("STOP: Cental %s not started", self._attr_name)
+            return
         self._stop_connection_checker()
         await self._stop_clients()
         if self.json_rpc_client.is_activated:
@@ -295,6 +307,7 @@ class CentralUnit:
 
         while self._has_active_threads:
             await asyncio.sleep(1)
+        self._started = False
 
     async def restart_clients(self) -> None:
         """Restart clients."""
