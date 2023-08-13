@@ -9,14 +9,15 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
+import orjson
+
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
 from hahomematic.const import HmInterface
 from hahomematic.platforms.custom.entity import CustomEntity
-import orjson
 
-import const
+from tests import const
 
 _LOGGER = logging.getLogger(__name__)
 

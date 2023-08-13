@@ -4,12 +4,12 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
-from hahomematic.const import HmEntityUsage, HmEventType
-from hahomematic.platforms.event import ClickEvent, DeviceErrorEvent, ImpulseEvent
 import pytest
 
-import const
-import helper
+from hahomematic.const import HmEntityUsage, HmEventType
+from hahomematic.platforms.event import ClickEvent, DeviceErrorEvent, ImpulseEvent
+
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

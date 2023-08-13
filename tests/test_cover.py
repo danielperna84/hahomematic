@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
+import pytest
+
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.custom.cover import (
     GARAGE_DOOR_SECTION_CLOSING,
@@ -17,10 +19,8 @@ from hahomematic.platforms.custom.cover import (
     CeIpBlind,
     CeWindowDrive,
 )
-import pytest
 
-import const
-import helper
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU8537918": "HmIP-BROLL.json",

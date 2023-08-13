@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
+import pytest
+
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.custom.light import (
     CeColorDimmer,
@@ -13,10 +15,8 @@ from hahomematic.platforms.custom.light import (
     CeIpFixedColorLight,
     CeIpRGBWLight,
 )
-import pytest
 
-import const
-import helper
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU1399816": "HmIP-BDT.json",
