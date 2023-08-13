@@ -16,11 +16,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_device_general(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_device_general(factory: helper.Factory) -> None:
     """Test device availability."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU2128127")
     assert device.device_address == "VCU2128127"
     assert device.name == "HmIP-BSM_VCU2128127"
@@ -42,11 +40,9 @@ async def test_device_general(
 
 
 @pytest.mark.asyncio
-async def test_device_availability(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_device_availability(factory: helper.Factory) -> None:
     """Test device availability."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU6354483")
     assert device.available is True
     for generic_entity in device.generic_entities.values():
@@ -70,11 +66,9 @@ async def test_device_availability(
 
 
 @pytest.mark.asyncio
-async def test_device_config_pending(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_device_config_pending(factory: helper.Factory) -> None:
     """Test device availability."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU2128127")
     assert device._e_config_pending.value is False
     last_save = central.paramset_descriptions.last_save

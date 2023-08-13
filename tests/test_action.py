@@ -19,11 +19,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_hmaction(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmaction(factory: helper.Factory) -> None:
     """Test HmAction."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     action: HmAction = cast(
         HmAction,
         central.get_generic_entity("VCU9724704:1", "LOCK_TARGET_LEVEL"),

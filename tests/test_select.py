@@ -20,11 +20,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_hmselect(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmselect(factory: helper.Factory) -> None:
     """Test HmSelect."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     select: HmSelect = cast(
         HmSelect,
         central.get_generic_entity("VCU6354483:1", "WINDOW_STATE"),
@@ -66,11 +64,9 @@ async def test_hmselect(
 
 
 @pytest.mark.asyncio
-async def test_hmsysvarselect(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmsysvarselect(factory: helper.Factory) -> None:
     """Test HmSysvarSelect."""
-    central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
+    central, mock_client = await factory.get_default_central({}, add_sysvars=True)
     select: HmSysvarSelect = cast(HmSysvarSelect, central.get_sysvar_entity("sv_list_ext"))
     assert select.usage == HmEntityUsage.ENTITY
     assert select.unit is None

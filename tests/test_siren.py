@@ -20,11 +20,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_ceipsiren(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_ceipsiren(factory: helper.Factory) -> None:
     """Test CeIpSiren."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     siren: CeIpSiren = cast(CeIpSiren, helper.get_prepared_custom_entity(central, "VCU8249617", 3))
     assert siren.usage == HmEntityUsage.CE_PRIMARY
 
@@ -103,11 +101,9 @@ async def test_ceipsiren(
 
 
 @pytest.mark.asyncio
-async def test_ceipsirensmoke(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_ceipsirensmoke(factory: helper.Factory) -> None:
     """Test CeIpSirenSmoke."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     siren: CeIpSirenSmoke = cast(
         CeIpSirenSmoke, helper.get_prepared_custom_entity(central, "VCU2822385", 1)
     )

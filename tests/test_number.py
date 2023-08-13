@@ -22,11 +22,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_hmfloat(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmfloat(factory: helper.Factory) -> None:
     """Test HmFloat."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     efloat: HmFloat = cast(
         HmFloat,
         central.get_generic_entity("VCU0000011:3", "LEVEL"),
@@ -55,11 +53,9 @@ async def test_hmfloat(
 
 
 @pytest.mark.asyncio
-async def test_hmfloat_special(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmfloat_special(factory: helper.Factory) -> None:
     """Test HmFloat."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     efloat: HmFloat = cast(
         HmFloat,
         central.get_generic_entity("VCU0000054:2", "SETPOINT"),
@@ -88,11 +84,9 @@ async def test_hmfloat_special(
 
 
 @pytest.mark.asyncio
-async def test_hminteger(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hminteger(factory: helper.Factory) -> None:
     """Test HmInteger."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     einteger: HmInteger = cast(
         HmInteger,
         central.get_generic_entity("VCU4984404:1", "SET_POINT_MODE"),
@@ -129,11 +123,9 @@ async def test_hminteger(
 
 
 @pytest.mark.asyncio
-async def test_hmsysvarnumber(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmsysvarnumber(factory: helper.Factory) -> None:
     """Test HmSysvarNumber."""
-    central, mock_client = await central_local_factory.get_default_central({}, add_sysvars=True)
+    central, mock_client = await factory.get_default_central({}, add_sysvars=True)
     enumber: HmSysvarNumber = cast(
         HmSysvarNumber,
         central.get_sysvar_entity("sv_float_ext"),

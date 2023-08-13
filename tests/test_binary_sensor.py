@@ -19,11 +19,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_hmbinarysensor(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmbinarysensor(factory: helper.Factory) -> None:
     """Test HmBinarySensor."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     binary_sensor: HmBinarySensor = cast(
         HmBinarySensor,
         central.get_generic_entity("VCU5864966:1", "STATE"),
@@ -45,11 +43,9 @@ async def test_hmbinarysensor(
 
 
 @pytest.mark.asyncio
-async def test_hmsysvarbinarysensor(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmsysvarbinarysensor(factory: helper.Factory) -> None:
     """Test HmSysvarBinarySensor."""
-    central, _ = await central_local_factory.get_default_central({}, add_sysvars=True)
+    central, _ = await factory.get_default_central({}, add_sysvars=True)
     binary_sensor: HmSysvarBinarySensor = cast(
         HmSysvarBinarySensor,
         central.get_sysvar_entity("sv_logic"),

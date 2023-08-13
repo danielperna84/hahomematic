@@ -21,11 +21,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_hmbutton(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmbutton(factory: helper.Factory) -> None:
     """Test HmButton."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     button: HmButton = cast(
         HmButton,
         central.get_generic_entity("VCU1437294:1", "RESET_MOTION"),
@@ -50,11 +48,9 @@ async def test_hmbutton(
 
 
 @pytest.mark.asyncio
-async def test_hmprogrambutton(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hmprogrambutton(factory: helper.Factory) -> None:
     """Test HmProgramButton."""
-    central, mock_client = await central_local_factory.get_default_central({}, add_programs=True)
+    central, mock_client = await factory.get_default_central({}, add_programs=True)
     button: HmProgramButton = cast(HmProgramButton, central.get_program_button("pid1"))
     assert button.usage == HmEntityUsage.ENTITY
     assert button.available is True

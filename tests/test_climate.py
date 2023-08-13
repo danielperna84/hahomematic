@@ -35,11 +35,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_cesimplerfthermostat(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
     """Test CeSimpleRfThermostat."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     climate: CeSimpleRfThermostat = cast(
         CeSimpleRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000054", 1)
     )
@@ -95,11 +93,9 @@ async def test_cesimplerfthermostat(
 
 
 @pytest.mark.asyncio
-async def test_cerfthermostat(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_cerfthermostat(factory: helper.Factory) -> None:
     """Test CeRfThermostat."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     climate: CeRfThermostat = cast(
         CeRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000050", 4)
     )
@@ -201,11 +197,9 @@ async def test_cerfthermostat(
 
 
 @pytest.mark.asyncio
-async def test_ceipthermostat(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_ceipthermostat(factory: helper.Factory) -> None:
     """Test CeIpThermostat."""
-    central, mock_client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, mock_client = await factory.get_default_central(TEST_DEVICES)
     climate: CeIpThermostat = cast(
         CeIpThermostat, helper.get_prepared_custom_entity(central, "VCU1769958", 1)
     )

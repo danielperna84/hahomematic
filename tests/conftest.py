@@ -87,9 +87,9 @@ async def central_unit_full(
     await central_unit.stop()
 
 
-@pytest.fixture(name="central_local_factory")
-async def central_unit_local_factory(
+@pytest.fixture
+async def factory(
     client_session: ClientSession,
-) -> helper.CentralUnitLocalFactory:
+) -> helper.Factory:
     """Return central factory."""
-    return helper.CentralUnitLocalFactory(client_session)
+    return helper.Factory(client_session)

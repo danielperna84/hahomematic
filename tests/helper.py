@@ -26,7 +26,7 @@ GOT_DEVICES = False
 # pylint: disable=protected-access
 
 
-class CentralUnitLocalFactory:
+class Factory:
     """Factory for a central_unit with one local client."""
 
     def __init__(self, client_session: ClientSession):
@@ -82,7 +82,6 @@ class CentralUnitLocalFactory:
             central=central,
             interface_config=interface_config,
             do_mock_client=do_mock_client,
-            ignore_devices_on_create=ignore_devices_on_create if ignore_devices_on_create else [],
         )
 
         assert central
@@ -147,7 +146,6 @@ async def _get_client(
     central: CentralUnit,
     interface_config: InterfaceConfig,
     do_mock_client: bool = True,
-    ignore_devices_on_create: list[str] | None = None,
 ) -> Client | Mock:
     """Return a central based on give address_device_translation."""
     _client = await _ClientConfig(

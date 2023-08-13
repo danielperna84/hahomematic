@@ -32,12 +32,9 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_central_basics(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_central_basics(factory: helper.Factory) -> None:
     """Test central basics."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
-
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     assert central.central_url == "http://127.0.0.1"
     assert central.is_alive is True
     assert central.system_information.serial == "0815_4711"
@@ -51,36 +48,26 @@ async def test_central_basics(
 
 
 @pytest.mark.asyncio
-async def test_device_export(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_device_export(factory: helper.Factory) -> None:
     """Test device export."""
-    assert central_local_factory
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU6354483")
     await device.export_device_definition()
 
 
 @pytest.mark.asyncio
-async def test_identify_callback_ip(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_identify_callback_ip(factory: helper.Factory) -> None:
     """Test identify_callback_ip."""
-    assert central_local_factory
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
-
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
     central.config.host = "no_host"
     assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
 
 
 @pytest.mark.asyncio
-async def test_device_unignore(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_device_unignore(factory: helper.Factory) -> None:
     """Test device un ignore."""
-    assert central_local_factory
-    central1, _ = await central_local_factory.get_default_central(
+    central1, _ = await factory.get_default_central(
         {"VCU3609622": "HmIP-eTRV-2.json"},
     )
     assert (
@@ -104,7 +91,7 @@ async def test_device_unignore(
         )
     assert switch1 is None
 
-    central2, _ = await central_local_factory.get_default_central(
+    central2, _ = await factory.get_default_central(
         {"VCU3609622": "HmIP-eTRV-2.json"},
         un_ignore_list=[
             "LEVEL",  # parameter exists, but hidden
@@ -137,22 +124,18 @@ async def test_device_unignore(
 
 
 @pytest.mark.asyncio
-async def test_all_parameters(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_all_parameters(factory: helper.Factory) -> None:
     """Test all_parameters."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     parameters = central.paramset_descriptions.get_all_readable_parameters()
     assert parameters
     assert len(parameters) == 43
 
 
 @pytest.mark.asyncio
-async def test_entities_by_platform(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_entities_by_platform(factory: helper.Factory) -> None:
     """Test entities_by_platform."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     ebp_sensor = central.get_entities_by_platform(platform=HmPlatform.SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 12
@@ -165,13 +148,9 @@ async def test_entities_by_platform(
 
 
 @pytest.mark.asyncio
-async def test_hub_entities_by_platform(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     """Test hub_entities_by_platform."""
-    central, _ = await central_local_factory.get_default_central(
-        {}, add_programs=True, add_sysvars=True
-    )
+    central, _ = await factory.get_default_central({}, add_programs=True, add_sysvars=True)
     ebp_sensor = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 4
@@ -193,11 +172,9 @@ async def test_hub_entities_by_platform(
 
 
 @pytest.mark.asyncio
-async def test_add_device(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_add_device(factory: helper.Factory) -> None:
     """Test add_device."""
-    central, _ = await central_local_factory.get_default_central(
+    central, _ = await factory.get_default_central(
         TEST_DEVICES, ignore_devices_on_create=["HmIP-BSM.json"]
     )
     assert len(central._devices) == 1
@@ -229,11 +206,9 @@ async def test_add_device(
 
 
 @pytest.mark.asyncio
-async def test_delete_device(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_delete_device(factory: helper.Factory) -> None:
     """Test device delete_device."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     assert len(central._devices) == 2
     assert len(central._entities) == 53
     assert (
@@ -259,12 +234,9 @@ async def test_delete_device(
 
 
 @pytest.mark.asyncio
-async def test_virtual_remote_delete(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_virtual_remote_delete(factory: helper.Factory) -> None:
     """Test device delete."""
-    assert central_local_factory
-    central, _ = await central_local_factory.get_default_central(
+    central, _ = await factory.get_default_central(
         {
             "VCU4264293": "HmIP-RCV-50.json",
             "VCU0000057": "HM-RCV-50.json",
@@ -297,14 +269,9 @@ async def test_virtual_remote_delete(
 
 
 @pytest.mark.asyncio
-async def test_central_not_alive(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_central_not_alive(factory: helper.Factory) -> None:
     """Test central other methods."""
-    assert central_local_factory
-    central, client = await central_local_factory.get_unpatched_default_central(
-        {}, do_mock_client=False
-    )
+    central, client = await factory.get_unpatched_default_central({}, do_mock_client=False)
     mock_client = helper.get_mock(instance=client, available=False)
 
     assert central.system_information.serial is None
@@ -320,18 +287,15 @@ async def test_central_not_alive(
 
 
 @pytest.mark.asyncio
-async def test_central_callbacks(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_central_callbacks(factory: helper.Factory) -> None:
     """Test central other methods."""
-    assert central_local_factory
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     central.fire_interface_event(
         interface_id="SOME_ID",
         interface_event_type=HmInterfaceEventType.CALLBACK,
         data={ATTR_AVAILABLE: False},
     )
-    assert central_local_factory.ha_event_mock.call_args_list[-1] == call(
+    assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.interface",
         {
             "interface_id": "SOME_ID",
@@ -342,15 +306,11 @@ async def test_central_callbacks(
 
 
 @pytest.mark.asyncio
-async def test_central_services(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_central_services(factory: helper.Factory) -> None:
     """Test central fetch sysvar and programs."""
-    assert central_local_factory
-    central, mock_client = await central_local_factory.get_default_central(
+    central, mock_client = await factory.get_default_central(
         TEST_DEVICES, add_programs=True, add_sysvars=True
     )
-
     await central.fetch_program_data()
     assert mock_client.method_calls[-1] == call.get_all_programs(include_internal=False)
 
@@ -431,12 +391,9 @@ async def test_central_services(
 
 
 @pytest.mark.asyncio
-async def test_central_direct(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_central_direct(factory: helper.Factory) -> None:
     """Test central other methods."""
-    assert central_local_factory
-    central, client = await central_local_factory.get_unpatched_default_central(
+    central, client = await factory.get_unpatched_default_central(
         TEST_DEVICES, do_mock_client=False
     )
     mock_client = helper.get_mock(instance=client, available=False)
@@ -456,12 +413,9 @@ async def test_central_direct(
 
 
 @pytest.mark.asyncio
-async def test_central_without_interface_config(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_central_without_interface_config(factory: helper.Factory) -> None:
     """Test central other methods."""
-    assert central_local_factory
-    central = await central_local_factory.get_raw_central(interface_config=None)
+    central = await factory.get_raw_central(interface_config=None)
     assert central.has_clients is False
 
     with pytest.raises(NoClients):
@@ -488,14 +442,9 @@ async def test_central_without_interface_config(
 
 
 @pytest.mark.asyncio
-async def test_ping_pong(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_ping_pong(factory: helper.Factory) -> None:
     """Test central other methods."""
-    assert central_local_factory
-    central, client = await central_local_factory.get_default_central(
-        TEST_DEVICES, do_mock_client=False
-    )
+    central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
     await client.check_connection_availability()
     assert central._ping_count[interface_id] == 1
@@ -504,14 +453,9 @@ async def test_ping_pong(
 
 
 @pytest.mark.asyncio
-async def test_ping_failure(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_ping_failure(factory: helper.Factory) -> None:
     """Test central other methods."""
-    assert central_local_factory
-    central, client = await central_local_factory.get_default_central(
-        TEST_DEVICES, do_mock_client=False
-    )
+    central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 1
@@ -520,7 +464,7 @@ async def test_ping_failure(
         await client.check_connection_availability()
         count += 1
     assert central._ping_count[interface_id] == max_count
-    assert central_local_factory.ha_event_mock.mock_calls[-1] == call(
+    assert factory.ha_event_mock.mock_calls[-1] == call(
         HmEventType.INTERFACE,
         {
             "data": {"instance_name": "CentralTest"},
@@ -529,21 +473,16 @@ async def test_ping_failure(
         },
     )
     assert central._ping_pong_fired is True
-    assert len(central_local_factory.ha_event_mock.mock_calls) == 2
+    assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
     central.event(interface_id, "", EVENT_PONG, interface_id)
-    assert len(central_local_factory.ha_event_mock.mock_calls) == 2
+    assert len(factory.ha_event_mock.mock_calls) == 2
 
 
 @pytest.mark.asyncio
-async def test_pong_failure(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_pong_failure(factory: helper.Factory) -> None:
     """Test central other methods."""
-    assert central_local_factory
-    central, client = await central_local_factory.get_default_central(
-        TEST_DEVICES, do_mock_client=False
-    )
+    central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 2
@@ -552,7 +491,7 @@ async def test_pong_failure(
         central.event(interface_id, "", EVENT_PONG, interface_id)
         count += 1
     assert central._ping_count[interface_id] == -max_count + 1
-    assert central_local_factory.ha_event_mock.mock_calls[-1] == call(
+    assert factory.ha_event_mock.mock_calls[-1] == call(
         HmEventType.INTERFACE,
         {
             "data": {"instance_name": "CentralTest"},
@@ -561,18 +500,16 @@ async def test_pong_failure(
         },
     )
     assert central._ping_pong_fired is True
-    assert len(central_local_factory.ha_event_mock.mock_calls) == 2
+    assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
     central.event(interface_id, "", EVENT_PONG, interface_id)
-    assert len(central_local_factory.ha_event_mock.mock_calls) == 2
+    assert len(factory.ha_event_mock.mock_calls) == 2
 
 
 @pytest.mark.asyncio
-async def test_central_caches(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_central_caches(factory: helper.Factory) -> None:
     """Test central cache."""
-    central, client = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, client = await factory.get_default_central(TEST_DEVICES)
     assert len(central.device_descriptions._raw_device_descriptions[client.interface_id]) == 20
     assert len(central.paramset_descriptions._raw_paramset_descriptions[client.interface_id]) == 18
     await central.clear_all_caches()
@@ -583,11 +520,9 @@ async def test_central_caches(
 
 
 @pytest.mark.asyncio
-async def test_central_getter(
-    central_local_factory: helper.CentralUnitLocalFactory,
-) -> None:
+async def test_central_getter(factory: helper.Factory) -> None:
     """Test central getter."""
-    central, _ = await central_local_factory.get_default_central(TEST_DEVICES)
+    central, _ = await factory.get_default_central(TEST_DEVICES)
     assert central.get_device("123") is None
     assert central.get_custom_entity("123", 1) is None
     assert central.get_generic_entity("123", 1) is None
