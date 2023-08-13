@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from typing import cast
 
+import pytest
+
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.hub.sensor import HmSysvarSensor
-import pytest
 
-import const
-import helper
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU7981740": "HmIP-SRH.json",

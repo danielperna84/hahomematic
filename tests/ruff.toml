@@ -22,7 +22,7 @@ extend-ignore = [
 
 [isort]
 known-first-party = [
-    "homeassistant",
+    "hahomematic",
     "tests",
     "script",
 ]

@@ -4,6 +4,8 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import MagicMock, call
 
+import pytest
+
 from hahomematic.caches.visibility import check_ignore_parameters_is_clean
 from hahomematic.const import HmCallSource, HmEntityUsage
 from hahomematic.platforms.custom.definition import (
@@ -13,10 +15,8 @@ from hahomematic.platforms.custom.definition import (
 from hahomematic.platforms.custom.switch import CeSwitch
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
-import pytest
 
-import const
-import helper
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

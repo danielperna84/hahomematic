@@ -4,13 +4,14 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
+import pytest
+
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.custom.switch import CeSwitch
 from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.hub.switch import HmSysvarSwitch
-import pytest
 
-import helper
+from tests import helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

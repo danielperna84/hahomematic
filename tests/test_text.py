@@ -4,12 +4,13 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
+import pytest
+
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.hub.text import HmSysvarText
-import pytest
 
-import helper
+from tests import helper
 
 TEST_DEVICES: dict[str, str] = {}
 

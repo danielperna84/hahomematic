@@ -5,8 +5,7 @@ import asyncio
 
 import pytest
 
-import const
-import helper
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

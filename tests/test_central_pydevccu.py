@@ -3,16 +3,17 @@ from __future__ import annotations
 
 import os
 
+import orjson
+import pytest
+
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import (
     get_public_attributes_for_config_property,
     get_public_attributes_for_value_property,
 )
-import orjson
-import pytest
 
-import const
+from tests import const
 
 # pylint: disable=protected-access
 

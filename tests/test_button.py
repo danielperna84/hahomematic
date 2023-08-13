@@ -4,13 +4,14 @@ from __future__ import annotations
 from typing import cast
 from unittest.mock import call
 
+import pytest
+
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.generic.button import HmButton
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.support import ProgramData
-import pytest
 
-import helper
+from tests import helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU1437294": "HmIP-SMI.json",

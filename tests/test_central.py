@@ -5,6 +5,8 @@ from contextlib import suppress
 from typing import cast
 from unittest.mock import call, patch
 
+import pytest
+
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     ATTR_AVAILABLE,
@@ -18,10 +20,8 @@ from hahomematic.const import (
 from hahomematic.exceptions import HaHomematicException, NoClients
 from hahomematic.platforms.generic.number import HmFloat
 from hahomematic.platforms.generic.switch import HmSwitch
-import pytest
 
-import const
-import helper
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
