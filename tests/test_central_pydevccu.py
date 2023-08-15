@@ -24,7 +24,7 @@ async def test_central_mini(central_unit_mini) -> None:
     assert central_unit_mini
     assert central_unit_mini.name == const.CENTRAL_NAME
     assert central_unit_mini.model == "PyDevCCU"
-    assert central_unit_mini.get_client(const.PYDEVCCU_INTERFACE_ID).model == "PyDevCCU"
+    assert central_unit_mini.get_client(const.INTERFACE_ID).model == "PyDevCCU"
     assert central_unit_mini.primary_client.model == "PyDevCCU"
     assert len(central_unit_mini._devices) == 1
     assert len(central_unit_mini._entities) == 28
@@ -36,7 +36,7 @@ async def test_central_full(central_unit_full) -> None:
     assert central_unit_full
     assert central_unit_full.name == const.CENTRAL_NAME
     assert central_unit_full.model == "PyDevCCU"
-    assert central_unit_full.get_client(const.PYDEVCCU_INTERFACE_ID).model == "PyDevCCU"
+    assert central_unit_full.get_client(const.INTERFACE_ID).model == "PyDevCCU"
     assert central_unit_full.primary_client.model == "PyDevCCU"
 
     data = {}
@@ -126,15 +126,15 @@ async def test_central_full(central_unit_full) -> None:
     assert len(central_unit_full._devices) == 375
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
     await central_unit_full.delete_devices(
-        interface_id=const.PYDEVCCU_INTERFACE_ID, addresses=virtual_remotes
+        interface_id=const.INTERFACE_ID, addresses=virtual_remotes
     )
     assert len(central_unit_full._devices) == 372
     del_addresses = list(
-        central_unit_full.device_descriptions.get_device_descriptions(const.PYDEVCCU_INTERFACE_ID)
+        central_unit_full.device_descriptions.get_device_descriptions(const.INTERFACE_ID)
     )
     del_addresses = [adr for adr in del_addresses if ":" not in adr]
     await central_unit_full.delete_devices(
-        interface_id=const.PYDEVCCU_INTERFACE_ID, addresses=del_addresses
+        interface_id=const.INTERFACE_ID, addresses=del_addresses
     )
     assert len(central_unit_full._devices) == 0
     assert len(central_unit_full._entities) == 0
