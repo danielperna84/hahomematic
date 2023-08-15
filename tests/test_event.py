@@ -26,11 +26,11 @@ async def test_clickevent(factory: helper.Factory) -> None:
     event: ClickEvent = cast(ClickEvent, central.get_event("VCU2128127:1", "PRESS_SHORT"))
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.KEYPRESS
-    central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:1", "PRESS_SHORT", True)
+    central.event(const.INTERFACE_ID, "VCU2128127:1", "PRESS_SHORT", True)
     assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.keypress",
         {
-            "interface_id": const.LOCAL_INTERFACE_ID,
+            "interface_id": const.INTERFACE_ID,
             "address": "VCU2128127",
             "channel_no": 1,
             "device_type": "HmIP-BSM",
@@ -47,11 +47,11 @@ async def test_impulseevent(factory: helper.Factory) -> None:
     event: ImpulseEvent = cast(ImpulseEvent, central.get_event("VCU0000263:1", "SEQUENCE_OK"))
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.IMPULSE
-    central.event(const.LOCAL_INTERFACE_ID, "VCU0000263:1", "SEQUENCE_OK", True)
+    central.event(const.INTERFACE_ID, "VCU0000263:1", "SEQUENCE_OK", True)
     assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.impulse",
         {
-            "interface_id": const.LOCAL_INTERFACE_ID,
+            "interface_id": const.INTERFACE_ID,
             "address": "VCU0000263",
             "channel_no": 1,
             "device_type": "HM-Sen-EP",
@@ -71,11 +71,11 @@ async def test_deviceerrorevent(factory: helper.Factory) -> None:
     )
     assert event.usage == HmEntityUsage.EVENT
     assert event.event_type == HmEventType.DEVICE_ERROR
-    central.event(const.LOCAL_INTERFACE_ID, "VCU2128127:0", "ERROR_OVERHEAT", True)
+    central.event(const.INTERFACE_ID, "VCU2128127:0", "ERROR_OVERHEAT", True)
     assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.device_error",
         {
-            "interface_id": const.LOCAL_INTERFACE_ID,
+            "interface_id": const.INTERFACE_ID,
             "address": "VCU2128127",
             "channel_no": 0,
             "device_type": "HmIP-BSM",

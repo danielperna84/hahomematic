@@ -29,9 +29,9 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     assert sensor.unit == "V"
     assert sensor.value_list is None
     assert sensor.value is None
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:6", "VOLTAGE", 120)
+    central.event(const.INTERFACE_ID, "VCU3941846:6", "VOLTAGE", 120)
     assert sensor.value == 120.0
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:6", "VOLTAGE", 234.00)
+    central.event(const.INTERFACE_ID, "VCU3941846:6", "VOLTAGE", 234.00)
     assert sensor.value == 234.00
 
     sensor2: HmSensor = cast(
@@ -42,15 +42,15 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     assert sensor2.unit == "dBm"
     assert sensor2.value_list is None
     assert sensor2.value is None
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 24)
+    central.event(const.INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 24)
     assert sensor2.value == -24
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", -40)
+    central.event(const.INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", -40)
     assert sensor2.value == -40
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", -160)
+    central.event(const.INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", -160)
     assert sensor2.value == -96
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 160)
+    central.event(const.INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 160)
     assert sensor2.value == -96
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 400)
+    central.event(const.INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 400)
     assert sensor2.value is None
 
     sensor3: HmSensor = cast(
@@ -72,9 +72,9 @@ async def test_hmsensor_srh(factory: helper.Factory) -> None:
     assert sensor.unit is None
     assert sensor.value_list == ("CLOSED", "TILTED", "OPEN")
     assert sensor.value is None
-    central.event(const.LOCAL_INTERFACE_ID, "VCU7981740:1", "STATE", 0)
+    central.event(const.INTERFACE_ID, "VCU7981740:1", "STATE", 0)
     assert sensor.value == "CLOSED"
-    central.event(const.LOCAL_INTERFACE_ID, "VCU7981740:1", "STATE", 2)
+    central.event(const.INTERFACE_ID, "VCU7981740:1", "STATE", 2)
     assert sensor.value == "OPEN"
 
 

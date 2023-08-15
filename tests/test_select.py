@@ -41,7 +41,7 @@ async def test_hmselect(factory: helper.Factory) -> None:
         value=1,
     )
     assert select.value == "OPEN"
-    central.event(const.LOCAL_INTERFACE_ID, "VCU6354483:1", "WINDOW_STATE", 0)
+    central.event(const.INTERFACE_ID, "VCU6354483:1", "WINDOW_STATE", 0)
     assert select.value == "CLOSED"
 
     await select.send_value(3)

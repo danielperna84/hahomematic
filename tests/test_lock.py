@@ -52,22 +52,22 @@ async def test_cerflock(factory: helper.Factory) -> None:
     )
 
     assert lock.is_locking is None
-    central.event(const.LOCAL_INTERFACE_ID, "VCU0000146:1", "DIRECTION", 2)
+    central.event(const.INTERFACE_ID, "VCU0000146:1", "DIRECTION", 2)
     assert lock.is_locking is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU0000146:1", "DIRECTION", 0)
+    central.event(const.INTERFACE_ID, "VCU0000146:1", "DIRECTION", 0)
     assert lock.is_locking is False
 
     assert lock.is_unlocking is False
-    central.event(const.LOCAL_INTERFACE_ID, "VCU0000146:1", "DIRECTION", 1)
+    central.event(const.INTERFACE_ID, "VCU0000146:1", "DIRECTION", 1)
     assert lock.is_unlocking is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU0000146:1", "DIRECTION", 0)
+    central.event(const.INTERFACE_ID, "VCU0000146:1", "DIRECTION", 0)
     assert lock.is_unlocking is False
 
     assert lock.is_jammed is False
-    central.event(const.LOCAL_INTERFACE_ID, "VCU0000146:1", "ERROR", 2)
+    central.event(const.INTERFACE_ID, "VCU0000146:1", "ERROR", 2)
     assert lock.is_jammed is True
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU0000146:1", "ERROR", 0)
+    central.event(const.INTERFACE_ID, "VCU0000146:1", "ERROR", 0)
 
     await lock.open()
     call_count = len(mock_client.method_calls)
@@ -90,7 +90,7 @@ async def test_ceiplock(factory: helper.Factory) -> None:
         parameter="LOCK_TARGET_LEVEL",
         value=0,
     )
-    central.event(const.LOCAL_INTERFACE_ID, "VCU9724704:1", "LOCK_STATE", 1)
+    central.event(const.INTERFACE_ID, "VCU9724704:1", "LOCK_STATE", 1)
     assert lock.is_locked is True
     await lock.unlock()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -99,7 +99,7 @@ async def test_ceiplock(factory: helper.Factory) -> None:
         parameter="LOCK_TARGET_LEVEL",
         value=1,
     )
-    central.event(const.LOCAL_INTERFACE_ID, "VCU9724704:1", "LOCK_STATE", 2)
+    central.event(const.INTERFACE_ID, "VCU9724704:1", "LOCK_STATE", 2)
     assert lock.is_locked is False
     await lock.open()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -110,15 +110,15 @@ async def test_ceiplock(factory: helper.Factory) -> None:
     )
 
     assert lock.is_locking is None
-    central.event(const.LOCAL_INTERFACE_ID, "VCU9724704:1", "ACTIVITY_STATE", 2)
+    central.event(const.INTERFACE_ID, "VCU9724704:1", "ACTIVITY_STATE", 2)
     assert lock.is_locking is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU9724704:1", "ACTIVITY_STATE", 0)
+    central.event(const.INTERFACE_ID, "VCU9724704:1", "ACTIVITY_STATE", 0)
     assert lock.is_locking is False
 
     assert lock.is_unlocking is False
-    central.event(const.LOCAL_INTERFACE_ID, "VCU9724704:1", "ACTIVITY_STATE", 1)
+    central.event(const.INTERFACE_ID, "VCU9724704:1", "ACTIVITY_STATE", 1)
     assert lock.is_unlocking is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU9724704:1", "ACTIVITY_STATE", 0)
+    central.event(const.INTERFACE_ID, "VCU9724704:1", "ACTIVITY_STATE", 0)
     assert lock.is_unlocking is False
 
     assert lock.is_jammed is False
