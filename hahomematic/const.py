@@ -36,10 +36,7 @@ PATH_JSON_RPC: Final = "/api/homematic.cgi"
 
 BACKEND_CCU: Final = "CCU"
 BACKEND_HOMEGEAR: Final = "Homegear"
-BACKEND_LOCAL: Final = "Local CCU"
 BACKEND_PYDEVCCU: Final = "PyDevCCU"
-LOCAL_INTERFACE = "Local"
-LOCAL_SERIAL: Final = "0815_4711"
 
 PROGRAM_ADDRESS: Final = "program"
 SYSVAR_ADDRESS: Final = "sysvar"
@@ -413,7 +410,6 @@ class HmInterface(StrEnum):
     HMW: Final = IF_BIDCOS_WIRED_NAME
     HM: Final = IF_BIDCOS_RF_NAME
     VIRTUAL: Final = IF_VIRTUAL_DEVICES_NAME
-    LOCAL: Final = LOCAL_INTERFACE
 
 
 class HmEventType(StrEnum):

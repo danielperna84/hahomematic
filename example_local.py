@@ -6,9 +6,11 @@ import asyncio
 import logging
 import sys
 
+from client_local import LocalRessources
+
 from hahomematic import config, const
 from hahomematic.central_unit import CentralConfig
-from hahomematic.client import InterfaceConfig, LocalRessources
+from hahomematic.client import InterfaceConfig
 from hahomematic.platforms.custom.definition import validate_entity_definition
 
 logging.basicConfig(level=logging.INFO)

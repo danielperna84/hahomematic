@@ -34,13 +34,17 @@ TEST_DEVICES: dict[str, str] = {
 @pytest.mark.asyncio
 async def test_central_basics(factory: helper.Factory) -> None:
     """Test central basics."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, client = await factory.get_default_central(TEST_DEVICES)
     assert central.central_url == "http://127.0.0.1"
     assert central.is_alive is True
     assert central.system_information.serial == "0815_4711"
     assert central.version == "0"
-    system_information = await central.validate_config_and_get_system_information()
-    assert system_information.serial == "0815_4711"
+    with patch(
+        "hahomematic.client._ClientConfig.get_client",
+        return_value=client,
+    ):
+        system_information = await central.validate_config_and_get_system_information()
+        assert system_information.serial == "0815_4711"
     device = central.get_device("VCU2128127")
     assert device
     entities = central.get_readable_entities()
@@ -468,7 +472,7 @@ async def test_ping_failure(factory: helper.Factory) -> None:
         HmEventType.INTERFACE,
         {
             "data": {"instance_name": "CentralTest"},
-            "interface_id": "CentralTest-Local",
+            "interface_id": "CentralTest-BidCos-RF",
             "type": HmInterfaceEventType.PINGPONG,
         },
     )
@@ -495,7 +499,7 @@ async def test_pong_failure(factory: helper.Factory) -> None:
         HmEventType.INTERFACE,
         {
             "data": {"instance_name": "CentralTest"},
-            "interface_id": "CentralTest-Local",
+            "interface_id": "CentralTest-BidCos-RF",
             "type": HmInterfaceEventType.PINGPONG,
         },
     )
