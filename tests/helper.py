@@ -13,9 +13,10 @@ import orjson
 
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
-from hahomematic.client import Client, InterfaceConfig, LocalRessources, _ClientConfig
+from hahomematic.client import Client, InterfaceConfig, _ClientConfig
 from hahomematic.const import HmInterface
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic_support.client_local import ClientLocal, LocalRessources
 
 from tests import const
 
@@ -55,6 +56,7 @@ class Factory:
             client_session=self._client_session,
             load_un_ignore=un_ignore_list is not None,
             un_ignore_list=un_ignore_list,
+            enable_server=False,
         ).create_central()
 
         central.register_system_event_callback(self.system_event_mock)
@@ -71,18 +73,31 @@ class Factory:
         un_ignore_list: list[str] | None = None,
     ) -> tuple[CentralUnit, Client | Mock]:
         """Return a central based on give address_device_translation."""
-        interface_config = _get_local_client_interface_config(
-            address_device_translation=address_device_translation,
-            ignore_devices_on_create=ignore_devices_on_create,
+        interface_config = InterfaceConfig(
+            central_name=const.CENTRAL_NAME,
+            interface=hahomematic_const.HmInterface.HM,
+            port=2002,
         )
+
         central = await self.get_raw_central(
             interface_config=interface_config, un_ignore_list=un_ignore_list
         )
-        client = await _get_client(
-            central=central,
-            interface_config=interface_config,
-            do_mock_client=do_mock_client,
+
+        _client = ClientLocal(
+            client_config=_ClientConfig(
+                central=central,
+                interface_config=interface_config,
+                local_ip="127.0.0.1",
+            ),
+            local_resources=LocalRessources(
+                address_device_translation=address_device_translation,
+                ignore_devices_on_create=ignore_devices_on_create
+                if ignore_devices_on_create
+                else [],
+            ),
         )
+        await _client.init_client()
+        client = get_mock(_client) if do_mock_client else _client
 
         assert central
         assert client
@@ -105,59 +120,25 @@ class Factory:
             un_ignore_list=un_ignore_list,
         )
 
-        with patch(
-            "hahomematic.client.create_client",
-            return_value=client,
-        ), patch(
-            "hahomematic.client.ClientLocal.get_all_system_variables",
+        patch(
+            "hahomematic.central_unit.CentralUnit._get_primary_client", return_value=client
+        ).start()
+        patch("hahomematic.client._ClientConfig.get_client", return_value=client).start()
+        patch(
+            "hahomematic_support.client_local.ClientLocal.get_all_system_variables",
             return_value=const.SYSVAR_DATA if add_sysvars else [],
-        ), patch(
-            "hahomematic.client.ClientLocal.get_all_programs",
+        ).start()
+        patch(
+            "hahomematic_support.client_local.ClientLocal.get_all_programs",
             return_value=const.PROGRAM_DATA if add_programs else [],
-        ):
-            await central.start()
+        ).start()
+
+        await central.start()
+        await central._refresh_device_descriptions(client=client)
 
         assert central
         assert client
         return central, client
-
-
-def _get_local_client_interface_config(
-    address_device_translation: dict[str, str],
-    ignore_devices_on_create: list[str] | None = None,
-) -> InterfaceConfig:
-    """Return a central based on give address_device_translation."""
-    _ignore_devices_on_create: list[str] = (
-        ignore_devices_on_create if ignore_devices_on_create else []
-    )
-
-    return InterfaceConfig(
-        central_name=const.CENTRAL_NAME,
-        interface=hahomematic_const.HmInterface.LOCAL,
-        port=2002,
-        local_resources=LocalRessources(
-            address_device_translation=address_device_translation,
-            ignore_devices_on_create=_ignore_devices_on_create,
-        ),
-    )
-
-
-async def _get_client(
-    central: CentralUnit,
-    interface_config: InterfaceConfig,
-    do_mock_client: bool = True,
-) -> Client | Mock:
-    """Return a central based on give address_device_translation."""
-    _client = await _ClientConfig(
-        central=central,
-        interface_config=interface_config,
-        local_ip="127.0.0.1",
-    ).get_client()
-    _mock_client = get_mock(_client)
-    client = _mock_client if do_mock_client else _client
-
-    assert client
-    return client
 
 
 def get_prepared_custom_entity(

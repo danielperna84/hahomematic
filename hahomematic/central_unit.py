@@ -37,7 +37,6 @@ from hahomematic.const import (
     HH_EVENT_NEW_DEVICES,
     HM_ADDRESS,
     IF_PRIMARY,
-    LOCAL_INTERFACE,
     MAX_CACHE_AGE,
     PROXY_INIT_SUCCESS,
     HmDeviceFirmwareState,
@@ -260,11 +259,6 @@ class CentralUnit:
         await self._start_clients()
         if self.config.enable_server:
             self._start_connection_checker()
-        else:
-            local_interface_id = f"{self.name}-{LOCAL_INTERFACE}"
-            if self.has_client(interface_id=local_interface_id):
-                client = self.get_client(interface_id=local_interface_id)
-                await self._refresh_device_descriptions(client=client)
         self._started = True
 
     async def start_direct(self) -> None:
@@ -583,8 +577,6 @@ class CentralUnit:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hmcl.Client | None = None
         for client in self._clients.values():
-            if isinstance(client, hmcl.ClientLocal):
-                return client
             if client.interface in IF_PRIMARY and client.available:
                 return client
         return client
@@ -1279,6 +1271,7 @@ class CentralConfig:
         un_ignore_list: list[str] | None = None,
         use_caches: bool = True,
         load_un_ignore: bool = True,
+        enable_server: bool = True,
     ) -> None:
         """Init the client config."""
         self.connection_state: Final = CentralConnectionState()
@@ -1299,6 +1292,7 @@ class CentralConfig:
         self.un_ignore_list: Final = un_ignore_list
         self._use_caches: Final = use_caches
         self._load_un_ignore: Final = load_un_ignore
+        self.enable_server = enable_server
 
     @property
     def central_url(self) -> str:
@@ -1310,14 +1304,6 @@ class CentralConfig:
         if self.json_port:
             url = f"{url}:{self.json_port}"
         return f"{url}"
-
-    @property
-    def enable_server(self) -> bool:
-        """Return if xmlrpc-server should be started."""
-        for interface_config in self.interface_configs:
-            if interface_config.interface == LOCAL_INTERFACE:
-                return False
-        return True
 
     @property
     def load_un_ignore(self) -> bool:

@@ -5,7 +5,7 @@ repos:
       - id: black
         args:
           - --quiet
-        files: ^((hahomematic|pylint|script|tests)/.+)?[^/]+\.py$
+        files: ^((hahomematic|hahomematic_support|pylint|script|tests)/.+)?[^/]+\.py$
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.0.284
     hooks:
@@ -30,7 +30,7 @@ repos:
           - --quiet
           - --format=custom
           - --configfile=tests/bandit.yaml
-        files: ^(hahomematic|script|tests)/.+\.py$
+        files: ^(hahomematic|hahomematic_support|script|tests)/.+\.py$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:
@@ -63,7 +63,7 @@ repos:
           - --py311-plus
           - --force
           - --keep-updates
-        files: ^(hahomematic|tests|script)/.+\.py$
+        files: ^(hahomematic|hahomematic_support|tests|script)/.+\.py$
   - repo: local
     hooks:
       # Run mypy through our wrapper script in order to get the possible
@@ -76,10 +76,10 @@ repos:
         language: script
         types: [python]
         require_serial: true
-        files: ^(hahomematic|pylint)/.+\.py$
+        files: ^(hahomematic|hahomematic_support|pylint)/.+\.py$
       - id: pylint
         name: pylint
         entry: script/run-in-env.sh pylint -j 0
         language: script
         types: [python]
-        files: ^hahomematic/.+\.py$
+        files: ^(hahomematic|hahomematic_support)/.+\.py$

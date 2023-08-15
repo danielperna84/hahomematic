@@ -1,0 +1,13 @@
+# This extend our general Ruff rules specifically for hahomematic_support
+extend = "../pyproject.toml"
+
+[isort]
+known-first-party = [
+    "hahomematic",
+    "hahomematic_support"
+]
+
+known-third-party = [
+    "orjson",
+    "voluptuous",
+]

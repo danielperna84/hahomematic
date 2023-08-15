@@ -66,7 +66,7 @@ async def test_cedimmer(factory: helper.Factory) -> None:
     assert light.is_on
 
     assert light.channel_brightness is None
-    central.event(const.LOCAL_INTERFACE_ID, "VCU1399816:3", "LEVEL", 0.4)
+    central.event(const.INTERFACE_ID, "VCU1399816:3", "LEVEL", 0.4)
     assert light.channel_brightness == 102
 
     await light.turn_on(on_time=5.0, ramp_time=6.0)
@@ -174,9 +174,9 @@ async def test_cecolordimmer(factory: helper.Factory) -> None:
         channel_address="VCU9973336:9", paramset_key="VALUES", parameter="LEVEL", value=1.0
     )
     assert light.hs_color == (0.0, 0.0)
-    central.event(const.LOCAL_INTERFACE_ID, "VCU9973336:15", "COLOR", 201)
+    central.event(const.INTERFACE_ID, "VCU9973336:15", "COLOR", 201)
     assert light.hs_color == (0.0, 0.0)
-    central.event(const.LOCAL_INTERFACE_ID, "VCU9973336:15", "COLOR", None)
+    central.event(const.INTERFACE_ID, "VCU9973336:15", "COLOR", None)
     assert light.hs_color == (0.0, 0.0)
 
     await light.turn_on()
@@ -264,9 +264,9 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
     )
     assert light.effect == "Slow color change"
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3747418:2", "COLOR", 201)
+    central.event(const.INTERFACE_ID, "VCU3747418:2", "COLOR", 201)
     assert light.hs_color == (0.0, 0.0)
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3747418:2", "COLOR", None)
+    central.event(const.INTERFACE_ID, "VCU3747418:2", "COLOR", None)
     assert light.hs_color == (0.0, 0.0)
 
     await light.turn_on()
@@ -426,10 +426,10 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     )
     assert light.color_name == "PURPLE"
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3716619:7", "LEVEL", 0.5)
+    central.event(const.INTERFACE_ID, "VCU3716619:7", "LEVEL", 0.5)
     assert light.channel_brightness == 127
 
-    central.event(const.LOCAL_INTERFACE_ID, "VCU3716619:7", "COLOR", 1)
+    central.event(const.INTERFACE_ID, "VCU3716619:7", "COLOR", 1)
     assert light.channel_hs_color == (240.0, 100.0)
     assert light.channel_color_name == "BLUE"
 

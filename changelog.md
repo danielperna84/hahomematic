@@ -1,3 +1,10 @@
+# Version 2023.8.4 (2023-08-14)
+
+- Improve testing:
+  - Extract ClientLocal code from production code
+  - Use own main package for ClientLocal
+  - Patch permanent till teardown
+
 # Version 2023.8.3 (2023-08-12)
 
 - Update project setup

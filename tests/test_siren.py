@@ -27,13 +27,13 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
     assert siren.usage == HmEntityUsage.CE_PRIMARY
 
     assert siren.is_on is False
-    central.event(const.LOCAL_INTERFACE_ID, "VCU8249617:3", "ACOUSTIC_ALARM_ACTIVE", 1)
+    central.event(const.INTERFACE_ID, "VCU8249617:3", "ACOUSTIC_ALARM_ACTIVE", 1)
     assert siren.is_on is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU8249617:3", "ACOUSTIC_ALARM_ACTIVE", 0)
+    central.event(const.INTERFACE_ID, "VCU8249617:3", "ACOUSTIC_ALARM_ACTIVE", 0)
     assert siren.is_on is False
-    central.event(const.LOCAL_INTERFACE_ID, "VCU8249617:3", "OPTICAL_ALARM_ACTIVE", 1)
+    central.event(const.INTERFACE_ID, "VCU8249617:3", "OPTICAL_ALARM_ACTIVE", 1)
     assert siren.is_on is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU8249617:3", "OPTICAL_ALARM_ACTIVE", 0)
+    central.event(const.INTERFACE_ID, "VCU8249617:3", "OPTICAL_ALARM_ACTIVE", 0)
     assert siren.is_on is False
 
     await siren.turn_on(
@@ -110,13 +110,13 @@ async def test_ceipsirensmoke(factory: helper.Factory) -> None:
     assert siren.usage == HmEntityUsage.CE_PRIMARY
 
     assert siren.is_on is False
-    central.event(const.LOCAL_INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 1)
+    central.event(const.INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 1)
     assert siren.is_on is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 2)
+    central.event(const.INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 2)
     assert siren.is_on is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 3)
+    central.event(const.INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 3)
     assert siren.is_on is True
-    central.event(const.LOCAL_INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 0)
+    central.event(const.INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 0)
     assert siren.is_on is False
 
     await siren.turn_on()

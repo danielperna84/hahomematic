@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
-    LOCAL_INTERFACE,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
@@ -18,8 +17,7 @@ CCU_HOST = "127.0.0.1"
 CCU_USERNAME = "user"
 CCU_PASSWORD = "pass"
 CCU_PORT = 2002
-LOCAL_INTERFACE_ID = f"{CENTRAL_NAME}-{LOCAL_INTERFACE}"
-PYDEVCCU_INTERFACE_ID = f"{CENTRAL_NAME}-{IF_BIDCOS_RF_NAME}"
+INTERFACE_ID = f"{CENTRAL_NAME}-{IF_BIDCOS_RF_NAME}"
 
 
 SYSVAR_DATA: list[SystemVariableData] = [

@@ -23,10 +23,12 @@ extend-ignore = [
 [isort]
 known-first-party = [
     "hahomematic",
+    "hahomematic_support",
     "tests",
     "script",
 ]
 known-third-party = [
+    "orjson",
     "syrupy",
     "pytest",
     "voluptuous",

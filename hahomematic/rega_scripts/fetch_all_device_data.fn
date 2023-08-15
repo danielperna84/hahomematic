@@ -20,8 +20,9 @@ boolean dpFirst = true;
 Write('{');
 foreach (sDevId, root.Devices().EnumUsedIDs()) {
     object oDevice = dom.GetObject(sDevId);
+    string ifacename = interfaces.Get ((dom.GetObject(oDevice).Interface())).Name();
     boolean bDevReady = oDevice.ReadyConfig();
-    if (bDevReady) {
+    if ((bDevReady) && !((ifacename == "CUxD") || (ifacename == "CCU-Jack"))) {
         foreach (sChnId, oDevice.Channels()) {
             object oChannel = dom.GetObject(sChnId);
             foreach(sDPId, oChannel.DPs().EnumUsedIDs()) {
