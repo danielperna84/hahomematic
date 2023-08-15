@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from unittest.mock import patch
 
 from aiohttp import ClientSession, TCPConnector
 import pydevccu
@@ -14,6 +15,12 @@ from tests import const, helper
 logging.basicConfig(level=logging.INFO)
 
 # pylint: disable=protected-access, redefined-outer-name
+
+
+@pytest.fixture(autouse=True)
+def teardown():
+    """Clean up."""
+    patch.stopall()
 
 
 @pytest.fixture

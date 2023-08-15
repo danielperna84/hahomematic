@@ -39,12 +39,8 @@ async def test_central_basics(factory: helper.Factory) -> None:
     assert central.is_alive is True
     assert central.system_information.serial == "0815_4711"
     assert central.version == "0"
-    with patch(
-        "hahomematic.client._ClientConfig.get_client",
-        return_value=client,
-    ):
-        system_information = await central.validate_config_and_get_system_information()
-        assert system_information.serial == "0815_4711"
+    system_information = await central.validate_config_and_get_system_information()
+    assert system_information.serial == "0815_4711"
     device = central.get_device("VCU2128127")
     assert device
     entities = central.get_readable_entities()

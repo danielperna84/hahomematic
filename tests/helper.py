@@ -121,21 +121,21 @@ class Factory:
             un_ignore_list=un_ignore_list,
         )
 
-        with patch(
-            "hahomematic.central_unit.CentralUnit._get_primary_client",
-            return_value=client,
-        ), patch(
-            "hahomematic.client._ClientConfig.get_client",
-            return_value=client,
-        ), patch(
+        patch(
+            "hahomematic.central_unit.CentralUnit._get_primary_client", return_value=client
+        ).start()
+        patch("hahomematic.client._ClientConfig.get_client", return_value=client).start()
+        patch(
             "tests.client_local.ClientLocal.get_all_system_variables",
             return_value=const.SYSVAR_DATA if add_sysvars else [],
-        ), patch(
+        ).start()
+        patch(
             "tests.client_local.ClientLocal.get_all_programs",
             return_value=const.PROGRAM_DATA if add_programs else [],
-        ):
-            await central.start()
-            await central._refresh_device_descriptions(client=client)
+        ).start()
+
+        await central.start()
+        await central._refresh_device_descriptions(client=client)
 
         assert central
         assert client
