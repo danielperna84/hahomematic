@@ -23,6 +23,7 @@ extend-ignore = [
 [isort]
 known-first-party = [
     "hahomematic",
+    "hahomematic_support",
     "tests",
     "script",
 ]

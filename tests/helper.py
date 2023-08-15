@@ -9,7 +9,6 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
-from hahomematic_support.client_local import ClientLocal, LocalRessources
 import orjson
 
 from hahomematic import const as hahomematic_const
@@ -17,6 +16,7 @@ from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, _ClientConfig
 from hahomematic.const import HmInterface
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic_support.client_local import ClientLocal, LocalRessources
 
 from tests import const
 
