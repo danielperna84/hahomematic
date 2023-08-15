@@ -25,12 +25,11 @@ BACKEND_LOCAL: Final = "Local CCU"
 class ClientLocal(Client):  # pragma: no cover
     """Local client object to provide access to locally stored files."""
 
-    _paramset_descriptions_cache: dict[str, Any] = {}
-
     def __init__(self, client_config: _ClientConfig, local_resources: LocalRessources) -> None:
         """Initialize the Client."""
         super().__init__(client_config=client_config)
         self._local_resources = local_resources
+        self._paramset_descriptions_cache: dict[str, Any] = {}
 
     @property
     def available(self) -> bool:

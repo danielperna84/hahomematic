@@ -37,6 +37,7 @@ PATH_JSON_RPC: Final = "/api/homematic.cgi"
 BACKEND_CCU: Final = "CCU"
 BACKEND_HOMEGEAR: Final = "Homegear"
 BACKEND_PYDEVCCU: Final = "PyDevCCU"
+HOMEGEAR_SERIAL = "Homegear_SN0815"
 
 PROGRAM_ADDRESS: Final = "program"
 SYSVAR_ADDRESS: Final = "sysvar"
