@@ -9,9 +9,9 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
+from hahomematic_support.client_local import ClientLocal, LocalRessources
 import orjson
 
-from client_local import LocalRessources
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, _ClientConfig
@@ -19,7 +19,6 @@ from hahomematic.const import HmInterface
 from hahomematic.platforms.custom.entity import CustomEntity
 
 from tests import const
-from tests.client_local import ClientLocal
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,11 +125,11 @@ class Factory:
         ).start()
         patch("hahomematic.client._ClientConfig.get_client", return_value=client).start()
         patch(
-            "tests.client_local.ClientLocal.get_all_system_variables",
+            "hahomematic_support.client_local.ClientLocal.get_all_system_variables",
             return_value=const.SYSVAR_DATA if add_sysvars else [],
         ).start()
         patch(
-            "tests.client_local.ClientLocal.get_all_programs",
+            "hahomematic_support.client_local.ClientLocal.get_all_programs",
             return_value=const.PROGRAM_DATA if add_programs else [],
         ).start()
 

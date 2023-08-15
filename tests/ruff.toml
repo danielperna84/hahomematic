@@ -27,6 +27,7 @@ known-first-party = [
     "script",
 ]
 known-third-party = [
+    "orjson",
     "syrupy",
     "pytest",
     "voluptuous",

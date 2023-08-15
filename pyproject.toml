@@ -386,6 +386,7 @@ max-line-length-suggestions = 99
 pythonpath = [
     ".",
     "hahomematic",
+    "hahomematic_support",
 ]
 testpaths = [
     "tests",
@@ -511,6 +512,7 @@ voluptuous = "vol"
 force-sort-within-sections = true
 required-imports = ["from __future__ import annotations"]
 known-first-party = ["hahomematic",]
+known-third-party = ["orjson","voluptuous",]
 combine-as-imports = true
 split-on-trailing-comma = false
 
