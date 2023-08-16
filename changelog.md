@@ -3,6 +3,7 @@
 - Improve testing:
   - Set client_session to None
   - Remove unnecessary async from create_central
+- Make start_direct a config option
 
 # Version 2023.8.4 (2023-08-14)
 

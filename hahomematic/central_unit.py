@@ -256,20 +256,14 @@ class CentralUnit:
             _LOGGER.debug("START_: Cental %s already started", self._attr_name)
             return
         await self.parameter_visibility.load()
-        await self._start_clients()
-        if self.config.enable_server:
-            self._start_connection_checker()
-        self._started = True
-
-    async def start_direct(self) -> None:
-        """Start the central unit for temporary usage. #CC."""
-        if self._started:
-            _LOGGER.debug("START_DIRECT: Cental %s already started", self._attr_name)
-            return
-        await self.parameter_visibility.load()
-        await self._create_clients()
-        for client in self._clients.values():
-            await self._refresh_device_descriptions(client=client)
+        if self.config.start_direct:
+            if await self._create_clients():
+                for client in self._clients.values():
+                    await self._refresh_device_descriptions(client=client)
+        else:
+            await self._start_clients()
+            if self.config.enable_server:
+                self._start_connection_checker()
         self._started = True
 
     async def stop(self) -> None:
@@ -1271,7 +1265,7 @@ class CentralConfig:
         un_ignore_list: list[str] | None = None,
         use_caches: bool = True,
         load_un_ignore: bool = True,
-        enable_server: bool = True,
+        start_direct: bool = False,
     ) -> None:
         """Init the client config."""
         self.connection_state: Final = CentralConnectionState()
@@ -1292,7 +1286,7 @@ class CentralConfig:
         self.un_ignore_list: Final = un_ignore_list
         self._use_caches: Final = use_caches
         self._load_un_ignore: Final = load_un_ignore
-        self.enable_server = enable_server
+        self.start_direct = start_direct
 
     @property
     def central_url(self) -> str:
@@ -1304,6 +1298,11 @@ class CentralConfig:
         if self.json_port:
             url = f"{url}:{self.json_port}"
         return f"{url}"
+
+    @property
+    def enable_server(self) -> bool:
+        """Return if server and connection checker should be started."""
+        return self.start_direct is False
 
     @property
     def load_un_ignore(self) -> bool:
