@@ -448,7 +448,7 @@ class Example:
             port=2002,
         )
 
-        self.central = await CentralConfig(
+        self.central = CentralConfig(
             name=CENTRAL_NAME,
             host=CCU_HOST,
             username=CCU_USERNAME,

@@ -79,7 +79,7 @@ class Example:
                 remote_path="/groups",
             ),
         }
-        self.central = await CentralConfig(
+        self.central = CentralConfig(
             name=central_name,
             host=CCU_HOST,
             username=CCU_USERNAME,

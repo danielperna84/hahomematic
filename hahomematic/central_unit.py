@@ -1337,7 +1337,7 @@ class CentralConfig:
             return False
         return True
 
-    async def create_central(self) -> CentralUnit:
+    def create_central(self) -> CentralUnit:
         """Return the central."""
         if not self.check_config():
             raise HaHomematicException("create_central: Config contains errors. See log files.")
