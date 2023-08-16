@@ -1,3 +1,8 @@
+# Version 2023.8.5 (2023-08-16)
+
+- Improve testing:
+  - Set client_session to None
+
 # Version 2023.8.4 (2023-08-14)
 
 - Improve testing:
