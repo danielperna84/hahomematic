@@ -26,6 +26,7 @@ from hahomematic.const import (
     HM_PARENT_TYPE,
     HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
+    HOMEGEAR_SERIAL,
     IF_BIDCOS_RF_NAME,
     IF_NAMES,
     INIT_DATETIME,
@@ -907,9 +908,7 @@ class ClientHomegear(Client):
 
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
-        return SystemInformation(
-            available_interfaces=[IF_BIDCOS_RF_NAME], serial="Homegear_SN0815"
-        )
+        return SystemInformation(available_interfaces=[IF_BIDCOS_RF_NAME], serial=HOMEGEAR_SERIAL)
 
 
 class _ClientConfig:

@@ -51,19 +51,17 @@ async def client_session() -> ClientSession:
 
 
 @pytest.fixture
-async def central_unit_mini(
-    pydev_ccu_mini: pydevccu.Server, client_session: ClientSession
-) -> CentralUnit:
+async def central_unit_mini(pydev_ccu_mini: pydevccu.Server) -> CentralUnit:
     """Create and yield central."""
-    central_unit = await helper.get_pydev_ccu_central_unit_full(client_session, use_caches=True)
+    central_unit = await helper.get_pydev_ccu_central_unit_full(
+        client_session=None, use_caches=True
+    )
     yield central_unit
     await central_unit.stop()
 
 
 @pytest.fixture
-async def central_unit_full(
-    pydev_ccu_full: pydevccu.Server, client_session: ClientSession
-) -> CentralUnit:
+async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
     """Create and yield central."""
 
     def entity_data_event_callback(*args, **kwargs):
@@ -78,7 +76,9 @@ async def central_unit_full(
     def system_event_callback(*args, **kwargs):
         """Do dummy system_event_callback."""
 
-    central_unit = await helper.get_pydev_ccu_central_unit_full(client_session, use_caches=False)
+    central_unit = await helper.get_pydev_ccu_central_unit_full(
+        client_session=None, use_caches=False
+    )
 
     central_unit.register_entity_data_event_callback(entity_data_event_callback)
     central_unit.register_entity_event_callback(entity_event_callback)
@@ -95,8 +95,6 @@ async def central_unit_full(
 
 
 @pytest.fixture
-async def factory(
-    client_session: ClientSession,
-) -> helper.Factory:
+async def factory() -> helper.Factory:
     """Return central factory."""
-    return helper.Factory(client_session)
+    return helper.Factory(client_session=None)

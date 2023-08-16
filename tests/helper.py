@@ -30,7 +30,7 @@ GOT_DEVICES = False
 class Factory:
     """Factory for a central_unit with one local client."""
 
-    def __init__(self, client_session: ClientSession):
+    def __init__(self, client_session: ClientSession | None):
         """Init the central factory."""
         self._client_session = client_session
         self.system_event_mock = MagicMock()
@@ -132,6 +132,9 @@ class Factory:
             "hahomematic_support.client_local.ClientLocal.get_all_programs",
             return_value=const.PROGRAM_DATA if add_programs else [],
         ).start()
+        patch(
+            "hahomematic.central_unit.CentralUnit._identify_callback_ip", return_value="127.0.0.1"
+        ).start()
 
         await central.start()
         await central._refresh_device_descriptions(client=client)
@@ -183,7 +186,7 @@ def _load_json_file(package: str, resource: str, filename: str) -> Any | None:
 
 
 async def get_pydev_ccu_central_unit_full(
-    client_session: ClientSession, use_caches: bool
+    client_session: ClientSession | None, use_caches: bool
 ) -> CentralUnit:
     """Create and yield central."""
     sleep_counter = 0
