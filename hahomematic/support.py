@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import base64
 from collections.abc import Collection
-from contextlib import closing
+import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from functools import cache
@@ -136,13 +136,15 @@ def check_password(password: str | None) -> bool:
 
 def get_tls_context(verify_tls: bool) -> ssl.SSLContext:
     """Return tls verified/unverified ssl/tls context."""
-    if verify_tls:
-        ssl_context = ssl.create_default_context()
-    else:
-        ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
-    return ssl_context
+    sslcontext = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    if not verify_tls:
+        sslcontext.check_hostname = False
+        sslcontext.verify_mode = ssl.CERT_NONE
+    with contextlib.suppress(AttributeError):
+        # This only works for OpenSSL >= 1.0.0
+        sslcontext.options |= ssl.OP_NO_COMPRESSION
+    sslcontext.set_default_verify_paths()
+    return sslcontext
 
 
 def get_channel_address(device_address: str, channel_no: int | None) -> str:
@@ -181,7 +183,7 @@ def updated_within_seconds(last_update: datetime, max_age_seconds: int | float) 
 
 def find_free_port() -> int:
     """Find a free port for XmlRpc server default port."""
-    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+    with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
         sock.bind(("", 0))
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return int(sock.getsockname()[1])
