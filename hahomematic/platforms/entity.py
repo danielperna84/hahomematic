@@ -534,7 +534,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             return None  # type: ignore[return-value]
 
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
-        """Get the event_data. #CC."""
+        """Get the event_data."""
         event_data = {
             ATTR_ADDRESS: self.device.device_address,
             ATTR_CHANNEL_NO: self._attr_channel_no,

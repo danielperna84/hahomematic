@@ -433,7 +433,7 @@ class Client(ABC):
         value: Any,
         rx_mode: str | None = None,
     ) -> bool:
-        """Set single value on paramset VALUES. #CC."""
+        """Set single value on paramset VALUES."""
         if paramset_key == PARAMSET_KEY_VALUES:
             return await self._set_value(
                 channel_address=channel_address,
@@ -483,7 +483,7 @@ class Client(ABC):
         Set paramsets manually.
 
         Address is usually the channel_address,
-        but for bidcos devices there is a master paramset at the device. #CC.
+        but for bidcos devices there is a master paramset at the device.
         """
         try:
             _LOGGER.debug("PUT_PARAMSET: %s, %s, %s", address, paramset_key, value)
