@@ -88,7 +88,6 @@ class Example:
             storage_folder="homematicip_local",
             interface_configs=interface_configs,
             default_callback_port=54321,
-            use_caches=False,
             client_session=ClientSession(connector=TCPConnector(limit=3)),
         ).create_central()
 

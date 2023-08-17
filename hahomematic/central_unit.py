@@ -1263,8 +1263,6 @@ class CentralConfig:
         callback_port: int | None = None,
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
-        use_caches: bool = True,
-        load_un_ignore: bool = True,
         start_direct: bool = False,
     ) -> None:
         """Init the client config."""
@@ -1284,8 +1282,6 @@ class CentralConfig:
         self.callback_port: Final = callback_port
         self.json_port: Final = json_port
         self.un_ignore_list: Final = un_ignore_list
-        self._use_caches: Final = use_caches
-        self._load_un_ignore: Final = load_un_ignore
         self.start_direct = start_direct
 
     @property
@@ -1307,16 +1303,12 @@ class CentralConfig:
     @property
     def load_un_ignore(self) -> bool:
         """Return if unignore should be loaded."""
-        if not self.enable_server:
-            return False
-        return self._load_un_ignore
+        return self.start_direct is False
 
     @property
     def use_caches(self) -> bool:
         """Return if caches should be used."""
-        if not self.enable_server:
-            return False
-        return self._use_caches
+        return self.start_direct is False
 
     def check_config(self) -> bool:
         """Check config."""

@@ -1,3 +1,8 @@
+# Version 2023.8.6 (2023-08-17)
+
+- Remove use_caches and load_un_ignore from central config
+- Remove obsolete comments
+
 # Version 2023.8.5 (2023-08-16)
 
 - Improve testing:
