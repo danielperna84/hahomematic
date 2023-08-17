@@ -53,11 +53,10 @@ async def client_session() -> ClientSession:
 @pytest.fixture
 async def central_unit_mini(pydev_ccu_mini: pydevccu.Server) -> CentralUnit:
     """Create and yield central."""
-    central_unit = await helper.get_pydev_ccu_central_unit_full(
-        client_session=None, use_caches=True
-    )
+    central_unit = await helper.get_pydev_ccu_central_unit_full(client_session=None)
     yield central_unit
     await central_unit.stop()
+    await central_unit.clear_all_caches()
 
 
 @pytest.fixture
@@ -77,7 +76,7 @@ async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
         """Do dummy system_event_callback."""
 
     central_unit = await helper.get_pydev_ccu_central_unit_full(
-        client_session=None, use_caches=False
+        client_session=None,
     )
 
     central_unit.register_entity_data_event_callback(entity_data_event_callback)
@@ -92,6 +91,7 @@ async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
     central_unit.unregister_ha_event_callback(ha_event_callback)
     central_unit.unregister_system_event_callback(system_event_callback)
     await central_unit.stop()
+    await central_unit.clear_all_caches()
 
 
 @pytest.fixture

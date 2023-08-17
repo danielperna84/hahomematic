@@ -54,7 +54,6 @@ class Factory:
             interface_configs=set(interface_configs),
             default_callback_port=54321,
             client_session=self._client_session,
-            load_un_ignore=un_ignore_list is not None,
             un_ignore_list=un_ignore_list,
             start_direct=True,
         ).create_central()
@@ -187,9 +186,7 @@ def _load_json_file(package: str, resource: str, filename: str) -> Any | None:
         return orjson.loads(fptr.read())
 
 
-async def get_pydev_ccu_central_unit_full(
-    client_session: ClientSession | None, use_caches: bool
-) -> CentralUnit:
+async def get_pydev_ccu_central_unit_full(client_session: ClientSession | None) -> CentralUnit:
     """Create and yield central."""
     sleep_counter = 0
     global GOT_DEVICES  # pylint: disable=global-statement
@@ -223,7 +220,6 @@ async def get_pydev_ccu_central_unit_full(
         interface_configs=interface_configs,
         default_callback_port=54321,
         client_session=client_session,
-        use_caches=use_caches,
     ).create_central()
     central_unit.register_system_event_callback(systemcallback)
     await central_unit.start()
