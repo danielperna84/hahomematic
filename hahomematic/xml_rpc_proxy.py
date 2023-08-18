@@ -6,6 +6,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 import errno
 import logging
+from ssl import SSLError
 from typing import Any, Final, TypeVar
 import xmlrpc.client
 
@@ -97,6 +98,10 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                 self._connection_state.remove_issue(issuer=self)
                 return result
             raise NoConnection(f"No connection to {self.interface_id}")
+        except SSLError as sslerr:
+            message = f"SSLError on {self.interface_id}: {reduce_args(args=sslerr.args)}"
+            _LOGGER.error(message)
+            raise NoConnection(message) from sslerr
         except OSError as ose:
             message = f"OSError on {self.interface_id}: {reduce_args(args=ose.args)}"
             if ose.args[0] in NO_CONNECTION_ERROR_CODES:
