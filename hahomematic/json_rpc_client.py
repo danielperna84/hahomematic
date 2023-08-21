@@ -6,6 +6,7 @@ import logging
 import os
 from pathlib import Path
 import re
+from ssl import SSLError
 from typing import Any, Final
 
 from aiohttp import (
@@ -317,6 +318,9 @@ class JsonRpcAioHttpClient:
         except (ClientConnectorError, ClientError) as cce:
             self.clear_session()
             raise ClientException(reduce_args(args=cce.args)) from cce
+        except SSLError as sslerr:
+            self.clear_session()
+            raise ClientException(reduce_args(args=sslerr.args)) from sslerr
         except (OSError, TypeError, Exception) as ex:
             self.clear_session()
             raise ClientException(reduce_args(args=ex.args)) from ex

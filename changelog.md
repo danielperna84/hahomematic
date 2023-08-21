@@ -1,3 +1,7 @@
+# Version 2023.8.7 (2023-08-18)
+
+- Add SSLError to XmlRpcProxy and JsonRpcAioHttpClient
+
 # Version 2023.8.6 (2023-08-17)
 
 - Remove use_caches and load_un_ignore from central config
