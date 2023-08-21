@@ -7,6 +7,7 @@
 - Remove use_caches and load_un_ignore from central config
 - Remove obsolete comments
 - Align sslcontext creation with Home Assistant
+- Make integration more robust against json result failures
 
 # Version 2023.8.5 (2023-08-16)
 

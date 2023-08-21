@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from json import JSONDecodeError
 import logging
 import os
 from pathlib import Path
@@ -50,7 +51,7 @@ from hahomematic.const import (
     SYSVAR_VALUE,
     SYSVAR_VALUE_LIST,
 )
-from hahomematic.exceptions import AuthFailure, BaseHomematicException, ClientException
+from hahomematic.exceptions import AuthFailure, ClientException
 from hahomematic.support import (
     ProgramData,
     SystemVariableData,
@@ -420,7 +421,7 @@ class JsonRpcAioHttpClient:
                     str(json_result),
                 )
         except ClientException as clex:
-            self._handle_exception_log(method="SET_SYSTEM_VARIABLE failed", exception=clex)
+            self._handle_exception_log(method="SET_SYSTEM_VARIABLE", exception=clex)
             return False
 
         return True
@@ -533,19 +534,24 @@ class JsonRpcAioHttpClient:
             self._handle_exception_log(method="GET_ALL_SYSTEM_VARIABLES", exception=clex)
             return []
 
-        return variables
+        return []
 
     async def _get_system_variables_ext_markers(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
         ext_markers: dict[str, Any] = {}
 
-        response = await self._post_script(script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER)
+        try:
+            response = await self._post_script(script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER)
 
-        _LOGGER.debug("GET_SYSTEM_VARIABLES_EXT_MARKERS: Getting system variables ext markers")
-        if json_result := response[P_RESULT]:
-            for data in json_result:
-                ext_markers[data[SYSVAR_ID]] = data[SYSVAR_HASEXTMARKER]
-
+            _LOGGER.debug("GET_SYSTEM_VARIABLES_EXT_MARKERS: Getting system variables ext markers")
+            if json_result := response[P_RESULT]:
+                for data in json_result:
+                    ext_markers[data[SYSVAR_ID]] = data[SYSVAR_HASEXTMARKER]
+        except JSONDecodeError as jderr:
+            _LOGGER.error(
+                "GET_SYSTEM_VARIABLES_EXT_MARKERS failed: JSONDecodeError [%s]. This leads to a missing assignment of extended system variables",
+                reduce_args(jderr.args),
+            )
         return ext_markers
 
     async def get_all_channel_ids_room(self) -> dict[str, set[str]]:
@@ -647,7 +653,11 @@ class JsonRpcAioHttpClient:
                 all_device_data = _convert_to_values_cache(json_result)
         except ClientException as clex:
             self._handle_exception_log(method="GET_ALL_DEVICE_DATA", exception=clex)
-            return {}
+        except JSONDecodeError as jderr:
+            _LOGGER.error(
+                "GET_ALL_DEVICE_DATA failed: JSONDecodeError [%s]. This results in a higher DutyCycle during Integration startup.",
+                reduce_args(jderr.args),
+            )
 
         return all_device_data
 
@@ -717,7 +727,7 @@ class JsonRpcAioHttpClient:
 
         return https_redirect_enabled
 
-    async def get_serial(self) -> str:
+    async def get_serial(self) -> str | None:
         """Get the serial of the backend."""
         serial = "unknown"
 
@@ -731,20 +741,27 @@ class JsonRpcAioHttpClient:
                     serial = serial[-10:]
         except ClientException as clex:
             self._handle_exception_log(method="GET_SERIAL", exception=clex)
-            return serial
+        except JSONDecodeError as jderr:
+            _LOGGER.error(
+                "GET_SERIAL failed: JSONDecodeError [%s]. This leads to a missing serial identification of the CCU",
+                reduce_args(jderr.args),
+            )
 
         return serial
 
-    def _handle_exception_log(self, method: str, exception: BaseHomematicException) -> None:
+    def _handle_exception_log(self, method: str, exception: Exception) -> None:
         """Handle BaseHomematicException and derivates logging."""
+        exception_name = (
+            exception.name if hasattr(exception, "name") else exception.__class__.__name__
+        )
         if self._connection_state.json_issue:
             _LOGGER.debug(
-                "%s failed: %s [%s]", method, exception.name, reduce_args(args=exception.args)
+                "%s failed: %s [%s]", method, exception_name, reduce_args(args=exception.args)
             )
         else:
             self._connection_state.add_issue(issuer=self)
             _LOGGER.error(
-                "%s failed: %s [%s]", method, exception.name, reduce_args(args=exception.args)
+                "%s failed: %s [%s]", method, exception_name, reduce_args(args=exception.args)
             )
 
 
