@@ -1,3 +1,7 @@
+# Version 2023.8.8 (2023-08-21)
+
+- Fix get_all_system_variables return value
+
 # Version 2023.8.7 (2023-08-21)
 
 - Add SSLError to XmlRpcProxy and JsonRpcAioHttpClient

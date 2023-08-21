@@ -532,9 +532,8 @@ class JsonRpcAioHttpClient:
                         )
         except ClientException as clex:
             self._handle_exception_log(method="GET_ALL_SYSTEM_VARIABLES", exception=clex)
-            return []
 
-        return []
+        return variables
 
     async def _get_system_variables_ext_markers(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
