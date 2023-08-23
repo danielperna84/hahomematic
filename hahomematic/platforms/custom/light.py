@@ -17,6 +17,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_COLOR,
     FIELD_CHANNEL_LEVEL,
     FIELD_COLOR,
+    FIELD_COLOR_BEHAVIOUR,
     FIELD_COLOR_LEVEL,
     FIELD_COLOR_TEMPERATURE,
     FIELD_DEVICE_OPERATION_MODE,
@@ -67,6 +68,18 @@ HM_DIMMER_OFF: Final = 0.0
 TIME_UNIT_SECONDS: Final = 0
 TIME_UNIT_MINUTES: Final = 1
 TIME_UNIT_HOURS: Final = 2
+
+COLOR_BEHAVIOUR_DO_NOT_CARE: Final = "DO_NOT_CARE"
+COLOR_BEHAVIOUR_OFF: Final = "OFF"
+COLOR_BEHAVIOUR_OLD_VALUE: Final = "OLD_VALUE"
+COLOR_BEHAVIOUR_ON: Final = "ON"
+
+EXCLUDE_FROM_COLOR_BEHAVIOUR: Final = (
+    COLOR_BEHAVIOUR_DO_NOT_CARE,
+    COLOR_BEHAVIOUR_OFF,
+    COLOR_BEHAVIOUR_OLD_VALUE,
+    COLOR_BEHAVIOUR_ON,
+)
 
 
 class HmLightArgs(TypedDict, total=False):
@@ -537,7 +550,7 @@ class CeIpRGBWLight(BaseHmLight):
 
 
 class CeIpFixedColorLight(BaseHmLight):
-    """Class for HomematicIP HmIP-BSL, HmIPW-WRC6 light entities."""
+    """Class for HomematicIP HmIP-BSL light entities."""
 
     _color_switcher: dict[str, tuple[float, float]] = {
         "WHITE": (0.0, 0.0),
@@ -645,6 +658,67 @@ class CeIpFixedColorLight(BaseHmLight):
         ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
         await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
         await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
+
+
+class CeIpFixedColorLightWired(CeIpFixedColorLight):
+    """Class for HomematicIP HmIPW-WRC6 light entities."""
+
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_color_behaviour: HmSelect = self._get_entity(
+            field_name=FIELD_COLOR_BEHAVIOUR, entity_type=HmSelect
+        )
+        self._effect_list = (
+            [
+                item
+                for item in self._e_color_behaviour.value_list
+                if item not in EXCLUDE_FROM_COLOR_BEHAVIOUR
+            ]
+            if (self._e_color_behaviour and self._e_color_behaviour.value_list)
+            else []
+        )
+
+    @config_property
+    def supports_effects(self) -> bool:
+        """Flag if light supports effects."""
+        return True
+
+    @value_property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if (effect := self._e_color_behaviour.value) is not None and effect in self._effect_list:
+            return effect
+        return None
+
+    @value_property
+    def effect_list(self) -> list[str] | None:
+        """Return the list of supported effects."""
+        return self._effect_list
+
+    @bind_collector
+    async def turn_on(
+        self, collector: CallParameterCollector | None = None, **kwargs: Any
+    ) -> None:
+        """Turn the light on."""
+        if not self.is_state_change(on=True, **kwargs):
+            return
+
+        if kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness) > 0:
+            await self._e_color_behaviour.send_value(value=COLOR_BEHAVIOUR_ON, collector=collector)
+
+        await super().turn_on(collector=collector, **kwargs)
+
+    @bind_collector
+    async def turn_off(
+        self, collector: CallParameterCollector | None = None, **kwargs: Any
+    ) -> None:
+        """Turn the light off."""
+        if not self.is_state_change(off=True, **kwargs):
+            return
+
+        await self._e_color_behaviour.send_value(value=COLOR_BEHAVIOUR_OFF, collector=collector)
+        await super().turn_off(collector=collector, **kwargs)
 
 
 def _recalc_unit_timer(time: float) -> tuple[float, int]:
@@ -793,11 +867,26 @@ def make_ip_simple_fixed_color_light(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[CustomEntity, ...]:
-    """Create simple fixed color light entities like HmIPW-WRC6."""
+    """Create simple fixed color light entities like HmIP-BSL."""
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpFixedColorLight,
         device_enum=HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
+def make_ip_simple_fixed_color_light_wired(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[CustomEntity, ...]:
+    """Create simple fixed color light entities like HmIPW-WRC6."""
+    return hmed.make_custom_entity(
+        device=device,
+        custom_entity_class=CeIpFixedColorLightWired,
+        device_enum=HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -921,7 +1010,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         ),
     ),
     "HmIPW-WRC6": CustomConfig(
-        func=make_ip_simple_fixed_color_light, channels=(7, 8, 9, 10, 11, 12)
+        func=make_ip_simple_fixed_color_light_wired, channels=(7, 8, 9, 10, 11, 12)
     ),
     "OLIGO.smart.iq.HM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
 }
