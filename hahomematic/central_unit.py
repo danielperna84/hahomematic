@@ -38,6 +38,7 @@ from hahomematic.const import (
     HM_ADDRESS,
     IF_PRIMARY,
     MAX_CACHE_AGE,
+    PARAMSET_KEY_MASTER,
     PROXY_INIT_SUCCESS,
     HmDeviceFirmwareState,
     HmEntityUsage,
@@ -73,6 +74,7 @@ from hahomematic.support import (
     check_or_create_directory,
     check_password,
     get_device_address,
+    measure_execution_time,
     reduce_args,
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
@@ -972,11 +974,14 @@ class CentralUnit:
         """Fetch program data for the hub."""
         await self._hub.fetch_program_data(include_internal=include_internal)
 
+    @measure_execution_time
     async def load_and_refresh_entity_data(
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
-        if self.device_data.is_empty(max_age_seconds=max_age_seconds):
+        if paramset_key != PARAMSET_KEY_MASTER and self.device_data.is_empty(
+            max_age_seconds=max_age_seconds
+        ):
             await self.device_data.load()
         await self.device_data.refresh_entity_data(
             paramset_key=paramset_key, max_age_seconds=max_age_seconds
