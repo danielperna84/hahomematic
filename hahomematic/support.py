@@ -1,18 +1,19 @@
 """Helper functions used within hahomematic."""
 from __future__ import annotations
 
+import asyncio
 import base64
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 import contextlib
 from dataclasses import dataclass, field
 from datetime import datetime
-from functools import cache
+from functools import cache, wraps
 import logging
 import os
 import re
 import socket
 import ssl
-from typing import Any
+from typing import Any, TypeVar
 
 import voluptuous as vol
 
@@ -34,7 +35,7 @@ from hahomematic.const import (
 from hahomematic.exceptions import HaHomematicException
 
 _LOGGER = logging.getLogger(__name__)
-
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
     {
@@ -303,3 +304,31 @@ class Channel:
     def no(self) -> int | None:
         """Return the channel no."""
         return get_channel_no(self.address)
+
+
+def measure_execution_time(func: _CallableT) -> _CallableT:
+    """Decorate function to measure the function execution time."""
+
+    is_enabled = _LOGGER.isEnabledFor(level=logging.DEBUG)
+
+    @wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        """Wrap method."""
+        if is_enabled:
+            start = datetime.now()
+        try:
+            if asyncio.iscoroutinefunction(func):
+                return await func(*args, **kwargs)
+            return func(*args, **kwargs)
+        finally:
+            if is_enabled:
+                delta = (datetime.now() - start).total_seconds()
+                _LOGGER.info(
+                    "Execution of %s took %ss args(%s) kwargs(%s) ",
+                    func.__name__,
+                    delta,
+                    args,
+                    kwargs,
+                )
+
+    return wrapper  # type: ignore[return-value]

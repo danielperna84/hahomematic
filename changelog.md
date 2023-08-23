@@ -1,3 +1,7 @@
+# Version 2023.8.9 (2023-08-23)
+
+- Add decorator to measure function execution time
+
 # Version 2023.8.8 (2023-08-21)
 
 - Fix get_all_system_variables return value

@@ -52,6 +52,7 @@ from hahomematic.support import (
     build_headers,
     build_xml_rpc_uri,
     get_channel_no,
+    measure_execution_time,
     reduce_args,
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
@@ -309,6 +310,7 @@ class Client(ABC):
                     return device
         return None
 
+    @measure_execution_time
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""
         try:
@@ -680,6 +682,7 @@ class ClientCCU(Client):
         """Return the supports_ping_pong info of the backend."""
         return True
 
+    @measure_execution_time
     async def fetch_device_details(self) -> None:
         """Get all names via JSON-RPS and store in data.NAMES."""
         if json_result := await self._json_rpc_client.get_device_details():
@@ -703,6 +706,7 @@ class ClientCCU(Client):
         else:
             _LOGGER.debug("FETCH_DEVICE_DETAILS: Unable to fetch device details via JSON-RPC")
 
+    @measure_execution_time
     async def fetch_all_device_data(self) -> None:
         """Fetch all device data from CCU."""
         if device_data := await self._json_rpc_client.get_all_device_data():
@@ -806,10 +810,12 @@ class ClientHomegear(Client):
         """Return the supports_ping_pong info of the backend."""
         return False
 
+    @measure_execution_time
     async def fetch_all_device_data(self) -> None:
         """Fetch all device data from CCU."""
         return
 
+    @measure_execution_time
     async def fetch_device_details(self) -> None:
         """Get all names from metadata (Homegear)."""
         _LOGGER.debug("FETCH_DEVICE_DETAILS: Fetching names via Metadata")
