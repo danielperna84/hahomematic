@@ -368,8 +368,8 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     assert light.channel_brightness is None
     assert light.channel_hs_color is None
     await light.turn_on()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3716619:8", paramset_key="VALUES", parameter="LEVEL", value=1.0
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3716619:8", paramset_key="VALUES", value={"COLOR": 7, "LEVEL": 1.0}
     )
     assert light.brightness == 255
     await light.turn_on(brightness=28)
@@ -385,7 +385,7 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
         channel_address="VCU3716619:8", paramset_key="VALUES", parameter="LEVEL", value=0.0
     )
     assert light.brightness == 0
-    assert light.color_name == "BLACK"
+    assert light.color_name == "WHITE"
 
     await light.turn_on(hs_color=(350, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
