@@ -74,11 +74,32 @@ COLOR_BEHAVIOUR_OFF: Final = "OFF"
 COLOR_BEHAVIOUR_OLD_VALUE: Final = "OLD_VALUE"
 COLOR_BEHAVIOUR_ON: Final = "ON"
 
+COLOR_BLACK: Final = "BLACK"
+COLOR_BLUE: Final = "BLUE"
+COLOR_DO_NOT_CARE: Final = "DO_NOT_CARE"
+COLOR_GREEN: Final = "GREEN"
+COLOR_OLD_VALUE: Final = "OLD_VALUE"
+COLOR_PURPLE: Final = "PURPLE"
+COLOR_RED: Final = "RED"
+COLOR_TURQUOISE: Final = "TURQUOISE"
+COLOR_WHITE: Final = "WHITE"
+COLOR_YELLOW: Final = "YELLOW"
+
+NO_COLOR: Final = (
+    COLOR_BLACK,
+    COLOR_DO_NOT_CARE,
+    COLOR_OLD_VALUE,
+)
+
 EXCLUDE_FROM_COLOR_BEHAVIOUR: Final = (
+    COLOR_BEHAVIOUR_DO_NOT_CARE,
+    COLOR_BEHAVIOUR_OLD_VALUE,
+)
+
+OFF_COLOR_BEHAVIOUR: Final = (
     COLOR_BEHAVIOUR_DO_NOT_CARE,
     COLOR_BEHAVIOUR_OFF,
     COLOR_BEHAVIOUR_OLD_VALUE,
-    COLOR_BEHAVIOUR_ON,
 )
 
 
@@ -553,13 +574,13 @@ class CeIpFixedColorLight(BaseHmLight):
     """Class for HomematicIP HmIP-BSL light entities."""
 
     _color_switcher: dict[str, tuple[float, float]] = {
-        "WHITE": (0.0, 0.0),
-        "RED": (0.0, 100.0),
-        "YELLOW": (60.0, 100.0),
-        "GREEN": (120.0, 100.0),
-        "TURQUOISE": (180.0, 100.0),
-        "BLUE": (240.0, 100.0),
-        "PURPLE": (300.0, 100.0),
+        COLOR_WHITE: (0.0, 0.0),
+        COLOR_RED: (0.0, 100.0),
+        COLOR_YELLOW: (60.0, 100.0),
+        COLOR_GREEN: (120.0, 100.0),
+        COLOR_TURQUOISE: (180.0, 100.0),
+        COLOR_BLUE: (240.0, 100.0),
+        COLOR_PURPLE: (300.0, 100.0),
     }
 
     @value_property
@@ -639,6 +660,8 @@ class CeIpFixedColorLight(BaseHmLight):
         if (hs_color := kwargs.get(_HM_ARG_HS_COLOR)) is not None:
             simple_rgb_color = _convert_color(hs_color)
             await self._e_color.send_value(value=simple_rgb_color, collector=collector)
+        elif self.color_name in NO_COLOR:
+            await self._e_color.send_value(value=COLOR_WHITE, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
 
@@ -706,21 +729,10 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
 
         if (effect := kwargs.get(_HM_ARG_EFFECT)) is not None and effect in self._effect_list:
             await self._e_color_behaviour.send_value(value=effect, collector=collector)
-        elif kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness) > 0:
+        elif self._e_color_behaviour.value in OFF_COLOR_BEHAVIOUR:
             await self._e_color_behaviour.send_value(value=COLOR_BEHAVIOUR_ON, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
-
-    @bind_collector
-    async def turn_off(
-        self, collector: CallParameterCollector | None = None, **kwargs: Any
-    ) -> None:
-        """Turn the light off."""
-        if not self.is_state_change(off=True, **kwargs):
-            return
-
-        await self._e_color_behaviour.send_value(value=COLOR_BEHAVIOUR_OFF, collector=collector)
-        await super().turn_off(collector=collector, **kwargs)
 
 
 def _recalc_unit_timer(time: float) -> tuple[float, int]:
@@ -745,18 +757,18 @@ def _convert_color(color: tuple[float, float]) -> str:
     hue: int = int(color[0])
     saturation: int = int(color[1])
     if saturation < 5:
-        return "WHITE"
+        return COLOR_WHITE
     if 30 < hue <= 90:
-        return "YELLOW"
+        return COLOR_YELLOW
     if 90 < hue <= 150:
-        return "GREEN"
+        return COLOR_GREEN
     if 150 < hue <= 210:
-        return "TURQUOISE"
+        return COLOR_TURQUOISE
     if 210 < hue <= 270:
-        return "BLUE"
+        return COLOR_BLUE
     if 270 < hue <= 330:
-        return "PURPLE"
-    return "RED"
+        return COLOR_PURPLE
+    return COLOR_RED
 
 
 def make_ip_dimmer(
