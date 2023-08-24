@@ -297,27 +297,27 @@ async def test_central_services(factory: helper.Factory) -> None:
 
     assert len(mock_client.method_calls) == 37
     await central.load_and_refresh_entity_data(paramset_key="MASTER")
-    assert len(mock_client.method_calls) == 38
+    assert len(mock_client.method_calls) == 37
     await central.load_and_refresh_entity_data(paramset_key="VALUES")
-    assert len(mock_client.method_calls) == 71
+    assert len(mock_client.method_calls) == 70
 
     await central.get_system_variable(name="SysVar_Name")
     assert mock_client.method_calls[-1] == call.get_system_variable("SysVar_Name")
 
-    assert len(mock_client.method_calls) == 72
+    assert len(mock_client.method_calls) == 71
     await central.set_system_variable(name="sv_alarm", value=True)
     assert mock_client.method_calls[-1] == call.set_system_variable(name="sv_alarm", value=True)
-    assert len(mock_client.method_calls) == 73
+    assert len(mock_client.method_calls) == 72
     await central.set_system_variable(name="SysVar_Name", value=True)
-    assert len(mock_client.method_calls) == 73
+    assert len(mock_client.method_calls) == 72
 
     await central.set_install_mode(interface_id=const.INTERFACE_ID)
     assert mock_client.method_calls[-1] == call.set_install_mode(
         on=True, t=60, mode=1, device_address=None
     )
-    assert len(mock_client.method_calls) == 74
+    assert len(mock_client.method_calls) == 73
     await central.set_install_mode(interface_id="NOT_A_VALID_INTERFACE_ID")
-    assert len(mock_client.method_calls) == 74
+    assert len(mock_client.method_calls) == 73
 
     await central.get_client(interface_id=const.INTERFACE_ID).set_value(
         channel_address="123",
@@ -331,7 +331,7 @@ async def test_central_services(factory: helper.Factory) -> None:
         parameter="LEVEL",
         value=1.0,
     )
-    assert len(mock_client.method_calls) == 75
+    assert len(mock_client.method_calls) == 74
 
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").set_value(
@@ -340,7 +340,7 @@ async def test_central_services(factory: helper.Factory) -> None:
             parameter="LEVEL",
             value=1.0,
         )
-    assert len(mock_client.method_calls) == 75
+    assert len(mock_client.method_calls) == 74
 
     await central.get_client(interface_id=const.INTERFACE_ID).put_paramset(
         address="123",
@@ -350,14 +350,14 @@ async def test_central_services(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="123", paramset_key="VALUES", value={"LEVEL": 1.0}
     )
-    assert len(mock_client.method_calls) == 76
+    assert len(mock_client.method_calls) == 75
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").put_paramset(
             address="123",
             paramset_key=PARAMSET_KEY_VALUES,
             value={"LEVEL": 1.0},
         )
-    assert len(mock_client.method_calls) == 76
+    assert len(mock_client.method_calls) == 75
 
     assert (
         central.get_generic_entity(
