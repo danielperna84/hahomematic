@@ -651,6 +651,20 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
 
+    await light.turn_off()
+    await light.turn_on(effect="BLINKING_SLOW")
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU4704397:8", paramset_key="VALUES", value={"COLOR_BEHAVIOUR": 2, "LEVEL": 1.0}
+    )
+
+    await light.turn_on(brightness=28)
+    await light.turn_on(effect="FLASH_MIDDLE")
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU4704397:8",
+        paramset_key="VALUES",
+        value={"COLOR_BEHAVIOUR": 6, "LEVEL": 0.10980392156862745},
+    )
+
 
 async def test_ceiprgbwlight(factory: helper.Factory) -> None:
     """Test CeIpRGBWLight."""

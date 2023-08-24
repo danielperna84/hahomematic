@@ -704,7 +704,9 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
         if not self.is_state_change(on=True, **kwargs):
             return
 
-        if kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness) > 0:
+        if (effect := kwargs.get(_HM_ARG_EFFECT)) is not None and effect in self._effect_list:
+            await self._e_color_behaviour.send_value(value=effect, collector=collector)
+        elif kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness) > 0:
             await self._e_color_behaviour.send_value(value=COLOR_BEHAVIOUR_ON, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
