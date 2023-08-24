@@ -113,7 +113,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                 _LOGGER.error(message)
             raise NoConnection(message) from ose
         except xmlrpc.client.Fault as fex:
-            raise ClientException(reduce_args(args=fex.args)) from fex
+            raise ClientException(fex) from fex
         except xmlrpc.client.ProtocolError as per:
             if not self._connection_state.has_issue(issuer=self):
                 if per.errmsg == "Unauthorized":

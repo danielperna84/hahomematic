@@ -22,6 +22,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_OPERATION_MODE,
     FIELD_CHANNEL_STATE,
     FIELD_COLOR,
+    FIELD_COLOR_BEHAVIOUR,
     FIELD_COLOR_LEVEL,
     FIELD_COLOR_TEMPERATURE,
     FIELD_COMBINED_PARAMETER,
@@ -213,6 +214,20 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                         FIELD_CHANNEL_COLOR: "COLOR",
                         FIELD_CHANNEL_LEVEL: "LEVEL",
                     },
+                },
+            },
+        },
+        HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED: {
+            ED_DEVICE_GROUP: {
+                ED_PRIMARY_CHANNEL: 1,
+                ED_REPEATABLE_FIELDS: {
+                    FIELD_COLOR: "COLOR",
+                    FIELD_LEVEL: "LEVEL",
+                    FIELD_ON_TIME_UNIT: "DURATION_UNIT",
+                    FIELD_ON_TIME_VALUE: "DURATION_VALUE",
+                    FIELD_RAMP_TIME_UNIT: "RAMP_TIME_UNIT",
+                    FIELD_RAMP_TIME_VALUE: "RAMP_TIME_VALUE",
+                    FIELD_COLOR_BEHAVIOUR: "COLOR_BEHAVIOUR",
                 },
             },
         },
