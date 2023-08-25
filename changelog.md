@@ -1,3 +1,7 @@
+# Version 2023.8.11 (2023-08-25)
+
+- Always set color_behaviour for HmIPW-WRC6
+
 # Version 2023.8.10 (2023-08-25)
 
 - Extend HmIPW-WRC6 implementation
