@@ -1,3 +1,7 @@
+# Version 2023.8.10 (2023-08-25)
+
+- Extend HmIPW-WRC6 implementation
+
 # Version 2023.8.9 (2023-08-23)
 
 - Add decorator to measure function execution time
