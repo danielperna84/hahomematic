@@ -540,6 +540,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 7, "LEVEL": 1.0},
     )
     assert light.brightness == 255
+    assert light.color_name == COLOR_WHITE
+
     await light.turn_on(brightness=100)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU4704397:8",
@@ -549,56 +551,77 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     )
     assert light.brightness == 100
     assert light.color_name == COLOR_WHITE
+    assert light.effect == COLOR_BEHAVIOUR_ON
+
     await light.turn_off()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU4704397:8", paramset_key="VALUES", parameter="LEVEL", value=0.0
     )
     assert light.brightness == 0
     assert light.color_name == COLOR_WHITE
+    assert light.effect == COLOR_BEHAVIOUR_ON
 
     await light.turn_on(hs_color=(350, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8", paramset_key="VALUES", value={"COLOR": 4, "LEVEL": 1.0}
     )
+    assert light.brightness == 255
     assert light.color_name == COLOR_RED
+    assert light.effect == COLOR_BEHAVIOUR_ON
 
     await light.turn_on(hs_color=(0.0, 0.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8", paramset_key="VALUES", value={"COLOR": 7, "LEVEL": 1.0}
     )
+    assert light.brightness == 255
     assert light.color_name == COLOR_WHITE
+    assert light.effect == COLOR_BEHAVIOUR_ON
 
     await light.turn_on(hs_color=(60.0, 50.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8", paramset_key="VALUES", value={"COLOR": 6, "LEVEL": 1.0}
     )
+    assert light.brightness == 255
     assert light.color_name == COLOR_YELLOW
+    assert light.effect == COLOR_BEHAVIOUR_ON
 
     await light.turn_on(hs_color=(120, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8", paramset_key="VALUES", value={"COLOR": 2, "LEVEL": 1.0}
     )
+    assert light.brightness == 255
     assert light.color_name == COLOR_GREEN
+    assert light.effect == COLOR_BEHAVIOUR_ON
 
     await light.turn_on(hs_color=(180, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8", paramset_key="VALUES", value={"COLOR": 3, "LEVEL": 1.0}
     )
+    assert light.brightness == 255
     assert light.color_name == COLOR_TURQUOISE
+    assert light.effect == COLOR_BEHAVIOUR_ON
 
     await light.turn_on(hs_color=(240, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8", paramset_key="VALUES", value={"COLOR": 1, "LEVEL": 1.0}
     )
+    assert light.brightness == 255
     assert light.color_name == COLOR_BLUE
+    assert light.effect == COLOR_BEHAVIOUR_ON
 
     await light.turn_on(hs_color=(300, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8", paramset_key="VALUES", value={"COLOR": 5, "LEVEL": 1.0}
     )
+    assert light.brightness == 255
     assert light.color_name == COLOR_PURPLE
+    assert light.effect == COLOR_BEHAVIOUR_ON
 
     await light.turn_off()
+    assert light.brightness == 0
+    assert light.color_name == COLOR_PURPLE
+    assert light.effect == COLOR_BEHAVIOUR_ON
+
     light.set_on_time(18)
     await light.turn_on()
     assert mock_client.method_calls[-1] == call.put_paramset(
