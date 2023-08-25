@@ -731,6 +731,8 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
             await self._e_color_behaviour.send_value(value=effect, collector=collector)
         elif self._e_color_behaviour.value in OFF_COLOR_BEHAVIOUR:
             await self._e_color_behaviour.send_value(value=COLOR_BEHAVIOUR_ON, collector=collector)
+        elif (color_behaviour := self._e_color_behaviour.value) is not None:
+            await self._e_color_behaviour.send_value(value=color_behaviour, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
 
