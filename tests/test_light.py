@@ -8,7 +8,6 @@ import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.custom.light import (
-    COLOR_BEHAVIOUR_OFF,
     COLOR_BEHAVIOUR_ON,
     COLOR_BLACK,
     COLOR_BLUE,
@@ -516,9 +515,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     assert light.supports_effects is True
     assert light.supports_hs_color is True
     assert light.supports_transition is True
-    assert light.effect == COLOR_BEHAVIOUR_OFF
+    assert light.effect is None
     assert light.effect_list == [
-        COLOR_BEHAVIOUR_OFF,
         COLOR_BEHAVIOUR_ON,
         "BLINKING_SLOW",
         "BLINKING_MIDDLE",

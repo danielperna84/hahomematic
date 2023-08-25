@@ -93,6 +93,7 @@ NO_COLOR: Final = (
 
 EXCLUDE_FROM_COLOR_BEHAVIOUR: Final = (
     COLOR_BEHAVIOUR_DO_NOT_CARE,
+    COLOR_BEHAVIOUR_OFF,
     COLOR_BEHAVIOUR_OLD_VALUE,
 )
 
@@ -729,7 +730,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
 
         if (effect := kwargs.get(_HM_ARG_EFFECT)) is not None and effect in self._effect_list:
             await self._e_color_behaviour.send_value(value=effect, collector=collector)
-        elif self._e_color_behaviour.value in OFF_COLOR_BEHAVIOUR:
+        elif self._e_color_behaviour.value not in self._effect_list:
             await self._e_color_behaviour.send_value(value=COLOR_BEHAVIOUR_ON, collector=collector)
         elif (color_behaviour := self._e_color_behaviour.value) is not None:
             await self._e_color_behaviour.send_value(value=color_behaviour, collector=collector)
