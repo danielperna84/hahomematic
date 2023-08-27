@@ -20,7 +20,6 @@ CCU_HOST = "127.0.0.1"
 CCU_USERNAME = "xxx"
 CCU_PASSWORD = "xxx"
 CENTRAL_NAME = "ccu-dev"
-INTERFACE_ID = f"{CENTRAL_NAME}-{const.IF_HMIP_RF_NAME}"
 
 
 class Example:

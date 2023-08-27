@@ -887,21 +887,6 @@ def make_ip_fixed_color_light(
     )
 
 
-def make_ip_simple_fixed_color_light(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
-    """Create simple fixed color light entities like HmIP-BSL."""
-    return hmed.make_custom_entity(
-        device=device,
-        custom_entity_class=CeIpFixedColorLight,
-        device_enum=HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT,
-        group_base_channels=group_base_channels,
-        extended=extended,
-    )
-
-
 def make_ip_simple_fixed_color_light_wired(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
