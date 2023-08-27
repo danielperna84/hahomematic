@@ -9,7 +9,15 @@ from abc import abstractmethod
 import math
 from typing import Any, Final, TypedDict
 
-from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmEntityUsage, HmPlatform
+from hahomematic.const import (
+    EVENT_PRESS_LONG,
+    EVENT_PRESS_SHORT,
+    HM_ARG_OFF,
+    HM_ARG_ON,
+    HM_ARG_ON_TIME,
+    HmEntityUsage,
+    HmPlatform,
+)
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
@@ -943,8 +951,8 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
                         5,
                         6,
                     ): (
-                        "PRESS_LONG",
-                        "PRESS_SHORT",
+                        EVENT_PRESS_LONG,
+                        EVENT_PRESS_SHORT,
                         "SENSOR",
                     )
                 },

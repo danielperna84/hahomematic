@@ -23,9 +23,6 @@ CCU_PASSWORD_PATTERN: Final = r"[A-Za-z0-9.!$():;#-]{0,}"
 IDENTIFIER_SEPARATOR: Final = "@"
 INIT_DATETIME: Final = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
 IP_ANY_V4: Final = "0.0.0.0"
-IP_ANY_V6: Final = "::"
-IP_LOCALHOST_V4: Final = "127.0.0.1"
-IP_LOCALHOST_V6: Final = "::1"
 PORT_ANY: Final = 0
 
 MANUFACTURER_EQ3: Final = "eQ-3"
@@ -44,35 +41,23 @@ SYSVAR_ADDRESS: Final = "sysvar"
 
 ATTR_ADDRESS: Final = "address"
 ATTR_AVAILABLE: Final = "available"
-ATTR_CALLBACK_HOST: Final = "callback_host"
-ATTR_CALLBACK_PORT: Final = "callback_port"
 ATTR_CHANNELS: Final = "channels"
 ATTR_CHANNEL_NO: Final = "channel_no"
-ATTR_CONFIG: Final = "config"
 ATTR_DATA: Final = "data"
 ATTR_DEVICE_TYPE: Final = "device_type"
 ATTR_FIRMWARE: Final = "firmware"
-ATTR_HOST: Final = "host"
 ATTR_ID: Final = "id"
 ATTR_INSTANCE_NAME: Final = "instance_name"
 ATTR_INTERFACE: Final = "interface"
 ATTR_INTERFACE_ID: Final = "interface_id"
-ATTR_IP: Final = "ip"
-ATTR_JSON_PORT: Final = "json_port"
-ATTR_MESSAGE: Final = "message"
-ATTR_MODEL: Final = "model"
 ATTR_NAME: Final = "name"
 ATTR_PARAMETER: Final = "parameter"
-ATTR_PARAMSET_KEY: Final = "paramsetKey"
 ATTR_PASSWORD: Final = "password"
-ATTR_PORT: Final = "port"
-ATTR_ROOM: Final = "room"
 ATTR_SECONDS_SINCE_LAST_EVENT: Final = "seconds_since_last_event"
 ATTR_TLS: Final = "tls"
 ATTR_TYPE: Final = "type"
 ATTR_USERNAME: Final = "username"
 ATTR_VALUE: Final = "value"
-ATTR_VALUE_KEY: Final = "valueKey"
 ATTR_VERIFY_TLS: Final = "verify_tls"
 
 EVENT_CONFIG_PENDING: Final = "CONFIG_PENDING"
@@ -129,7 +114,6 @@ HM_UNIT: Final = "UNIT"
 HM_VALUE_LIST: Final = "VALUE_LIST"
 
 HH_EVENT_DELETE_DEVICES: Final = "deleteDevices"
-HH_EVENT_DELETE_SYSVARS: Final = "deleteSysvars"
 HH_EVENT_DEVICES_CREATED: Final = "devicesCreated"
 HH_EVENT_ERROR: Final = "error"
 HH_EVENT_HUB_REFRESHED: Final = "hubEntityRefreshed"
@@ -142,7 +126,7 @@ HH_EVENT_UPDATE_DEVICE: Final = "updateDevice"
 MAX_CACHE_AGE: Final = 60
 MAX_JSON_SESSION_AGE: Final = 90
 
-OPERATION_NONE: Final = 0
+OPERATION_NONE: Final = 0  # not used
 OPERATION_READ: Final = 1
 OPERATION_WRITE: Final = 2
 OPERATION_EVENT: Final = 4
@@ -277,17 +261,6 @@ IF_NAMES: Final[tuple[str, ...]] = (
 )
 IF_PRIMARY: Final[tuple[str, ...]] = (IF_HMIP_RF_NAME, IF_BIDCOS_RF_NAME)
 
-IF_DEFAULT_ALLOCATION: Final[dict[int, str]] = {
-    IF_BIDCOS_RF_PORT: IF_BIDCOS_RF_NAME,
-    IF_BIDCOS_RF_TLS_PORT: IF_BIDCOS_RF_NAME,
-    IF_BIDCOS_WIRED_PORT: IF_BIDCOS_WIRED_NAME,
-    IF_BIDCOS_WIRED_TLS_PORT: IF_BIDCOS_WIRED_NAME,
-    IF_HMIP_RF_PORT: IF_HMIP_RF_NAME,
-    IF_HMIP_RF_TLS_PORT: IF_HMIP_RF_NAME,
-    IF_VIRTUAL_DEVICES_PORT: IF_VIRTUAL_DEVICES_NAME,
-    IF_VIRTUAL_DEVICES_TLS_PORT: IF_VIRTUAL_DEVICES_NAME,
-}
-
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
 RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
@@ -297,22 +270,16 @@ RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
 )
 
 # virtual remotes device_types
-HM_VIRTUAL_REMOTE_HMIP_TYPE: Final = "HmIP-RCV-50"
-HM_VIRTUAL_REMOTE_HMW_TYPE: Final = "HMW-RCV-50"
-HM_VIRTUAL_REMOTE_HM_TYPE: Final = "HM-RCV-50"
 HM_VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
-    HM_VIRTUAL_REMOTE_HMIP_TYPE,
-    HM_VIRTUAL_REMOTE_HMW_TYPE,
-    HM_VIRTUAL_REMOTE_HM_TYPE,
+    "HM-RCV-50",
+    "HMW-RCV-50",
+    "HmIP-RCV-50",
 )
 
-HM_VIRTUAL_REMOTE_HMIP_ADDRESS: Final = "HmIP-RCV-1"
-HM_VIRTUAL_REMOTE_HMW_ADDRESS: Final = "HMW-RCV-50"
-HM_VIRTUAL_REMOTE_HM_ADDRESS: Final = "BidCoS-RF"
 HM_VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
-    HM_VIRTUAL_REMOTE_HMIP_ADDRESS,
-    HM_VIRTUAL_REMOTE_HMW_ADDRESS,
-    HM_VIRTUAL_REMOTE_HM_ADDRESS,
+    "BidCoS-RF",
+    "HMW-RCV-50",
+    "HmIP-RCV-1",
 )
 
 # dict with binary_sensor relevant value lists and the corresponding TRUE value
@@ -396,12 +363,12 @@ class HmPlatform(StrEnum):
 class HmProductGroup(StrEnum):
     """Enum with homematic product groups."""
 
-    UNKNOWN: Final = PG_UNKNOWN
-    HMIPW: Final = PG_HMIP_WIRED
-    HMIP: Final = PG_HMIP_RF
-    HMW: Final = PG_BIDCOS_WIRED
-    HM: Final = PG_BIDCOS_RF
-    VIRTUAL: Final = PG_VIRTUAL_DEVICES
+    UNKNOWN: Final = "unknown"
+    HMIPW: Final = "HmIP-Wired"
+    HMIP: Final = "HmIP-RF"
+    HMW: Final = "BidCos-Wired"
+    HM: Final = "BidCos-RF"
+    VIRTUAL: Final = "VirtualDevices"
 
 
 class HmInterface(StrEnum):

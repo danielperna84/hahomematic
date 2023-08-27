@@ -227,7 +227,7 @@ async def test_virtual_remote_delete(factory: helper.Factory) -> None:
     )
     assert len(central.get_virtual_remotes()) == 1
 
-    assert central._get_virtual_remote("VCU4264293")
+    assert central._get_virtual_remote("VCU0000057")
 
     await central.delete_device(interface_id=const.INTERFACE_ID, device_address="NOT_A_DEVICE_ID")
 
