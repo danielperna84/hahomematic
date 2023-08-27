@@ -2,6 +2,7 @@
 
 - Remove unused const
 - Remove dead code
+- Optimize get readable entities for MASTER
 
 # Version 2023.8.11 (2023-08-25)
 

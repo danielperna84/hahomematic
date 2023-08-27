@@ -14,7 +14,6 @@ from hahomematic.const import (
     HmCallSource,
 )
 from hahomematic.platforms.device import HmDevice
-from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.support import get_device_address, updated_within_seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -170,14 +169,11 @@ class DeviceDataCache:
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
-        for entity in self._central.get_readable_entities():
-            if paramset_key is None or (
-                isinstance(entity, GenericEntity) and entity.paramset_key == paramset_key
-            ):
-                await entity.load_entity_value(
-                    call_source=HmCallSource.HM_INIT,
-                    max_age_seconds=max_age_seconds,
-                )
+        for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
+            await entity.load_entity_value(
+                call_source=HmCallSource.HM_INIT,
+                max_age_seconds=max_age_seconds,
+            )
 
     def add_device_data(self, device_data: dict[str, dict[str, dict[str, Any]]]) -> None:
         """Add device data to cache."""

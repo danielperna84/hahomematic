@@ -548,26 +548,30 @@ class CentralUnit:
         """Return all entities by platform."""
         if not existing_unique_ids:
             existing_unique_ids = []
-        entities = []
-        for entity in self._entities.values():
+
+        return [
+            be
+            for be in self._entities.values()
             if (
-                entity.unique_identifier not in existing_unique_ids
-                and entity.usage != HmEntityUsage.NO_CREATE
-                and entity.platform == platform
-            ):
-                entities.append(entity)
+                be.unique_identifier not in existing_unique_ids
+                and be.usage != HmEntityUsage.NO_CREATE
+                and be.platform == platform
+            )
+        ]
 
-        return entities
-
-    def get_readable_entities(self) -> list[BaseEntity]:
-        """Return a list of readable entities."""
-        readable_entities: list[BaseEntity] = []
-        for entity in self._entities.values():
-            if (isinstance(entity, GenericEntity) and entity.is_readable) or isinstance(
-                entity, CustomEntity
-            ):
-                readable_entities.append(entity)
-        return readable_entities
+    def get_readable_generic_entities(
+        self, paramset_key: str | None = None
+    ) -> list[GenericEntity]:
+        """Return a list of readable generic entities."""
+        return [
+            ge
+            for ge in self._entities.values()
+            if (
+                isinstance(ge, GenericEntity)
+                and ge.is_readable
+                and ((paramset_key and ge.paramset_key == paramset_key) or paramset_key is None)
+            )
+        ]
 
     def _get_primary_client(self) -> hmcl.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
@@ -1229,10 +1233,7 @@ class ConnectionChecker(threading.Thread):
                     if reconnects:
                         await asyncio.gather(*reconnects)
                         if self._central.available:
-                            # refresh cache
-                            await self._central.device_data.load()
-                            # refresh entity data
-                            await self._central.device_data.refresh_entity_data()
+                            await self._central.load_and_refresh_entity_data()
             except NoConnection as nex:
                 _LOGGER.error(
                     "CHECK_CONNECTION failed: no connection: %s", reduce_args(args=nex.args)
