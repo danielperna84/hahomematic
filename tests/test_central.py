@@ -43,7 +43,7 @@ async def test_central_basics(factory: helper.Factory) -> None:
     assert system_information.serial == "0815_4711"
     device = central.get_device("VCU2128127")
     assert device
-    entities = central.get_readable_entities()
+    entities = central.get_readable_generic_entities()
     assert entities
 
 
