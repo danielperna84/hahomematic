@@ -180,12 +180,9 @@ class HmHub:
 
     def _identify_missing_program_ids(self, programs: list[ProgramData]) -> list[str]:
         """Identify missing programs."""
-        program_ids: list[str] = [x.pid for x in programs]
-        missing_programs: list[str] = []
-        for pid in self._central.program_entities:
-            if pid not in program_ids:
-                missing_programs.append(pid)
-        return missing_programs
+        return [
+            pid for pid in self._central.program_entities if pid not in [x.pid for x in programs]
+        ]
 
     def _identify_missing_variable_names(self, variables: list[SystemVariableData]) -> set[str]:
         """Identify missing variables."""
@@ -209,9 +206,4 @@ def _is_excluded(variable: str, excludes: list[str]) -> bool:
 
 def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:
     """Clean variables by removing excluded."""
-    cleaned_variables: list[SystemVariableData] = []
-    for sysvar in variables:
-        if _is_excluded(sysvar.name, EXCLUDED):
-            continue
-        cleaned_variables.append(sysvar)
-    return cleaned_variables
+    return [sv for sv in variables if not _is_excluded(sv.name, EXCLUDED)]

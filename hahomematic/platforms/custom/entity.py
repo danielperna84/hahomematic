@@ -80,7 +80,7 @@ class CustomEntity(BaseEntity):
     @property
     def _readable_entities(self) -> list[hmge.GenericEntity]:
         """Returns the list of readable entities."""
-        return [e for e in self.data_entities.values() if e.is_readable]
+        return [ge for ge in self.data_entities.values() if ge.is_readable]
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""

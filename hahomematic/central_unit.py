@@ -587,29 +587,20 @@ class CentralUnit:
         """Return the hub entities by platform."""
         if not existing_unique_ids:
             existing_unique_ids = []
-        hub_entities: list[GenericHubEntity] = []
-        for program_entity in self.program_entities.values():
-            if (
-                program_entity.unique_identifier not in existing_unique_ids
-                and program_entity.platform == platform
-            ):
-                hub_entities.append(program_entity)
 
-        for sysvar_entity in self.sysvar_entities.values():
-            if (
-                sysvar_entity.unique_identifier not in existing_unique_ids
-                and sysvar_entity.platform == platform
-            ):
-                hub_entities.append(sysvar_entity)
-        return hub_entities
+        return [
+            he
+            for he in (list(self.program_entities.values()) + list(self.sysvar_entities.values()))
+            if (he.unique_identifier not in existing_unique_ids and he.platform == platform)
+        ]
 
     def get_virtual_remotes(self) -> list[HmDevice]:
         """Get the virtual remote for the Client."""
-        virtual_remotes: list[HmDevice] = []
-        for client in self._clients.values():
-            if virtual_remote := client.get_virtual_remote():
-                virtual_remotes.append(virtual_remote)
-        return virtual_remotes
+        return [
+            cl.get_virtual_remote()  # type: ignore[misc]
+            for cl in self._clients.values()
+            if cl.get_virtual_remote() is not None
+        ]
 
     def has_client(self, interface_id: str) -> bool:
         """Check if client exists in central."""
