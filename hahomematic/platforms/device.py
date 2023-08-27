@@ -39,8 +39,7 @@ from hahomematic.const import (
     HmProductGroup,
 )
 from hahomematic.exceptions import BaseHomematicException
-from hahomematic.platforms import custom as cep
-from hahomematic.platforms.custom import entity as hmce
+from hahomematic.platforms.custom import definition as hmed, entity as hmce
 from hahomematic.platforms.entity import BaseEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
@@ -100,8 +99,8 @@ class HmDevice(PayloadMixin):
         self._attr_manufacturer = self._identify_manufacturer()
         self._attr_product_group: Final = self._identify_product_group()
         # marker if device will be created as custom entity
-        self._has_custom_entity_definition: Final = cep.has_custom_entity_definition_by_device(
-            device=self
+        self._has_custom_entity_definition: Final = hmed.entity_definition_exists(
+            device_type=self._attr_device_type
         )
         self._attr_name: Final = get_device_name(
             central=central,

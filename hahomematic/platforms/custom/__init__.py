@@ -11,11 +11,6 @@ from hahomematic.platforms.custom.support import CustomConfig
 _LOGGER = logging.getLogger(__name__)
 
 
-def has_custom_entity_definition_by_device(device: hmd.HmDevice) -> bool:
-    """Return if custom_entity definition is available for the device."""
-    return entity_definition_exists(device.device_type)
-
-
 def create_custom_entity_and_append_to_device(
     device: hmd.HmDevice,
 ) -> None:

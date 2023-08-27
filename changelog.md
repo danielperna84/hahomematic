@@ -1,3 +1,8 @@
+# Version 2023.8.12 (2023-08-27)
+
+- Remove unused const
+- Remove dead code
+
 # Version 2023.8.11 (2023-08-25)
 
 - Always set color_behaviour for HmIPW-WRC6

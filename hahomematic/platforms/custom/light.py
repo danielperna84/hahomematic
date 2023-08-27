@@ -9,7 +9,15 @@ from abc import abstractmethod
 import math
 from typing import Any, Final, TypedDict
 
-from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmEntityUsage, HmPlatform
+from hahomematic.const import (
+    EVENT_PRESS_LONG,
+    EVENT_PRESS_SHORT,
+    HM_ARG_OFF,
+    HM_ARG_ON,
+    HM_ARG_ON_TIME,
+    HmEntityUsage,
+    HmPlatform,
+)
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
@@ -879,21 +887,6 @@ def make_ip_fixed_color_light(
     )
 
 
-def make_ip_simple_fixed_color_light(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
-    """Create simple fixed color light entities like HmIP-BSL."""
-    return hmed.make_custom_entity(
-        device=device,
-        custom_entity_class=CeIpFixedColorLight,
-        device_enum=HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT,
-        group_base_channels=group_base_channels,
-        extended=extended,
-    )
-
-
 def make_ip_simple_fixed_color_light_wired(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
@@ -943,8 +936,8 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
                         5,
                         6,
                     ): (
-                        "PRESS_LONG",
-                        "PRESS_SHORT",
+                        EVENT_PRESS_LONG,
+                        EVENT_PRESS_SHORT,
                         "SENSOR",
                     )
                 },
