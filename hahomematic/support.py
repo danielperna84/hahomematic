@@ -312,13 +312,29 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
     is_enabled = _LOGGER.isEnabledFor(level=logging.DEBUG)
 
     @wraps(func)
-    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
         """Wrap method."""
         if is_enabled:
             start = datetime.now()
         try:
-            if asyncio.iscoroutinefunction(func):
-                return await func(*args, **kwargs)
+            return await func(*args, **kwargs)
+        finally:
+            if is_enabled:
+                delta = (datetime.now() - start).total_seconds()
+                _LOGGER.info(
+                    "Execution of %s took %ss args(%s) kwargs(%s) ",
+                    func.__name__,
+                    delta,
+                    args,
+                    kwargs,
+                )
+
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        """Wrap method."""
+        if is_enabled:
+            start = datetime.now()
+        try:
             return func(*args, **kwargs)
         finally:
             if is_enabled:
@@ -331,4 +347,6 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
                     kwargs,
                 )
 
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper  # type: ignore[return-value]
     return wrapper  # type: ignore[return-value]

@@ -1,3 +1,7 @@
+# Version 2023.8.13 (2023-08-28)
+
+- Fix measure_execution_time decorator for sync methods
+
 # Version 2023.8.12 (2023-08-27)
 
 - Remove unused const
