@@ -46,11 +46,7 @@ from hahomematic.const import (
     HmInterfaceEventType,
     HmPlatform,
 )
-from hahomematic.decorators import (
-    async_callback_system_event,
-    callback_event,
-    callback_system_event,
-)
+from hahomematic.decorators import callback_event, callback_system_event
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
@@ -703,7 +699,7 @@ class CentralUnit:
 
         await self.delete_devices(interface_id=interface_id, addresses=addresses)
 
-    @async_callback_system_event(name=HH_EVENT_DELETE_DEVICES)
+    @callback_system_event(name=HH_EVENT_DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
@@ -715,7 +711,7 @@ class CentralUnit:
             if device := self._devices.get(address):
                 await self.remove_device(device=device)
 
-    @async_callback_system_event(name=HH_EVENT_NEW_DEVICES)
+    @callback_system_event(name=HH_EVENT_NEW_DEVICES)
     async def add_new_devices(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:

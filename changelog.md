@@ -1,6 +1,7 @@
 # Version 2023.8.13 (2023-08-28)
 
 - Fix measure_execution_time decorator for sync methods
+- Add async support to callback_system_event
 
 # Version 2023.8.12 (2023-08-27)
 
