@@ -32,16 +32,16 @@ def callback_system_event(name: str) -> Callable:
         @wraps(func)
         async def async_wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
             """Wrap async callback system events."""
-            return_value = await func(*args, **kwargs)  # type: ignore[misc]
+            return_value = cast(R, await func(*args, **kwargs))  # type: ignore[misc]
             _exec_callback_system_event(name, *args, **kwargs)
-            return cast(R, return_value)
+            return return_value
 
         @wraps(func)
         def wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
             """Wrap callback system events."""
-            return_value = func(*args, **kwargs)
+            return_value = cast(R, func(*args, **kwargs))
             _exec_callback_system_event(name, *args, **kwargs)
-            return cast(R, return_value)
+            return return_value
 
         def _exec_callback_system_event(name: str, *args: Any, **kwargs: Any) -> None:
             """Execute the callback for a system event."""
