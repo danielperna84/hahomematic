@@ -27,9 +27,6 @@ PORT_ANY: Final = 0
 
 PATH_JSON_RPC: Final = "/api/homematic.cgi"
 
-BACKEND_CCU: Final = "CCU"
-BACKEND_HOMEGEAR: Final = "Homegear"
-BACKEND_PYDEVCCU: Final = "PyDevCCU"
 HOMEGEAR_SERIAL = "Homegear_SN0815"
 
 PROGRAM_ADDRESS: Final = "program"
@@ -266,6 +263,14 @@ PG_HMIP_RF: Final = "HmIP-RF"
 PG_HMIP_WIRED: Final = "HmIP-Wired"
 PG_UNKNOWN: Final = "unknown"
 PG_VIRTUAL_DEVICES: Final = "VirtualDevices"
+
+
+class HmBackend(StrEnum):
+    """Enum with supported hahomematic backends."""
+
+    CCU = "CCU"
+    HOMEGEAR = "Homegear"
+    PYDEVCCU = "PyDevCCU"
 
 
 class HmCallSource(StrEnum):

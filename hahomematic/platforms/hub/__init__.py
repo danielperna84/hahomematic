@@ -6,7 +6,7 @@ import logging
 from typing import Final
 
 from hahomematic import central_unit as hmcu
-from hahomematic.const import BACKEND_CCU, HmSystemEvent, HmSysvarType
+from hahomematic.const import HmBackend, HmSystemEvent, HmSysvarType
 from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericSystemVariable
@@ -99,7 +99,7 @@ class HmHub:
 
         # remove some variables in case of CCU Backend
         # - OldValue(s) are for internal calculations
-        if self._central.model is BACKEND_CCU:
+        if self._central.model is HmBackend.CCU:
             variables = _clean_variables(variables)
 
         missing_variable_names = self._identify_missing_variable_names(variables=variables)
