@@ -93,7 +93,7 @@ def create_entity_and_append_to_device(
     elif parameter not in CLICK_EVENTS:
         # Also check, if sensor could be a binary_sensor due to value_list.
         if is_binary_sensor(parameter_data):
-            p_type = HmType.BOOL
+            parameter_data[HmDescription.TYPE] = HmType.BOOL
             entity_t = HmBinarySensor
         else:
             entity_t = HmSensor

@@ -440,7 +440,7 @@ def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
     if parameter_data[HmDescription.TYPE] == HmType.BOOL:
         return True
-    if value_list := parameter_data.get("VALUE_LIST"):
+    if value_list := parameter_data.get(HmDescription.VALUE_LIST):
         return tuple(value_list) in BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
     return False
 
