@@ -10,7 +10,7 @@ from typing import Any, Final
 import orjson
 
 from hahomematic import client as hmcl
-from hahomematic.const import HM_ADDRESS, HM_CHILDREN, HM_PARENT, HM_TYPE, HmDataOperationResult
+from hahomematic.const import HmDataOperationResult, HmDescription
 from hahomematic.support import check_or_create_directory
 
 DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
@@ -41,7 +41,7 @@ class DeviceExporter:
         paramset_descriptions: dict[str, Any] = await self._client.get_all_paramset_descriptions(
             list(device_descriptions.values())
         )
-        device_type = device_descriptions[self._device_address][HM_TYPE]
+        device_type = device_descriptions[self._device_address][HmDescription.TYPE]
         filename = f"{device_type}.json"
 
         # anonymize device_descriptions
@@ -50,16 +50,17 @@ class DeviceExporter:
             if device_description == {}:
                 continue  # pragma: no cover
             new_device_description = copy(device_description)
-            new_device_description[HM_ADDRESS] = self._anonymize_address(
-                address=new_device_description[HM_ADDRESS]
+            new_device_description[HmDescription.ADDRESS] = self._anonymize_address(
+                address=new_device_description[HmDescription.ADDRESS]
             )
-            if new_device_description.get(HM_PARENT):
-                new_device_description[HM_PARENT] = new_device_description[HM_ADDRESS].split(":")[
-                    0
-                ]
-            elif new_device_description.get(HM_CHILDREN):
-                new_device_description[HM_CHILDREN] = [
-                    self._anonymize_address(a) for a in new_device_description[HM_CHILDREN]
+            if new_device_description.get(HmDescription.PARENT):
+                new_device_description[HmDescription.PARENT] = new_device_description[
+                    HmDescription.ADDRESS
+                ].split(":")[0]
+            elif new_device_description.get(HmDescription.CHILDREN):
+                new_device_description[HmDescription.CHILDREN] = [
+                    self._anonymize_address(a)
+                    for a in new_device_description[HmDescription.CHILDREN]
                 ]
             anonymize_device_descriptions.append(new_device_description)
 

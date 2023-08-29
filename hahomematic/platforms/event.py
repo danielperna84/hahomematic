@@ -9,9 +9,9 @@ from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
     ENTITY_EVENTS,
-    HM_OPERATIONS,
     IMPULSE_EVENTS,
     PARAMSET_KEY_VALUES,
+    HmDescription,
     HmEntityUsage,
     HmEventType,
     HmOperations,
@@ -162,7 +162,7 @@ def create_event_and_append_to_device(
         device.interface_id,
     )
     event_t: type[GenericEvent] | None = None
-    if parameter_data[HM_OPERATIONS] & HmOperations.EVENT:
+    if parameter_data[HmDescription.OPERATIONS] & HmOperations.EVENT:
         if parameter in CLICK_EVENTS:
             event_t = ClickEvent
         if parameter.startswith(DEVICE_ERROR_EVENTS):

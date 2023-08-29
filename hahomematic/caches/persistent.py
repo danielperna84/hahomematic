@@ -14,12 +14,10 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     FILE_DEVICES,
     FILE_PARAMSETS,
-    HM_ADDRESS,
-    HM_OPERATIONS,
-    HM_TYPE,
     INIT_DATETIME,
     PARAMSET_KEY_VALUES,
     HmDataOperationResult,
+    HmDescription,
     HmOperations,
 )
 from hahomematic.platforms.device import HmDevice
@@ -127,7 +125,8 @@ class DeviceDescriptionCache(BasePersistentCache):
             self._raw_device_descriptions[interface_id] = []
 
         self._remove_device(
-            interface_id=interface_id, deleted_addresses=[device_description[HM_ADDRESS]]
+            interface_id=interface_id,
+            deleted_addresses=[device_description[HmDescription.ADDRESS]],
         )
         self._raw_device_descriptions[interface_id].append(device_description)
 
@@ -151,7 +150,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         self._raw_device_descriptions[interface_id] = [
             raw_device
             for raw_device in self.get_raw_device_descriptions(interface_id)
-            if raw_device[HM_ADDRESS] not in deleted_addresses
+            if raw_device[HmDescription.ADDRESS] not in deleted_addresses
         ]
 
         for address in deleted_addresses:
@@ -175,7 +174,7 @@ class DeviceDescriptionCache(BasePersistentCache):
                 self.get_device_parameter(
                     interface_id=interface_id,
                     device_address=channel_address,
-                    parameter=HM_TYPE,
+                    parameter=HmDescription.TYPE,
                 )
             )
             channels[channel_address] = Channel(type=channel_name, address=channel_address)
@@ -228,7 +227,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         if interface_id not in self._device_descriptions:
             self._device_descriptions[interface_id] = {}
 
-        address = device_description[HM_ADDRESS]
+        address = device_description[HmDescription.ADDRESS]
         self._device_descriptions[interface_id][address] = device_description
 
         if ":" not in address and address not in self._addresses[interface_id]:
@@ -343,7 +342,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         for channels in self._raw_paramset_descriptions.values():
             for channel_address in channels:
                 for parameter, paramset in channels[channel_address][PARAMSET_KEY_VALUES].items():
-                    operations = paramset[HM_OPERATIONS]
+                    operations = paramset[HmDescription.OPERATIONS]
                     if operations & HmOperations.READ and operations & HmOperations.EVENT:
                         parameters.add(parameter)
 

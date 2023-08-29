@@ -62,26 +62,6 @@ HM_ARG_VALUE: Final = "value"
 HM_ARG_ON: Final = "on"
 HM_ARG_OFF: Final = "off"
 
-HM_ADDRESS: Final = "ADDRESS"
-HM_AVAILABLE_FIRMWARE: Final = "AVAILABLE_FIRMWARE"
-HM_CHILDREN: Final = "CHILDREN"
-HM_DEFAULT: Final = "DEFAULT"
-HM_FIRMWARE: Final = "FIRMWARE"
-HM_FIRMWARE_UPDATABLE: Final = "UPDATABLE"
-HM_FIRMWARE_UPDATE_STATE: Final = "FIRMWARE_UPDATE_STATE"
-HM_FLAGS: Final = "FLAGS"
-HM_MAX: Final = "MAX"
-HM_MIN: Final = "MIN"
-HM_NAME: Final = "NAME"
-HM_OPERATIONS: Final = "OPERATIONS"
-HM_PARAMSETS: Final = "PARAMSETS"
-HM_PARENT: Final = "PARENT"
-HM_PARENT_TYPE: Final = "PARENT_TYPE"
-HM_SPECIAL: Final = "SPECIAL"  # Which has the following keys
-HM_SUBTYPE: Final = "SUBTYPE"
-HM_TYPE: Final = "TYPE"
-HM_UNIT: Final = "UNIT"
-HM_VALUE_LIST: Final = "VALUE_LIST"
 
 MAX_CACHE_AGE: Final = 60
 MAX_JSON_SESSION_AGE: Final = 90
@@ -230,6 +210,31 @@ class HmDataOperationResult(IntEnum):
     SAVE_SUCCESS: Final = 11
     NO_LOAD: Final = 20
     NO_SAVE: Final = 21
+
+
+class HmDescription(StrEnum):
+    """Enum with homematic device/paramset description attributes."""
+
+    ADDRESS = "ADDRESS"
+    AVAILABLE_FIRMWARE = "AVAILABLE_FIRMWARE"
+    CHILDREN = "CHILDREN"
+    DEFAULT = "DEFAULT"
+    FIRMWARE = "FIRMWARE"
+    FIRMWARE_UPDATABLE = "UPDATABLE"
+    FIRMWARE_UPDATE_STATE = "FIRMWARE_UPDATE_STATE"
+    FLAGS = "FLAGS"
+    MAX = "MAX"
+    MIN = "MIN"
+    NAME = "NAME"
+    OPERATIONS = "OPERATIONS"
+    PARAMSETS = "PARAMSETS"
+    PARENT = "PARENT"
+    PARENT_TYPE = "PARENT_TYPE"
+    SPECIAL = "SPECIAL"  # Which has the following keys
+    SUBTYPE = "SUBTYPE"
+    TYPE = "TYPE"
+    UNIT = "UNIT"
+    VALUE_LIST = "VALUE_LIST"
 
 
 class HmDeviceFirmwareState(StrEnum):

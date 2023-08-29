@@ -11,12 +11,6 @@ from typing import Any, Final
 from hahomematic import central_unit as hmcu, exporter as hmexp
 from hahomematic.const import (
     ENTITY_EVENTS,
-    HM_AVAILABLE_FIRMWARE,
-    HM_FIRMWARE,
-    HM_FIRMWARE_UPDATABLE,
-    HM_FIRMWARE_UPDATE_STATE,
-    HM_SUBTYPE,
-    HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
@@ -26,6 +20,7 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     RELEVANT_INIT_PARAMETERS,
     HmCallSource,
+    HmDescription,
     HmDeviceFirmwareState,
     HmEvent,
     HmEventType,
@@ -82,14 +77,14 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=HM_TYPE,
+                parameter=HmDescription.TYPE,
             )
         )
         self._attr_sub_type: Final = str(
             central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=HM_SUBTYPE,
+                parameter=HmDescription.SUBTYPE,
             )
         )
         self._attr_manufacturer = self._identify_manufacturer()
@@ -123,7 +118,7 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._attr_interface_id,
                 device_address=self._attr_device_address,
-                parameter=HM_AVAILABLE_FIRMWARE,
+                parameter=HmDescription.AVAILABLE_FIRMWARE,
             )
             or None
         )
@@ -131,7 +126,7 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._attr_interface_id,
                 device_address=self._attr_device_address,
-                parameter=HM_FIRMWARE,
+                parameter=HmDescription.FIRMWARE,
             )
         )
 
@@ -141,7 +136,7 @@ class HmDevice(PayloadMixin):
                     self.central.device_descriptions.get_device_parameter(
                         interface_id=self._attr_interface_id,
                         device_address=self._attr_device_address,
-                        parameter=HM_FIRMWARE_UPDATE_STATE,
+                        parameter=HmDescription.FIRMWARE_UPDATE_STATE,
                     )
                 )
             )
@@ -152,7 +147,7 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._attr_interface_id,
                 device_address=self._attr_device_address,
-                parameter=HM_FIRMWARE_UPDATABLE,
+                parameter=HmDescription.FIRMWARE_UPDATABLE,
             )
         )
 

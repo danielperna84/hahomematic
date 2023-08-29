@@ -9,11 +9,11 @@ from typing import Any, Generic, TypeVar
 from hahomematic import central_unit as hmcu, support as hms
 from hahomematic.const import (
     BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
-    HM_TYPE,
     HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,
     PROGRAM_ADDRESS,
     SYSVAR_ADDRESS,
+    HmDescription,
     HmEntityUsage,
     HmType,
 )
@@ -438,7 +438,7 @@ def convert_value(value: Any, target_type: HmType, value_list: tuple[str, ...] |
 
 def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
-    if parameter_data[HM_TYPE] == HmType.BOOL:
+    if parameter_data[HmDescription.TYPE] == HmType.BOOL:
         return True
     if value_list := parameter_data.get("VALUE_LIST"):
         return tuple(value_list) in BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST

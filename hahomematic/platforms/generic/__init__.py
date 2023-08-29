@@ -8,9 +8,8 @@ from hahomematic import support as hms
 from hahomematic.const import (
     BUTTON_ACTIONS,
     CLICK_EVENTS,
-    HM_OPERATIONS,
-    HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
+    HmDescription,
     HmOperations,
     HmType,
 )
@@ -66,9 +65,9 @@ def create_entity_and_append_to_device(
         device.interface_id,
     )
     entity_t: type[hmge.GenericEntity] | None = None
-    if parameter_data[HM_OPERATIONS] & HmOperations.WRITE:
-        if parameter_data[HM_TYPE] == HmType.ACTION:
-            if parameter_data[HM_OPERATIONS] == HmOperations.WRITE:
+    if parameter_data[HmDescription.OPERATIONS] & HmOperations.WRITE:
+        if parameter_data[HmDescription.TYPE] == HmType.ACTION:
+            if parameter_data[HmDescription.OPERATIONS] == HmOperations.WRITE:
                 if parameter in BUTTON_ACTIONS or device.device_type in HM_VIRTUAL_REMOTE_TYPES:
                     entity_t = HmButton
                 else:
@@ -77,22 +76,22 @@ def create_entity_and_append_to_device(
                 entity_t = HmButton
             else:
                 entity_t = HmSwitch
-        elif parameter_data[HM_OPERATIONS] == HmOperations.WRITE:
+        elif parameter_data[HmDescription.OPERATIONS] == HmOperations.WRITE:
             entity_t = HmAction
-        elif parameter_data[HM_TYPE] == HmType.BOOL:
+        elif parameter_data[HmDescription.TYPE] == HmType.BOOL:
             entity_t = HmSwitch
-        elif parameter_data[HM_TYPE] == HmType.ENUM:
+        elif parameter_data[HmDescription.TYPE] == HmType.ENUM:
             entity_t = HmSelect
-        elif parameter_data[HM_TYPE] == HmType.FLOAT:
+        elif parameter_data[HmDescription.TYPE] == HmType.FLOAT:
             entity_t = HmFloat
-        elif parameter_data[HM_TYPE] == HmType.INTEGER:
+        elif parameter_data[HmDescription.TYPE] == HmType.INTEGER:
             entity_t = HmInteger
-        elif parameter_data[HM_TYPE] == HmType.STRING:
+        elif parameter_data[HmDescription.TYPE] == HmType.STRING:
             entity_t = HmText
     elif parameter not in CLICK_EVENTS:
         # Also check, if sensor could be a binary_sensor due to value_list.
         if is_binary_sensor(parameter_data):
-            parameter_data[HM_TYPE] = HmType.BOOL
+            parameter_data[HmDescription.TYPE] = HmType.BOOL
             entity_t = HmBinarySensor
         else:
             entity_t = HmSensor

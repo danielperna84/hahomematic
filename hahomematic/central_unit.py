@@ -30,10 +30,10 @@ from hahomematic.const import (
     ATTR_TYPE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
-    HM_ADDRESS,
     IF_PRIMARY,
     MAX_CACHE_AGE,
     PARAMSET_KEY_MASTER,
+    HmDescription,
     HmDeviceFirmwareState,
     HmEntityUsage,
     HmEvent,
@@ -739,14 +739,14 @@ class CentralUnit:
         async with self._sema_add_devices:
             # We need this list to avoid adding duplicates.
             known_addresses = [
-                dev_desc[HM_ADDRESS]
+                dev_desc[HmDescription.ADDRESS]
                 for dev_desc in self.device_descriptions.get_raw_device_descriptions(interface_id)
             ]
             client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
                     self.device_descriptions.add_device_description(interface_id, dev_desc)
-                    if dev_desc[HM_ADDRESS] not in known_addresses:
+                    if dev_desc[HmDescription.ADDRESS] not in known_addresses:
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:  # pragma: no cover
                     _LOGGER.error(

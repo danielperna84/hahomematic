@@ -20,15 +20,6 @@ from hahomematic.const import (
     CONFIGURABLE_CHANNEL,
     FIX_UNIT_BY_PARAM,
     FIX_UNIT_REPLACE,
-    HM_DEFAULT,
-    HM_FLAGS,
-    HM_MAX,
-    HM_MIN,
-    HM_OPERATIONS,
-    HM_SPECIAL,
-    HM_TYPE,
-    HM_UNIT,
-    HM_VALUE_LIST,
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     MAX_CACHE_AGE,
@@ -36,6 +27,7 @@ from hahomematic.const import (
     PARAM_CHANNEL_OPERATION_MODE,
     PARAMSET_KEY_VALUES,
     HmCallSource,
+    HmDescription,
     HmEntityUsage,
     HmFlag,
     HmOperations,
@@ -308,21 +300,21 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
         """Assign parameter data to instance variables."""
-        self._attr_type: HmType = HmType(parameter_data[HM_TYPE])
+        self._attr_type: HmType = HmType(parameter_data[HmDescription.TYPE])
         self._attr_value_list: tuple[str, ...] | None = None
-        if HM_VALUE_LIST in parameter_data:
-            self._attr_value_list = tuple(parameter_data[HM_VALUE_LIST])
-        self._attr_max: ParameterT = self._convert_value(parameter_data[HM_MAX])
-        self._attr_min: ParameterT = self._convert_value(parameter_data[HM_MIN])
+        if HmDescription.VALUE_LIST in parameter_data:
+            self._attr_value_list = tuple(parameter_data[HmDescription.VALUE_LIST])
+        self._attr_max: ParameterT = self._convert_value(parameter_data[HmDescription.MAX])
+        self._attr_min: ParameterT = self._convert_value(parameter_data[HmDescription.MIN])
         self._attr_default: ParameterT = self._convert_value(
-            parameter_data.get(HM_DEFAULT, self._attr_min)
+            parameter_data.get(HmDescription.DEFAULT, self._attr_min)
         )
-        flags: int = parameter_data[HM_FLAGS]
+        flags: int = parameter_data[HmDescription.FLAGS]
         self._attr_visible: bool = flags & HmFlag.VISIBLE == HmFlag.VISIBLE
         self._attr_service: bool = flags & HmFlag.SERVICE == HmFlag.SERVICE
-        self._attr_operations: int = parameter_data[HM_OPERATIONS]
-        self._attr_special: dict[str, Any] | None = parameter_data.get(HM_SPECIAL)
-        self._attr_raw_unit: str | None = parameter_data.get(HM_UNIT)
+        self._attr_operations: int = parameter_data[HmDescription.OPERATIONS]
+        self._attr_special: dict[str, Any] | None = parameter_data.get(HmDescription.SPECIAL)
+        self._attr_raw_unit: str | None = parameter_data.get(HmDescription.UNIT)
         self._attr_unit: str | None = self._fix_unit(raw_unit=self._attr_raw_unit)
 
     @config_property

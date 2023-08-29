@@ -17,11 +17,6 @@ from hahomematic.const import (
     ATTR_INTERFACE,
     ATTR_NAME,
     ATTR_SECONDS_SINCE_LAST_EVENT,
-    HM_ADDRESS,
-    HM_NAME,
-    HM_PARAMSETS,
-    HM_PARENT_TYPE,
-    HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
     HOMEGEAR_SERIAL,
     IF_BIDCOS_RF_NAME,
@@ -31,6 +26,7 @@ from hahomematic.const import (
     PARAMSET_KEY_VALUES,
     HmBackend,
     HmCallSource,
+    HmDescription,
     HmForcedDeviceAvailability,
     HmInterface,
     HmInterfaceEventType,
@@ -547,18 +543,18 @@ class Client(ABC):
         if not device_description:
             return {}
         paramsets: dict[str, dict[str, Any]] = {}
-        address = device_description[HM_ADDRESS]
+        address = device_description[HmDescription.ADDRESS]
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
-        for paramset_key in device_description.get(HM_PARAMSETS, []):
+        for paramset_key in device_description.get(HmDescription.PARAMSETS, []):
             if (channel_no := get_channel_no(address)) is None:
                 # No paramsets at root device
                 continue
 
             device_type = (
-                device_description[HM_TYPE]
+                device_description[HmDescription.TYPE]
                 if channel_no is None
-                else device_description[HM_PARENT_TYPE]
+                else device_description[HmDescription.PARENT_TYPE]
             )
             if (
                 only_relevant
@@ -819,7 +815,7 @@ class ClientHomegear(Client):
             try:
                 self.central.device_details.add_name(
                     address,
-                    await self._proxy_read.getMetadata(address, HM_NAME),
+                    await self._proxy_read.getMetadata(address, HmDescription.NAME),
                 )
             except BaseHomematicException as hhe:
                 _LOGGER.warning(

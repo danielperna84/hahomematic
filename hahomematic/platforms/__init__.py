@@ -8,9 +8,8 @@ from hahomematic.caches.visibility import ALLOWED_INTERNAL_PARAMETERS
 from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
-    HM_FLAGS,
-    HM_OPERATIONS,
     IMPULSE_EVENTS,
+    HmDescription,
     HmFlag,
     HmOperations,
 )
@@ -65,7 +64,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         parameter=parameter,
                     )
                 )
-                if parameter_data[HM_OPERATIONS] & HmOperations.EVENT and (
+                if parameter_data[HmDescription.OPERATIONS] & HmOperations.EVENT and (
                     parameter in CLICK_EVENTS
                     or parameter.startswith(DEVICE_ERROR_EVENTS)
                     or parameter in IMPULSE_EVENTS
@@ -77,10 +76,10 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         parameter_data=parameter_data,
                     )
                 if (
-                    not parameter_data[HM_OPERATIONS] & HmOperations.EVENT
-                    and not parameter_data[HM_OPERATIONS] & HmOperations.WRITE
+                    not parameter_data[HmDescription.OPERATIONS] & HmOperations.EVENT
+                    and not parameter_data[HmDescription.OPERATIONS] & HmOperations.WRITE
                 ) or (
-                    parameter_data[HM_FLAGS] & HmFlag.INTERNAL
+                    parameter_data[HmDescription.FLAGS] & HmFlag.INTERNAL
                     and parameter not in ALLOWED_INTERNAL_PARAMETERS
                     and not parameter_is_un_ignored
                 ):
