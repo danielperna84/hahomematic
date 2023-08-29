@@ -25,10 +25,6 @@ INIT_DATETIME: Final = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:
 IP_ANY_V4: Final = "0.0.0.0"
 PORT_ANY: Final = 0
 
-MANUFACTURER_EQ3: Final = "eQ-3"
-MANUFACTURER_HB: Final = "Homebrew"
-MANUFACTURER_MOEHLENHOFF: Final = "Möhlenhoff"
-
 PATH_JSON_RPC: Final = "/api/homematic.cgi"
 
 BACKEND_CCU: Final = "CCU"
@@ -166,13 +162,6 @@ SYSVAR_TYPE_LOGIC: Final = "LOGIC"
 SYSVAR_TYPE_NUMBER: Final = "NUMBER"
 SYSVAR_TYPE_STRING: Final = "STRING"
 
-TYPE_ACTION: Final = "ACTION"  # Usually buttons, send Boolean to trigger
-TYPE_BOOL: Final = "BOOL"
-TYPE_ENUM: Final = "ENUM"
-TYPE_FLOAT: Final = "FLOAT"
-TYPE_INTEGER: Final = "INTEGER"
-TYPE_STRING: Final = "STRING"
-
 CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
@@ -287,6 +276,14 @@ PG_UNKNOWN: Final = "unknown"
 PG_VIRTUAL_DEVICES: Final = "VirtualDevices"
 
 
+class HmCallSource(StrEnum):
+    """Enum with sources for calls."""
+
+    HA_INIT: Final = "ha_init"
+    HM_INIT: Final = "hm_init"
+    MANUAL_OR_SCHEDULED: Final = "manual_or_scheduled"
+
+
 class HmDataOperationResult(IntEnum):
     """Enum with data operation results."""
 
@@ -296,17 +293,6 @@ class HmDataOperationResult(IntEnum):
     SAVE_SUCCESS: Final = 11
     NO_LOAD: Final = 20
     NO_SAVE: Final = 21
-
-
-class HmEntityUsage(StrEnum):
-    """Enum with information about usage in Home Assistant."""
-
-    CE_PRIMARY: Final = "ce_primary"
-    CE_SECONDARY: Final = "ce_secondary"
-    CE_VISIBLE: Final = "ce_visible"
-    ENTITY: Final = "entity"
-    EVENT: Final = "event"
-    NO_CREATE: Final = "entity_no_create"
 
 
 class HmDeviceFirmwareState(StrEnum):
@@ -321,6 +307,43 @@ class HmDeviceFirmwareState(StrEnum):
     READY_FOR_UPDATE: Final = "READY_FOR_UPDATE"
     DO_UPDATE_PENDING: Final = "DO_UPDATE_PENDING"
     PERFORMING_UPDATE: Final = "PERFORMING_UPDATE"
+
+
+class HmEntityUsage(StrEnum):
+    """Enum with information about usage in Home Assistant."""
+
+    CE_PRIMARY: Final = "ce_primary"
+    CE_SECONDARY: Final = "ce_secondary"
+    CE_VISIBLE: Final = "ce_visible"
+    ENTITY: Final = "entity"
+    EVENT: Final = "event"
+    NO_CREATE: Final = "entity_no_create"
+
+
+class HmEventType(StrEnum):
+    """Enum with hahomematic event types."""
+
+    DEVICE_AVAILABILITY: Final = "homematic.device_availability"
+    DEVICE_ERROR: Final = "homematic.device_error"
+    IMPULSE: Final = "homematic.impulse"
+    INTERFACE: Final = "homematic.interface"
+    KEYPRESS: Final = "homematic.keypress"
+
+
+class HmForcedDeviceAvailability(StrEnum):
+    """Enum with hahomematic event types."""
+
+    FORCE_FALSE: Final = "forced_not_available"
+    FORCE_TRUE: Final = "forced_available"
+    NOT_SET: Final = "not_set"
+
+
+class HmManufacturer(StrEnum):
+    """Enum with hahomematic system events."""
+
+    EQ3 = "eQ-3"
+    HB = "Homebrew"
+    MOEHLENHOFF = "Möhlenhoff"
 
 
 class HmPlatform(StrEnum):
@@ -370,24 +393,6 @@ class HmInterface(StrEnum):
     VIRTUAL: Final = IF_VIRTUAL_DEVICES_NAME
 
 
-class HmEventType(StrEnum):
-    """Enum with hahomematic event types."""
-
-    DEVICE_AVAILABILITY: Final = "homematic.device_availability"
-    DEVICE_ERROR: Final = "homematic.device_error"
-    IMPULSE: Final = "homematic.impulse"
-    INTERFACE: Final = "homematic.interface"
-    KEYPRESS: Final = "homematic.keypress"
-
-
-class HmCallSource(StrEnum):
-    """Enum with sources for calls."""
-
-    HA_INIT: Final = "ha_init"
-    HM_INIT: Final = "hm_init"
-    MANUAL_OR_SCHEDULED: Final = "manual_or_scheduled"
-
-
 class HmInterfaceEventType(StrEnum):
     """Enum with hahomematic event types."""
 
@@ -396,16 +401,8 @@ class HmInterfaceEventType(StrEnum):
     PROXY: Final = "proxy"
 
 
-class HmForcedDeviceAvailability(StrEnum):
-    """Enum with hahomematic event types."""
-
-    FORCE_FALSE: Final = "forced_not_available"
-    FORCE_TRUE: Final = "forced_available"
-    NOT_SET: Final = "not_set"
-
-
 class HmSystemEvent(StrEnum):
-    """enum with hahomematic system events."""
+    """Enum with hahomematic system events."""
 
     DELETE_DEVICES = "deleteDevices"
     DEVICES_CREATED = "devicesCreated"
@@ -416,6 +413,17 @@ class HmSystemEvent(StrEnum):
     REPLACE_DEVICE = "replaceDevice"
     RE_ADDED_DEVICE = "readdedDevice"
     UPDATE_DEVICE = "updateDevice"
+
+
+class HmType(StrEnum):
+    """Enum for homematic parameter types."""
+
+    ACTION = "ACTION"  # Usually buttons, send Boolean to trigger
+    BOOL = "BOOL"
+    ENUM = "ENUM"
+    FLOAT = "FLOAT"
+    INTEGER = "INTEGER"
+    STRING = "STRING"
 
 
 AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (

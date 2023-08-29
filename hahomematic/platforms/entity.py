@@ -40,10 +40,10 @@ from hahomematic.const import (
     OPERATION_WRITE,
     PARAM_CHANNEL_OPERATION_MODE,
     PARAMSET_KEY_VALUES,
-    TYPE_BOOL,
     HmCallSource,
     HmEntityUsage,
     HmPlatform,
+    HmType,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.support import (
@@ -510,7 +510,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             return None  # type: ignore[return-value]
         try:
             if (
-                self._attr_type == TYPE_BOOL
+                self._attr_type == HmType.BOOL
                 and self._attr_value_list is not None
                 and value is not None
                 and isinstance(value, str)

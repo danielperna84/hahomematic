@@ -23,9 +23,6 @@ from hahomematic.const import (
     HM_VIRTUAL_REMOTE_TYPES,
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
-    MANUFACTURER_EQ3,
-    MANUFACTURER_HB,
-    MANUFACTURER_MOEHLENHOFF,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     PARAMSET_KEY_MASTER,
@@ -36,6 +33,7 @@ from hahomematic.const import (
     HmEventType,
     HmForcedDeviceAvailability,
     HmInterface,
+    HmManufacturer,
     HmProductGroup,
 )
 from hahomematic.exceptions import BaseHomematicException
@@ -160,13 +158,13 @@ class HmDevice(PayloadMixin):
             )
         )
 
-    def _identify_manufacturer(self) -> str:
+    def _identify_manufacturer(self) -> HmManufacturer:
         """Identify the manufacturer of a device."""
         if self.device_type.lower().startswith("hb"):
-            return MANUFACTURER_HB
+            return HmManufacturer.HB
         if self.device_type.lower().startswith("alpha"):
-            return MANUFACTURER_MOEHLENHOFF
-        return MANUFACTURER_EQ3
+            return HmManufacturer.MOEHLENHOFF
+        return HmManufacturer.EQ3
 
     def _identify_product_group(self) -> HmProductGroup:
         """Identify the product group of the homematic device."""

@@ -15,12 +15,8 @@ from hahomematic.const import (
     SYSVAR_TYPE_LIST,
     SYSVAR_TYPE_LOGIC,
     SYSVAR_TYPE_STRING,
-    TYPE_ACTION,
-    TYPE_BOOL,
-    TYPE_FLOAT,
-    TYPE_INTEGER,
-    TYPE_STRING,
     HmEntityUsage,
+    HmType,
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms.support import (
@@ -312,17 +308,17 @@ async def test_updated_within_seconds() -> None:
 @pytest.mark.asyncio
 async def test_convert_value() -> None:
     """Test convert_value."""
-    assert convert_value(value=None, target_type=TYPE_BOOL, value_list=None) is None
-    assert convert_value(value=True, target_type=TYPE_BOOL, value_list=None) is True
-    assert convert_value(value="true", target_type=TYPE_BOOL, value_list=None) is True
-    assert convert_value(value=1, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is True
-    assert convert_value(value=0, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is False
-    assert convert_value(value=2, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is False
-    assert convert_value(value="0.1", target_type=TYPE_FLOAT, value_list=None) == 0.1
-    assert convert_value(value="1", target_type=TYPE_INTEGER, value_list=None) == 1
-    assert convert_value(value="test", target_type=TYPE_STRING, value_list=None) == "test"
-    assert convert_value(value="1", target_type=TYPE_STRING, value_list=None) == "1"
-    assert convert_value(value=True, target_type=TYPE_ACTION, value_list=None) is True
+    assert convert_value(value=None, target_type=HmType.BOOL, value_list=None) is None
+    assert convert_value(value=True, target_type=HmType.BOOL, value_list=None) is True
+    assert convert_value(value="true", target_type=HmType.BOOL, value_list=None) is True
+    assert convert_value(value=1, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is True
+    assert convert_value(value=0, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is False
+    assert convert_value(value=2, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is False
+    assert convert_value(value="0.1", target_type=HmType.FLOAT, value_list=None) == 0.1
+    assert convert_value(value="1", target_type=HmType.INTEGER, value_list=None) == 1
+    assert convert_value(value="test", target_type=HmType.STRING, value_list=None) == "test"
+    assert convert_value(value="1", target_type=HmType.STRING, value_list=None) == "1"
+    assert convert_value(value=True, target_type=HmType.ACTION, value_list=None) is True
 
 
 @pytest.mark.asyncio

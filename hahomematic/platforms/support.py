@@ -14,11 +14,8 @@ from hahomematic.const import (
     INIT_DATETIME,
     PROGRAM_ADDRESS,
     SYSVAR_ADDRESS,
-    TYPE_BOOL,
-    TYPE_FLOAT,
-    TYPE_INTEGER,
-    TYPE_STRING,
     HmEntityUsage,
+    HmType,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
@@ -423,25 +420,25 @@ def convert_value(value: Any, target_type: str, value_list: tuple[str, ...] | No
     """Convert a value to target_type."""
     if value is None:
         return None
-    if target_type == TYPE_BOOL:
+    if target_type == HmType.BOOL:
         if value_list:
             # relevant for ENUMs retyped to a BOOL
             return _get_binary_sensor_value(value=value, value_list=value_list)
         if isinstance(value, str):
             return to_bool(value)
         return bool(value)
-    if target_type == TYPE_FLOAT:
+    if target_type == HmType.FLOAT:
         return float(value)
-    if target_type == TYPE_INTEGER:
+    if target_type == HmType.INTEGER:
         return int(float(value))
-    if target_type == TYPE_STRING:
+    if target_type == HmType.STRING:
         return str(value)
     return value
 
 
 def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
-    if parameter_data[HM_TYPE] == TYPE_BOOL:
+    if parameter_data[HM_TYPE] == HmType.BOOL:
         return True
     if value_list := parameter_data.get("VALUE_LIST"):
         return tuple(value_list) in BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
