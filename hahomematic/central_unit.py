@@ -30,7 +30,6 @@ from hahomematic.const import (
     ATTR_TYPE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
-    IF_PRIMARY,
     MAX_CACHE_AGE,
     HmDescription,
     HmDeviceFirmwareState,
@@ -38,6 +37,7 @@ from hahomematic.const import (
     HmEvent,
     HmEventType,
     HmInterfaceEventType,
+    HmInterfaceName,
     HmParamsetKey,
     HmPlatform,
     HmProxyInitState,
@@ -570,7 +570,10 @@ class CentralUnit:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hmcl.Client | None = None
         for client in self._clients.values():
-            if client.interface in IF_PRIMARY and client.available:
+            if (
+                client.interface in (HmInterfaceName.HMIP_RF, HmInterfaceName.BIDCOS_RF)
+                and client.available
+            ):
                 return client
         return client
 

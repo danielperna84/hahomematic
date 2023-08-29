@@ -7,11 +7,11 @@ from typing import Any, Final
 
 from hahomematic import central_unit as hmcu
 from hahomematic.const import (
-    IF_BIDCOS_RF_NAME,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     HmCallSource,
+    HmInterfaceName,
 )
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import get_device_address, updated_within_seconds
@@ -73,7 +73,7 @@ class DeviceDetailsCache:
 
     def get_interface(self, address: str) -> str:
         """Get interface from cache."""
-        return self._interface_cache.get(address) or IF_BIDCOS_RF_NAME
+        return self._interface_cache.get(address) or HmInterfaceName.BIDCOS_RF
 
     def add_device_channel_id(self, address: str, channel_id: str) -> None:
         """Add channel id for a channel."""

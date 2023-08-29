@@ -117,28 +117,6 @@ FIX_UNIT_BY_PARAM: Final[dict[str, str]] = {
     "WIND_DIRECTION_RANGE": "°",
 }
 
-IF_BIDCOS_RF_NAME: Final = "BidCos-RF"
-IF_BIDCOS_RF_PORT: Final = 2001
-IF_BIDCOS_RF_TLS_PORT: Final = 42001
-IF_BIDCOS_WIRED_NAME: Final = "BidCos-Wired"
-IF_BIDCOS_WIRED_PORT: Final = 2000
-IF_BIDCOS_WIRED_TLS_PORT: Final = 42000
-IF_HMIP_RF_NAME: Final = "HmIP-RF"
-IF_HMIP_RF_PORT: Final = 2010
-IF_HMIP_RF_TLS_PORT: Final = 42010
-IF_VIRTUAL_DEVICES_NAME: Final = "VirtualDevices"
-IF_VIRTUAL_DEVICES_PATH: Final = "/groups"
-IF_VIRTUAL_DEVICES_PORT: Final = 9292
-IF_VIRTUAL_DEVICES_TLS_PORT: Final = 49292
-
-IF_NAMES: Final[tuple[str, ...]] = (
-    IF_BIDCOS_RF_NAME,
-    IF_BIDCOS_WIRED_NAME,
-    IF_HMIP_RF_NAME,
-    IF_VIRTUAL_DEVICES_NAME,
-)
-IF_PRIMARY: Final[tuple[str, ...]] = (IF_HMIP_RF_NAME, IF_BIDCOS_RF_NAME)
-
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
 # virtual remotes device_types
@@ -160,13 +138,6 @@ BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[dict[tuple[str, ...], str]] 
     ("DRY", "RAIN"): "RAIN",
     ("STABLE", "NOT_STABLE"): "NOT_STABLE",
 }
-
-PG_BIDCOS_RF: Final = "BidCos-RF"
-PG_BIDCOS_WIRED: Final = "BidCos-Wired"
-PG_HMIP_RF: Final = "HmIP-RF"
-PG_HMIP_WIRED: Final = "HmIP-Wired"
-PG_UNKNOWN: Final = "unknown"
-PG_VIRTUAL_DEVICES: Final = "VirtualDevices"
 
 
 class HmBackend(StrEnum):
@@ -356,13 +327,13 @@ class HmProductGroup(StrEnum):
     VIRTUAL: Final = "VirtualDevices"
 
 
-class HmInterface(StrEnum):
-    """Enum with homematic product groups."""
+class HmInterfaceName(StrEnum):
+    """Enum with homematic interface names."""
 
-    HMIP: Final = IF_HMIP_RF_NAME
-    HMW: Final = IF_BIDCOS_WIRED_NAME
-    HM: Final = IF_BIDCOS_RF_NAME
-    VIRTUAL: Final = IF_VIRTUAL_DEVICES_NAME
+    BIDCOS_RF = "BidCos-RF"
+    BIDCOS_WIRED = "BidCos-Wired"
+    HMIP_RF = "HmIP-RF"
+    VIRTUAL_DEVICES = "VirtualDevices"
 
 
 class HmInterfaceEventType(StrEnum):

@@ -443,7 +443,7 @@ class Example:
 
         interface_config = InterfaceConfig(
             central_name=CENTRAL_NAME,
-            interface=const.HmInterface.HM,
+            interface=const.HmInterfaceName.BIDCOS_RF,
             port=2002,
         )
 

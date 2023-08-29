@@ -19,15 +19,13 @@ from hahomematic.const import (
     ATTR_SECONDS_SINCE_LAST_EVENT,
     HM_VIRTUAL_REMOTE_TYPES,
     HOMEGEAR_SERIAL,
-    IF_BIDCOS_RF_NAME,
-    IF_NAMES,
     INIT_DATETIME,
     HmBackend,
     HmCallSource,
     HmDescription,
     HmForcedDeviceAvailability,
-    HmInterface,
     HmInterfaceEventType,
+    HmInterfaceName,
     HmParamsetKey,
     HmProductGroup,
     HmProxyInitState,
@@ -903,7 +901,9 @@ class ClientHomegear(Client):
 
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
-        return SystemInformation(available_interfaces=[IF_BIDCOS_RF_NAME], serial=HOMEGEAR_SERIAL)
+        return SystemInformation(
+            available_interfaces=[HmInterfaceName.BIDCOS_RF], serial=HOMEGEAR_SERIAL
+        )
 
 
 class _ClientConfig:
@@ -1008,12 +1008,12 @@ class InterfaceConfig:
     def __init__(
         self,
         central_name: str,
-        interface: HmInterface,
+        interface: HmInterfaceName,
         port: int,
         remote_path: str | None = None,
     ) -> None:
         """Init the interface config."""
-        self.interface: Final[HmInterface] = interface
+        self.interface: Final[HmInterfaceName] = interface
         self.interface_id: Final[str] = f"{central_name}-{self.interface}"
         self.port: Final = port
         self.remote_path: Final = remote_path
@@ -1021,11 +1021,11 @@ class InterfaceConfig:
 
     def validate(self) -> None:
         """Validate the client_config."""
-        if self.interface not in IF_NAMES:
+        if self.interface not in list(HmInterfaceName):
             _LOGGER.warning(
                 "VALIDATE interface config failed: "
                 "Interface names must be within [%s] for production use",
-                ", ".join(IF_NAMES),
+                ", ".join(list(HmInterfaceName)),
             )
 
 

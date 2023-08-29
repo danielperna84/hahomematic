@@ -23,7 +23,7 @@ from hahomematic.const import (
     HmEvent,
     HmEventType,
     HmForcedDeviceAvailability,
-    HmInterface,
+    HmInterfaceName,
     HmManufacturer,
     HmParamsetKey,
     HmProductGroup,
@@ -160,17 +160,17 @@ class HmDevice(PayloadMixin):
 
     def _identify_product_group(self) -> HmProductGroup:
         """Identify the product group of the homematic device."""
-        if self.interface == HmInterface.HMIP:
+        if self.interface == HmInterfaceName.HMIP_RF:
             l_device_type = self.device_type.lower()
             if l_device_type.startswith("hmipw"):
                 return HmProductGroup.HMIPW
             if l_device_type.startswith("hmip"):
                 return HmProductGroup.HMIP
-        if self.interface == HmInterface.HMW:
+        if self.interface == HmInterfaceName.BIDCOS_WIRED:
             return HmProductGroup.HMW
-        if self.interface == HmInterface.HM:
+        if self.interface == HmInterfaceName.BIDCOS_RF:
             return HmProductGroup.HM
-        if self.interface == HmInterface.VIRTUAL:
+        if self.interface == HmInterfaceName.VIRTUAL_DEVICES:
             return HmProductGroup.VIRTUAL
         return HmProductGroup.UNKNOWN
 
