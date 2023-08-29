@@ -40,7 +40,7 @@ from hahomematic.const import (
     HmEventType,
     HmInterfaceEventType,
     HmPlatform,
-    HmProxyStatus,
+    HmProxyInitState,
     HmSystemEvent,
 )
 from hahomematic.decorators import callback_event, callback_system_event
@@ -415,7 +415,7 @@ class CentralUnit:
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
         for client in self._clients.values():
-            if await client.proxy_init() == HmProxyStatus.INIT_SUCCESS:
+            if await client.proxy_init() == HmProxyInitState.INIT_SUCCESS:
                 _LOGGER.debug("INIT_CLIENTS: client for %s initialized", client.interface_id)
 
     async def _de_init_clients(self) -> None:

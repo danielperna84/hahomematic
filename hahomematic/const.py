@@ -392,7 +392,7 @@ class HmInterfaceEventType(StrEnum):
     PROXY: Final = "proxy"
 
 
-class HmProxyStatus(Enum):
+class HmProxyInitState(Enum):
     """Enum with proxy handling results."""
 
     INIT_FAILED: Final = 0

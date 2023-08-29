@@ -9,7 +9,7 @@ from typing import Any, Final, cast
 import orjson
 
 from hahomematic.client import _LOGGER, Client, _ClientConfig
-from hahomematic.const import DEFAULT_ENCODING, IF_BIDCOS_RF_NAME, HmCallSource, HmProxyStatus
+from hahomematic.const import DEFAULT_ENCODING, IF_BIDCOS_RF_NAME, HmCallSource, HmProxyInitState
 from hahomematic.support import ProgramData, SystemInformation, SystemVariableData
 
 LOCAL_SERIAL: Final = "0815_4711"
@@ -40,13 +40,13 @@ class ClientLocal(Client):  # pragma: no cover
         """Return the supports_ping_pong info of the backend."""
         return True
 
-    async def proxy_init(self) -> HmProxyStatus:
+    async def proxy_init(self) -> HmProxyInitState:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
-        return HmProxyStatus.INIT_SUCCESS
+        return HmProxyInitState.INIT_SUCCESS
 
-    async def proxy_de_init(self) -> HmProxyStatus:
+    async def proxy_de_init(self) -> HmProxyInitState:
         """De-init to stop CCU from sending events for this remote."""
-        return HmProxyStatus.DE_INIT_SUCCESS
+        return HmProxyInitState.DE_INIT_SUCCESS
 
     def stop(self) -> None:
         """Stop depending services."""

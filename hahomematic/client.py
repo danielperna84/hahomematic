@@ -35,7 +35,7 @@ from hahomematic.const import (
     HmInterface,
     HmInterfaceEventType,
     HmProductGroup,
-    HmProxyStatus,
+    HmProxyInitState,
 )
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
 from hahomematic.platforms.device import HmDevice
@@ -101,7 +101,7 @@ class Client(ABC):
     def supports_ping_pong(self) -> bool:
         """Return the supports_ping_pong info of the backend."""
 
-    async def proxy_init(self) -> HmProxyStatus:
+    async def proxy_init(self) -> HmProxyInitState:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
         try:
             _LOGGER.debug("PROXY_INIT: init('%s', '%s')", self._config.init_url, self.interface_id)
@@ -118,18 +118,18 @@ class Client(ABC):
                 self.interface_id,
             )
             self.last_updated = INIT_DATETIME
-            return HmProxyStatus.INIT_FAILED
+            return HmProxyInitState.INIT_FAILED
         self.last_updated = datetime.now()
-        return HmProxyStatus.INIT_SUCCESS
+        return HmProxyInitState.INIT_SUCCESS
 
-    async def proxy_de_init(self) -> HmProxyStatus:
+    async def proxy_de_init(self) -> HmProxyInitState:
         """De-init to stop CCU from sending events for this remote."""
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "PROXY_DE_INIT: Skipping de-init for %s (not initialized)",
                 self.interface_id,
             )
-            return HmProxyStatus.DE_INIT_SKIPPED
+            return HmProxyInitState.DE_INIT_SKIPPED
         try:
             _LOGGER.debug("PROXY_DE_INIT: init('%s')", self._config.init_url)
             await self._proxy.init(self._config.init_url)
@@ -140,16 +140,16 @@ class Client(ABC):
                 reduce_args(args=hhe.args),
                 self.interface_id,
             )
-            return HmProxyStatus.DE_INIT_FAILED
+            return HmProxyInitState.DE_INIT_FAILED
 
         self.last_updated = INIT_DATETIME
-        return HmProxyStatus.DE_INIT_SUCCESS
+        return HmProxyInitState.DE_INIT_SUCCESS
 
-    async def proxy_re_init(self) -> HmProxyStatus:
+    async def proxy_re_init(self) -> HmProxyInitState:
         """Reinit Proxy."""
-        if await self.proxy_de_init() != HmProxyStatus.DE_INIT_FAILED:
+        if await self.proxy_de_init() != HmProxyInitState.DE_INIT_FAILED:
             return await self.proxy_init()
-        return HmProxyStatus.DE_INIT_FAILED
+        return HmProxyInitState.DE_INIT_FAILED
 
     def _mark_all_devices_forced_availability(
         self, forced_availability: HmForcedDeviceAvailability

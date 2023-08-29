@@ -25,12 +25,8 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_PARAMSETS,
     INIT_DATETIME,
-    SYSVAR_HM_TYPE_FLOAT,
-    SYSVAR_HM_TYPE_INTEGER,
-    SYSVAR_TYPE_ALARM,
-    SYSVAR_TYPE_LIST,
-    SYSVAR_TYPE_LOGIC,
     HmInterfaceEventType,
+    HmSysvarType,
 )
 from hahomematic.exceptions import HaHomematicException
 
@@ -95,16 +91,16 @@ def check_or_create_directory(directory: str) -> bool:
     return True
 
 
-def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
+def parse_sys_var(data_type: HmSysvarType | None, raw_value: Any) -> Any:
     """Parse system variables to fix type."""
     # pylint: disable=no-else-return
     if not data_type:
         return raw_value
-    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
+    if data_type in (HmSysvarType.ALARM, HmSysvarType.LOGIC):
         return to_bool(raw_value)
-    if data_type == SYSVAR_HM_TYPE_FLOAT:
+    if data_type == HmSysvarType.HM_FLOAT:
         return float(raw_value)
-    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
+    if data_type in (HmSysvarType.HM_INTEGER, HmSysvarType.LIST):
         return int(raw_value)
     return raw_value
 
@@ -262,7 +258,7 @@ class SystemVariableData(HubData):
     """Dataclass for system variables."""
 
     value: bool | float | int | str | None
-    data_type: str | None = None
+    data_type: HmSysvarType | None = None
     unit: str | None = None
     value_list: list[str] | None = None
     max_value: float | int | None = None
