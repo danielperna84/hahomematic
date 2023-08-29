@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import IntEnum, StrEnum
+from enum import Enum, IntEnum, StrEnum
 from typing import Final
 
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = (
@@ -127,12 +127,6 @@ PROGRAM_ISACTIVE: Final = "isActive"
 PROGRAM_ISINTERNAL: Final = "isInternal"
 PROGRAM_LASTEXECUTETIME: Final = "lastExecuteTime"
 PROGRAM_NAME: Final = "name"
-
-PROXY_INIT_FAILED: Final = 0
-PROXY_INIT_SUCCESS: Final = 1
-PROXY_DE_INIT_FAILED: Final = 4
-PROXY_DE_INIT_SUCCESS: Final = 8
-PROXY_DE_INIT_SKIPPED: Final = 16
 
 REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
 REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
@@ -396,6 +390,16 @@ class HmInterfaceEventType(StrEnum):
     CALLBACK: Final = "callback"
     PINGPONG: Final = "pingpong"
     PROXY: Final = "proxy"
+
+
+class HmProxyStatus(Enum):
+    """Enum with proxy handling results."""
+
+    INIT_FAILED: Final = 0
+    INIT_SUCCESS: Final = 1
+    DE_INIT_FAILED: Final = 4
+    DE_INIT_SUCCESS: Final = 8
+    DE_INIT_SKIPPED: Final = 16
 
 
 class HmSystemEvent(StrEnum):

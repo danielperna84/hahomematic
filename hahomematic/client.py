@@ -17,9 +17,6 @@ from hahomematic.const import (
     ATTR_INTERFACE,
     ATTR_NAME,
     ATTR_SECONDS_SINCE_LAST_EVENT,
-    BACKEND_CCU,
-    BACKEND_HOMEGEAR,
-    BACKEND_PYDEVCCU,
     HM_ADDRESS,
     HM_NAME,
     HM_PARAMSETS,
@@ -32,16 +29,13 @@ from hahomematic.const import (
     INIT_DATETIME,
     PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
-    PROXY_DE_INIT_FAILED,
-    PROXY_DE_INIT_SKIPPED,
-    PROXY_DE_INIT_SUCCESS,
-    PROXY_INIT_FAILED,
-    PROXY_INIT_SUCCESS,
+    HmBackend,
     HmCallSource,
     HmForcedDeviceAvailability,
     HmInterface,
     HmInterfaceEventType,
     HmProductGroup,
+    HmProxyStatus,
 )
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
 from hahomematic.platforms.device import HmDevice
@@ -107,7 +101,7 @@ class Client(ABC):
     def supports_ping_pong(self) -> bool:
         """Return the supports_ping_pong info of the backend."""
 
-    async def proxy_init(self) -> int:
+    async def proxy_init(self) -> HmProxyStatus:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
         try:
             _LOGGER.debug("PROXY_INIT: init('%s', '%s')", self._config.init_url, self.interface_id)
@@ -124,18 +118,18 @@ class Client(ABC):
                 self.interface_id,
             )
             self.last_updated = INIT_DATETIME
-            return PROXY_INIT_FAILED
+            return HmProxyStatus.INIT_FAILED
         self.last_updated = datetime.now()
-        return PROXY_INIT_SUCCESS
+        return HmProxyStatus.INIT_SUCCESS
 
-    async def proxy_de_init(self) -> int:
+    async def proxy_de_init(self) -> HmProxyStatus:
         """De-init to stop CCU from sending events for this remote."""
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "PROXY_DE_INIT: Skipping de-init for %s (not initialized)",
                 self.interface_id,
             )
-            return PROXY_DE_INIT_SKIPPED
+            return HmProxyStatus.DE_INIT_SKIPPED
         try:
             _LOGGER.debug("PROXY_DE_INIT: init('%s')", self._config.init_url)
             await self._proxy.init(self._config.init_url)
@@ -146,16 +140,16 @@ class Client(ABC):
                 reduce_args(args=hhe.args),
                 self.interface_id,
             )
-            return PROXY_DE_INIT_FAILED
+            return HmProxyStatus.DE_INIT_FAILED
 
         self.last_updated = INIT_DATETIME
-        return PROXY_DE_INIT_SUCCESS
+        return HmProxyStatus.DE_INIT_SUCCESS
 
-    async def proxy_re_init(self) -> int:
+    async def proxy_re_init(self) -> HmProxyStatus:
         """Reinit Proxy."""
-        if await self.proxy_de_init() != PROXY_DE_INIT_FAILED:
+        if await self.proxy_de_init() != HmProxyStatus.DE_INIT_FAILED:
             return await self.proxy_init()
-        return PROXY_DE_INIT_FAILED
+        return HmProxyStatus.DE_INIT_FAILED
 
     def _mark_all_devices_forced_availability(
         self, forced_availability: HmForcedDeviceAvailability
@@ -675,7 +669,7 @@ class ClientCCU(Client):
     @property
     def model(self) -> str:
         """Return the model of the backend."""
-        return BACKEND_CCU
+        return HmBackend.CCU
 
     @property
     def supports_ping_pong(self) -> bool:
@@ -799,11 +793,11 @@ class ClientHomegear(Client):
         """Return the model of the backend."""
         if self._config.version:
             return (
-                BACKEND_PYDEVCCU
-                if BACKEND_PYDEVCCU.lower() in self._config.version
-                else BACKEND_HOMEGEAR
+                HmBackend.PYDEVCCU
+                if HmBackend.PYDEVCCU.lower() in self._config.version
+                else HmBackend.HOMEGEAR
             )
-        return BACKEND_CCU
+        return HmBackend.CCU
 
     @property
     def supports_ping_pong(self) -> bool:
