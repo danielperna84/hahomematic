@@ -7,21 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
-from hahomematic.const import (
-    INIT_DATETIME,
-    SYSVAR_HM_TYPE_FLOAT,
-    SYSVAR_HM_TYPE_INTEGER,
-    SYSVAR_TYPE_ALARM,
-    SYSVAR_TYPE_LIST,
-    SYSVAR_TYPE_LOGIC,
-    SYSVAR_TYPE_STRING,
-    TYPE_ACTION,
-    TYPE_BOOL,
-    TYPE_FLOAT,
-    TYPE_INTEGER,
-    TYPE_STRING,
-    HmEntityUsage,
-)
+from hahomematic.const import INIT_DATETIME, HmEntityUsage, HmSysvarType, HmType
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms.support import (
     _check_channel_name_with_channel_no,
@@ -127,12 +113,12 @@ def test_check_or_create_directory() -> None:
 def test_parse_sys_var() -> None:
     """Test parse_sys_var."""
     assert parse_sys_var(data_type=None, raw_value="1.4") == "1.4"
-    assert parse_sys_var(data_type=SYSVAR_TYPE_STRING, raw_value="1.4") == "1.4"
-    assert parse_sys_var(data_type=SYSVAR_HM_TYPE_FLOAT, raw_value="1.4") == 1.4
-    assert parse_sys_var(data_type=SYSVAR_HM_TYPE_INTEGER, raw_value="1") == 1
-    assert parse_sys_var(data_type=SYSVAR_TYPE_ALARM, raw_value="true") is True
-    assert parse_sys_var(data_type=SYSVAR_TYPE_LIST, raw_value="1") == 1
-    assert parse_sys_var(data_type=SYSVAR_TYPE_LOGIC, raw_value="true") is True
+    assert parse_sys_var(data_type=HmSysvarType.STRING, raw_value="1.4") == "1.4"
+    assert parse_sys_var(data_type=HmSysvarType.HM_FLOAT, raw_value="1.4") == 1.4
+    assert parse_sys_var(data_type=HmSysvarType.HM_INTEGER, raw_value="1") == 1
+    assert parse_sys_var(data_type=HmSysvarType.ALARM, raw_value="true") is True
+    assert parse_sys_var(data_type=HmSysvarType.LIST, raw_value="1") == 1
+    assert parse_sys_var(data_type=HmSysvarType.LOGIC, raw_value="true") is True
 
 
 @pytest.mark.asyncio
@@ -312,17 +298,17 @@ async def test_updated_within_seconds() -> None:
 @pytest.mark.asyncio
 async def test_convert_value() -> None:
     """Test convert_value."""
-    assert convert_value(value=None, target_type=TYPE_BOOL, value_list=None) is None
-    assert convert_value(value=True, target_type=TYPE_BOOL, value_list=None) is True
-    assert convert_value(value="true", target_type=TYPE_BOOL, value_list=None) is True
-    assert convert_value(value=1, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is True
-    assert convert_value(value=0, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is False
-    assert convert_value(value=2, target_type=TYPE_BOOL, value_list=("CLOSED", "OPEN")) is False
-    assert convert_value(value="0.1", target_type=TYPE_FLOAT, value_list=None) == 0.1
-    assert convert_value(value="1", target_type=TYPE_INTEGER, value_list=None) == 1
-    assert convert_value(value="test", target_type=TYPE_STRING, value_list=None) == "test"
-    assert convert_value(value="1", target_type=TYPE_STRING, value_list=None) == "1"
-    assert convert_value(value=True, target_type=TYPE_ACTION, value_list=None) is True
+    assert convert_value(value=None, target_type=HmType.BOOL, value_list=None) is None
+    assert convert_value(value=True, target_type=HmType.BOOL, value_list=None) is True
+    assert convert_value(value="true", target_type=HmType.BOOL, value_list=None) is True
+    assert convert_value(value=1, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is True
+    assert convert_value(value=0, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is False
+    assert convert_value(value=2, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is False
+    assert convert_value(value="0.1", target_type=HmType.FLOAT, value_list=None) == 0.1
+    assert convert_value(value="1", target_type=HmType.INTEGER, value_list=None) == 1
+    assert convert_value(value="test", target_type=HmType.STRING, value_list=None) == "test"
+    assert convert_value(value="1", target_type=HmType.STRING, value_list=None) == "1"
+    assert convert_value(value=True, target_type=HmType.ACTION, value_list=None) is True
 
 
 @pytest.mark.asyncio

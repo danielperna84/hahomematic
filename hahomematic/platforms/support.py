@@ -9,16 +9,13 @@ from typing import Any, Generic, TypeVar
 from hahomematic import central_unit as hmcu, support as hms
 from hahomematic.const import (
     BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
-    HM_TYPE,
     HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,
     PROGRAM_ADDRESS,
     SYSVAR_ADDRESS,
-    TYPE_BOOL,
-    TYPE_FLOAT,
-    TYPE_INTEGER,
-    TYPE_STRING,
+    HmDescription,
     HmEntityUsage,
+    HmType,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
@@ -419,31 +416,31 @@ def _check_channel_name_with_channel_no(name: str) -> bool:
     return False
 
 
-def convert_value(value: Any, target_type: str, value_list: tuple[str, ...] | None) -> Any:
+def convert_value(value: Any, target_type: HmType, value_list: tuple[str, ...] | None) -> Any:
     """Convert a value to target_type."""
     if value is None:
         return None
-    if target_type == TYPE_BOOL:
+    if target_type == HmType.BOOL:
         if value_list:
             # relevant for ENUMs retyped to a BOOL
             return _get_binary_sensor_value(value=value, value_list=value_list)
         if isinstance(value, str):
             return to_bool(value)
         return bool(value)
-    if target_type == TYPE_FLOAT:
+    if target_type == HmType.FLOAT:
         return float(value)
-    if target_type == TYPE_INTEGER:
+    if target_type == HmType.INTEGER:
         return int(float(value))
-    if target_type == TYPE_STRING:
+    if target_type == HmType.STRING:
         return str(value)
     return value
 
 
 def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
-    if parameter_data[HM_TYPE] == TYPE_BOOL:
+    if parameter_data[HmDescription.TYPE] == HmType.BOOL:
         return True
-    if value_list := parameter_data.get("VALUE_LIST"):
+    if value_list := parameter_data.get(HmDescription.VALUE_LIST):
         return tuple(value_list) in BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
     return False
 

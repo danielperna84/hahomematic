@@ -18,19 +18,15 @@ from typing import Any, TypeVar
 import voluptuous as vol
 
 from hahomematic.const import (
-    ATTR_DATA,
-    ATTR_INTERFACE_ID,
-    ATTR_TYPE,
     CCU_PASSWORD_PATTERN,
+    EVENT_DATA,
+    EVENT_INTERFACE_ID,
+    EVENT_TYPE,
     FILE_DEVICES,
     FILE_PARAMSETS,
     INIT_DATETIME,
-    SYSVAR_HM_TYPE_FLOAT,
-    SYSVAR_HM_TYPE_INTEGER,
-    SYSVAR_TYPE_ALARM,
-    SYSVAR_TYPE_LIST,
-    SYSVAR_TYPE_LOGIC,
     HmInterfaceEventType,
+    HmSysvarType,
 )
 from hahomematic.exceptions import HaHomematicException
 
@@ -39,9 +35,9 @@ _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_INTERFACE_ID): str,
-        vol.Required(ATTR_TYPE): HmInterfaceEventType,
-        vol.Required(ATTR_DATA): vol.Schema(
+        vol.Required(EVENT_INTERFACE_ID): str,
+        vol.Required(EVENT_TYPE): HmInterfaceEventType,
+        vol.Required(EVENT_DATA): vol.Schema(
             {vol.Required(vol.Any(str)): vol.Schema(vol.Any(str, int, bool))}
         ),
     }
@@ -95,16 +91,16 @@ def check_or_create_directory(directory: str) -> bool:
     return True
 
 
-def parse_sys_var(data_type: str | None, raw_value: Any) -> Any:
+def parse_sys_var(data_type: HmSysvarType | None, raw_value: Any) -> Any:
     """Parse system variables to fix type."""
     # pylint: disable=no-else-return
     if not data_type:
         return raw_value
-    if data_type in (SYSVAR_TYPE_ALARM, SYSVAR_TYPE_LOGIC):
+    if data_type in (HmSysvarType.ALARM, HmSysvarType.LOGIC):
         return to_bool(raw_value)
-    if data_type == SYSVAR_HM_TYPE_FLOAT:
+    if data_type == HmSysvarType.HM_FLOAT:
         return float(raw_value)
-    if data_type in (SYSVAR_HM_TYPE_INTEGER, SYSVAR_TYPE_LIST):
+    if data_type in (HmSysvarType.HM_INTEGER, HmSysvarType.LIST):
         return int(raw_value)
     return raw_value
 
@@ -262,7 +258,7 @@ class SystemVariableData(HubData):
     """Dataclass for system variables."""
 
     value: bool | float | int | str | None
-    data_type: str | None = None
+    data_type: HmSysvarType | None = None
     unit: str | None = None
     value_list: list[str] | None = None
     max_value: float | int | None = None
@@ -312,13 +308,29 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
     is_enabled = _LOGGER.isEnabledFor(level=logging.DEBUG)
 
     @wraps(func)
-    async def wrapper(*args: Any, **kwargs: Any) -> Any:
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
         """Wrap method."""
         if is_enabled:
             start = datetime.now()
         try:
-            if asyncio.iscoroutinefunction(func):
-                return await func(*args, **kwargs)
+            return await func(*args, **kwargs)
+        finally:
+            if is_enabled:
+                delta = (datetime.now() - start).total_seconds()
+                _LOGGER.info(
+                    "Execution of %s took %ss args(%s) kwargs(%s) ",
+                    func.__name__,
+                    delta,
+                    args,
+                    kwargs,
+                )
+
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        """Wrap method."""
+        if is_enabled:
+            start = datetime.now()
+        try:
             return func(*args, **kwargs)
         finally:
             if is_enabled:
@@ -331,4 +343,6 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
                     kwargs,
                 )
 
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper  # type: ignore[return-value]
     return wrapper  # type: ignore[return-value]

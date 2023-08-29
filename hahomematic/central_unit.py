@@ -23,34 +23,27 @@ from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescri
 from hahomematic.caches.visibility import ParameterVisibilityCache
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
-    ATTR_AVAILABLE,
-    ATTR_DATA,
-    ATTR_INSTANCE_NAME,
-    ATTR_INTERFACE_ID,
-    ATTR_TYPE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
-    EVENT_PONG,
-    HH_EVENT_DELETE_DEVICES,
-    HH_EVENT_DEVICES_CREATED,
-    HH_EVENT_LIST_DEVICES,
-    HH_EVENT_NEW_DEVICES,
-    HM_ADDRESS,
-    IF_PRIMARY,
+    EVENT_AVAILABLE,
+    EVENT_DATA,
+    EVENT_INSTANCE_NAME,
+    EVENT_INTERFACE_ID,
+    EVENT_TYPE,
     MAX_CACHE_AGE,
-    PARAMSET_KEY_MASTER,
-    PROXY_INIT_SUCCESS,
+    HmDescription,
     HmDeviceFirmwareState,
     HmEntityUsage,
+    HmEvent,
     HmEventType,
     HmInterfaceEventType,
+    HmInterfaceName,
+    HmParamsetKey,
     HmPlatform,
+    HmProxyInitState,
+    HmSystemEvent,
 )
-from hahomematic.decorators import (
-    async_callback_system_event,
-    callback_event,
-    callback_system_event,
-)
+from hahomematic.decorators import callback_event, callback_system_event
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
@@ -401,7 +394,7 @@ class CentralUnit:
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
                     interface_event_type=HmInterfaceEventType.PROXY,
-                    data={ATTR_AVAILABLE: False},
+                    data={EVENT_AVAILABLE: False},
                 )
                 _LOGGER.warning(
                     "CREATE_CLIENTS failed: No connection to interface %s [%s]",
@@ -422,7 +415,7 @@ class CentralUnit:
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
         for client in self._clients.values():
-            if await client.proxy_init() == PROXY_INIT_SUCCESS:
+            if await client.proxy_init() == HmProxyInitState.INIT_SUCCESS:
                 _LOGGER.debug("INIT_CLIENTS: client for %s initialized", client.interface_id)
 
     async def _de_init_clients(self) -> None:
@@ -445,9 +438,9 @@ class CentralUnit:
         """Fire an event about the interface status."""
         data = data or {}
         event_data: dict[str, Any] = {
-            ATTR_INTERFACE_ID: interface_id,
-            ATTR_TYPE: interface_event_type,
-            ATTR_DATA: data,
+            EVENT_INTERFACE_ID: interface_id,
+            EVENT_TYPE: interface_event_type,
+            EVENT_DATA: data,
         }
 
         self.fire_ha_event_callback(
@@ -577,7 +570,10 @@ class CentralUnit:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hmcl.Client | None = None
         for client in self._clients.values():
-            if client.interface in IF_PRIMARY and client.available:
+            if (
+                client.interface in (HmInterfaceName.HMIP_RF, HmInterfaceName.BIDCOS_RF)
+                and client.available
+            ):
                 return client
         return client
 
@@ -679,7 +675,9 @@ class CentralUnit:
         _LOGGER.debug("CREATE_DEVICES: Finished creating devices for %s", self._attr_name)
 
         if new_devices:
-            self.fire_system_event_callback(name=HH_EVENT_DEVICES_CREATED, new_devices=new_devices)
+            self.fire_system_event_callback(
+                system_event=HmSystemEvent.DEVICES_CREATED, new_devices=new_devices
+            )
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
         """Delete devices from central_unit."""
@@ -703,7 +701,7 @@ class CentralUnit:
 
         await self.delete_devices(interface_id=interface_id, addresses=addresses)
 
-    @async_callback_system_event(name=HH_EVENT_DELETE_DEVICES)
+    @callback_system_event(system_event=HmSystemEvent.DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
@@ -715,7 +713,7 @@ class CentralUnit:
             if device := self._devices.get(address):
                 await self.remove_device(device=device)
 
-    @async_callback_system_event(name=HH_EVENT_NEW_DEVICES)
+    @callback_system_event(system_event=HmSystemEvent.NEW_DEVICES)
     async def add_new_devices(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
@@ -744,14 +742,14 @@ class CentralUnit:
         async with self._sema_add_devices:
             # We need this list to avoid adding duplicates.
             known_addresses = [
-                dev_desc[HM_ADDRESS]
+                dev_desc[HmDescription.ADDRESS]
                 for dev_desc in self.device_descriptions.get_raw_device_descriptions(interface_id)
             ]
             client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
                     self.device_descriptions.add_device_description(interface_id, dev_desc)
-                    if dev_desc[HM_ADDRESS] not in known_addresses:
+                    if dev_desc[HmDescription.ADDRESS] not in known_addresses:
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:  # pragma: no cover
                     _LOGGER.error(
@@ -781,7 +779,7 @@ class CentralUnit:
 
         self.last_events[interface_id] = datetime.now()
         # No need to check the response of a XmlRPC-PING
-        if parameter == EVENT_PONG:
+        if parameter == HmEvent.PONG:
             if value == interface_id:
                 self._reduce_ping_count(interface_id=interface_id)
             return
@@ -806,7 +804,7 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
-    @callback_system_event(name=HH_EVENT_LIST_DEVICES)
+    @callback_system_event(system_event=HmSystemEvent.LIST_DEVICES)
     def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
         _LOGGER.debug("list_devices: interface_id = %s", interface_id)
@@ -897,9 +895,9 @@ class CentralUnit:
         if self._ping_pong_fired:
             return
         event_data: dict[str, Any] = {
-            ATTR_INTERFACE_ID: interface_id,
-            ATTR_TYPE: HmInterfaceEventType.PINGPONG,
-            ATTR_DATA: {ATTR_INSTANCE_NAME: self.config.name},
+            EVENT_INTERFACE_ID: interface_id,
+            EVENT_TYPE: HmInterfaceEventType.PINGPONG,
+            EVENT_DATA: {EVENT_INSTANCE_NAME: self.config.name},
         }
         self.fire_ha_event_callback(
             event_type=HmEventType.INTERFACE,
@@ -974,7 +972,7 @@ class CentralUnit:
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
-        if paramset_key != PARAMSET_KEY_MASTER and self.device_data.is_empty(
+        if paramset_key != HmParamsetKey.MASTER and self.device_data.is_empty(
             max_age_seconds=max_age_seconds
         ):
             await self.device_data.load()
@@ -1153,7 +1151,7 @@ class CentralUnit:
         if callback_handler in self._callback_system_event:
             self._callback_system_event.remove(callback_handler)
 
-    def fire_system_event_callback(self, name: str, **kwargs: Any) -> None:
+    def fire_system_event_callback(self, system_event: HmSystemEvent, **kwargs: Any) -> None:
         """
         Fire system_event callback in central.
 
@@ -1161,7 +1159,7 @@ class CentralUnit:
         """
         for callback_handler in self._callback_system_event:
             try:
-                callback_handler(name, **kwargs)
+                callback_handler(system_event, **kwargs)
             except Exception as ex:
                 _LOGGER.error(
                     "FIRE_SYSTEM_EVENT_CALLBACK: Unable to call handler: %s",

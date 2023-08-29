@@ -11,31 +11,21 @@ from typing import Any, Final
 from hahomematic import central_unit as hmcu, exporter as hmexp
 from hahomematic.const import (
     ENTITY_EVENTS,
-    EVENT_CONFIG_PENDING,
-    EVENT_STICKY_UN_REACH,
-    EVENT_UN_REACH,
-    HM_AVAILABLE_FIRMWARE,
-    HM_FIRMWARE,
-    HM_FIRMWARE_UPDATABLE,
-    HM_FIRMWARE_UPDATE_STATE,
-    HM_SUBTYPE,
-    HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
-    MANUFACTURER_EQ3,
-    MANUFACTURER_HB,
-    MANUFACTURER_MOEHLENHOFF,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
-    PARAMSET_KEY_MASTER,
-    PARAMSET_KEY_VALUES,
     RELEVANT_INIT_PARAMETERS,
     HmCallSource,
+    HmDescription,
     HmDeviceFirmwareState,
+    HmEvent,
     HmEventType,
     HmForcedDeviceAvailability,
-    HmInterface,
+    HmInterfaceName,
+    HmManufacturer,
+    HmParamsetKey,
     HmProductGroup,
 )
 from hahomematic.exceptions import BaseHomematicException
@@ -86,14 +76,14 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=HM_TYPE,
+                parameter=HmDescription.TYPE,
             )
         )
         self._attr_sub_type: Final = str(
             central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=HM_SUBTYPE,
+                parameter=HmDescription.SUBTYPE,
             )
         )
         self._attr_manufacturer = self._identify_manufacturer()
@@ -127,7 +117,7 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._attr_interface_id,
                 device_address=self._attr_device_address,
-                parameter=HM_AVAILABLE_FIRMWARE,
+                parameter=HmDescription.AVAILABLE_FIRMWARE,
             )
             or None
         )
@@ -135,7 +125,7 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._attr_interface_id,
                 device_address=self._attr_device_address,
-                parameter=HM_FIRMWARE,
+                parameter=HmDescription.FIRMWARE,
             )
         )
 
@@ -145,7 +135,7 @@ class HmDevice(PayloadMixin):
                     self.central.device_descriptions.get_device_parameter(
                         interface_id=self._attr_interface_id,
                         device_address=self._attr_device_address,
-                        parameter=HM_FIRMWARE_UPDATE_STATE,
+                        parameter=HmDescription.FIRMWARE_UPDATE_STATE,
                     )
                 )
             )
@@ -156,31 +146,31 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._attr_interface_id,
                 device_address=self._attr_device_address,
-                parameter=HM_FIRMWARE_UPDATABLE,
+                parameter=HmDescription.FIRMWARE_UPDATABLE,
             )
         )
 
-    def _identify_manufacturer(self) -> str:
+    def _identify_manufacturer(self) -> HmManufacturer:
         """Identify the manufacturer of a device."""
         if self.device_type.lower().startswith("hb"):
-            return MANUFACTURER_HB
+            return HmManufacturer.HB
         if self.device_type.lower().startswith("alpha"):
-            return MANUFACTURER_MOEHLENHOFF
-        return MANUFACTURER_EQ3
+            return HmManufacturer.MOEHLENHOFF
+        return HmManufacturer.EQ3
 
     def _identify_product_group(self) -> HmProductGroup:
         """Identify the product group of the homematic device."""
-        if self.interface == HmInterface.HMIP:
+        if self.interface == HmInterfaceName.HMIP_RF:
             l_device_type = self.device_type.lower()
             if l_device_type.startswith("hmipw"):
                 return HmProductGroup.HMIPW
             if l_device_type.startswith("hmip"):
                 return HmProductGroup.HMIP
-        if self.interface == HmInterface.HMW:
+        if self.interface == HmInterfaceName.BIDCOS_WIRED:
             return HmProductGroup.HMW
-        if self.interface == HmInterface.HM:
+        if self.interface == HmInterfaceName.BIDCOS_RF:
             return HmProductGroup.HM
-        if self.interface == HmInterface.VIRTUAL:
+        if self.interface == HmInterfaceName.VIRTUAL_DEVICES:
             return HmProductGroup.VIRTUAL
         return HmProductGroup.UNKNOWN
 
@@ -286,17 +276,21 @@ class HmDevice(PayloadMixin):
     @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity."""
-        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_UN_REACH))
+        return self.generic_entities.get((f"{self._attr_device_address}:0", HmEvent.UN_REACH))
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity."""
-        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_STICKY_UN_REACH))
+        return self.generic_entities.get(
+            (f"{self._attr_device_address}:0", HmEvent.STICKY_UN_REACH)
+        )
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity."""
-        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING))
+        return self.generic_entities.get(
+            (f"{self._attr_device_address}:0", HmEvent.CONFIG_PENDING)
+        )
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
@@ -541,9 +535,9 @@ class ValueCache:
         for entity in self._attr_device.generic_entities.values():
             if (
                 entity.channel_no == 0
-                and entity.paramset_key == PARAMSET_KEY_VALUES
+                and entity.paramset_key == HmParamsetKey.VALUES
                 and entity.parameter in RELEVANT_INIT_PARAMETERS
-            ) or entity.paramset_key == PARAMSET_KEY_MASTER:
+            ) or entity.paramset_key == HmParamsetKey.MASTER:
                 entities.append(entity)
         return set(entities)
 

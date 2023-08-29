@@ -12,14 +12,7 @@ from typing import Any, Final
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
 from hahomematic import central_unit as hmcu
-from hahomematic.const import (
-    HH_EVENT_ERROR,
-    HH_EVENT_RE_ADDED_DEVICE,
-    HH_EVENT_REPLACE_DEVICE,
-    HH_EVENT_UPDATE_DEVICE,
-    IP_ANY_V4,
-    PORT_ANY,
-)
+from hahomematic.const import IP_ANY_V4, PORT_ANY, HmSystemEvent
 from hahomematic.decorators import callback_system_event
 from hahomematic.support import find_free_port
 
@@ -44,7 +37,7 @@ class RPCFunctions:
                 value=value,
             )
 
-    @callback_system_event(name=HH_EVENT_ERROR)
+    @callback_system_event(system_event=HmSystemEvent.ERROR)
     def error(self, interface_id: str, error_code: str, msg: str) -> None:
         """When some error occurs the CCU / Homegear will send its error message here."""
         _LOGGER.warning(
@@ -80,7 +73,7 @@ class RPCFunctions:
                 name="deleteDevices",
             )
 
-    @callback_system_event(name=HH_EVENT_UPDATE_DEVICE)
+    @callback_system_event(system_event=HmSystemEvent.UPDATE_DEVICE)
     def updateDevice(self, interface_id: str, address: str, hint: int) -> None:
         """
         Update a device.
@@ -95,7 +88,7 @@ class RPCFunctions:
             str(hint),
         )
 
-    @callback_system_event(name=HH_EVENT_REPLACE_DEVICE)
+    @callback_system_event(system_event=HmSystemEvent.REPLACE_DEVICE)
     def replaceDevice(
         self, interface_id: str, old_device_address: str, new_device_address: str
     ) -> None:
@@ -107,7 +100,7 @@ class RPCFunctions:
             new_device_address,
         )
 
-    @callback_system_event(name=HH_EVENT_RE_ADDED_DEVICE)
+    @callback_system_event(system_event=HmSystemEvent.RE_ADDED_DEVICE)
     def readdedDevice(self, interface_id: str, addresses: list[str]) -> None:
         """
         Re-Add device from backend.

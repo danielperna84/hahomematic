@@ -9,13 +9,7 @@ from typing import Any, Final, cast
 import orjson
 
 from hahomematic.client import _LOGGER, Client, _ClientConfig
-from hahomematic.const import (
-    DEFAULT_ENCODING,
-    IF_BIDCOS_RF_NAME,
-    PROXY_DE_INIT_SUCCESS,
-    PROXY_INIT_SUCCESS,
-    HmCallSource,
-)
+from hahomematic.const import DEFAULT_ENCODING, HmCallSource, HmInterfaceName, HmProxyInitState
 from hahomematic.support import ProgramData, SystemInformation, SystemVariableData
 
 LOCAL_SERIAL: Final = "0815_4711"
@@ -46,13 +40,13 @@ class ClientLocal(Client):  # pragma: no cover
         """Return the supports_ping_pong info of the backend."""
         return True
 
-    async def proxy_init(self) -> int:
+    async def proxy_init(self) -> HmProxyInitState:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
-        return PROXY_INIT_SUCCESS
+        return HmProxyInitState.INIT_SUCCESS
 
-    async def proxy_de_init(self) -> int:
+    async def proxy_de_init(self) -> HmProxyInitState:
         """De-init to stop CCU from sending events for this remote."""
-        return PROXY_DE_INIT_SUCCESS
+        return HmProxyInitState.DE_INIT_SUCCESS
 
     def stop(self) -> None:
         """Stop depending services."""
@@ -115,7 +109,9 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
-        return SystemInformation(available_interfaces=[IF_BIDCOS_RF_NAME], serial=LOCAL_SERIAL)
+        return SystemInformation(
+            available_interfaces=[HmInterfaceName.BIDCOS_RF], serial=LOCAL_SERIAL
+        )
 
     async def get_all_device_descriptions(self) -> Any:
         """Get device descriptions from CCU / Homegear."""

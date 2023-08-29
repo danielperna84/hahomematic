@@ -10,12 +10,11 @@ import math
 from typing import Any, Final, TypedDict
 
 from hahomematic.const import (
-    EVENT_PRESS_LONG,
-    EVENT_PRESS_SHORT,
     HM_ARG_OFF,
     HM_ARG_ON,
     HM_ARG_ON_TIME,
     HmEntityUsage,
+    HmEvent,
     HmPlatform,
 )
 from hahomematic.decorators import bind_collector
@@ -936,8 +935,8 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
                         5,
                         6,
                     ): (
-                        EVENT_PRESS_LONG,
-                        EVENT_PRESS_SHORT,
+                        HmEvent.PRESS_LONG,
+                        HmEvent.PRESS_SHORT,
                         "SENSOR",
                     )
                 },

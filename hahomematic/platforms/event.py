@@ -9,12 +9,12 @@ from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
     ENTITY_EVENTS,
-    HM_OPERATIONS,
     IMPULSE_EVENTS,
-    OPERATION_EVENT,
-    PARAMSET_KEY_VALUES,
+    HmDescription,
     HmEntityUsage,
     HmEventType,
+    HmOperations,
+    HmParamsetKey,
     HmPlatform,
 )
 from hahomematic.platforms import device as hmd
@@ -48,7 +48,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
             device=device,
             unique_identifier=unique_identifier,
             channel_address=channel_address,
-            paramset_key=PARAMSET_KEY_VALUES,
+            paramset_key=HmParamsetKey.VALUES,
             parameter=parameter,
             parameter_data=parameter_data,
         )
@@ -139,7 +139,7 @@ def create_event_and_append_to_device(
     if device.central.parameter_visibility.parameter_is_ignored(
         device_type=device.device_type,
         channel_no=hms.get_channel_no(address=channel_address),
-        paramset_key=PARAMSET_KEY_VALUES,
+        paramset_key=HmParamsetKey.VALUES,
         parameter=parameter,
     ):
         _LOGGER.debug(
@@ -162,7 +162,7 @@ def create_event_and_append_to_device(
         device.interface_id,
     )
     event_t: type[GenericEvent] | None = None
-    if parameter_data[HM_OPERATIONS] & OPERATION_EVENT:
+    if parameter_data[HmDescription.OPERATIONS] & HmOperations.EVENT:
         if parameter in CLICK_EVENTS:
             event_t = ClickEvent
         if parameter.startswith(DEVICE_ERROR_EVENTS):

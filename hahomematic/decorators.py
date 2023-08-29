@@ -1,14 +1,16 @@
 """Decorators used within hahomematic."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
 from inspect import getfullargspec
 import logging
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar, cast
 
 from hahomematic import client as hmcl
+from hahomematic.const import HmSystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import entity as hme
 from hahomematic.support import reduce_args
@@ -17,65 +19,56 @@ _LOGGER = logging.getLogger(__name__)
 
 P = ParamSpec("P")
 R = TypeVar("R")
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 
-def callback_system_event(name: str) -> Callable:
+def callback_system_event(system_event: HmSystemEvent) -> Callable:
     """Check if callback_system is set and call it AFTER original function."""
 
-    def decorator_callback_system_event(func: Callable[P, R]) -> Callable[P, R]:
-        """Decorate callback system events."""
-
-        @wraps(func)
-        def wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
-            """Wrap callback system events."""
-            return_value = func(*args, **kwargs)
-            _exec_callback_system_event(name, *args, **kwargs)
-            return return_value
-
-        return wrapper_callback_system_event
-
-    return decorator_callback_system_event
-
-
-def async_callback_system_event(name: str) -> Callable:
-    """Check if callback_system is set and call it AFTER original function."""
-
-    def async_decorator_callback_system_event(
-        func: Callable[P, Awaitable[R]]
-    ) -> Callable[P, Awaitable[R]]:
+    def decorator_callback_system_event(
+        func: Callable[P, R | Awaitable[R]]
+    ) -> Callable[P, R | Awaitable[R]]:
         """Decorate callback system events."""
 
         @wraps(func)
         async def async_wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
             """Wrap async callback system events."""
-            return_value = await func(*args, **kwargs)
-            _exec_callback_system_event(name, *args, **kwargs)
+            return_value = cast(R, await func(*args, **kwargs))  # type: ignore[misc]
+            _exec_callback_system_event(*args, **kwargs)
             return return_value
 
-        return async_wrapper_callback_system_event
+        @wraps(func)
+        def wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
+            """Wrap callback system events."""
+            return_value = cast(R, func(*args, **kwargs))
+            _exec_callback_system_event(*args, **kwargs)
+            return return_value
 
-    return async_decorator_callback_system_event
+        def _exec_callback_system_event(*args: Any, **kwargs: Any) -> None:
+            """Execute the callback for a system event."""
+            if len(args) > 1:
+                _LOGGER.warning(
+                    "EXEC_CALLBACK_SYSTEM_EVENT failed: *args not supported for callback_system_event"
+                )
+            try:
+                args = args[1:]
+                interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
+                if client := hmcl.get_client(interface_id=interface_id):
+                    client.last_updated = datetime.now()
+                    client.central.fire_system_event_callback(system_event=system_event, **kwargs)
+            except Exception as err:  # pragma: no cover
+                _LOGGER.warning(
+                    "EXEC_CALLBACK_SYSTEM_EVENT failed: Unable to reduce kwargs for callback_system_event"
+                )
+                raise HaHomematicException(
+                    f"args-exception callback_system_event [{reduce_args(args=err.args)}]"
+                ) from err
 
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper_callback_system_event
+        return wrapper_callback_system_event
 
-def _exec_callback_system_event(name: str, *args: Any, **kwargs: Any) -> None:
-    """Execute the callback for a system event."""
-    if len(args) > 1:
-        _LOGGER.warning(
-            "EXEC_CALLBACK_SYSTEM_EVENT failed: *args not supported for callback_system_event"
-        )
-    try:
-        args = args[1:]
-        interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
-        if client := hmcl.get_client(interface_id=interface_id):
-            client.last_updated = datetime.now()
-            client.central.fire_system_event_callback(name=name, **kwargs)
-    except Exception as err:  # pragma: no cover
-        _LOGGER.warning(
-            "EXEC_CALLBACK_SYSTEM_EVENT failed: Unable to reduce kwargs for callback_system_event"
-        )
-        raise HaHomematicException(
-            f"args-exception callback_system_event [{reduce_args(args=err.args)}]"
-        ) from err
+    return decorator_callback_system_event
 
 
 def callback_event(func: Callable[P, R]) -> Callable[P, R]:
@@ -105,9 +98,6 @@ def callback_event(func: Callable[P, R]) -> Callable[P, R]:
             ) from err
 
     return wrapper_callback_event
-
-
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 
 def bind_collector(func: _CallableT) -> _CallableT:

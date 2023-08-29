@@ -10,38 +10,20 @@ from typing import Any, Final, cast
 from hahomematic import central_unit as hmcu
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
-    ATTR_ADDRESS,
-    ATTR_AVAILABLE,
-    ATTR_CHANNELS,
-    ATTR_ID,
-    ATTR_INTERFACE,
-    ATTR_NAME,
-    ATTR_SECONDS_SINCE_LAST_EVENT,
-    BACKEND_CCU,
-    BACKEND_HOMEGEAR,
-    BACKEND_PYDEVCCU,
-    HM_ADDRESS,
-    HM_NAME,
-    HM_PARAMSETS,
-    HM_PARENT_TYPE,
-    HM_TYPE,
+    EVENT_AVAILABLE,
+    EVENT_SECONDS_SINCE_LAST_EVENT,
     HM_VIRTUAL_REMOTE_TYPES,
     HOMEGEAR_SERIAL,
-    IF_BIDCOS_RF_NAME,
-    IF_NAMES,
     INIT_DATETIME,
-    PARAMSET_KEY_MASTER,
-    PARAMSET_KEY_VALUES,
-    PROXY_DE_INIT_FAILED,
-    PROXY_DE_INIT_SKIPPED,
-    PROXY_DE_INIT_SUCCESS,
-    PROXY_INIT_FAILED,
-    PROXY_INIT_SUCCESS,
+    HmBackend,
     HmCallSource,
+    HmDescription,
     HmForcedDeviceAvailability,
-    HmInterface,
     HmInterfaceEventType,
+    HmInterfaceName,
+    HmParamsetKey,
     HmProductGroup,
+    HmProxyInitState,
 )
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
 from hahomematic.platforms.device import HmDevice
@@ -58,6 +40,12 @@ from hahomematic.support import (
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
 _LOGGER = logging.getLogger(__name__)
+
+_ADDRESS: Final = "address"
+_CHANNELS: Final = "channels"
+_ID: Final = "id"
+_INTERFACE: Final = "interface"
+_NAME: Final = "name"
 
 
 class Client(ABC):
@@ -107,7 +95,7 @@ class Client(ABC):
     def supports_ping_pong(self) -> bool:
         """Return the supports_ping_pong info of the backend."""
 
-    async def proxy_init(self) -> int:
+    async def proxy_init(self) -> HmProxyInitState:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
         try:
             _LOGGER.debug("PROXY_INIT: init('%s', '%s')", self._config.init_url, self.interface_id)
@@ -124,18 +112,18 @@ class Client(ABC):
                 self.interface_id,
             )
             self.last_updated = INIT_DATETIME
-            return PROXY_INIT_FAILED
+            return HmProxyInitState.INIT_FAILED
         self.last_updated = datetime.now()
-        return PROXY_INIT_SUCCESS
+        return HmProxyInitState.INIT_SUCCESS
 
-    async def proxy_de_init(self) -> int:
+    async def proxy_de_init(self) -> HmProxyInitState:
         """De-init to stop CCU from sending events for this remote."""
         if self.last_updated == INIT_DATETIME:
             _LOGGER.debug(
                 "PROXY_DE_INIT: Skipping de-init for %s (not initialized)",
                 self.interface_id,
             )
-            return PROXY_DE_INIT_SKIPPED
+            return HmProxyInitState.DE_INIT_SKIPPED
         try:
             _LOGGER.debug("PROXY_DE_INIT: init('%s')", self._config.init_url)
             await self._proxy.init(self._config.init_url)
@@ -146,16 +134,16 @@ class Client(ABC):
                 reduce_args(args=hhe.args),
                 self.interface_id,
             )
-            return PROXY_DE_INIT_FAILED
+            return HmProxyInitState.DE_INIT_FAILED
 
         self.last_updated = INIT_DATETIME
-        return PROXY_DE_INIT_SUCCESS
+        return HmProxyInitState.DE_INIT_SUCCESS
 
-    async def proxy_re_init(self) -> int:
+    async def proxy_re_init(self) -> HmProxyInitState:
         """Reinit Proxy."""
-        if await self.proxy_de_init() != PROXY_DE_INIT_FAILED:
+        if await self.proxy_de_init() != HmProxyInitState.DE_INIT_FAILED:
             return await self.proxy_init()
-        return PROXY_DE_INIT_FAILED
+        return HmProxyInitState.DE_INIT_FAILED
 
     def _mark_all_devices_forced_availability(
         self, forced_availability: HmForcedDeviceAvailability
@@ -175,7 +163,7 @@ class Client(ABC):
         self.central.fire_interface_event(
             interface_id=self.interface_id,
             interface_event_type=HmInterfaceEventType.PROXY,
-            data={ATTR_AVAILABLE: available},
+            data={EVENT_AVAILABLE: available},
         )
 
     async def reconnect(self) -> bool:
@@ -241,8 +229,8 @@ class Client(ABC):
                         interface_id=self.interface_id,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
                         data={
-                            ATTR_AVAILABLE: False,
-                            ATTR_SECONDS_SINCE_LAST_EVENT: int(seconds_since_last_event),
+                            EVENT_AVAILABLE: False,
+                            EVENT_SECONDS_SINCE_LAST_EVENT: int(seconds_since_last_event),
                         },
                     )
                     self._is_callback_alive = False
@@ -257,7 +245,7 @@ class Client(ABC):
                 self.central.fire_interface_event(
                     interface_id=self.interface_id,
                     interface_event_type=HmInterfaceEventType.CALLBACK,
-                    data={ATTR_AVAILABLE: True},
+                    data={EVENT_AVAILABLE: True},
                 )
                 self._is_callback_alive = True
         return True
@@ -384,10 +372,10 @@ class Client(ABC):
                 paramset_key,
                 call_source,
             )
-            if paramset_key == PARAMSET_KEY_VALUES:
+            if paramset_key == HmParamsetKey.VALUES:
                 return await self._proxy_read.getValue(channel_address, parameter)
             paramset = (
-                await self._proxy_read.getParamset(channel_address, PARAMSET_KEY_MASTER) or {}
+                await self._proxy_read.getParamset(channel_address, HmParamsetKey.MASTER) or {}
             )
             return paramset.get(parameter)
         except BaseHomematicException as hhe:
@@ -436,7 +424,7 @@ class Client(ABC):
         rx_mode: str | None = None,
     ) -> bool:
         """Set single value on paramset VALUES."""
-        if paramset_key == PARAMSET_KEY_VALUES:
+        if paramset_key == HmParamsetKey.VALUES:
             return await self._set_value(
                 channel_address=channel_address,
                 parameter=parameter,
@@ -553,18 +541,18 @@ class Client(ABC):
         if not device_description:
             return {}
         paramsets: dict[str, dict[str, Any]] = {}
-        address = device_description[HM_ADDRESS]
+        address = device_description[HmDescription.ADDRESS]
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
-        for paramset_key in device_description.get(HM_PARAMSETS, []):
+        for paramset_key in device_description.get(HmDescription.PARAMSETS, []):
             if (channel_no := get_channel_no(address)) is None:
                 # No paramsets at root device
                 continue
 
             device_type = (
-                device_description[HM_TYPE]
+                device_description[HmDescription.TYPE]
                 if channel_no is None
-                else device_description[HM_PARENT_TYPE]
+                else device_description[HmDescription.PARENT_TYPE]
             )
             if (
                 only_relevant
@@ -675,7 +663,7 @@ class ClientCCU(Client):
     @property
     def model(self) -> str:
         """Return the model of the backend."""
-        return BACKEND_CCU
+        return HmBackend.CCU
 
     @property
     def supports_ping_pong(self) -> bool:
@@ -687,22 +675,18 @@ class ClientCCU(Client):
         """Get all names via JSON-RPS and store in data.NAMES."""
         if json_result := await self._json_rpc_client.get_device_details():
             for device in json_result:
-                self.central.device_details.add_name(
-                    address=device[ATTR_ADDRESS], name=device[ATTR_NAME]
-                )
+                self.central.device_details.add_name(address=device[_ADDRESS], name=device[_NAME])
                 self.central.device_details.add_device_channel_id(
-                    address=device[ATTR_ADDRESS], channel_id=device[ATTR_ID]
+                    address=device[_ADDRESS], channel_id=device[_ID]
                 )
-                for channel in device.get(ATTR_CHANNELS, []):
+                for channel in device.get(_CHANNELS, []):
                     self.central.device_details.add_name(
-                        address=channel[ATTR_ADDRESS], name=channel[ATTR_NAME]
+                        address=channel[_ADDRESS], name=channel[_NAME]
                     )
                     self.central.device_details.add_device_channel_id(
-                        address=channel[ATTR_ADDRESS], channel_id=channel[ATTR_ID]
+                        address=channel[_ADDRESS], channel_id=channel[_ID]
                     )
-                self.central.device_details.add_interface(
-                    device[ATTR_ADDRESS], device[ATTR_INTERFACE]
-                )
+                self.central.device_details.add_interface(device[_ADDRESS], device[_INTERFACE])
         else:
             _LOGGER.debug("FETCH_DEVICE_DETAILS: Unable to fetch device details via JSON-RPC")
 
@@ -799,11 +783,11 @@ class ClientHomegear(Client):
         """Return the model of the backend."""
         if self._config.version:
             return (
-                BACKEND_PYDEVCCU
-                if BACKEND_PYDEVCCU.lower() in self._config.version
-                else BACKEND_HOMEGEAR
+                HmBackend.PYDEVCCU
+                if HmBackend.PYDEVCCU.lower() in self._config.version
+                else HmBackend.HOMEGEAR
             )
-        return BACKEND_CCU
+        return HmBackend.CCU
 
     @property
     def supports_ping_pong(self) -> bool:
@@ -825,7 +809,7 @@ class ClientHomegear(Client):
             try:
                 self.central.device_details.add_name(
                     address,
-                    await self._proxy_read.getMetadata(address, HM_NAME),
+                    await self._proxy_read.getMetadata(address, HmDescription.NAME),
                 )
             except BaseHomematicException as hhe:
                 _LOGGER.warning(
@@ -914,7 +898,9 @@ class ClientHomegear(Client):
 
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
-        return SystemInformation(available_interfaces=[IF_BIDCOS_RF_NAME], serial=HOMEGEAR_SERIAL)
+        return SystemInformation(
+            available_interfaces=[HmInterfaceName.BIDCOS_RF], serial=HOMEGEAR_SERIAL
+        )
 
 
 class _ClientConfig:
@@ -1019,12 +1005,12 @@ class InterfaceConfig:
     def __init__(
         self,
         central_name: str,
-        interface: HmInterface,
+        interface: HmInterfaceName,
         port: int,
         remote_path: str | None = None,
     ) -> None:
         """Init the interface config."""
-        self.interface: Final[HmInterface] = interface
+        self.interface: Final[HmInterfaceName] = interface
         self.interface_id: Final[str] = f"{central_name}-{self.interface}"
         self.port: Final = port
         self.remote_path: Final = remote_path
@@ -1032,11 +1018,11 @@ class InterfaceConfig:
 
     def validate(self) -> None:
         """Validate the client_config."""
-        if self.interface not in IF_NAMES:
+        if self.interface not in list(HmInterfaceName):
             _LOGGER.warning(
                 "VALIDATE interface config failed: "
                 "Interface names must be within [%s] for production use",
-                ", ".join(IF_NAMES),
+                ", ".join(list(HmInterfaceName)),
             )
 
 

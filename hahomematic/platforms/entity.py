@@ -11,39 +11,28 @@ import voluptuous as vol
 
 from hahomematic import central_unit as hmcu, client as hmcl, support as hms
 from hahomematic.const import (
-    ATTR_ADDRESS,
-    ATTR_CHANNEL_NO,
-    ATTR_DEVICE_TYPE,
-    ATTR_INTERFACE_ID,
-    ATTR_PARAMETER,
-    ATTR_VALUE,
     CONFIGURABLE_CHANNEL,
+    EVENT_ADDRESS,
+    EVENT_CHANNEL_NO,
+    EVENT_DEVICE_TYPE,
+    EVENT_INTERFACE_ID,
+    EVENT_PARAMETER,
+    EVENT_VALUE,
     FIX_UNIT_BY_PARAM,
     FIX_UNIT_REPLACE,
-    FLAG_SERVICE,
-    FLAG_VISIBLE,
-    HM_DEFAULT,
-    HM_FLAGS,
-    HM_MAX,
-    HM_MIN,
-    HM_OPERATIONS,
-    HM_SPECIAL,
-    HM_TYPE,
-    HM_UNIT,
-    HM_VALUE_LIST,
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
-    OPERATION_EVENT,
-    OPERATION_READ,
-    OPERATION_WRITE,
     PARAM_CHANNEL_OPERATION_MODE,
-    PARAMSET_KEY_VALUES,
-    TYPE_BOOL,
     HmCallSource,
+    HmDescription,
     HmEntityUsage,
+    HmFlag,
+    HmOperations,
+    HmParamsetKey,
     HmPlatform,
+    HmType,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.support import (
@@ -57,12 +46,12 @@ from hahomematic.platforms.support import (
 
 HM_EVENT_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ADDRESS): str,
-        vol.Required(ATTR_CHANNEL_NO): int,
-        vol.Required(ATTR_DEVICE_TYPE): str,
-        vol.Required(ATTR_INTERFACE_ID): str,
-        vol.Required(ATTR_PARAMETER): str,
-        vol.Optional(ATTR_VALUE): vol.Any(bool, int),
+        vol.Required(EVENT_ADDRESS): str,
+        vol.Required(EVENT_CHANNEL_NO): int,
+        vol.Required(EVENT_DEVICE_TYPE): str,
+        vol.Required(EVENT_INTERFACE_ID): str,
+        vol.Required(EVENT_PARAMETER): str,
+        vol.Optional(EVENT_VALUE): vol.Any(bool, int),
     }
 )
 
@@ -311,21 +300,21 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
         """Assign parameter data to instance variables."""
-        self._attr_type: str = parameter_data[HM_TYPE]
+        self._attr_type: HmType = HmType(parameter_data[HmDescription.TYPE])
         self._attr_value_list: tuple[str, ...] | None = None
-        if HM_VALUE_LIST in parameter_data:
-            self._attr_value_list = tuple(parameter_data[HM_VALUE_LIST])
-        self._attr_max: ParameterT = self._convert_value(parameter_data[HM_MAX])
-        self._attr_min: ParameterT = self._convert_value(parameter_data[HM_MIN])
+        if HmDescription.VALUE_LIST in parameter_data:
+            self._attr_value_list = tuple(parameter_data[HmDescription.VALUE_LIST])
+        self._attr_max: ParameterT = self._convert_value(parameter_data[HmDescription.MAX])
+        self._attr_min: ParameterT = self._convert_value(parameter_data[HmDescription.MIN])
         self._attr_default: ParameterT = self._convert_value(
-            parameter_data.get(HM_DEFAULT, self._attr_min)
+            parameter_data.get(HmDescription.DEFAULT, self._attr_min)
         )
-        flags: int = parameter_data[HM_FLAGS]
-        self._attr_visible: bool = flags & FLAG_VISIBLE == FLAG_VISIBLE
-        self._attr_service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
-        self._attr_operations: int = parameter_data[HM_OPERATIONS]
-        self._attr_special: dict[str, Any] | None = parameter_data.get(HM_SPECIAL)
-        self._attr_raw_unit: str | None = parameter_data.get(HM_UNIT)
+        flags: int = parameter_data[HmDescription.FLAGS]
+        self._attr_visible: bool = flags & HmFlag.VISIBLE == HmFlag.VISIBLE
+        self._attr_service: bool = flags & HmFlag.SERVICE == HmFlag.SERVICE
+        self._attr_operations: int = parameter_data[HmDescription.OPERATIONS]
+        self._attr_special: dict[str, Any] | None = parameter_data.get(HmDescription.SPECIAL)
+        self._attr_raw_unit: str | None = parameter_data.get(HmDescription.UNIT)
         self._attr_unit: str | None = self._fix_unit(raw_unit=self._attr_raw_unit)
 
     @config_property
@@ -334,7 +323,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._attr_default
 
     @config_property
-    def hmtype(self) -> str:
+    def hmtype(self) -> HmType:
         """Return the HomeMatic type."""
         return self._attr_type
 
@@ -376,7 +365,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def is_readable(self) -> bool:
         """Return, if entity is readable."""
-        return bool(self._attr_operations & OPERATION_READ)
+        return bool(self._attr_operations & HmOperations.READ)
 
     @value_property
     def is_valid(self) -> bool:
@@ -386,7 +375,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def is_writeable(self) -> bool:
         """Return, if entity is writeable."""
-        return bool(self._attr_operations & OPERATION_WRITE)
+        return bool(self._attr_operations & HmOperations.WRITE)
 
     @value_property
     def last_update(self) -> datetime:
@@ -406,7 +395,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def supports_events(self) -> bool:
         """Return, if entity is supports events."""
-        return bool(self._attr_operations & OPERATION_EVENT)
+        return bool(self._attr_operations & HmOperations.EVENT)
 
     @config_property
     def unit(self) -> str | None:
@@ -510,7 +499,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             return None  # type: ignore[return-value]
         try:
             if (
-                self._attr_type == TYPE_BOOL
+                self._attr_type == HmType.BOOL
                 and self._attr_value_list is not None
                 and value is not None
                 and isinstance(value, str)
@@ -536,14 +525,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         event_data = {
-            ATTR_ADDRESS: self.device.device_address,
-            ATTR_CHANNEL_NO: self._attr_channel_no,
-            ATTR_DEVICE_TYPE: self.device.device_type,
-            ATTR_INTERFACE_ID: self.device.interface_id,
-            ATTR_PARAMETER: self._attr_parameter,
+            EVENT_ADDRESS: self.device.device_address,
+            EVENT_CHANNEL_NO: self._attr_channel_no,
+            EVENT_DEVICE_TYPE: self.device.device_type,
+            EVENT_INTERFACE_ID: self.device.interface_id,
+            EVENT_PARAMETER: self._attr_parameter,
         }
         if value is not None:
-            event_data[ATTR_VALUE] = value
+            event_data[EVENT_VALUE] = value
         return cast(dict[str, Any], HM_EVENT_DATA_SCHEMA(event_data))
 
     def _set_last_update(self) -> None:
@@ -577,13 +566,13 @@ class CallParameterCollector:
                 for parameter, value in paramset.items():
                     if not await self._client.set_value(
                         channel_address=channel_address,
-                        paramset_key=PARAMSET_KEY_VALUES,
+                        paramset_key=HmParamsetKey.VALUES,
                         parameter=parameter,
                         value=value,
                     ):
                         return False  # pragma: no cover
             elif not await self._client.put_paramset(
-                address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
+                address=channel_address, paramset_key=HmParamsetKey.VALUES, value=paramset
             ):
                 return False  # pragma: no cover
         return True
