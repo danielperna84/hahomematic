@@ -15,9 +15,8 @@ from hahomematic.const import (
     PARAM_DEVICE_OPERATION_MODE,
     PARAM_TEMPERATURE_MAXIMUM,
     PARAM_TEMPERATURE_MINIMUM,
-    PARAMSET_KEY_MASTER,
-    PARAMSET_KEY_VALUES,
     HmEvent,
+    HmParamsetKey,
     HmPlatform,
 )
 from hahomematic.platforms.custom.definition import get_required_parameters
@@ -267,8 +266,8 @@ class ParameterVisibilityCache:
         self._raw_un_ignore_list: Final[set[str]] = set(central.config.un_ignore_list or set())
         # paramset_key, parameter
         self._un_ignore_parameters_general: Final[dict[str, set[str]]] = {
-            PARAMSET_KEY_MASTER: set(),
-            PARAMSET_KEY_VALUES: set(),
+            HmParamsetKey.MASTER: set(),
+            HmParamsetKey.VALUES: set(),
         }
         self._ignore_parameters_by_device_lower: Final[dict[str, tuple[str, ...]]] = {
             parameter: tuple(device_type.lower() for device_type in device_types)
@@ -320,10 +319,10 @@ class ParameterVisibilityCache:
                 ):
                     self._un_ignore_parameters_by_device_paramset_key[device_type_l][
                         channel_no
-                    ] = {PARAMSET_KEY_MASTER: set()}
+                    ] = {HmParamsetKey.MASTER: set()}
                 for parameter in parameters:
                     self._un_ignore_parameters_by_device_paramset_key[device_type_l][channel_no][
-                        PARAMSET_KEY_MASTER
+                        HmParamsetKey.MASTER
                     ].add(parameter)
 
     def get_un_ignore_parameters(
@@ -360,7 +359,7 @@ class ParameterVisibilityCache:
         """Check if parameter can be ignored."""
         device_type_l = device_type.lower()
 
-        if paramset_key == PARAMSET_KEY_VALUES:
+        if paramset_key == HmParamsetKey.VALUES:
             if self.parameter_is_un_ignored(
                 device_type=device_type,
                 channel_no=channel_no,
@@ -395,10 +394,10 @@ class ParameterVisibilityCache:
                 accept_channel := _ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
             ) is not None and accept_channel != channel_no:
                 return True
-        if paramset_key == PARAMSET_KEY_MASTER:
+        if paramset_key == HmParamsetKey.MASTER:
             if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
                 device_type_l, {}
-            ).get(channel_no, {}).get(PARAMSET_KEY_MASTER, []):
+            ).get(channel_no, {}).get(HmParamsetKey.MASTER, []):
                 return False  # pragma: no cover
 
             dt_short = list(
@@ -409,7 +408,7 @@ class ParameterVisibilityCache:
             )
             if dt_short and parameter not in self._un_ignore_parameters_by_device_paramset_key.get(
                 dt_short[0], {}
-            ).get(channel_no, {}).get(PARAMSET_KEY_MASTER, []):
+            ).get(channel_no, {}).get(HmParamsetKey.MASTER, []):
                 return True
 
         return False
@@ -537,7 +536,7 @@ class ParameterVisibilityCache:
                 paramset_key
             ].add(parameter)
 
-            if paramset_key == PARAMSET_KEY_MASTER:
+            if paramset_key == HmParamsetKey.MASTER:
                 if device_type not in self._relevant_master_paramsets_by_device:
                     self._relevant_master_paramsets_by_device[device_type] = set()
                 self._relevant_master_paramsets_by_device[device_type].add(channel_no)
@@ -555,11 +554,11 @@ class ParameterVisibilityCache:
                 return
             paramset_key = data[0]
             parameter = data[1]
-            if paramset_key in (PARAMSET_KEY_VALUES, PARAMSET_KEY_MASTER):
+            if paramset_key in (HmParamsetKey.VALUES, HmParamsetKey.MASTER):
                 self._un_ignore_parameters_general[paramset_key].add(parameter)
         else:
             # add parameter
-            self._un_ignore_parameters_general[PARAMSET_KEY_VALUES].add(line)
+            self._un_ignore_parameters_general[HmParamsetKey.VALUES].add(line)
 
     @lru_cache(maxsize=1024)
     def parameter_is_hidden(
@@ -593,9 +592,9 @@ class ParameterVisibilityCache:
 
         Required to load MASTER paramsets, which are not initialized by default.
         """
-        if paramset_key == PARAMSET_KEY_VALUES:
+        if paramset_key == HmParamsetKey.VALUES:
             return True
-        if channel_no is not None and paramset_key == PARAMSET_KEY_MASTER:
+        if channel_no is not None and paramset_key == HmParamsetKey.MASTER:
             for (
                 d_type,
                 channel_nos,

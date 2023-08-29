@@ -27,26 +27,11 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     MAX_JSON_SESSION_AGE,
     PATH_JSON_RPC,
-    PROGRAM_ID,
-    PROGRAM_ISACTIVE,
-    PROGRAM_ISINTERNAL,
-    PROGRAM_LASTEXECUTETIME,
-    PROGRAM_NAME,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     REGA_SCRIPT_GET_SERIAL,
     REGA_SCRIPT_PATH,
     REGA_SCRIPT_SET_SYSTEM_VARIABLE,
     REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER,
-    SYSVAR_HASEXTMARKER,
-    SYSVAR_ID,
-    SYSVAR_ISINTERNAL,
-    SYSVAR_MAX_VALUE,
-    SYSVAR_MIN_VALUE,
-    SYSVAR_NAME,
-    SYSVAR_TYPE,
-    SYSVAR_UNIT,
-    SYSVAR_VALUE,
-    SYSVAR_VALUE_LIST,
     HmSysvarType,
 )
 from hahomematic.exceptions import AuthFailure, ClientException
@@ -58,12 +43,23 @@ from hahomematic.support import (
     reduce_args,
 )
 
-P_ERROR = "error"
-P_RESULT = "result"
-P_MESSAGE = "message"
-SESSION_ID: Final = "_session_id_"
+_HASEXTMARKER: Final = "hasExtMarker"
+_ID: Final = "id"
+_ISACTIVE: Final = "isActive"
+_ISINTERNAL: Final = "isInternal"
+_LASTEXECUTETIME: Final = "lastExecuteTime"
+_MAX_VALUE: Final = "maxValue"
+_MIN_VALUE: Final = "minValue"
+_NAME: Final = "name"
+_P_ERROR = "error"
+_P_MESSAGE = "message"
+_P_RESULT = "result"
+_SESSION_ID: Final = "_session_id_"
+_TYPE: Final = "type"
+_UNIT: Final = "unit"
+_VALUE: Final = "value"
+_VALUE_LIST: Final = "valueList"
 
-ALLOWED_METHOD_ON_FAILURE = ("Session.login",)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,10 +112,10 @@ class JsonRpcAioHttpClient:
         response = await self._do_post(
             session_id=session_id,
             method=method,
-            extra_params={SESSION_ID: session_id},
+            extra_params={_SESSION_ID: session_id},
         )
 
-        if response[P_RESULT] and response[P_RESULT] is True:
+        if response[_P_RESULT] and response[_P_RESULT] is True:
             self._last_session_id_refresh = datetime.now()
             _LOGGER.debug("DO_RENEW_LOGIN: Method: %s [%s]", method, session_id)
             return session_id
@@ -157,7 +153,7 @@ class JsonRpcAioHttpClient:
 
         _LOGGER.debug("DO_LOGIN: Method: %s [%s]", method, session_id)
 
-        if result := response[P_RESULT]:
+        if result := response[_P_RESULT]:
             session_id = result
 
         return session_id
@@ -226,8 +222,8 @@ class JsonRpcAioHttpClient:
             extra_params={"script": script},
         )
 
-        if not response[P_ERROR]:
-            response[P_RESULT] = orjson.loads(response[P_RESULT])
+        if not response[_P_ERROR]:
+            response[_P_RESULT] = orjson.loads(response[_P_RESULT])
         _LOGGER.debug("POST_SCRIPT: Method: %s [%s]", method, script_name)
 
         if not keep_session:
@@ -285,8 +281,8 @@ class JsonRpcAioHttpClient:
                 self._connection_state.remove_issue(issuer=self)
                 json_response = await self._get_json_reponse(response=response)
 
-                if error := json_response[P_ERROR]:
-                    error_message = error[P_MESSAGE]
+                if error := json_response[_P_ERROR]:
+                    error_message = error[_P_MESSAGE]
                     message = f"POST method '{method}' failed: {error_message}"
                     _LOGGER.debug(message)
                     if error_message.startswith("access denied"):
@@ -297,8 +293,8 @@ class JsonRpcAioHttpClient:
 
             json_response = await self._get_json_reponse(response=response)
             message = f"Status: {response.status}"
-            if error := json_response[P_ERROR]:
-                error_message = error[P_MESSAGE]
+            if error := json_response[_P_ERROR]:
+                error_message = error[_P_MESSAGE]
                 message = f"{message}: {error_message}"
             raise ClientException(message)
         except (AuthFailure, ClientException):
@@ -351,7 +347,7 @@ class JsonRpcAioHttpClient:
             return
 
         method = "Session.logout"
-        params = {SESSION_ID: session_id}
+        params = {_SESSION_ID: session_id}
         try:
             await self._do_post(
                 session_id=session_id,
@@ -370,13 +366,13 @@ class JsonRpcAioHttpClient:
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
         params = {
-            PROGRAM_ID: pid,
+            _ID: pid,
         }
         try:
             response = await self._post("Program.execute", params)
             _LOGGER.debug("EXECUTE_PROGRAM: Executing a program")
 
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 _LOGGER.debug(
                     "EXECUTE_PROGRAM: Result while executing program: %s",
                     str(json_result),
@@ -391,12 +387,12 @@ class JsonRpcAioHttpClient:
         """Set a system variable on CCU / Homegear."""
 
         params = {
-            SYSVAR_NAME: name,
-            SYSVAR_VALUE: value,
+            _NAME: name,
+            _VALUE: value,
         }
         try:
             if isinstance(value, bool):
-                params[SYSVAR_VALUE] = int(value)
+                params[_VALUE] = int(value)
                 response = await self._post("SysVar.setBool", params)
             elif isinstance(value, str):
                 if re.findall("<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});", value):
@@ -413,7 +409,7 @@ class JsonRpcAioHttpClient:
                 response = await self._post("SysVar.setFloat", params)
 
             _LOGGER.debug("SET_SYSTEM_VARIABLE: Setting System variable")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 _LOGGER.debug(
                     "SET_SYSTEM_VARIABLE: Result while setting variable: %s",
                     str(json_result),
@@ -430,7 +426,7 @@ class JsonRpcAioHttpClient:
 
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
-        params = {SYSVAR_NAME: name}
+        params = {_NAME: name}
         try:
             response = await self._post(
                 "SysVar.deleteSysVarByName",
@@ -438,7 +434,7 @@ class JsonRpcAioHttpClient:
             )
 
             _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Getting System variable")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 deleted = json_result
                 _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Deleted: %s", str(deleted))
         except ClientException as clex:
@@ -452,14 +448,14 @@ class JsonRpcAioHttpClient:
         var = None
 
         try:
-            params = {SYSVAR_NAME: name}
+            params = {_NAME: name}
             response = await self._post(
                 "SysVar.getValueByName",
                 params,
             )
 
             _LOGGER.debug("GET_SYSTEM_VARIABLE: Getting System variable")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 # This does not yet support strings
                 try:
                     var = float(json_result)
@@ -480,16 +476,16 @@ class JsonRpcAioHttpClient:
             )
 
             _LOGGER.debug("GET_ALL_SYSTEM_VARIABLES: Getting all system variables")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 ext_markers = await self._get_system_variables_ext_markers()
                 for var in json_result:
-                    is_internal = var[SYSVAR_ISINTERNAL]
+                    is_internal = var[_ISINTERNAL]
                     if include_internal is False and is_internal is True:
                         continue
-                    var_id = var[SYSVAR_ID]
-                    name = var[SYSVAR_NAME]
-                    org_data_type = var[SYSVAR_TYPE]
-                    raw_value = var[SYSVAR_VALUE]
+                    var_id = var[_ID]
+                    name = var[_NAME]
+                    org_data_type = var[_TYPE]
+                    raw_value = var[_VALUE]
                     if org_data_type == HmSysvarType.NUMBER:
                         data_type = (
                             HmSysvarType.HM_FLOAT if "." in raw_value else HmSysvarType.HM_INTEGER
@@ -497,17 +493,17 @@ class JsonRpcAioHttpClient:
                     else:
                         data_type = org_data_type
                     extended_sysvar = ext_markers.get(var_id, False)
-                    unit = var[SYSVAR_UNIT]
+                    unit = var[_UNIT]
                     value_list: list[str] | None = None
-                    if val_list := var.get(SYSVAR_VALUE_LIST):
+                    if val_list := var.get(_VALUE_LIST):
                         value_list = val_list.split(";")
                     try:
                         value = parse_sys_var(data_type=data_type, raw_value=raw_value)
                         max_value = None
-                        if raw_max_value := var.get(SYSVAR_MAX_VALUE):
+                        if raw_max_value := var.get(_MAX_VALUE):
                             max_value = parse_sys_var(data_type=data_type, raw_value=raw_max_value)
                         min_value = None
-                        if raw_min_value := var.get(SYSVAR_MIN_VALUE):
+                        if raw_min_value := var.get(_MIN_VALUE):
                             min_value = parse_sys_var(data_type=data_type, raw_value=raw_min_value)
                         variables.append(
                             SystemVariableData(
@@ -541,9 +537,9 @@ class JsonRpcAioHttpClient:
             response = await self._post_script(script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER)
 
             _LOGGER.debug("GET_SYSTEM_VARIABLES_EXT_MARKERS: Getting system variables ext markers")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 for data in json_result:
-                    ext_markers[data[SYSVAR_ID]] = data[SYSVAR_HASEXTMARKER]
+                    ext_markers[data[_ID]] = data[_HASEXTMARKER]
         except JSONDecodeError as jderr:
             _LOGGER.error(
                 "GET_SYSTEM_VARIABLES_EXT_MARKERS failed: JSONDecodeError [%s]. This leads to a missing assignment of extended system variables",
@@ -561,7 +557,7 @@ class JsonRpcAioHttpClient:
             )
 
             _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_ROOM: Getting all rooms")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 for room in json_result:
                     if room["id"] not in channel_ids_room:
                         channel_ids_room[room["id"]] = set()
@@ -586,7 +582,7 @@ class JsonRpcAioHttpClient:
             )
 
             _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_FUNCTION: Getting all functions")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 for function in json_result:
                     if function["id"] not in channel_ids_function:
                         channel_ids_function[function["id"]] = set()
@@ -611,7 +607,7 @@ class JsonRpcAioHttpClient:
             )
 
             _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 for interface in json_result:
                     interfaces.append(interface[ATTR_NAME])
         except ClientException as clex:
@@ -630,7 +626,7 @@ class JsonRpcAioHttpClient:
             )
 
             _LOGGER.debug("GET_DEVICE_DETAILS: Getting the device details")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 device_details = json_result
         except ClientException as clex:
             self._handle_exception_log(method="GET_DEVICE_DETAILS", exception=clex)
@@ -646,7 +642,7 @@ class JsonRpcAioHttpClient:
             response = await self._post_script(script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA)
 
             _LOGGER.debug("GET_ALL_DEVICE_DATA: Getting all device data")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 all_device_data = _convert_to_values_cache(json_result)
         except ClientException as clex:
             self._handle_exception_log(method="GET_ALL_DEVICE_DATA", exception=clex)
@@ -668,15 +664,15 @@ class JsonRpcAioHttpClient:
             )
 
             _LOGGER.debug("GET_ALL_PROGRAMS: Getting all programs")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 for prog in json_result:
-                    is_internal = prog[PROGRAM_ISINTERNAL]
+                    is_internal = prog[_ISINTERNAL]
                     if include_internal is False and is_internal is True:
                         continue
-                    pid = prog[PROGRAM_ID]
-                    name = prog[PROGRAM_NAME]
-                    is_active = prog[PROGRAM_ISACTIVE]
-                    last_execute_time = prog[PROGRAM_LASTEXECUTETIME]
+                    pid = prog[_ID]
+                    name = prog[_NAME]
+                    is_active = prog[_ISACTIVE]
+                    last_execute_time = prog[_LASTEXECUTETIME]
 
                     all_programs.append(
                         ProgramData(
@@ -701,7 +697,7 @@ class JsonRpcAioHttpClient:
             response = await self._post(method="CCU.getAuthEnabled")
 
             _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
-            if (json_result := response[P_RESULT]) is not None:
+            if (json_result := response[_P_RESULT]) is not None:
                 auth_enabled = bool(json_result)
         except ClientException as clex:
             self._handle_exception_log(method="GET_AUTH_ENABLED", exception=clex)
@@ -716,7 +712,7 @@ class JsonRpcAioHttpClient:
             response = await self._post(method="CCU.getHttpsRedirectEnabled")
 
             _LOGGER.debug("GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled")
-            if (json_result := response[P_RESULT]) is not None:
+            if (json_result := response[_P_RESULT]) is not None:
                 https_redirect_enabled = bool(json_result)
         except ClientException as clex:
             self._handle_exception_log(method="GET_HTTPS_REDIRECT_ENABLED", exception=clex)
@@ -732,7 +728,7 @@ class JsonRpcAioHttpClient:
             response = await self._post_script(script_name=REGA_SCRIPT_GET_SERIAL)
 
             _LOGGER.debug("GET_SERIAL: Getting the backend serial")
-            if json_result := response[P_RESULT]:
+            if json_result := response[_P_RESULT]:
                 serial = json_result["serial"]
                 if len(serial) > 10:
                     serial = serial[-10:]
@@ -768,7 +764,7 @@ def _get_params(
     use_default_params: bool,
 ) -> dict[str, Any]:
     """Add additional params to default prams."""
-    params: dict[str, Any] = {SESSION_ID: session_id} if use_default_params else {}
+    params: dict[str, Any] = {_SESSION_ID: session_id} if use_default_params else {}
     if extra_params:
         params.update(extra_params)
     return params

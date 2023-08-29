@@ -25,12 +25,12 @@ from hahomematic.const import (
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     PARAM_CHANNEL_OPERATION_MODE,
-    PARAMSET_KEY_VALUES,
     HmCallSource,
     HmDescription,
     HmEntityUsage,
     HmFlag,
     HmOperations,
+    HmParamsetKey,
     HmPlatform,
     HmType,
 )
@@ -566,13 +566,13 @@ class CallParameterCollector:
                 for parameter, value in paramset.items():
                     if not await self._client.set_value(
                         channel_address=channel_address,
-                        paramset_key=PARAMSET_KEY_VALUES,
+                        paramset_key=HmParamsetKey.VALUES,
                         parameter=parameter,
                         value=value,
                     ):
                         return False  # pragma: no cover
             elif not await self._client.put_paramset(
-                address=channel_address, paramset_key=PARAMSET_KEY_VALUES, value=paramset
+                address=channel_address, paramset_key=HmParamsetKey.VALUES, value=paramset
             ):
                 return False  # pragma: no cover
         return True

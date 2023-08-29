@@ -32,13 +32,13 @@ from hahomematic.const import (
     DEFAULT_VERIFY_TLS,
     IF_PRIMARY,
     MAX_CACHE_AGE,
-    PARAMSET_KEY_MASTER,
     HmDescription,
     HmDeviceFirmwareState,
     HmEntityUsage,
     HmEvent,
     HmEventType,
     HmInterfaceEventType,
+    HmParamsetKey,
     HmPlatform,
     HmProxyInitState,
     HmSystemEvent,
@@ -969,7 +969,7 @@ class CentralUnit:
         self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
-        if paramset_key != PARAMSET_KEY_MASTER and self.device_data.is_empty(
+        if paramset_key != HmParamsetKey.MASTER and self.device_data.is_empty(
             max_age_seconds=max_age_seconds
         ):
             await self.device_data.load()

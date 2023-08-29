@@ -32,6 +32,8 @@ HOMEGEAR_SERIAL = "Homegear_SN0815"
 PROGRAM_ADDRESS: Final = "program"
 SYSVAR_ADDRESS: Final = "sysvar"
 
+# class HmAttribute(StrEnum):
+#    """Enum with"""
 ATTR_ADDRESS: Final = "address"
 ATTR_AVAILABLE: Final = "available"
 ATTR_CHANNELS: Final = "channels"
@@ -48,10 +50,10 @@ ATTR_PARAMETER: Final = "parameter"
 ATTR_PASSWORD: Final = "password"
 ATTR_SECONDS_SINCE_LAST_EVENT: Final = "seconds_since_last_event"
 ATTR_TLS: Final = "tls"
+ATTR_VERIFY_TLS: Final = "verify_tls"
 ATTR_TYPE: Final = "type"
 ATTR_USERNAME: Final = "username"
 ATTR_VALUE: Final = "value"
-ATTR_VERIFY_TLS: Final = "verify_tls"
 
 FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 FILE_DEVICES: Final = "homematic_devices.json"
@@ -72,14 +74,6 @@ PARAM_DEVICE_OPERATION_MODE: Final = "DEVICE_OPERATION_MODE"
 PARAM_TEMPERATURE_MAXIMUM: Final = "TEMPERATURE_MAXIMUM"
 PARAM_TEMPERATURE_MINIMUM: Final = "TEMPERATURE_MINIMUM"
 
-PARAMSET_KEY_MASTER: Final = "MASTER"
-PARAMSET_KEY_VALUES: Final = "VALUES"
-
-PROGRAM_ID: Final = "id"
-PROGRAM_ISACTIVE: Final = "isActive"
-PROGRAM_ISINTERNAL: Final = "isInternal"
-PROGRAM_LASTEXECUTETIME: Final = "lastExecuteTime"
-PROGRAM_NAME: Final = "name"
 
 REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
 REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
@@ -87,16 +81,6 @@ REGA_SCRIPT_PATH: Final = "rega_scripts"
 REGA_SCRIPT_SET_SYSTEM_VARIABLE: Final = "set_system_variable.fn"
 REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marker.fn"
 
-SYSVAR_HASEXTMARKER: Final = "hasExtMarker"
-SYSVAR_ID: Final = "id"
-SYSVAR_ISINTERNAL: Final = "isInternal"
-SYSVAR_MAX_VALUE: Final = "maxValue"
-SYSVAR_MIN_VALUE: Final = "minValue"
-SYSVAR_NAME: Final = "name"
-SYSVAR_TYPE: Final = "type"
-SYSVAR_UNIT: Final = "unit"
-SYSVAR_VALUE: Final = "value"
-SYSVAR_VALUE_LIST: Final = "valueList"
 
 CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
@@ -325,6 +309,13 @@ class HmOperations(IntEnum):
     READ = 1
     WRITE = 2
     EVENT = 4
+
+
+class HmParamsetKey(StrEnum):
+    """Enum with paramset keys."""
+
+    MASTER = "MASTER"
+    VALUES = "VALUES"
 
 
 class HmPlatform(StrEnum):

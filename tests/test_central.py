@@ -10,11 +10,11 @@ import pytest
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     ATTR_AVAILABLE,
-    PARAMSET_KEY_VALUES,
     HmEntityUsage,
     HmEvent,
     HmEventType,
     HmInterfaceEventType,
+    HmParamsetKey,
     HmPlatform,
 )
 from hahomematic.exceptions import HaHomematicException, NoClients
@@ -321,13 +321,13 @@ async def test_central_services(factory: helper.Factory) -> None:
 
     await central.get_client(interface_id=const.INTERFACE_ID).set_value(
         channel_address="123",
-        paramset_key=PARAMSET_KEY_VALUES,
+        paramset_key=HmParamsetKey.VALUES,
         parameter="LEVEL",
         value=1.0,
     )
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="123",
-        paramset_key=PARAMSET_KEY_VALUES,
+        paramset_key=HmParamsetKey.VALUES,
         parameter="LEVEL",
         value=1.0,
     )
@@ -336,7 +336,7 @@ async def test_central_services(factory: helper.Factory) -> None:
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").set_value(
             channel_address="123",
-            paramset_key=PARAMSET_KEY_VALUES,
+            paramset_key=HmParamsetKey.VALUES,
             parameter="LEVEL",
             value=1.0,
         )
@@ -344,7 +344,7 @@ async def test_central_services(factory: helper.Factory) -> None:
 
     await central.get_client(interface_id=const.INTERFACE_ID).put_paramset(
         address="123",
-        paramset_key=PARAMSET_KEY_VALUES,
+        paramset_key=HmParamsetKey.VALUES,
         value={"LEVEL": 1.0},
     )
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -354,7 +354,7 @@ async def test_central_services(factory: helper.Factory) -> None:
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").put_paramset(
             address="123",
-            paramset_key=PARAMSET_KEY_VALUES,
+            paramset_key=HmParamsetKey.VALUES,
             value={"LEVEL": 1.0},
         )
     assert len(mock_client.method_calls) == 75

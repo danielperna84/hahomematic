@@ -7,7 +7,7 @@ import sys
 from typing import Any
 from xmlrpc.client import ServerProxy
 
-from hahomematic.const import PARAMSET_KEY_MASTER, PARAMSET_KEY_VALUES
+from hahomematic.const import HmParamsetKey
 from hahomematic.support import build_headers, build_xml_rpc_uri, get_tls_context
 
 
@@ -74,8 +74,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--paramset_key",
-        default=PARAMSET_KEY_VALUES,
-        choices=[PARAMSET_KEY_VALUES, PARAMSET_KEY_MASTER],
+        default=HmParamsetKey.VALUES,
+        choices=[HmParamsetKey.VALUES, HmParamsetKey.MASTER],
         help="Paramset of HomeMatic device. Default: VALUES",
     )
     parser.add_argument(
@@ -108,14 +108,14 @@ def main() -> None:
     proxy = ServerProxy(url, context=context, headers=headers)
 
     try:
-        if args.paramset_key == PARAMSET_KEY_VALUES and args.value is None:
+        if args.paramset_key == HmParamsetKey.VALUES and args.value is None:
             proxy.getValue(args.address, args.parameter)
             if args.json:
                 pass
             else:
                 pass
             sys.exit(0)
-        elif args.paramset_key == PARAMSET_KEY_VALUES and args.value:
+        elif args.paramset_key == HmParamsetKey.VALUES and args.value:
             value: Any
             if args.type == "int":
                 value = int(args.value)
@@ -127,7 +127,7 @@ def main() -> None:
                 value = args.value
             proxy.setValue(args.address, args.parameter, value)
             sys.exit(0)
-        elif args.paramset_key == PARAMSET_KEY_MASTER and args.value is None:
+        elif args.paramset_key == HmParamsetKey.MASTER and args.value is None:
             paramset: dict[str, Any] | None
             if (paramset := proxy.getParamset(args.address, args.paramset_key)) and paramset.get(args.parameter):  # type: ignore[assignment] # noqa: E501
                 if args.json:
@@ -135,7 +135,7 @@ def main() -> None:
                 else:
                     pass
             sys.exit(0)
-        elif args.paramset_key == PARAMSET_KEY_MASTER and args.value:
+        elif args.paramset_key == HmParamsetKey.MASTER and args.value:
             if args.type == "int":
                 value = int(args.value)
             elif args.type == "float":

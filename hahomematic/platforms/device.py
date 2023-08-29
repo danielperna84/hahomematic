@@ -16,8 +16,6 @@ from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
-    PARAMSET_KEY_MASTER,
-    PARAMSET_KEY_VALUES,
     RELEVANT_INIT_PARAMETERS,
     HmCallSource,
     HmDescription,
@@ -27,6 +25,7 @@ from hahomematic.const import (
     HmForcedDeviceAvailability,
     HmInterface,
     HmManufacturer,
+    HmParamsetKey,
     HmProductGroup,
 )
 from hahomematic.exceptions import BaseHomematicException
@@ -536,9 +535,9 @@ class ValueCache:
         for entity in self._attr_device.generic_entities.values():
             if (
                 entity.channel_no == 0
-                and entity.paramset_key == PARAMSET_KEY_VALUES
+                and entity.paramset_key == HmParamsetKey.VALUES
                 and entity.parameter in RELEVANT_INIT_PARAMETERS
-            ) or entity.paramset_key == PARAMSET_KEY_MASTER:
+            ) or entity.paramset_key == HmParamsetKey.MASTER:
                 entities.append(entity)
         return set(entities)
 

@@ -22,14 +22,13 @@ from hahomematic.const import (
     IF_BIDCOS_RF_NAME,
     IF_NAMES,
     INIT_DATETIME,
-    PARAMSET_KEY_MASTER,
-    PARAMSET_KEY_VALUES,
     HmBackend,
     HmCallSource,
     HmDescription,
     HmForcedDeviceAvailability,
     HmInterface,
     HmInterfaceEventType,
+    HmParamsetKey,
     HmProductGroup,
     HmProxyInitState,
 )
@@ -374,10 +373,10 @@ class Client(ABC):
                 paramset_key,
                 call_source,
             )
-            if paramset_key == PARAMSET_KEY_VALUES:
+            if paramset_key == HmParamsetKey.VALUES:
                 return await self._proxy_read.getValue(channel_address, parameter)
             paramset = (
-                await self._proxy_read.getParamset(channel_address, PARAMSET_KEY_MASTER) or {}
+                await self._proxy_read.getParamset(channel_address, HmParamsetKey.MASTER) or {}
             )
             return paramset.get(parameter)
         except BaseHomematicException as hhe:
@@ -426,7 +425,7 @@ class Client(ABC):
         rx_mode: str | None = None,
     ) -> bool:
         """Set single value on paramset VALUES."""
-        if paramset_key == PARAMSET_KEY_VALUES:
+        if paramset_key == HmParamsetKey.VALUES:
             return await self._set_value(
                 channel_address=channel_address,
                 parameter=parameter,
