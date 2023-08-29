@@ -56,16 +56,13 @@ HM_ARG_VALUE: Final = "value"
 HM_ARG_ON: Final = "on"
 HM_ARG_OFF: Final = "off"
 
-
 MAX_CACHE_AGE: Final = 60
 MAX_JSON_SESSION_AGE: Final = 90
-
 
 PARAM_CHANNEL_OPERATION_MODE: Final = "CHANNEL_OPERATION_MODE"
 PARAM_DEVICE_OPERATION_MODE: Final = "DEVICE_OPERATION_MODE"
 PARAM_TEMPERATURE_MAXIMUM: Final = "TEMPERATURE_MAXIMUM"
 PARAM_TEMPERATURE_MINIMUM: Final = "TEMPERATURE_MINIMUM"
-
 
 REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
 REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
@@ -148,7 +145,7 @@ class HmCallSource(StrEnum):
     MANUAL_OR_SCHEDULED: Final = "manual_or_scheduled"
 
 
-class HmDataOperationResult(IntEnum):
+class HmDataOperationResult(Enum):
     """Enum with data operation results."""
 
     LOAD_FAIL: Final = 0

@@ -64,10 +64,12 @@ def create_entity_and_append_to_device(
         parameter,
         device.interface_id,
     )
+    p_type = parameter_data[HmDescription.TYPE]
+    p_operations = parameter_data[HmDescription.OPERATIONS]
     entity_t: type[hmge.GenericEntity] | None = None
-    if parameter_data[HmDescription.OPERATIONS] & HmOperations.WRITE:
-        if parameter_data[HmDescription.TYPE] == HmType.ACTION:
-            if parameter_data[HmDescription.OPERATIONS] == HmOperations.WRITE:
+    if p_operations & HmOperations.WRITE:
+        if p_type == HmType.ACTION:
+            if p_operations == HmOperations.WRITE:
                 if parameter in BUTTON_ACTIONS or device.device_type in HM_VIRTUAL_REMOTE_TYPES:
                     entity_t = HmButton
                 else:
@@ -76,22 +78,22 @@ def create_entity_and_append_to_device(
                 entity_t = HmButton
             else:
                 entity_t = HmSwitch
-        elif parameter_data[HmDescription.OPERATIONS] == HmOperations.WRITE:
+        elif p_operations == HmOperations.WRITE:
             entity_t = HmAction
-        elif parameter_data[HmDescription.TYPE] == HmType.BOOL:
+        elif p_type == HmType.BOOL:
             entity_t = HmSwitch
-        elif parameter_data[HmDescription.TYPE] == HmType.ENUM:
+        elif p_type == HmType.ENUM:
             entity_t = HmSelect
-        elif parameter_data[HmDescription.TYPE] == HmType.FLOAT:
+        elif p_type == HmType.FLOAT:
             entity_t = HmFloat
-        elif parameter_data[HmDescription.TYPE] == HmType.INTEGER:
+        elif p_type == HmType.INTEGER:
             entity_t = HmInteger
-        elif parameter_data[HmDescription.TYPE] == HmType.STRING:
+        elif p_type == HmType.STRING:
             entity_t = HmText
     elif parameter not in CLICK_EVENTS:
         # Also check, if sensor could be a binary_sensor due to value_list.
         if is_binary_sensor(parameter_data):
-            parameter_data[HmDescription.TYPE] = HmType.BOOL
+            p_type = HmType.BOOL
             entity_t = HmBinarySensor
         else:
             entity_t = HmSensor
