@@ -34,7 +34,7 @@ def callback_system_event(system_event: HmSystemEvent) -> Callable:
         async def async_wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
             """Wrap async callback system events."""
             return_value = cast(R, await func(*args, **kwargs))  # type: ignore[misc]
-            _exec_callback_system_event(system_event, *args, **kwargs)
+            _exec_callback_system_event(*args, **kwargs)
             return return_value
 
         @wraps(func)
