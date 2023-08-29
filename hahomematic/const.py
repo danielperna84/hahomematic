@@ -154,14 +154,6 @@ SYSVAR_UNIT: Final = "unit"
 SYSVAR_VALUE: Final = "value"
 SYSVAR_VALUE_LIST: Final = "valueList"
 
-SYSVAR_HM_TYPE_FLOAT: Final = "FLOAT"
-SYSVAR_HM_TYPE_INTEGER: Final = "INTEGER"
-SYSVAR_TYPE_ALARM: Final = "ALARM"
-SYSVAR_TYPE_LIST: Final = "LIST"
-SYSVAR_TYPE_LOGIC: Final = "LOGIC"
-SYSVAR_TYPE_NUMBER: Final = "NUMBER"
-SYSVAR_TYPE_STRING: Final = "STRING"
-
 CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
@@ -413,6 +405,18 @@ class HmSystemEvent(StrEnum):
     REPLACE_DEVICE = "replaceDevice"
     RE_ADDED_DEVICE = "readdedDevice"
     UPDATE_DEVICE = "updateDevice"
+
+
+class HmSysvarType(StrEnum):
+    """Enum for homematic sysvar types."""
+
+    ALARM = "ALARM"
+    HM_FLOAT = "FLOAT"
+    HM_INTEGER = "INTEGER"
+    LIST = "LIST"
+    LOGIC = "LOGIC"
+    NUMBER = "NUMBER"
+    STRING = "STRING"
 
 
 class HmType(StrEnum):

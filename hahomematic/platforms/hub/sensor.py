@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hahomematic.const import SYSVAR_TYPE_LIST, HmPlatform
+from hahomematic.const import HmPlatform, HmSysvarType
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 from hahomematic.platforms.support import value_property
 
@@ -24,7 +24,7 @@ class HmSysvarSensor(GenericSystemVariable):
     def value(self) -> Any | None:
         """Return the value."""
         if (
-            self.data_type == SYSVAR_TYPE_LIST
+            self.data_type == HmSysvarType.LIST
             and self._attr_value is not None
             and self.value_list is not None
         ):

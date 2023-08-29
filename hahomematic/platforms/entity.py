@@ -311,7 +311,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
         """Assign parameter data to instance variables."""
-        self._attr_type: str = parameter_data[HM_TYPE]
+        self._attr_type: HmType = HmType(parameter_data[HM_TYPE])
         self._attr_value_list: tuple[str, ...] | None = None
         if HM_VALUE_LIST in parameter_data:
             self._attr_value_list = tuple(parameter_data[HM_VALUE_LIST])
@@ -334,7 +334,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._attr_default
 
     @config_property
-    def hmtype(self) -> str:
+    def hmtype(self) -> HmType:
         """Return the HomeMatic type."""
         return self._attr_type
 

@@ -416,7 +416,7 @@ def _check_channel_name_with_channel_no(name: str) -> bool:
     return False
 
 
-def convert_value(value: Any, target_type: str, value_list: tuple[str, ...] | None) -> Any:
+def convert_value(value: Any, target_type: HmType, value_list: tuple[str, ...] | None) -> Any:
     """Convert a value to target_type."""
     if value is None:
         return None
