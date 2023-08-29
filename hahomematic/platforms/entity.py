@@ -20,8 +20,6 @@ from hahomematic.const import (
     CONFIGURABLE_CHANNEL,
     FIX_UNIT_BY_PARAM,
     FIX_UNIT_REPLACE,
-    FLAG_SERVICE,
-    FLAG_VISIBLE,
     HM_DEFAULT,
     HM_FLAGS,
     HM_MAX,
@@ -35,13 +33,12 @@ from hahomematic.const import (
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
-    OPERATION_EVENT,
-    OPERATION_READ,
-    OPERATION_WRITE,
     PARAM_CHANNEL_OPERATION_MODE,
     PARAMSET_KEY_VALUES,
     HmCallSource,
     HmEntityUsage,
+    HmFlag,
+    HmOperations,
     HmPlatform,
     HmType,
 )
@@ -321,8 +318,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             parameter_data.get(HM_DEFAULT, self._attr_min)
         )
         flags: int = parameter_data[HM_FLAGS]
-        self._attr_visible: bool = flags & FLAG_VISIBLE == FLAG_VISIBLE
-        self._attr_service: bool = flags & FLAG_SERVICE == FLAG_SERVICE
+        self._attr_visible: bool = flags & HmFlag.VISIBLE == HmFlag.VISIBLE
+        self._attr_service: bool = flags & HmFlag.SERVICE == HmFlag.SERVICE
         self._attr_operations: int = parameter_data[HM_OPERATIONS]
         self._attr_special: dict[str, Any] | None = parameter_data.get(HM_SPECIAL)
         self._attr_raw_unit: str | None = parameter_data.get(HM_UNIT)
@@ -376,7 +373,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def is_readable(self) -> bool:
         """Return, if entity is readable."""
-        return bool(self._attr_operations & OPERATION_READ)
+        return bool(self._attr_operations & HmOperations.READ)
 
     @value_property
     def is_valid(self) -> bool:
@@ -386,7 +383,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def is_writeable(self) -> bool:
         """Return, if entity is writeable."""
-        return bool(self._attr_operations & OPERATION_WRITE)
+        return bool(self._attr_operations & HmOperations.WRITE)
 
     @value_property
     def last_update(self) -> datetime:
@@ -406,7 +403,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def supports_events(self) -> bool:
         """Return, if entity is supports events."""
-        return bool(self._attr_operations & OPERATION_EVENT)
+        return bool(self._attr_operations & HmOperations.EVENT)
 
     @config_property
     def unit(self) -> str | None:

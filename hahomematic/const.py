@@ -53,32 +53,9 @@ ATTR_USERNAME: Final = "username"
 ATTR_VALUE: Final = "value"
 ATTR_VERIFY_TLS: Final = "verify_tls"
 
-EVENT_CONFIG_PENDING: Final = "CONFIG_PENDING"
-EVENT_ERROR: Final = "ERROR"
-EVENT_UPDATE_PENDING: Final = "UPDATE_PENDING"
-
-EVENT_PONG: Final = "PONG"
-EVENT_PRESS: Final = "PRESS"
-EVENT_PRESS_CONT: Final = "PRESS_CONT"
-EVENT_PRESS_LOCK: Final = "PRESS_LOCK"
-EVENT_PRESS_LONG: Final = "PRESS_LONG"
-EVENT_PRESS_LONG_RELEASE: Final = "PRESS_LONG_RELEASE"
-EVENT_PRESS_LONG_START: Final = "PRESS_LONG_START"
-EVENT_PRESS_SHORT: Final = "PRESS_SHORT"
-EVENT_PRESS_UNLOCK: Final = "PRESS_UNLOCK"
-EVENT_SEQUENCE_OK: Final = "SEQUENCE_OK"
-EVENT_STICKY_UN_REACH: Final = "STICKY_UNREACH"
-EVENT_UN_REACH: Final = "UNREACH"
-
 FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 FILE_DEVICES: Final = "homematic_devices.json"
 FILE_PARAMSETS: Final = "homematic_paramsets.json"
-
-FLAG_VISIBLE: Final = 1
-FLAG_INTERAL: Final = 2
-FLAG_TRANSFORM: Final = 4  # not used
-FLAG_SERVICE: Final = 8
-FLAG_STICKY: Final = 10  # This might be wrong. Documentation says 0x10 # not used
 
 HM_ARG_ON_TIME: Final = "on_time"
 HM_ARG_VALUE: Final = "value"
@@ -109,10 +86,6 @@ HM_VALUE_LIST: Final = "VALUE_LIST"
 MAX_CACHE_AGE: Final = 60
 MAX_JSON_SESSION_AGE: Final = 90
 
-OPERATION_NONE: Final = 0  # not used
-OPERATION_READ: Final = 1
-OPERATION_WRITE: Final = 2
-OPERATION_EVENT: Final = 4
 
 PARAM_CHANNEL_OPERATION_MODE: Final = "CHANNEL_OPERATION_MODE"
 PARAM_DEVICE_OPERATION_MODE: Final = "DEVICE_OPERATION_MODE"
@@ -150,28 +123,7 @@ CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
 
-KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[dict[str, tuple[str, ...]]] = {
-    "STATE": ("BINARY_BEHAVIOR",),
-    EVENT_PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    EVENT_PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    EVENT_PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    EVENT_PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-}
-
-CLICK_EVENTS: Final[tuple[str, ...]] = (
-    EVENT_PRESS,
-    EVENT_PRESS_CONT,
-    EVENT_PRESS_LOCK,
-    EVENT_PRESS_LONG,
-    EVENT_PRESS_LONG_RELEASE,
-    EVENT_PRESS_LONG_START,
-    EVENT_PRESS_SHORT,
-    EVENT_PRESS_UNLOCK,
-)
-
 DEVICE_ERROR_EVENTS: Final[tuple[str, ...]] = ("ERROR", "SENSOR_ERROR")
-
-IMPULSE_EVENTS: Final[tuple[str, ...]] = (EVENT_SEQUENCE_OK,)
 
 BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
 
@@ -224,12 +176,6 @@ IF_NAMES: Final[tuple[str, ...]] = (
 IF_PRIMARY: Final[tuple[str, ...]] = (IF_HMIP_RF_NAME, IF_BIDCOS_RF_NAME)
 
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
-
-RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
-    EVENT_CONFIG_PENDING,
-    EVENT_STICKY_UN_REACH,
-    EVENT_UN_REACH,
-)
 
 # virtual remotes device_types
 HM_VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
@@ -311,6 +257,26 @@ class HmEntityUsage(StrEnum):
     NO_CREATE: Final = "entity_no_create"
 
 
+class HmEvent(StrEnum):
+    """Enum with homematic events."""
+
+    PRESS = "PRESS"
+    PRESS_CONT = "PRESS_CONT"
+    PRESS_LOCK = "PRESS_LOCK"
+    PRESS_LONG = "PRESS_LONG"
+    PRESS_LONG_RELEASE = "PRESS_LONG_RELEASE"
+    PRESS_LONG_START = "PRESS_LONG_START"
+    PRESS_SHORT = "PRESS_SHORT"
+    PRESS_UNLOCK = "PRESS_UNLOCK"
+    CONFIG_PENDING = "CONFIG_PENDING"
+    ERROR = "ERROR"
+    UPDATE_PENDING = "UPDATE_PENDING"
+    PONG = "PONG"
+    SEQUENCE_OK = "SEQUENCE_OK"
+    STICKY_UN_REACH = "STICKY_UNREACH"
+    UN_REACH = "UNREACH"
+
+
 class HmEventType(StrEnum):
     """Enum with hahomematic event types."""
 
@@ -319,6 +285,16 @@ class HmEventType(StrEnum):
     IMPULSE: Final = "homematic.impulse"
     INTERFACE: Final = "homematic.interface"
     KEYPRESS: Final = "homematic.keypress"
+
+
+class HmFlag(IntEnum):
+    """Enum with homematic flags."""
+
+    VISIBLE = 1
+    INTERNAL = 2
+    TRANSFORM = 4  # not used
+    SERVICE = 8
+    STICKY = 10  # This might be wrong. Documentation says 0x10 # not used
 
 
 class HmForcedDeviceAvailability(StrEnum):
@@ -335,6 +311,15 @@ class HmManufacturer(StrEnum):
     EQ3 = "eQ-3"
     HB = "Homebrew"
     MOEHLENHOFF = "Möhlenhoff"
+
+
+class HmOperations(IntEnum):
+    """Enum with homematic operations."""
+
+    NONE = 0  # not used
+    READ = 1
+    WRITE = 2
+    EVENT = 4
 
 
 class HmPlatform(StrEnum):
@@ -466,7 +451,34 @@ AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.HUB_TEXT,
 )
 
+CLICK_EVENTS: Final[tuple[str, ...]] = (
+    HmEvent.PRESS,
+    HmEvent.PRESS_CONT,
+    HmEvent.PRESS_LOCK,
+    HmEvent.PRESS_LONG,
+    HmEvent.PRESS_LONG_RELEASE,
+    HmEvent.PRESS_LONG_START,
+    HmEvent.PRESS_SHORT,
+    HmEvent.PRESS_UNLOCK,
+)
+
 ENTITY_EVENTS: Final = (
     HmEventType.IMPULSE,
     HmEventType.KEYPRESS,
+)
+
+IMPULSE_EVENTS: Final[tuple[str, ...]] = (HmEvent.SEQUENCE_OK,)
+
+KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[dict[str, tuple[str, ...]]] = {
+    "STATE": ("BINARY_BEHAVIOR",),
+    HmEvent.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    HmEvent.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    HmEvent.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    HmEvent.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+}
+
+RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
+    HmEvent.CONFIG_PENDING,
+    HmEvent.STICKY_UN_REACH,
+    HmEvent.UN_REACH,
 )

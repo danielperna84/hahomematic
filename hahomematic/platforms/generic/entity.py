@@ -5,12 +5,10 @@ import logging
 from typing import Any, Final
 
 from hahomematic.const import (
-    EVENT_CONFIG_PENDING,
-    EVENT_STICKY_UN_REACH,
-    EVENT_UN_REACH,
     MAX_CACHE_AGE,
     HmCallSource,
     HmEntityUsage,
+    HmEvent,
     HmEventType,
     HmPlatform,
 )
@@ -64,7 +62,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 
         # reload paramset_descriptions, if value has changed
         if (
-            self._attr_parameter == EVENT_CONFIG_PENDING
+            self._attr_parameter == HmEvent.CONFIG_PENDING
             and new_value is False
             and old_value is True
         ):
@@ -74,8 +72,8 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 
         # send device availability events
         if self._attr_parameter in (
-            EVENT_UN_REACH,
-            EVENT_STICKY_UN_REACH,
+            HmEvent.UN_REACH,
+            HmEvent.STICKY_UN_REACH,
         ):
             self.device.update_device(self._attr_unique_identifier)
             self._central.fire_ha_event_callback(

@@ -10,11 +10,6 @@ from hahomematic import central_unit as hmcu, support as hms
 from hahomematic.const import (
     CLICK_EVENTS,
     DEFAULT_ENCODING,
-    EVENT_CONFIG_PENDING,
-    EVENT_ERROR,
-    EVENT_STICKY_UN_REACH,
-    EVENT_UN_REACH,
-    EVENT_UPDATE_PENDING,
     FILE_CUSTOM_UN_IGNORE_PARAMETERS,
     PARAM_CHANNEL_OPERATION_MODE,
     PARAM_DEVICE_OPERATION_MODE,
@@ -22,6 +17,7 @@ from hahomematic.const import (
     PARAM_TEMPERATURE_MINIMUM,
     PARAMSET_KEY_MASTER,
     PARAMSET_KEY_VALUES,
+    HmEvent,
     HmPlatform,
 )
 from hahomematic.platforms.custom.definition import get_required_parameters
@@ -79,11 +75,11 @@ _IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[dict[str, tuple[str, ...]]] = {
 
 # Entities that will be created, but should be hidden.
 _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
-    EVENT_CONFIG_PENDING,
-    EVENT_ERROR,
-    EVENT_STICKY_UN_REACH,
-    EVENT_UN_REACH,
-    EVENT_UPDATE_PENDING,
+    HmEvent.CONFIG_PENDING,
+    HmEvent.ERROR,
+    HmEvent.STICKY_UN_REACH,
+    HmEvent.UN_REACH,
+    HmEvent.UPDATE_PENDING,
     PARAM_CHANNEL_OPERATION_MODE,
     PARAM_TEMPERATURE_MAXIMUM,
     PARAM_TEMPERATURE_MINIMUM,

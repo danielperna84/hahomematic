@@ -18,10 +18,9 @@ from hahomematic.const import (
     HM_OPERATIONS,
     HM_TYPE,
     INIT_DATETIME,
-    OPERATION_EVENT,
-    OPERATION_READ,
     PARAMSET_KEY_VALUES,
     HmDataOperationResult,
+    HmOperations,
 )
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
@@ -345,7 +344,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
             for channel_address in channels:
                 for parameter, paramset in channels[channel_address][PARAMSET_KEY_VALUES].items():
                     operations = paramset[HM_OPERATIONS]
-                    if operations & OPERATION_READ and operations & OPERATION_EVENT:
+                    if operations & HmOperations.READ and operations & HmOperations.EVENT:
                         parameters.add(parameter)
 
         return sorted(parameters)

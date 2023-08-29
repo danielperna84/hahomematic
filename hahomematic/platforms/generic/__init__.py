@@ -11,7 +11,7 @@ from hahomematic.const import (
     HM_OPERATIONS,
     HM_TYPE,
     HM_VIRTUAL_REMOTE_TYPES,
-    OPERATION_WRITE,
+    HmOperations,
     HmType,
 )
 from hahomematic.platforms import device as hmd
@@ -66,9 +66,9 @@ def create_entity_and_append_to_device(
         device.interface_id,
     )
     entity_t: type[hmge.GenericEntity] | None = None
-    if parameter_data[HM_OPERATIONS] & OPERATION_WRITE:
+    if parameter_data[HM_OPERATIONS] & HmOperations.WRITE:
         if parameter_data[HM_TYPE] == HmType.ACTION:
-            if parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
+            if parameter_data[HM_OPERATIONS] == HmOperations.WRITE:
                 if parameter in BUTTON_ACTIONS or device.device_type in HM_VIRTUAL_REMOTE_TYPES:
                     entity_t = HmButton
                 else:
@@ -77,7 +77,7 @@ def create_entity_and_append_to_device(
                 entity_t = HmButton
             else:
                 entity_t = HmSwitch
-        elif parameter_data[HM_OPERATIONS] == OPERATION_WRITE:
+        elif parameter_data[HM_OPERATIONS] == HmOperations.WRITE:
             entity_t = HmAction
         elif parameter_data[HM_TYPE] == HmType.BOOL:
             entity_t = HmSwitch

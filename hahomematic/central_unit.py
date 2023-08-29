@@ -30,13 +30,13 @@ from hahomematic.const import (
     ATTR_TYPE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
-    EVENT_PONG,
     HM_ADDRESS,
     IF_PRIMARY,
     MAX_CACHE_AGE,
     PARAMSET_KEY_MASTER,
     HmDeviceFirmwareState,
     HmEntityUsage,
+    HmEvent,
     HmEventType,
     HmInterfaceEventType,
     HmPlatform,
@@ -776,7 +776,7 @@ class CentralUnit:
 
         self.last_events[interface_id] = datetime.now()
         # No need to check the response of a XmlRPC-PING
-        if parameter == EVENT_PONG:
+        if parameter == HmEvent.PONG:
             if value == interface_id:
                 self._reduce_ping_count(interface_id=interface_id)
             return

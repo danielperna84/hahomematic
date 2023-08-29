@@ -11,9 +11,6 @@ from typing import Any, Final
 from hahomematic import central_unit as hmcu, exporter as hmexp
 from hahomematic.const import (
     ENTITY_EVENTS,
-    EVENT_CONFIG_PENDING,
-    EVENT_STICKY_UN_REACH,
-    EVENT_UN_REACH,
     HM_AVAILABLE_FIRMWARE,
     HM_FIRMWARE,
     HM_FIRMWARE_UPDATABLE,
@@ -30,6 +27,7 @@ from hahomematic.const import (
     RELEVANT_INIT_PARAMETERS,
     HmCallSource,
     HmDeviceFirmwareState,
+    HmEvent,
     HmEventType,
     HmForcedDeviceAvailability,
     HmInterface,
@@ -284,17 +282,21 @@ class HmDevice(PayloadMixin):
     @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity."""
-        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_UN_REACH))
+        return self.generic_entities.get((f"{self._attr_device_address}:0", HmEvent.UN_REACH))
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity."""
-        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_STICKY_UN_REACH))
+        return self.generic_entities.get(
+            (f"{self._attr_device_address}:0", HmEvent.STICKY_UN_REACH)
+        )
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity."""
-        return self.generic_entities.get((f"{self._attr_device_address}:0", EVENT_CONFIG_PENDING))
+        return self.generic_entities.get(
+            (f"{self._attr_device_address}:0", HmEvent.CONFIG_PENDING)
+        )
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
