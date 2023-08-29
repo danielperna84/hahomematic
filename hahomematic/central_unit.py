@@ -31,10 +31,6 @@ from hahomematic.const import (
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
     EVENT_PONG,
-    HH_EVENT_DELETE_DEVICES,
-    HH_EVENT_DEVICES_CREATED,
-    HH_EVENT_LIST_DEVICES,
-    HH_EVENT_NEW_DEVICES,
     HM_ADDRESS,
     IF_PRIMARY,
     MAX_CACHE_AGE,
@@ -45,6 +41,7 @@ from hahomematic.const import (
     HmEventType,
     HmInterfaceEventType,
     HmPlatform,
+    HmSystemEvent,
 )
 from hahomematic.decorators import callback_event, callback_system_event
 from hahomematic.exceptions import (
@@ -675,7 +672,9 @@ class CentralUnit:
         _LOGGER.debug("CREATE_DEVICES: Finished creating devices for %s", self._attr_name)
 
         if new_devices:
-            self.fire_system_event_callback(name=HH_EVENT_DEVICES_CREATED, new_devices=new_devices)
+            self.fire_system_event_callback(
+                system_event=HmSystemEvent.DEVICES_CREATED, new_devices=new_devices
+            )
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
         """Delete devices from central_unit."""
@@ -699,7 +698,7 @@ class CentralUnit:
 
         await self.delete_devices(interface_id=interface_id, addresses=addresses)
 
-    @callback_system_event(name=HH_EVENT_DELETE_DEVICES)
+    @callback_system_event(system_event=HmSystemEvent.DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central_unit."""
         _LOGGER.debug(
@@ -711,7 +710,7 @@ class CentralUnit:
             if device := self._devices.get(address):
                 await self.remove_device(device=device)
 
-    @callback_system_event(name=HH_EVENT_NEW_DEVICES)
+    @callback_system_event(system_event=HmSystemEvent.NEW_DEVICES)
     async def add_new_devices(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
@@ -802,7 +801,7 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
-    @callback_system_event(name=HH_EVENT_LIST_DEVICES)
+    @callback_system_event(system_event=HmSystemEvent.LIST_DEVICES)
     def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
         _LOGGER.debug("list_devices: interface_id = %s", interface_id)
@@ -1149,7 +1148,7 @@ class CentralUnit:
         if callback_handler in self._callback_system_event:
             self._callback_system_event.remove(callback_handler)
 
-    def fire_system_event_callback(self, name: str, **kwargs: Any) -> None:
+    def fire_system_event_callback(self, system_event: HmSystemEvent, **kwargs: Any) -> None:
         """
         Fire system_event callback in central.
 
@@ -1157,7 +1156,7 @@ class CentralUnit:
         """
         for callback_handler in self._callback_system_event:
             try:
-                callback_handler(name, **kwargs)
+                callback_handler(system_event, **kwargs)
             except Exception as ex:
                 _LOGGER.error(
                     "FIRE_SYSTEM_EVENT_CALLBACK: Unable to call handler: %s",

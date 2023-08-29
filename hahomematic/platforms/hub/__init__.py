@@ -8,13 +8,13 @@ from typing import Final
 from hahomematic import central_unit as hmcu
 from hahomematic.const import (
     BACKEND_CCU,
-    HH_EVENT_HUB_REFRESHED,
     SYSVAR_HM_TYPE_FLOAT,
     SYSVAR_HM_TYPE_INTEGER,
     SYSVAR_TYPE_ALARM,
     SYSVAR_TYPE_LIST,
     SYSVAR_TYPE_LOGIC,
     SYSVAR_TYPE_STRING,
+    HmSystemEvent,
 )
 from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.hub.button import HmProgramButton
@@ -86,7 +86,7 @@ class HmHub:
 
         if new_programs:
             self._central.fire_system_event_callback(
-                name=HH_EVENT_HUB_REFRESHED, new_hub_entities=new_programs
+                system_event=HmSystemEvent.HUB_REFRESHED, new_hub_entities=new_programs
             )
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
@@ -129,7 +129,7 @@ class HmHub:
 
         if new_sysvars:
             self._central.fire_system_event_callback(
-                name=HH_EVENT_HUB_REFRESHED, new_hub_entities=new_sysvars
+                system_event=HmSystemEvent.HUB_REFRESHED, new_hub_entities=new_sysvars
             )
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:

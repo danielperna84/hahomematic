@@ -14,7 +14,7 @@ import orjson
 from hahomematic import const as hahomematic_const
 from hahomematic.central_unit import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, _ClientConfig
-from hahomematic.const import HmInterface
+from hahomematic.const import HmInterface, HmSystemEvent
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic_support.client_local import ClientLocal, LocalRessources
 
@@ -192,9 +192,9 @@ async def get_pydev_ccu_central_unit_full(client_session: ClientSession | None) 
     global GOT_DEVICES  # pylint: disable=global-statement
     GOT_DEVICES = False
 
-    def systemcallback(name, *args, **kwargs):
+    def systemcallback(system_event, *args, **kwargs):
         if (
-            name == "devicesCreated"
+            system_event == HmSystemEvent.DEVICES_CREATED
             and kwargs
             and kwargs.get("new_devices")
             and len(kwargs["new_devices"]) > 0

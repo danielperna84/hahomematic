@@ -10,6 +10,7 @@ import logging
 from typing import Any, ParamSpec, TypeVar, cast
 
 from hahomematic import client as hmcl
+from hahomematic.const import HmSystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import entity as hme
 from hahomematic.support import reduce_args
@@ -21,7 +22,7 @@ R = TypeVar("R")
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 
-def callback_system_event(name: str) -> Callable:
+def callback_system_event(system_event: HmSystemEvent) -> Callable:
     """Check if callback_system is set and call it AFTER original function."""
 
     def decorator_callback_system_event(
@@ -33,17 +34,17 @@ def callback_system_event(name: str) -> Callable:
         async def async_wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
             """Wrap async callback system events."""
             return_value = cast(R, await func(*args, **kwargs))  # type: ignore[misc]
-            _exec_callback_system_event(name, *args, **kwargs)
+            _exec_callback_system_event(system_event, *args, **kwargs)
             return return_value
 
         @wraps(func)
         def wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
             """Wrap callback system events."""
             return_value = cast(R, func(*args, **kwargs))
-            _exec_callback_system_event(name, *args, **kwargs)
+            _exec_callback_system_event(*args, **kwargs)
             return return_value
 
-        def _exec_callback_system_event(name: str, *args: Any, **kwargs: Any) -> None:
+        def _exec_callback_system_event(*args: Any, **kwargs: Any) -> None:
             """Execute the callback for a system event."""
             if len(args) > 1:
                 _LOGGER.warning(
@@ -54,7 +55,7 @@ def callback_system_event(name: str) -> Callable:
                 interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
                 if client := hmcl.get_client(interface_id=interface_id):
                     client.last_updated = datetime.now()
-                    client.central.fire_system_event_callback(name=name, **kwargs)
+                    client.central.fire_system_event_callback(system_event=system_event, **kwargs)
             except Exception as err:  # pragma: no cover
                 _LOGGER.warning(
                     "EXEC_CALLBACK_SYSTEM_EVENT failed: Unable to reduce kwargs for callback_system_event"

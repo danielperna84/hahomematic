@@ -113,16 +113,6 @@ HM_TYPE: Final = "TYPE"
 HM_UNIT: Final = "UNIT"
 HM_VALUE_LIST: Final = "VALUE_LIST"
 
-HH_EVENT_DELETE_DEVICES: Final = "deleteDevices"
-HH_EVENT_DEVICES_CREATED: Final = "devicesCreated"
-HH_EVENT_ERROR: Final = "error"
-HH_EVENT_HUB_REFRESHED: Final = "hubEntityRefreshed"
-HH_EVENT_LIST_DEVICES: Final = "listDevices"
-HH_EVENT_NEW_DEVICES: Final = "newDevices"
-HH_EVENT_REPLACE_DEVICE: Final = "replaceDevice"
-HH_EVENT_RE_ADDED_DEVICE: Final = "readdedDevice"
-HH_EVENT_UPDATE_DEVICE: Final = "updateDevice"
-
 MAX_CACHE_AGE: Final = 60
 MAX_JSON_SESSION_AGE: Final = 90
 
@@ -412,6 +402,20 @@ class HmForcedDeviceAvailability(StrEnum):
     FORCE_FALSE: Final = "forced_not_available"
     FORCE_TRUE: Final = "forced_available"
     NOT_SET: Final = "not_set"
+
+
+class HmSystemEvent(StrEnum):
+    """enum with hahomematic system events."""
+
+    DELETE_DEVICES = "deleteDevices"
+    DEVICES_CREATED = "devicesCreated"
+    ERROR = "error"
+    HUB_REFRESHED = "hubEntityRefreshed"
+    LIST_DEVICES = "listDevices"
+    NEW_DEVICES = "newDevices"
+    REPLACE_DEVICE = "replaceDevice"
+    RE_ADDED_DEVICE = "readdedDevice"
+    UPDATE_DEVICE = "updateDevice"
 
 
 AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
