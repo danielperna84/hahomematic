@@ -18,10 +18,10 @@ from typing import Any, TypeVar
 import voluptuous as vol
 
 from hahomematic.const import (
-    ATTR_DATA,
-    ATTR_INTERFACE_ID,
-    ATTR_TYPE,
     CCU_PASSWORD_PATTERN,
+    EVENT_DATA,
+    EVENT_INTERFACE_ID,
+    EVENT_TYPE,
     FILE_DEVICES,
     FILE_PARAMSETS,
     INIT_DATETIME,
@@ -35,9 +35,9 @@ _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_INTERFACE_ID): str,
-        vol.Required(ATTR_TYPE): HmInterfaceEventType,
-        vol.Required(ATTR_DATA): vol.Schema(
+        vol.Required(EVENT_INTERFACE_ID): str,
+        vol.Required(EVENT_TYPE): HmInterfaceEventType,
+        vol.Required(EVENT_DATA): vol.Schema(
             {vol.Required(vol.Any(str)): vol.Schema(vol.Any(str, int, bool))}
         ),
     }

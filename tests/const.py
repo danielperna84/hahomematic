@@ -1,7 +1,7 @@
 """Constants for tests."""
 from __future__ import annotations
 
-from hahomematic.const import IF_BIDCOS_RF_NAME, HmSysvarType
+from hahomematic.const import HmInterfaceName, HmSysvarType
 from hahomematic.support import ProgramData, SystemVariableData
 
 CENTRAL_NAME = "CentralTest"
@@ -9,7 +9,7 @@ CCU_HOST = "127.0.0.1"
 CCU_USERNAME = "user"
 CCU_PASSWORD = "pass"
 CCU_PORT = 2002
-INTERFACE_ID = f"{CENTRAL_NAME}-{IF_BIDCOS_RF_NAME}"
+INTERFACE_ID = f"{CENTRAL_NAME}-{HmInterfaceName.BIDCOS_RF}"
 
 
 SYSVAR_DATA: list[SystemVariableData] = [

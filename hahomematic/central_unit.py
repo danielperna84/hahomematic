@@ -23,13 +23,13 @@ from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescri
 from hahomematic.caches.visibility import ParameterVisibilityCache
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
-    ATTR_AVAILABLE,
-    ATTR_DATA,
-    ATTR_INSTANCE_NAME,
-    ATTR_INTERFACE_ID,
-    ATTR_TYPE,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
+    EVENT_AVAILABLE,
+    EVENT_DATA,
+    EVENT_INSTANCE_NAME,
+    EVENT_INTERFACE_ID,
+    EVENT_TYPE,
     MAX_CACHE_AGE,
     HmDescription,
     HmDeviceFirmwareState,
@@ -394,7 +394,7 @@ class CentralUnit:
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
                     interface_event_type=HmInterfaceEventType.PROXY,
-                    data={ATTR_AVAILABLE: False},
+                    data={EVENT_AVAILABLE: False},
                 )
                 _LOGGER.warning(
                     "CREATE_CLIENTS failed: No connection to interface %s [%s]",
@@ -438,9 +438,9 @@ class CentralUnit:
         """Fire an event about the interface status."""
         data = data or {}
         event_data: dict[str, Any] = {
-            ATTR_INTERFACE_ID: interface_id,
-            ATTR_TYPE: interface_event_type,
-            ATTR_DATA: data,
+            EVENT_INTERFACE_ID: interface_id,
+            EVENT_TYPE: interface_event_type,
+            EVENT_DATA: data,
         }
 
         self.fire_ha_event_callback(
@@ -895,9 +895,9 @@ class CentralUnit:
         if self._ping_pong_fired:
             return
         event_data: dict[str, Any] = {
-            ATTR_INTERFACE_ID: interface_id,
-            ATTR_TYPE: HmInterfaceEventType.PINGPONG,
-            ATTR_DATA: {ATTR_INSTANCE_NAME: self.config.name},
+            EVENT_INTERFACE_ID: interface_id,
+            EVENT_TYPE: HmInterfaceEventType.PINGPONG,
+            EVENT_DATA: {EVENT_INSTANCE_NAME: self.config.name},
         }
         self.fire_ha_event_callback(
             event_type=HmEventType.INTERFACE,

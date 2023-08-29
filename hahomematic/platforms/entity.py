@@ -11,13 +11,13 @@ import voluptuous as vol
 
 from hahomematic import central_unit as hmcu, client as hmcl, support as hms
 from hahomematic.const import (
-    ATTR_ADDRESS,
-    ATTR_CHANNEL_NO,
-    ATTR_DEVICE_TYPE,
-    ATTR_INTERFACE_ID,
-    ATTR_PARAMETER,
-    ATTR_VALUE,
     CONFIGURABLE_CHANNEL,
+    EVENT_ADDRESS,
+    EVENT_CHANNEL_NO,
+    EVENT_DEVICE_TYPE,
+    EVENT_INTERFACE_ID,
+    EVENT_PARAMETER,
+    EVENT_VALUE,
     FIX_UNIT_BY_PARAM,
     FIX_UNIT_REPLACE,
     INIT_DATETIME,
@@ -46,12 +46,12 @@ from hahomematic.platforms.support import (
 
 HM_EVENT_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_ADDRESS): str,
-        vol.Required(ATTR_CHANNEL_NO): int,
-        vol.Required(ATTR_DEVICE_TYPE): str,
-        vol.Required(ATTR_INTERFACE_ID): str,
-        vol.Required(ATTR_PARAMETER): str,
-        vol.Optional(ATTR_VALUE): vol.Any(bool, int),
+        vol.Required(EVENT_ADDRESS): str,
+        vol.Required(EVENT_CHANNEL_NO): int,
+        vol.Required(EVENT_DEVICE_TYPE): str,
+        vol.Required(EVENT_INTERFACE_ID): str,
+        vol.Required(EVENT_PARAMETER): str,
+        vol.Optional(EVENT_VALUE): vol.Any(bool, int),
     }
 )
 
@@ -525,14 +525,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         event_data = {
-            ATTR_ADDRESS: self.device.device_address,
-            ATTR_CHANNEL_NO: self._attr_channel_no,
-            ATTR_DEVICE_TYPE: self.device.device_type,
-            ATTR_INTERFACE_ID: self.device.interface_id,
-            ATTR_PARAMETER: self._attr_parameter,
+            EVENT_ADDRESS: self.device.device_address,
+            EVENT_CHANNEL_NO: self._attr_channel_no,
+            EVENT_DEVICE_TYPE: self.device.device_type,
+            EVENT_INTERFACE_ID: self.device.interface_id,
+            EVENT_PARAMETER: self._attr_parameter,
         }
         if value is not None:
-            event_data[ATTR_VALUE] = value
+            event_data[EVENT_VALUE] = value
         return cast(dict[str, Any], HM_EVENT_DATA_SCHEMA(event_data))
 
     def _set_last_update(self) -> None:

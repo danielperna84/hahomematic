@@ -21,9 +21,8 @@ import orjson
 
 from hahomematic import central_unit as hmcu, config
 from hahomematic.const import (
-    ATTR_NAME,
-    ATTR_PASSWORD,
-    ATTR_USERNAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     DEFAULT_ENCODING,
     MAX_JSON_SESSION_AGE,
     PATH_JSON_RPC,
@@ -59,7 +58,6 @@ _TYPE: Final = "type"
 _UNIT: Final = "unit"
 _VALUE: Final = "value"
 _VALUE_LIST: Final = "valueList"
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,8 +138,8 @@ class JsonRpcAioHttpClient:
         session_id: str | None = None
 
         params = {
-            ATTR_USERNAME: self._username,
-            ATTR_PASSWORD: self._password,
+            CONF_USERNAME: self._username,
+            CONF_PASSWORD: self._password,
         }
         method = "Session.login"
         response = await self._do_post(
@@ -609,7 +607,7 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces")
             if json_result := response[_P_RESULT]:
                 for interface in json_result:
-                    interfaces.append(interface[ATTR_NAME])
+                    interfaces.append(interface[_NAME])
         except ClientException as clex:
             self._handle_exception_log(method="GET_AVAILABLE_INTERFACES", exception=clex)
             return []

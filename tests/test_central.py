@@ -9,7 +9,7 @@ import pytest
 
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
-    ATTR_AVAILABLE,
+    EVENT_AVAILABLE,
     HmEntityUsage,
     HmEvent,
     HmEventType,
@@ -271,14 +271,14 @@ async def test_central_callbacks(factory: helper.Factory) -> None:
     central.fire_interface_event(
         interface_id="SOME_ID",
         interface_event_type=HmInterfaceEventType.CALLBACK,
-        data={ATTR_AVAILABLE: False},
+        data={EVENT_AVAILABLE: False},
     )
     assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.interface",
         {
             "interface_id": "SOME_ID",
             "type": "callback",
-            "data": {ATTR_AVAILABLE: False},
+            "data": {EVENT_AVAILABLE: False},
         },
     )
 

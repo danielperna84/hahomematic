@@ -11,28 +11,24 @@ from typing import Any, Final, TypeVar
 import xmlrpc.client
 
 from hahomematic import central_unit as hmcu
-from hahomematic.const import ATTR_TLS, ATTR_VERIFY_TLS
 from hahomematic.exceptions import AuthFailure, ClientException, NoConnection
 from hahomematic.support import get_tls_context, reduce_args
 
 _LOGGER = logging.getLogger(__name__)
 _T = TypeVar("_T")
 
-ATTR_CONTEXT: Final = "context"
-ATTR_ENCODING_ISO_8859_1: Final = "ISO-8859-1"
-
-PROXY_GET_VERSION: Final = "getVersion"
-PROXY_INIT: Final = "init"
-PROXY_LIST_METHODS: Final = "system.listMethods"
-PROXY_PING: Final = "ping"
-VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION: Final[tuple[str, ...]] = (
-    PROXY_GET_VERSION,
-    PROXY_INIT,
-    PROXY_LIST_METHODS,
-    PROXY_PING,
+_CONTEXT: Final = "context"
+_ENCODING_ISO_8859_1: Final = "ISO-8859-1"
+_TLS: Final = "tls"
+_VERIFY_TLS: Final = "verify_tls"
+_VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION: Final[tuple[str, ...]] = (
+    "getVersion",
+    "init",
+    "system.listMethods",
+    "ping",
 )
 
-NO_CONNECTION_ERROR_CODES: Final[dict[int, str]] = {
+_NO_CONNECTION_ERROR_CODES: Final[dict[int, str]] = {
     errno.ECONNREFUSED: "Connection refused",
     errno.ENETUNREACH: "Network is unreachable",
     errno.ETIMEDOUT: "Operation timed out",
@@ -62,12 +58,12 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             if max_workers > 0
             else None
         )
-        self._tls: Final[bool] = kwargs.pop(ATTR_TLS, False)
-        self._verify_tls: Final[bool] = kwargs.pop(ATTR_VERIFY_TLS, True)
+        self._tls: Final[bool] = kwargs.pop(_TLS, False)
+        self._verify_tls: Final[bool] = kwargs.pop(_VERIFY_TLS, True)
         if self._tls:
-            kwargs[ATTR_CONTEXT] = get_tls_context(self._verify_tls)
+            kwargs[_CONTEXT] = get_tls_context(self._verify_tls)
         xmlrpc.client.ServerProxy.__init__(  # type: ignore[misc]
-            self, encoding=ATTR_ENCODING_ISO_8859_1, *args, **kwargs
+            self, encoding=_ENCODING_ISO_8859_1, *args, **kwargs
         )
 
     def _async_add_proxy_executor_job(
@@ -85,7 +81,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         try:
             if args[
                 0
-            ] in VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION or not self._connection_state.has_issue(  # noqa: E501
+            ] in _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION or not self._connection_state.has_issue(  # noqa: E501
                 issuer=self
             ):
                 _LOGGER.debug("__ASYNC_REQUEST: %s", args)
@@ -104,7 +100,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             raise NoConnection(message) from sslerr
         except OSError as ose:
             message = f"OSError on {self.interface_id}: {reduce_args(args=ose.args)}"
-            if ose.args[0] in NO_CONNECTION_ERROR_CODES:
+            if ose.args[0] in _NO_CONNECTION_ERROR_CODES:
                 if self._connection_state.add_issue(issuer=self):
                     _LOGGER.error(message)
                 else:

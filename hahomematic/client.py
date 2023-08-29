@@ -10,13 +10,8 @@ from typing import Any, Final, cast
 from hahomematic import central_unit as hmcu
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
-    ATTR_ADDRESS,
-    ATTR_AVAILABLE,
-    ATTR_CHANNELS,
-    ATTR_ID,
-    ATTR_INTERFACE,
-    ATTR_NAME,
-    ATTR_SECONDS_SINCE_LAST_EVENT,
+    EVENT_AVAILABLE,
+    EVENT_SECONDS_SINCE_LAST_EVENT,
     HM_VIRTUAL_REMOTE_TYPES,
     HOMEGEAR_SERIAL,
     INIT_DATETIME,
@@ -45,6 +40,12 @@ from hahomematic.support import (
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
 _LOGGER = logging.getLogger(__name__)
+
+_ADDRESS: Final = "address"
+_CHANNELS: Final = "channels"
+_ID: Final = "id"
+_INTERFACE: Final = "interface"
+_NAME: Final = "name"
 
 
 class Client(ABC):
@@ -162,7 +163,7 @@ class Client(ABC):
         self.central.fire_interface_event(
             interface_id=self.interface_id,
             interface_event_type=HmInterfaceEventType.PROXY,
-            data={ATTR_AVAILABLE: available},
+            data={EVENT_AVAILABLE: available},
         )
 
     async def reconnect(self) -> bool:
@@ -228,8 +229,8 @@ class Client(ABC):
                         interface_id=self.interface_id,
                         interface_event_type=HmInterfaceEventType.CALLBACK,
                         data={
-                            ATTR_AVAILABLE: False,
-                            ATTR_SECONDS_SINCE_LAST_EVENT: int(seconds_since_last_event),
+                            EVENT_AVAILABLE: False,
+                            EVENT_SECONDS_SINCE_LAST_EVENT: int(seconds_since_last_event),
                         },
                     )
                     self._is_callback_alive = False
@@ -244,7 +245,7 @@ class Client(ABC):
                 self.central.fire_interface_event(
                     interface_id=self.interface_id,
                     interface_event_type=HmInterfaceEventType.CALLBACK,
-                    data={ATTR_AVAILABLE: True},
+                    data={EVENT_AVAILABLE: True},
                 )
                 self._is_callback_alive = True
         return True
@@ -674,22 +675,18 @@ class ClientCCU(Client):
         """Get all names via JSON-RPS and store in data.NAMES."""
         if json_result := await self._json_rpc_client.get_device_details():
             for device in json_result:
-                self.central.device_details.add_name(
-                    address=device[ATTR_ADDRESS], name=device[ATTR_NAME]
-                )
+                self.central.device_details.add_name(address=device[_ADDRESS], name=device[_NAME])
                 self.central.device_details.add_device_channel_id(
-                    address=device[ATTR_ADDRESS], channel_id=device[ATTR_ID]
+                    address=device[_ADDRESS], channel_id=device[_ID]
                 )
-                for channel in device.get(ATTR_CHANNELS, []):
+                for channel in device.get(_CHANNELS, []):
                     self.central.device_details.add_name(
-                        address=channel[ATTR_ADDRESS], name=channel[ATTR_NAME]
+                        address=channel[_ADDRESS], name=channel[_NAME]
                     )
                     self.central.device_details.add_device_channel_id(
-                        address=channel[ATTR_ADDRESS], channel_id=channel[ATTR_ID]
+                        address=channel[_ADDRESS], channel_id=channel[_ID]
                     )
-                self.central.device_details.add_interface(
-                    device[ATTR_ADDRESS], device[ATTR_INTERFACE]
-                )
+                self.central.device_details.add_interface(device[_ADDRESS], device[_INTERFACE])
         else:
             _LOGGER.debug("FETCH_DEVICE_DETAILS: Unable to fetch device details via JSON-RPC")
 
