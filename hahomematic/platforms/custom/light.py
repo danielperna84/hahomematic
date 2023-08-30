@@ -65,49 +65,49 @@ _DOM_RGB: Final = "RGB"
 _DOM_RGBW: Final = "RGBW"
 _DOM_TUNABLE_WHITE: Final = "2_TUNABLE_WHITE"
 
-HM_EFFECT_OFF: Final = "Off"
+_HM_EFFECT_OFF: Final = "Off"
 
-HM_MAX_MIREDS: Final = 500
-HM_MIN_MIREDS: Final = 153
+_HM_MAX_MIREDS: Final = 500
+_HM_MIN_MIREDS: Final = 153
 
-HM_DIMMER_OFF: Final = 0.0
+_HM_DIMMER_OFF: Final = 0.0
 
-TIME_UNIT_SECONDS: Final = 0
-TIME_UNIT_MINUTES: Final = 1
-TIME_UNIT_HOURS: Final = 2
+_TIME_UNIT_SECONDS: Final = 0
+_TIME_UNIT_MINUTES: Final = 1
+_TIME_UNIT_HOURS: Final = 2
 
-COLOR_BEHAVIOUR_DO_NOT_CARE: Final = "DO_NOT_CARE"
-COLOR_BEHAVIOUR_OFF: Final = "OFF"
-COLOR_BEHAVIOUR_OLD_VALUE: Final = "OLD_VALUE"
-COLOR_BEHAVIOUR_ON: Final = "ON"
+_COLOR_BEHAVIOUR_DO_NOT_CARE: Final = "DO_NOT_CARE"
+_COLOR_BEHAVIOUR_OFF: Final = "OFF"
+_COLOR_BEHAVIOUR_OLD_VALUE: Final = "OLD_VALUE"
+_COLOR_BEHAVIOUR_ON: Final = "ON"
 
-COLOR_BLACK: Final = "BLACK"
-COLOR_BLUE: Final = "BLUE"
-COLOR_DO_NOT_CARE: Final = "DO_NOT_CARE"
-COLOR_GREEN: Final = "GREEN"
-COLOR_OLD_VALUE: Final = "OLD_VALUE"
-COLOR_PURPLE: Final = "PURPLE"
-COLOR_RED: Final = "RED"
-COLOR_TURQUOISE: Final = "TURQUOISE"
-COLOR_WHITE: Final = "WHITE"
-COLOR_YELLOW: Final = "YELLOW"
+_COLOR_BLACK: Final = "BLACK"
+_COLOR_BLUE: Final = "BLUE"
+_COLOR_DO_NOT_CARE: Final = "DO_NOT_CARE"
+_COLOR_GREEN: Final = "GREEN"
+_COLOR_OLD_VALUE: Final = "OLD_VALUE"
+_COLOR_PURPLE: Final = "PURPLE"
+_COLOR_RED: Final = "RED"
+_COLOR_TURQUOISE: Final = "TURQUOISE"
+_COLOR_WHITE: Final = "WHITE"
+_COLOR_YELLOW: Final = "YELLOW"
 
-NO_COLOR: Final = (
-    COLOR_BLACK,
-    COLOR_DO_NOT_CARE,
-    COLOR_OLD_VALUE,
+_NO_COLOR: Final = (
+    _COLOR_BLACK,
+    _COLOR_DO_NOT_CARE,
+    _COLOR_OLD_VALUE,
 )
 
-EXCLUDE_FROM_COLOR_BEHAVIOUR: Final = (
-    COLOR_BEHAVIOUR_DO_NOT_CARE,
-    COLOR_BEHAVIOUR_OFF,
-    COLOR_BEHAVIOUR_OLD_VALUE,
+_EXCLUDE_FROM_COLOR_BEHAVIOUR: Final = (
+    _COLOR_BEHAVIOUR_DO_NOT_CARE,
+    _COLOR_BEHAVIOUR_OFF,
+    _COLOR_BEHAVIOUR_OLD_VALUE,
 )
 
-OFF_COLOR_BEHAVIOUR: Final = (
-    COLOR_BEHAVIOUR_DO_NOT_CARE,
-    COLOR_BEHAVIOUR_OFF,
-    COLOR_BEHAVIOUR_OLD_VALUE,
+_OFF_COLOR_BEHAVIOUR: Final = (
+    _COLOR_BEHAVIOUR_DO_NOT_CARE,
+    _COLOR_BEHAVIOUR_OFF,
+    _COLOR_BEHAVIOUR_OLD_VALUE,
 )
 
 
@@ -225,7 +225,7 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         if ramp_time := kwargs.get(_HM_ARG_RAMP_TIME):
             await self._set_ramp_time_off_value(ramp_time=float(ramp_time), collector=collector)
 
-        await self._e_level.send_value(value=HM_DIMMER_OFF, collector=collector)
+        await self._e_level.send_value(value=_HM_DIMMER_OFF, collector=collector)
 
     @bind_collector
     async def _set_on_time_value(
@@ -284,7 +284,7 @@ class CeDimmer(BaseHmLight):
     @value_property
     def is_on(self) -> bool | None:
         """Return true if dimmer is on."""
-        return self._e_level.value is not None and self._e_level.value > HM_DIMMER_OFF
+        return self._e_level.value is not None and self._e_level.value > _HM_DIMMER_OFF
 
     @value_property
     def brightness(self) -> int | None:
@@ -352,7 +352,7 @@ class CeColorDimmerEffect(CeColorDimmer):
     """Class for HomeMatic dimmer with color entities."""
 
     _effect_list: list[str] = [
-        HM_EFFECT_OFF,
+        _HM_EFFECT_OFF,
         "Slow color change",
         "Medium color change",
         "Fast color change",
@@ -393,7 +393,11 @@ class CeColorDimmerEffect(CeColorDimmer):
         if not self.is_state_change(on=True, **kwargs):
             return
 
-        if _HM_ARG_EFFECT not in kwargs and self.supports_effects and self.effect != HM_EFFECT_OFF:
+        if (
+            _HM_ARG_EFFECT not in kwargs
+            and self.supports_effects
+            and self.effect != _HM_EFFECT_OFF
+        ):
             await self._e_effect.send_value(value=0, collector=collector)
 
         if self.supports_effects and (effect := kwargs.get(_HM_ARG_EFFECT)) is not None:
@@ -418,7 +422,7 @@ class CeColorTempDimmer(CeDimmer):
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between 153..500."""
         return int(
-            HM_MAX_MIREDS - (HM_MAX_MIREDS - HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
+            _HM_MAX_MIREDS - (_HM_MAX_MIREDS - _HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
         )
 
     @config_property
@@ -434,7 +438,7 @@ class CeColorTempDimmer(CeDimmer):
         if not self.is_state_change(on=True, **kwargs):
             return
         if (color_temp := kwargs.get(_HM_ARG_COLOR_TEMP)) is not None:
-            color_level = (HM_MAX_MIREDS - color_temp) / (HM_MAX_MIREDS - HM_MIN_MIREDS)
+            color_level = (_HM_MAX_MIREDS - color_temp) / (_HM_MAX_MIREDS - _HM_MIN_MIREDS)
             await self._e_color_level.send_value(value=color_level, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
@@ -473,7 +477,7 @@ class CeIpRGBWLight(BaseHmLight):
     @value_property
     def is_on(self) -> bool | None:
         """Return true if light is on."""
-        return self._e_level.value is not None and self._e_level.value > HM_DIMMER_OFF
+        return self._e_level.value is not None and self._e_level.value > _HM_DIMMER_OFF
 
     @value_property
     def brightness(self) -> int | None:
@@ -582,13 +586,13 @@ class CeIpFixedColorLight(BaseHmLight):
     """Class for HomematicIP HmIP-BSL light entities."""
 
     _color_switcher: dict[str, tuple[float, float]] = {
-        COLOR_WHITE: (0.0, 0.0),
-        COLOR_RED: (0.0, 100.0),
-        COLOR_YELLOW: (60.0, 100.0),
-        COLOR_GREEN: (120.0, 100.0),
-        COLOR_TURQUOISE: (180.0, 100.0),
-        COLOR_BLUE: (240.0, 100.0),
-        COLOR_PURPLE: (300.0, 100.0),
+        _COLOR_WHITE: (0.0, 0.0),
+        _COLOR_RED: (0.0, 100.0),
+        _COLOR_YELLOW: (60.0, 100.0),
+        _COLOR_GREEN: (120.0, 100.0),
+        _COLOR_TURQUOISE: (180.0, 100.0),
+        _COLOR_BLUE: (240.0, 100.0),
+        _COLOR_PURPLE: (300.0, 100.0),
     }
 
     @value_property
@@ -668,8 +672,8 @@ class CeIpFixedColorLight(BaseHmLight):
         if (hs_color := kwargs.get(_HM_ARG_HS_COLOR)) is not None:
             simple_rgb_color = _convert_color(hs_color)
             await self._e_color.send_value(value=simple_rgb_color, collector=collector)
-        elif self.color_name in NO_COLOR:
-            await self._e_color.send_value(value=COLOR_WHITE, collector=collector)
+        elif self.color_name in _NO_COLOR:
+            await self._e_color.send_value(value=_COLOR_WHITE, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
 
@@ -704,7 +708,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
             [
                 item
                 for item in self._e_color_behaviour.value_list
-                if item not in EXCLUDE_FROM_COLOR_BEHAVIOUR
+                if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR
             ]
             if (self._e_color_behaviour and self._e_color_behaviour.value_list)
             else []
@@ -738,7 +742,9 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
         if (effect := kwargs.get(_HM_ARG_EFFECT)) is not None and effect in self._effect_list:
             await self._e_color_behaviour.send_value(value=effect, collector=collector)
         elif self._e_color_behaviour.value not in self._effect_list:
-            await self._e_color_behaviour.send_value(value=COLOR_BEHAVIOUR_ON, collector=collector)
+            await self._e_color_behaviour.send_value(
+                value=_COLOR_BEHAVIOUR_ON, collector=collector
+            )
         elif (color_behaviour := self._e_color_behaviour.value) is not None:
             await self._e_color_behaviour.send_value(value=color_behaviour, collector=collector)
 
@@ -747,13 +753,13 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
 
 def _recalc_unit_timer(time: float) -> tuple[float, int]:
     """Recalculate unit and value of timer."""
-    ramp_time_unit = TIME_UNIT_SECONDS
+    ramp_time_unit = _TIME_UNIT_SECONDS
     if time > 16343:
         time /= 60
-        ramp_time_unit = TIME_UNIT_MINUTES
+        ramp_time_unit = _TIME_UNIT_MINUTES
     if time > 16343:
         time /= 60
-        ramp_time_unit = TIME_UNIT_HOURS
+        ramp_time_unit = _TIME_UNIT_HOURS
     return time, ramp_time_unit
 
 
@@ -767,18 +773,18 @@ def _convert_color(color: tuple[float, float]) -> str:
     hue: int = int(color[0])
     saturation: int = int(color[1])
     if saturation < 5:
-        return COLOR_WHITE
+        return _COLOR_WHITE
     if 30 < hue <= 90:
-        return COLOR_YELLOW
+        return _COLOR_YELLOW
     if 90 < hue <= 150:
-        return COLOR_GREEN
+        return _COLOR_GREEN
     if 150 < hue <= 210:
-        return COLOR_TURQUOISE
+        return _COLOR_TURQUOISE
     if 210 < hue <= 270:
-        return COLOR_BLUE
+        return _COLOR_BLUE
     if 270 < hue <= 330:
-        return COLOR_PURPLE
-    return COLOR_RED
+        return _COLOR_PURPLE
+    return _COLOR_RED
 
 
 def make_ip_dimmer(

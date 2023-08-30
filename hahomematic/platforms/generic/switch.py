@@ -12,7 +12,7 @@ from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import value_property
 
-PARAM_ON_TIME: Final = "ON_TIME"
+_PARAM_ON_TIME: Final = "ON_TIME"
 
 
 class HmSwitch(GenericEntity[bool, bool]):
@@ -48,6 +48,6 @@ class HmSwitch(GenericEntity[bool, bool]):
         await self._client.set_value(
             channel_address=self._attr_channel_address,
             paramset_key=self._attr_paramset_key,
-            parameter=PARAM_ON_TIME,
+            parameter=_PARAM_ON_TIME,
             value=float(on_time),
         )

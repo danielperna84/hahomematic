@@ -13,10 +13,10 @@ from hahomematic import client as hmcl
 from hahomematic.const import HmDataOperationResult, HmDescription
 from hahomematic.support import check_or_create_directory
 
-DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
-PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
-
 _LOGGER = logging.getLogger(__name__)
+
+_DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
+_PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
 
 
 class DeviceExporter:
@@ -73,14 +73,14 @@ class DeviceExporter:
 
         # Save device_descriptions for device to file.
         await self._save(
-            file_dir=f"{self._storage_folder}/{DEVICE_DESCRIPTIONS_DIR}",
+            file_dir=f"{self._storage_folder}/{_DEVICE_DESCRIPTIONS_DIR}",
             filename=filename,
             data=anonymize_device_descriptions,
         )
 
         # Save device_descriptions for device to file.
         await self._save(
-            file_dir=f"{self._storage_folder}/{PARAMSET_DESCRIPTIONS_DIR}",
+            file_dir=f"{self._storage_folder}/{_PARAMSET_DESCRIPTIONS_DIR}",
             filename=filename,
             data=anonymize_paramset_descriptions,
         )

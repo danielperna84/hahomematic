@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 from hahomematic import support as hms
 from hahomematic.const import (
-    BUTTON_ACTIONS,
     CLICK_EVENTS,
     HM_VIRTUAL_REMOTE_TYPES,
     HmDescription,
@@ -26,6 +25,7 @@ from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.support import generate_unique_identifier, is_binary_sensor
 
 _LOGGER = logging.getLogger(__name__)
+_BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
 
 
 def create_entity_and_append_to_device(
@@ -70,7 +70,7 @@ def create_entity_and_append_to_device(
     if p_operations & HmOperations.WRITE:
         if p_type == HmType.ACTION:
             if p_operations == HmOperations.WRITE:
-                if parameter in BUTTON_ACTIONS or device.device_type in HM_VIRTUAL_REMOTE_TYPES:
+                if parameter in _BUTTON_ACTIONS or device.device_type in HM_VIRTUAL_REMOTE_TYPES:
                     entity_t = HmButton
                 else:
                     entity_t = HmAction

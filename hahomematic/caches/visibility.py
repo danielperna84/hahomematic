@@ -10,11 +10,7 @@ from hahomematic import central_unit as hmcu, support as hms
 from hahomematic.const import (
     CLICK_EVENTS,
     DEFAULT_ENCODING,
-    FILE_CUSTOM_UN_IGNORE_PARAMETERS,
     PARAM_CHANNEL_OPERATION_MODE,
-    PARAM_DEVICE_OPERATION_MODE,
-    PARAM_TEMPERATURE_MAXIMUM,
-    PARAM_TEMPERATURE_MINIMUM,
     HmEvent,
     HmParamsetKey,
     HmPlatform,
@@ -24,6 +20,12 @@ from hahomematic.platforms.generic import entity as hmge
 from hahomematic.support import reduce_args
 
 _LOGGER = logging.getLogger(__name__)
+
+_FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
+
+_PARAM_DEVICE_OPERATION_MODE: Final = "DEVICE_OPERATION_MODE"
+_PARAM_TEMPERATURE_MAXIMUM: Final = "TEMPERATURE_MAXIMUM"
+_PARAM_TEMPERATURE_MINIMUM: Final = "TEMPERATURE_MINIMUM"
 
 # Define which additional parameters from MASTER paramset should be created as entity.
 # By default these are also on the _HIDDEN_PARAMETERS, which prevents these entities
@@ -44,21 +46,21 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[dict[str, tuple[tuple[int, ...], tup
     "HmIP-FSI16": ((1,), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-MIO16-PCB": ((13, 14, 15, 16), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIP-MOD-RC8": (tuple(range(1, 9)), (PARAM_CHANNEL_OPERATION_MODE,)),
-    "HmIP-RGBW": ((0,), (PARAM_DEVICE_OPERATION_MODE,)),
+    "HmIP-RGBW": ((0,), (_PARAM_DEVICE_OPERATION_MODE,)),
     "HmIPW-DRBL4": ((1, 5, 9, 13), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIPW-DRI16": (tuple(range(1, 17)), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIPW-DRI32": (tuple(range(1, 33)), (PARAM_CHANNEL_OPERATION_MODE,)),
     "HmIPW-FIO6": (tuple(range(1, 7)), (PARAM_CHANNEL_OPERATION_MODE,)),
-    "ALPHA-IP-RBG": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HM-CC-RT-DN": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HM-CC-VG-1": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HmIP-BWTH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HmIP-HEATING": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HmIP-STH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HmIP-WTH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HmIP-eTRV": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HmIPW-STH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
-    "HmIPW-WTH": ((1,), (PARAM_TEMPERATURE_MAXIMUM, PARAM_TEMPERATURE_MINIMUM)),
+    "ALPHA-IP-RBG": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HM-CC-RT-DN": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HM-CC-VG-1": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-BWTH": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-HEATING": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-STH": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-WTH": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HmIP-eTRV": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HmIPW-STH": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
+    "HmIPW-WTH": ((1,), (_PARAM_TEMPERATURE_MAXIMUM, _PARAM_TEMPERATURE_MINIMUM)),
 }
 
 # Some parameters are marked as INTERNAL in the paramset and not considered by default,
@@ -80,8 +82,8 @@ _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
     HmEvent.UN_REACH,
     HmEvent.UPDATE_PENDING,
     PARAM_CHANNEL_OPERATION_MODE,
-    PARAM_TEMPERATURE_MAXIMUM,
-    PARAM_TEMPERATURE_MINIMUM,
+    _PARAM_TEMPERATURE_MAXIMUM,
+    _PARAM_TEMPERATURE_MINIMUM,
     "ACTIVITY_STATE",
     "DIRECTION",
     "SECTION",
@@ -626,7 +628,7 @@ class ParameterVisibilityCache:
             if not hms.check_or_create_directory(self._storage_folder):
                 return  # pragma: no cover
             if not os.path.exists(
-                os.path.join(self._storage_folder, FILE_CUSTOM_UN_IGNORE_PARAMETERS)
+                os.path.join(self._storage_folder, _FILE_CUSTOM_UN_IGNORE_PARAMETERS)
             ):
                 _LOGGER.debug(
                     "LOAD: No file found in %s",
@@ -638,7 +640,7 @@ class ParameterVisibilityCache:
                 with open(
                     file=os.path.join(
                         self._storage_folder,
-                        FILE_CUSTOM_UN_IGNORE_PARAMETERS,
+                        _FILE_CUSTOM_UN_IGNORE_PARAMETERS,
                     ),
                     encoding=DEFAULT_ENCODING,
                 ) as fptr:

@@ -11,15 +11,12 @@ import voluptuous as vol
 
 from hahomematic import central_unit as hmcu, client as hmcl, support as hms
 from hahomematic.const import (
-    CONFIGURABLE_CHANNEL,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
     EVENT_DEVICE_TYPE,
     EVENT_INTERFACE_ID,
     EVENT_PARAMETER,
     EVENT_VALUE,
-    FIX_UNIT_BY_PARAM,
-    FIX_UNIT_REPLACE,
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     MAX_CACHE_AGE,
@@ -44,6 +41,39 @@ from hahomematic.platforms.support import (
     value_property,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+_CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
+    "KEY_TRANSCEIVER",
+    "MULTI_MODE_INPUT_TRANSMITTER",
+)
+
+_FIX_UNIT_REPLACE: Final[dict[str, str]] = {
+    '"': "",
+    "100%": "%",
+    "% rF": "%",
+    "degree": "°C",
+    "Lux": "lx",
+    "m3": "m³",
+}
+
+_FIX_UNIT_BY_PARAM: Final[dict[str, str]] = {
+    "ACTUAL_TEMPERATURE": "°C",
+    "CURRENT_ILLUMINATION": "lx",
+    "HUMIDITY": "%",
+    "ILLUMINATION": "lx",
+    "LEVEL": "%",
+    "MASS_CONCENTRATION_PM_10_24H_AVERAGE": "µg/m³",
+    "MASS_CONCENTRATION_PM_1_24H_AVERAGE": "µg/m³",
+    "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE": "µg/m³",
+    "OPERATING_VOLTAGE": "V",
+    "RSSI_DEVICE": "dBm",
+    "RSSI_PEER": "dBm",
+    "SUNSHINEDURATION": "min",
+    "WIND_DIRECTION": "°",
+    "WIND_DIRECTION_RANGE": "°",
+}
+
 HM_EVENT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_ADDRESS): str,
@@ -54,8 +84,6 @@ HM_EVENT_DATA_SCHEMA = vol.Schema(
         vol.Optional(EVENT_VALUE): vol.Any(bool, int),
     }
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CallbackEntity(ABC):
@@ -425,7 +453,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def _enabled_by_channel_operation_mode(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
-        if self._channel_type not in CONFIGURABLE_CHANNEL:
+        if self._channel_type not in _CONFIGURABLE_CHANNEL:
             return None
         if self._attr_parameter not in KEY_CHANNEL_OPERATION_MODE_VISIBILITY:
             return None
@@ -435,11 +463,11 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     def _fix_unit(self, raw_unit: str | None) -> str | None:
         """Replace given unit."""
-        if new_unit := FIX_UNIT_BY_PARAM.get(self._attr_parameter):
+        if new_unit := _FIX_UNIT_BY_PARAM.get(self._attr_parameter):
             return new_unit
         if not raw_unit:
             return None
-        for check, fix in FIX_UNIT_REPLACE.items():
+        for check, fix in _FIX_UNIT_REPLACE.items():
             if check in raw_unit:
                 return fix
         return raw_unit
