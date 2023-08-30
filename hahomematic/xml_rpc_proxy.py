@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from enum import IntEnum, StrEnum
 import errno
 import logging
 from ssl import SSLError
@@ -85,6 +86,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             ] in _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION or not self._connection_state.has_issue(  # noqa: E501
                 issuer=self
             ):
+                args = _cleanup_args(*args)
                 _LOGGER.debug("__ASYNC_REQUEST: %s", args)
                 result = await self._async_add_proxy_executor_job(
                     # pylint: disable=protected-access
@@ -129,3 +131,18 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """Stop depending services."""
         if self._proxy_executor:
             self._proxy_executor.shutdown()
+
+
+def _cleanup_args(*args: Any) -> Any:
+    """Cleanup the type of args."""
+    if len(args[1]) == 0:
+        return args
+    new_args: list[Any] = []
+    for arg in args[1]:
+        if isinstance(arg, StrEnum):
+            new_args.append(str(arg))
+        elif isinstance(arg, IntEnum):
+            new_args.append(int(arg))
+        else:
+            new_args.append(arg)
+    return (args[0], tuple(new_args))
