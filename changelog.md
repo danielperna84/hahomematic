@@ -1,6 +1,7 @@
 # Version 2023.8.15 (2023-08-30)
 
 - Reduce visibility of local constants
+- Convert StrEnum and IntEnum in proxy
 
 # Version 2023.8.13 (2023-08-28)
 
