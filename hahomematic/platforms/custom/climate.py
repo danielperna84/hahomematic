@@ -65,12 +65,13 @@ _HMIP_MODE_AWAY: Final = 2
 _PARTY_INIT_DATE: Final = "2000_01_01 00:00"
 _PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
 
-_HM_PRESET_MODE_PREFIX: Final = "week_program_"
 _TEMP_CELSIUS: Final = "°C"
 
 _HM_ARG_TEMPERATURE: Final = "temperature"
 _HM_ARG_HVAC_MODE: Final = "hvac_mode"
 _HM_ARG_PRESET_MODE: Final = "preset_mode"
+
+HM_PRESET_MODE_PREFIX: Final = "week_program_"
 
 
 class HmHvacAction(StrEnum):
@@ -578,7 +579,7 @@ class CeIpThermostat(BaseClimateEntity):
         profiles: dict[HmPresetMode, int] = {}
         if self._e_active_profile.min and self._e_active_profile.max:
             for i in range(self._e_active_profile.min, self._e_active_profile.max + 1):
-                profiles[HmPresetMode(f"{_HM_PRESET_MODE_PREFIX}{i}")] = i
+                profiles[HmPresetMode(f"{HM_PRESET_MODE_PREFIX}{i}")] = i
 
         return profiles
 

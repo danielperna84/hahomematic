@@ -31,7 +31,6 @@ from hahomematic.platforms.support import value_property
 
 # HM constants
 _LOCK_STATE_UNKNOWN: Final = "UNKNOWN"
-_LOCK_STATE_LOCKED: Final = "LOCKED"
 _LOCK_STATE_UNLOCKED: Final = "UNLOCKED"
 
 _LOCK_TARGET_LEVEL_LOCKED: Final = "LOCKED"
@@ -41,6 +40,8 @@ _LOCK_TARGET_LEVEL_OPEN: Final = "OPEN"
 _HM_UNLOCKING: Final = "UP"
 _HM_LOCKING: Final = "DOWN"
 _HM_NO_ERROR: Final = "NO_ERROR"
+
+LOCK_STATE_LOCKED: Final = "LOCKED"
 
 
 class BaseLock(CustomEntity):
@@ -100,7 +101,7 @@ class CeIpLock(BaseLock):
     @value_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._e_lock_state.value == _LOCK_STATE_LOCKED
+        return self._e_lock_state.value == LOCK_STATE_LOCKED
 
     @value_property
     def is_locking(self) -> bool | None:
