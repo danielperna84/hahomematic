@@ -35,9 +35,9 @@ _HM_ARG_ACOUSTIC_ALARM: Final = "acoustic_alarm"
 _HM_ARG_OPTICAL_ALARM: Final = "optical_alarm"
 _HM_ARG_DURATION: Final = "duration"
 
-SMOKE_DETECTOR_COMMAND_OFF: Final = "INTRUSION_ALARM_OFF"
-SMOKE_DETECTOR_COMMAND_ON: Final = "INTRUSION_ALARM"
-SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF: Final = "IDLE_OFF"
+_SMOKE_DETECTOR_COMMAND_OFF: Final = "INTRUSION_ALARM_OFF"
+_SMOKE_DETECTOR_COMMAND_ON: Final = "INTRUSION_ALARM"
+_SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF: Final = "IDLE_OFF"
 
 
 class HmSirenArgs(TypedDict, total=False):
@@ -212,7 +212,7 @@ class CeIpSirenSmoke(BaseSiren):
         if not self._e_smoke_detector_alarm_status.value:
             return False
         return bool(
-            self._e_smoke_detector_alarm_status.value != SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF
+            self._e_smoke_detector_alarm_status.value != _SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF
         )
 
     @value_property
@@ -237,13 +237,13 @@ class CeIpSirenSmoke(BaseSiren):
     ) -> None:
         """Turn the device on."""
         await self._e_smoke_detector_command.send_value(
-            value=SMOKE_DETECTOR_COMMAND_ON, collector=collector
+            value=_SMOKE_DETECTOR_COMMAND_ON, collector=collector
         )
 
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
         await self._e_smoke_detector_command.send_value(
-            value=SMOKE_DETECTOR_COMMAND_OFF, collector=collector
+            value=_SMOKE_DETECTOR_COMMAND_OFF, collector=collector
         )
 
 

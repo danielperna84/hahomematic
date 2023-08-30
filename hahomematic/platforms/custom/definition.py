@@ -74,6 +74,8 @@ from hahomematic.platforms.custom.const import (
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.support import generate_unique_identifier
 
+_LOGGER = logging.getLogger(__name__)
+
 ED_DEFAULT_ENTITIES: Final = "default_entities"
 ED_INCLUDE_DEFAULT_ENTITIES: Final = "include_default_entities"
 ED_DEVICE_GROUP: Final = "device_group"
@@ -89,8 +91,6 @@ DEFAULT_INCLUDE_DEFAULT_ENTITIES: Final = True
 
 ALL_DEVICES: list[dict[str, CustomConfig | tuple[CustomConfig, ...]]] = []
 ALL_BLACKLISTED_DEVICES: list[tuple[str, ...]] = []
-
-_LOGGER = logging.getLogger(__name__)
 
 SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
     {vol.Required(vol.Any(int, tuple[int, ...])): vol.Schema((vol.Optional(str),))}

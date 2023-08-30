@@ -24,13 +24,7 @@ from hahomematic.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DEFAULT_ENCODING,
-    MAX_JSON_SESSION_AGE,
     PATH_JSON_RPC,
-    REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
-    REGA_SCRIPT_GET_SERIAL,
-    REGA_SCRIPT_PATH,
-    REGA_SCRIPT_SET_SYSTEM_VARIABLE,
-    REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER,
     HmSysvarType,
 )
 from hahomematic.exceptions import AuthFailure, ClientException
@@ -41,6 +35,10 @@ from hahomematic.support import (
     parse_sys_var,
     reduce_args,
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+_MAX_JSON_SESSION_AGE: Final = 90
 
 _HASEXTMARKER: Final = "hasExtMarker"
 _ID: Final = "id"
@@ -59,7 +57,11 @@ _UNIT: Final = "unit"
 _VALUE: Final = "value"
 _VALUE_LIST: Final = "valueList"
 
-_LOGGER = logging.getLogger(__name__)
+_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
+_REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
+_REGA_SCRIPT_PATH: Final = "rega_scripts"
+_REGA_SCRIPT_SET_SYSTEM_VARIABLE: Final = "set_system_variable.fn"
+_REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marker.fn"
 
 
 class JsonRpcAioHttpClient:
@@ -120,7 +122,7 @@ class JsonRpcAioHttpClient:
 
         return await self._do_login()
 
-    def _updated_within_seconds(self, max_age_seconds: int = MAX_JSON_SESSION_AGE) -> bool:
+    def _updated_within_seconds(self, max_age_seconds: int = _MAX_JSON_SESSION_AGE) -> bool:
         """Check if session id has been updated within 90 seconds."""
         if self._last_session_id_refresh is None:
             return False
@@ -234,7 +236,7 @@ class JsonRpcAioHttpClient:
         if script_name in self._script_cache:
             return self._script_cache[script_name]
 
-        script_file = os.path.join(Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name)
+        script_file = os.path.join(Path(__file__).resolve().parent, _REGA_SCRIPT_PATH, script_name)
         if script := Path(script_file).read_text(encoding=DEFAULT_ENCODING):
             self._script_cache[script_name] = script
             return script
@@ -401,7 +403,7 @@ class JsonRpcAioHttpClient:
                     )
                     return False
                 response = await self._post_script(
-                    script_name=REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
+                    script_name=_REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
                 )
             else:
                 response = await self._post("SysVar.setFloat", params)
@@ -532,7 +534,9 @@ class JsonRpcAioHttpClient:
         ext_markers: dict[str, Any] = {}
 
         try:
-            response = await self._post_script(script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER)
+            response = await self._post_script(
+                script_name=_REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER
+            )
 
             _LOGGER.debug("GET_SYSTEM_VARIABLES_EXT_MARKERS: Getting system variables ext markers")
             if json_result := response[_P_RESULT]:
@@ -637,7 +641,7 @@ class JsonRpcAioHttpClient:
         all_device_data: dict[str, dict[str, dict[str, Any]]] = {}
 
         try:
-            response = await self._post_script(script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA)
+            response = await self._post_script(script_name=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA)
 
             _LOGGER.debug("GET_ALL_DEVICE_DATA: Getting all device data")
             if json_result := response[_P_RESULT]:
@@ -723,7 +727,7 @@ class JsonRpcAioHttpClient:
         serial = "unknown"
 
         try:
-            response = await self._post_script(script_name=REGA_SCRIPT_GET_SERIAL)
+            response = await self._post_script(script_name=_REGA_SCRIPT_GET_SERIAL)
 
             _LOGGER.debug("GET_SERIAL: Getting the backend serial")
             if json_result := response[_P_RESULT]:

@@ -47,64 +47,18 @@ EVENT_SECONDS_SINCE_LAST_EVENT: Final = "seconds_since_last_event"
 EVENT_TYPE: Final = "type"
 EVENT_VALUE: Final = "value"
 
-FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 FILE_DEVICES: Final = "homematic_devices.json"
 FILE_PARAMSETS: Final = "homematic_paramsets.json"
 
 HM_ARG_ON_TIME: Final = "on_time"
-HM_ARG_VALUE: Final = "value"
 HM_ARG_ON: Final = "on"
 HM_ARG_OFF: Final = "off"
 
 MAX_CACHE_AGE: Final = 60
-MAX_JSON_SESSION_AGE: Final = 90
 
 PARAM_CHANNEL_OPERATION_MODE: Final = "CHANNEL_OPERATION_MODE"
-PARAM_DEVICE_OPERATION_MODE: Final = "DEVICE_OPERATION_MODE"
-PARAM_TEMPERATURE_MAXIMUM: Final = "TEMPERATURE_MAXIMUM"
-PARAM_TEMPERATURE_MINIMUM: Final = "TEMPERATURE_MINIMUM"
-
-REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
-REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
-REGA_SCRIPT_PATH: Final = "rega_scripts"
-REGA_SCRIPT_SET_SYSTEM_VARIABLE: Final = "set_system_variable.fn"
-REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marker.fn"
-
-
-CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
-    "KEY_TRANSCEIVER",
-    "MULTI_MODE_INPUT_TRANSMITTER",
-)
 
 DEVICE_ERROR_EVENTS: Final[tuple[str, ...]] = ("ERROR", "SENSOR_ERROR")
-
-BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
-
-FIX_UNIT_REPLACE: Final[dict[str, str]] = {
-    '"': "",
-    "100%": "%",
-    "% rF": "%",
-    "degree": "°C",
-    "Lux": "lx",
-    "m3": "m³",
-}
-
-FIX_UNIT_BY_PARAM: Final[dict[str, str]] = {
-    "ACTUAL_TEMPERATURE": "°C",
-    "CURRENT_ILLUMINATION": "lx",
-    "HUMIDITY": "%",
-    "ILLUMINATION": "lx",
-    "LEVEL": "%",
-    "MASS_CONCENTRATION_PM_10_24H_AVERAGE": "µg/m³",
-    "MASS_CONCENTRATION_PM_1_24H_AVERAGE": "µg/m³",
-    "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE": "µg/m³",
-    "OPERATING_VOLTAGE": "V",
-    "RSSI_DEVICE": "dBm",
-    "RSSI_PEER": "dBm",
-    "SUNSHINEDURATION": "min",
-    "WIND_DIRECTION": "°",
-    "WIND_DIRECTION_RANGE": "°",
-}
 
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
@@ -120,13 +74,6 @@ HM_VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
     "HMW-RCV-50",
     "HmIP-RCV-1",
 )
-
-# dict with binary_sensor relevant value lists and the corresponding TRUE value
-BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[dict[tuple[str, ...], str]] = {
-    ("CLOSED", "OPEN"): "OPEN",
-    ("DRY", "RAIN"): "RAIN",
-    ("STABLE", "NOT_STABLE"): "NOT_STABLE",
-}
 
 
 class HmBackend(StrEnum):

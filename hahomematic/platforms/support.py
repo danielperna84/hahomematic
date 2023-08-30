@@ -4,11 +4,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, Final, Generic, TypeVar
 
 from hahomematic import central_unit as hmcu, support as hms
 from hahomematic.const import (
-    BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST,
     HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,
     PROGRAM_ADDRESS,
@@ -25,6 +24,13 @@ G = TypeVar("G")  # think about variance
 S = TypeVar("S")
 
 _LOGGER = logging.getLogger(__name__)
+
+# dict with binary_sensor relevant value lists and the corresponding TRUE value
+_BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[dict[tuple[str, ...], str]] = {
+    ("CLOSED", "OPEN"): "OPEN",
+    ("DRY", "RAIN"): "RAIN",
+    ("STABLE", "NOT_STABLE"): "NOT_STABLE",
+}
 
 
 # pylint: disable=invalid-name
@@ -441,7 +447,7 @@ def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     if parameter_data[HmDescription.TYPE] == HmType.BOOL:
         return True
     if value_list := parameter_data.get(HmDescription.VALUE_LIST):
-        return tuple(value_list) in BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
+        return tuple(value_list) in _BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
     return False
 
 
@@ -449,7 +455,7 @@ def _get_binary_sensor_value(value: int, value_list: tuple[str, ...]) -> bool:
     """Return, the value of a binary_sensor."""
     try:
         str_value = value_list[value]
-        if true_value := BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST.get(value_list):
+        if true_value := _BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST.get(value_list):
             return str_value == true_value
     except IndexError:
         pass

@@ -17,30 +17,31 @@ from hahomematic.support import reduce_args
 
 _LOGGER = logging.getLogger(__name__)
 
-P = ParamSpec("P")
-R = TypeVar("R")
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
 def callback_system_event(system_event: HmSystemEvent) -> Callable:
     """Check if callback_system is set and call it AFTER original function."""
 
     def decorator_callback_system_event(
-        func: Callable[P, R | Awaitable[R]]
-    ) -> Callable[P, R | Awaitable[R]]:
+        func: Callable[_P, _R | Awaitable[_R]]
+    ) -> Callable[_P, _R | Awaitable[_R]]:
         """Decorate callback system events."""
 
         @wraps(func)
-        async def async_wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
+        async def async_wrapper_callback_system_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap async callback system events."""
-            return_value = cast(R, await func(*args, **kwargs))  # type: ignore[misc]
+            return_value = cast(_R, await func(*args, **kwargs))  # type: ignore[misc]
             _exec_callback_system_event(*args, **kwargs)
             return return_value
 
         @wraps(func)
-        def wrapper_callback_system_event(*args: P.args, **kwargs: P.kwargs) -> R:
+        def wrapper_callback_system_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap callback system events."""
-            return_value = cast(R, func(*args, **kwargs))
+            return_value = cast(_R, func(*args, **kwargs))
             _exec_callback_system_event(*args, **kwargs)
             return return_value
 
@@ -71,11 +72,11 @@ def callback_system_event(system_event: HmSystemEvent) -> Callable:
     return decorator_callback_system_event
 
 
-def callback_event(func: Callable[P, R]) -> Callable[P, R]:
+def callback_event(func: Callable[_P, _R]) -> Callable[_P, _R]:
     """Check if callback_event is set and call it AFTER original function."""
 
     @wraps(func)
-    def wrapper_callback_event(*args: P.args, **kwargs: P.kwargs) -> R:
+    def wrapper_callback_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         """Wrap callback events."""
         return_value = func(*args, **kwargs)
         _exec_callback_entity_event(*args, **kwargs)

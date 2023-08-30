@@ -18,7 +18,8 @@ from hahomematic.platforms.hub.text import HmSysvarText
 from hahomematic.support import ProgramData, SystemVariableData
 
 _LOGGER = logging.getLogger(__name__)
-EXCLUDED: Final = [
+
+_EXCLUDED: Final = [
     "OldVal",
     "pcCCUID",
 ]
@@ -197,4 +198,4 @@ def _is_excluded(variable: str, excludes: list[str]) -> bool:
 
 def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:
     """Clean variables by removing excluded."""
-    return [sv for sv in variables if not _is_excluded(sv.name, EXCLUDED)]
+    return [sv for sv in variables if not _is_excluded(sv.name, _EXCLUDED)]

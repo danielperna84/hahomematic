@@ -9,9 +9,9 @@ import pytest
 
 from hahomematic.const import HmEntityUsage
 from hahomematic.platforms.custom.climate import (
-    HMIP_MODE_AUTO,
-    HMIP_MODE_AWAY,
-    HMIP_MODE_MANU,
+    _HMIP_MODE_AUTO,
+    _HMIP_MODE_AWAY,
+    _HMIP_MODE_MANU,
     CeIpThermostat,
     CeRfThermostat,
     CeSimpleRfThermostat,
@@ -131,7 +131,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000050:4", paramset_key="VALUES", parameter="MANU_MODE", value=12.0
     )
-    central.event(const.INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", HMIP_MODE_MANU)
+    central.event(const.INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", _HMIP_MODE_MANU)
     assert climate.hvac_mode == HmHvacMode.HEAT
 
     await climate.set_hvac_mode(HmHvacMode.OFF)
@@ -251,7 +251,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         value={"CONTROL_MODE": 1, "SET_POINT_TEMPERATURE": 5.0},
     )
-    central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", HMIP_MODE_MANU)
+    central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", _HMIP_MODE_MANU)
     assert climate.hvac_mode == HmHvacMode.HEAT
 
     assert climate.preset_mode == HmPresetMode.NONE
@@ -272,7 +272,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         value={"BOOST_MODE": False, "CONTROL_MODE": 0},
     )
-    central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", HMIP_MODE_AUTO)
+    central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", _HMIP_MODE_AUTO)
     central.event(const.INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)
     assert climate.hvac_mode == HmHvacMode.AUTO
     assert climate.preset_modes == [
@@ -289,10 +289,10 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1769958:1", paramset_key="VALUES", parameter="BOOST_MODE", value=False
     )
-    central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", HMIP_MODE_AWAY)
+    central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", _HMIP_MODE_AWAY)
     assert climate.preset_mode == HmPresetMode.AWAY
 
-    central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", HMIP_MODE_AUTO)
+    central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", _HMIP_MODE_AUTO)
     await climate.set_preset_mode(HmPresetMode.WEEK_PROGRAM_1)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1769958:1", paramset_key="VALUES", parameter="ACTIVE_PROFILE", value=1
