@@ -10,7 +10,7 @@ from enum import StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import HmParamsetKey, HmPlatform
 from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
@@ -524,7 +524,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Enable the away mode by calendar on thermostat."""
         await self._client.put_paramset(
             address=self._attr_channel_address,
-            paramset_key="VALUES",
+            paramset_key=HmParamsetKey.VALUES,
             value={
                 "CONTROL_MODE": _HMIP_MODE_AWAY,
                 "PARTY_TIME_END": end.strftime(_PARTY_DATE_FORMAT),
@@ -534,7 +534,7 @@ class CeIpThermostat(BaseClimateEntity):
 
         await self._client.put_paramset(
             address=self._attr_channel_address,
-            paramset_key="VALUES",
+            paramset_key=HmParamsetKey.VALUES,
             value={
                 "SET_POINT_TEMPERATURE": away_temperature,
             },
@@ -552,7 +552,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Disable the away mode on thermostat."""
         await self._client.put_paramset(
             address=self._attr_channel_address,
-            paramset_key="VALUES",
+            paramset_key=HmParamsetKey.VALUES,
             value={
                 "CONTROL_MODE": _HMIP_MODE_AWAY,
                 "PARTY_TIME_START": _PARTY_INIT_DATE,

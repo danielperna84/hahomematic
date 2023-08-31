@@ -113,6 +113,8 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             raise NoConnection(message) from ose
         except xmlrpc.client.Fault as fex:
             raise ClientException(fex) from fex
+        except TypeError as terr:
+            raise ClientException(terr) from terr
         except xmlrpc.client.ProtocolError as per:
             if not self._connection_state.has_issue(issuer=self):
                 if per.errmsg == "Unauthorized":
@@ -137,12 +139,30 @@ def _cleanup_args(*args: Any) -> Any:
     """Cleanup the type of args."""
     if len(args[1]) == 0:
         return args
-    new_args: list[Any] = []
-    for arg in args[1]:
-        if isinstance(arg, StrEnum):
-            new_args.append(str(arg))
-        elif isinstance(arg, IntEnum):
-            new_args.append(int(arg))
-        else:
-            new_args.append(arg)
-    return (args[0], tuple(new_args))
+    if len(args) == 2:
+        new_args: list[Any] = []
+        for data in args[1]:
+            if isinstance(data, dict):
+                new_args.append(_cleanup_paramset(paramset=data))
+            else:
+                new_args.append(_cleanup_parameter(value=data))
+        return (args[0], tuple(new_args))
+    _LOGGER.error("XmlRpcProxy command: Too many arguments")
+    return args
+
+
+def _cleanup_parameter(value: Any) -> Any:
+    """Cleanup a single parameter."""
+    if isinstance(value, StrEnum):
+        return str(value)
+    if isinstance(value, IntEnum):
+        return int(value)
+    return value
+
+
+def _cleanup_paramset(paramset: dict[str, Any]) -> dict[str, Any]:
+    """Cleanup a single parameter."""
+    new_paramset: dict[str, Any] = {}
+    for name, value in paramset.items():
+        new_paramset[name] = _cleanup_parameter(value=value)
+    return new_paramset
