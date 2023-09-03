@@ -106,12 +106,15 @@ class CeCover(CustomEntity):
 
     @bind_collector
     async def set_position(
-        self, position: float, collector: CallParameterCollector | None = None
+        self,
+        position: float | None = None,
+        tilt_position: float | None = None,
+        collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the cover to a specific position."""
         if not self.is_state_change(position=position):
             return
-        level = min(100.0, max(0.0, position)) / 100.0
+        level = min(100.0, max(0.0, position)) / 100.0 if position is not None else None
         await self._set_level(level=level, collector=collector)
 
     async def _set_level(
@@ -244,27 +247,19 @@ class CeBlind(CeCover):
         return int(self._channel_tilt_level * 100)
 
     @bind_collector
-    async def set_tilt_position(
-        self, tilt_position: float, collector: CallParameterCollector | None = None
-    ) -> None:
-        """Move the blind to a specific tilt position."""
-        if not self.is_state_change(tilt_position=tilt_position):
-            return
-        tilt_level = min(100.0, max(0.0, tilt_position)) / 100.0
-        await self._set_level(tilt_level=tilt_level, collector=collector)
-
-    @bind_collector
-    async def set_combined_position(
+    async def set_position(
         self,
-        position: float,
-        tilt_position: float,
+        position: float | None = None,
+        tilt_position: float | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the blind to a specific position."""
         if not self.is_state_change(position=position, tilt_position=tilt_position):
             return
-        level = min(100.0, max(0.0, position)) / 100.0
-        tilt_level = min(100.0, max(0.0, tilt_position)) / 100.0
+        level = min(100.0, max(0.0, position)) / 100.0 if position is not None else None
+        tilt_level = (
+            min(100.0, max(0.0, tilt_position)) / 100.0 if tilt_position is not None else None
+        )
         await self._set_level(level=level, tilt_level=tilt_level, collector=collector)
 
     async def _set_level(
@@ -428,9 +423,14 @@ class CeGarage(CustomEntity):
 
     @bind_collector
     async def set_position(
-        self, position: float, collector: CallParameterCollector | None = None
+        self,
+        position: float | None = None,
+        tilt_position: float | None = None,
+        collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the garage door to a specific position."""
+        if position is None:
+            return
         if 50.0 < position <= 100.0:
             await self.open(collector=collector)
         if 10.0 < position <= 50.0:
