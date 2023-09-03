@@ -46,7 +46,7 @@ async def test_cecover(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover._channel_level == _HM_CLOSED
     assert cover.is_closed is True
-    await cover.set_position(81)
+    await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU8537918:4",
         paramset_key="VALUES",
@@ -96,7 +96,7 @@ async def test_cecover(factory: helper.Factory) -> None:
 
     central.event(const.INTERFACE_ID, "VCU8537918:3", "LEVEL", 0.4)
     call_count = len(mock_client.method_calls)
-    await cover.set_position(40)
+    await cover.set_position(position=40)
     assert call_count == len(mock_client.method_calls)
 
 
@@ -111,7 +111,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
     assert cover._channel_level == _HM_CLOSED
     assert cover.channel_operation_mode == "SHUTTER"
     assert cover.is_closed is True
-    await cover.set_position(81)
+    await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU7807849:2",
         paramset_key="VALUES",
@@ -162,7 +162,7 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover._channel_level == _HM_WD_CLOSED
     assert cover.is_closed is True
-    await cover.set_position(81)
+    await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000350:1",
         paramset_key="VALUES",
@@ -191,12 +191,12 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
     assert cover._channel_level == _HM_WD_CLOSED
     assert cover.is_closed is True
 
-    await cover.set_position(1)
+    await cover.set_position(position=1)
     assert cover.current_position == 1
     assert cover._channel_level == _HM_CLOSED
     assert cover.is_closed is False
 
-    await cover.set_position(0.0)
+    await cover.set_position(position=0.0)
     assert cover.current_position == 0
     assert cover._channel_level == _HM_WD_CLOSED
     assert cover.is_closed is True
@@ -211,7 +211,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
 
-    await cover.set_position(81)
+    await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
@@ -255,7 +255,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover.current_tilt_position == 100
 
-    await cover.set_tilt_position(45)
+    await cover.set_position(tilt_position=45)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
@@ -277,7 +277,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
 
-    await cover.set_combined_position(position=10, tilt_position=20)
+    await cover.set_position(position=10, tilt_position=20)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
@@ -320,7 +320,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
 
     central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.4)
     call_count = len(mock_client.method_calls)
-    await cover.set_tilt_position(40)
+    await cover.set_position(tilt_position=40)
     assert call_count == len(mock_client.method_calls)
 
 
@@ -333,7 +333,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
 
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
-    await cover.set_position(81)
+    await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
@@ -379,7 +379,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover.current_tilt_position == 100
 
-    await cover.set_tilt_position(45)
+    await cover.set_position(tilt_position=45)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
@@ -402,7 +402,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
 
-    await cover.set_combined_position(position=10, tilt_position=20)
+    await cover.set_position(position=10, tilt_position=20)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
@@ -439,7 +439,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_position is None
-    await cover.set_position(81)
+    await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU3574044:1",
         paramset_key="VALUES",
@@ -458,7 +458,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
     central.event(const.INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 0)
     assert cover.current_position == 0
     assert cover.is_closed is True
-    await cover.set_position(11)
+    await cover.set_position(position=11)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU3574044:1",
         paramset_key="VALUES",
@@ -468,7 +468,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
     central.event(const.INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 2)
     assert cover.current_position == 10
 
-    await cover.set_position(5)
+    await cover.set_position(position=5)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU3574044:1",
         paramset_key="VALUES",
@@ -532,7 +532,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
     assert cover.usage == HmEntityUsage.CE_PRIMARY
 
     assert cover.current_position is None
-    await cover.set_position(81)
+    await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU6166407:1",
         paramset_key="VALUES",
@@ -551,7 +551,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
     central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 0)
     assert cover.current_position == 0
     assert cover.is_closed is True
-    await cover.set_position(11)
+    await cover.set_position(position=11)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU6166407:1",
         paramset_key="VALUES",
@@ -561,7 +561,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
     central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 2)
     assert cover.current_position == 10
 
-    await cover.set_position(5)
+    await cover.set_position(position=5)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU6166407:1",
         paramset_key="VALUES",

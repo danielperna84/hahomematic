@@ -1,3 +1,7 @@
+# Version 2023.9.0 (2023-09-03)
+
+- Refactor cover api
+
 # Version 2023.8.14 (2023-08-30)
 
 - Reduce visibility of local constants
