@@ -114,7 +114,7 @@ async def test_central_full(central_unit_full) -> None:
         fptr.write(orjson.dumps(addresses, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS))
 
     assert usage_types[HmEntityUsage.NO_CREATE] == 3056
-    assert usage_types[HmEntityUsage.CE_PRIMARY] == 186
+    assert usage_types[HmEntityUsage.CE_PRIMARY] == 187
     assert usage_types[HmEntityUsage.ENTITY] == 3303
     assert usage_types[HmEntityUsage.CE_VISIBLE] == 98
     assert usage_types[HmEntityUsage.CE_SECONDARY] == 148
