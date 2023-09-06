@@ -30,6 +30,10 @@ _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION: Final[tuple[str, ...]] = (
     "ping",
 )
 
+_SSL_ERROR_CODES: Final[dict[int, str]] = {
+    errno.ENOEXEC: "EOF occurred in violation of protocol",
+}
+
 _NO_CONNECTION_ERROR_CODES: Final[dict[int, str]] = {
     errno.ECONNREFUSED: "Connection refused",
     errno.ENETUNREACH: "Network is unreachable",
@@ -99,7 +103,10 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             raise NoConnection(f"No connection to {self.interface_id}")
         except SSLError as sslerr:
             message = f"SSLError on {self.interface_id}: {reduce_args(args=sslerr.args)}"
-            _LOGGER.error(message)
+            if sslerr.args[0] in _SSL_ERROR_CODES:
+                _LOGGER.debug(message)
+            else:
+                _LOGGER.error(message)
             raise NoConnection(message) from sslerr
         except OSError as ose:
             message = f"OSError on {self.interface_id}: {reduce_args(args=ose.args)}"

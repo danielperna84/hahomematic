@@ -510,7 +510,7 @@ class Client(ABC):
                 paramset_description=parameter_data,
             )
         except BaseHomematicException as hhe:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "FETCH_PARAMSET_DESCRIPTION failed: "
                 "%s [%s] Unable to get paramset %s for channel_address %s",
                 hhe.name,
