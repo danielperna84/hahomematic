@@ -1,3 +1,7 @@
+# Version 2023.9.1 (2023-09-06)
+
+- Re add channel 7 for HmIPW-WRC6
+
 # Version 2023.9.0 (2023-09-03)
 
 - Refactor cover api

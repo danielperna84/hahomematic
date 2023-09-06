@@ -1025,7 +1025,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         ),
     ),
     "HmIPW-WRC6": CustomConfig(
-        func=make_ip_simple_fixed_color_light_wired, channels=(7, 8, 9, 10, 11, 12)
+        func=make_ip_simple_fixed_color_light_wired, channels=(7, 8, 9, 10, 11, 12, 13)
     ),
     "OLIGO.smart.iq.HM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
 }

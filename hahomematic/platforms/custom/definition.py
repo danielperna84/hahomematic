@@ -219,7 +219,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
         },
         HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED: {
             ED_DEVICE_GROUP: {
-                ED_PRIMARY_CHANNEL: 1,
+                ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
                     FIELD_COLOR: "COLOR",
                     FIELD_LEVEL: "LEVEL",
