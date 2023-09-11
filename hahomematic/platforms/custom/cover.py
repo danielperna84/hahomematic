@@ -623,6 +623,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HMW-LC-Bl1": CustomConfig(func=make_rf_cover, channels=(3,)),
     "HmIP-BBL": CustomConfig(func=make_ip_blind, channels=(3,)),
     "HmIP-BROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
+    "HmIP-BROLL-2": CustomConfig(func=make_ip_cover, channels=(3,)),
     "HmIP-DRBLI4": CustomConfig(
         func=make_ip_blind,
         channels=(9, 13, 17, 21),
