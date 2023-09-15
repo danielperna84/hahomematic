@@ -11,17 +11,17 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import HmEntityDefinition
 from hahomematic.platforms.custom.support import ExtendedConfig
+from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.support import (
     EntityNameData,
     check_channel_is_the_only_primary_channel,
     get_custom_entity_name,
-    value_property,
 )
 from hahomematic.support import get_channel_address
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 _EntityT = TypeVar("_EntityT", bound=hmge.GenericEntity)
 
 

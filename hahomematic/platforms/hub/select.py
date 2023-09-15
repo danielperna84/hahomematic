@@ -8,10 +8,10 @@ from __future__ import annotations
 import logging
 
 from hahomematic.const import HmPlatform
+from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
-from hahomematic.platforms.support import value_property
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 
 
 class HmSysvarSelect(GenericSystemVariable):

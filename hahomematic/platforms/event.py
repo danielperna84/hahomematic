@@ -18,15 +18,15 @@ from hahomematic.const import (
     HmPlatform,
 )
 from hahomematic.platforms import device as hmd
+from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.entity import BaseParameterEntity
 from hahomematic.platforms.support import (
     EntityNameData,
-    config_property,
     generate_unique_identifier,
     get_event_name,
 )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 
 
 class GenericEvent(BaseParameterEntity[Any, Any]):

@@ -17,7 +17,7 @@ from hahomematic.platforms.hub.switch import HmSysvarSwitch
 from hahomematic.platforms.hub.text import HmSysvarText
 from hahomematic.support import ProgramData, SystemVariableData
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 
 _EXCLUDED: Final = [
     "OldVal",

@@ -10,7 +10,7 @@ import logging
 from hahomematic.const import HmPlatform
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 
 
 class HmSysvarNumber(GenericSystemVariable):

@@ -11,7 +11,6 @@ import logging
 from typing import Any, Final
 
 from hahomematic.const import HmParamsetKey, HmPlatform
-from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -37,16 +36,16 @@ from hahomematic.platforms.custom.const import (
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.entity import CallParameterCollector
+from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
-from hahomematic.platforms.support import config_property, value_property
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 
 _CLOSED_LEVEL: Final = 0.0
 

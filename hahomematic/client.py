@@ -25,6 +25,7 @@ from hahomematic.const import (
     HmProductGroup,
     HmProxyInitState,
 )
+from hahomematic.decorators import measure_execution_time
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
@@ -34,12 +35,11 @@ from hahomematic.support import (
     build_headers,
     build_xml_rpc_uri,
     get_channel_no,
-    measure_execution_time,
     reduce_args,
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.client")
 
 _ADDRESS: Final = "address"
 _CHANNELS: Final = "channels"

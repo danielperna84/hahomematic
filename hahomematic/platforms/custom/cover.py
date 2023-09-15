@@ -9,7 +9,6 @@ import logging
 from typing import Any, Final
 
 from hahomematic.const import HmEntityUsage, HmPlatform
-from hahomematic.decorators import bind_collector
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -29,14 +28,14 @@ from hahomematic.platforms.custom.const import (
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.entity import CallParameterCollector
+from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.platforms.support import value_property
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 
 _HM_ARG_POSITION: Final = "position"
 _HM_ARG_TILT_POSITION: Final = "tilt_position"

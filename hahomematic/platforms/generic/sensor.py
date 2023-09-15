@@ -9,10 +9,10 @@ import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform
+from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
-from hahomematic.platforms.support import value_property
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 
 
 class HmSensor(GenericEntity[Any, None]):

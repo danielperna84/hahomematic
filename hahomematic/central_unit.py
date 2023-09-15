@@ -43,7 +43,7 @@ from hahomematic.const import (
     HmProxyInitState,
     HmSystemEvent,
 )
-from hahomematic.decorators import callback_event, callback_system_event
+from hahomematic.decorators import callback_event, callback_system_event, measure_execution_time
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
@@ -67,12 +67,12 @@ from hahomematic.support import (
     check_or_create_directory,
     check_password,
     get_device_address,
-    measure_execution_time,
     reduce_args,
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.central")
+_LOGGER_SERVER = logging.getLogger("hahomematic.server")
 
 _R = TypeVar("_R")
 _T = TypeVar("_T")
@@ -249,7 +249,7 @@ class CentralUnit:
     async def start(self) -> None:
         """Start processing of the central unit."""
         if self._started:
-            _LOGGER.debug("START_: Cental %s already started", self._attr_name)
+            _LOGGER.debug("START: Cental %s already started", self._attr_name)
             return
         await self.parameter_visibility.load()
         if self.config.start_direct:
@@ -423,7 +423,7 @@ class CentralUnit:
         """De-init clients."""
         for name, client in self._clients.items():
             if await client.proxy_de_init():
-                _LOGGER.debug("STOP: Proxy de-initialized: %s", name)
+                _LOGGER.debug("DE_INIT_CLIENTS: Proxy de-initialized: %s", name)
 
     async def _init_hub(self) -> None:
         """Init the hub."""
@@ -790,7 +790,7 @@ class CentralUnit:
                     callback(value)
             except RuntimeError as rte:  # pragma: no cover
                 _LOGGER.debug(
-                    "event: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
+                    "EVENT: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
                     reduce_args(args=rte.args),
                     interface_id,
                     channel_address,
@@ -808,9 +808,11 @@ class CentralUnit:
     @callback_system_event(system_event=HmSystemEvent.LIST_DEVICES)
     def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
-        _LOGGER.debug("list_devices: interface_id = %s", interface_id)
-
-        return self.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
+        result = self.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
+        _LOGGER_SERVER.debug(
+            "LIST_DEVICES: interface_id = %s, channel_count = %i", interface_id, len(result)
+        )
+        return result
 
     def add_entity(self, entity: BaseEntity) -> None:
         """Add entity to central collections."""
@@ -838,7 +840,7 @@ class CentralUnit:
         """Remove device to central collections."""
         if device.device_address not in self._devices:
             _LOGGER.debug(
-                "remove_device: device %s not registered in central",
+                "REMOVE_DEVICE: device %s not registered in central",
                 device.device_address,
             )
             return
