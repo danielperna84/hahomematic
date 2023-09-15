@@ -24,7 +24,7 @@ from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.support import generate_unique_identifier, is_binary_sensor
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 _BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
 
 
@@ -43,7 +43,7 @@ def create_entity_and_append_to_device(
         parameter=parameter,
     ):
         _LOGGER.debug(
-            "create_entity_and_append_to_device: Ignoring parameter: %s [%s]",
+            "CREATE_ENTITY_AND_APPEND_TO_DEVICE: Ignoring parameter: %s [%s]",
             parameter,
             channel_address,
         )
@@ -54,12 +54,12 @@ def create_entity_and_append_to_device(
     )
     if device.central.has_entity(unique_identifier=unique_identifier):
         _LOGGER.debug(
-            "create_entity_and_append_to_device: Skipping %s (already exists)",
+            "CREATE_ENTITY_AND_APPEND_TO_DEVICE: Skipping %s (already exists)",
             unique_identifier,
         )
         return
     _LOGGER.debug(
-        "create_entity_and_append_to_device: Creating entity for %s, %s, %s",
+        "CREATE_ENTITY_AND_APPEND_TO_DEVICE: Creating entity for %s, %s, %s",
         channel_address,
         parameter,
         device.interface_id,
@@ -108,7 +108,7 @@ def create_entity_and_append_to_device(
             parameter_data=parameter_data,
         )
         _LOGGER.debug(
-            "create_entity_and_append_to_device: %s: %s %s",
+            "CREATE_ENTITY_AND_APPEND_TO_DEVICE: %s: %s %s",
             entity.platform,
             channel_address,
             parameter,

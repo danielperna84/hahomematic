@@ -42,7 +42,7 @@ from hahomematic.platforms.support import (
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import updated_within_seconds
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.platform")
 
 
 class HmDevice(PayloadMixin):

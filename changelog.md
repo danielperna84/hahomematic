@@ -1,3 +1,8 @@
+# Version 2023.9.2 (2023-09-15)
+
+- Cleanup logger
+- Move bind_collector to platforms
+
 # Version 2023.9.1 (2023-09-06)
 
 - Re add channel 7 for HmIPW-WRC6

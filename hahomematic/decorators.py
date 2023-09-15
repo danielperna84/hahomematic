@@ -5,17 +5,15 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
-from inspect import getfullargspec
 import logging
 from typing import Any, ParamSpec, TypeVar, cast
 
 from hahomematic import client as hmcl
 from hahomematic.const import HmSystemEvent
 from hahomematic.exceptions import HaHomematicException
-from hahomematic.platforms import entity as hme
 from hahomematic.support import reduce_args
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.central")
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -99,28 +97,3 @@ def callback_event(func: Callable[_P, _R]) -> Callable[_P, _R]:
             ) from err
 
     return wrapper_callback_event
-
-
-def bind_collector(func: _CallableT) -> _CallableT:
-    """Decorate function to automatically add collector if not set."""
-    argument_name = "collector"
-    argument_index = getfullargspec(func).args.index(argument_name)
-
-    @wraps(func)
-    async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
-        """Wrap method to add collector."""
-        try:
-            collector_exists = args[argument_index] is not None
-        except IndexError:
-            collector_exists = kwargs.get(argument_name) is not None
-
-        if collector_exists:
-            return_value = await func(*args, **kwargs)
-        else:
-            collector = hme.CallParameterCollector(client=args[0].device.client)
-            kwargs[argument_name] = collector
-            return_value = await func(*args, **kwargs)
-            await collector.send_data()
-        return return_value
-
-    return wrapper_collector  # type: ignore[return-value]

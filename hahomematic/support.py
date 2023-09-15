@@ -30,7 +30,8 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.support")
+_LOGGER_PERF = logging.getLogger("hahomematic.performance")
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -306,7 +307,7 @@ class Channel:
 def measure_execution_time(func: _CallableT) -> _CallableT:
     """Decorate function to measure the function execution time."""
 
-    is_enabled = _LOGGER.isEnabledFor(level=logging.DEBUG)
+    is_enabled = _LOGGER_PERF.isEnabledFor(level=logging.DEBUG)
 
     @wraps(func)
     async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -318,7 +319,7 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
         finally:
             if is_enabled:
                 delta = (datetime.now() - start).total_seconds()
-                _LOGGER.info(
+                _LOGGER_PERF.info(
                     "Execution of %s took %ss args(%s) kwargs(%s) ",
                     func.__name__,
                     delta,
@@ -336,7 +337,7 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
         finally:
             if is_enabled:
                 delta = (datetime.now() - start).total_seconds()
-                _LOGGER.info(
+                _LOGGER_PERF.info(
                     "Execution of %s took %ss args(%s) kwargs(%s) ",
                     func.__name__,
                     delta,

@@ -39,7 +39,7 @@ from hahomematic.support import (
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger("hahomematic.client")
 
 _ADDRESS: Final = "address"
 _CHANNELS: Final = "channels"
