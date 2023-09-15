@@ -2,35 +2,98 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from functools import wraps
-from inspect import getfullargspec
-from typing import Any, TypeVar
+from typing import Any, Generic, TypeVar
 
-from hahomematic.platforms import entity as hme
-
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+G = TypeVar("G")
+S = TypeVar("S")
 
 
-def bind_collector(func: _CallableT) -> _CallableT:
-    """Decorate function to automatically add collector if not set."""
-    argument_name = "collector"
-    argument_index = getfullargspec(func).args.index(argument_name)
+# pylint: disable=invalid-name
+class generic_property(Generic[G, S], property):
+    """Generic property implementation."""
 
-    @wraps(func)
-    async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
-        """Wrap method to add collector."""
-        try:
-            collector_exists = args[argument_index] is not None
-        except IndexError:
-            collector_exists = kwargs.get(argument_name) is not None
+    fget: Callable[[Any], G] | None
+    fset: Callable[[Any, S], None] | None
+    fdel: Callable[[Any], None] | None
 
-        if collector_exists:
-            return_value = await func(*args, **kwargs)
-        else:
-            collector = hme.CallParameterCollector(client=args[0].device.client)
-            kwargs[argument_name] = collector
-            return_value = await func(*args, **kwargs)
-            await collector.send_data()
-        return return_value
+    def __init__(
+        self,
+        fget: Callable[[Any], G] | None = None,
+        fset: Callable[[Any, S], None] | None = None,
+        fdel: Callable[[Any], None] | None = None,
+        doc: str | None = None,
+    ) -> None:
+        """Init the generic property."""
+        super().__init__(fget, fset, fdel, doc)
+        if doc is None and fget is not None:
+            doc = fget.__doc__
+        self.__doc__ = doc
 
-    return wrapper_collector  # type: ignore[return-value]
+    def getter(self, __fget: Callable[[Any], G]) -> generic_property:
+        """Return generic getter."""
+        return type(self)(__fget, self.fset, self.fdel, self.__doc__)  # pragma: no cover
+
+    def setter(self, __fset: Callable[[Any, S], None]) -> generic_property:
+        """Return generic setter."""
+        return type(self)(self.fget, __fset, self.fdel, self.__doc__)
+
+    def deleter(self, __fdel: Callable[[Any], None]) -> generic_property:
+        """Return generic deleter."""
+        return type(self)(self.fget, self.fset, __fdel, self.__doc__)
+
+    def __get__(self, __obj: Any, __type: type | None = None) -> G:
+        """Return the attribute."""
+        if __obj is None:
+            return self  # type: ignore[return-value]
+        if self.fget is None:
+            raise AttributeError("unreadable attribute")  # pragma: no cover
+        return self.fget(__obj)
+
+    def __set__(self, __obj: Any, __value: Any) -> None:
+        """Set the attribute."""
+        if self.fset is None:
+            raise AttributeError("can't set attribute")  # pragma: no cover
+        self.fset(__obj, __value)
+
+    def __delete__(self, __obj: Any) -> None:
+        """Delete the attribute."""
+        if self.fdel is None:
+            raise AttributeError("can't delete attribute")  # pragma: no cover
+        self.fdel(__obj)
+
+
+# pylint: disable=invalid-name
+class config_property(generic_property[G, S], property):
+    """Decorate to mark own config properties."""
+
+
+# pylint: disable=invalid-name
+class value_property(generic_property[G, S], property):
+    """Decorate to mark own value properties."""
+
+
+def _get_public_attributes_by_decorator(
+    data_object: Any, property_decorator: type
+) -> dict[str, Any]:
+    """Return the object attributes by decorator."""
+    pub_attributes = [
+        y
+        for y in dir(data_object.__class__)
+        if not y.startswith("_")
+        and isinstance(getattr(data_object.__class__, y), property_decorator)
+    ]
+    return {x: getattr(data_object, x) for x in pub_attributes}
+
+
+def get_public_attributes_for_config_property(data_object: Any) -> dict[str, Any]:
+    """Return the object attributes by decorator config_property."""
+    return _get_public_attributes_by_decorator(
+        data_object=data_object, property_decorator=config_property
+    )
+
+
+def get_public_attributes_for_value_property(data_object: Any) -> dict[str, Any]:
+    """Return the object attributes by decorator value_property."""
+    return _get_public_attributes_by_decorator(
+        data_object=data_object, property_decorator=value_property
+    )

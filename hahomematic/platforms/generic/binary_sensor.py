@@ -6,8 +6,8 @@ See https://www.home-assistant.io/integrations/binary_sensor/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
+from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
-from hahomematic.platforms.support import value_property
 
 
 class HmBinarySensor(GenericEntity[bool, bool]):

@@ -4,6 +4,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
+from functools import wraps
+from inspect import getfullargspec
 import logging
 from typing import Any, Final, Generic, TypeVar, cast
 
@@ -32,16 +34,17 @@ from hahomematic.const import (
     HmType,
 )
 from hahomematic.platforms import device as hmd
+from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.support import (
     EntityNameData,
     PayloadMixin,
-    config_property,
     convert_value,
     generate_channel_unique_identifier,
-    value_property,
 )
 
 _LOGGER = logging.getLogger("hahomematic.platform")
+
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
@@ -604,3 +607,28 @@ class CallParameterCollector:
             ):
                 return False  # pragma: no cover
         return True
+
+
+def bind_collector(func: _CallableT) -> _CallableT:
+    """Decorate function to automatically add collector if not set."""
+    argument_name = "collector"
+    argument_index = getfullargspec(func).args.index(argument_name)
+
+    @wraps(func)
+    async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
+        """Wrap method to add collector."""
+        try:
+            collector_exists = args[argument_index] is not None
+        except IndexError:
+            collector_exists = kwargs.get(argument_name) is not None
+
+        if collector_exists:
+            return_value = await func(*args, **kwargs)
+        else:
+            collector = CallParameterCollector(client=args[0].device.client)
+            kwargs[argument_name] = collector
+            return_value = await func(*args, **kwargs)
+            await collector.send_data()
+        return return_value
+
+    return wrapper_collector  # type: ignore[return-value]

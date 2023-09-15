@@ -1,7 +1,8 @@
 # Version 2023.9.2 (2023-09-15)
 
 - Cleanup logger
-- Move bind_collector to platforms
+- Move bind_collector to platforms.entity
+- Move config/value_property to platforms.decorators
 
 # Version 2023.9.1 (2023-09-06)
 

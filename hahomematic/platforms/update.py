@@ -10,12 +10,9 @@ from typing import Final
 
 from hahomematic.const import HmPlatform
 from hahomematic.platforms import device as hmd
+from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallbackEntity
-from hahomematic.platforms.support import (
-    config_property,
-    generate_unique_identifier,
-    value_property,
-)
+from hahomematic.platforms.support import generate_unique_identifier
 
 
 class HmUpdate(CallbackEntity):

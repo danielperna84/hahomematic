@@ -24,12 +24,11 @@ from hahomematic.platforms.custom.const import (
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import bind_collector
-from hahomematic.platforms.entity import CallParameterCollector
+from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.platforms.support import config_property, value_property
 
 _HM_ARG_ACOUSTIC_ALARM: Final = "acoustic_alarm"
 _HM_ARG_OPTICAL_ALARM: Final = "optical_alarm"

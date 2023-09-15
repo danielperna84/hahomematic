@@ -7,11 +7,11 @@ import orjson
 import pytest
 
 from hahomematic.const import HmEntityUsage
-from hahomematic.platforms.generic.entity import GenericEntity
-from hahomematic.platforms.support import (
+from hahomematic.platforms.decorators import (
     get_public_attributes_for_config_property,
     get_public_attributes_for_value_property,
 )
+from hahomematic.platforms.generic.entity import GenericEntity
 
 from tests import const
 

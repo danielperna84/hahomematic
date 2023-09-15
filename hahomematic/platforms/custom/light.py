@@ -43,13 +43,13 @@ from hahomematic.platforms.custom.const import (
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import bind_collector
-from hahomematic.platforms.entity import CallParameterCollector
+from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.platforms.support import OnTimeMixin, config_property, value_property
+from hahomematic.platforms.support import OnTimeMixin
 
 _HM_ARG_BRIGHTNESS: Final = "brightness"
 _HM_ARG_COLOR_NAME: Final = "color_name"

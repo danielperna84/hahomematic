@@ -30,15 +30,11 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.platforms.custom import definition as hmed, entity as hmce
+from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import BaseEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
-from hahomematic.platforms.support import (
-    PayloadMixin,
-    config_property,
-    get_device_name,
-    value_property,
-)
+from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import updated_within_seconds
 

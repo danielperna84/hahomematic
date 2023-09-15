@@ -1,7 +1,7 @@
 """Tests for switch entities of hahomematic."""
 from __future__ import annotations
 
-from hahomematic.platforms.support import (
+from hahomematic.platforms.decorators import (
     config_property,
     get_public_attributes_for_config_property,
     get_public_attributes_for_value_property,

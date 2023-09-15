@@ -14,7 +14,8 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd, entity as hme
-from hahomematic.platforms.support import EntityNameData, config_property, get_entity_name
+from hahomematic.platforms.decorators import config_property
+from hahomematic.platforms.support import EntityNameData, get_entity_name
 
 _LOGGER = logging.getLogger("hahomematic.platform")
 

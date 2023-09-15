@@ -9,8 +9,8 @@ import logging
 from typing import Any
 
 from hahomematic.const import HmPlatform, HmSysvarType
+from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
-from hahomematic.platforms.support import value_property
 
 _LOGGER = logging.getLogger("hahomematic.platform")
 
