@@ -43,7 +43,7 @@ from hahomematic.const import (
     HmProxyInitState,
     HmSystemEvent,
 )
-from hahomematic.decorators import callback_event, callback_system_event
+from hahomematic.decorators import callback_event, callback_system_event, measure_execution_time
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
@@ -67,7 +67,6 @@ from hahomematic.support import (
     check_or_create_directory,
     check_password,
     get_device_address,
-    measure_execution_time,
     reduce_args,
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy

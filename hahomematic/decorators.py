@@ -14,6 +14,7 @@ from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
 
 _LOGGER = logging.getLogger("hahomematic.central")
+_LOGGER_PERF = logging.getLogger("hahomematic.performance")
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -97,3 +98,49 @@ def callback_event(func: Callable[_P, _R]) -> Callable[_P, _R]:
             ) from err
 
     return wrapper_callback_event
+
+
+def measure_execution_time(func: _CallableT) -> _CallableT:
+    """Decorate function to measure the function execution time."""
+
+    is_enabled = _LOGGER_PERF.isEnabledFor(level=logging.DEBUG)
+
+    @wraps(func)
+    async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+        """Wrap method."""
+        if is_enabled:
+            start = datetime.now()
+        try:
+            return await func(*args, **kwargs)
+        finally:
+            if is_enabled:
+                delta = (datetime.now() - start).total_seconds()
+                _LOGGER_PERF.info(
+                    "Execution of %s took %ss args(%s) kwargs(%s) ",
+                    func.__name__,
+                    delta,
+                    args,
+                    kwargs,
+                )
+
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        """Wrap method."""
+        if is_enabled:
+            start = datetime.now()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            if is_enabled:
+                delta = (datetime.now() - start).total_seconds()
+                _LOGGER_PERF.info(
+                    "Execution of %s took %ss args(%s) kwargs(%s) ",
+                    func.__name__,
+                    delta,
+                    args,
+                    kwargs,
+                )
+
+    if asyncio.iscoroutinefunction(func):
+        return async_wrapper  # type: ignore[return-value]
+    return wrapper  # type: ignore[return-value]
