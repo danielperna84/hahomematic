@@ -16,7 +16,7 @@ from hahomematic.const import (
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import get_device_address, updated_within_seconds
 
-_LOGGER = logging.getLogger("hahomematic.cache")
+_LOGGER = logging.getLogger(__name__)
 
 
 class DeviceDetailsCache:

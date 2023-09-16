@@ -13,7 +13,7 @@ from hahomematic.const import HmSystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
 
-_LOGGER = logging.getLogger("hahomematic.central")
+_LOGGER = logging.getLogger(__name__)
 _LOGGER_PERF = logging.getLogger("hahomematic.performance")
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])

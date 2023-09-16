@@ -29,7 +29,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 
-_LOGGER = logging.getLogger("hahomematic.base")
+_LOGGER = logging.getLogger(__name__)
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 

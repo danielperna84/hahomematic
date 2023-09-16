@@ -71,8 +71,7 @@ from hahomematic.support import (
 )
 from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
-_LOGGER = logging.getLogger("hahomematic.central")
-_LOGGER_SERVER = logging.getLogger("hahomematic.server")
+_LOGGER = logging.getLogger(__name__)
 
 _R = TypeVar("_R")
 _T = TypeVar("_T")
@@ -809,7 +808,7 @@ class CentralUnit:
     def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
         result = self.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
-        _LOGGER_SERVER.debug(
+        _LOGGER.debug(
             "LIST_DEVICES: interface_id = %s, channel_count = %i", interface_id, len(result)
         )
         return result

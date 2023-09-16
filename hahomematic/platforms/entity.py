@@ -42,7 +42,7 @@ from hahomematic.platforms.support import (
     generate_channel_unique_identifier,
 )
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 

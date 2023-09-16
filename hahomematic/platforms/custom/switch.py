@@ -26,7 +26,7 @@ from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.support import OnTimeMixin
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 
 class CeSwitch(CustomEntity, OnTimeMixin):

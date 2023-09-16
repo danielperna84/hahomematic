@@ -21,7 +21,7 @@ from hahomematic.platforms.support import (
 )
 from hahomematic.support import get_channel_address
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 _EntityT = TypeVar("_EntityT", bound=hmge.GenericEntity)
 
 

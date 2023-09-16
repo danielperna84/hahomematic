@@ -18,7 +18,7 @@ from hahomematic.platforms.custom import create_custom_entity_and_append_to_devi
 from hahomematic.platforms.event import create_event_and_append_to_device
 from hahomematic.platforms.generic import create_entity_and_append_to_device
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 
 def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:

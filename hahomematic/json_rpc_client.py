@@ -36,7 +36,7 @@ from hahomematic.support import (
     reduce_args,
 )
 
-_LOGGER = logging.getLogger("hahomematic.client")
+_LOGGER = logging.getLogger(__name__)
 
 _MAX_JSON_SESSION_AGE: Final = 90
 

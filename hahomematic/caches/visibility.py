@@ -19,7 +19,7 @@ from hahomematic.platforms.custom.definition import get_required_parameters
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.support import reduce_args
 
-_LOGGER = logging.getLogger("hahomematic.cache")
+_LOGGER = logging.getLogger(__name__)
 
 _FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 

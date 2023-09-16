@@ -16,7 +16,7 @@ from hahomematic import central_unit as hmcu
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.DEBUG)
 
-_LOGGER = logging.getLogger("hahomematic.central")
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
