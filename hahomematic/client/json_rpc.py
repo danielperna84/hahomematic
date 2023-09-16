@@ -19,7 +19,7 @@ from aiohttp import (
 )
 import orjson
 
-from hahomematic import central_unit as hmcu, config
+from hahomematic import central as hmcu, config
 from hahomematic.const import (
     CONF_PASSWORD,
     CONF_USERNAME,

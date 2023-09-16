@@ -5,7 +5,7 @@ import asyncio
 import logging
 from typing import Final
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central as hmcu
 from hahomematic.const import HmBackend, HmSystemEvent, HmSysvarType
 from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.hub.button import HmProgramButton

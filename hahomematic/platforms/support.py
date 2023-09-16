@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu, support as hms
+from hahomematic import central as hmcu, support as hms
 from hahomematic.const import (
     HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,

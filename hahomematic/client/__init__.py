@@ -7,7 +7,8 @@ from datetime import datetime
 import logging
 from typing import Any, Final, cast
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central as hmcu
+from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
     EVENT_AVAILABLE,
@@ -25,8 +26,8 @@ from hahomematic.const import (
     HmProductGroup,
     HmProxyInitState,
 )
-from hahomematic.decorators import measure_execution_time
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
+from hahomematic.performance import measure_execution_time
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
     ProgramData,
@@ -37,7 +38,6 @@ from hahomematic.support import (
     get_channel_no,
     reduce_args,
 )
-from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -634,7 +634,7 @@ class Client(ABC):
         ):
             _LOGGER.warning(
                 "UPDATE_PARAMSET_DESCRIPTIONS failed: "
-                "Interface missing in central_unit cache. "
+                "Interface missing in central cache. "
                 "Not updating paramsets for %s",
                 device_address,
             )
@@ -644,7 +644,7 @@ class Client(ABC):
         ):
             _LOGGER.warning(
                 "UPDATE_PARAMSET_DESCRIPTIONS failed: "
-                "Channel missing in central_unit.cache. "
+                "Channel missing in central.cache. "
                 "Not updating paramsets for %s",
                 device_address,
             )

@@ -6,7 +6,7 @@ from typing import Any, Final
 
 from slugify import slugify
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central as hmcu
 from hahomematic.const import SYSVAR_ADDRESS
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallbackEntity

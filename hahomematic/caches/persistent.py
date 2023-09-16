@@ -9,7 +9,7 @@ from typing import Any, Final
 
 import orjson
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central as hmcu
 from hahomematic.const import (
     DEFAULT_ENCODING,
     FILE_DEVICES,

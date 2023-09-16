@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu, exporter as hmexp
+from hahomematic import central as hmcu, exporter as hmexp
 from hahomematic.const import (
     ENTITY_EVENTS,
     HM_VIRTUAL_REMOTE_TYPES,

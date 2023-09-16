@@ -11,7 +11,7 @@ from typing import Any, Final, Generic, TypeVar, cast
 
 import voluptuous as vol
 
-from hahomematic import central_unit as hmcu, client as hmcl, support as hms
+from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.const import (
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,

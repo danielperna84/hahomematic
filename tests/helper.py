@@ -12,7 +12,7 @@ from aiohttp import ClientSession
 import orjson
 
 from hahomematic import const as hahomematic_const
-from hahomematic.central_unit import CentralConfig, CentralUnit
+from hahomematic.central import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, _ClientConfig
 from hahomematic.const import HmInterfaceName, HmSystemEvent
 from hahomematic.platforms.custom.entity import CustomEntity
@@ -28,7 +28,7 @@ GOT_DEVICES = False
 
 
 class Factory:
-    """Factory for a central_unit with one local client."""
+    """Factory for a central with one local client."""
 
     def __init__(self, client_session: ClientSession | None):
         """Init the central factory."""
@@ -120,9 +120,7 @@ class Factory:
             un_ignore_list=un_ignore_list,
         )
 
-        patch(
-            "hahomematic.central_unit.CentralUnit._get_primary_client", return_value=client
-        ).start()
+        patch("hahomematic.central.CentralUnit._get_primary_client", return_value=client).start()
         patch("hahomematic.client._ClientConfig.get_client", return_value=client).start()
         patch(
             "hahomematic_support.client_local.ClientLocal.get_all_system_variables",
@@ -133,7 +131,7 @@ class Factory:
             return_value=const.PROGRAM_DATA if add_programs else [],
         ).start()
         patch(
-            "hahomematic.central_unit.CentralUnit._identify_callback_ip", return_value="127.0.0.1"
+            "hahomematic.central.CentralUnit._identify_callback_ip", return_value="127.0.0.1"
         ).start()
 
         await central.start()
@@ -146,10 +144,10 @@ class Factory:
 
 
 def get_prepared_custom_entity(
-    central_unit: CentralUnit, address: str, channel_no: int | None
+    central: CentralUnit, address: str, channel_no: int | None
 ) -> CustomEntity | None:
     """Return the hm custom_entity."""
-    if custom_entity := central_unit.get_custom_entity(address=address, channel_no=channel_no):
+    if custom_entity := central.get_custom_entity(address=address, channel_no=channel_no):
         for data_entity in custom_entity.data_entities.values():
             data_entity._attr_state_uncertain = False
         return custom_entity
@@ -210,7 +208,7 @@ async def get_pydev_ccu_central_unit_full(client_session: ClientSession | None) 
         )
     }
 
-    central_unit = CentralConfig(
+    central = CentralConfig(
         name=const.CENTRAL_NAME,
         host=const.CCU_HOST,
         username=const.CCU_USERNAME,
@@ -221,10 +219,10 @@ async def get_pydev_ccu_central_unit_full(client_session: ClientSession | None) 
         default_callback_port=54321,
         client_session=client_session,
     ).create_central()
-    central_unit.register_system_event_callback(systemcallback)
-    await central_unit.start()
+    central.register_system_event_callback(systemcallback)
+    await central.start()
     while not GOT_DEVICES and sleep_counter < 300:
         sleep_counter += 1
         await asyncio.sleep(1)
 
-    return central_unit
+    return central

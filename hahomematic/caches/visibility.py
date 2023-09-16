@@ -6,7 +6,7 @@ import logging
 import os
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu, support as hms
+from hahomematic import central as hmcu, support as hms
 from hahomematic.const import (
     CLICK_EVENTS,
     DEFAULT_ENCODING,

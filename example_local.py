@@ -8,7 +8,7 @@ import sys
 from unittest.mock import patch
 
 from hahomematic import config, const
-from hahomematic.central_unit import CentralConfig
+from hahomematic.central import CentralConfig
 from hahomematic.client import InterfaceConfig, _ClientConfig
 from hahomematic.platforms.custom.definition import validate_entity_definition
 from hahomematic_support.client_local import ClientLocal, LocalRessources
@@ -482,7 +482,7 @@ class Example:
         config.CACHE_DIR = "cache"
 
         with patch(
-            "hahomematic.central_unit.CentralUnit._get_primary_client", return_value=client
+            "hahomematic.central.CentralUnit._get_primary_client", return_value=client
         ), patch("hahomematic.client._ClientConfig.get_client", return_value=client):
             await self.central.start()
             await self.central._refresh_device_descriptions(client=client)
