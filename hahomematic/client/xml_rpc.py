@@ -103,21 +103,25 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             raise NoConnection(f"No connection to {self.interface_id}")
         except SSLError as sslerr:
             message = f"SSLError on {self.interface_id}: {reduce_args(args=sslerr.args)}"
+            log_debug = False
             if sslerr.args[0] in _SSL_ERROR_CODES:
                 _LOGGER.debug(message)
+                log_debug = True
             else:
                 _LOGGER.error(message)
-            raise NoConnection(message) from sslerr
+            raise NoConnection(message, log_debug=log_debug) from sslerr
         except OSError as ose:
             message = f"OSError on {self.interface_id}: {reduce_args(args=ose.args)}"
+            log_debug = False
             if ose.args[0] in _NO_CONNECTION_ERROR_CODES:
                 if self._connection_state.add_issue(issuer=self):
                     _LOGGER.error(message)
                 else:
                     _LOGGER.debug(message)
+                    log_debug = True
             else:
                 _LOGGER.error(message)
-            raise NoConnection(message) from ose
+            raise NoConnection(message, log_debug=log_debug) from ose
         except xmlrpc.client.Fault as fex:
             raise ClientException(fex) from fex
         except TypeError as terr:
