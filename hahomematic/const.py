@@ -1,6 +1,7 @@
 """Constants used by hahomematic."""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
 from typing import Final
@@ -385,3 +386,43 @@ RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
     HmEvent.STICKY_UN_REACH,
     HmEvent.UN_REACH,
 )
+
+
+@dataclass(slots=True)
+class HubData:
+    """Dataclass for hub entities."""
+
+    name: str
+
+
+@dataclass(slots=True)
+class ProgramData(HubData):
+    """Dataclass for programs."""
+
+    pid: str
+    is_active: bool
+    is_internal: bool
+    last_execute_time: str
+
+
+@dataclass(slots=True)
+class SystemVariableData(HubData):
+    """Dataclass for system variables."""
+
+    value: bool | float | int | str | None
+    data_type: HmSysvarType | None = None
+    unit: str | None = None
+    value_list: list[str] | None = None
+    max_value: float | int | None = None
+    min_value: float | int | None = None
+    extended_sysvar: bool = False
+
+
+@dataclass(slots=True)
+class SystemInformation:
+    """System information of the backend."""
+
+    available_interfaces: list[str] = field(default_factory=list)
+    auth_enabled: bool | None = None
+    https_redirect_enabled: bool | None = None
+    serial: str | None = None

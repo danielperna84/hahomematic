@@ -11,7 +11,7 @@ from typing import Any, Final, Generic, TypeVar, cast
 
 import voluptuous as vol
 
-from hahomematic import central_unit as hmcu, client as hmcl, support as hms
+from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.const import (
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
@@ -42,7 +42,7 @@ from hahomematic.platforms.support import (
     generate_channel_unique_identifier,
 )
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 

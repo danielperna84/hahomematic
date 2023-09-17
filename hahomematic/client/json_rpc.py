@@ -19,24 +19,20 @@ from aiohttp import (
 )
 import orjson
 
-from hahomematic import central_unit as hmcu, config
+from hahomematic import central as hmcu, config
 from hahomematic.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DEFAULT_ENCODING,
     PATH_JSON_RPC,
     HmSysvarType,
-)
-from hahomematic.exceptions import AuthFailure, ClientException
-from hahomematic.support import (
     ProgramData,
     SystemVariableData,
-    get_tls_context,
-    parse_sys_var,
-    reduce_args,
 )
+from hahomematic.exceptions import AuthFailure, ClientException
+from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
 
-_LOGGER = logging.getLogger("hahomematic.client")
+_LOGGER = logging.getLogger(__name__)
 
 _MAX_JSON_SESSION_AGE: Final = 90
 
@@ -59,7 +55,7 @@ _VALUE_LIST: Final = "valueList"
 
 _REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
 _REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
-_REGA_SCRIPT_PATH: Final = "rega_scripts"
+_REGA_SCRIPT_PATH: Final = "../rega_scripts"
 _REGA_SCRIPT_SET_SYSTEM_VARIABLE: Final = "set_system_variable.fn"
 _REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marker.fn"
 

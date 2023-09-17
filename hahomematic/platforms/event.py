@@ -26,7 +26,7 @@ from hahomematic.platforms.support import (
     get_event_name,
 )
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 
 class GenericEvent(BaseParameterEntity[Any, Any]):

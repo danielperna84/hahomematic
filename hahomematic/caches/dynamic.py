@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central as hmcu
 from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
@@ -16,7 +16,7 @@ from hahomematic.const import (
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import get_device_address, updated_within_seconds
 
-_LOGGER = logging.getLogger("hahomematic.cache")
+_LOGGER = logging.getLogger(__name__)
 
 
 class DeviceDetailsCache:

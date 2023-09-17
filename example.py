@@ -9,7 +9,7 @@ import sys
 from aiohttp import ClientSession, TCPConnector
 
 from hahomematic import config, const
-from hahomematic.central_unit import CentralConfig
+from hahomematic.central import CentralConfig
 from hahomematic.client import InterfaceConfig
 from hahomematic.platforms.custom.definition import validate_entity_definition
 

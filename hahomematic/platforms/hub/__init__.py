@@ -5,8 +5,14 @@ import asyncio
 import logging
 from typing import Final
 
-from hahomematic import central_unit as hmcu
-from hahomematic.const import HmBackend, HmSystemEvent, HmSysvarType
+from hahomematic import central as hmcu
+from hahomematic.const import (
+    HmBackend,
+    HmSystemEvent,
+    HmSysvarType,
+    ProgramData,
+    SystemVariableData,
+)
 from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericSystemVariable
@@ -15,9 +21,8 @@ from hahomematic.platforms.hub.select import HmSysvarSelect
 from hahomematic.platforms.hub.sensor import HmSysvarSensor
 from hahomematic.platforms.hub.switch import HmSysvarSwitch
 from hahomematic.platforms.hub.text import HmSysvarText
-from hahomematic.support import ProgramData, SystemVariableData
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 _EXCLUDED: Final = [
     "OldVal",

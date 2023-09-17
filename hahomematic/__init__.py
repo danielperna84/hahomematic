@@ -11,19 +11,19 @@ import logging
 import signal
 import sys
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central as hmcu
 
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.DEBUG)
 
-_LOGGER = logging.getLogger("hahomematic.central")
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
 # noinspection PyUnusedLocal
 def signal_handler(sig, frame):  # type: ignore[no-untyped-def]
-    """Handle signal to shut down central_unit."""
-    _LOGGER.info("Got signal: %s. Shutting down central_unit", str(sig))
+    """Handle signal to shut down central."""
+    _LOGGER.info("Got signal: %s. Shutting down central", str(sig))
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     for central in hmcu.CENTRAL_INSTANCES.values():
         asyncio.run_coroutine_threadsafe(central.stop(), asyncio.get_running_loop())

@@ -5,7 +5,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu, support as hms
+from hahomematic import central as hmcu, support as hms
 from hahomematic.const import (
     HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,
@@ -23,7 +23,7 @@ from hahomematic.platforms.decorators import (
 )
 from hahomematic.support import to_bool
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 # dict with binary_sensor relevant value lists and the corresponding TRUE value
 _BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[dict[tuple[str, ...], str]] = {

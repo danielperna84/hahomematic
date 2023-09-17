@@ -6,10 +6,9 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import HmEntityUsage, ProgramData
 from hahomematic.platforms.generic.button import HmButton
 from hahomematic.platforms.hub.button import HmProgramButton
-from hahomematic.support import ProgramData
 
 from tests import helper
 

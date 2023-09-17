@@ -12,7 +12,7 @@ from hahomematic.const import HmPlatform, HmSysvarType
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 
 class HmSysvarSensor(GenericSystemVariable):

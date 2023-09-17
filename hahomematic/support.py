@@ -4,7 +4,7 @@ from __future__ import annotations
 import base64
 from collections.abc import Callable, Collection
 import contextlib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
 import logging
@@ -29,7 +29,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 
-_LOGGER = logging.getLogger("hahomematic.base")
+_LOGGER = logging.getLogger(__name__)
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -234,46 +234,6 @@ def _get_search_key(search_elements: Collection[str], search_key: str) -> str | 
         if search_key.startswith(element):
             return element
     return None
-
-
-@dataclass(slots=True)
-class HubData:
-    """Dataclass for hub entities."""
-
-    name: str
-
-
-@dataclass(slots=True)
-class ProgramData(HubData):
-    """Dataclass for programs."""
-
-    pid: str
-    is_active: bool
-    is_internal: bool
-    last_execute_time: str
-
-
-@dataclass(slots=True)
-class SystemVariableData(HubData):
-    """Dataclass for system variables."""
-
-    value: bool | float | int | str | None
-    data_type: HmSysvarType | None = None
-    unit: str | None = None
-    value_list: list[str] | None = None
-    max_value: float | int | None = None
-    min_value: float | int | None = None
-    extended_sysvar: bool = False
-
-
-@dataclass(slots=True)
-class SystemInformation:
-    """System information of the backend."""
-
-    available_interfaces: list[str] = field(default_factory=list)
-    auth_enabled: bool | None = None
-    https_redirect_enabled: bool | None = None
-    serial: str | None = None
 
 
 def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:

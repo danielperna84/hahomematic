@@ -9,8 +9,15 @@ from typing import Any, Final, cast
 import orjson
 
 from hahomematic.client import _LOGGER, Client, _ClientConfig
-from hahomematic.const import DEFAULT_ENCODING, HmCallSource, HmInterfaceName, HmProxyInitState
-from hahomematic.support import ProgramData, SystemInformation, SystemVariableData
+from hahomematic.const import (
+    DEFAULT_ENCODING,
+    HmCallSource,
+    HmInterfaceName,
+    HmProxyInitState,
+    ProgramData,
+    SystemInformation,
+    SystemVariableData,
+)
 
 LOCAL_SERIAL: Final = "0815_4711"
 BACKEND_LOCAL: Final = "Local CCU"

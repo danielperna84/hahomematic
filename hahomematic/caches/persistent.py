@@ -9,7 +9,7 @@ from typing import Any, Final
 
 import orjson
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central as hmcu
 from hahomematic.const import (
     DEFAULT_ENCODING,
     FILE_DEVICES,
@@ -28,7 +28,7 @@ from hahomematic.support import (
     get_split_channel_address,
 )
 
-_LOGGER = logging.getLogger("hahomematic.cache")
+_LOGGER = logging.getLogger(__name__)
 
 
 class BasePersistentCache(ABC):

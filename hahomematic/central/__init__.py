@@ -17,10 +17,14 @@ from typing import Any, Final, TypeVar, cast
 from aiohttp import ClientSession
 import orjson
 
-from hahomematic import client as hmcl, config, xml_rpc_server as xmlrpc
+from hahomematic import client as hmcl, config
 from hahomematic.caches.dynamic import DeviceDataCache, DeviceDetailsCache
 from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescriptionCache
 from hahomematic.caches.visibility import ParameterVisibilityCache
+from hahomematic.central import xml_rpc_server as xmlrpc
+from hahomematic.central.decorators import callback_event, callback_system_event
+from hahomematic.client.json_rpc import JsonRpcAioHttpClient
+from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     DEFAULT_TLS,
@@ -42,15 +46,15 @@ from hahomematic.const import (
     HmPlatform,
     HmProxyInitState,
     HmSystemEvent,
+    SystemInformation,
 )
-from hahomematic.decorators import callback_event, callback_system_event, measure_execution_time
 from hahomematic.exceptions import (
     BaseHomematicException,
     HaHomematicException,
     NoClients,
     NoConnection,
 )
-from hahomematic.json_rpc_client import JsonRpcAioHttpClient
+from hahomematic.performance import measure_execution_time
 from hahomematic.platforms import create_entities_and_append_to_device
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.device import HmDevice
@@ -63,21 +67,18 @@ from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVari
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
     HM_INTERFACE_EVENT_SCHEMA,
-    SystemInformation,
     check_or_create_directory,
     check_password,
     get_device_address,
     reduce_args,
 )
-from hahomematic.xml_rpc_proxy import XmlRpcProxy
 
-_LOGGER = logging.getLogger("hahomematic.central")
-_LOGGER_SERVER = logging.getLogger("hahomematic.server")
+_LOGGER = logging.getLogger(__name__)
 
 _R = TypeVar("_R")
 _T = TypeVar("_T")
 
-# {instance_name, central_unit}
+# {instance_name, central}
 CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
 ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 
@@ -164,7 +165,7 @@ class CentralUnit:
 
     @property
     def available(self) -> bool:
-        """Return the availability of the central_unit."""
+        """Return the availability of the central."""
         return all(client.available for client in self._clients.values())
 
     @property
@@ -681,7 +682,7 @@ class CentralUnit:
             )
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
-        """Delete devices from central_unit."""
+        """Delete devices from central."""
         _LOGGER.debug(
             "DELETE_DEVICE: interface_id = %s, device_address = %s",
             interface_id,
@@ -704,7 +705,7 @@ class CentralUnit:
 
     @callback_system_event(system_event=HmSystemEvent.DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
-        """Delete devices from central_unit."""
+        """Delete devices from central."""
         _LOGGER.debug(
             "DELETE_DEVICES: interface_id = %s, addresses = %s",
             interface_id,
@@ -809,7 +810,7 @@ class CentralUnit:
     def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
         result = self.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
-        _LOGGER_SERVER.debug(
+        _LOGGER.debug(
             "LIST_DEVICES: interface_id = %s, channel_count = %i", interface_id, len(result)
         )
         return result

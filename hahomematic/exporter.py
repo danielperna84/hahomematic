@@ -13,7 +13,7 @@ from hahomematic import client as hmcl
 from hahomematic.const import HmDataOperationResult, HmDescription
 from hahomematic.support import check_or_create_directory
 
-_LOGGER = logging.getLogger("hahomematic.base")
+_LOGGER = logging.getLogger(__name__)
 
 _DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
 _PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"

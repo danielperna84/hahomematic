@@ -11,12 +11,12 @@ import threading
 from typing import Any, Final
 from xmlrpc.server import SimpleXMLRPCRequestHandler, SimpleXMLRPCServer
 
-from hahomematic import central_unit as hmcu
+from hahomematic import central as hmcu
+from hahomematic.central.decorators import callback_system_event
 from hahomematic.const import IP_ANY_V4, PORT_ANY, HmSystemEvent
-from hahomematic.decorators import callback_system_event
 from hahomematic.support import find_free_port
 
-_LOGGER = logging.getLogger("hahomematic.central")
+_LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name

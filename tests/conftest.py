@@ -8,7 +8,7 @@ from aiohttp import ClientSession, TCPConnector
 import pydevccu
 import pytest
 
-from hahomematic.central_unit import CentralUnit
+from hahomematic.central import CentralUnit
 
 from tests import const, helper
 
@@ -53,10 +53,10 @@ async def client_session() -> ClientSession:
 @pytest.fixture
 async def central_unit_mini(pydev_ccu_mini: pydevccu.Server) -> CentralUnit:
     """Create and yield central."""
-    central_unit = await helper.get_pydev_ccu_central_unit_full(client_session=None)
-    yield central_unit
-    await central_unit.stop()
-    await central_unit.clear_all_caches()
+    central = await helper.get_pydev_ccu_central_unit_full(client_session=None)
+    yield central
+    await central.stop()
+    await central.clear_all_caches()
 
 
 @pytest.fixture
@@ -75,23 +75,23 @@ async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
     def system_event_callback(*args, **kwargs):
         """Do dummy system_event_callback."""
 
-    central_unit = await helper.get_pydev_ccu_central_unit_full(
+    central = await helper.get_pydev_ccu_central_unit_full(
         client_session=None,
     )
 
-    central_unit.register_entity_data_event_callback(entity_data_event_callback)
-    central_unit.register_entity_event_callback(entity_event_callback)
-    central_unit.register_ha_event_callback(ha_event_callback)
-    central_unit.register_system_event_callback(system_event_callback)
+    central.register_entity_data_event_callback(entity_data_event_callback)
+    central.register_entity_event_callback(entity_event_callback)
+    central.register_ha_event_callback(ha_event_callback)
+    central.register_system_event_callback(system_event_callback)
 
-    yield central_unit
+    yield central
 
-    central_unit.unregister_entity_data_event_callback(entity_data_event_callback)
-    central_unit.unregister_entity_event_callback(entity_event_callback)
-    central_unit.unregister_ha_event_callback(ha_event_callback)
-    central_unit.unregister_system_event_callback(system_event_callback)
-    await central_unit.stop()
-    await central_unit.clear_all_caches()
+    central.unregister_entity_data_event_callback(entity_data_event_callback)
+    central.unregister_entity_event_callback(entity_event_callback)
+    central.unregister_ha_event_callback(ha_event_callback)
+    central.unregister_system_event_callback(system_event_callback)
+    await central.stop()
+    await central.clear_all_caches()
 
 
 @pytest.fixture

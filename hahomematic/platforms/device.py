@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final
 
-from hahomematic import central_unit as hmcu, exporter as hmexp
+from hahomematic import central as hmcu, exporter as hmexp
 from hahomematic.const import (
     ENTITY_EVENTS,
     HM_VIRTUAL_REMOTE_TYPES,
@@ -38,7 +38,7 @@ from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import updated_within_seconds
 
-_LOGGER = logging.getLogger("hahomematic.platform")
+_LOGGER = logging.getLogger(__name__)
 
 
 class HmDevice(PayloadMixin):
