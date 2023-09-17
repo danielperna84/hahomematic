@@ -3,7 +3,6 @@ source = hahomematic
 
 omit =
     hahomematic/__init__.py
-    #hahomematic/client.py
     hahomematic/hmcli.py
     hahomematic/client/json_rpc.py
     hahomematic/client/xml_rpc.py
