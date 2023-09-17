@@ -5,9 +5,9 @@ omit =
     hahomematic/__init__.py
     #hahomematic/client.py
     hahomematic/hmcli.py
-    hahomematic/json_rpc_client.py
-    hahomematic/xml_rpc_proxy.py
-    hahomematic/xml_rpc_server.py
+    hahomematic/client/json_rpc.py
+    hahomematic/client/xml_rpc.py
+    hahomematic/central/xml_rpc_server.py
     
 
 [report]
