@@ -1,5 +1,5 @@
 """
-hahomematic is a Python 3 (>= 3.10) module for Home Assistant.
+hahomematic is a Python 3 (>= 3.11) module for Home Assistant.
 
 The lib interacts with HomeMatic and HomematicIP devices.
 https://github.com/danielperna84/hahomematic
@@ -14,7 +14,7 @@ import sys
 from hahomematic import central as hmcu
 
 if sys.stdout.isatty():
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
 _LOGGER = logging.getLogger(__name__)
 
