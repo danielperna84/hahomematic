@@ -494,7 +494,7 @@ fixture-parentheses = false
 
 [tool.ruff.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
-"hahomematic.central_unit" = "hmcu"
+"hahomematic.central" = "hmcu"
 "hahomematic.client" = "hmcl"
 "hahomematic.exporter" = "hmexp"
 "hahomematic.platforms.custom.definition" = "hmed"
@@ -503,7 +503,7 @@ voluptuous = "vol"
 "hahomematic.platforms.entity" = "hme"
 "hahomematic.platforms.generic.entity" = "hmge"
 "hahomematic.support" = "hms"
-"hahomematic.xml_rpc_server" = "xmlrpc"
+"hahomematic.central.xml_rpc_server" = "xmlrpc"
 
 [tool.ruff.per-file-ignores]
 "script/*" = ["T20"]
