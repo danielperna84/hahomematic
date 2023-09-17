@@ -16,6 +16,7 @@ from typing import Any, Final, TypeVar, cast
 
 from aiohttp import ClientSession
 import orjson
+import voluptuous as vol
 
 from hahomematic import client as hmcl, config
 from hahomematic.caches.dynamic import DeviceDataCache, DeviceDetailsCache
@@ -66,7 +67,6 @@ from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
-    HM_INTERFACE_EVENT_SCHEMA,
     check_or_create_directory,
     check_password,
     get_device_address,
@@ -81,6 +81,16 @@ _T = TypeVar("_T")
 # {instance_name, central}
 CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
 ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
+
+HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
+    {
+        vol.Required(EVENT_INTERFACE_ID): str,
+        vol.Required(EVENT_TYPE): HmInterfaceEventType,
+        vol.Required(EVENT_DATA): vol.Schema(
+            {vol.Required(vol.Any(str)): vol.Schema(vol.Any(str, int, bool))}
+        ),
+    }
+)
 
 
 class CentralUnit:

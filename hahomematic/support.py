@@ -14,17 +14,11 @@ import socket
 import ssl
 from typing import Any, TypeVar
 
-import voluptuous as vol
-
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
-    EVENT_DATA,
-    EVENT_INTERFACE_ID,
-    EVENT_TYPE,
     FILE_DEVICES,
     FILE_PARAMSETS,
     INIT_DATETIME,
-    HmInterfaceEventType,
     HmSysvarType,
 )
 from hahomematic.exceptions import HaHomematicException
@@ -32,16 +26,6 @@ from hahomematic.exceptions import HaHomematicException
 _LOGGER = logging.getLogger(__name__)
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-
-HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
-    {
-        vol.Required(EVENT_INTERFACE_ID): str,
-        vol.Required(EVENT_TYPE): HmInterfaceEventType,
-        vol.Required(EVENT_DATA): vol.Schema(
-            {vol.Required(vol.Any(str)): vol.Schema(vol.Any(str, int, bool))}
-        ),
-    }
-)
 
 
 def reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:
