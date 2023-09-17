@@ -43,7 +43,7 @@ def create_entity_and_append_to_device(
         parameter=parameter,
     ):
         _LOGGER.debug(
-            "CREATE_ENTITY_AND_APPEND_TO_DEVICE: Ignoring parameter: %s [%s]",
+            "CREATE_ENTITIES: Ignoring parameter: %s [%s]",
             parameter,
             channel_address,
         )
@@ -54,12 +54,12 @@ def create_entity_and_append_to_device(
     )
     if device.central.has_entity(unique_identifier=unique_identifier):
         _LOGGER.debug(
-            "CREATE_ENTITY_AND_APPEND_TO_DEVICE: Skipping %s (already exists)",
+            "CREATE_ENTITIES: Skipping %s (already exists)",
             unique_identifier,
         )
         return
     _LOGGER.debug(
-        "CREATE_ENTITY_AND_APPEND_TO_DEVICE: Creating entity for %s, %s, %s",
+        "CREATE_ENTITIES: Creating entity for %s, %s, %s",
         channel_address,
         parameter,
         device.interface_id,
