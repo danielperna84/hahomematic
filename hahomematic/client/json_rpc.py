@@ -59,7 +59,7 @@ _VALUE_LIST: Final = "valueList"
 
 _REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
 _REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
-_REGA_SCRIPT_PATH: Final = "rega_scripts"
+_REGA_SCRIPT_PATH: Final = "../rega_scripts"
 _REGA_SCRIPT_SET_SYSTEM_VARIABLE: Final = "set_system_variable.fn"
 _REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marker.fn"
 
