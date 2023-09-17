@@ -26,15 +26,11 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     PATH_JSON_RPC,
     HmSysvarType,
-)
-from hahomematic.exceptions import AuthFailure, ClientException
-from hahomematic.support import (
     ProgramData,
     SystemVariableData,
-    get_tls_context,
-    parse_sys_var,
-    reduce_args,
 )
+from hahomematic.exceptions import AuthFailure, ClientException
+from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
 
 _LOGGER = logging.getLogger(__name__)
 

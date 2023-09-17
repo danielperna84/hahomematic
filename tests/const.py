@@ -1,8 +1,7 @@
 """Constants for tests."""
 from __future__ import annotations
 
-from hahomematic.const import HmInterfaceName, HmSysvarType
-from hahomematic.support import ProgramData, SystemVariableData
+from hahomematic.const import HmInterfaceName, HmSysvarType, ProgramData, SystemVariableData
 
 CENTRAL_NAME = "CentralTest"
 CCU_HOST = "127.0.0.1"

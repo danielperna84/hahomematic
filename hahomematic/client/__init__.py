@@ -25,19 +25,14 @@ from hahomematic.const import (
     HmParamsetKey,
     HmProductGroup,
     HmProxyInitState,
+    ProgramData,
+    SystemInformation,
+    SystemVariableData,
 )
 from hahomematic.exceptions import AuthFailure, BaseHomematicException, NoConnection
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import (
-    ProgramData,
-    SystemInformation,
-    SystemVariableData,
-    build_headers,
-    build_xml_rpc_uri,
-    get_channel_no,
-    reduce_args,
-)
+from hahomematic.support import build_headers, build_xml_rpc_uri, get_channel_no, reduce_args
 
 _LOGGER = logging.getLogger(__name__)
 

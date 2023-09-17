@@ -8,9 +8,8 @@ from __future__ import annotations
 from typing import Final
 
 from hahomematic import central as hmcu
-from hahomematic.const import PROGRAM_ADDRESS, HmPlatform
+from hahomematic.const import PROGRAM_ADDRESS, HmPlatform, HubData, ProgramData
 from hahomematic.platforms.hub.entity import GenericHubEntity
-from hahomematic.support import HubData, ProgramData
 
 
 class HmProgramButton(GenericHubEntity):

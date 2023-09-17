@@ -46,6 +46,7 @@ from hahomematic.const import (
     HmPlatform,
     HmProxyInitState,
     HmSystemEvent,
+    SystemInformation,
 )
 from hahomematic.exceptions import (
     BaseHomematicException,
@@ -66,7 +67,6 @@ from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVari
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
     HM_INTERFACE_EVENT_SCHEMA,
-    SystemInformation,
     check_or_create_directory,
     check_password,
     get_device_address,
