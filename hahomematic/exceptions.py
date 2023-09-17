@@ -7,47 +7,48 @@ from typing import Any, Final
 class BaseHomematicException(Exception):
     """hahomematic base exception."""
 
-    def __init__(self, name: str, *args: Any) -> None:
+    def __init__(self, name: str, *args: Any, **kwargs: Any) -> None:
         """Init the HaHomematicException."""
-        super().__init__(*args)
         self.name: Final = name
+        self.log_debug = kwargs.pop("log_debug", False)
+        super().__init__(*args, **kwargs)
 
 
 class ClientException(BaseHomematicException):
     """hahomematic Client exception."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Init the ClientException."""
-        super().__init__("ClientException", *args)
+        super().__init__("ClientException", *args, **kwargs)
 
 
 class NoConnection(BaseHomematicException):
     """hahomematic NoConnection exception."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Init the NoConnection."""
-        super().__init__("NoConnection", *args)
+        super().__init__("NoConnection", *args, **kwargs)
 
 
 class NoClients(BaseHomematicException):
     """hahomematic NoClients exception."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Init the NoClients."""
-        super().__init__("NoClients", *args)
+        super().__init__("NoClients", *args, **kwargs)
 
 
 class AuthFailure(BaseHomematicException):
     """hahomematic AuthFailure exception."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Init the AuthFailure."""
-        super().__init__("AuthFailure", *args)
+        super().__init__("AuthFailure", *args, **kwargs)
 
 
 class HaHomematicException(BaseHomematicException):
     """hahomematic HaHomematicException exception."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Init the HaHomematicException."""
-        super().__init__("HaHomematicException", *args)
+        super().__init__("HaHomematicException", *args, **kwargs)

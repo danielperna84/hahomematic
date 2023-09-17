@@ -564,7 +564,8 @@ class Client(ABC):
                     address=address, paramset_key=paramset_key
                 )
             except BaseHomematicException as hhe:
-                _LOGGER.warning(
+                _LOGGER.log(
+                    logging.DEBUG if hhe.log_debug else logging.WARNING,
                     "GET_PARAMSET_DESCRIPTIONS failed with %s [%s] for %s address %s",
                     hhe.name,
                     reduce_args(args=hhe.args),

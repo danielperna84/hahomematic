@@ -1,4 +1,8 @@
-# Version 2023.9.2 (2023-09-15)
+# Version 2023.9.3 (2023-09-17)
+
+- Add log_debug info to own exceptions
+
+# Version 2023.9.2 (2023-09-17)
 
 - Cleanup logger
 - Refactor client and central modules
