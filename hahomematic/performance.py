@@ -8,14 +8,14 @@ from functools import wraps
 import logging
 from typing import Any, TypeVar
 
-_LOGGER_PERF = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 
 def measure_execution_time(func: _CallableT) -> _CallableT:
     """Decorate function to measure the function execution time."""
 
-    is_enabled = _LOGGER_PERF.isEnabledFor(level=logging.DEBUG)
+    is_enabled = _LOGGER.isEnabledFor(level=logging.DEBUG)
 
     @wraps(func)
     async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -27,7 +27,7 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
         finally:
             if is_enabled:
                 delta = (datetime.now() - start).total_seconds()
-                _LOGGER_PERF.info(
+                _LOGGER.info(
                     "Execution of %s took %ss args(%s) kwargs(%s) ",
                     func.__name__,
                     delta,
@@ -45,7 +45,7 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
         finally:
             if is_enabled:
                 delta = (datetime.now() - start).total_seconds()
-                _LOGGER_PERF.info(
+                _LOGGER.info(
                     "Execution of %s took %ss args(%s) kwargs(%s) ",
                     func.__name__,
                     delta,
