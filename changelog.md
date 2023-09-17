@@ -5,6 +5,7 @@
 - Move bind_collector to platforms.entity
 - Move config/value_property to platforms.decorators
 - Move measure_execution_time to decorators
+- Move definition exporter to device
 - Update requirements
 
 # Version 2023.9.1 (2023-09-06)
