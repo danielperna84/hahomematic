@@ -181,7 +181,7 @@ async def test_add_device(factory: helper.Factory) -> None:
     assert len(central._entities) == 23
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 9
     assert (
-        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 8
+        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 2
     )
     dev_desc = helper.load_device_description(central=central, filename="HmIP-BSM.json")
     await central.add_new_devices(interface_id=const.INTERFACE_ID, device_descriptions=dev_desc)
@@ -189,7 +189,7 @@ async def test_add_device(factory: helper.Factory) -> None:
     assert len(central._entities) == 53
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 20
     assert (
-        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 18
+        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 11
     )
     await central.add_new_devices(interface_id="NOT_ANINTERFACE_ID", device_descriptions=dev_desc)
     assert len(central._devices) == 2
@@ -203,7 +203,7 @@ async def test_delete_device(factory: helper.Factory) -> None:
     assert len(central._entities) == 53
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 20
     assert (
-        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 18
+        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 11
     )
 
     await central.delete_devices(interface_id=const.INTERFACE_ID, addresses=["VCU2128127"])
@@ -211,7 +211,7 @@ async def test_delete_device(factory: helper.Factory) -> None:
     assert len(central._entities) == 23
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 9
     assert (
-        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 8
+        len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 2
     )
 
 
@@ -489,7 +489,7 @@ async def test_central_caches(factory: helper.Factory) -> None:
     """Test central cache."""
     central, client = await factory.get_default_central(TEST_DEVICES)
     assert len(central.device_descriptions._raw_device_descriptions[client.interface_id]) == 20
-    assert len(central.paramset_descriptions._raw_paramset_descriptions[client.interface_id]) == 18
+    assert len(central.paramset_descriptions._raw_paramset_descriptions[client.interface_id]) == 11
     await central.clear_all_caches()
     assert central.device_descriptions._raw_device_descriptions.get(client.interface_id) is None
     assert (

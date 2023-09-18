@@ -294,17 +294,17 @@ class Client(ABC):
         return None
 
     @measure_execution_time
-    async def get_all_device_descriptions(self) -> Any:
+    async def get_all_device_descriptions(self) -> list[dict[str, Any]] | None:
         """Get device descriptions from CCU / Homegear."""
         try:
-            return await self._proxy.listDevices()
+            return await self._proxy.listDevices()  # type: ignore[no-any-return]
         except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "GET_ALL_DEVICE_DESCRIPTIONS failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
             )
         return None
 
-    async def get_device_descriptions(self, device_address: str) -> Any:
+    async def get_device_descriptions(self, device_address: str) -> list[dict[str, Any]] | None:
         """Get device descriptions from CCU / Homegear."""
         try:
             if device_descriptions := await self._proxy_read.getDeviceDescription(device_address):
@@ -341,10 +341,10 @@ class Client(ABC):
             return False
         return True
 
-    async def get_install_mode(self) -> Any:
+    async def get_install_mode(self) -> int:
         """Get remaining time in seconds install mode is active from CCU / Homegear."""
         try:
-            return await self._proxy.getInstallMode()
+            return await self._proxy.getInstallMode()  # type: ignore[no-any-return]
         except BaseHomematicException as hhe:
             _LOGGER.warning(
                 "GET_INSTALL_MODE failed: %s [%s]", hhe.name, reduce_args(args=hhe.args)
@@ -433,7 +433,7 @@ class Client(ABC):
             rx_mode=rx_mode,
         )
 
-    async def get_paramset(self, address: str, paramset_key: str) -> Any:
+    async def get_paramset(self, address: str, paramset_key: str) -> dict[str, Any]:
         """
         Return a paramset from CCU.
 
@@ -446,7 +446,7 @@ class Client(ABC):
                 address,
                 paramset_key,
             )
-            return await self._proxy_read.getParamset(address, paramset_key)
+            return await self._proxy_read.getParamset(address, paramset_key)  # type: ignore[no-any-return]
         except BaseHomematicException as hhe:
             _LOGGER.debug(
                 "GET_PARAMSET failed with %s [%s]: %s, %s",
@@ -494,25 +494,16 @@ class Client(ABC):
         """Fetch a specific paramset and add it to the known ones."""
         _LOGGER.debug("FETCH_PARAMSET_DESCRIPTION: %s for %s", paramset_key, channel_address)
 
-        try:
-            parameter_data = await self._get_paramset_description(
-                address=channel_address, paramset_key=paramset_key
-            )
+        if paramset_description := await self._get_paramset_description(
+            address=channel_address, paramset_key=paramset_key
+        ):
             self.central.paramset_descriptions.add(
                 interface_id=self.interface_id,
                 channel_address=channel_address,
                 paramset_key=paramset_key,
-                paramset_description=parameter_data,
+                paramset_description=paramset_description,
             )
-        except BaseHomematicException as hhe:
-            _LOGGER.debug(
-                "FETCH_PARAMSET_DESCRIPTION failed: "
-                "%s [%s] Unable to get paramset %s for channel_address %s",
-                hhe.name,
-                reduce_args(args=hhe.args),
-                paramset_key,
-                channel_address,
-            )
+
         if save_to_file:
             await self.central.paramset_descriptions.save()
 
@@ -559,24 +550,27 @@ class Client(ABC):
                 )
             ):
                 continue
-            try:
-                paramsets[address][paramset_key] = await self._get_paramset_description(
-                    address=address, paramset_key=paramset_key
-                )
-            except BaseHomematicException as hhe:
-                _LOGGER.log(
-                    logging.DEBUG if hhe.log_debug else logging.WARNING,
-                    "GET_PARAMSET_DESCRIPTIONS failed with %s [%s] for %s address %s",
-                    hhe.name,
-                    reduce_args(args=hhe.args),
-                    paramset_key,
-                    address,
-                )
+            if paramset_description := await self._get_paramset_description(
+                address=address, paramset_key=paramset_key
+            ):
+                paramsets[address][paramset_key] = paramset_description
         return paramsets
 
-    async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
+    async def _get_paramset_description(
+        self, address: str, paramset_key: str
+    ) -> dict[str, Any] | None:
         """Get paramset description from CCU."""
-        return await self._proxy_read.getParamsetDescription(address, paramset_key)
+        try:
+            return await self._proxy_read.getParamsetDescription(address, paramset_key)  # type: ignore[no-any-return]
+        except BaseHomematicException as hhe:
+            _LOGGER.debug(
+                "GET_PARAMSET_DESCRIPTIONS failed with %s [%s] for %s address %s",
+                hhe.name,
+                reduce_args(args=hhe.args),
+                paramset_key,
+                address,
+            )
+        return None
 
     async def get_all_paramset_descriptions(
         self, device_descriptions: list[dict[str, Any]]
