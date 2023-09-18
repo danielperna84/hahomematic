@@ -1,6 +1,7 @@
-# Version 2023.9.3 (2023-09-17)
+# Version 2023.9.3 (2023-09-18)
 
-- Add log_debug info to own exceptions
+- Improve typing
+- Refactor get_paramset_description
 
 # Version 2023.9.2 (2023-09-17)
 
