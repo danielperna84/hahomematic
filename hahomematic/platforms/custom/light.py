@@ -209,8 +209,7 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         if (on_time := kwargs.get(HM_ARG_ON_TIME)) or (on_time := self.get_on_time_and_cleanup()):
             await self._set_on_time_value(on_time=on_time, collector=collector)
 
-        brightness = kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness)
-        if not brightness:
+        if not (brightness := kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness)):
             brightness = 255
         level = brightness / 255.0
         await self._e_level.send_value(value=level, collector=collector)
@@ -310,8 +309,7 @@ class CeColorDimmer(CeDimmer):
     @value_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
-        if self._e_color.value is not None:
-            color = self._e_color.value
+        if (color := self._e_color.value) is not None:
             if color >= 200:
                 # 200 is a special case (white), so we have a saturation of 0.
                 # Larger values are undefined.
@@ -401,8 +399,7 @@ class CeColorDimmerEffect(CeColorDimmer):
             await self._e_effect.send_value(value=0, collector=collector)
 
         if self.supports_effects and (effect := kwargs.get(_HM_ARG_EFFECT)) is not None:
-            effect_idx = self._effect_list.index(effect)
-            if effect_idx is not None:
+            if (effect_idx := self._effect_list.index(effect)) is not None:
                 await self._e_effect.send_value(value=effect_idx, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
@@ -771,8 +768,7 @@ def _convert_color(color: tuple[float, float]) -> str:
     so a conversion is required.
     """
     hue: int = int(color[0])
-    saturation: int = int(color[1])
-    if saturation < 5:
+    if int(color[1]) < 5:
         return _COLOR_WHITE
     if 30 < hue <= 90:
         return _COLOR_YELLOW

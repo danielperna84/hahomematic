@@ -68,15 +68,13 @@ class HmHub:
             self._central.name,
         )
 
-        missing_program_ids = self._identify_missing_program_ids(programs=programs)
-        if missing_program_ids:
+        if missing_program_ids := self._identify_missing_program_ids(programs=programs):
             self._remove_program_entity(ids=missing_program_ids)
 
         new_programs: list[HmProgramButton] = []
 
         for program_data in programs:
-            entity: HmProgramButton | None = self._central.program_entities.get(program_data.pid)
-            if entity:
+            if entity := self._central.program_entities.get(program_data.pid):
                 entity.update_data(data=program_data)
             else:
                 new_programs.append(self._create_program(data=program_data))
@@ -108,8 +106,7 @@ class HmHub:
         if self._central.model is HmBackend.CCU:
             variables = _clean_variables(variables)
 
-        missing_variable_names = self._identify_missing_variable_names(variables=variables)
-        if missing_variable_names:
+        if missing_variable_names := self._identify_missing_variable_names(variables=variables):
             self._remove_sysvar_entity(del_entities=missing_variable_names)
 
         new_sysvars: list[GenericSystemVariable] = []
@@ -118,8 +115,7 @@ class HmHub:
             name = sysvar.name
             value = sysvar.value
 
-            entity: GenericSystemVariable | None = self._central.sysvar_entities.get(name)
-            if entity:
+            if entity := self._central.sysvar_entities.get(name):
                 entity.update_value(value)
             else:
                 new_sysvars.append(self._create_system_variable(data=sysvar))

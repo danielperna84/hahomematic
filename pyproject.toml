@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2023.9.3"
+version     = "2023.9.4"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
@@ -128,7 +128,7 @@ disable = [
     "format",
     "abstract-method",
     "broad-except",
-    "cyclic-import",
+    #"cyclic-import",
     "duplicate-code",
     "inconsistent-return-statements",
     "locally-disabled",
@@ -142,9 +142,9 @@ disable = [
     "too-many-public-methods",
     "too-many-boolean-expressions",
     "wrong-import-order",
-    "consider-using-f-string",
+    #"consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
-    "consider-using-assignment-expr",
+    #"consider-using-assignment-expr",
 
     # Handled by ruff
     # Ref: <https://github.com/astral-sh/ruff/issues/970>

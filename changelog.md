@@ -1,3 +1,7 @@
+# Version 2023.9.4 (2023-09-20)
+
+- Use more assignment-expr
+
 # Version 2023.9.3 (2023-09-18)
 
 - Improve typing

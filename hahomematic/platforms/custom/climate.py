@@ -208,8 +208,7 @@ class BaseClimateEntity(CustomEntity):
     @property
     def _min_or_target_temperature(self) -> float:
         """Return the min or target temperature."""
-        temperature: float = self.target_temperature or self.min_temp
-        if temperature < self.min_temp:
+        if (temperature := self.target_temperature or self.min_temp) < self.min_temp:
             return self.min_temp
         return temperature
 

@@ -124,8 +124,7 @@ class DeviceDetailsCache:
         """
         device_rooms: dict[str, set[str]] = {}
         for address, rooms in self._channel_rooms.items():
-            device_address = get_device_address(address=address)
-            if device_address not in device_rooms:
+            if (device_address := get_device_address(address=address)) not in device_rooms:
                 device_rooms[device_address] = set()
             device_rooms[device_address].update(rooms)
         for device_address, rooms in device_rooms.items():

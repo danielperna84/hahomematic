@@ -776,14 +776,11 @@ def _convert_to_values_cache(
     for device_adr, value in all_device_data.items():
         device_adr = device_adr.replace("%3A", ":")
         device_adrs = device_adr.split(".")
-        interface = device_adrs[0]
-        if interface not in values_cache:
+        if (interface := device_adrs[0]) not in values_cache:
             values_cache[interface] = {}
-        channel_address = device_adrs[1]
-        if channel_address not in values_cache[interface]:
+        if (channel_address := device_adrs[1]) not in values_cache[interface]:
             values_cache[interface][channel_address] = {}
-        parameter = device_adrs[2]
-        if parameter not in values_cache[interface][channel_address]:
+        if (parameter := device_adrs[2]) not in values_cache[interface][channel_address]:
             values_cache[interface][channel_address][parameter] = {}
         values_cache[interface][channel_address][parameter] = value
     return values_cache
