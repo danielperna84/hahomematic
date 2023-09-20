@@ -6,13 +6,13 @@ See https://www.home-assistant.io/integrations/sensor/.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 from hahomematic.const import HmPlatform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class HmSensor(GenericEntity[Any, None]):

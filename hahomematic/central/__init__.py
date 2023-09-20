@@ -73,7 +73,7 @@ from hahomematic.support import (
     reduce_args,
 )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 _R = TypeVar("_R")
 _T = TypeVar("_T")

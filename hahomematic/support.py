@@ -12,7 +12,7 @@ import os
 import re
 import socket
 import ssl
-from typing import Any, TypeVar
+from typing import Any, Final, TypeVar
 
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
@@ -23,7 +23,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 

@@ -74,7 +74,7 @@ from hahomematic.platforms.custom.const import (
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.support import generate_unique_identifier
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 ED_DEFAULT_ENTITIES: Final = "default_entities"
 ED_INCLUDE_DEFAULT_ENTITIES: Final = "include_default_entities"

@@ -16,7 +16,7 @@ from hahomematic.central.decorators import callback_system_event
 from hahomematic.const import IP_ANY_V4, PORT_ANY, HmSystemEvent
 from hahomematic.support import find_free_port
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name

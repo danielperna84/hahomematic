@@ -46,7 +46,7 @@ from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import check_or_create_directory, updated_within_seconds
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class HmDevice(PayloadMixin):

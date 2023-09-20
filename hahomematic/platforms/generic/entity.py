@@ -17,7 +17,7 @@ from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.support import EntityNameData, get_entity_name
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]):

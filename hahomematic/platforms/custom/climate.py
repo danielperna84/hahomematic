@@ -45,7 +45,7 @@ from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 _CLOSED_LEVEL: Final = 0.0
 

@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/switch/.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Final
 
 from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
 from hahomematic.platforms import device as hmd
@@ -26,7 +26,7 @@ from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.support import OnTimeMixin
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class CeSwitch(CustomEntity, OnTimeMixin):

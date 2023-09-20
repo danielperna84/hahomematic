@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Final
 
 from hahomematic import support as hms
 from hahomematic.caches.visibility import ALLOWED_INTERNAL_PARAMETERS
@@ -18,7 +19,7 @@ from hahomematic.platforms.custom import create_custom_entity_and_append_to_devi
 from hahomematic.platforms.event import create_event_and_append_to_device
 from hahomematic.platforms.generic import create_entity_and_append_to_device
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:

@@ -23,7 +23,7 @@ from hahomematic.platforms.decorators import (
 )
 from hahomematic.support import to_bool
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 # dict with binary_sensor relevant value lists and the corresponding TRUE value
 _BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[dict[tuple[str, ...], str]] = {

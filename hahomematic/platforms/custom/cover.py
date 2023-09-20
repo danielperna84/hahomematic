@@ -35,7 +35,7 @@ from hahomematic.platforms.generic.number import HmFloat
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 _HM_ARG_POSITION: Final = "position"
 _HM_ARG_TILT_POSITION: Final = "tilt_position"

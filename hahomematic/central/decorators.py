@@ -6,14 +6,14 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
 import logging
-from typing import Any, ParamSpec, TypeVar, cast
+from typing import Any, Final, ParamSpec, TypeVar, cast
 
 from hahomematic import client as hmcl
 from hahomematic.const import HmSystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
