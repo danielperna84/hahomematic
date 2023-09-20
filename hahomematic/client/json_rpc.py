@@ -32,7 +32,7 @@ from hahomematic.const import (
 from hahomematic.exceptions import AuthFailure, ClientException
 from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 _MAX_JSON_SESSION_AGE: Final = 90
 
@@ -44,9 +44,9 @@ _LASTEXECUTETIME: Final = "lastExecuteTime"
 _MAX_VALUE: Final = "maxValue"
 _MIN_VALUE: Final = "minValue"
 _NAME: Final = "name"
-_P_ERROR = "error"
-_P_MESSAGE = "message"
-_P_RESULT = "result"
+_P_ERROR: Final = "error"
+_P_MESSAGE: Final = "message"
+_P_RESULT: Final = "result"
 _SESSION_ID: Final = "_session_id_"
 _TYPE: Final = "type"
 _UNIT: Final = "unit"

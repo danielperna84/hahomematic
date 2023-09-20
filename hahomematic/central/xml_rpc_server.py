@@ -140,7 +140,6 @@ class HaHomematicXMLRPCServer(SimpleXMLRPCServer):
     system_listMethods(self, interface_id: str.
     """
 
-    # pylint: disable=arguments-differ
     def system_listMethods(self, interface_id: str | None = None) -> list[str]:
         """
         Return a list of the methods supported by the server.

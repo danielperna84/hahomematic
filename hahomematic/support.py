@@ -77,7 +77,6 @@ def check_or_create_directory(directory: str) -> bool:
 
 def parse_sys_var(data_type: HmSysvarType | None, raw_value: Any) -> Any:
     """Parse system variables to fix type."""
-    # pylint: disable=no-else-return
     if not data_type:
         return raw_value
     if data_type in (HmSysvarType.ALARM, HmSysvarType.LOGIC):

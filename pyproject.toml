@@ -90,7 +90,7 @@ extension-pkg-allow-list = [
 ]
 
 [tool.pylint.BASIC]
-class-const-naming-style = "any"
+class-const-naming-style = "UPPER_CASE"
 good-names = [
     "_",
     "ev",
