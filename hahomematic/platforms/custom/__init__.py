@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import importlib
 import logging
+from typing import Final
 
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom.definition import entity_definition_exists, get_entity_configs
 from hahomematic.platforms.custom.support import CustomConfig
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 def create_custom_entity_and_append_to_device(

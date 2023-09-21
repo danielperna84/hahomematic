@@ -6,9 +6,9 @@ from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
 import logging
-from typing import Any, TypeVar
+from typing import Any, Final, TypeVar
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 

@@ -10,13 +10,14 @@ import asyncio
 import logging
 import signal
 import sys
+from typing import Final
 
 from hahomematic import central as hmcu
 
 if sys.stdout.isatty():
     logging.basicConfig(level=logging.INFO)
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument

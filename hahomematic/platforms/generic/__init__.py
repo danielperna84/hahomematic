@@ -24,7 +24,7 @@ from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.support import generate_unique_identifier, is_binary_sensor
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 _BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
 
 

@@ -1,3 +1,8 @@
+# Version 2023.9.4 (2023-09-21)
+
+- Use more assignment-expr
+- Make \_LOGGER final
+
 # Version 2023.9.3 (2023-09-18)
 
 - Improve typing

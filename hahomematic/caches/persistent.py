@@ -28,7 +28,7 @@ from hahomematic.support import (
     get_split_channel_address,
 )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class BasePersistentCache(ABC):

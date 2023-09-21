@@ -45,7 +45,7 @@ from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 _CLOSED_LEVEL: Final = 0.0
 
@@ -208,8 +208,7 @@ class BaseClimateEntity(CustomEntity):
     @property
     def _min_or_target_temperature(self) -> float:
         """Return the min or target temperature."""
-        temperature: float = self.target_temperature or self.min_temp
-        if temperature < self.min_temp:
+        if (temperature := self.target_temperature or self.min_temp) < self.min_temp:
             return self.min_temp
         return temperature
 

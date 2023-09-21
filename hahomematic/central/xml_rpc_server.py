@@ -16,7 +16,7 @@ from hahomematic.central.decorators import callback_system_event
 from hahomematic.const import IP_ANY_V4, PORT_ANY, HmSystemEvent
 from hahomematic.support import find_free_port
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 # pylint: disable=invalid-name
@@ -140,7 +140,6 @@ class HaHomematicXMLRPCServer(SimpleXMLRPCServer):
     system_listMethods(self, interface_id: str.
     """
 
-    # pylint: disable=arguments-differ
     def system_listMethods(self, interface_id: str | None = None) -> list[str]:
         """
         Return a list of the methods supported by the server.

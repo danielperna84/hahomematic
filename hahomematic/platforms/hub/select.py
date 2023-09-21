@@ -6,12 +6,13 @@ See https://www.home-assistant.io/integrations/select/.
 from __future__ import annotations
 
 import logging
+from typing import Final
 
 from hahomematic.const import HmPlatform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class HmSysvarSelect(GenericSystemVariable):

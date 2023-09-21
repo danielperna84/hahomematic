@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2023.9.3"
+version     = "2023.9.4"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
@@ -90,7 +90,7 @@ extension-pkg-allow-list = [
 ]
 
 [tool.pylint.BASIC]
-class-const-naming-style = "any"
+class-const-naming-style = "UPPER_CASE"
 good-names = [
     "_",
     "ev",
@@ -126,13 +126,13 @@ good-names = [
 # consider-using-assignment-expr (Pylint CodeStyle extension)
 disable = [
     "format",
-    "abstract-method",
+    #"abstract-method",
     "broad-except",
     "cyclic-import",
-    "duplicate-code",
+    #"duplicate-code",
     "inconsistent-return-statements",
-    "locally-disabled",
-    "not-context-manager",
+    #"locally-disabled",
+    #"not-context-manager",
     "too-few-public-methods",
     "too-many-ancestors",
     "too-many-arguments",
@@ -142,9 +142,9 @@ disable = [
     "too-many-public-methods",
     "too-many-boolean-expressions",
     "wrong-import-order",
-    "consider-using-f-string",
+    #"consider-using-f-string",
     "consider-using-namedtuple-or-dataclass",
-    "consider-using-assignment-expr",
+    #"consider-using-assignment-expr",
 
     # Handled by ruff
     # Ref: <https://github.com/astral-sh/ruff/issues/970>
@@ -355,7 +355,7 @@ disable = [
     "wrong-exception-operation",
 ]
 enable = [
-    #"useless-suppression",  # temporarily every now and then to clean them up
+    "useless-suppression",
     "use-symbolic-message-instead",
 ]
 
@@ -474,7 +474,7 @@ ignore = [
     "D407",  # Section name underlining
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
-    "PLC0208", # Use a sequence type instead of a `set` when iterating over values
+    #"PLC0208", # Use a sequence type instead of a `set` when iterating over values
     "PLR0911", # Too many return statements ({returns} > {max_returns})
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
@@ -493,6 +493,7 @@ fixture-parentheses = false
 [tool.ruff.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
 "hahomematic.central" = "hmcu"
+"hahomematic.central.xml_rpc_server" = "xmlrpc"
 "hahomematic.client" = "hmcl"
 "hahomematic.exporter" = "hmexp"
 "hahomematic.platforms.custom.definition" = "hmed"
@@ -501,7 +502,6 @@ voluptuous = "vol"
 "hahomematic.platforms.entity" = "hme"
 "hahomematic.platforms.generic.entity" = "hmge"
 "hahomematic.support" = "hms"
-"hahomematic.central.xml_rpc_server" = "xmlrpc"
 
 [tool.ruff.per-file-ignores]
 "script/*" = ["T20"]

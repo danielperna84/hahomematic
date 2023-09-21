@@ -46,7 +46,7 @@ from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import check_or_create_directory, updated_within_seconds
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class HmDevice(PayloadMixin):
@@ -183,8 +183,7 @@ class HmDevice(PayloadMixin):
         """Return the availability of the device."""
         if self._forced_availability != HmForcedDeviceAvailability.NOT_SET:
             return self._forced_availability == HmForcedDeviceAvailability.FORCE_TRUE
-        un_reach = self._e_unreach
-        if un_reach is None:
+        if (un_reach := self._e_unreach) is None:
             un_reach = self._e_sticky_un_reach
         if un_reach is not None and un_reach.value is not None:
             return not un_reach.value
@@ -675,7 +674,7 @@ class _DefinitionExporter:
         self._storage_folder: Final = self._central.config.storage_folder
         self._interface_id: Final = device.interface_id
         self._device_address: Final = device.device_address
-        self._random_id: Final[str] = "VCU%i" % random.randint(1000000, 9999999)
+        self._random_id: Final[str] = f"VCU{int(random.randint(1000000, 9999999))}"
 
     async def export_data(self) -> None:
         """Export data."""

@@ -15,7 +15,7 @@ from hahomematic import central as hmcu
 from hahomematic.exceptions import AuthFailure, ClientException, NoConnection
 from hahomematic.support import get_tls_context, reduce_args
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
 
