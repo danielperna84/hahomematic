@@ -192,17 +192,17 @@ class CeDimmer(CustomEntity, OnTimeMixin):
     @config_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
-        return False
+        return self.color_temp is not None
 
     @config_property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
-        return False
+        return self.effect_list is not None
 
     @config_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
-        return False
+        return self.hs_color is not None
 
     @config_property
     def supports_transition(self) -> bool:
@@ -316,16 +316,6 @@ class CeColorDimmer(CeDimmer):
             return color / 200 * 360, 100
         return 0.0, 0.0
 
-    @config_property
-    def supports_hs_color(self) -> bool:
-        """Flag if light supports color temperature."""
-        return True
-
-    @config_property
-    def supports_effects(self) -> bool:
-        """Flag if light supports effects."""
-        return False
-
     @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
@@ -361,11 +351,6 @@ class CeColorDimmerEffect(CeColorDimmer):
         self._e_effect: HmInteger = self._get_entity(
             field_name=FIELD_PROGRAM, entity_type=HmInteger
         )
-
-    @config_property
-    def supports_effects(self) -> bool:
-        """Flag if light supports effects."""
-        return True
 
     @value_property
     def effect(self) -> str | None:
@@ -417,11 +402,6 @@ class CeColorTempDimmer(CeDimmer):
         return int(
             _HM_MAX_MIREDS - (_HM_MAX_MIREDS - _HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
         )
-
-    @config_property
-    def supports_color_temperature(self) -> bool:
-        """Flag if light supports color temperature."""
-        return True
 
     @bind_collector
     async def turn_on(
@@ -485,11 +465,6 @@ class CeIpRGBWLight(CeDimmer):
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
         return self._e_device_operation_mode.value == _DOM_TUNABLE_WHITE
-
-    @config_property
-    def supports_effects(self) -> bool:
-        """Flag if light supports effects."""
-        return True
 
     @config_property
     def supports_hs_color(self) -> bool:
@@ -619,11 +594,6 @@ class CeIpFixedColorLight(CeDimmer):
             return self._color_switcher.get(self._e_channel_color.value, (0.0, 0.0))
         return None
 
-    @config_property
-    def supports_hs_color(self) -> bool:
-        """Flag if light supports color."""
-        return True
-
     @bind_collector
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Any
@@ -663,28 +633,23 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color_behaviour: HmSelect = self._get_entity(
+        self._e_effect: HmSelect = self._get_entity(
             field_name=FIELD_COLOR_BEHAVIOUR, entity_type=HmSelect
         )
         self._effect_list = (
             [
                 item
-                for item in self._e_color_behaviour.value_list
+                for item in self._e_effect.value_list
                 if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR
             ]
-            if (self._e_color_behaviour and self._e_color_behaviour.value_list)
+            if (self._e_effect and self._e_effect.value_list)
             else []
         )
-
-    @config_property
-    def supports_effects(self) -> bool:
-        """Flag if light supports effects."""
-        return True
 
     @value_property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if (effect := self._e_color_behaviour.value) is not None and effect in self._effect_list:
+        if (effect := self._e_effect.value) is not None and effect in self._effect_list:
             return effect
         return None
 
@@ -702,13 +667,11 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
             return
 
         if (effect := kwargs.get(_HM_ARG_EFFECT)) is not None and effect in self._effect_list:
-            await self._e_color_behaviour.send_value(value=effect, collector=collector)
-        elif self._e_color_behaviour.value not in self._effect_list:
-            await self._e_color_behaviour.send_value(
-                value=_COLOR_BEHAVIOUR_ON, collector=collector
-            )
-        elif (color_behaviour := self._e_color_behaviour.value) is not None:
-            await self._e_color_behaviour.send_value(value=color_behaviour, collector=collector)
+            await self._e_effect.send_value(value=effect, collector=collector)
+        elif self._e_effect.value not in self._effect_list:
+            await self._e_effect.send_value(value=_COLOR_BEHAVIOUR_ON, collector=collector)
+        elif (color_behaviour := self._e_effect.value) is not None:
+            await self._e_effect.send_value(value=color_behaviour, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
 
