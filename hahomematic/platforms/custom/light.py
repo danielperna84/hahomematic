@@ -151,11 +151,11 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
     @value_property
     @abstractmethod
     def brightness(self) -> int | None:
-        """Return the brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        """Return the brightness of this light between min/max brightness."""
 
     @value_property
     def color_temp(self) -> int | None:
-        """Return the color temperature in mireds of this light between 153..500."""
+        """Return the color temperature in mireds of this light between min/max mireds."""
         return None
 
     @value_property
@@ -290,12 +290,12 @@ class CeDimmer(BaseHmLight):
 
     @value_property
     def brightness(self) -> int | None:
-        """Return the brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        """Return the brightness of this light between min/max brightness."""
         return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
     @value_property
     def channel_brightness(self) -> int | None:
-        """Return the channel_brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        """Return the channel_brightness of this light between min/max brightness."""
         if self._e_channel_level.value is not None:
             return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
         return None
@@ -420,7 +420,7 @@ class CeColorTempDimmer(CeDimmer):
 
     @value_property
     def color_temp(self) -> int | None:
-        """Return the color temperature in mireds of this light between 153..500."""
+        """Return the color temperature in mireds of this light between min/max mireds."""
         return int(
             _HM_MAX_MIREDS - (_HM_MAX_MIREDS - _HM_MIN_MIREDS) * (self._e_color_level.value or 0.0)
         )
@@ -481,12 +481,12 @@ class CeIpRGBWLight(BaseHmLight):
 
     @value_property
     def brightness(self) -> int | None:
-        """Return the brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        """Return the brightness of this light between min/max brightness."""
         return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
     @value_property
     def color_temp(self) -> int | None:
-        """Return the color temperature in mireds of this light between 153..500."""
+        """Return the color temperature in mireds of this light between min/max mireds."""
         if not self._e_color_temperature_kelvin.value:
             return None
         return math.floor(1000000 / self._e_color_temperature_kelvin.value)
@@ -630,12 +630,12 @@ class CeIpFixedColorLight(BaseHmLight):
 
     @value_property
     def brightness(self) -> int | None:
-        """Return the brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        """Return the brightness of this light between min/max brightness."""
         return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
     @value_property
     def channel_brightness(self) -> int | None:
-        """Return the channel brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        """Return the channel brightness of this light between min/max brightness."""
         if self._e_channel_level.value is not None:
             return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
         return None
