@@ -5,7 +5,6 @@ See https://www.home-assistant.io/integrations/light/.
 """
 from __future__ import annotations
 
-from abc import abstractmethod
 import math
 from typing import Any, Final, TypedDict
 
@@ -126,7 +125,7 @@ class HmLightArgs(TypedDict, total=False):
     ramp_time: float
 
 
-class BaseHmLight(CustomEntity, OnTimeMixin):
+class CeDimmer(CustomEntity, OnTimeMixin):
     """Base class for HomeMatic light entities."""
 
     _attr_platform = HmPlatform.LIGHT
@@ -136,6 +135,9 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         OnTimeMixin.__init__(self)
         super()._init_entity_fields()
         self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
+        self._e_channel_level: HmSensor = self._get_entity(
+            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
+        )
         self._e_on_time_value: HmAction = self._get_entity(
             field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
         )
@@ -144,14 +146,33 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         )
 
     @value_property
-    @abstractmethod
     def is_on(self) -> bool | None:
-        """Return true if light is on."""
+        """Return true if dimmer is on."""
+        return self._e_level.value is not None and self._e_level.value > _HM_DIMMER_OFF
 
     @value_property
-    @abstractmethod
     def brightness(self) -> int | None:
         """Return the brightness of this light between min/max brightness."""
+        return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
+
+    @value_property
+    def brightness_pct(self) -> int | None:
+        """Return the brightness in percent of this light."""
+        return int((self._e_level.value or _MIN_BRIGHTNESS) * 100)
+
+    @value_property
+    def channel_brightness(self) -> int | None:
+        """Return the channel_brightness of this light between min/max brightness."""
+        if self._e_channel_level.value is not None:
+            return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
+        return None
+
+    @value_property
+    def channel_brightness_pct(self) -> int | None:
+        """Return the channel_brightness in percent of this light."""
+        if self._e_channel_level.value is not None:
+            return int(self._e_channel_level.value * 100)
+        return None
 
     @value_property
     def color_temp(self) -> int | None:
@@ -271,34 +292,6 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
         if kwargs.get(HM_ARG_ON_TIME) is not None:
             return True
         return super().is_state_change(**kwargs)
-
-
-class CeDimmer(BaseHmLight):
-    """Class for HomeMatic dimmer entities."""
-
-    def _init_entity_fields(self) -> None:
-        """Init the entity fields."""
-        super()._init_entity_fields()
-        self._e_channel_level: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
-        )
-
-    @value_property
-    def is_on(self) -> bool | None:
-        """Return true if dimmer is on."""
-        return self._e_level.value is not None and self._e_level.value > _HM_DIMMER_OFF
-
-    @value_property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between min/max brightness."""
-        return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
-
-    @value_property
-    def channel_brightness(self) -> int | None:
-        """Return the channel_brightness of this light between min/max brightness."""
-        if self._e_channel_level.value is not None:
-            return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
-        return None
 
 
 class CeColorDimmer(CeDimmer):
@@ -444,7 +437,7 @@ class CeColorTempDimmer(CeDimmer):
         await super().turn_on(collector=collector, **kwargs)
 
 
-class CeIpRGBWLight(BaseHmLight):
+class CeIpRGBWLight(CeDimmer):
     """Class for HomematicIP HmIP-RGBW light entities."""
 
     def _init_entity_fields(self) -> None:
@@ -473,16 +466,6 @@ class CeIpRGBWLight(BaseHmLight):
         self._e_saturation: HmFloat = self._get_entity(
             field_name=FIELD_SATURATION, entity_type=HmFloat
         )
-
-    @value_property
-    def is_on(self) -> bool | None:
-        """Return true if light is on."""
-        return self._e_level.value is not None and self._e_level.value > _HM_DIMMER_OFF
-
-    @value_property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between min/max brightness."""
-        return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
     @value_property
     def color_temp(self) -> int | None:
@@ -582,7 +565,7 @@ class CeIpRGBWLight(BaseHmLight):
         )
 
 
-class CeIpFixedColorLight(BaseHmLight):
+class CeIpFixedColorLight(CeDimmer):
     """Class for HomematicIP HmIP-BSL light entities."""
 
     _color_switcher: dict[str, tuple[float, float]] = {
@@ -612,33 +595,12 @@ class CeIpFixedColorLight(BaseHmLight):
         self._e_channel_color: HmSensor = self._get_entity(
             field_name=FIELD_CHANNEL_COLOR, entity_type=HmSensor
         )
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
-        self._e_channel_level: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
-        )
         self._e_on_time_unit: HmAction = self._get_entity(
             field_name=FIELD_ON_TIME_UNIT, entity_type=HmAction
         )
         self._e_ramp_time_unit: HmAction = self._get_entity(
             field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction
         )
-
-    @value_property
-    def is_on(self) -> bool | None:
-        """Return true if dimmer is on."""
-        return self._e_level.value is not None and self._e_level.value > 0.0
-
-    @value_property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between min/max brightness."""
-        return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
-
-    @value_property
-    def channel_brightness(self) -> int | None:
-        """Return the channel brightness of this light between min/max brightness."""
-        if self._e_channel_level.value is not None:
-            return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
-        return None
 
     @value_property
     def hs_color(self) -> tuple[float, float] | None:
