@@ -72,6 +72,9 @@ _HM_MIN_MIREDS: Final = 153
 
 _HM_DIMMER_OFF: Final = 0.0
 
+_MAX_BRIGHTNESS: Final = 255.0
+_MIN_BRIGHTNESS: Final = 0.0
+
 _TIME_UNIT_SECONDS: Final = 0
 _TIME_UNIT_MINUTES: Final = 1
 _TIME_UNIT_HOURS: Final = 2
@@ -148,7 +151,7 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
     @value_property
     @abstractmethod
     def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
+        """Return the brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
 
     @value_property
     def color_temp(self) -> int | None:
@@ -210,8 +213,8 @@ class BaseHmLight(CustomEntity, OnTimeMixin):
             await self._set_on_time_value(on_time=on_time, collector=collector)
 
         if not (brightness := kwargs.get(_HM_ARG_BRIGHTNESS, self.brightness)):
-            brightness = 255
-        level = brightness / 255.0
+            brightness = _MAX_BRIGHTNESS
+        level = brightness / _MAX_BRIGHTNESS
         await self._e_level.send_value(value=level, collector=collector)
 
     @bind_collector
@@ -287,14 +290,14 @@ class CeDimmer(BaseHmLight):
 
     @value_property
     def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return int((self._e_level.value or 0.0) * 255)
+        """Return the brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
     @value_property
     def channel_brightness(self) -> int | None:
-        """Return the channel_brightness of this light between 0..255."""
+        """Return the channel_brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
         if self._e_channel_level.value is not None:
-            return int(self._e_channel_level.value * 255)
+            return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
         return None
 
 
@@ -478,8 +481,8 @@ class CeIpRGBWLight(BaseHmLight):
 
     @value_property
     def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return int((self._e_level.value or 0.0) * 255)
+        """Return the brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
     @value_property
     def color_temp(self) -> int | None:
@@ -627,14 +630,14 @@ class CeIpFixedColorLight(BaseHmLight):
 
     @value_property
     def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        return int((self._e_level.value or 0.0) * 255)
+        """Return the brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
+        return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
     @value_property
     def channel_brightness(self) -> int | None:
-        """Return the channel brightness of this light between 0..255."""
+        """Return the channel brightness of this light between MIN_BRIGHTNESS..MAX_BRIGHTNESS."""
         if self._e_channel_level.value is not None:
-            return int(self._e_channel_level.value * 255)
+            return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
         return None
 
     @value_property

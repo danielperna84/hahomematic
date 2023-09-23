@@ -1,3 +1,8 @@
+# Version 2023.9.5 (2023-09-23)
+
+- Use MIN/MAX_BRIGHTNESS constant
+- Update requirements
+
 # Version 2023.9.4 (2023-09-21)
 
 - Use more assignment-expr

@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools~=68.0", "wheel~=0.41.1"]
+requires = ["setuptools~=68.2", "wheel~=0.41.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2023.9.4"
+version     = "2023.9.5"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
