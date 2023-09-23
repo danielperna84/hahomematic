@@ -443,8 +443,8 @@ class CeIpRGBWLight(CeDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_activity_state: HmSelect = self._get_entity(
-            field_name=FIELD_DIRECTION, entity_type=HmSelect
+        self._e_activity_state: HmSensor = self._get_entity(
+            field_name=FIELD_DIRECTION, entity_type=HmSensor
         )
         self._e_color_temperature_kelvin: HmInteger = self._get_entity(
             field_name=FIELD_COLOR_TEMPERATURE, entity_type=HmInteger
