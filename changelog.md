@@ -3,7 +3,6 @@
 - Cleanup light code
 - Use more enums for climate, cover, lock
 - Use TypedDict for light, siren args
-- Use enums for args
 - Update requirements
 
 # Version 2023.9.4 (2023-09-21)
