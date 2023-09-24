@@ -72,7 +72,7 @@ repos:
       # shell.
       - id: mypy
         name: mypy
-        entry: script/run-in-env.sh mypy
+        entry: script/run-in-env.sh mypy --enable-incomplete-feature=Unpack
         language: script
         types: [python]
         require_serial: true

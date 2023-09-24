@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/climate/.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
 
@@ -47,30 +47,40 @@ from hahomematic.platforms.generic.switch import HmSwitch
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-_CLOSED_LEVEL: Final = 0.0
-
 # HA constants
-_HM_MODE_AUTO: Final = "AUTO-MODE"  # 0
-_HM_MODE_MANU: Final = "MANU-MODE"  # 1
-_HM_MODE_AWAY: Final = "PARTY-MODE"  # 2
-_HM_MODE_BOOST: Final = "BOOST-MODE"  # 3
-
-_HM_OFF_TEMPERATURE: Final = 4.5
-
-_HMIP_MODE_AUTO: Final = 0
-_HMIP_MODE_MANU: Final = 1
-_HMIP_MODE_AWAY: Final = 2
-
-_PARTY_INIT_DATE: Final = "2000_01_01 00:00"
+_CLOSED_LEVEL: Final = 0.0
+_DEFAULT_TEMPERATURE_STEP: Final = 0.5
+_OFF_TEMPERATURE: Final = 4.5
 _PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
-
+_PARTY_INIT_DATE: Final = "2000_01_01 00:00"
 _TEMP_CELSIUS: Final = "°C"
 
-_HM_ARG_TEMPERATURE: Final = "temperature"
-_HM_ARG_HVAC_MODE: Final = "hvac_mode"
-_HM_ARG_PRESET_MODE: Final = "preset_mode"
-
 HM_PRESET_MODE_PREFIX: Final = "week_program_"
+
+
+class HmStateChangeArg(StrEnum):
+    """Enum with climate state change arguments."""
+
+    HVAC_MODE = "hvac_mode"
+    PRESET_MODE = "preset_mode"
+    TEMPERATURE = "temperature"
+
+
+class HmMode(StrEnum):
+    """Enum with the HM modes."""
+
+    AUTO = "AUTO-MODE"  # 0
+    AWAY = "PARTY-MODE"  # 2
+    BOOST = "BOOST-MODE"  # 3
+    MANU = "MANU-MODE"  # 1
+
+
+class HmIPMode(IntEnum):
+    """Enum with the HmIP modes."""
+
+    AUTO = 0
+    AWAY = 2
+    MANU = 1
 
 
 class HmHvacAction(StrEnum):
@@ -85,20 +95,20 @@ class HmHvacAction(StrEnum):
 class HmHvacMode(StrEnum):
     """Enum with the hvac modes."""
 
-    OFF = "off"
-    HEAT = "heat"
     AUTO = "auto"
     COOL = "cool"
+    HEAT = "heat"
+    OFF = "off"
 
 
 class HmPresetMode(StrEnum):
     """Enum with preset modes."""
 
-    NONE = "none"
     AWAY = "away"
     BOOST = "boost"
     COMFORT = "comfort"
     ECO = "eco"
+    NONE = "none"
     WEEK_PROGRAM_1 = "week_program_1"
     WEEK_PROGRAM_2 = "week_program_2"
     WEEK_PROGRAM_3 = "week_program_3"
@@ -144,8 +154,8 @@ class BaseClimateEntity(CustomEntity):
         else:
             min_temp = self._e_setpoint.min
 
-        if min_temp == _HM_OFF_TEMPERATURE:
-            return min_temp + 0.5
+        if min_temp == _OFF_TEMPERATURE:
+            return min_temp + _DEFAULT_TEMPERATURE_STEP
         return min_temp
 
     @value_property
@@ -173,7 +183,7 @@ class BaseClimateEntity(CustomEntity):
     @config_property
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
-        return 0.5
+        return _DEFAULT_TEMPERATURE_STEP
 
     @value_property
     def preset_mode(self) -> HmPresetMode:
@@ -250,15 +260,15 @@ class BaseClimateEntity(CustomEntity):
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            temperature := kwargs.get(_HM_ARG_TEMPERATURE)
+            temperature := kwargs.get(HmStateChangeArg.TEMPERATURE)
         ) is not None and temperature != self.target_temperature:
             return True
         if (
-            hvac_mode := kwargs.get(_HM_ARG_HVAC_MODE)
+            hvac_mode := kwargs.get(HmStateChangeArg.HVAC_MODE)
         ) is not None and hvac_mode != self.hvac_mode:
             return True
         if (
-            preset_mode := kwargs.get(_HM_ARG_PRESET_MODE)
+            preset_mode := kwargs.get(HmStateChangeArg.PRESET_MODE)
         ) is not None and preset_mode != self.preset_mode:
             return True
         return super().is_state_change(**kwargs)
@@ -310,9 +320,9 @@ class CeRfThermostat(BaseClimateEntity):
     @value_property
     def hvac_mode(self) -> HmHvacMode:
         """Return hvac operation mode."""
-        if self.target_temperature and self.target_temperature <= _HM_OFF_TEMPERATURE:
+        if self.target_temperature and self.target_temperature <= _OFF_TEMPERATURE:
             return HmHvacMode.OFF
-        if self._e_control_mode.value == _HM_MODE_MANU:
+        if self._e_control_mode.value == HmMode.MANU:
             return HmHvacMode.HEAT
         return HmHvacMode.AUTO
 
@@ -326,9 +336,9 @@ class CeRfThermostat(BaseClimateEntity):
         """Return the current preset mode."""
         if self._e_control_mode.value is None:
             return HmPresetMode.NONE
-        if self._e_control_mode.value == _HM_MODE_BOOST:
+        if self._e_control_mode.value == HmMode.BOOST:
             return HmPresetMode.BOOST
-        if self._e_control_mode.value == _HM_MODE_AWAY:
+        if self._e_control_mode.value == HmMode.AWAY:
             return HmPresetMode.AWAY
         return HmPresetMode.NONE
 
@@ -365,7 +375,7 @@ class CeRfThermostat(BaseClimateEntity):
             # Disable validation here to allow setting a value,
             # that is out of the validation range.
             await self.set_temperature(
-                temperature=_HM_OFF_TEMPERATURE, collector=collector, do_validate=False
+                temperature=_OFF_TEMPERATURE, collector=collector, do_validate=False
             )
 
     @bind_collector
@@ -435,11 +445,11 @@ class CeIpThermostat(BaseClimateEntity):
     @value_property
     def hvac_mode(self) -> HmHvacMode:
         """Return hvac operation mode."""
-        if self.target_temperature and self.target_temperature <= _HM_OFF_TEMPERATURE:
+        if self.target_temperature and self.target_temperature <= _OFF_TEMPERATURE:
             return HmHvacMode.OFF
-        if self._e_set_point_mode.value == _HMIP_MODE_MANU:
+        if self._e_set_point_mode.value == HmIPMode.MANU:
             return HmHvacMode.HEAT if self._is_heating_mode else HmHvacMode.COOL
-        if self._e_set_point_mode.value == _HMIP_MODE_AUTO:
+        if self._e_set_point_mode.value == HmIPMode.AUTO:
             return HmHvacMode.AUTO
         return HmHvacMode.AUTO
 
@@ -457,7 +467,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Return the current preset mode."""
         if self._e_boost_mode.value:
             return HmPresetMode.BOOST
-        if self._e_set_point_mode.value == _HMIP_MODE_AWAY:
+        if self._e_set_point_mode.value == HmIPMode.AWAY:
             return HmPresetMode.AWAY
         if self.hvac_mode == HmHvacMode.AUTO:
             return self._current_profile_name if self._current_profile_name else HmPresetMode.NONE
@@ -488,15 +498,15 @@ class CeIpThermostat(BaseClimateEntity):
             await self.set_preset_mode(preset_mode=HmPresetMode.NONE, collector=collector)
 
         if hvac_mode == HmHvacMode.AUTO:
-            await self._e_control_mode.send_value(value=_HMIP_MODE_AUTO, collector=collector)
+            await self._e_control_mode.send_value(value=HmIPMode.AUTO, collector=collector)
         elif hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
-            await self._e_control_mode.send_value(value=_HMIP_MODE_MANU, collector=collector)
+            await self._e_control_mode.send_value(value=HmIPMode.MANU, collector=collector)
             await self.set_temperature(
                 temperature=self._min_or_target_temperature, collector=collector
             )
         elif hvac_mode == HmHvacMode.OFF:
-            await self._e_control_mode.send_value(value=_HMIP_MODE_MANU, collector=collector)
-            await self.set_temperature(temperature=_HM_OFF_TEMPERATURE, collector=collector)
+            await self._e_control_mode.send_value(value=HmIPMode.MANU, collector=collector)
+            await self.set_temperature(temperature=_OFF_TEMPERATURE, collector=collector)
 
     @bind_collector
     async def set_preset_mode(
@@ -524,7 +534,7 @@ class CeIpThermostat(BaseClimateEntity):
             address=self._attr_channel_address,
             paramset_key=HmParamsetKey.VALUES,
             value={
-                "CONTROL_MODE": _HMIP_MODE_AWAY,
+                "CONTROL_MODE": HmIPMode.AWAY,
                 "PARTY_TIME_END": end.strftime(_PARTY_DATE_FORMAT),
                 "PARTY_TIME_START": start.strftime(_PARTY_DATE_FORMAT),
             },
@@ -552,7 +562,7 @@ class CeIpThermostat(BaseClimateEntity):
             address=self._attr_channel_address,
             paramset_key=HmParamsetKey.VALUES,
             value={
-                "CONTROL_MODE": _HMIP_MODE_AWAY,
+                "CONTROL_MODE": HmIPMode.AWAY,
                 "PARTY_TIME_START": _PARTY_INIT_DATE,
                 "PARTY_TIME_END": _PARTY_INIT_DATE,
             },
