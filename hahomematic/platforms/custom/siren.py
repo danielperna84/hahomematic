@@ -6,7 +6,8 @@ See https://www.home-assistant.io/integrations/siren/.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Final, TypedDict
+from enum import StrEnum
+from typing import Final, TypedDict, Unpack
 
 from hahomematic.const import HmPlatform
 from hahomematic.platforms import device as hmd
@@ -30,16 +31,17 @@ from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.sensor import HmSensor
 
-_HM_ARG_ACOUSTIC_ALARM: Final = "acoustic_alarm"
-_HM_ARG_OPTICAL_ALARM: Final = "optical_alarm"
-_HM_ARG_DURATION: Final = "duration"
-
-_SMOKE_DETECTOR_COMMAND_OFF: Final = "INTRUSION_ALARM_OFF"
-_SMOKE_DETECTOR_COMMAND_ON: Final = "INTRUSION_ALARM"
 _SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF: Final = "IDLE_OFF"
 
 
-class HmSirenArgs(TypedDict, total=False):
+class HmSirenCommand(StrEnum):
+    """Enum with siren commands."""
+
+    OFF = "INTRUSION_ALARM_OFF"
+    ON = "INTRUSION_ALARM"
+
+
+class HmSirenOnArgs(TypedDict, total=False):
     """Matcher for the siren arguments."""
 
     acoustic_alarm: str
@@ -86,7 +88,7 @@ class BaseSiren(CustomEntity):
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[HmSirenOnArgs],
     ) -> None:
         """Turn the device on."""
 
@@ -147,20 +149,18 @@ class CeIpSiren(BaseSiren):
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[HmSirenOnArgs],
     ) -> None:
         """Turn the device on."""
 
-        acoustic_alarm = kwargs.get(
-            _HM_ARG_ACOUSTIC_ALARM, self._e_acoustic_alarm_selection.default
-        )
+        acoustic_alarm = kwargs.get("acoustic_alarm", self._e_acoustic_alarm_selection.default)
         if self.available_tones and acoustic_alarm and acoustic_alarm not in self.available_tones:
             raise ValueError(
                 f"Invalid tone specified for entity {self.full_name}: {acoustic_alarm}, "
                 "check the available_tones attribute for valid tones to pass in"
             )
 
-        optical_alarm = kwargs.get(_HM_ARG_OPTICAL_ALARM, self._e_optical_alarm_selection.default)
+        optical_alarm = kwargs.get("optical_alarm", self._e_optical_alarm_selection.default)
         if self.available_lights and optical_alarm and optical_alarm not in self.available_lights:
             raise ValueError(
                 f"Invalid light specified for entity {self.full_name}: {optical_alarm}, "
@@ -174,7 +174,7 @@ class CeIpSiren(BaseSiren):
         await self._e_duration_unit.send_value(
             value=self._e_duration_unit.default, collector=collector
         )
-        duration = kwargs.get(_HM_ARG_DURATION, self._e_duration.default)
+        duration = kwargs.get("duration", self._e_duration.default)
         await self._e_duration.send_value(value=duration, collector=collector)
 
     @bind_collector
@@ -232,17 +232,17 @@ class CeIpSirenSmoke(BaseSiren):
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[HmSirenOnArgs],
     ) -> None:
         """Turn the device on."""
         await self._e_smoke_detector_command.send_value(
-            value=_SMOKE_DETECTOR_COMMAND_ON, collector=collector
+            value=HmSirenCommand.ON, collector=collector
         )
 
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
         await self._e_smoke_detector_command.send_value(
-            value=_SMOKE_DETECTOR_COMMAND_OFF, collector=collector
+            value=HmSirenCommand.OFF, collector=collector
         )
 
 

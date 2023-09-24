@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
-from enum import IntEnum, StrEnum
+from enum import Enum, IntEnum, StrEnum
 import errno
 import logging
 from ssl import SSLError
@@ -164,6 +164,8 @@ def _cleanup_parameter(value: Any) -> Any:
         return str(value)
     if isinstance(value, IntEnum):
         return int(value)
+    if isinstance(value, Enum):
+        _LOGGER.error("XmlRpcProxy command: Enum is not supported as parameter value")
     return value
 
 

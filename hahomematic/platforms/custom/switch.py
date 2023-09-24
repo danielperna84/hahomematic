@@ -5,10 +5,11 @@ See https://www.home-assistant.io/integrations/switch/.
 """
 from __future__ import annotations
 
+from enum import StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HM_ARG_OFF, HM_ARG_ON, HM_ARG_ON_TIME, HmPlatform
+from hahomematic.const import HmPlatform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -27,6 +28,14 @@ from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.support import OnTimeMixin
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+
+class HmStateChangeArg(StrEnum):
+    """Enum with switch state change arguments."""
+
+    OFF = "off"
+    ON = "on"
+    ON_TIME = "on_time"
 
 
 class CeSwitch(CustomEntity, OnTimeMixin):
@@ -76,11 +85,11 @@ class CeSwitch(CustomEntity, OnTimeMixin):
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
-        if kwargs.get(HM_ARG_ON_TIME) is not None:
+        if kwargs.get(HmStateChangeArg.ON_TIME) is not None:
             return True
-        if kwargs.get(HM_ARG_ON) is not None and self.value is not True:
+        if kwargs.get(HmStateChangeArg.ON) is not None and self.value is not True:
             return True
-        if kwargs.get(HM_ARG_OFF) is not None and self.value is not False:
+        if kwargs.get(HmStateChangeArg.OFF) is not None and self.value is not False:
             return True
         return super().is_state_change(**kwargs)
 

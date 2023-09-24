@@ -6,7 +6,7 @@ See https://www.home-assistant.io/integrations/lock/.
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Final
+from enum import StrEnum
 
 from hahomematic.const import HmPlatform
 from hahomematic.platforms import device as hmd
@@ -28,19 +28,22 @@ from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
 
-# HM constants
-_LOCK_STATE_UNKNOWN: Final = "UNKNOWN"
-_LOCK_STATE_UNLOCKED: Final = "UNLOCKED"
 
-_LOCK_TARGET_LEVEL_LOCKED: Final = "LOCKED"
-_LOCK_TARGET_LEVEL_UNLOCKED: Final = "UNLOCKED"
-_LOCK_TARGET_LEVEL_OPEN: Final = "OPEN"
+class HmLockActivity(StrEnum):
+    """Enum with lock activities."""
 
-_HM_UNLOCKING: Final = "UP"
-_HM_LOCKING: Final = "DOWN"
-_HM_NO_ERROR: Final = "NO_ERROR"
+    LOCKING = "DOWN"
+    UNLOCKING = "UP"
 
-LOCK_STATE_LOCKED: Final = "LOCKED"
+
+class HmLockState(StrEnum):
+    """Enum with lock states."""
+
+    LOCKED = "LOCKED"
+    NO_ERROR = "NO_ERROR"
+    OPEN = "OPEN"
+    UNKNOWN = "UNKNOWN"
+    UNLOCKED = "UNLOCKED"
 
 
 class BaseLock(CustomEntity):
@@ -100,20 +103,20 @@ class CeIpLock(BaseLock):
     @value_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._e_lock_state.value == LOCK_STATE_LOCKED
+        return self._e_lock_state.value == HmLockState.LOCKED
 
     @value_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == _HM_LOCKING
+            return str(self._e_direction.value) == HmLockActivity.LOCKING
         return None
 
     @value_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == _HM_UNLOCKING
+            return str(self._e_direction.value) == HmLockActivity.UNLOCKING
         return None
 
     @value_property
@@ -124,23 +127,17 @@ class CeIpLock(BaseLock):
     @bind_collector
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
-        await self._e_lock_target_level.send_value(
-            value=_LOCK_TARGET_LEVEL_LOCKED, collector=collector
-        )
+        await self._e_lock_target_level.send_value(value=HmLockState.LOCKED, collector=collector)
 
     @bind_collector
     async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
-        await self._e_lock_target_level.send_value(
-            value=_LOCK_TARGET_LEVEL_UNLOCKED, collector=collector
-        )
+        await self._e_lock_target_level.send_value(value=HmLockState.UNLOCKED, collector=collector)
 
     @bind_collector
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
-        await self._e_lock_target_level.send_value(
-            value=_LOCK_TARGET_LEVEL_OPEN, collector=collector
-        )
+        await self._e_lock_target_level.send_value(value=HmLockState.OPEN, collector=collector)
 
 
 class CeRfLock(BaseLock):
@@ -165,20 +162,20 @@ class CeRfLock(BaseLock):
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == _HM_LOCKING
+            return str(self._e_direction.value) == HmLockActivity.LOCKING
         return None
 
     @value_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == _HM_UNLOCKING
+            return str(self._e_direction.value) == HmLockActivity.UNLOCKING
         return None
 
     @value_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._e_error.value is not None and self._e_error.value != _HM_NO_ERROR
+        return self._e_error.value is not None and self._e_error.value != HmLockState.NO_ERROR
 
     @bind_collector
     async def lock(self, collector: CallParameterCollector | None = None) -> None:

@@ -54,10 +54,6 @@ EVENT_VALUE: Final = "value"
 FILE_DEVICES: Final = "homematic_devices.json"
 FILE_PARAMSETS: Final = "homematic_paramsets.json"
 
-HM_ARG_ON_TIME: Final = "on_time"
-HM_ARG_ON: Final = "on"
-HM_ARG_OFF: Final = "off"
-
 MAX_CACHE_AGE: Final = 60
 
 PARAM_CHANNEL_OPERATION_MODE: Final = "CHANNEL_OPERATION_MODE"
