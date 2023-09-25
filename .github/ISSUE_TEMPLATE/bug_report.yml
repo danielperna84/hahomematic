@@ -124,8 +124,8 @@ body:
         It generally allows pinpointing defects and thus resolving issues faster.
   - type: textarea
     attributes:
-      label: Anything in the logs that might be useful for us?
-      description: For example, error message, or stack traces.
+      label: Anything in the logs that might be useful for us? The log (full log) is the best source to support trouble shooting!
+      description: For example, error message, or stack traces. Don't switch to DEBUG level if not requested.
       render: txt
   - type: textarea
     attributes:
