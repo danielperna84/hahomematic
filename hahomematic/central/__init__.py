@@ -1361,41 +1361,69 @@ class CentralConnectionState:
 
     def __init__(self) -> None:
         """Init the CentralConnectionStatus."""
-        self._json_issue: bool = False
+        self._json_issues: Final[list[str]] = []
         self._xml_proxy_issues: Final[list[str]] = []
 
-    @property
-    def json_issue(self) -> bool:
-        """Return if there is an outgoing connection issue."""
-        return self._json_issue
-
-    def add_issue(self, issuer: ConnectionProblemIssuer) -> bool:
+    def add_issue(self, issuer: ConnectionProblemIssuer, iid: str) -> bool:
         """Add issue to collection."""
-        if isinstance(issuer, JsonRpcAioHttpClient) and not self._json_issue:
-            self._json_issue = True
-            _LOGGER.debug("add_issue: add issue for JsonRpcAioHttpClient")
+        if isinstance(issuer, JsonRpcAioHttpClient) and iid not in self._json_issues:
+            self._json_issues.append(iid)
+            _LOGGER.debug("add_issue: add issue  [%s] for JsonRpcAioHttpClient", iid)
             return True
-        if isinstance(issuer, XmlRpcProxy) and issuer.interface_id not in self._xml_proxy_issues:
-            self._xml_proxy_issues.append(issuer.interface_id)
-            _LOGGER.debug("add_issue: add issue for %s", issuer.interface_id)
+        if isinstance(issuer, XmlRpcProxy) and iid not in self._xml_proxy_issues:
+            self._xml_proxy_issues.append(iid)
+            _LOGGER.debug("add_issue: add issue [%s] for %s", iid, issuer.interface_id)
             return True
         return False
 
-    def remove_issue(self, issuer: ConnectionProblemIssuer) -> bool:
+    def remove_issue(self, issuer: ConnectionProblemIssuer, iid: str) -> bool:
         """Add issue to collection."""
-        if isinstance(issuer, JsonRpcAioHttpClient) and self._json_issue is True:
-            self._json_issue = False
-            _LOGGER.debug("remove_issue: removing issue for JsonRpcAioHttpClient")
+        if isinstance(issuer, JsonRpcAioHttpClient) and iid in self._json_issues:
+            self._json_issues.remove(iid)
+            _LOGGER.debug("remove_issue: removing issue [%s] for JsonRpcAioHttpClient", iid)
             return True
         if isinstance(issuer, XmlRpcProxy) and issuer.interface_id in self._xml_proxy_issues:
-            self._xml_proxy_issues.remove(issuer.interface_id)
-            _LOGGER.debug("remove_issue: removing issue for %s", issuer.interface_id)
+            self._xml_proxy_issues.remove(iid)
+            _LOGGER.debug("remove_issue: removing issue [%s] for %s", iid, issuer.interface_id)
             return True
         return False
 
-    def has_issue(self, issuer: ConnectionProblemIssuer) -> bool:
+    def has_issue(self, issuer: ConnectionProblemIssuer, iid: str) -> bool:
         """Add issue to collection."""
         if isinstance(issuer, JsonRpcAioHttpClient):
-            return self._json_issue
+            return iid in self._json_issues
         if isinstance(issuer, XmlRpcProxy):
-            return issuer.interface_id in self._xml_proxy_issues
+            return iid in self._xml_proxy_issues
+
+    def handle_exception_log(
+        self,
+        issuer: ConnectionProblemIssuer,
+        method: str,
+        exception: Exception,
+        logger: logging.Logger = _LOGGER,
+        level: int = logging.ERROR,
+        extra_msg: str = "",
+        iid: str | None = None,
+    ) -> None:
+        """Handle Exception and derivates logging."""
+        exception_name = (
+            exception.name if hasattr(exception, "name") else exception.__class__.__name__
+        )
+        if self.has_issue(issuer=issuer, iid=iid or method):
+            logger.debug(
+                "%s failed: %s [%s] %s",
+                method,
+                exception_name,
+                reduce_args(args=exception.args),
+                extra_msg,
+            )
+        else:
+            self.add_issue(issuer=issuer, iid=iid or method)
+            logger.log(
+                level,
+                "%s failed: %s [%s] %s",
+                method,
+                exception_name,
+                reduce_args(args=exception.args),
+                extra_msg,
+            )

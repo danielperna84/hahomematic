@@ -85,10 +85,12 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """Call method on server side."""
         parent = xmlrpc.client.ServerProxy
         try:
-            if args[
-                0
-            ] in _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION or not self._connection_state.has_issue(  # noqa: E501
-                issuer=self
+            method = args[0]
+            if (
+                method in _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION
+                or not self._connection_state.has_issue(  # noqa: E501
+                    issuer=self, iid=self.interface_id
+                )
             ):
                 args = _cleanup_args(*args)
                 _LOGGER.debug("__ASYNC_REQUEST: %s", args)
@@ -98,7 +100,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                     self,
                     *args,
                 )
-                self._connection_state.remove_issue(issuer=self)
+                self._connection_state.remove_issue(issuer=self, iid=self.interface_id)
                 return result
             raise NoConnection(f"No connection to {self.interface_id}")
         except SSLError as sslerr:
@@ -111,7 +113,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         except OSError as ose:
             message = f"OSError on {self.interface_id}: {reduce_args(args=ose.args)}"
             if ose.args[0] in _OS_ERROR_CODES:
-                if self._connection_state.add_issue(issuer=self):
+                if self._connection_state.add_issue(issuer=self, iid=self.interface_id):
                     _LOGGER.error(message)
                 else:
                     _LOGGER.debug(message)
@@ -123,7 +125,7 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         except TypeError as terr:
             raise ClientException(terr) from terr
         except xmlrpc.client.ProtocolError as per:
-            if not self._connection_state.has_issue(issuer=self):
+            if not self._connection_state.has_issue(issuer=self, iid=self.interface_id):
                 if per.errmsg == "Unauthorized":
                     raise AuthFailure(reduce_args(args=per.args)) from per
                 raise NoConnection(reduce_args(args=per.args)) from per
