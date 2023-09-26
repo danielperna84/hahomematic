@@ -261,18 +261,17 @@ class JsonRpcAioHttpClient:
                 "Content-Length": str(len(payload)),
             }
 
-            if self._tls:
-                response = await self._client_session.post(
+            if (
+                response := await self._client_session.post(
                     self._url,
                     data=payload,
                     headers=headers,
                     timeout=config.TIMEOUT,
-                    ssl=self._tls_context,
+                    ssl=self._tls_context if self._tls else None,
                 )
-            else:
-                response = await self._client_session.post(
-                    self._url, data=payload, headers=headers, timeout=config.TIMEOUT
-                )
+            ) is None:
+                raise ClientException("POST method failed with no response")
+
             if response.status == 200:
                 self._connection_state.remove_issue(issuer=self)
                 json_response = await self._get_json_reponse(response=response)
@@ -287,8 +286,8 @@ class JsonRpcAioHttpClient:
 
                 return json_response
 
-            json_response = await self._get_json_reponse(response=response)
             message = f"Status: {response.status}"
+            json_response = await self._get_json_reponse(response=response)
             if error := json_response[_P_ERROR]:
                 error_message = error[_P_MESSAGE]
                 message = f"{message}: {error_message}"

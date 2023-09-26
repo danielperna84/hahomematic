@@ -2,6 +2,7 @@
 
 - Use freezegun for climate test
 - Update ReGa-Script fetch_all_device_data.fn
+- Simplify json rpc post code
 
 # Version 2023.9.5 (2023-09-23)
 
