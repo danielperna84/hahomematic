@@ -61,7 +61,7 @@ py-version = "3.11"
 ignore = [
     "tests",
 ]
-extension-pkg-whitelist= ["orjson"]
+
 # Use a conservative default here; 2 should speed up most setups and not hurt
 # any too bad. Override on command line as appropriate.
 jobs = 2
@@ -80,17 +80,20 @@ load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "pylint_strict_informational",
+    "pylint_per_file_ignores",
 ]
 persistent = false
 extension-pkg-allow-list = [
     "av.audio.stream",
+    "av.logging",
     "av.stream",
     "ciso8601",
+    "orjson",
     "cv2",
 ]
 
 [tool.pylint.BASIC]
-class-const-naming-style = "UPPER_CASE"
+class-const-naming-style = "any"
 good-names = [
     "_",
     "ev",
@@ -121,18 +124,18 @@ good-names = [
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
 # ---
-# Enable once current issues are fixed:
-# consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
-# consider-using-assignment-expr (Pylint CodeStyle extension)
+# Pylint CodeStyle plugin
+# consider-using-namedtuple-or-dataclass - too opinionated
+# consider-using-assignment-expr - decision to use := better left to devs
 disable = [
     "format",
-    #"abstract-method",
+    "abstract-method",
     "broad-except",
     "cyclic-import",
-    #"duplicate-code",
+    "duplicate-code",
     "inconsistent-return-statements",
-    #"locally-disabled",
-    #"not-context-manager",
+    "locally-disabled",
+    "not-context-manager",
     "too-few-public-methods",
     "too-many-ancestors",
     "too-many-arguments",
@@ -239,6 +242,7 @@ disable = [
     "missing-module-docstring", # D100
     "multiple-imports", #E401
     "singleton-comparison", # E711, E712
+    "subprocess-run-check", # PLW1510
     "superfluous-parens", # UP034
     "ungrouped-imports", # I001
     "unidiomatic-typecheck", # E721
@@ -272,6 +276,7 @@ disable = [
     "use-list-literal", # C405
     "useless-object-inheritance", # UP004
     "useless-return", # PLR1711
+    # "no-self-use", # PLR6301  # Optional plugin, not enabled
 
     # Handled by mypy
     # Ref: <https://github.com/antonagestam/pylint-mypy-overlap>
@@ -395,12 +400,17 @@ norecursedirs = [
     ".git",
     "testing_config",
 ]
+log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
+log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_mode = "auto"
+
+filterwarnings = [
+
+]
 
 [tool.ruff]
 target-version = "py311"
 line-length = 99
-
 
 select = [
     "B002", # Python does not support the unary prefix increment
@@ -411,9 +421,11 @@ select = [
     "C",  # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D",  # docstrings
+    "DTZ003",  # Use datetime.now(tz=) instead of datetime.utcnow()
+    "DTZ004",  # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
     "E",  # pycodestyle
     "F",  # pyflakes/autoflake
-    "G",  # flake8-logging-format
+    "G", # flake8-logging-format
     "I",  # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
     "ISC001", # Implicitly concatenated string literals on one line
@@ -422,7 +434,6 @@ select = [
     "N815", # Variable {name} in class scope should not be mixedCase
     "PGH001", # No builtin eval() allowed
     "PGH004",  # Use specific rule codes when using noqa
-    "PIE",  # flake8-pie
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "PLC", # pylint
     "PLE", # pylint
@@ -458,6 +469,7 @@ select = [
     "SIM401", # Use get from dict with default instead of an if block
     "T100", # Trace found: {name} used
     "T20",  # flake8-print
+    "TID251", # Banned imports
     "TRY004", # Prefer TypeError exception for invalid type
     "TRY200", # Use raise from to specify exception cause
     "TRY302", # Remove exception handler; error is immediately re-raised
@@ -466,15 +478,18 @@ select = [
 ]
 
 ignore = [
-    "B026",
+    "B026", # Catching too general exception Exception
     "D202",  # No blank lines allowed after function docstring
     "D203",  # 1 blank line required before class docstring
     "D212",  # Multi-line docstring summary should start at the second line
+    #"D213",  # Multi-line docstring summary should start at the second line
     "D406",  # Section name should end with a newline
     "D407",  # Section name underlining
     "E501",  # line too long
     "E731",  # do not assign a lambda expression, use a def
-    #"PLC0208", # Use a sequence type instead of a `set` when iterating over values
+    #"PLC1901", # Lots of false positives
+    # False positives https://github.com/astral-sh/ruff/issues/5386
+    "PLC0208", # Use a sequence type instead of a `set` when iterating over values
     "PLR0911", # Too many return statements ({returns} > {max_returns})
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})

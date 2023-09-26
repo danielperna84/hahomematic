@@ -142,7 +142,6 @@ class ClientLocal(Client):  # pragma: no cover
                 device_descriptions.extend(device_description)
         return device_descriptions
 
-    # pylint: disable=invalid-name
     async def set_install_mode(
         self,
         on: bool = True,
