@@ -216,14 +216,17 @@ class JsonRpcAioHttpClient:
             session_id=session_id,
             method=method,
             extra_params={"script": script},
+            from_script=True,
         )
 
-        if not response[_P_ERROR]:
-            response[_P_RESULT] = orjson.loads(response[_P_RESULT])
         _LOGGER.debug("POST_SCRIPT: Method: %s [%s]", method, script_name)
-
-        if not keep_session:
-            await self._do_logout(session_id=session_id)
+        try:
+            if not response[_P_ERROR]:
+                response[_P_RESULT] = orjson.loads(response[_P_RESULT])
+            self._connection_state.remove_issue(issuer=self, iid=script_name)
+        finally:
+            if not keep_session:
+                await self._do_logout(session_id=session_id)
 
         return response
 
@@ -244,6 +247,7 @@ class JsonRpcAioHttpClient:
         method: str,
         extra_params: dict[str, str] | None = None,
         use_default_params: bool = True,
+        from_script: bool = False,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST function."""
         if not self._client_session:
@@ -267,13 +271,14 @@ class JsonRpcAioHttpClient:
                     data=payload,
                     headers=headers,
                     timeout=config.TIMEOUT,
-                    ssl=self._tls_context if self._tls else None,
+                    ssl=self._tls_context,
                 )
             ) is None:
                 raise ClientException("POST method failed with no response")
 
             if response.status == 200:
-                self._connection_state.remove_issue(issuer=self)
+                if not from_script:
+                    self._connection_state.remove_issue(issuer=self, iid=method)
                 json_response = await self._get_json_reponse(response=response)
 
                 if error := json_response[_P_ERROR]:
@@ -293,7 +298,7 @@ class JsonRpcAioHttpClient:
                 message = f"{message}: {error_message}"
             raise ClientException(message)
         except (AuthFailure, ClientException):
-            self._connection_state.add_issue(issuer=self)
+            self._connection_state.add_issue(issuer=self, iid=method)
             await self.logout()
             raise
         except ClientConnectorCertificateError as cccerr:
@@ -410,7 +415,9 @@ class JsonRpcAioHttpClient:
                     str(json_result),
                 )
         except ClientException as clex:
-            self._handle_exception_log(method="SET_SYSTEM_VARIABLE", exception=clex)
+            self._handle_exception_log(
+                method="SET_SYSTEM_VARIABLE", exception=clex, iid=_REGA_SCRIPT_SET_SYSTEM_VARIABLE
+            )
             return False
 
         return True
@@ -538,9 +545,11 @@ class JsonRpcAioHttpClient:
                 for data in json_result:
                     ext_markers[data[_ID]] = data[_HASEXTMARKER]
         except JSONDecodeError as jderr:
-            _LOGGER.error(
-                "GET_SYSTEM_VARIABLES_EXT_MARKERS failed: JSONDecodeError [%s]. This leads to a missing assignment of extended system variables",
-                reduce_args(jderr.args),
+            self._handle_exception_log(
+                method="GET_SYSTEM_VARIABLES_EXT_MARKERS",
+                exception=jderr,
+                extra_msg="This leads to a missing assignment of extended system variables.",
+                iid=_REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER,
             )
         return ext_markers
 
@@ -642,11 +651,17 @@ class JsonRpcAioHttpClient:
             if json_result := response[_P_RESULT]:
                 all_device_data = _convert_to_values_cache(json_result)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_ALL_DEVICE_DATA", exception=clex)
+            self._handle_exception_log(
+                method="GET_ALL_DEVICE_DATA",
+                exception=clex,
+                iid=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
+            )
         except JSONDecodeError as jderr:
-            _LOGGER.error(
-                "GET_ALL_DEVICE_DATA failed: JSONDecodeError [%s]. This results in a higher DutyCycle during Integration startup.",
-                reduce_args(jderr.args),
+            self._handle_exception_log(
+                method="GET_ALL_DEVICE_DATA",
+                exception=jderr,
+                extra_msg="This leeds to a higher DutyCycle during Integration startup.",
+                iid=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
             )
 
         return all_device_data
@@ -730,28 +745,48 @@ class JsonRpcAioHttpClient:
                 if len(serial) > 10:
                     serial = serial[-10:]
         except ClientException as clex:
-            self._handle_exception_log(method="GET_SERIAL", exception=clex)
+            self._handle_exception_log(
+                method="GET_SERIAL", exception=clex, iid=_REGA_SCRIPT_GET_SERIAL
+            )
         except JSONDecodeError as jderr:
-            _LOGGER.error(
-                "GET_SERIAL failed: JSONDecodeError [%s]. This leads to a missing serial identification of the CCU",
-                reduce_args(jderr.args),
+            self._handle_exception_log(
+                method="GET_SERIAL",
+                exception=jderr,
+                extra_msg="This leads to a missing serial identification of the CCU",
+                iid=_REGA_SCRIPT_GET_SERIAL,
             )
 
         return serial
 
-    def _handle_exception_log(self, method: str, exception: Exception) -> None:
+    def _handle_exception_log(
+        self,
+        method: str,
+        exception: Exception,
+        level: int = logging.ERROR,
+        extra_msg: str = "",
+        iid: str | None = None,
+    ) -> None:
         """Handle BaseHomematicException and derivates logging."""
         exception_name = (
             exception.name if hasattr(exception, "name") else exception.__class__.__name__
         )
-        if self._connection_state.json_issue:
+        if self._connection_state.has_issue(issuer=self, iid=iid or method):
             _LOGGER.debug(
-                "%s failed: %s [%s]", method, exception_name, reduce_args(args=exception.args)
+                "%s failed: %s [%s] %s",
+                method,
+                exception_name,
+                reduce_args(args=exception.args),
+                extra_msg,
             )
         else:
-            self._connection_state.add_issue(issuer=self)
-            _LOGGER.error(
-                "%s failed: %s [%s]", method, exception_name, reduce_args(args=exception.args)
+            self._connection_state.add_issue(issuer=self, iid=iid or method)
+            _LOGGER.log(
+                level,
+                "%s failed: %s [%s] %s",
+                method,
+                exception_name,
+                reduce_args(args=exception.args),
+                extra_msg,
             )
 
 

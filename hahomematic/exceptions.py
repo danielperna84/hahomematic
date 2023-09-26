@@ -1,7 +1,7 @@
 """Module for HaHomematicExceptions."""
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import Any
 
 
 class BaseHomematicException(Exception):
@@ -9,7 +9,11 @@ class BaseHomematicException(Exception):
 
     def __init__(self, name: str, *args: Any) -> None:
         """Init the HaHomematicException."""
-        self.name: Final = name
+        if isinstance(args[0], BaseException):
+            self.name = args[0].__class__.__name__
+            args = args[0].args
+        else:
+            self.name = name
         super().__init__(*args)
 
 
