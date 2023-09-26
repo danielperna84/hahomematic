@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import cast
 from unittest.mock import call
 
+from freezegun import freeze_time
 import pytest
 
 from hahomematic.const import HmEntityUsage
@@ -297,16 +298,17 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     )
     assert climate.preset_mode == HmPresetMode.WEEK_PROGRAM_1
 
-    await climate.enable_away_mode_by_duration(hours=100, away_temperature=17.0)
-    # assert mock_client.method_calls[-2] == call.put_paramset(
-    #     address="VCU1769958:1",
-    #     paramset_key="VALUES",
-    #     value={
-    #         "CONTROL_MODE": 2,
-    #         "PARTY_TIME_END": "2023_01_28 18:47",
-    #         "PARTY_TIME_START": "2023_01_24 14:37",
-    #     },
-    # )
+    with freeze_time("2023-03-03 08:00:00"):
+        await climate.enable_away_mode_by_duration(hours=100, away_temperature=17.0)
+    assert mock_client.method_calls[-2] == call.put_paramset(
+        address="VCU1769958:1",
+        paramset_key="VALUES",
+        value={
+            "CONTROL_MODE": 2,
+            "PARTY_TIME_END": "2023_03_07 12:00",
+            "PARTY_TIME_START": "2023_03_03 07:50",
+        },
+    )
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU1769958:1", paramset_key="VALUES", value={"SET_POINT_TEMPERATURE": 17.0}
     )

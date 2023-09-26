@@ -1,3 +1,7 @@
+# Version 2023.9.6 (2023-09-26)
+
+- Use freezegun for climate test
+
 # Version 2023.9.5 (2023-09-23)
 
 - Cleanup light code
