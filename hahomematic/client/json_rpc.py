@@ -766,28 +766,16 @@ class JsonRpcAioHttpClient:
         extra_msg: str = "",
         iid: str | None = None,
     ) -> None:
-        """Handle BaseHomematicException and derivates logging."""
-        exception_name = (
-            exception.name if hasattr(exception, "name") else exception.__class__.__name__
+        """Handle Exception and derivates logging."""
+        self._connection_state.handle_exception_log(
+            issuer=self,
+            method=method,
+            exception=exception,
+            logger=_LOGGER,
+            level=level,
+            extra_msg=extra_msg,
+            iid=iid,
         )
-        if self._connection_state.has_issue(issuer=self, iid=iid or method):
-            _LOGGER.debug(
-                "%s failed: %s [%s] %s",
-                method,
-                exception_name,
-                reduce_args(args=exception.args),
-                extra_msg,
-            )
-        else:
-            self._connection_state.add_issue(issuer=self, iid=iid or method)
-            _LOGGER.log(
-                level,
-                "%s failed: %s [%s] %s",
-                method,
-                exception_name,
-                reduce_args(args=exception.args),
-                extra_msg,
-            )
 
 
 def _get_params(

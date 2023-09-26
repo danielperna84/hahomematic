@@ -1394,3 +1394,36 @@ class CentralConnectionState:
             return iid in self._json_issues
         if isinstance(issuer, XmlRpcProxy):
             return iid in self._xml_proxy_issues
+
+    def handle_exception_log(
+        self,
+        issuer: ConnectionProblemIssuer,
+        method: str,
+        exception: Exception,
+        logger: logging.Logger = _LOGGER,
+        level: int = logging.ERROR,
+        extra_msg: str = "",
+        iid: str | None = None,
+    ) -> None:
+        """Handle Exception and derivates logging."""
+        exception_name = (
+            exception.name if hasattr(exception, "name") else exception.__class__.__name__
+        )
+        if self.has_issue(issuer=issuer, iid=iid or method):
+            logger.debug(
+                "%s failed: %s [%s] %s",
+                method,
+                exception_name,
+                reduce_args(args=exception.args),
+                extra_msg,
+            )
+        else:
+            self.add_issue(issuer=issuer, iid=iid or method)
+            logger.log(
+                level,
+                "%s failed: %s [%s] %s",
+                method,
+                exception_name,
+                reduce_args(args=exception.args),
+                extra_msg,
+            )
