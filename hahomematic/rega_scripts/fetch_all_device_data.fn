@@ -1,16 +1,18 @@
-!# fetch_all_device_data
-!#  This script fetches all device data required to initialize the entities without affecting the duty cycle.
+!# fetch_all_device_data.fn v2.0
+!# This script fetches all device data required to initialize the entities without affecting the duty cycle.
 !#
 !# Original script: https://github.com/ioBroker/ioBroker.hm-rega/blob/master/regascripts/datapoints.fn
-!#
 !# datapoints.fn 1.9
-!#
-!# Dieses Homematic-Script gibt eine Liste aller Datenpunkte (ausser WORKING/DIRECTION) als JSON String aus
-!#
 !# 3'2013-9'2014 hobbyquaker https://github.com/hobbyquaker
+!# 
+!# v2.0 - 09/2023
+!# modified by Baxxy13 https://github.com/Baxxy13
+!#  
+!# Dieses Homematic-Script gibt eine Liste aller Datenpunkte, die zur Laufzeit einen validen Zeitstempel haben, als JSON String aus.
 !#
+!# Zu ignorierende Interfaces Leerzeichen-separiert in die sIgnored_Interfaces eintragen!
 
-
+string sIgnored_Interfaces = "CUxD CCU-Jack";
 string sDevId;
 string sChnId;
 string sDPId;
@@ -22,12 +24,12 @@ foreach (sDevId, root.Devices().EnumUsedIDs()) {
     object oDevice = dom.GetObject(sDevId);
     string ifacename = interfaces.Get ((dom.GetObject(oDevice).Interface())).Name();
     boolean bDevReady = oDevice.ReadyConfig();
-    if ((bDevReady) && !((ifacename == "CUxD") || (ifacename == "CCU-Jack"))) {
+    if ((bDevReady) && (sIgnored_Interfaces.Find(ifacename) < 0)) {
         foreach (sChnId, oDevice.Channels()) {
             object oChannel = dom.GetObject(sChnId);
             foreach(sDPId, oChannel.DPs().EnumUsedIDs()) {
                 object oDP = dom.GetObject(sDPId);
-                if (oDP && oDP.Timestamp().ToInteger() > 0) {
+                if (oDP && oDP.Timestamp()) {
                     if (oDP.TypeName() != "VARDP") {
                         if (dpFirst) {
                           dpFirst = false;
