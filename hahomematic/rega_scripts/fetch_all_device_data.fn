@@ -1,46 +1,47 @@
-!# fetch_all_device_data.fn v2.1
+!# fetch_all_device_data.fn v2.2
 !# This script fetches all device data required to initialize the entities without affecting the duty cycle.
 !#
 !# Original script: https://github.com/ioBroker/ioBroker.hm-rega/blob/master/regascripts/datapoints.fn
 !# datapoints.fn 1.9
 !# 3'2013-9'2014 hobbyquaker https://github.com/hobbyquaker
-!# 
-!# v2.0 - 09/2023
-!# modified by Baxxy13 https://github.com/Baxxy13
-!#  
+!#
 !# Dieses Homematic-Script gibt eine Liste aller Datenpunkte, die zur Laufzeit einen validen Zeitstempel haben, als JSON String aus.
 !#
-!# v2.1 - 09/2023
-!# modified by SukramJ https://github.com/SukramJ
+!# modified by: SukramJ https://github.com/SukramJ && Baxxy13 https://github.com/Baxxy13
+!# v2.2 - 09/2023
 !#
-!# Das abzufragende Interface muss in sUse_Interface eingetragen sein.
+!# Das Interface wird durch die Integration an 'sUse_Interface' übergeben.
 !# Nutzbare Interfaces: BidCos-RF, BidCos-Wired, HmIP-RF, VirtualDevices
+!# Zum Testen direkt auf der Homematic-Zentrale muss das Interface wie folgt eingetragen werden: sUse_Interface = "HmIP-RF";
 
 string sUse_Interface = "##interface##";
 string sDevId;
 string sChnId;
 string sDPId;
-string sValue;
 string sDPId;
-boolean dpFirst = true;
+var vDPValue;
+boolean bDPFirst = true;
+object oInterface = interfaces.Get(sUse_Interface);
+
 Write('{');
-foreach (sDevId, root.Devices().EnumUsedIDs()) {
-    object oDevice = dom.GetObject(sDevId);
-    string ifacename = interfaces.Get ((dom.GetObject(oDevice).Interface())).Name();
-    boolean bDevReady = oDevice.ReadyConfig();
-    if ((bDevReady) && (sUse_Interface == ifacename)) {
+if (oInterface) {
+integer iInterface_ID = interfaces.Get(sUse_Interface).ID();
+string sAllDevices = dom.GetObject(ID_DEVICES).EnumUsedIDs();
+foreach (sDevId, sAllDevices) {
+   object oDevice = dom.GetObject(sDevId);
+    if ((oDevice) && (oDevice.ReadyConfig()) && (oDevice.Interface() == iInterface_ID)) {
         foreach (sChnId, oDevice.Channels()) {
             object oChannel = dom.GetObject(sChnId);
             foreach(sDPId, oChannel.DPs().EnumUsedIDs()) {
                 object oDP = dom.GetObject(sDPId);
                 if (oDP && oDP.Timestamp()) {
                     if (oDP.TypeName() != "VARDP") {
-                        if (dpFirst) {
-                          dpFirst = false;
+                        if (bDPFirst) {
+                          bDPFirst = false;
                         } else {
                           WriteLine(',');
                         }
-                        string sValueType = oDP.ValueType();
+                        integer sValueType = oDP.ValueType();
                         Write('"');
                         WriteURL(oDP.Name());
                         Write('":');
@@ -49,18 +50,18 @@ foreach (sDevId, root.Devices().EnumUsedIDs()) {
                             WriteURL(oDP.Value());
                             Write('"');
                         } else {
-                            sValue = oDP.Value();
+                            vDPValue = oDP.Value();
                             if (sValueType == 2) {
-                                if (sValue) {
+                                if (vDPValue) {
                                     Write("true");
                                 } else {
                                     Write("false");
                                 }
                             } else {
-                               if (sValue == "") {
+                               if (vDPValue == "") {
                                     Write("0");
                                } else {
-                                    Write(sValue);
+                                    Write(vDPValue);
                                }
                             }
                         }
@@ -69,5 +70,6 @@ foreach (sDevId, root.Devices().EnumUsedIDs()) {
             }
         }
     }
+  }
 }
 Write('}');
