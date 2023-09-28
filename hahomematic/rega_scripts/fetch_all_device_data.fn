@@ -25,44 +25,45 @@ object oInterface = interfaces.Get(sUse_Interface);
 
 Write('{');
 if (oInterface) {
-integer iInterface_ID = interfaces.Get(sUse_Interface).ID();
-string sAllDevices = dom.GetObject(ID_DEVICES).EnumUsedIDs();
-foreach (sDevId, sAllDevices) {
-   object oDevice = dom.GetObject(sDevId);
-    if ((oDevice) && (oDevice.ReadyConfig()) && (oDevice.Interface() == iInterface_ID)) {
-        foreach (sChnId, oDevice.Channels()) {
-            object oChannel = dom.GetObject(sChnId);
-            foreach(sDPId, oChannel.DPs().EnumUsedIDs()) {
-                object oDP = dom.GetObject(sDPId);
-                if (oDP && oDP.Timestamp()) {
-                    if (oDP.TypeName() != "VARDP") {
-                        if (bDPFirst) {
-                          bDPFirst = false;
-                        } else {
-                          WriteLine(',');
-                        }
-                        integer sValueType = oDP.ValueType();
-                        Write('"');
-                        WriteURL(oDP.Name());
-                        Write('":');
-                        if (sValueType == 20) {
-                            Write('"');
-                            WriteURL(oDP.Value());
-                            Write('"');
-                        } else {
-                            vDPValue = oDP.Value();
-                            if (sValueType == 2) {
-                                if (vDPValue) {
-                                    Write("true");
-                                } else {
-                                    Write("false");
-                                }
+    integer iInterface_ID = interfaces.Get(sUse_Interface).ID();
+    string sAllDevices = dom.GetObject(ID_DEVICES).EnumUsedIDs();
+    foreach (sDevId, sAllDevices) {
+       object oDevice = dom.GetObject(sDevId);
+        if ((oDevice) && (oDevice.ReadyConfig()) && (oDevice.Interface() == iInterface_ID)) {
+            foreach (sChnId, oDevice.Channels()) {
+                object oChannel = dom.GetObject(sChnId);
+                foreach(sDPId, oChannel.DPs().EnumUsedIDs()) {
+                    object oDP = dom.GetObject(sDPId);
+                    if (oDP && oDP.Timestamp()) {
+                        if (oDP.TypeName() != "VARDP") {
+                            if (bDPFirst) {
+                              bDPFirst = false;
                             } else {
-                               if (vDPValue == "") {
-                                    Write("0");
-                               } else {
-                                    Write(vDPValue);
-                               }
+                              WriteLine(',');
+                            }
+                            integer sValueType = oDP.ValueType();
+                            Write('"');
+                            WriteURL(oDP.Name());
+                            Write('":');
+                            if (sValueType == 20) {
+                                Write('"');
+                                WriteURL(oDP.Value());
+                                Write('"');
+                            } else {
+                                vDPValue = oDP.Value();
+                                if (sValueType == 2) {
+                                    if (vDPValue) {
+                                        Write("true");
+                                    } else {
+                                        Write("false");
+                                    }
+                                } else {
+                                   if (vDPValue == "") {
+                                        Write("0");
+                                   } else {
+                                        Write(vDPValue);
+                                   }
+                                }
                             }
                         }
                     }
@@ -70,6 +71,5 @@ foreach (sDevId, sAllDevices) {
             }
         }
     }
-  }
 }
 Write('}');
