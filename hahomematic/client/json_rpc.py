@@ -44,6 +44,7 @@ _LASTEXECUTETIME: Final = "lastExecuteTime"
 _MAX_VALUE: Final = "maxValue"
 _MIN_VALUE: Final = "minValue"
 _NAME: Final = "name"
+_INTERFACE: Final = "interface"
 _P_ERROR: Final = "error"
 _P_MESSAGE: Final = "message"
 _P_RESULT: Final = "result"
@@ -640,14 +641,20 @@ class JsonRpcAioHttpClient:
 
         return device_details
 
-    async def get_all_device_data(self) -> dict[str, dict[str, dict[str, Any]]]:
+    async def get_all_device_data(self, interface: str) -> dict[str, dict[str, dict[str, Any]]]:
         """Get the all device data of the backend."""
         all_device_data: dict[str, dict[str, dict[str, Any]]] = {}
-
+        params = {
+            _INTERFACE: interface,
+        }
         try:
-            response = await self._post_script(script_name=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA)
+            response = await self._post_script(
+                script_name=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA, extra_params=params
+            )
 
-            _LOGGER.debug("GET_ALL_DEVICE_DATA: Getting all device data")
+            _LOGGER.debug(
+                "GET_ALL_DEVICE_DATA: Getting all device data for interface %s", interface
+            )
             if json_result := response[_P_RESULT]:
                 all_device_data = _convert_to_values_cache(json_result)
         except ClientException as clex:
@@ -660,7 +667,7 @@ class JsonRpcAioHttpClient:
             self._handle_exception_log(
                 method="GET_ALL_DEVICE_DATA",
                 exception=jderr,
-                extra_msg="This leeds to a higher DutyCycle during Integration startup.",
+                extra_msg=f"This leeds to a higher DutyCycle during Integration startup for interface {interface}",
                 iid=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
             )
 

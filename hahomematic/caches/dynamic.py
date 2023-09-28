@@ -161,7 +161,7 @@ class DeviceDataCache:
             return
         self.clear()
         _LOGGER.debug("load: device data for %s", self._central.name)
-        if client := self._central.primary_client:
+        for client in self._central.clients:
             await client.fetch_all_device_data()
 
     async def refresh_entity_data(

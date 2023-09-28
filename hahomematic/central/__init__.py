@@ -184,8 +184,13 @@ class CentralUnit:
         return self.config.central_url
 
     @property
+    def clients(self) -> tuple[hmcl.Client, ...]:
+        """Return all clients."""
+        return tuple(self._clients.values())
+
+    @property
     def devices(self) -> tuple[HmDevice, ...]:
-        """Return a tuple of devices."""
+        """Return all devices."""
         return tuple(self._devices.values())
 
     @property
@@ -203,8 +208,13 @@ class CentralUnit:
 
     @property
     def interface_ids(self) -> list[str]:
-        """Return all associated interfaces."""
+        """Return all associated interface ids."""
         return list(self._clients)
+
+    @property
+    def interfaces(self) -> list[str]:
+        """Return all associated interfaces."""
+        return [client.interface for client in self._clients.values()]
 
     @property
     def is_alive(self) -> bool:
