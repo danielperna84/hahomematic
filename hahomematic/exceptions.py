@@ -1,7 +1,13 @@
 """Module for HaHomematicExceptions."""
 from __future__ import annotations
 
-from typing import Any
+import asyncio
+from collections.abc import Awaitable, Callable
+from functools import wraps
+import logging
+from typing import Any, Final, ParamSpec, TypeVar, cast
+
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 class BaseHomematicException(Exception):
@@ -11,10 +17,10 @@ class BaseHomematicException(Exception):
         """Init the HaHomematicException."""
         if isinstance(args[0], BaseException):
             self.name = args[0].__class__.__name__
-            args = args[0].args
+            args = _reduce_args(args=args[0].args)
         else:
             self.name = name
-        super().__init__(*args)
+        super().__init__(_reduce_args(args=args))
 
 
 class ClientException(BaseHomematicException):
@@ -55,3 +61,57 @@ class HaHomematicException(BaseHomematicException):
     def __init__(self, *args: Any) -> None:
         """Init the HaHomematicException."""
         super().__init__("HaHomematicException", *args)
+
+
+def _reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:
+    """Return the first arg, if there is only one arg."""
+    return args[0] if len(args) == 1 else args
+
+
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def log_exception(
+    ex_type: type[BaseException],
+    logger: logging.Logger = _LOGGER,
+    level: int = logging.ERROR,
+    extra_msg: str = "",
+    re_raise: bool = False,
+    ex_return: Any = None,
+) -> Callable:
+    """Decorate methods for exception logging."""
+
+    def decorator_log_exception(
+        func: Callable[_P, _R | Awaitable[_R]]
+    ) -> Callable[_P, _R | Awaitable[_R]]:
+        """Decorate log exception method."""
+
+        name = func.__name__
+
+        @wraps(func)
+        async def async_wrapper_log_exception(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            """Wrap async methods."""
+            try:
+                return_value = cast(_R, await func(*args, **kwargs))  # type: ignore[misc]
+            except ex_type as ex:
+                message = f"{name.upper()} failed: {ex_type.__name__} [{_reduce_args(args=ex.args)}] {extra_msg}"
+                logger.log(level, message)
+                if re_raise:
+                    raise
+                return ex_return  # type: ignore[no-any-return]
+            return return_value
+
+        @wraps(func)
+        def wrapper_log_exception(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+            """Wrap sync methods."""
+            return_value = cast(_R, func(*args, **kwargs))
+
+            return return_value
+
+        if asyncio.iscoroutinefunction(func):
+            return async_wrapper_log_exception
+        return wrapper_log_exception
+
+    return decorator_log_exception
