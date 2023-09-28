@@ -2,6 +2,7 @@
 
 - Use freezegun for climate test
 - Update ReGa-Script fetch_all_device_data.fn
+- Parameterize call to fetch_all_device_data.fn
 - Simplify json rpc post code
 - Improve for ConnectionProblemIssuer json rpc
 
@@ -10,7 +11,6 @@
 - Cleanup light code
 - Use more enums for climate, cover, lock
 - Use TypedDict for light, siren args
-- Parameterize call to fetch_all_device_data.fn
 - Update requirements
 
 # Version 2023.9.4 (2023-09-21)
