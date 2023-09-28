@@ -127,12 +127,12 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         except xmlrpc.client.ProtocolError as per:
             if not self._connection_state.has_issue(issuer=self, iid=self.interface_id):
                 if per.errmsg == "Unauthorized":
-                    raise AuthFailure(reduce_args(args=per.args)) from per
-                raise NoConnection(reduce_args(args=per.args)) from per
+                    raise AuthFailure(per) from per
+                raise NoConnection(per) from per
         except NoConnection:
             raise
         except Exception as ex:
-            raise ClientException(reduce_args(args=ex.args)) from ex
+            raise ClientException(ex) from ex
 
     def __getattr__(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         """Magic method dispatcher."""

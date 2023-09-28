@@ -1408,31 +1408,31 @@ class CentralConnectionState:
     def handle_exception_log(
         self,
         issuer: ConnectionProblemIssuer,
-        method: str,
+        iid: str,
         exception: Exception,
         logger: logging.Logger = _LOGGER,
         level: int = logging.ERROR,
         extra_msg: str = "",
-        iid: str | None = None,
+        multiple_logs: bool = True,
     ) -> None:
         """Handle Exception and derivates logging."""
         exception_name = (
             exception.name if hasattr(exception, "name") else exception.__class__.__name__
         )
-        if self.has_issue(issuer=issuer, iid=iid or method):
+        if self.has_issue(issuer=issuer, iid=iid) and multiple_logs is False:
             logger.debug(
                 "%s failed: %s [%s] %s",
-                method,
+                iid,
                 exception_name,
                 reduce_args(args=exception.args),
                 extra_msg,
             )
         else:
-            self.add_issue(issuer=issuer, iid=iid or method)
+            self.add_issue(issuer=issuer, iid=iid)
             logger.log(
                 level,
                 "%s failed: %s [%s] %s",
-                method,
+                iid,
                 exception_name,
                 reduce_args(args=exception.args),
                 extra_msg,
