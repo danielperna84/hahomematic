@@ -686,7 +686,7 @@ class ClientCCU(Client):
         if device_data := await self._json_rpc_client.get_all_device_data(
             interface=self.interface
         ):
-            _LOGGER.info(
+            _LOGGER.debug(
                 "FETCH_ALL_DEVICE_DATA: Fetched all device data for interface %s", self.interface
             )
             self.central.device_data.add_device_data(device_data=device_data)
