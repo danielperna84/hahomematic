@@ -1,10 +1,11 @@
 # Version 2023.9.6 (2023-09-26)
 
 - Use freezegun for climate test
-- Update ReGa-Script fetch_all_device_data.fn
+- Update ReGa-Script fetch_all_device_data.fn by @Baxxy13
 - Parameterize call to fetch_all_device_data.fn
 - Simplify json rpc post code
 - Improve for ConnectionProblemIssuer json rpc
+- Improve handle_exception_log
 
 # Version 2023.9.5 (2023-09-23)
 

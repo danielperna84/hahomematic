@@ -217,14 +217,12 @@ class JsonRpcAioHttpClient:
             session_id=session_id,
             method=method,
             extra_params={"script": script},
-            from_script=True,
         )
 
         _LOGGER.debug("POST_SCRIPT: Method: %s [%s]", method, script_name)
         try:
             if not response[_P_ERROR]:
                 response[_P_RESULT] = orjson.loads(response[_P_RESULT])
-            self._connection_state.remove_issue(issuer=self, iid=script_name)
         finally:
             if not keep_session:
                 await self._do_logout(session_id=session_id)
@@ -248,7 +246,6 @@ class JsonRpcAioHttpClient:
         method: str,
         extra_params: dict[str, str] | None = None,
         use_default_params: bool = True,
-        from_script: bool = False,
     ) -> dict[str, Any] | Any:
         """Reusable JSON-RPC POST function."""
         if not self._client_session:
@@ -278,8 +275,6 @@ class JsonRpcAioHttpClient:
                 raise ClientException("POST method failed with no response")
 
             if response.status == 200:
-                if not from_script:
-                    self._connection_state.remove_issue(issuer=self, iid=method)
                 json_response = await self._get_json_reponse(response=response)
 
                 if error := json_response[_P_ERROR]:
@@ -299,7 +294,6 @@ class JsonRpcAioHttpClient:
                 message = f"{message}: {error_message}"
             raise ClientException(message)
         except (AuthFailure, ClientException):
-            self._connection_state.add_issue(issuer=self, iid=method)
             await self.logout()
             raise
         except ClientConnectorCertificateError as cccerr:
@@ -313,13 +307,13 @@ class JsonRpcAioHttpClient:
             raise ClientException(message) from cccerr
         except (ClientConnectorError, ClientError) as cce:
             self.clear_session()
-            raise ClientException(reduce_args(args=cce.args)) from cce
+            raise ClientException(cce) from cce
         except SSLError as sslerr:
             self.clear_session()
-            raise ClientException(reduce_args(args=sslerr.args)) from sslerr
+            raise ClientException(sslerr) from sslerr
         except (OSError, TypeError, Exception) as ex:
             self.clear_session()
-            raise ClientException(reduce_args(args=ex.args)) from ex
+            raise ClientException(ex) from ex
 
     async def _get_json_reponse(self, response: ClientResponse) -> dict[str, Any] | Any:
         """Return the json object from response."""
@@ -335,11 +329,12 @@ class JsonRpcAioHttpClient:
 
     async def logout(self) -> None:
         """Logout of CCU."""
+        iid = "LOGOUT"
         try:
             await self._do_logout(self._session_id)
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="LOGOUT", exception=clex)
-            return
+            self._handle_exception_log(iid=iid, exception=clex)
 
     async def _do_logout(self, session_id: str | None) -> None:
         """Logout of CCU."""
@@ -366,6 +361,7 @@ class JsonRpcAioHttpClient:
 
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
+        iid = "EXECUTE_PROGRAM"
         params = {
             _ID: pid,
         }
@@ -378,15 +374,16 @@ class JsonRpcAioHttpClient:
                     "EXECUTE_PROGRAM: Result while executing program: %s",
                     str(json_result),
                 )
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="EXECUTE_PROGRAM", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
             return False
 
         return True
 
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
-
+        iid = "SET_SYSTEM_VARIABLE"
         params = {
             _NAME: name,
             _VALUE: value,
@@ -415,10 +412,9 @@ class JsonRpcAioHttpClient:
                     "SET_SYSTEM_VARIABLE: Result while setting variable: %s",
                     str(json_result),
                 )
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(
-                method="SET_SYSTEM_VARIABLE", exception=clex, iid=_REGA_SCRIPT_SET_SYSTEM_VARIABLE
-            )
+            self._handle_exception_log(iid=iid, exception=clex)
             return False
 
         return True
@@ -429,6 +425,7 @@ class JsonRpcAioHttpClient:
 
     async def delete_system_variable(self, name: str) -> bool:
         """Delete a system variable from CCU / Homegear."""
+        iid = "DELETE_SYSTEM_VARIABLE"
         params = {_NAME: name}
         try:
             response = await self._post(
@@ -440,14 +437,16 @@ class JsonRpcAioHttpClient:
             if json_result := response[_P_RESULT]:
                 deleted = json_result
                 _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Deleted: %s", str(deleted))
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="DELETE_SYSTEM_VARIABLE", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
             return False
 
         return True
 
     async def get_system_variable(self, name: str) -> Any:
         """Get single system variable from CCU / Homegear."""
+        iid = "GET_SYSTEM_VARIABLE"
         var = None
 
         try:
@@ -464,14 +463,16 @@ class JsonRpcAioHttpClient:
                     var = float(json_result)
                 except Exception:
                     var = json_result == "true"
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="DELETE_SYSTEM_VARIABLE", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
             return None
 
         return var
 
     async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
         """Get all system variables from CCU / Homegear."""
+        iid = "GET_ALL_SYSTEM_VARIABLES"
         variables: list[SystemVariableData] = []
         try:
             response = await self._post(
@@ -527,13 +528,15 @@ class JsonRpcAioHttpClient:
                             reduce_args(args=verr.args),
                             name,
                         )
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_ALL_SYSTEM_VARIABLES", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
 
         return variables
 
     async def _get_system_variables_ext_markers(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
+        iid = "GET_SYSTEM_VARIABLES_EXT_MARKERS"
         ext_markers: dict[str, Any] = {}
 
         try:
@@ -545,17 +548,18 @@ class JsonRpcAioHttpClient:
             if json_result := response[_P_RESULT]:
                 for data in json_result:
                     ext_markers[data[_ID]] = data[_HASEXTMARKER]
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except JSONDecodeError as jderr:
             self._handle_exception_log(
-                method="GET_SYSTEM_VARIABLES_EXT_MARKERS",
+                iid=iid,
                 exception=jderr,
                 extra_msg="This leads to a missing assignment of extended system variables.",
-                iid=_REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER,
             )
         return ext_markers
 
     async def get_all_channel_ids_room(self) -> dict[str, set[str]]:
         """Get all channel_ids per room from CCU / Homegear."""
+        iid = "GET_ALL_CHANNEL_IDS_PER_ROOM"
         channel_ids_room: dict[str, set[str]] = {}
 
         try:
@@ -573,14 +577,16 @@ class JsonRpcAioHttpClient:
                         if channel_id not in channel_ids_room:
                             channel_ids_room[channel_id] = set()
                         channel_ids_room[channel_id].add(room["name"])
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_ALL_CHANNEL_IDS_PER_ROOM", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
             return {}
 
         return channel_ids_room
 
     async def get_all_channel_ids_function(self) -> dict[str, set[str]]:
         """Get all channel_ids per function from CCU / Homegear."""
+        iid = "GET_ALL_CHANNEL_IDS_PER_FUNCTION"
         channel_ids_function: dict[str, set[str]] = {}
 
         try:
@@ -598,14 +604,16 @@ class JsonRpcAioHttpClient:
                         if channel_id not in channel_ids_function:
                             channel_ids_function[channel_id] = set()
                         channel_ids_function[channel_id].add(function["name"])
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_ALL_CHANNEL_IDS_PER_FUNCTION", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
             return {}
 
         return channel_ids_function
 
     async def get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""
+        iid = "GET_AVAILABLE_INTERFACES"
         interfaces: list[str] = []
 
         try:
@@ -617,14 +625,16 @@ class JsonRpcAioHttpClient:
             if json_result := response[_P_RESULT]:
                 for interface in json_result:
                     interfaces.append(interface[_NAME])
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_AVAILABLE_INTERFACES", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
             return []
 
         return interfaces
 
     async def get_device_details(self) -> list[dict[str, Any]]:
         """Get the device details of the backend."""
+        iid = "GET_DEVICE_DETAILS"
         device_details: list[dict[str, Any]] = []
 
         try:
@@ -635,14 +645,16 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("GET_DEVICE_DETAILS: Getting the device details")
             if json_result := response[_P_RESULT]:
                 device_details = json_result
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_DEVICE_DETAILS", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
             return []
 
         return device_details
 
     async def get_all_device_data(self, interface: str) -> dict[str, dict[str, dict[str, Any]]]:
         """Get the all device data of the backend."""
+        iid = f"GET_ALL_DEVICE_DATA for {interface}"
         all_device_data: dict[str, dict[str, dict[str, Any]]] = {}
         params = {
             _INTERFACE: interface,
@@ -657,24 +669,25 @@ class JsonRpcAioHttpClient:
             )
             if json_result := response[_P_RESULT]:
                 all_device_data = _convert_to_values_cache(json_result)
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
             self._handle_exception_log(
-                method="GET_ALL_DEVICE_DATA",
+                iid=iid,
                 exception=clex,
-                iid=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
             )
         except JSONDecodeError as jderr:
             self._handle_exception_log(
-                method="GET_ALL_DEVICE_DATA",
+                iid=iid,
                 exception=jderr,
-                extra_msg=f"This leeds to a higher DutyCycle during Integration startup for interface {interface}",
-                iid=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
+                extra_msg="This leeds to a higher DutyCycle during Integration startup",
+                multiple_logs=False,
             )
 
         return all_device_data
 
     async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
         """Get the all programs of the backend."""
+        iid = "GET_ALL_PROGRAMS"
         all_programs: list[ProgramData] = []
 
         try:
@@ -702,14 +715,16 @@ class JsonRpcAioHttpClient:
                             last_execute_time=last_execute_time,
                         )
                     )
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_ALL_PROGRAMS", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
             return []
 
         return all_programs
 
     async def get_auth_enabled(self) -> bool | None:
         """Get the auth_enabled flag of the backend."""
+        iid = "GET_AUTH_ENABLED"
         auth_enabled: bool | None = None
 
         try:
@@ -718,13 +733,15 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
             if (json_result := response[_P_RESULT]) is not None:
                 auth_enabled = bool(json_result)
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_AUTH_ENABLED", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
             return None
         return auth_enabled
 
     async def get_https_redirect_enabled(self) -> bool | None:
         """Get the auth_enabled flag of the backend."""
+        iid = "GET_HTTPS_REDIRECT_ENABLED"
         https_redirect_enabled: bool | None = None
 
         try:
@@ -733,14 +750,16 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled")
             if (json_result := response[_P_RESULT]) is not None:
                 https_redirect_enabled = bool(json_result)
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(method="GET_HTTPS_REDIRECT_ENABLED", exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex)
             return None
 
         return https_redirect_enabled
 
     async def get_serial(self) -> str | None:
         """Get the serial of the backend."""
+        iid = "GET_SERIAL"
         serial = "unknown"
 
         try:
@@ -751,37 +770,35 @@ class JsonRpcAioHttpClient:
                 serial = json_result["serial"]
                 if len(serial) > 10:
                     serial = serial[-10:]
+            self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(
-                method="GET_SERIAL", exception=clex, iid=_REGA_SCRIPT_GET_SERIAL
-            )
+            self._handle_exception_log(iid=iid, exception=clex)
         except JSONDecodeError as jderr:
             self._handle_exception_log(
-                method="GET_SERIAL",
+                iid=iid,
                 exception=jderr,
                 extra_msg="This leads to a missing serial identification of the CCU",
-                iid=_REGA_SCRIPT_GET_SERIAL,
             )
 
         return serial
 
     def _handle_exception_log(
         self,
-        method: str,
+        iid: str,
         exception: Exception,
         level: int = logging.ERROR,
         extra_msg: str = "",
-        iid: str | None = None,
+        multiple_logs: bool = True,
     ) -> None:
         """Handle Exception and derivates logging."""
         self._connection_state.handle_exception_log(
             issuer=self,
-            method=method,
+            iid=iid,
             exception=exception,
             logger=_LOGGER,
             level=level,
             extra_msg=extra_msg,
-            iid=iid,
+            multiple_logs=multiple_logs,
         )
 
 

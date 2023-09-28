@@ -9,6 +9,10 @@ from typing import Any, Final, ParamSpec, TypeVar, cast
 
 _LOGGER: Final = logging.getLogger(__name__)
 
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
 
 class BaseHomematicException(Exception):
     """hahomematic base exception."""
@@ -68,11 +72,6 @@ def _reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:
     return args[0] if len(args) == 1 else args
 
 
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
-
-
 def log_exception(
     ex_type: type[BaseException],
     logger: logging.Logger = _LOGGER,
@@ -88,7 +87,7 @@ def log_exception(
     ) -> Callable[_P, _R | Awaitable[_R]]:
         """Decorate log exception method."""
 
-        name = func.__name__
+        function_name = func.__name__
 
         @wraps(func)
         async def async_wrapper_log_exception(*args: _P.args, **kwargs: _P.kwargs) -> _R:
@@ -96,7 +95,7 @@ def log_exception(
             try:
                 return_value = cast(_R, await func(*args, **kwargs))  # type: ignore[misc]
             except ex_type as ex:
-                message = f"{name.upper()} failed: {ex_type.__name__} [{_reduce_args(args=ex.args)}] {extra_msg}"
+                message = f"{function_name.upper()} failed: {ex_type.__name__} [{_reduce_args(args=ex.args)}] {extra_msg}"
                 logger.log(level, message)
                 if re_raise:
                     raise
