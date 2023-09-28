@@ -2,6 +2,7 @@
 
 - Use freezegun for climate test
 - Update ReGa-Script fetch_all_device_data.fn
+- Parameterize call to fetch_all_device_data.fn
 - Simplify json rpc post code
 - Improve for ConnectionProblemIssuer json rpc
 

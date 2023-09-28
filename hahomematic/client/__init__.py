@@ -683,12 +683,17 @@ class ClientCCU(Client):
     @measure_execution_time
     async def fetch_all_device_data(self) -> None:
         """Fetch all device data from CCU."""
-        if device_data := await self._json_rpc_client.get_all_device_data():
-            _LOGGER.debug("FETCH_ALL_DEVICE_DATA: Fetched all device data")
+        if device_data := await self._json_rpc_client.get_all_device_data(
+            interface=self.interface
+        ):
+            _LOGGER.info(
+                "FETCH_ALL_DEVICE_DATA: Fetched all device data for interface %s", self.interface
+            )
             self.central.device_data.add_device_data(device_data=device_data)
         else:
             _LOGGER.debug(
-                "FETCH_ALL_DEVICE_DATA: Unable to get all device data via JSON-RPC RegaScript"
+                "FETCH_ALL_DEVICE_DATA: Unable to get all device data via JSON-RPC RegaScript for interface %s",
+                self.interface,
             )
 
     async def check_connection_availability(self) -> bool:

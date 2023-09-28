@@ -1,4 +1,4 @@
-!# fetch_all_device_data.fn v2.0
+!# fetch_all_device_data.fn v2.1
 !# This script fetches all device data required to initialize the entities without affecting the duty cycle.
 !#
 !# Original script: https://github.com/ioBroker/ioBroker.hm-rega/blob/master/regascripts/datapoints.fn
@@ -10,9 +10,13 @@
 !#  
 !# Dieses Homematic-Script gibt eine Liste aller Datenpunkte, die zur Laufzeit einen validen Zeitstempel haben, als JSON String aus.
 !#
-!# Zu ignorierende Interfaces Leerzeichen-separiert in die sIgnored_Interfaces eintragen!
+!# v2.1 - 09/2023
+!# modified by SukramJ https://github.com/SukramJ
+!#
+!# Das abzufragende Interface muss in sUse_Interface eingetragen sein.
+!# Nutzbare Interfaces: BidCos-RF, BidCos-Wired, HmIP-RF, VirtualDevices
 
-string sIgnored_Interfaces = "CUxD CCU-Jack";
+string sUse_Interface = "##interface##";
 string sDevId;
 string sChnId;
 string sDPId;
@@ -24,7 +28,7 @@ foreach (sDevId, root.Devices().EnumUsedIDs()) {
     object oDevice = dom.GetObject(sDevId);
     string ifacename = interfaces.Get ((dom.GetObject(oDevice).Interface())).Name();
     boolean bDevReady = oDevice.ReadyConfig();
-    if ((bDevReady) && (sIgnored_Interfaces.Find(ifacename) < 0)) {
+    if ((bDevReady) && (sUse_Interface == ifacename)) {
         foreach (sChnId, oDevice.Channels()) {
             object oChannel = dom.GetObject(sChnId);
             foreach(sDPId, oChannel.DPs().EnumUsedIDs()) {
