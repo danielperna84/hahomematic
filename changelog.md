@@ -1,5 +1,6 @@
 # Version 2023.9.7 (2023-09-29)
 
+- Add check to BaseHomematicException
 - Update requirements
 
 # Version 2023.9.6 (2023-09-29)
