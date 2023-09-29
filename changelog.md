@@ -1,6 +1,7 @@
 # Version 2023.9.7 (2023-09-29)
 
 - Add check to BaseHomematicException
+- Reduce log level to 'warning' for get_all_device_data 'JSONDecodeError' exceptions
 - Update requirements
 
 # Version 2023.9.6 (2023-09-29)

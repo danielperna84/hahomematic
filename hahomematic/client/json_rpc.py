@@ -659,8 +659,9 @@ class JsonRpcAioHttpClient:
             self._handle_exception_log(
                 iid=iid,
                 exception=jderr,
-                extra_msg="This leeds to a higher DutyCycle during Integration startup",
+                extra_msg=f"Using fallback. This leeds to a higher DutyCycle during Integration startup for interface {interface}",
                 multiple_logs=False,
+                level=logging.WARNING,
             )
 
         return all_device_data
