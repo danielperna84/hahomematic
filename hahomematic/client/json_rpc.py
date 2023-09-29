@@ -627,7 +627,7 @@ class JsonRpcAioHttpClient:
                     interfaces.append(interface[_NAME])
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
             return []
 
         return interfaces
@@ -647,7 +647,7 @@ class JsonRpcAioHttpClient:
                 device_details = json_result
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
             return []
 
         return device_details
@@ -735,7 +735,7 @@ class JsonRpcAioHttpClient:
                 auth_enabled = bool(json_result)
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
             return None
         return auth_enabled
 
@@ -752,7 +752,7 @@ class JsonRpcAioHttpClient:
                 https_redirect_enabled = bool(json_result)
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
             return None
 
         return https_redirect_enabled
@@ -772,12 +772,13 @@ class JsonRpcAioHttpClient:
                     serial = serial[-10:]
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
         except JSONDecodeError as jderr:
             self._handle_exception_log(
                 iid=iid,
                 exception=jderr,
                 extra_msg="This leads to a missing serial identification of the CCU",
+                multiple_logs=False,
             )
 
         return serial
