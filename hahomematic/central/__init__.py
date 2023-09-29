@@ -171,7 +171,7 @@ class CentralUnit:
         CENTRAL_INSTANCES[self._attr_name] = self
         self._connection_checker: Final = ConnectionChecker(self)
         self._hub: HmHub = HmHub(central=self)
-        self._attr_version: str | None = None
+        self._version: str | None = None
 
     @property
     def available(self) -> bool:
@@ -259,13 +259,13 @@ class CentralUnit:
     @property
     def version(self) -> str | None:
         """Return the version of the backend."""
-        if self._attr_version is None:
+        if self._version is None:
             versions: list[str] = []
             for client in self._clients.values():
                 if client.version:
                     versions.append(client.version)
-            self._attr_version = max(versions) if versions else None
-        return self._attr_version
+            self._version = max(versions) if versions else None
+        return self._version
 
     async def start(self) -> None:
         """Start processing of the central unit."""

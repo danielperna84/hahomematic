@@ -762,12 +762,7 @@ class ClientCCU(Client):
 
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
-        return SystemInformation(
-            available_interfaces=await self._json_rpc_client.get_available_interfaces(),
-            auth_enabled=await self._json_rpc_client.get_auth_enabled(),
-            https_redirect_enabled=await self._json_rpc_client.get_https_redirect_enabled(),
-            serial=await self._json_rpc_client.get_serial(),
-        )
+        return await self._json_rpc_client.get_system_information()
 
 
 class ClientHomegear(Client):

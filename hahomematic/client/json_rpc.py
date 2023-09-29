@@ -27,6 +27,7 @@ from hahomematic.const import (
     PATH_JSON_RPC,
     HmSysvarType,
     ProgramData,
+    SystemInformation,
     SystemVariableData,
 )
 from hahomematic.exceptions import AuthFailure, ClientException
@@ -376,7 +377,7 @@ class JsonRpcAioHttpClient:
                 )
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, level=logging.WARNING)
             return False
 
         return True
@@ -414,7 +415,7 @@ class JsonRpcAioHttpClient:
                 )
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, level=logging.WARNING)
             return False
 
         return True
@@ -439,7 +440,7 @@ class JsonRpcAioHttpClient:
                 _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Deleted: %s", str(deleted))
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, level=logging.WARNING)
             return False
 
         return True
@@ -465,7 +466,7 @@ class JsonRpcAioHttpClient:
                     var = json_result == "true"
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+            self._handle_exception_log(iid=iid, exception=clex, level=logging.WARNING)
             return None
 
         return var
@@ -611,27 +612,6 @@ class JsonRpcAioHttpClient:
 
         return channel_ids_function
 
-    async def get_available_interfaces(self) -> list[str]:
-        """Get all available interfaces from CCU / Homegear."""
-        iid = "GET_AVAILABLE_INTERFACES"
-        interfaces: list[str] = []
-
-        try:
-            response = await self._post(
-                "Interface.listInterfaces",
-            )
-
-            _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces")
-            if json_result := response[_P_RESULT]:
-                for interface in json_result:
-                    interfaces.append(interface[_NAME])
-            self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
-            return []
-
-        return interfaces
-
     async def get_device_details(self) -> list[dict[str, Any]]:
         """Get the device details of the backend."""
         iid = "GET_DEVICE_DETAILS"
@@ -722,66 +702,71 @@ class JsonRpcAioHttpClient:
 
         return all_programs
 
-    async def get_auth_enabled(self) -> bool | None:
-        """Get the auth_enabled flag of the backend."""
-        iid = "GET_AUTH_ENABLED"
-        auth_enabled: bool | None = None
-
+    async def get_system_information(self) -> SystemInformation:
+        """Get system information of the backend."""
+        iid = "GET_SYSTEM_INFORMATION"
         try:
-            response = await self._post(method="CCU.getAuthEnabled")
-
-            _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
-            if (json_result := response[_P_RESULT]) is not None:
-                auth_enabled = bool(json_result)
-            self._connection_state.remove_issue(issuer=self, iid=iid)
+            if (auth_enabled := await self._get_auth_enabled()) is not None and (
+                system_information := SystemInformation(
+                    auth_enabled=auth_enabled,
+                    available_interfaces=await self._get_available_interfaces(),
+                    https_redirect_enabled=await self._get_https_redirect_enabled(),
+                    serial=await self._get_serial(),
+                )
+            ):
+                self._connection_state.remove_issue(issuer=self, iid=iid)
+                return system_information
         except ClientException as clex:
             self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
-            return None
-        return auth_enabled
+            raise
+        return SystemInformation()
 
-    async def get_https_redirect_enabled(self) -> bool | None:
+    async def _get_auth_enabled(self) -> bool | None:
         """Get the auth_enabled flag of the backend."""
-        iid = "GET_HTTPS_REDIRECT_ENABLED"
-        https_redirect_enabled: bool | None = None
+        _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
 
-        try:
-            response = await self._post(method="CCU.getHttpsRedirectEnabled")
+        response = await self._post(method="CCU.getAuthEnabled")
+        if (json_result := response[_P_RESULT]) is not None:
+            return bool(json_result)
+        return None
 
-            _LOGGER.debug("GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled")
-            if (json_result := response[_P_RESULT]) is not None:
-                https_redirect_enabled = bool(json_result)
-            self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
-            return None
+    async def _get_available_interfaces(self) -> list[str]:
+        """Get all available interfaces from CCU / Homegear."""
+        _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces")
 
-        return https_redirect_enabled
+        interfaces: list[str] = []
+        response = await self._post(
+            "Interface.listInterfaces",
+        )
 
-    async def get_serial(self) -> str | None:
+        if json_result := response[_P_RESULT]:
+            for interface in json_result:
+                interfaces.append(interface[_NAME])
+        return interfaces
+
+    async def _get_https_redirect_enabled(self) -> bool | None:
+        """Get the auth_enabled flag of the backend."""
+        _LOGGER.debug("GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled")
+
+        response = await self._post(method="CCU.getHttpsRedirectEnabled")
+        if (json_result := response[_P_RESULT]) is not None:
+            return bool(json_result)
+        return None
+
+    async def _get_serial(self) -> str | None:
         """Get the serial of the backend."""
-        iid = "GET_SERIAL"
-        serial = "unknown"
-
+        _LOGGER.debug("GET_SERIAL: Getting the backend serial")
         try:
             response = await self._post_script(script_name=_REGA_SCRIPT_GET_SERIAL)
 
-            _LOGGER.debug("GET_SERIAL: Getting the backend serial")
             if json_result := response[_P_RESULT]:
-                serial = json_result["serial"]
+                serial: str = json_result["serial"]
                 if len(serial) > 10:
                     serial = serial[-10:]
-            self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
+                return serial
         except JSONDecodeError as jderr:
-            self._handle_exception_log(
-                iid=iid,
-                exception=jderr,
-                extra_msg="This leads to a missing serial identification of the CCU",
-                multiple_logs=False,
-            )
-
-        return serial
+            raise ClientException(jderr) from jderr
+        return None
 
     def _handle_exception_log(
         self,
