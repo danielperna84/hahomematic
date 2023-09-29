@@ -1190,6 +1190,10 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
+    def __str__(self) -> str:
+        """Provide some useful information."""
+        return f"central name: {self.name}"
+
 
 class ConnectionChecker(threading.Thread):
     """Periodically check Connection to CCU / Homegear."""
