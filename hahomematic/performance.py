@@ -28,11 +28,10 @@ def measure_execution_time(func: _CallableT) -> _CallableT:
             if is_enabled:
                 delta = (datetime.now() - start).total_seconds()
                 _LOGGER.info(
-                    "Execution of %s took %ss args(%s) kwargs(%s) ",
+                    "Execution of %s took %ss (%s)",
                     func.__name__,
                     delta,
-                    args,
-                    kwargs,
+                    str(args[0]),
                 )
 
     @wraps(func)

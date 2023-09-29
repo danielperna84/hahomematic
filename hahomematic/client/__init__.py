@@ -56,7 +56,7 @@ class Client(ABC):
         self.interface: Final = client_config.interface
         self.interface_id: Final = client_config.interface_id
         self.version: Final = client_config.version
-        self._attr_available: bool = True
+        self._available: bool = True
         self._connection_error_count: int = 0
         self._is_callback_alive: bool = True
         self.last_updated: datetime = INIT_DATETIME
@@ -78,7 +78,7 @@ class Client(ABC):
     @property
     def available(self) -> bool:
         """Return the availability of the client."""
-        return self._attr_available
+        return self._available
 
     @property
     @abstractmethod
@@ -145,11 +145,11 @@ class Client(ABC):
     ) -> None:
         """Mark device's availability state for this interface."""
         available = forced_availability != HmForcedDeviceAvailability.FORCE_FALSE
-        if self._attr_available != available:
+        if self._available != available:
             for device in self.central.devices:
                 if device.interface_id == self.interface_id:
                     device.set_forced_availability(forced_availability=forced_availability)
-            self._attr_available = available
+            self._available = available
             _LOGGER.debug(
                 "MARK_ALL_DEVICES_FORCED_AVAILABILITY: marked all devices %s for %s",
                 "available" if available else "unavailable",
@@ -642,9 +642,13 @@ class Client(ABC):
         await self.fetch_paramset_descriptions(
             self.central.device_descriptions.get_device(
                 interface_id=self.interface_id, device_address=device_address
-            ),
+            )
         )
         await self.central.paramset_descriptions.save()
+
+    def __str__(self) -> str:
+        """Provide some useful information."""
+        return f"interface_id: {self.interface_id}"
 
 
 class ClientCCU(Client):
@@ -762,12 +766,7 @@ class ClientCCU(Client):
 
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
-        return SystemInformation(
-            available_interfaces=await self._json_rpc_client.get_available_interfaces(),
-            auth_enabled=await self._json_rpc_client.get_auth_enabled(),
-            https_redirect_enabled=await self._json_rpc_client.get_https_redirect_enabled(),
-            serial=await self._json_rpc_client.get_serial(),
-        )
+        return await self._json_rpc_client.get_system_information()
 
 
 class ClientHomegear(Client):

@@ -6,6 +6,9 @@
 - Simplify json rpc post code
 - Improve for ConnectionProblemIssuer json rpc
 - Improve handle_exception_log
+- Avoid repeated logs
+- Move get_system_information to json_rpc
+- Add **str** to client and central
 
 # Version 2023.9.5 (2023-09-23)
 
