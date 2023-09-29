@@ -7,6 +7,7 @@
 - Improve for ConnectionProblemIssuer json rpc
 - Improve handle_exception_log
 - Avoid repeated logs
+- Move get_system_information to json_rpc
 
 # Version 2023.9.5 (2023-09-23)
 
