@@ -19,7 +19,7 @@ class BaseHomematicException(Exception):
 
     def __init__(self, name: str, *args: Any) -> None:
         """Init the HaHomematicException."""
-        if isinstance(args[0], BaseException):
+        if args and isinstance(args[0], BaseException):
             self.name = args[0].__class__.__name__
             args = _reduce_args(args=args[0].args)
         else:

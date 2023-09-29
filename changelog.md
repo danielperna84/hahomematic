@@ -1,4 +1,9 @@
-# Version 2023.9.6 (2023-09-26)
+# Version 2023.9.7 (2023-09-29)
+
+- Add check to BaseHomematicException
+- Update requirements
+
+# Version 2023.9.6 (2023-09-29)
 
 - Use freezegun for climate test
 - Update ReGa-Script fetch_all_device_data.fn by @Baxxy13
