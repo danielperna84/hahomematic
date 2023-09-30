@@ -130,20 +130,20 @@ class DeviceDetailsCache:
                 self._device_room[device_address] = list(set(rooms))[0]
 
 
-class DeviceDataCache:
-    """Cache for device/channel initial data."""
+class CentralDataCache:
+    """Central cache for device/channel initial data."""
 
     def __init__(self, central: hmcu.CentralUnit) -> None:
-        """Init the device data cache."""
+        """Init the central data cache."""
         self._central: Final = central
         # { key, value}
-        self._values_cache: Final[dict[str, Any]] = {}
+        self._value_cache: Final[dict[str, Any]] = {}
         self._last_updated = INIT_DATETIME
 
     @property
     def is_empty(self) -> bool:
         """Return if cache is empty."""
-        if len(self._values_cache) == 0:
+        if len(self._value_cache) == 0:
             return True
         if not updated_within_seconds(last_update=self._last_updated):
             self.clear()
@@ -151,7 +151,7 @@ class DeviceDataCache:
         return False
 
     async def load(self) -> None:
-        """Fetch device data from backend."""
+        """Fetch data from backend."""
         if updated_within_seconds(last_update=self._last_updated, max_age=(MAX_CACHE_AGE / 2)):
             return
         self.clear()
@@ -164,24 +164,24 @@ class DeviceDataCache:
         for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
             await entity.load_entity_value(call_source=HmCallSource.HM_INIT)
 
-    def add_device_data(self, all_device_data: dict[str, Any]) -> None:
-        """Add device data to cache."""
-        self._values_cache.update(all_device_data)
+    def add_data(self, all_device_data: dict[str, Any]) -> None:
+        """Add data to cache."""
+        self._value_cache.update(all_device_data)
         self._last_updated = datetime.now()
 
-    def get_device_data(
+    def get_data(
         self,
         interface: str,
         channel_address: str,
         parameter: str,
     ) -> Any:
-        """Get device data from cache."""
+        """Get data from cache."""
         if not self.is_empty:
             key = f"{interface}.{channel_address.replace(':','%3A')}.{parameter}"
-            return self._values_cache.get(key, NO_CACHE_ENTRY)
+            return self._value_cache.get(key, NO_CACHE_ENTRY)
         return NO_CACHE_ENTRY
 
     def clear(self) -> None:
         """Clear the cache."""
-        self._values_cache.clear()
+        self._value_cache.clear()
         self._last_updated = INIT_DATETIME

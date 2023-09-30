@@ -633,7 +633,7 @@ class ValueCache:
         if (
             paramset_key == HmParamsetKey.VALUES
             and (
-                global_value := self._device.central.device_data.get_device_data(
+                global_value := self._device.central.data_cache.get_data(
                     interface=self._device.interface,
                     channel_address=channel_address,
                     parameter=parameter,

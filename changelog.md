@@ -4,6 +4,7 @@
 - Remove attr prefix
 - Remove max_age from most method signatures
 - Simplify data cache
+- Rename some cache methods
 
 # Version 2023.9.7 (2023-09-29)
 
