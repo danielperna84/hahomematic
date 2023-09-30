@@ -1,10 +1,11 @@
-# Version 2023.10.0 (2023-10-03)
+# Version 2023.9.8 (2023-9-30)
 
-- Cleanup cache naming
+- Improve caching
+  - Cleanup cache naming
+  - Remove max_age from most method signatures
+  - Simplify data cache
+  - Rename some cache methods
 - Remove attr prefix
-- Remove max_age from most method signatures
-- Simplify data cache
-- Rename some cache methods
 
 # Version 2023.9.7 (2023-09-29)
 

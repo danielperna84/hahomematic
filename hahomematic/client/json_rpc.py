@@ -104,7 +104,7 @@ class JsonRpcAioHttpClient:
 
     async def _do_renew_login(self, session_id: str) -> str | None:
         """Renew JSON-RPC session or perform login."""
-        if self._updated_within_seconds():
+        if self._updated_within_seconds:
             return session_id
         method = "Session.renew"
         response = await self._do_post(
@@ -120,12 +120,13 @@ class JsonRpcAioHttpClient:
 
         return await self._do_login()
 
-    def _updated_within_seconds(self, max_age: int = _MAX_JSON_SESSION_AGE) -> bool:
+    @property
+    def _updated_within_seconds(self) -> bool:
         """Check if session id has been updated within 90 seconds."""
         if self._last_session_id_refresh is None:
             return False
         delta = datetime.now() - self._last_session_id_refresh
-        if delta.seconds < max_age:
+        if delta.seconds < _MAX_JSON_SESSION_AGE:
             return True
         return False
 
