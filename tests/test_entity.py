@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from hahomematic.caches.visibility import check_ignore_parameters_is_clean
-from hahomematic.const import MAX_CACHE_AGE, HmCallSource, HmEntityUsage
+from hahomematic.const import HmCallSource, HmEntityUsage
 from hahomematic.platforms.custom.definition import (
     get_required_parameters,
     validate_entity_definition,
@@ -116,9 +116,7 @@ async def test_load_custom_entity(factory: helper.Factory) -> None:
     """Test load custom_entity."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     switch: HmSwitch = cast(HmSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
-    await switch.load_entity_value(
-        call_source=HmCallSource.MANUAL_OR_SCHEDULED, max_age=MAX_CACHE_AGE
-    )
+    await switch.load_entity_value(call_source=HmCallSource.MANUAL_OR_SCHEDULED)
     assert mock_client.method_calls[-2] == call.get_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
@@ -138,9 +136,7 @@ async def test_load_generic_entity(factory: helper.Factory) -> None:
     """Test load generic_entity."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
-    await switch.load_entity_value(
-        call_source=HmCallSource.MANUAL_OR_SCHEDULED, max_age=MAX_CACHE_AGE
-    )
+    await switch.load_entity_value(call_source=HmCallSource.MANUAL_OR_SCHEDULED)
     assert mock_client.method_calls[-1] == call.get_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",

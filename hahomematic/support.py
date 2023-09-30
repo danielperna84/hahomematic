@@ -19,6 +19,7 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_PARAMSETS,
     INIT_DATETIME,
+    MAX_CACHE_AGE,
     HmSysvarType,
 )
 from hahomematic.exceptions import HaHomematicException
@@ -151,7 +152,7 @@ def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
     return channel_address, None
 
 
-def updated_within_seconds(last_update: datetime, max_age: int | float) -> bool:
+def updated_within_seconds(last_update: datetime, max_age: int | float = MAX_CACHE_AGE) -> bool:
     """Entity has been updated within X minutes."""
     if last_update == INIT_DATETIME:
         return False

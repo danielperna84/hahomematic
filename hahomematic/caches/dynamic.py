@@ -140,11 +140,12 @@ class DeviceDataCache:
         self._values_cache: Final[dict[str, dict[str, dict[str, Any]]]] = {}
         self._last_updated = INIT_DATETIME
 
-    def is_empty(self, max_age: int) -> bool:
+    @property
+    def is_empty(self) -> bool:
         """Return if cache is empty."""
         if len(self._values_cache) == 0:
             return True
-        if not updated_within_seconds(last_update=self._last_updated, max_age=max_age):
+        if not updated_within_seconds(last_update=self._last_updated):
             self.clear()
             return True
         return False
@@ -158,15 +159,10 @@ class DeviceDataCache:
         for client in self._central.clients:
             await client.fetch_all_device_data()
 
-    async def refresh_entity_data(
-        self, paramset_key: str | None = None, max_age: int = MAX_CACHE_AGE
-    ) -> None:
+    async def refresh_entity_data(self, paramset_key: str | None = None) -> None:
         """Refresh entity data."""
         for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
-            await entity.load_entity_value(
-                call_source=HmCallSource.HM_INIT,
-                max_age=max_age,
-            )
+            await entity.load_entity_value(call_source=HmCallSource.HM_INIT)
 
     def add_device_data(self, device_data: dict[str, dict[str, dict[str, Any]]]) -> None:
         """Add device data to cache."""
@@ -179,10 +175,9 @@ class DeviceDataCache:
         interface: str,
         channel_address: str,
         parameter: str,
-        max_age: int,
     ) -> Any:
         """Get device data from cache."""
-        if not self.is_empty(max_age=max_age):
+        if not self.is_empty:
             return (
                 self._values_cache.get(interface, {})
                 .get(channel_address, {})
