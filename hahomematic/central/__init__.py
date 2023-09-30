@@ -19,7 +19,7 @@ import orjson
 import voluptuous as vol
 
 from hahomematic import client as hmcl, config
-from hahomematic.caches.dynamic import DeviceDataCache, DeviceDetailsCache
+from hahomematic.caches.dynamic import CentralDataCache, DeviceDetailsCache
 from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescriptionCache
 from hahomematic.caches.visibility import ParameterVisibilityCache
 from hahomematic.central import xml_rpc_server as xmlrpc
@@ -123,7 +123,7 @@ class CentralUnit:
         )
 
         # Caches for CCU data
-        self.device_data: Final[DeviceDataCache] = DeviceDataCache(central=self)
+        self.data_cache: Final[CentralDataCache] = CentralDataCache(central=self)
         self.device_details: Final[DeviceDetailsCache] = DeviceDetailsCache(central=self)
         self.device_descriptions: Final[DeviceDescriptionCache] = DeviceDescriptionCache(
             central=self
@@ -635,7 +635,7 @@ class CentralUnit:
             await self.device_descriptions.load()
             await self.paramset_descriptions.load()
             await self.device_details.load()
-            await self.device_data.load()
+            await self.data_cache.load()
         except orjson.JSONDecodeError:  # pragma: no cover
             _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._name)
             await self.clear_all_caches()
@@ -781,7 +781,7 @@ class CentralUnit:
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
             await self.device_details.load()
-            await self.device_data.load()
+            await self.data_cache.load()
             await self._create_devices()
 
     @callback_event
@@ -992,9 +992,9 @@ class CentralUnit:
     @measure_execution_time
     async def load_and_refresh_entity_data(self, paramset_key: str | None = None) -> None:
         """Refresh entity data."""
-        if paramset_key != HmParamsetKey.MASTER and self.device_data.is_empty:
-            await self.device_data.load()
-        await self.device_data.refresh_entity_data(paramset_key=paramset_key)
+        if paramset_key != HmParamsetKey.MASTER and self.data_cache.is_empty:
+            await self.data_cache.load()
+        await self.data_cache.refresh_entity_data(paramset_key=paramset_key)
 
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""
@@ -1075,7 +1075,7 @@ class CentralUnit:
     def clear_dynamic_caches(self) -> None:
         """Clear all stored data."""
         self.device_details.clear()
-        self.device_data.clear()
+        self.data_cache.clear()
 
     async def clear_all_caches(self) -> None:
         """Clear all stored data."""

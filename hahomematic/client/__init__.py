@@ -693,7 +693,7 @@ class ClientCCU(Client):
             _LOGGER.debug(
                 "FETCH_ALL_DEVICE_DATA: Fetched all device data for interface %s", self.interface
             )
-            self.central.device_data.add_device_data(all_device_data=all_device_data)
+            self.central.data_cache.add_data(all_device_data=all_device_data)
         else:
             _LOGGER.debug(
                 "FETCH_ALL_DEVICE_DATA: Unable to get all device data via JSON-RPC RegaScript for interface %s",
