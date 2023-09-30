@@ -22,7 +22,6 @@ from hahomematic.const import (
     INIT_DATETIME,
     NO_CACHE_ENTRY,
     RELEVANT_INIT_PARAMETERS,
-    CacheEntry,
     HmCallSource,
     HmDataOperationResult,
     HmDescription,
@@ -43,7 +42,7 @@ from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
 from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
-from hahomematic.support import check_or_create_directory
+from hahomematic.support import CacheEntry, check_or_create_directory
 
 _LOGGER: Final = logging.getLogger(__name__)
 

@@ -4,9 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
-from typing import Any, Final
-
-from hahomematic.support import updated_within_seconds
+from typing import Final
 
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = (
     15  # check if connection is available via rpc ping every:
@@ -427,23 +425,3 @@ class SystemInformation:
     auth_enabled: bool | None = None
     https_redirect_enabled: bool | None = None
     serial: str | None = None
-
-
-@dataclass(slots=True)
-class CacheEntry:
-    """An entry for the value cache."""
-
-    value: Any
-    last_update: datetime
-
-    @staticmethod
-    def empty() -> CacheEntry:
-        """Return empty cache entry."""
-        return CacheEntry(value=NO_CACHE_ENTRY, last_update=datetime.min)
-
-    @property
-    def is_valid(self) -> bool:
-        """Return if entry is valid."""
-        if self.value == NO_CACHE_ENTRY:
-            return False
-        return updated_within_seconds(last_update=self.last_update)
