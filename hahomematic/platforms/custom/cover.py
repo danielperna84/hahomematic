@@ -99,9 +99,9 @@ class HmGarageDoorState(StrEnum):
 class CeCover(CustomEntity):
     """Class for HomeMatic cover entities."""
 
-    _attr_platform = HmPlatform.COVER
-    _attr_hm_closed_state: float = _CLOSED
-    _attr_hm_open_state: float = _OPEN
+    _platform = HmPlatform.COVER
+    _hm_closed_state: float = _CLOSED
+    _hm_open_state: float = _OPEN
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -120,9 +120,7 @@ class CeCover(CustomEntity):
         """Return the channel level of the cover."""
         if self._e_channel_level.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
             return float(self._e_channel_level.value)
-        return (
-            self._e_level.value if self._e_level.value is not None else self._attr_hm_closed_state
-        )
+        return self._e_level.value if self._e_level.value is not None else self._hm_closed_state
 
     @value_property
     def current_position(self) -> int:
@@ -156,7 +154,7 @@ class CeCover(CustomEntity):
     @value_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self._channel_level == self._attr_hm_closed_state
+        return self._channel_level == self._hm_closed_state
 
     @value_property
     def is_opening(self) -> bool | None:
@@ -177,14 +175,14 @@ class CeCover(CustomEntity):
         """Open the cover."""
         if not self.is_state_change(open=True):
             return
-        await self._set_level(level=self._attr_hm_open_state, collector=collector)
+        await self._set_level(level=self._hm_open_state, collector=collector)
 
     @bind_collector
     async def close(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover."""
         if not self.is_state_change(close=True):
             return
-        await self._set_level(level=self._attr_hm_closed_state, collector=collector)
+        await self._set_level(level=self._hm_closed_state, collector=collector)
 
     @bind_collector
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
@@ -207,15 +205,13 @@ class CeCover(CustomEntity):
 class CeWindowDrive(CeCover):
     """Class for Homematic window drive."""
 
-    _attr_hm_closed_state: float = _WD_CLOSED
-    _attr_hm_open_state: float = _OPEN
+    _hm_closed_state: float = _WD_CLOSED
+    _hm_open_state: float = _OPEN
 
     @value_property
     def current_position(self) -> int:
         """Return current position of cover."""
-        level = (
-            self._e_level.value if self._e_level.value is not None else self._attr_hm_closed_state
-        )
+        level = self._e_level.value if self._e_level.value is not None else self._hm_closed_state
         if level == _WD_CLOSED:
             level = _CLOSED
         elif level == _CLOSED:
@@ -261,9 +257,7 @@ class CeBlind(CeCover):
         if self._e_channel_level_2.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
             return float(self._e_channel_level_2.value)
         return (
-            self._e_level_2.value
-            if self._e_level_2.value is not None
-            else self._attr_hm_closed_state
+            self._e_level_2.value if self._e_level_2.value is not None else self._hm_closed_state
         )
 
     @value_property
@@ -310,14 +304,14 @@ class CeBlind(CeCover):
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
-        await self._set_level(tilt_level=self._attr_hm_open_state, collector=collector)
+        await self._set_level(tilt_level=self._hm_open_state, collector=collector)
 
     @bind_collector
     async def close_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
         if not self.is_state_change(tilt_close=True):
             return
-        await self._set_level(tilt_level=self._attr_hm_closed_state, collector=collector)
+        await self._set_level(tilt_level=self._hm_closed_state, collector=collector)
 
     @bind_collector
     async def stop_tilt(self, collector: CallParameterCollector | None = None) -> None:
@@ -384,8 +378,8 @@ class CeIpBlind(CeBlind):
         if not self.is_state_change(open=True, tilt_open=True):
             return
         await self._set_level(
-            level=self._attr_hm_open_state,
-            tilt_level=self._attr_hm_open_state,
+            level=self._hm_open_state,
+            tilt_level=self._hm_open_state,
             collector=collector,
         )
 
@@ -395,8 +389,8 @@ class CeIpBlind(CeBlind):
         if not self.is_state_change(close=True, tilt_close=True):
             return
         await self._set_level(
-            level=self._attr_hm_closed_state,
-            tilt_level=self._attr_hm_closed_state,
+            level=self._hm_closed_state,
+            tilt_level=self._hm_closed_state,
             collector=collector,
         )
 
@@ -420,7 +414,7 @@ class CeIpBlind(CeBlind):
 class CeGarage(CustomEntity):
     """Class for HomeMatic garage entities."""
 
-    _attr_platform = HmPlatform.COVER
+    _platform = HmPlatform.COVER
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""

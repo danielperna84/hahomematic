@@ -85,9 +85,9 @@ async def test_central_full(central_unit_full) -> None:
     for entity in central_unit_full._entities.values():
         if (
             hasattr(entity, "parameter")
-            and (entity.parameter, entity._attr_operations) not in parameters
+            and (entity.parameter, entity._operations) not in parameters
         ):
-            parameters.append((entity.parameter, entity._attr_operations))
+            parameters.append((entity.parameter, entity._operations))
     parameters = sorted(parameters)
 
     units = set()

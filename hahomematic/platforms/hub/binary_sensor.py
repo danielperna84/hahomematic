@@ -13,11 +13,11 @@ from hahomematic.platforms.hub.entity import GenericSystemVariable
 class HmSysvarBinarySensor(GenericSystemVariable):
     """Implementation of a sysvar binary_sensor."""
 
-    _attr_platform = HmPlatform.HUB_BINARY_SENSOR
+    _platform = HmPlatform.HUB_BINARY_SENSOR
 
     @value_property
     def value(self) -> bool | None:
         """Return the value of the entity."""
-        if self._attr_value is not None:
-            return bool(self._attr_value)
+        if self._value is not None:
+            return bool(self._value)
         return None

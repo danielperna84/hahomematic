@@ -17,7 +17,7 @@ class BaseNumber(GenericEntity[ParameterT, InputParameterT]):
     This is a default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.NUMBER
+    _platform = HmPlatform.NUMBER
 
 
 class HmFloat(BaseNumber[float, float | str]):
@@ -32,14 +32,14 @@ class HmFloat(BaseNumber[float, float | str]):
         if not do_validate or (
             value is not None
             and isinstance(value, float)
-            and self._attr_min <= float(value) <= self._attr_max
+            and self._min <= float(value) <= self._max
         ):
             return float(value)
-        if self._attr_special and isinstance(value, str) and value in self._attr_special:
-            return float(self._attr_special[value])
+        if self._special and isinstance(value, str) and value in self._special:
+            return float(self._special[value])
         raise ValueError(
-            f"NUMBER.FLOAT failed: Invalid value: {value} (min: {self._attr_min}, "
-            f"max: {self._attr_max}, special:{self._attr_special})"
+            f"NUMBER.FLOAT failed: Invalid value: {value} (min: {self._min}, "
+            f"max: {self._max}, special:{self._special})"
         )
 
 
@@ -53,15 +53,13 @@ class HmInteger(BaseNumber[int, int | str]):
     def _prepare_value_for_sending(self, value: int | str, do_validate: bool = True) -> int:
         """Prepare value before sending."""
         if not do_validate or (
-            value is not None
-            and isinstance(value, int)
-            and self._attr_min <= int(value) <= self._attr_max
+            value is not None and isinstance(value, int) and self._min <= int(value) <= self._max
         ):
             return int(value)
-        if self._attr_special and isinstance(value, str) and value in self._attr_special:
-            return int(self._attr_special[value])
+        if self._special and isinstance(value, str) and value in self._special:
+            return int(self._special[value])
 
         raise ValueError(
-            f"NUMBER.INT failed: Invalid value: {value} (min: {self._attr_min}, "
-            f"max: {self._attr_max}, special:{self._attr_special})"
+            f"NUMBER.INT failed: Invalid value: {value} (min: {self._min}, "
+            f"max: {self._max}, special:{self._special})"
         )

@@ -16,8 +16,8 @@ class HmButton(GenericEntity[None, bool]):
     This is a default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.BUTTON
-    _attr_validate_state_change = False
+    _platform = HmPlatform.BUTTON
+    _validate_state_change = False
 
     async def press(self) -> None:
         """Handle the button press."""

@@ -120,7 +120,7 @@ class HmPresetMode(StrEnum):
 class BaseClimateEntity(CustomEntity):
     """Base HomeMatic climate entity."""
 
-    _attr_platform = HmPlatform.CLIMATE
+    _platform = HmPlatform.CLIMATE
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -531,7 +531,7 @@ class CeIpThermostat(BaseClimateEntity):
     ) -> None:
         """Enable the away mode by calendar on thermostat."""
         await self._client.put_paramset(
-            address=self._attr_channel_address,
+            address=self._channel_address,
             paramset_key=HmParamsetKey.VALUES,
             value={
                 "CONTROL_MODE": HmIPMode.AWAY,
@@ -541,7 +541,7 @@ class CeIpThermostat(BaseClimateEntity):
         )
 
         await self._client.put_paramset(
-            address=self._attr_channel_address,
+            address=self._channel_address,
             paramset_key=HmParamsetKey.VALUES,
             value={
                 "SET_POINT_TEMPERATURE": away_temperature,
@@ -559,7 +559,7 @@ class CeIpThermostat(BaseClimateEntity):
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
         await self._client.put_paramset(
-            address=self._attr_channel_address,
+            address=self._channel_address,
             paramset_key=HmParamsetKey.VALUES,
             value={
                 "CONTROL_MODE": HmIPMode.AWAY,

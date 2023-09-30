@@ -22,16 +22,16 @@ class HmSensor(GenericEntity[Any, None]):
     This is a default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.SENSOR
+    _platform = HmPlatform.SENSOR
 
     @value_property
     def value(self) -> Any | None:
         """Return the value."""
-        if self._attr_value is not None and self._attr_value_list is not None:
-            return self._attr_value_list[int(self._attr_value)]
+        if self._value is not None and self._value_list is not None:
+            return self._value_list[int(self._value)]
         if convert_func := self._get_converter_func():
-            return convert_func(self._attr_value)
-        return self._attr_value
+            return convert_func(self._value)
+        return self._value
 
     def _get_converter_func(self) -> Any:
         """Return a converter based on sensor."""

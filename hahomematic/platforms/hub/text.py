@@ -12,8 +12,8 @@ from hahomematic.platforms.hub.entity import GenericSystemVariable
 class HmSysvarText(GenericSystemVariable):
     """Implementation of a sysvar text entity."""
 
-    _attr_platform = HmPlatform.HUB_TEXT
-    _attr_is_extended = True
+    _platform = HmPlatform.HUB_TEXT
+    _is_extended = True
 
     async def send_variable(self, value: str | None) -> None:
         """Set the value of the entity."""

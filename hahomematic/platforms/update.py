@@ -22,7 +22,7 @@ class HmUpdate(CallbackEntity):
     This is a default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.UPDATE
+    _platform = HmPlatform.UPDATE
 
     def __init__(self, device: hmd.HmDevice) -> None:
         """Init the callback entity."""

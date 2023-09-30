@@ -149,7 +149,7 @@ def get_prepared_custom_entity(
     """Return the hm custom_entity."""
     if custom_entity := central.get_custom_entity(address=address, channel_no=channel_no):
         for data_entity in custom_entity.data_entities.values():
-            data_entity._attr_state_uncertain = False
+            data_entity._state_uncertain = False
         return custom_entity
     return None
 

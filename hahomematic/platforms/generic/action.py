@@ -19,16 +19,16 @@ class HmAction(GenericEntity[None, Any]):
     This is an internal default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.ACTION
-    _attr_validate_state_change = False
+    _platform = HmPlatform.ACTION
+    _validate_state_change = False
 
     def _prepare_value_for_sending(self, value: Any, do_validate: bool = True) -> Any:
         """Prepare value before sending."""
         if (
             value is not None
-            and self._attr_value_list
+            and self._value_list
             and isinstance(value, str)
-            and value in self._attr_value_list
+            and value in self._value_list
         ):
-            return self._attr_value_list.index(value)
+            return self._value_list.index(value)
         return value

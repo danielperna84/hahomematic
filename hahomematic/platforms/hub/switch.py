@@ -12,5 +12,5 @@ from hahomematic.platforms.hub.entity import GenericSystemVariable
 class HmSysvarSwitch(GenericSystemVariable):
     """Implementation of a sysvar switch entity."""
 
-    _attr_platform = HmPlatform.HUB_SWITCH
-    _attr_is_extended = True
+    _platform = HmPlatform.HUB_SWITCH
+    _is_extended = True

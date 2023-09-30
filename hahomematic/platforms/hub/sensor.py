@@ -18,18 +18,18 @@ _LOGGER: Final = logging.getLogger(__name__)
 class HmSysvarSensor(GenericSystemVariable):
     """Implementation of a sysvar sensor."""
 
-    _attr_platform = HmPlatform.HUB_SENSOR
+    _platform = HmPlatform.HUB_SENSOR
 
     @value_property
     def value(self) -> Any | None:
         """Return the value."""
         if (
             self.data_type == HmSysvarType.LIST
-            and self._attr_value is not None
+            and self._value is not None
             and self.value_list is not None
         ):
-            return self.value_list[int(self._attr_value)]
-        return _check_length_and_warn(name=self.ccu_var_name, value=self._attr_value)
+            return self.value_list[int(self._value)]
+        return _check_length_and_warn(name=self.ccu_var_name, value=self._value)
 
 
 def _check_length_and_warn(name: str | None, value: Any) -> Any:

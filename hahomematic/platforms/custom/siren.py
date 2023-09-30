@@ -52,7 +52,7 @@ class HmSirenOnArgs(TypedDict, total=False):
 class BaseSiren(CustomEntity):
     """Class for HomeMatic siren entities."""
 
-    _attr_platform = HmPlatform.SIREN
+    _platform = HmPlatform.SIREN
 
     @value_property
     @abstractmethod

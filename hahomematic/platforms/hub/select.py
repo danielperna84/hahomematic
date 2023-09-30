@@ -18,25 +18,25 @@ _LOGGER: Final = logging.getLogger(__name__)
 class HmSysvarSelect(GenericSystemVariable):
     """Implementation of a sysvar select entity."""
 
-    _attr_platform = HmPlatform.HUB_SELECT
-    _attr_is_extended = True
+    _platform = HmPlatform.HUB_SELECT
+    _is_extended = True
 
     @value_property
     def value(self) -> str | None:
         """Get the value of the entity."""
-        if self._attr_value is not None and self._attr_value_list is not None:
-            return self._attr_value_list[int(self._attr_value)]
+        if self._value is not None and self._value_list is not None:
+            return self._value_list[int(self._value)]
         return None
 
     async def send_variable(self, value: int | str) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
-        if isinstance(value, int) and self._attr_value_list:
-            if 0 <= value < len(self._attr_value_list):
+        if isinstance(value, int) and self._value_list:
+            if 0 <= value < len(self._value_list):
                 await super().send_variable(value)
-        elif self._attr_value_list:
-            if value in self._attr_value_list:
-                await super().send_variable(self._attr_value_list.index(value))
+        elif self._value_list:
+            if value in self._value_list:
+                await super().send_variable(self._value_list.index(value))
         else:
             _LOGGER.warning(
                 "Value not in value_list for %s/%s",

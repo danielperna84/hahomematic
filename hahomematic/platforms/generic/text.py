@@ -16,4 +16,4 @@ class HmText(GenericEntity[str, str]):
     This is a default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.TEXT
+    _platform = HmPlatform.TEXT

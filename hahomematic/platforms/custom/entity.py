@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
 
-from hahomematic.const import INIT_DATETIME, MAX_CACHE_AGE, HmCallSource, HmEntityUsage
+from hahomematic.const import INIT_DATETIME, HmCallSource, HmEntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import HmEntityDefinition
@@ -94,7 +94,7 @@ class CustomEntity(BaseEntity):
             device=self.device,
             channel_no=self.channel_no,
             is_only_primary_channel=is_only_primary_channel,
-            usage=self._attr_usage,
+            usage=self._usage,
         )
 
     def _get_entity_usage(self) -> HmEntityUsage:
@@ -105,14 +105,10 @@ class CustomEntity(BaseEntity):
             return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
 
-    async def load_entity_value(
-        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
-    ) -> None:
+    async def load_entity_value(self, call_source: HmCallSource, max_age: int) -> None:
         """Init the entity values."""
         for entity in self._readable_entities:
-            await entity.load_entity_value(
-                call_source=call_source, max_age_seconds=max_age_seconds
-            )
+            await entity.load_entity_value(call_source=call_source, max_age=max_age)
         self.update_entity()
 
     def is_state_change(self, **kwargs: Any) -> bool:
@@ -131,7 +127,7 @@ class CustomEntity(BaseEntity):
         # Add repeating fields
         for field_name, parameter in self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {}).items():
             entity = self.device.get_generic_entity(
-                channel_address=self._attr_channel_address, parameter=parameter
+                channel_address=self._channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity)
 
@@ -140,7 +136,7 @@ class CustomEntity(BaseEntity):
             hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
         ).items():
             entity = self.device.get_generic_entity(
-                channel_address=self._attr_channel_address, parameter=parameter
+                channel_address=self._channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity, is_visible=True)
 

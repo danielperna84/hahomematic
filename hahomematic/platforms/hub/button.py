@@ -15,7 +15,7 @@ from hahomematic.platforms.hub.entity import GenericHubEntity
 class HmProgramButton(GenericHubEntity):
     """Class for a HomeMatic program button."""
 
-    _attr_platform = HmPlatform.HUB_BUTTON
+    _platform = HmPlatform.HUB_BUTTON
 
     def __init__(
         self,

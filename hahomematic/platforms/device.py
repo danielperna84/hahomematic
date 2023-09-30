@@ -56,10 +56,10 @@ class HmDevice(PayloadMixin):
         """Initialize the device object."""
         PayloadMixin.__init__(self)
         self.central: Final = central
-        self._attr_interface_id: Final = interface_id
-        self._attr_interface: Final = central.device_details.get_interface(device_address)
+        self._interface_id: Final = interface_id
+        self._interface: Final = central.device_details.get_interface(device_address)
         self.client: Final = central.get_client(interface_id=interface_id)
-        self._attr_device_address: Final = device_address
+        self._device_address: Final = device_address
         self.channels: Final = central.device_descriptions.get_channels(
             interface_id, device_address
         )
@@ -72,84 +72,84 @@ class HmDevice(PayloadMixin):
         self.generic_entities: Final[dict[tuple[str, str], GenericEntity]] = {}
         self.generic_events: Final[dict[tuple[str, str], GenericEvent]] = {}
         self.wrapper_entities: Final[dict[tuple[str, str], WrapperEntity]] = {}
-        self._attr_last_update: datetime = INIT_DATETIME
+        self._last_update: datetime = INIT_DATETIME
         self._forced_availability: HmForcedDeviceAvailability = HmForcedDeviceAvailability.NOT_SET
         self._update_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
-        self._attr_device_type: Final = str(
+        self._device_type: Final = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
                 parameter=HmDescription.TYPE,
             )
         )
-        self._attr_sub_type: Final = str(
+        self._sub_type: Final = str(
             central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
                 parameter=HmDescription.SUBTYPE,
             )
         )
-        self._attr_manufacturer = self._identify_manufacturer()
-        self._attr_product_group: Final = self._identify_product_group()
+        self._manufacturer = self._identify_manufacturer()
+        self._product_group: Final = self._identify_product_group()
         # marker if device will be created as custom entity
         self._has_custom_entity_definition: Final = hmed.entity_definition_exists(
-            device_type=self._attr_device_type
+            device_type=self._device_type
         )
-        self._attr_name: Final = get_device_name(
+        self._name: Final = get_device_name(
             central=central,
             device_address=device_address,
-            device_type=self._attr_device_type,
+            device_type=self._device_type,
         )
         self.value_cache: Final = ValueCache(device=self)
-        self._attr_room: Final = central.device_details.get_room(device_address=device_address)
+        self._room: Final = central.device_details.get_room(device_address=device_address)
         self._update_firmware_data()
-        self._attr_update_entity: Final = (
+        self._update_entity: Final = (
             HmUpdate(device=self) if self.device_type not in HM_VIRTUAL_REMOTE_TYPES else None
         )
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",
-            self._attr_interface_id,
-            self._attr_device_address,
-            self._attr_device_type,
-            self._attr_name,
+            self._interface_id,
+            self._device_address,
+            self._device_type,
+            self._name,
         )
 
     def _update_firmware_data(self) -> None:
         """Update firmware related data from device descriptions."""
-        self._attr_available_firmware: str | None = (
+        self._available_firmware: str | None = (
             self.central.device_descriptions.get_device_parameter(
-                interface_id=self._attr_interface_id,
-                device_address=self._attr_device_address,
+                interface_id=self._interface_id,
+                device_address=self._device_address,
                 parameter=HmDescription.AVAILABLE_FIRMWARE,
             )
             or None
         )
-        self._attr_firmware = str(
+        self._firmware = str(
             self.central.device_descriptions.get_device_parameter(
-                interface_id=self._attr_interface_id,
-                device_address=self._attr_device_address,
+                interface_id=self._interface_id,
+                device_address=self._device_address,
                 parameter=HmDescription.FIRMWARE,
             )
         )
 
         try:
-            self._attr_firmware_update_state = HmDeviceFirmwareState(
+            self._firmware_update_state = HmDeviceFirmwareState(
                 str(
                     self.central.device_descriptions.get_device_parameter(
-                        interface_id=self._attr_interface_id,
-                        device_address=self._attr_device_address,
+                        interface_id=self._interface_id,
+                        device_address=self._device_address,
                         parameter=HmDescription.FIRMWARE_UPDATE_STATE,
                     )
                 )
             )
         except ValueError:
-            self._attr_firmware_update_state = HmDeviceFirmwareState.UP_TO_DATE
+            self._firmware_update_state = HmDeviceFirmwareState.UP_TO_DATE
 
-        self._attr_firmware_updatable = bool(
+        self._firmware_updatable = bool(
             self.central.device_descriptions.get_device_parameter(
-                interface_id=self._attr_interface_id,
-                device_address=self._attr_device_address,
+                interface_id=self._interface_id,
+                device_address=self._device_address,
                 parameter=HmDescription.FIRMWARE_UPDATABLE,
             )
         )
@@ -192,7 +192,7 @@ class HmDevice(PayloadMixin):
     @config_property
     def available_firmware(self) -> str | None:
         """Return the available firmware of the device."""
-        return self._attr_available_firmware
+        return self._available_firmware
 
     @property
     def config_pending(self) -> bool:
@@ -204,42 +204,42 @@ class HmDevice(PayloadMixin):
     @config_property
     def device_address(self) -> str:
         """Return the device_address of the device."""
-        return self._attr_device_address
+        return self._device_address
 
     @config_property
     def device_type(self) -> str:
         """Return the device_type of the device."""
-        return self._attr_device_type
+        return self._device_type
 
     @config_property
     def firmware(self) -> str:
         """Return the firmware of the device."""
-        return self._attr_firmware
+        return self._firmware
 
     @config_property
     def firmware_updatable(self) -> bool:
         """Return the firmware update state of the device."""
-        return self._attr_firmware_updatable
+        return self._firmware_updatable
 
     @config_property
     def firmware_update_state(self) -> HmDeviceFirmwareState:
         """Return the firmware update state of the device."""
-        return self._attr_firmware_update_state
+        return self._firmware_update_state
 
     @config_property
     def identifier(self) -> str:
         """Return the identifier of the device."""
-        return f"{self._attr_device_address}{IDENTIFIER_SEPARATOR}{self._attr_interface_id}"
+        return f"{self._device_address}{IDENTIFIER_SEPARATOR}{self._interface_id}"
 
     @config_property
     def interface(self) -> str:
         """Return the interface of the device."""
-        return self._attr_interface
+        return self._interface
 
     @config_property
     def interface_id(self) -> str:
         """Return the interface_id of the device."""
-        return self._attr_interface_id
+        return self._interface_id
 
     @property
     def has_custom_entity_definition(self) -> bool:
@@ -249,51 +249,47 @@ class HmDevice(PayloadMixin):
     @config_property
     def manufacturer(self) -> str:
         """Return the manufacturer of the device."""
-        return self._attr_manufacturer
+        return self._manufacturer
 
     @config_property
     def name(self) -> str:
         """Return the name of the device."""
-        return self._attr_name
+        return self._name
 
     @config_property
     def product_group(self) -> HmProductGroup:
         """Return the product group of the device."""
-        return self._attr_product_group
+        return self._product_group
 
     @config_property
     def room(self) -> str | None:
         """Return the room of the device."""
-        return self._attr_room
+        return self._room
 
     @config_property
     def sub_type(self) -> str:
         """Return the sub_type of the device."""
-        return self._attr_sub_type
+        return self._sub_type
 
     @property
     def update_entity(self) -> HmUpdate | None:
         """Return the device firmware update entity of the device."""
-        return self._attr_update_entity
+        return self._update_entity
 
     @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity."""
-        return self.generic_entities.get((f"{self._attr_device_address}:0", HmEvent.UN_REACH))
+        return self.generic_entities.get((f"{self._device_address}:0", HmEvent.UN_REACH))
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity."""
-        return self.generic_entities.get(
-            (f"{self._attr_device_address}:0", HmEvent.STICKY_UN_REACH)
-        )
+        return self.generic_entities.get((f"{self._device_address}:0", HmEvent.STICKY_UN_REACH))
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity."""
-        return self.generic_entities.get(
-            (f"{self._attr_device_address}:0", HmEvent.CONFIG_PENDING)
-        )
+        return self.generic_entities.get((f"{self._device_address}:0", HmEvent.CONFIG_PENDING))
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
@@ -370,7 +366,7 @@ class HmDevice(PayloadMixin):
             self._firmware_update_callbacks.remove(firmware_update_callback)
 
     def _set_last_update(self) -> None:
-        self._attr_last_update = datetime.now()
+        self._last_update = datetime.now()
 
     def get_all_entities(self) -> list[hmce.CustomEntity | GenericEntity | WrapperEntity]:
         """Return all entities of a device."""
@@ -415,18 +411,18 @@ class HmDevice(PayloadMixin):
 
     def refresh_firmware_data(self) -> None:
         """Refresh firmware data of the device."""
-        old_available_firmware = self._attr_available_firmware
-        old_firmware = self._attr_firmware
-        old_firmware_update_state = self._attr_firmware_update_state
-        old_firmware_updatable = self._attr_firmware_updatable
+        old_available_firmware = self._available_firmware
+        old_firmware = self._firmware
+        old_firmware_update_state = self._firmware_update_state
+        old_firmware_updatable = self._firmware_updatable
 
         self._update_firmware_data()
 
         if (
-            old_available_firmware != self._attr_available_firmware
-            or old_firmware != self._attr_firmware
-            or old_firmware_update_state != self._attr_firmware_update_state
-            or old_firmware_updatable != self._attr_firmware_updatable
+            old_available_firmware != self._available_firmware
+            or old_firmware != self._firmware
+            or old_firmware_update_state != self._firmware_update_state
+            or old_firmware_updatable != self._firmware_updatable
         ):
             for _firmware_callback in self._firmware_update_callbacks:
                 _firmware_callback()
@@ -434,28 +430,28 @@ class HmDevice(PayloadMixin):
     async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Update the firmware of the homematic device."""
         update_result = await self.client.update_device_firmware(
-            device_address=self._attr_device_address
+            device_address=self._device_address
         )
 
         async def refresh_data() -> None:
             for refresh_interval in refresh_after_update_intervals:
                 await asyncio.sleep(refresh_interval)
-                await self.central.refresh_firmware_data(device_address=self._attr_device_address)
+                await self.central.refresh_firmware_data(device_address=self._device_address)
 
         if refresh_after_update_intervals:
             self.central.create_task(target=refresh_data(), name="refresh_firmware_data")
 
         return update_result
 
-    async def load_value_cache(self) -> None:
+    async def load_value_cache(self, max_age: int = MAX_CACHE_AGE) -> None:
         """Init the parameter cache."""
         if len(self.generic_entities) > 0:
-            await self.value_cache.init_base_entities()
+            await self.value_cache.init_base_entities(max_age=max_age)
         if len(self.generic_events) > 0:
-            await self.value_cache.init_readable_events()
+            await self.value_cache.init_readable_events(max_age=max_age)
         _LOGGER.debug(
             "INIT_DATA: Skipping load_data, missing entities for %s",
-            self._attr_device_address,
+            self._device_address,
         )
 
     async def reload_paramset_descriptions(self) -> None:
@@ -464,8 +460,8 @@ class HmDevice(PayloadMixin):
             paramset_key,
             channel_addresses,
         ) in self.central.paramset_descriptions.get_channel_addresses_by_paramset_key(
-            interface_id=self._attr_interface_id,
-            device_address=self._attr_device_address,
+            interface_id=self._interface_id,
+            device_address=self._device_address,
         ).items():
             for channel_address in channel_addresses:
                 await self.client.fetch_paramset_description(
@@ -487,9 +483,9 @@ class HmDevice(PayloadMixin):
     def __str__(self) -> str:
         """Provide some useful information."""
         return (
-            f"address: {self._attr_device_address}, "
-            f"type: {len(self._attr_device_type)}, "
-            f"name: {self._attr_name}, "
+            f"address: {self._device_address}, "
+            f"type: {len(self._device_type)}, "
+            f"name: {self._name}, "
             f"generic_entities: {len(self.generic_entities)}, "
             f"custom_entities: {len(self.custom_entities)}, "
             f"wrapper_entities: {len(self.wrapper_entities)}, "
@@ -498,19 +494,18 @@ class HmDevice(PayloadMixin):
 
 
 class ValueCache:
-    """A Cache to temporaily stored values."""
+    """A Cache to temporarily stored values."""
 
     _NO_VALUE_CACHE_ENTRY: Final = "NO_VALUE_CACHE_ENTRY"
 
-    _sema_get_or_load_value: Final = asyncio.BoundedSemaphore(1)
-
     def __init__(self, device: HmDevice) -> None:
         """Init the value cache."""
-        self._attr_device: Final = device
+        self._sema_get_or_load_value: Final = asyncio.Semaphore()
+        self._device: Final = device
         # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
-        self._attr_value_cache: Final[dict[str, dict[str, dict[str, CacheEntry]]]] = {}
+        self._device_cache: Final[dict[str, dict[str, dict[str, CacheEntry]]]] = {}
 
-    async def init_base_entities(self) -> None:
+    async def init_base_entities(self, max_age: int) -> None:
         """Load data by get_value."""
         try:
             for entity in self._get_base_entities():
@@ -519,20 +514,21 @@ class ValueCache:
                     paramset_key=entity.paramset_key,
                     parameter=entity.parameter,
                     call_source=HmCallSource.HM_INIT,
+                    max_age=max_age,
                 )
                 entity.update_value(value=value)
         except BaseHomematicException as bhe:
             _LOGGER.debug(
                 "init_base_entities: Failed to init cache for channel0 %s, %s [%s]",
-                self._attr_device.device_type,
-                self._attr_device.device_address,
+                self._device.device_type,
+                self._device.device_address,
                 bhe,
             )
 
     def _get_base_entities(self) -> set[GenericEntity]:
         """Get entities of channel 0 and master."""
         entities: list[GenericEntity] = []
-        for entity in self._attr_device.generic_entities.values():
+        for entity in self._device.generic_entities.values():
             if (
                 entity.channel_no == 0
                 and entity.paramset_key == HmParamsetKey.VALUES
@@ -541,7 +537,7 @@ class ValueCache:
                 entities.append(entity)
         return set(entities)
 
-    async def init_readable_events(self) -> None:
+    async def init_readable_events(self, max_age: int) -> None:
         """Load data by get_value."""
         try:
             for event in self._get_readable_events():
@@ -550,20 +546,21 @@ class ValueCache:
                     paramset_key=event.paramset_key,
                     parameter=event.parameter,
                     call_source=HmCallSource.HM_INIT,
+                    max_age=max_age,
                 )
                 event.update_value(value=value)
         except BaseHomematicException as bhe:
             _LOGGER.debug(
                 "init_base_events: Failed to init cache for channel0 %s, %s [%s]",
-                self._attr_device.device_type,
-                self._attr_device.device_address,
+                self._device.device_type,
+                self._device.device_address,
                 bhe,
             )
 
     def _get_readable_events(self) -> set[GenericEvent]:
         """Get readable events."""
         events: list[GenericEvent] = []
-        for event in self._attr_device.generic_events.values():
+        for event in self._device.generic_events.values():
             if event.is_readable:
                 events.append(event)
         return set(events)
@@ -574,7 +571,7 @@ class ValueCache:
         paramset_key: str,
         parameter: str,
         call_source: HmCallSource,
-        max_age_seconds: int = MAX_CACHE_AGE,
+        max_age: int,
     ) -> Any:
         """Load data."""
         async with self._sema_get_or_load_value:
@@ -583,7 +580,7 @@ class ValueCache:
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                     parameter=parameter,
-                    max_age_seconds=max_age_seconds,
+                    max_age=max_age,
                 )
             ) != NO_CACHE_ENTRY:
                 return (
@@ -592,7 +589,7 @@ class ValueCache:
 
             value: Any = self._NO_VALUE_CACHE_ENTRY
             try:
-                value = await self._attr_device.client.get_value(
+                value = await self._device.client.get_value(
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                     parameter=parameter,
@@ -601,52 +598,62 @@ class ValueCache:
             except BaseHomematicException as bhe:
                 _LOGGER.debug(
                     "GET_OR_LOAD_VALUE: Failed to get data for %s, %s, %s: %s",
-                    self._attr_device.device_type,
+                    self._device.device_type,
                     channel_address,
                     parameter,
                     bhe,
                 )
-            if paramset_key not in self._attr_value_cache:
-                self._attr_value_cache[paramset_key] = {}
-            if channel_address not in self._attr_value_cache[paramset_key]:
-                self._attr_value_cache[paramset_key][channel_address] = {}
-            # write value to cache even if an exception has occurred
-            # to avoid repetitive calls to CCU within max_age_seconds
-            self._attr_value_cache[paramset_key][channel_address][parameter] = CacheEntry(
-                value=value, last_update=datetime.now()
+            self._add_entry_to_device_cache(
+                channel_address=channel_address,
+                paramset_key=paramset_key,
+                parameter=parameter,
+                value=value,
             )
+
             return NO_CACHE_ENTRY if value == self._NO_VALUE_CACHE_ENTRY else value
+
+    def _add_entry_to_device_cache(
+        self, channel_address: str, paramset_key: str, parameter: str, value: Any
+    ) -> None:
+        """Add value to cache."""
+        if paramset_key not in self._device_cache:
+            self._device_cache[paramset_key] = {}
+        if channel_address not in self._device_cache[paramset_key]:
+            self._device_cache[paramset_key][channel_address] = {}
+        # write value to cache even if an exception has occurred
+        # to avoid repetitive calls to CCU within max_age
+        self._device_cache[paramset_key][channel_address][parameter] = CacheEntry(
+            value=value, last_update=datetime.now()
+        )
 
     def _get_value_from_cache(
         self,
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        max_age_seconds: int,
+        max_age: int,
     ) -> Any:
         """Load data from caches."""
         # Try to get data from central cache
         if (
-            global_value := self._attr_device.central.device_data.get_device_data(
-                interface=self._attr_device.interface,
+            global_value := self._device.central.device_data.get_device_data(
+                interface=self._device.interface,
                 channel_address=channel_address,
                 parameter=parameter,
-                max_age_seconds=max_age_seconds,
+                max_age=max_age,
             )
         ) != NO_CACHE_ENTRY:
             return global_value
 
         # Try to get data from device cache
         if (
-            cache_entry := self._attr_value_cache.get(paramset_key, {})
+            cache_entry := self._device_cache.get(paramset_key, {})
             .get(channel_address, {})
             .get(
                 parameter,
                 CacheEntry.empty(),
             )
-        ) != CacheEntry.empty() and updated_within_seconds(
-            last_update=cache_entry.last_update, max_age_seconds=max_age_seconds
-        ):
+        ) and cache_entry.is_valid(max_age=max_age):
             return cache_entry.value
         return NO_CACHE_ENTRY
 
@@ -662,6 +669,12 @@ class CacheEntry:
     def empty() -> CacheEntry:
         """Return empty cache entry."""
         return CacheEntry(value=NO_CACHE_ENTRY, last_update=datetime.min)
+
+    def is_valid(self, max_age: int) -> bool:
+        """Return if entry is valid."""
+        if self.value == NO_CACHE_ENTRY:
+            return False
+        return updated_within_seconds(last_update=self.last_update, max_age=max_age)
 
 
 class _DefinitionExporter:

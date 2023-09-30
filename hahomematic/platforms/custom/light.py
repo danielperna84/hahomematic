@@ -155,7 +155,7 @@ class HmLightOffArgs(TypedDict, total=False):
 class CeDimmer(CustomEntity, OnTimeMixin):
     """Base class for HomeMatic light entities."""
 
-    _attr_platform = HmPlatform.LIGHT
+    _platform = HmPlatform.LIGHT
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -524,7 +524,7 @@ class CeIpRGBWLight(CeDimmer):
             and self.channel_no in (3, 4)
         ):
             return HmEntityUsage.NO_CREATE
-        return self._attr_usage
+        return self._usage
 
     @value_property
     def effect_list(self) -> list[str] | None:
