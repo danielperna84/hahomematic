@@ -1,3 +1,7 @@
+# Version 2023.10.0 (2023-10-03)
+
+- Cleanup cache naming
+
 # Version 2023.9.7 (2023-09-29)
 
 - Add check to BaseHomematicException

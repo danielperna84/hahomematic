@@ -102,7 +102,6 @@ class CentralUnit:
         self._ping_count: Final[dict[str, int]] = {}
         self._ping_pong_fired: bool = False
         self._sema_ping_count: Final = threading.Semaphore()
-
         self._sema_add_devices: Final = asyncio.Semaphore()
         self._tasks: Final[set[asyncio.Future[Any]]] = set()
         # Keep the config for the central
@@ -993,16 +992,12 @@ class CentralUnit:
 
     @measure_execution_time
     async def load_and_refresh_entity_data(
-        self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
+        self, paramset_key: str | None = None, max_age: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
-        if paramset_key != HmParamsetKey.MASTER and self.device_data.is_empty(
-            max_age_seconds=max_age_seconds
-        ):
+        if paramset_key != HmParamsetKey.MASTER and self.device_data.is_empty(max_age=max_age):
             await self.device_data.load()
-        await self.device_data.refresh_entity_data(
-            paramset_key=paramset_key, max_age_seconds=max_age_seconds
-        )
+        await self.device_data.refresh_entity_data(paramset_key=paramset_key, max_age=max_age)
 
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""

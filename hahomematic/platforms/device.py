@@ -498,14 +498,13 @@ class HmDevice(PayloadMixin):
 
 
 class ValueCache:
-    """A Cache to temporaily stored values."""
+    """A Cache to temporarily stored values."""
 
     _NO_VALUE_CACHE_ENTRY: Final = "NO_VALUE_CACHE_ENTRY"
 
-    _sema_get_or_load_value: Final = asyncio.BoundedSemaphore(1)
-
     def __init__(self, device: HmDevice) -> None:
         """Init the value cache."""
+        self._sema_get_or_load_value: Final = asyncio.Semaphore()
         self._attr_device: Final = device
         # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
         self._attr_value_cache: Final[dict[str, dict[str, dict[str, CacheEntry]]]] = {}
@@ -574,7 +573,7 @@ class ValueCache:
         paramset_key: str,
         parameter: str,
         call_source: HmCallSource,
-        max_age_seconds: int = MAX_CACHE_AGE,
+        max_age: int = MAX_CACHE_AGE,
     ) -> Any:
         """Load data."""
         async with self._sema_get_or_load_value:
@@ -583,7 +582,7 @@ class ValueCache:
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                     parameter=parameter,
-                    max_age_seconds=max_age_seconds,
+                    max_age=max_age,
                 )
             ) != NO_CACHE_ENTRY:
                 return (
@@ -611,7 +610,7 @@ class ValueCache:
             if channel_address not in self._attr_value_cache[paramset_key]:
                 self._attr_value_cache[paramset_key][channel_address] = {}
             # write value to cache even if an exception has occurred
-            # to avoid repetitive calls to CCU within max_age_seconds
+            # to avoid repetitive calls to CCU within max_age
             self._attr_value_cache[paramset_key][channel_address][parameter] = CacheEntry(
                 value=value, last_update=datetime.now()
             )
@@ -622,7 +621,7 @@ class ValueCache:
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        max_age_seconds: int,
+        max_age: int,
     ) -> Any:
         """Load data from caches."""
         # Try to get data from central cache
@@ -631,7 +630,7 @@ class ValueCache:
                 interface=self._attr_device.interface,
                 channel_address=channel_address,
                 parameter=parameter,
-                max_age_seconds=max_age_seconds,
+                max_age=max_age,
             )
         ) != NO_CACHE_ENTRY:
             return global_value
@@ -644,9 +643,7 @@ class ValueCache:
                 parameter,
                 CacheEntry.empty(),
             )
-        ) != CacheEntry.empty() and updated_within_seconds(
-            last_update=cache_entry.last_update, max_age_seconds=max_age_seconds
-        ):
+        ) and cache_entry.is_valid(max_age=max_age):
             return cache_entry.value
         return NO_CACHE_ENTRY
 
@@ -662,6 +659,12 @@ class CacheEntry:
     def empty() -> CacheEntry:
         """Return empty cache entry."""
         return CacheEntry(value=NO_CACHE_ENTRY, last_update=datetime.min)
+
+    def is_valid(self, max_age: int) -> bool:
+        """Return if entry is valid."""
+        if self.value == NO_CACHE_ENTRY:
+            return False
+        return updated_within_seconds(last_update=self.last_update, max_age=max_age)
 
 
 class _DefinitionExporter:

@@ -120,12 +120,12 @@ class JsonRpcAioHttpClient:
 
         return await self._do_login()
 
-    def _updated_within_seconds(self, max_age_seconds: int = _MAX_JSON_SESSION_AGE) -> bool:
+    def _updated_within_seconds(self, max_age: int = _MAX_JSON_SESSION_AGE) -> bool:
         """Check if session id has been updated within 90 seconds."""
         if self._last_session_id_refresh is None:
             return False
         delta = datetime.now() - self._last_session_id_refresh
-        if delta.seconds < max_age_seconds:
+        if delta.seconds < max_age:
             return True
         return False
 

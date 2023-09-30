@@ -185,12 +185,10 @@ class WrapperEntity(hme.BaseEntity):
         wrapped_entity.wrapped = True
 
     async def load_entity_value(
-        self, call_source: HmCallSource, max_age_seconds: int = MAX_CACHE_AGE
+        self, call_source: HmCallSource, max_age: int = MAX_CACHE_AGE
     ) -> None:
         """Init the entity data."""
-        await self._wrapped_entity.load_entity_value(
-            call_source=call_source, max_age_seconds=max_age_seconds
-        )
+        await self._wrapped_entity.load_entity_value(call_source=call_source, max_age=max_age)
 
     def __getattr__(self, *args: Any) -> Any:
         """Return any other attribute not explicitly defined in the class."""

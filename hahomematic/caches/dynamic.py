@@ -35,9 +35,7 @@ class DeviceDetailsCache:
 
     async def load(self) -> None:
         """Fetch names from backend."""
-        if updated_within_seconds(
-            last_update=self._last_updated, max_age_seconds=(MAX_CACHE_AGE / 2)
-        ):
+        if updated_within_seconds(last_update=self._last_updated, max_age=(MAX_CACHE_AGE / 2)):
             return
         self.clear()
         _LOGGER.debug("load: Loading names for %s", self._central.name)
@@ -138,26 +136,22 @@ class DeviceDataCache:
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device data cache."""
         self._central: Final = central
-        # { interface, {channel_address, {parameter, CacheEntry}}}
-        self._central_values_cache: Final[dict[str, dict[str, dict[str, Any]]]] = {}
+        # { interface, {channel_address, {parameter, value}}}
+        self._values_cache: Final[dict[str, dict[str, dict[str, Any]]]] = {}
         self._last_updated = INIT_DATETIME
 
-    def is_empty(self, max_age_seconds: int) -> bool:
+    def is_empty(self, max_age: int) -> bool:
         """Return if cache is empty."""
-        if len(self._central_values_cache) == 0:
+        if len(self._values_cache) == 0:
             return True
-        if not updated_within_seconds(
-            last_update=self._last_updated, max_age_seconds=max_age_seconds
-        ):
+        if not updated_within_seconds(last_update=self._last_updated, max_age=max_age):
             self.clear()
             return True
         return False
 
     async def load(self) -> None:
         """Fetch device data from backend."""
-        if updated_within_seconds(
-            last_update=self._last_updated, max_age_seconds=(MAX_CACHE_AGE / 2)
-        ):
+        if updated_within_seconds(last_update=self._last_updated, max_age=(MAX_CACHE_AGE / 2)):
             return
         self.clear()
         _LOGGER.debug("load: device data for %s", self._central.name)
@@ -165,19 +159,19 @@ class DeviceDataCache:
             await client.fetch_all_device_data()
 
     async def refresh_entity_data(
-        self, paramset_key: str | None = None, max_age_seconds: int = MAX_CACHE_AGE
+        self, paramset_key: str | None = None, max_age: int = MAX_CACHE_AGE
     ) -> None:
         """Refresh entity data."""
         for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
             await entity.load_entity_value(
                 call_source=HmCallSource.HM_INIT,
-                max_age_seconds=max_age_seconds,
+                max_age=max_age,
             )
 
     def add_device_data(self, device_data: dict[str, dict[str, dict[str, Any]]]) -> None:
         """Add device data to cache."""
-        self._central_values_cache.clear()
-        self._central_values_cache.update(device_data)
+        self._values_cache.clear()
+        self._values_cache.update(device_data)
         self._last_updated = datetime.now()
 
     def get_device_data(
@@ -185,12 +179,12 @@ class DeviceDataCache:
         interface: str,
         channel_address: str,
         parameter: str,
-        max_age_seconds: int,
+        max_age: int,
     ) -> Any:
         """Get device data from cache."""
-        if not self.is_empty(max_age_seconds=max_age_seconds):
+        if not self.is_empty(max_age=max_age):
             return (
-                self._central_values_cache.get(interface, {})
+                self._values_cache.get(interface, {})
                 .get(channel_address, {})
                 .get(parameter, NO_CACHE_ENTRY)
             )
@@ -198,5 +192,5 @@ class DeviceDataCache:
 
     def clear(self) -> None:
         """Clear the cache."""
-        self._central_values_cache.clear()
+        self._values_cache.clear()
         self._last_updated = INIT_DATETIME
