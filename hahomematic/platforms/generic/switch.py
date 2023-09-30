@@ -22,14 +22,14 @@ class HmSwitch(GenericEntity[bool, bool]):
     This is a default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.SWITCH
+    _platform = HmPlatform.SWITCH
 
     @value_property
     def value(self) -> bool | None:  # type: ignore[override]
         """Get the value of the entity."""
-        if self._attr_type == HmType.ACTION:
+        if self._type == HmType.ACTION:
             return False
-        return self._attr_value
+        return self._value
 
     async def turn_on(
         self, collector: CallParameterCollector | None = None, on_time: float | None = None
@@ -46,8 +46,8 @@ class HmSwitch(GenericEntity[bool, bool]):
     async def set_on_time(self, on_time: float) -> None:
         """Set the on time value in seconds."""
         await self._client.set_value(
-            channel_address=self._attr_channel_address,
-            paramset_key=self._attr_paramset_key,
+            channel_address=self._channel_address,
+            paramset_key=self._paramset_key,
             parameter=_PARAM_ON_TIME,
             value=float(on_time),
         )

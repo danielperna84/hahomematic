@@ -106,8 +106,8 @@ class CentralUnit:
         self._tasks: Final[set[asyncio.Future[Any]]] = set()
         # Keep the config for the central
         self.config: Final = central_config
-        self._attr_name: Final = central_config.name
-        self._attr_model: str | None = None
+        self._name: Final = central_config.name
+        self._model: str | None = None
         self._connection_state: Final = central_config.connection_state
         self._loop: Final = asyncio.get_running_loop()
         self._xml_rpc_server: Final = (
@@ -167,7 +167,7 @@ class CentralUnit:
 
         self.json_rpc_client: Final[JsonRpcAioHttpClient] = central_config.create_json_rpc_client()
 
-        CENTRAL_INSTANCES[self._attr_name] = self
+        CENTRAL_INSTANCES[self._name] = self
         self._connection_checker: Final = ConnectionChecker(self)
         self._hub: HmHub = HmHub(central=self)
         self._version: str | None = None
@@ -232,14 +232,14 @@ class CentralUnit:
     @property
     def model(self) -> str | None:
         """Return the model of the backend."""
-        if not self._attr_model and (client := self.primary_client):
-            self._attr_model = client.model
-        return self._attr_model
+        if not self._model and (client := self.primary_client):
+            self._model = client.model
+        return self._model
 
     @property
     def name(self) -> str:
         """Return the name of the backend."""
-        return self._attr_name
+        return self._name
 
     @property
     def supports_ping_pong(self) -> bool:
@@ -269,7 +269,7 @@ class CentralUnit:
     async def start(self) -> None:
         """Start processing of the central unit."""
         if self._started:
-            _LOGGER.debug("START: Cental %s already started", self._attr_name)
+            _LOGGER.debug("START: Cental %s already started", self._name)
             return
         await self.parameter_visibility.load()
         if self.config.start_direct:
@@ -285,7 +285,7 @@ class CentralUnit:
     async def stop(self) -> None:
         """Stop processing of the central unit."""
         if not self._started:
-            _LOGGER.debug("STOP: Cental %s not started", self._attr_name)
+            _LOGGER.debug("STOP: Cental %s not started", self._name)
             return
         self._stop_connection_checker()
         await self._stop_clients()
@@ -306,8 +306,8 @@ class CentralUnit:
             )
 
         _LOGGER.debug("STOP: Removing instance")
-        if self._attr_name in CENTRAL_INSTANCES:
-            del CENTRAL_INSTANCES[self._attr_name]
+        if self._name in CENTRAL_INSTANCES:
+            del CENTRAL_INSTANCES[self._name]
 
         while self._has_active_threads:
             await asyncio.sleep(1)
@@ -380,13 +380,13 @@ class CentralUnit:
         if len(self._clients) > 0:
             _LOGGER.warning(
                 "CREATE_CLIENTS: Clients for %s are already created",
-                self._attr_name,
+                self._name,
             )
             return False
         if len(self.config.interface_configs) == 0:
             _LOGGER.warning(
                 "CREATE_CLIENTS failed: No Interfaces for %s defined",
-                self._attr_name,
+                self._name,
             )
             return False
 
@@ -408,7 +408,7 @@ class CentralUnit:
                     _LOGGER.debug(
                         "CREATE_CLIENTS: Adding client %s to %s",
                         client.interface_id,
-                        self._attr_name,
+                        self._name,
                     )
                     self._clients[client.interface_id] = client
             except BaseHomematicException as ex:
@@ -426,11 +426,11 @@ class CentralUnit:
         if self.has_clients:
             _LOGGER.debug(
                 "CREATE_CLIENTS: All clients successfully created for %s",
-                self._attr_name,
+                self._name,
             )
             return True
 
-        _LOGGER.debug("CREATE_CLIENTS failed for %s", self._attr_name)
+        _LOGGER.debug("CREATE_CLIENTS failed for %s", self._name)
         return False
 
     async def _init_clients(self) -> None:
@@ -508,7 +508,7 @@ class CentralUnit:
         """Start the connection checker."""
         _LOGGER.debug(
             "START_CONNECTION_CHECKER: Starting connection_checker for %s",
-            self._attr_name,
+            self._name,
         )
         self._connection_checker.start()
 
@@ -517,7 +517,7 @@ class CentralUnit:
         self._connection_checker.stop()
         _LOGGER.debug(
             "STOP_CONNECTION_CHECKER: Stopped connection_checker for %s",
-            self._attr_name,
+            self._name,
         )
 
     async def validate_config_and_get_system_information(self) -> SystemInformation:
@@ -547,7 +547,7 @@ class CentralUnit:
         """Return a client by interface_id."""
         if not self.has_client(interface_id=interface_id):
             raise HaHomematicException(
-                f"get_client: interface_id {interface_id} does not exist on {self._attr_name}"
+                f"get_client: interface_id {interface_id} does not exist on {self._name}"
             )
         return self._clients[interface_id]
 
@@ -638,16 +638,16 @@ class CentralUnit:
             await self.device_details.load()
             await self.device_data.load()
         except orjson.JSONDecodeError:  # pragma: no cover
-            _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._attr_name)
+            _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._name)
             await self.clear_all_caches()
 
     async def _create_devices(self) -> None:
         """Trigger creation of the objects that expose the functionality."""
         if not self._clients:
             raise HaHomematicException(
-                f"CREATE_DEVICES failed: No clients initialized. Not starting central {self._attr_name}."
+                f"CREATE_DEVICES failed: No clients initialized. Not starting central {self._name}."
             )
-        _LOGGER.debug("CREATE_DEVICES: Starting to create devices for %s", self._attr_name)
+        _LOGGER.debug("CREATE_DEVICES: Starting to create devices for %s", self._name)
 
         new_devices = set[HmDevice]()
         for interface_id in self._clients:
@@ -693,7 +693,7 @@ class CentralUnit:
                         interface_id,
                         device_address,
                     )
-        _LOGGER.debug("CREATE_DEVICES: Finished creating devices for %s", self._attr_name)
+        _LOGGER.debug("CREATE_DEVICES: Finished creating devices for %s", self._name)
 
         if new_devices:
             self.fire_system_event_callback(
@@ -942,7 +942,7 @@ class CentralUnit:
         except CancelledError:
             _LOGGER.debug(
                 "create_task: task cancelled for %s",
-                self._attr_name,
+                self._name,
             )
             return
 
@@ -960,7 +960,7 @@ class CentralUnit:
         except CancelledError:  # pragma: no cover
             _LOGGER.debug(
                 "run_coroutine: coroutine interrupted for %s",
-                self._attr_name,
+                self._name,
             )
             return None
 
@@ -972,7 +972,7 @@ class CentralUnit:
             task.add_done_callback(self._tasks.remove)
             return task
         except (CancelledError, asyncio.TimeoutError) as err:  # pragma: no cover
-            message = f"async_add_executor_job: task cancelled for {self._attr_name} [{reduce_args(args=err.args)}]"
+            message = f"async_add_executor_job: task cancelled for {self._name} [{reduce_args(args=err.args)}]"
             _LOGGER.debug(message)
             raise HaHomematicException(message) from err
 
@@ -1026,7 +1026,7 @@ class CentralUnit:
             _LOGGER.warning(
                 "SET_INSTALL_MODE: interface_id %s does not exist on %s",
                 interface_id,
-                self._attr_name,
+                self._name,
             )
             return False
         return await self.get_client(interface_id=interface_id).set_install_mode(

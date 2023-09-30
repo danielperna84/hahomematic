@@ -41,7 +41,7 @@ class HmStateChangeArg(StrEnum):
 class CeSwitch(CustomEntity, OnTimeMixin):
     """Class for HomeMatic switch entities."""
 
-    _attr_platform = HmPlatform.SWITCH
+    _platform = HmPlatform.SWITCH
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""

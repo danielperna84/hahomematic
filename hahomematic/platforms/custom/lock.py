@@ -49,7 +49,7 @@ class HmLockState(StrEnum):
 class BaseLock(CustomEntity):
     """Class for HomematicIP lock entities."""
 
-    _attr_platform = HmPlatform.LOCK
+    _platform = HmPlatform.LOCK
 
     @value_property
     @abstractmethod

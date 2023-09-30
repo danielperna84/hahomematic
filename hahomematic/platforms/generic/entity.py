@@ -16,7 +16,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]):
     """Base class for generic entities."""
 
-    _attr_validate_state_change: bool = True
+    _validate_state_change: bool = True
     is_hmtype: Final = True
 
     def __init__(
@@ -43,33 +43,29 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
     def usage(self) -> HmEntityUsage:
         """Return the entity usage."""
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
-            return self._attr_usage
+            return self._usage
         return HmEntityUsage.ENTITY if force_enabled else HmEntityUsage.NO_CREATE
 
     def event(self, value: Any) -> None:
         """Handle event for which this entity has subscribed."""
-        old_value = self._attr_value
+        old_value = self._value
         new_value = self._convert_value(value)
-        if self._attr_value == new_value:
+        if self._value == new_value:
             return
         self.update_value(value=new_value)
 
         # reload paramset_descriptions, if value has changed
-        if (
-            self._attr_parameter == HmEvent.CONFIG_PENDING
-            and new_value is False
-            and old_value is True
-        ):
+        if self._parameter == HmEvent.CONFIG_PENDING and new_value is False and old_value is True:
             self._central.create_task(
                 self.device.reload_paramset_descriptions(), name="reloadParamsetDescriptions"
             )
 
         # send device availability events
-        if self._attr_parameter in (
+        if self._parameter in (
             HmEvent.UN_REACH,
             HmEvent.STICKY_UN_REACH,
         ):
-            self.device.update_device(self._attr_unique_identifier)
+            self.device.update_device(self._unique_identifier)
             self._central.fire_ha_event_callback(
                 event_type=HmEventType.DEVICE_AVAILABILITY,
                 event_data=self.get_event_data(new_value),
@@ -98,13 +94,13 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             collector.add_entity(self, value=converted_value)
             return
 
-        if self._attr_validate_state_change and not self.is_state_change(value=converted_value):
+        if self._validate_state_change and not self.is_state_change(value=converted_value):
             return
 
         await self._client.set_value(
-            channel_address=self._attr_channel_address,
-            paramset_key=self._attr_paramset_key,
-            parameter=self._attr_parameter,
+            channel_address=self._channel_address,
+            paramset_key=self._paramset_key,
+            parameter=self._parameter,
             value=converted_value,
         )
 
@@ -120,7 +116,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             central=self._central,
             device=self.device,
             channel_no=self.channel_no,
-            parameter=self._attr_parameter,
+            parameter=self._parameter,
         )
 
     def _get_entity_usage(self) -> HmEntityUsage:
@@ -128,8 +124,8 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         if self._central.parameter_visibility.parameter_is_hidden(
             device_type=self.device.device_type,
             channel_no=self.channel_no,
-            paramset_key=self._attr_paramset_key,
-            parameter=self._attr_parameter,
+            paramset_key=self._paramset_key,
+            parameter=self._parameter,
         ):
             return HmEntityUsage.NO_CREATE
 
@@ -145,7 +141,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 
         If the state is uncertain, the state should also marked as changed.
         """
-        if value != self._attr_value:
+        if value != self._value:
             return True
         if self.state_uncertain:
             return True
@@ -169,7 +165,7 @@ class WrapperEntity(hme.BaseEntity):
             unique_identifier=f"{wrapped_entity.unique_identifier}_{new_platform}",
             is_in_multiple_channels=wrapped_entity.is_in_multiple_channels,
         )
-        self._attr_platform = new_platform
+        self._platform = new_platform
         # use callbacks from wrapped entity
         self._update_callbacks = wrapped_entity._update_callbacks
         self._remove_callbacks = wrapped_entity._remove_callbacks
@@ -195,5 +191,5 @@ class WrapperEntity(hme.BaseEntity):
             central=self._central,
             device=self.device,
             channel_no=self.channel_no,
-            parameter=self._attr_parameter,
+            parameter=self._parameter,
         )

@@ -17,11 +17,11 @@ class HmBinarySensor(GenericEntity[bool, bool]):
     This is a default platform that gets automatically generated.
     """
 
-    _attr_platform = HmPlatform.BINARY_SENSOR
+    _platform = HmPlatform.BINARY_SENSOR
 
     @value_property
     def value(self) -> bool | None:  # type: ignore[override]
         """Return the value of the entity."""
-        if self._attr_value is not None:
-            return self._attr_value
-        return self._attr_default
+        if self._value is not None:
+            return self._value
+        return self._default

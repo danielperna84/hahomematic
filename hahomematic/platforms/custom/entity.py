@@ -94,7 +94,7 @@ class CustomEntity(BaseEntity):
             device=self.device,
             channel_no=self.channel_no,
             is_only_primary_channel=is_only_primary_channel,
-            usage=self._attr_usage,
+            usage=self._usage,
         )
 
     def _get_entity_usage(self) -> HmEntityUsage:
@@ -127,7 +127,7 @@ class CustomEntity(BaseEntity):
         # Add repeating fields
         for field_name, parameter in self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {}).items():
             entity = self.device.get_generic_entity(
-                channel_address=self._attr_channel_address, parameter=parameter
+                channel_address=self._channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity)
 
@@ -136,7 +136,7 @@ class CustomEntity(BaseEntity):
             hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
         ).items():
             entity = self.device.get_generic_entity(
-                channel_address=self._attr_channel_address, parameter=parameter
+                channel_address=self._channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity, is_visible=True)
 

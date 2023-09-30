@@ -32,8 +32,8 @@ _LOGGER: Final = logging.getLogger(__name__)
 class GenericEvent(BaseParameterEntity[Any, Any]):
     """Base class for events."""
 
-    _attr_platform = HmPlatform.EVENT
-    _attr_event_type: HmEventType
+    _platform = HmPlatform.EVENT
+    _event_type: HmEventType
 
     def __init__(
         self,
@@ -57,13 +57,13 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
     def usage(self) -> HmEntityUsage:
         """Return the entity usage."""
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
-            return self._attr_usage
+            return self._usage
         return HmEntityUsage.EVENT if force_enabled else HmEntityUsage.NO_CREATE
 
     @config_property
     def event_type(self) -> HmEventType:
         """Return the event_type of the event."""
-        return self._attr_event_type
+        return self._event_type
 
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
@@ -83,7 +83,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
             central=self._central,
             device=self.device,
             channel_no=self.channel_no,
-            parameter=self._attr_parameter,
+            parameter=self._parameter,
         )
 
     def _get_entity_usage(self) -> HmEntityUsage:
@@ -94,19 +94,19 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
 class ClickEvent(GenericEvent):
     """class for handling click events."""
 
-    _attr_event_type = HmEventType.KEYPRESS
+    _event_type = HmEventType.KEYPRESS
 
 
 class DeviceErrorEvent(GenericEvent):
     """class for handling device error events."""
 
-    _attr_event_type = HmEventType.DEVICE_ERROR
+    _event_type = HmEventType.DEVICE_ERROR
 
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
-        old_value = self._attr_value
+        old_value = self._value
         new_value = self._convert_value(value)
-        if self._attr_value == new_value:
+        if self._value == new_value:
             return
         self.update_value(value=new_value)
 
@@ -129,7 +129,7 @@ class DeviceErrorEvent(GenericEvent):
 class ImpulseEvent(GenericEvent):
     """class for handling impulse events."""
 
-    _attr_event_type = HmEventType.IMPULSE
+    _event_type = HmEventType.IMPULSE
 
 
 def create_event_and_append_to_device(

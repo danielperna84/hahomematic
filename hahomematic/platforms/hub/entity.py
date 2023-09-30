@@ -31,8 +31,8 @@ class GenericHubEntity(CallbackEntity):
         )
         super().__init__(unique_identifier=unique_identifier)
         self.central: Final = central
-        self._attr_name: Final = self.get_name(data=data)
-        self._attr_full_name: Final = f"{self.central.name}_{self._attr_name}"
+        self._name: Final = self.get_name(data=data)
+        self._full_name: Final = f"{self.central.name}_{self._name}"
 
     @abstractmethod
     def get_name(self, data: HubData) -> str:
@@ -41,18 +41,18 @@ class GenericHubEntity(CallbackEntity):
     @config_property
     def full_name(self) -> str:
         """Return the fullname of the entity."""
-        return self._attr_full_name
+        return self._full_name
 
     @config_property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        return self._attr_name
+        return self._name
 
 
 class GenericSystemVariable(GenericHubEntity):
     """Class for a HomeMatic system variable."""
 
-    _attr_is_extended = False
+    _is_extended = False
 
     def __init__(
         self,
@@ -63,13 +63,13 @@ class GenericSystemVariable(GenericHubEntity):
         super().__init__(central=central, address=SYSVAR_ADDRESS, data=data)
         self.ccu_var_name: Final = data.name
         self.data_type: Final = data.data_type
-        self._attr_value_list: Final[tuple[str, ...] | None] = (
+        self._value_list: Final[tuple[str, ...] | None] = (
             tuple(data.value_list) if data.value_list else None
         )
-        self._attr_max: Final = data.max_value
-        self._attr_min: Final = data.min_value
-        self._attr_unit: Final = data.unit
-        self._attr_value = data.value
+        self._max: Final = data.max_value
+        self._min: Final = data.min_value
+        self._unit: Final = data.unit
+        self._value = data.value
 
     @property
     def available(self) -> bool:
@@ -79,32 +79,32 @@ class GenericSystemVariable(GenericHubEntity):
     @value_property
     def value(self) -> Any | None:
         """Return the value."""
-        return self._attr_value
+        return self._value
 
     @value_property
     def value_list(self) -> tuple[str, ...] | None:
         """Return the value_list."""
-        return self._attr_value_list
+        return self._value_list
 
     @config_property
     def max(self) -> float | int | None:
         """Return the max value."""
-        return self._attr_max
+        return self._max
 
     @config_property
     def min(self) -> float | int | None:
         """Return the min value."""
-        return self._attr_min
+        return self._min
 
     @config_property
     def unit(self) -> str | None:
         """Return the unit of the entity."""
-        return self._attr_unit
+        return self._unit
 
     @property
     def is_extended(self) -> bool:
         """Return if the entity is an extended type."""
-        return self._attr_is_extended
+        return self._is_extended
 
     def get_name(self, data: HubData) -> str:
         """Return the name of the sysvar entity."""
@@ -117,7 +117,7 @@ class GenericSystemVariable(GenericHubEntity):
         if self.data_type:
             value = parse_sys_var(data_type=self.data_type, raw_value=value)
         else:
-            old_value = self._attr_value
+            old_value = self._value
             if isinstance(old_value, bool):
                 value = bool(value)
             elif isinstance(old_value, int):
@@ -127,8 +127,8 @@ class GenericSystemVariable(GenericHubEntity):
             elif isinstance(old_value, float):
                 value = float(value)
 
-        if self._attr_value != value:
-            self._attr_value = value
+        if self._value != value:
+            self._value = value
             self.update_entity()
 
     async def send_variable(self, value: Any) -> None:

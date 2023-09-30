@@ -17,8 +17,8 @@ _LOGGER: Final = logging.getLogger(__name__)
 class HmSysvarNumber(GenericSystemVariable):
     """Implementation of a sysvar number."""
 
-    _attr_platform = HmPlatform.HUB_NUMBER
-    _attr_is_extended = True
+    _platform = HmPlatform.HUB_NUMBER
+    _is_extended = True
 
     async def send_variable(self, value: float) -> None:
         """Set the value of the entity."""
