@@ -500,8 +500,8 @@ class ValueCache:
         """Init the value cache."""
         self._sema_get_or_load_value: Final = asyncio.Semaphore()
         self._device: Final = device
-        # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
-        self._device_cache: Final[dict[str, dict[str, dict[str, CacheEntry]]]] = {}
+        # {key, CacheEntry}
+        self._device_cache: Final[dict[str, CacheEntry]] = {}
 
     async def init_base_entities(self) -> None:
         """Load data by get_value."""
@@ -606,19 +606,21 @@ class ValueCache:
 
             return NO_CACHE_ENTRY if value == self._NO_VALUE_CACHE_ENTRY else value
 
+    @staticmethod
+    def _get_key(channel_address: str, paramset_key: str, parameter: str) -> str:
+        """Get the key for the cache entry."""
+        return f"{channel_address}.{paramset_key}.{parameter}"
+
     def _add_entry_to_device_cache(
         self, channel_address: str, paramset_key: str, parameter: str, value: Any
     ) -> None:
         """Add value to cache."""
-        if paramset_key not in self._device_cache:
-            self._device_cache[paramset_key] = {}
-        if channel_address not in self._device_cache[paramset_key]:
-            self._device_cache[paramset_key][channel_address] = {}
+        key = self._get_key(
+            channel_address=channel_address, paramset_key=paramset_key, parameter=parameter
+        )
         # write value to cache even if an exception has occurred
         # to avoid repetitive calls to CCU within max_age
-        self._device_cache[paramset_key][channel_address][parameter] = CacheEntry(
-            value=value, last_update=datetime.now()
-        )
+        self._device_cache[key] = CacheEntry(value=value, last_update=datetime.now())
 
     def _get_value_from_cache(
         self,
@@ -629,22 +631,24 @@ class ValueCache:
         """Load data from caches."""
         # Try to get data from central cache
         if (
-            global_value := self._device.central.device_data.get_device_data(
-                interface=self._device.interface,
-                channel_address=channel_address,
-                parameter=parameter,
+            paramset_key == HmParamsetKey.VALUES
+            and (
+                global_value := self._device.central.device_data.get_device_data(
+                    interface=self._device.interface,
+                    channel_address=channel_address,
+                    parameter=parameter,
+                )
             )
-        ) != NO_CACHE_ENTRY:
+            != NO_CACHE_ENTRY
+        ):
             return global_value
 
         # Try to get data from device cache
+        key = self._get_key(
+            channel_address=channel_address, paramset_key=paramset_key, parameter=parameter
+        )
         if (
-            cache_entry := self._device_cache.get(paramset_key, {})
-            .get(channel_address, {})
-            .get(
-                parameter,
-                CacheEntry.empty(),
-            )
+            cache_entry := self._device_cache.get(key, CacheEntry.empty())
         ) and cache_entry.is_valid:
             return cache_entry.value
         return NO_CACHE_ENTRY

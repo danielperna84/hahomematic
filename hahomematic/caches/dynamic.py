@@ -136,8 +136,8 @@ class DeviceDataCache:
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device data cache."""
         self._central: Final = central
-        # { interface, {channel_address, {parameter, value}}}
-        self._values_cache: Final[dict[str, dict[str, dict[str, Any]]]] = {}
+        # { key, value}
+        self._values_cache: Final[dict[str, Any]] = {}
         self._last_updated = INIT_DATETIME
 
     @property
@@ -164,10 +164,9 @@ class DeviceDataCache:
         for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
             await entity.load_entity_value(call_source=HmCallSource.HM_INIT)
 
-    def add_device_data(self, device_data: dict[str, dict[str, dict[str, Any]]]) -> None:
+    def add_device_data(self, all_device_data: dict[str, Any]) -> None:
         """Add device data to cache."""
-        self._values_cache.clear()
-        self._values_cache.update(device_data)
+        self._values_cache.update(all_device_data)
         self._last_updated = datetime.now()
 
     def get_device_data(
@@ -178,11 +177,8 @@ class DeviceDataCache:
     ) -> Any:
         """Get device data from cache."""
         if not self.is_empty:
-            return (
-                self._values_cache.get(interface, {})
-                .get(channel_address, {})
-                .get(parameter, NO_CACHE_ENTRY)
-            )
+            key = f"{interface}.{channel_address.replace(':','%3A')}.{parameter}"
+            return self._values_cache.get(key, NO_CACHE_ENTRY)
         return NO_CACHE_ENTRY
 
     def clear(self) -> None:
