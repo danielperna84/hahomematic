@@ -4,14 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from hahomematic.const import (
-    MAX_CACHE_AGE,
-    HmCallSource,
-    HmEntityUsage,
-    HmEvent,
-    HmEventType,
-    HmPlatform,
-)
+from hahomematic.const import HmCallSource, HmEntityUsage, HmEvent, HmEventType, HmPlatform
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
@@ -184,9 +177,7 @@ class WrapperEntity(hme.BaseEntity):
         wrapped_entity.set_usage(HmEntityUsage.NO_CREATE)
         wrapped_entity.wrapped = True
 
-    async def load_entity_value(
-        self, call_source: HmCallSource, max_age: int = MAX_CACHE_AGE
-    ) -> None:
+    async def load_entity_value(self, call_source: HmCallSource, max_age: int) -> None:
         """Init the entity data."""
         await self._wrapped_entity.load_entity_value(call_source=call_source, max_age=max_age)
 

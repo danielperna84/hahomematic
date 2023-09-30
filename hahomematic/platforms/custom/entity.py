@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
 
-from hahomematic.const import INIT_DATETIME, MAX_CACHE_AGE, HmCallSource, HmEntityUsage
+from hahomematic.const import INIT_DATETIME, HmCallSource, HmEntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import HmEntityDefinition
@@ -105,9 +105,7 @@ class CustomEntity(BaseEntity):
             return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
 
-    async def load_entity_value(
-        self, call_source: HmCallSource, max_age: int = MAX_CACHE_AGE
-    ) -> None:
+    async def load_entity_value(self, call_source: HmCallSource, max_age: int) -> None:
         """Init the entity values."""
         for entity in self._readable_entities:
             await entity.load_entity_value(call_source=call_source, max_age=max_age)
