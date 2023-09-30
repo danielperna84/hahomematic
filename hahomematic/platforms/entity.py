@@ -273,7 +273,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         )
 
     @abstractmethod
-    async def load_entity_value(self, call_source: HmCallSource, max_age: int) -> None:
+    async def load_entity_value(self, call_source: HmCallSource) -> None:
         """Init the entity data."""
 
     @abstractmethod
@@ -476,9 +476,9 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
 
-    async def load_entity_value(self, call_source: HmCallSource, max_age: int) -> None:
+    async def load_entity_value(self, call_source: HmCallSource) -> None:
         """Init the entity data."""
-        if hms.updated_within_seconds(last_update=self._last_update, max_age=max_age):
+        if hms.updated_within_seconds(last_update=self._last_update):
             return
 
         # Check, if entity is readable
@@ -491,7 +491,6 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
                 call_source=call_source,
-                max_age=max_age,
             )
         )
 

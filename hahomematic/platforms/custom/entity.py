@@ -105,10 +105,10 @@ class CustomEntity(BaseEntity):
             return HmEntityUsage.CE_SECONDARY
         return HmEntityUsage.CE_PRIMARY
 
-    async def load_entity_value(self, call_source: HmCallSource, max_age: int) -> None:
+    async def load_entity_value(self, call_source: HmCallSource) -> None:
         """Init the entity values."""
         for entity in self._readable_entities:
-            await entity.load_entity_value(call_source=call_source, max_age=max_age)
+            await entity.load_entity_value(call_source=call_source)
         self.update_entity()
 
     def is_state_change(self, **kwargs: Any) -> bool:

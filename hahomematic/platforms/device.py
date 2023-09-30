@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from copy import copy
-from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
@@ -21,7 +20,6 @@ from hahomematic.const import (
     HM_VIRTUAL_REMOTE_TYPES,
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
-    MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     RELEVANT_INIT_PARAMETERS,
     HmCallSource,
@@ -44,7 +42,7 @@ from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
 from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
-from hahomematic.support import check_or_create_directory, updated_within_seconds
+from hahomematic.support import CacheEntry, check_or_create_directory
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -443,12 +441,12 @@ class HmDevice(PayloadMixin):
 
         return update_result
 
-    async def load_value_cache(self, max_age: int = MAX_CACHE_AGE) -> None:
+    async def load_value_cache(self) -> None:
         """Init the parameter cache."""
         if len(self.generic_entities) > 0:
-            await self.value_cache.init_base_entities(max_age=max_age)
+            await self.value_cache.init_base_entities()
         if len(self.generic_events) > 0:
-            await self.value_cache.init_readable_events(max_age=max_age)
+            await self.value_cache.init_readable_events()
         _LOGGER.debug(
             "INIT_DATA: Skipping load_data, missing entities for %s",
             self._device_address,
@@ -502,10 +500,10 @@ class ValueCache:
         """Init the value cache."""
         self._sema_get_or_load_value: Final = asyncio.Semaphore()
         self._device: Final = device
-        # { parparamset_key, {channel_address, {parameter, CacheEntry}}}
-        self._device_cache: Final[dict[str, dict[str, dict[str, CacheEntry]]]] = {}
+        # {key, CacheEntry}
+        self._device_cache: Final[dict[str, CacheEntry]] = {}
 
-    async def init_base_entities(self, max_age: int) -> None:
+    async def init_base_entities(self) -> None:
         """Load data by get_value."""
         try:
             for entity in self._get_base_entities():
@@ -514,7 +512,6 @@ class ValueCache:
                     paramset_key=entity.paramset_key,
                     parameter=entity.parameter,
                     call_source=HmCallSource.HM_INIT,
-                    max_age=max_age,
                 )
                 entity.update_value(value=value)
         except BaseHomematicException as bhe:
@@ -537,7 +534,7 @@ class ValueCache:
                 entities.append(entity)
         return set(entities)
 
-    async def init_readable_events(self, max_age: int) -> None:
+    async def init_readable_events(self) -> None:
         """Load data by get_value."""
         try:
             for event in self._get_readable_events():
@@ -546,7 +543,6 @@ class ValueCache:
                     paramset_key=event.paramset_key,
                     parameter=event.parameter,
                     call_source=HmCallSource.HM_INIT,
-                    max_age=max_age,
                 )
                 event.update_value(value=value)
         except BaseHomematicException as bhe:
@@ -571,7 +567,6 @@ class ValueCache:
         paramset_key: str,
         parameter: str,
         call_source: HmCallSource,
-        max_age: int,
     ) -> Any:
         """Load data."""
         async with self._sema_get_or_load_value:
@@ -580,7 +575,6 @@ class ValueCache:
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                     parameter=parameter,
-                    max_age=max_age,
                 )
             ) != NO_CACHE_ENTRY:
                 return (
@@ -612,69 +606,52 @@ class ValueCache:
 
             return NO_CACHE_ENTRY if value == self._NO_VALUE_CACHE_ENTRY else value
 
+    @staticmethod
+    def _get_key(channel_address: str, paramset_key: str, parameter: str) -> str:
+        """Get the key for the cache entry."""
+        return f"{channel_address}.{paramset_key}.{parameter}"
+
     def _add_entry_to_device_cache(
         self, channel_address: str, paramset_key: str, parameter: str, value: Any
     ) -> None:
         """Add value to cache."""
-        if paramset_key not in self._device_cache:
-            self._device_cache[paramset_key] = {}
-        if channel_address not in self._device_cache[paramset_key]:
-            self._device_cache[paramset_key][channel_address] = {}
+        key = self._get_key(
+            channel_address=channel_address, paramset_key=paramset_key, parameter=parameter
+        )
         # write value to cache even if an exception has occurred
         # to avoid repetitive calls to CCU within max_age
-        self._device_cache[paramset_key][channel_address][parameter] = CacheEntry(
-            value=value, last_update=datetime.now()
-        )
+        self._device_cache[key] = CacheEntry(value=value, last_update=datetime.now())
 
     def _get_value_from_cache(
         self,
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        max_age: int,
     ) -> Any:
         """Load data from caches."""
         # Try to get data from central cache
         if (
-            global_value := self._device.central.device_data.get_device_data(
-                interface=self._device.interface,
-                channel_address=channel_address,
-                parameter=parameter,
-                max_age=max_age,
+            paramset_key == HmParamsetKey.VALUES
+            and (
+                global_value := self._device.central.device_data.get_device_data(
+                    interface=self._device.interface,
+                    channel_address=channel_address,
+                    parameter=parameter,
+                )
             )
-        ) != NO_CACHE_ENTRY:
+            != NO_CACHE_ENTRY
+        ):
             return global_value
 
         # Try to get data from device cache
+        key = self._get_key(
+            channel_address=channel_address, paramset_key=paramset_key, parameter=parameter
+        )
         if (
-            cache_entry := self._device_cache.get(paramset_key, {})
-            .get(channel_address, {})
-            .get(
-                parameter,
-                CacheEntry.empty(),
-            )
-        ) and cache_entry.is_valid(max_age=max_age):
+            cache_entry := self._device_cache.get(key, CacheEntry.empty())
+        ) and cache_entry.is_valid:
             return cache_entry.value
         return NO_CACHE_ENTRY
-
-
-@dataclass(slots=True)
-class CacheEntry:
-    """An entry for the value cache."""
-
-    value: Any
-    last_update: datetime
-
-    @staticmethod
-    def empty() -> CacheEntry:
-        """Return empty cache entry."""
-        return CacheEntry(value=NO_CACHE_ENTRY, last_update=datetime.min)
-
-    def is_valid(self, max_age: int) -> bool:
-        """Return if entry is valid."""
-        if self.value == NO_CACHE_ENTRY:
-            return False
-        return updated_within_seconds(last_update=self.last_update, max_age=max_age)
 
 
 class _DefinitionExporter:

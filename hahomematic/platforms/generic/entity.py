@@ -173,9 +173,9 @@ class WrapperEntity(hme.BaseEntity):
         wrapped_entity.set_usage(HmEntityUsage.NO_CREATE)
         wrapped_entity.wrapped = True
 
-    async def load_entity_value(self, call_source: HmCallSource, max_age: int) -> None:
+    async def load_entity_value(self, call_source: HmCallSource) -> None:
         """Init the entity data."""
-        await self._wrapped_entity.load_entity_value(call_source=call_source, max_age=max_age)
+        await self._wrapped_entity.load_entity_value(call_source=call_source)
 
     def __getattr__(self, *args: Any) -> Any:
         """Return any other attribute not explicitly defined in the class."""

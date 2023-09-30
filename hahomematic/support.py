@@ -19,6 +19,8 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_PARAMSETS,
     INIT_DATETIME,
+    MAX_CACHE_AGE,
+    NO_CACHE_ENTRY,
     HmSysvarType,
 )
 from hahomematic.exceptions import HaHomematicException
@@ -151,7 +153,7 @@ def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
     return channel_address, None
 
 
-def updated_within_seconds(last_update: datetime, max_age: int | float) -> bool:
+def updated_within_seconds(last_update: datetime, max_age: int | float = MAX_CACHE_AGE) -> bool:
     """Entity has been updated within X minutes."""
     if last_update == INIT_DATETIME:
         return False
@@ -243,3 +245,23 @@ class Channel:
     def no(self) -> int | None:
         """Return the channel no."""
         return get_channel_no(self.address)
+
+
+@dataclass(slots=True)
+class CacheEntry:
+    """An entry for the value cache."""
+
+    value: Any
+    last_update: datetime
+
+    @staticmethod
+    def empty() -> CacheEntry:
+        """Return empty cache entry."""
+        return CacheEntry(value=NO_CACHE_ENTRY, last_update=datetime.min)
+
+    @property
+    def is_valid(self) -> bool:
+        """Return if entry is valid."""
+        if self.value == NO_CACHE_ENTRY:
+            return False
+        return updated_within_seconds(last_update=self.last_update)

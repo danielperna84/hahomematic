@@ -35,7 +35,6 @@ from hahomematic.const import (
     EVENT_INSTANCE_NAME,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
-    MAX_CACHE_AGE,
     HmDescription,
     HmDeviceFirmwareState,
     HmEntityUsage,
@@ -991,13 +990,11 @@ class CentralUnit:
         await self._hub.fetch_program_data(include_internal=include_internal)
 
     @measure_execution_time
-    async def load_and_refresh_entity_data(
-        self, paramset_key: str | None = None, max_age: int = MAX_CACHE_AGE
-    ) -> None:
+    async def load_and_refresh_entity_data(self, paramset_key: str | None = None) -> None:
         """Refresh entity data."""
-        if paramset_key != HmParamsetKey.MASTER and self.device_data.is_empty(max_age=max_age):
+        if paramset_key != HmParamsetKey.MASTER and self.device_data.is_empty:
             await self.device_data.load()
-        await self.device_data.refresh_entity_data(paramset_key=paramset_key, max_age=max_age)
+        await self.device_data.refresh_entity_data(paramset_key=paramset_key)
 
     async def get_system_variable(self, name: str) -> Any | None:
         """Get system variable from CCU / Homegear."""

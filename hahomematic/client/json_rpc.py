@@ -632,7 +632,7 @@ class JsonRpcAioHttpClient:
 
         return device_details
 
-    async def get_all_device_data(self, interface: str) -> dict[str, dict[str, dict[str, Any]]]:
+    async def get_all_device_data(self, interface: str) -> dict[str, Any]:
         """Get the all device data of the backend."""
         iid = f"GET_ALL_DEVICE_DATA for {interface}"
         all_device_data: dict[str, dict[str, dict[str, Any]]] = {}
@@ -648,7 +648,7 @@ class JsonRpcAioHttpClient:
                 "GET_ALL_DEVICE_DATA: Getting all device data for interface %s", interface
             )
             if json_result := response[_P_RESULT]:
-                all_device_data = _convert_to_values_cache(json_result)
+                all_device_data = json_result
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
             self._handle_exception_log(
@@ -799,21 +799,3 @@ def _get_params(
     if extra_params:
         params.update(extra_params)
     return params
-
-
-def _convert_to_values_cache(
-    all_device_data: dict[str, Any]
-) -> dict[str, dict[str, dict[str, Any]]]:
-    """Convert all device data o separated value list."""
-    values_cache: dict[str, dict[str, dict[str, Any]]] = {}
-    for device_adr, value in all_device_data.items():
-        device_adr = device_adr.replace("%3A", ":")
-        device_adrs = device_adr.split(".")
-        if (interface := device_adrs[0]) not in values_cache:
-            values_cache[interface] = {}
-        if (channel_address := device_adrs[1]) not in values_cache[interface]:
-            values_cache[interface][channel_address] = {}
-        if (parameter := device_adrs[2]) not in values_cache[interface][channel_address]:
-            values_cache[interface][channel_address][parameter] = {}
-        values_cache[interface][channel_address][parameter] = value
-    return values_cache

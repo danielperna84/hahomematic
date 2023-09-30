@@ -136,15 +136,16 @@ class DeviceDataCache:
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device data cache."""
         self._central: Final = central
-        # { interface, {channel_address, {parameter, value}}}
-        self._values_cache: Final[dict[str, dict[str, dict[str, Any]]]] = {}
+        # { key, value}
+        self._values_cache: Final[dict[str, Any]] = {}
         self._last_updated = INIT_DATETIME
 
-    def is_empty(self, max_age: int) -> bool:
+    @property
+    def is_empty(self) -> bool:
         """Return if cache is empty."""
         if len(self._values_cache) == 0:
             return True
-        if not updated_within_seconds(last_update=self._last_updated, max_age=max_age):
+        if not updated_within_seconds(last_update=self._last_updated):
             self.clear()
             return True
         return False
@@ -158,20 +159,14 @@ class DeviceDataCache:
         for client in self._central.clients:
             await client.fetch_all_device_data()
 
-    async def refresh_entity_data(
-        self, paramset_key: str | None = None, max_age: int = MAX_CACHE_AGE
-    ) -> None:
+    async def refresh_entity_data(self, paramset_key: str | None = None) -> None:
         """Refresh entity data."""
         for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
-            await entity.load_entity_value(
-                call_source=HmCallSource.HM_INIT,
-                max_age=max_age,
-            )
+            await entity.load_entity_value(call_source=HmCallSource.HM_INIT)
 
-    def add_device_data(self, device_data: dict[str, dict[str, dict[str, Any]]]) -> None:
+    def add_device_data(self, all_device_data: dict[str, Any]) -> None:
         """Add device data to cache."""
-        self._values_cache.clear()
-        self._values_cache.update(device_data)
+        self._values_cache.update(all_device_data)
         self._last_updated = datetime.now()
 
     def get_device_data(
@@ -179,15 +174,11 @@ class DeviceDataCache:
         interface: str,
         channel_address: str,
         parameter: str,
-        max_age: int,
     ) -> Any:
         """Get device data from cache."""
-        if not self.is_empty(max_age=max_age):
-            return (
-                self._values_cache.get(interface, {})
-                .get(channel_address, {})
-                .get(parameter, NO_CACHE_ENTRY)
-            )
+        if not self.is_empty:
+            key = f"{interface}.{channel_address.replace(':','%3A')}.{parameter}"
+            return self._values_cache.get(key, NO_CACHE_ENTRY)
         return NO_CACHE_ENTRY
 
     def clear(self) -> None:
