@@ -83,9 +83,9 @@ def parse_sys_var(data_type: SysvarType | None, raw_value: Any) -> Any:
         return raw_value
     if data_type in (SysvarType.ALARM, SysvarType.LOGIC):
         return to_bool(raw_value)
-    if data_type == SysvarType.HM_FLOAT:
+    if data_type == SysvarType.FLOAT:
         return float(raw_value)
-    if data_type in (SysvarType.HM_INTEGER, SysvarType.LIST):
+    if data_type in (SysvarType.INTEGER, SysvarType.LIST):
         return int(raw_value)
     return raw_value
 

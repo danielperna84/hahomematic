@@ -81,7 +81,7 @@ _T = TypeVar("_T")
 CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
 ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 
-HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
+INTERFACE_EVENT_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_INTERFACE_ID): str,
         vol.Required(EVENT_TYPE): InterfaceEventType,
@@ -465,7 +465,7 @@ class CentralUnit:
 
         self.fire_ha_event_callback(
             event_type=EventType.INTERFACE,
-            event_data=cast(dict[str, Any], HM_INTERFACE_EVENT_SCHEMA(event_data)),
+            event_data=cast(dict[str, Any], INTERFACE_EVENT_SCHEMA(event_data)),
         )
 
     async def _identify_callback_ip(self, port: int) -> str:
@@ -923,7 +923,7 @@ class CentralUnit:
         }
         self.fire_ha_event_callback(
             event_type=EventType.INTERFACE,
-            event_data=cast(dict[str, Any], HM_INTERFACE_EVENT_SCHEMA(event_data)),
+            event_data=cast(dict[str, Any], INTERFACE_EVENT_SCHEMA(event_data)),
         )
         _LOGGER.warning(
             "PING/PONG MISMATCH: There is a mismatch between send ping events and received pong events for HA instance %s. "

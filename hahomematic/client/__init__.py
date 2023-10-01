@@ -13,9 +13,9 @@ from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
     EVENT_AVAILABLE,
     EVENT_SECONDS_SINCE_LAST_EVENT,
-    HM_VIRTUAL_REMOTE_TYPES,
     HOMEGEAR_SERIAL,
     INIT_DATETIME,
+    VIRTUAL_REMOTE_TYPES,
     Backend,
     CallSource,
     Description,
@@ -287,7 +287,7 @@ class Client(ABC):
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
-        for device_type in HM_VIRTUAL_REMOTE_TYPES:
+        for device_type in VIRTUAL_REMOTE_TYPES:
             for device in self.central.devices:
                 if device.interface_id == self.interface_id and device.device_type == device_type:
                     return device

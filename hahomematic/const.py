@@ -66,13 +66,13 @@ DEVICE_ERROR_EVENTS: Final[tuple[str, ...]] = ("ERROR", "SENSOR_ERROR")
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
 # virtual remotes device_types
-HM_VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
+VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
     "HM-RCV-50",
     "HMW-RCV-50",
     "HmIP-RCV-50",
 )
 
-HM_VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
+VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
     "BidCoS-RF",
     "HMW-RCV-50",
     "HmIP-RCV-1",
@@ -329,8 +329,8 @@ class SysvarType(StrEnum):
     """Enum for homematic sysvar types."""
 
     ALARM = "ALARM"
-    HM_FLOAT = "FLOAT"
-    HM_INTEGER = "INTEGER"
+    FLOAT = "FLOAT"
+    INTEGER = "INTEGER"
     LIST = "LIST"
     LOGIC = "LOGIC"
     NUMBER = "NUMBER"
@@ -348,7 +348,7 @@ class ParameterType(StrEnum):
     STRING = "STRING"
 
 
-AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
+PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.BINARY_SENSOR,
     HmPlatform.BUTTON,
     HmPlatform.CLIMATE,
@@ -365,7 +365,7 @@ AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.UPDATE,
 )
 
-AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
+HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.HUB_BINARY_SENSOR,
     HmPlatform.HUB_BUTTON,
     HmPlatform.HUB_NUMBER,

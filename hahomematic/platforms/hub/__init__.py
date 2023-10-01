@@ -142,7 +142,7 @@ class Hub:
                 return HmSysvarBinarySensor(central=self._central, data=data)
             if data_type == SysvarType.LIST and extended_sysvar:
                 return HmSysvarSelect(central=self._central, data=data)
-            if data_type in (SysvarType.HM_FLOAT, SysvarType.HM_INTEGER) and extended_sysvar:
+            if data_type in (SysvarType.FLOAT, SysvarType.INTEGER) and extended_sysvar:
                 return HmSysvarNumber(central=self._central, data=data)
             if data_type == SysvarType.STRING and extended_sysvar:
                 return HmSysvarText(central=self._central, data=data)
