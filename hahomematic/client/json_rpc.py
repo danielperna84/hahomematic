@@ -492,9 +492,7 @@ class JsonRpcAioHttpClient:
                     org_data_type = var[_TYPE]
                     raw_value = var[_VALUE]
                     if org_data_type == SysvarType.NUMBER:
-                        data_type = (
-                            SysvarType.HM_FLOAT if "." in raw_value else SysvarType.HM_INTEGER
-                        )
+                        data_type = SysvarType.FLOAT if "." in raw_value else SysvarType.INTEGER
                     else:
                         data_type = org_data_type
                     extended_sysvar = ext_markers.get(var_id, False)

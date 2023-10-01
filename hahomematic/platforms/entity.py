@@ -76,7 +76,7 @@ _FIX_UNIT_BY_PARAM: Final[dict[str, str]] = {
     "WIND_DIRECTION_RANGE": "°",
 }
 
-HM_EVENT_DATA_SCHEMA = vol.Schema(
+EVENT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_ADDRESS): str,
         vol.Required(EVENT_CHANNEL_NO): int,
@@ -557,7 +557,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         }
         if value is not None:
             event_data[EVENT_VALUE] = value
-        return cast(dict[str, Any], HM_EVENT_DATA_SCHEMA(event_data))
+        return cast(dict[str, Any], EVENT_DATA_SCHEMA(event_data))
 
     def _set_last_update(self) -> None:
         """Set last_update to current datetime."""

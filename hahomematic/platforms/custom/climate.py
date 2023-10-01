@@ -55,7 +55,7 @@ _PARTY_DATE_FORMAT: Final = "%Y_%m_%d %H:%M"
 _PARTY_INIT_DATE: Final = "2000_01_01 00:00"
 _TEMP_CELSIUS: Final = "°C"
 
-HM_PRESET_MODE_PREFIX: Final = "week_program_"
+PRESET_MODE_PREFIX: Final = "week_program_"
 
 
 class StateChangeArg(StrEnum):
@@ -587,7 +587,7 @@ class CeIpThermostat(BaseClimateEntity):
         profiles: dict[PresetMode, int] = {}
         if self._e_active_profile.min and self._e_active_profile.max:
             for i in range(self._e_active_profile.min, self._e_active_profile.max + 1):
-                profiles[PresetMode(f"{HM_PRESET_MODE_PREFIX}{i}")] = i
+                profiles[PresetMode(f"{PRESET_MODE_PREFIX}{i}")] = i
 
         return profiles
 

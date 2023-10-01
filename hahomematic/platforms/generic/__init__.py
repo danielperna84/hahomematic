@@ -7,7 +7,7 @@ from typing import Any, Final
 from hahomematic import support as hms
 from hahomematic.const import (
     CLICK_EVENTS,
-    HM_VIRTUAL_REMOTE_TYPES,
+    VIRTUAL_REMOTE_TYPES,
     Description,
     Operations,
     ParameterType,
@@ -70,7 +70,7 @@ def create_entity_and_append_to_device(
     if p_operations & Operations.WRITE:
         if p_type == ParameterType.ACTION:
             if p_operations == Operations.WRITE:
-                if parameter in _BUTTON_ACTIONS or device.device_type in HM_VIRTUAL_REMOTE_TYPES:
+                if parameter in _BUTTON_ACTIONS or device.device_type in VIRTUAL_REMOTE_TYPES:
                     entity_t = HmButton
                 else:
                     entity_t = HmAction

@@ -7,10 +7,10 @@ from typing import Any, Final
 
 from hahomematic import central as hmcu, support as hms
 from hahomematic.const import (
-    HM_VIRTUAL_REMOTE_ADDRESSES,
     INIT_DATETIME,
     PROGRAM_ADDRESS,
     SYSVAR_ADDRESS,
+    VIRTUAL_REMOTE_ADDRESSES,
     Description,
     EntityUsage,
     ParameterType,
@@ -286,7 +286,7 @@ def generate_unique_identifier(
     if (
         address in (PROGRAM_ADDRESS, SYSVAR_ADDRESS)
         or address.startswith("INT000")
-        or address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES
+        or address.split(":")[0] in VIRTUAL_REMOTE_ADDRESSES
     ):
         return f"{central.config.central_id}_{unique_identifier}".lower()
     return f"{unique_identifier}".lower()
@@ -298,7 +298,7 @@ def generate_channel_unique_identifier(
 ) -> str:
     """Build unique identifier for a channel from address."""
     unique_identifier = address.replace(":", "_").replace("-", "_")
-    if address.split(":")[0] in HM_VIRTUAL_REMOTE_ADDRESSES:
+    if address.split(":")[0] in VIRTUAL_REMOTE_ADDRESSES:
         return f"{central.config.central_id}_{unique_identifier}".lower()
     return unique_identifier.lower()
 

@@ -9,7 +9,7 @@ pre-commit==3.4.0
 pydevccu==0.1.6
 pylint-per-file-ignores==1.3.2
 pylint-strict-informational==0.1
-pylint==2.17.6
+pylint==2.17.7
 pytest-aiohttp==1.0.5
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0

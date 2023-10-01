@@ -17,11 +17,11 @@ from hahomematic.const import (
     DEFAULT_DEVICE_DESCRIPTIONS_DIR,
     DEFAULT_PARAMSET_DESCRIPTIONS_DIR,
     ENTITY_EVENTS,
-    HM_VIRTUAL_REMOTE_TYPES,
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
     RELEVANT_INIT_PARAMETERS,
+    VIRTUAL_REMOTE_TYPES,
     CallSource,
     DataOperationResult,
     Description,
@@ -103,7 +103,7 @@ class HmDevice(PayloadMixin):
         self._room: Final = central.device_details.get_room(device_address=device_address)
         self._update_firmware_data()
         self._update_entity: Final = (
-            HmUpdate(device=self) if self.device_type not in HM_VIRTUAL_REMOTE_TYPES else None
+            HmUpdate(device=self) if self.device_type not in VIRTUAL_REMOTE_TYPES else None
         )
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",

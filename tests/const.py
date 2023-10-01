@@ -94,7 +94,7 @@ SYSVAR_DATA: list[SystemVariableData] = [
     ),
     SystemVariableData(
         name="sv_float",
-        data_type=SysvarType.HM_FLOAT,
+        data_type=SysvarType.FLOAT,
         unit=None,
         value=23.2,
         value_list=None,
@@ -104,7 +104,7 @@ SYSVAR_DATA: list[SystemVariableData] = [
     ),
     SystemVariableData(
         name="sv_float_ext",
-        data_type=SysvarType.HM_FLOAT,
+        data_type=SysvarType.FLOAT,
         unit="°C",
         value=23.2,
         value_list=None,
@@ -114,7 +114,7 @@ SYSVAR_DATA: list[SystemVariableData] = [
     ),
     SystemVariableData(
         name="sv_integer",
-        data_type=SysvarType.HM_INTEGER,
+        data_type=SysvarType.INTEGER,
         unit=None,
         value=17,
         value_list=None,
@@ -124,7 +124,7 @@ SYSVAR_DATA: list[SystemVariableData] = [
     ),
     SystemVariableData(
         name="sv_integer_ext",
-        data_type=SysvarType.HM_INTEGER,
+        data_type=SysvarType.INTEGER,
         unit=None,
         value=17,
         value_list=None,

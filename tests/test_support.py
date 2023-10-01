@@ -114,8 +114,8 @@ def test_parse_sys_var() -> None:
     """Test parse_sys_var."""
     assert parse_sys_var(data_type=None, raw_value="1.4") == "1.4"
     assert parse_sys_var(data_type=SysvarType.STRING, raw_value="1.4") == "1.4"
-    assert parse_sys_var(data_type=SysvarType.HM_FLOAT, raw_value="1.4") == 1.4
-    assert parse_sys_var(data_type=SysvarType.HM_INTEGER, raw_value="1") == 1
+    assert parse_sys_var(data_type=SysvarType.FLOAT, raw_value="1.4") == 1.4
+    assert parse_sys_var(data_type=SysvarType.INTEGER, raw_value="1") == 1
     assert parse_sys_var(data_type=SysvarType.ALARM, raw_value="true") is True
     assert parse_sys_var(data_type=SysvarType.LIST, raw_value="1") == 1
     assert parse_sys_var(data_type=SysvarType.LOGIC, raw_value="true") is True
