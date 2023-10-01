@@ -22,12 +22,12 @@ from hahomematic.const import (
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     NO_CACHE_ENTRY,
-    PARAM_CHANNEL_OPERATION_MODE,
     HmCallSource,
     HmDescription,
     HmEntityUsage,
     HmFlag,
     HmOperations,
+    HmParam,
     HmParamsetKey,
     HmPlatform,
     HmType,
@@ -444,7 +444,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
         cop: BaseParameterEntity | None = self.device.generic_entities.get(
-            (self._channel_address, PARAM_CHANNEL_OPERATION_MODE)
+            (self._channel_address, HmParam.CHANNEL_OPERATION_MODE)
         )
         if cop and cop.value:
             return str(cop.value)
