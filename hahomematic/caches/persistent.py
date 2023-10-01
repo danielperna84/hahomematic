@@ -15,10 +15,10 @@ from hahomematic.const import (
     FILE_DEVICES,
     FILE_PARAMSETS,
     INIT_DATETIME,
-    HmDataOperationResult,
-    HmDescription,
-    HmOperations,
-    HmParamsetKey,
+    DataOperationResult,
+    Description,
+    Operations,
+    ParamsetKey,
 )
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
@@ -47,12 +47,12 @@ class BasePersistentCache(ABC):
         self._persistant_cache: Final = persistant_cache
         self.last_save: datetime = INIT_DATETIME
 
-    async def save(self) -> HmDataOperationResult:
+    async def save(self) -> DataOperationResult:
         """Save current name data in NAMES to disk."""
 
-        def _save() -> HmDataOperationResult:
+        def _save() -> DataOperationResult:
             if not check_or_create_directory(self._cache_dir):
-                return HmDataOperationResult.NO_SAVE
+                return DataOperationResult.NO_SAVE
 
             self.last_save = datetime.now()
             if self._central.config.use_caches:
@@ -63,28 +63,28 @@ class BasePersistentCache(ABC):
                     fptr.write(
                         orjson.dumps(self._persistant_cache, option=orjson.OPT_NON_STR_KEYS)
                     )
-                return HmDataOperationResult.SAVE_SUCCESS
+                return DataOperationResult.SAVE_SUCCESS
 
             _LOGGER.debug("save: not saving cache for %s", self._central.name)
-            return HmDataOperationResult.NO_SAVE
+            return DataOperationResult.NO_SAVE
 
         return await self._central.async_add_executor_job(_save)
 
-    async def load(self) -> HmDataOperationResult:
+    async def load(self) -> DataOperationResult:
         """Load file from disk into dict."""
 
-        def _load() -> HmDataOperationResult:
+        def _load() -> DataOperationResult:
             if not check_or_create_directory(self._cache_dir):
-                return HmDataOperationResult.NO_LOAD
+                return DataOperationResult.NO_LOAD
             if not os.path.exists(os.path.join(self._cache_dir, self._filename)):
-                return HmDataOperationResult.NO_LOAD
+                return DataOperationResult.NO_LOAD
             with open(
                 file=os.path.join(self._cache_dir, self._filename),
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
                 self._persistant_cache.clear()
                 self._persistant_cache.update(orjson.loads(fptr.read()))
-            return HmDataOperationResult.LOAD_SUCCESS
+            return DataOperationResult.LOAD_SUCCESS
 
         return await self._central.async_add_executor_job(_load)
 
@@ -126,7 +126,7 @@ class DeviceDescriptionCache(BasePersistentCache):
 
         self._remove_device(
             interface_id=interface_id,
-            deleted_addresses=[device_description[HmDescription.ADDRESS]],
+            deleted_addresses=[device_description[Description.ADDRESS]],
         )
         self._raw_device_descriptions[interface_id].append(device_description)
 
@@ -150,7 +150,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         self._raw_device_descriptions[interface_id] = [
             raw_device
             for raw_device in self.get_raw_device_descriptions(interface_id)
-            if raw_device[HmDescription.ADDRESS] not in deleted_addresses
+            if raw_device[Description.ADDRESS] not in deleted_addresses
         ]
 
         for address in deleted_addresses:
@@ -174,7 +174,7 @@ class DeviceDescriptionCache(BasePersistentCache):
                 self.get_device_parameter(
                     interface_id=interface_id,
                     device_address=channel_address,
-                    parameter=HmDescription.TYPE,
+                    parameter=Description.TYPE,
                 )
             )
             channels[channel_address] = Channel(type=channel_name, address=channel_address)
@@ -194,7 +194,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         data: dict[str, Any] = {
             device_address: self._device_descriptions.get(interface_id, {}).get(device_address, {})
         }
-        children = data[device_address]["CHILDREN"]
+        children = data[device_address][Description.CHILDREN]
         for channel_address in children:
             data[channel_address] = self._device_descriptions.get(interface_id, {}).get(
                 channel_address, {}
@@ -227,7 +227,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         if interface_id not in self._device_descriptions:
             self._device_descriptions[interface_id] = {}
 
-        address = device_description[HmDescription.ADDRESS]
+        address = device_description[Description.ADDRESS]
         self._device_descriptions[interface_id][address] = device_description
 
         if ":" not in address and address not in self._addresses[interface_id]:
@@ -238,11 +238,11 @@ class DeviceDescriptionCache(BasePersistentCache):
                 self._addresses[interface_id][device_address] = []
             self._addresses[interface_id][device_address].append(address)
 
-    async def load(self) -> HmDataOperationResult:
+    async def load(self) -> DataOperationResult:
         """Load device data from disk into _device_description_cache."""
         if not self._central.config.use_caches:
             _LOGGER.debug("load: not caching paramset descriptions for %s", self._central.name)
-            return HmDataOperationResult.NO_LOAD
+            return DataOperationResult.NO_LOAD
         result = await super().load()
         for (
             interface_id,
@@ -341,9 +341,9 @@ class ParamsetDescriptionCache(BasePersistentCache):
         parameters: set[str] = set()
         for channels in self._raw_paramset_descriptions.values():
             for channel_address in channels:
-                for parameter, paramset in channels[channel_address][HmParamsetKey.VALUES].items():
-                    operations = paramset[HmDescription.OPERATIONS]
-                    if operations & HmOperations.READ and operations & HmOperations.EVENT:
+                for parameter, paramset in channels[channel_address][ParamsetKey.VALUES].items():
+                    operations = paramset[Description.OPERATIONS]
+                    if operations & Operations.READ and operations & Operations.EVENT:
                         parameters.add(parameter)
 
         return sorted(parameters)
@@ -391,16 +391,16 @@ class ParamsetDescriptionCache(BasePersistentCache):
                             channel_no
                         )
 
-    async def load(self) -> HmDataOperationResult:
+    async def load(self) -> DataOperationResult:
         """Load paramset descriptions from disk into paramset cache."""
         if not self._central.config.use_caches:
             _LOGGER.debug("load: not caching device descriptions for %s", self._central.name)
-            return HmDataOperationResult.NO_LOAD
+            return DataOperationResult.NO_LOAD
         result = await super().load()
         self._init_address_parameter_list()
         return result
 
-    async def save(self) -> HmDataOperationResult:
+    async def save(self) -> DataOperationResult:
         """Save current paramset descriptions to disk."""
         result = await super().save()
         self._init_address_parameter_list()

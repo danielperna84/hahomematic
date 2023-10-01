@@ -6,15 +6,20 @@ from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
 from typing import Final
 
-DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = (
-    15  # check if connection is available via rpc ping every:
-)
+DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = 15  # check if connection is available via rpc ping
 DEFAULT_ENCODING: Final = "UTF-8"
+DEFAULT_JSON_SESSION_AGE: Final = 90
 DEFAULT_PING_PONG_MISMATCH_COUNT: Final = 10
 DEFAULT_RECONNECT_WAIT: Final = 120  # wait with reconnect after a first ping was successful
 DEFAULT_TIMEOUT: Final = 60  # default timeout for a connection
 DEFAULT_TLS: Final = False
 DEFAULT_VERIFY_TLS: Final = False
+
+REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
+REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
+REGA_SCRIPT_PATH: Final = "../rega_scripts"
+REGA_SCRIPT_SET_SYSTEM_VARIABLE: Final = "set_system_variable.fn"
+REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marker.fn"
 
 DEFAULT_DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
 DEFAULT_PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
@@ -56,8 +61,6 @@ FILE_PARAMSETS: Final = "homematic_paramsets.json"
 
 MAX_CACHE_AGE: Final = 60
 
-PARAM_CHANNEL_OPERATION_MODE: Final = "CHANNEL_OPERATION_MODE"
-
 DEVICE_ERROR_EVENTS: Final[tuple[str, ...]] = ("ERROR", "SENSOR_ERROR")
 
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
@@ -76,7 +79,7 @@ HM_VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
 )
 
 
-class HmBackend(StrEnum):
+class Backend(StrEnum):
     """Enum with supported hahomematic backends."""
 
     CCU = "CCU"
@@ -84,7 +87,7 @@ class HmBackend(StrEnum):
     PYDEVCCU = "PyDevCCU"
 
 
-class HmCallSource(StrEnum):
+class CallSource(StrEnum):
     """Enum with sources for calls."""
 
     HA_INIT: Final = "ha_init"
@@ -92,7 +95,7 @@ class HmCallSource(StrEnum):
     MANUAL_OR_SCHEDULED: Final = "manual_or_scheduled"
 
 
-class HmDataOperationResult(Enum):
+class DataOperationResult(Enum):
     """Enum with data operation results."""
 
     LOAD_FAIL: Final = 0
@@ -103,7 +106,7 @@ class HmDataOperationResult(Enum):
     NO_SAVE: Final = 21
 
 
-class HmDescription(StrEnum):
+class Description(StrEnum):
     """Enum with homematic device/paramset description attributes."""
 
     ADDRESS = "ADDRESS"
@@ -128,7 +131,7 @@ class HmDescription(StrEnum):
     VALUE_LIST = "VALUE_LIST"
 
 
-class HmDeviceFirmwareState(StrEnum):
+class DeviceFirmwareState(StrEnum):
     """Enum with homematic device firmware states."""
 
     UP_TO_DATE: Final = "UP_TO_DATE"
@@ -142,7 +145,7 @@ class HmDeviceFirmwareState(StrEnum):
     PERFORMING_UPDATE: Final = "PERFORMING_UPDATE"
 
 
-class HmEntityUsage(StrEnum):
+class EntityUsage(StrEnum):
     """Enum with information about usage in Home Assistant."""
 
     CE_PRIMARY: Final = "ce_primary"
@@ -153,27 +156,7 @@ class HmEntityUsage(StrEnum):
     NO_CREATE: Final = "entity_no_create"
 
 
-class HmEvent(StrEnum):
-    """Enum with homematic events."""
-
-    PRESS = "PRESS"
-    PRESS_CONT = "PRESS_CONT"
-    PRESS_LOCK = "PRESS_LOCK"
-    PRESS_LONG = "PRESS_LONG"
-    PRESS_LONG_RELEASE = "PRESS_LONG_RELEASE"
-    PRESS_LONG_START = "PRESS_LONG_START"
-    PRESS_SHORT = "PRESS_SHORT"
-    PRESS_UNLOCK = "PRESS_UNLOCK"
-    CONFIG_PENDING = "CONFIG_PENDING"
-    ERROR = "ERROR"
-    UPDATE_PENDING = "UPDATE_PENDING"
-    PONG = "PONG"
-    SEQUENCE_OK = "SEQUENCE_OK"
-    STICKY_UN_REACH = "STICKY_UNREACH"
-    UN_REACH = "UNREACH"
-
-
-class HmEventType(StrEnum):
+class EventType(StrEnum):
     """Enum with hahomematic event types."""
 
     DEVICE_AVAILABILITY: Final = "homematic.device_availability"
@@ -183,7 +166,7 @@ class HmEventType(StrEnum):
     KEYPRESS: Final = "homematic.keypress"
 
 
-class HmFlag(IntEnum):
+class Flag(IntEnum):
     """Enum with homematic flags."""
 
     VISIBLE = 1
@@ -193,7 +176,7 @@ class HmFlag(IntEnum):
     STICKY = 10  # This might be wrong. Documentation says 0x10 # not used
 
 
-class HmForcedDeviceAvailability(StrEnum):
+class ForcedDeviceAvailability(StrEnum):
     """Enum with hahomematic event types."""
 
     FORCE_FALSE: Final = "forced_not_available"
@@ -201,7 +184,7 @@ class HmForcedDeviceAvailability(StrEnum):
     NOT_SET: Final = "not_set"
 
 
-class HmManufacturer(StrEnum):
+class Manufacturer(StrEnum):
     """Enum with hahomematic system events."""
 
     EQ3 = "eQ-3"
@@ -209,7 +192,7 @@ class HmManufacturer(StrEnum):
     MOEHLENHOFF = "Möhlenhoff"
 
 
-class HmOperations(IntEnum):
+class Operations(IntEnum):
     """Enum with homematic operations."""
 
     NONE = 0  # not used
@@ -218,7 +201,45 @@ class HmOperations(IntEnum):
     EVENT = 4
 
 
-class HmParamsetKey(StrEnum):
+class Parameter(StrEnum):
+    """Enum with homematic params."""
+
+    ACTIVITY_STATE = "ACTIVITY_STATE"
+    CHANNEL_OPERATION_MODE = "CHANNEL_OPERATION_MODE"
+    CONFIG_PENDING = "CONFIG_PENDING"
+    CURRENT_ILLUMINATION = "CURRENT_ILLUMINATION"
+    DEVICE_OPERATION_MODE = "DEVICE_OPERATION_MODE"
+    DIRECTION = "DIRECTION"
+    ERROR = "ERROR"
+    ERROR_JAMMED = "ERROR_JAMMED"
+    LED_STATUS = "LED_STATUS"
+    LEVEL = "LEVEL"
+    LOWBAT = "LOWBAT"
+    LOW_BAT = "LOW_BAT"
+    OPERATING_VOLTAGE = "OPERATING_VOLTAGE"
+    PONG = "PONG"
+    PRESS = "PRESS"
+    PRESS_CONT = "PRESS_CONT"
+    PRESS_LOCK = "PRESS_LOCK"
+    PRESS_LONG = "PRESS_LONG"
+    PRESS_LONG_RELEASE = "PRESS_LONG_RELEASE"
+    PRESS_LONG_START = "PRESS_LONG_START"
+    PRESS_SHORT = "PRESS_SHORT"
+    PRESS_UNLOCK = "PRESS_UNLOCK"
+    SECTION = "SECTION"
+    SEQUENCE_OK = "SEQUENCE_OK"
+    SMOKE_DETECTOR_ALARM_STATUS = "SMOKE_DETECTOR_ALARM_STATUS"
+    STATUS = "STATUS"
+    STICKY_UN_REACH = "STICKY_UNREACH"
+    TEMPERATURE_MAXIMUM = "TEMPERATURE_MAXIMUM"
+    TEMPERATURE_MINIMUM = "TEMPERATURE_MINIMUM"
+    UN_REACH = "UNREACH"
+    UPDATE_PENDING = "UPDATE_PENDING"
+    VALVE_STATE = "VALVE_STATE"
+    WORKING = "WORKING"
+
+
+class ParamsetKey(StrEnum):
     """Enum with paramset keys."""
 
     MASTER = "MASTER"
@@ -252,7 +273,7 @@ class HmPlatform(StrEnum):
     UPDATE: Final = "update"
 
 
-class HmProductGroup(StrEnum):
+class ProductGroup(StrEnum):
     """Enum with homematic product groups."""
 
     UNKNOWN: Final = "unknown"
@@ -263,7 +284,7 @@ class HmProductGroup(StrEnum):
     VIRTUAL: Final = "VirtualDevices"
 
 
-class HmInterfaceName(StrEnum):
+class InterfaceName(StrEnum):
     """Enum with homematic interface names."""
 
     BIDCOS_RF = "BidCos-RF"
@@ -272,7 +293,7 @@ class HmInterfaceName(StrEnum):
     VIRTUAL_DEVICES = "VirtualDevices"
 
 
-class HmInterfaceEventType(StrEnum):
+class InterfaceEventType(StrEnum):
     """Enum with hahomematic event types."""
 
     CALLBACK: Final = "callback"
@@ -280,7 +301,7 @@ class HmInterfaceEventType(StrEnum):
     PROXY: Final = "proxy"
 
 
-class HmProxyInitState(Enum):
+class ProxyInitState(Enum):
     """Enum with proxy handling results."""
 
     INIT_FAILED: Final = 0
@@ -290,7 +311,7 @@ class HmProxyInitState(Enum):
     DE_INIT_SKIPPED: Final = 16
 
 
-class HmSystemEvent(StrEnum):
+class SystemEvent(StrEnum):
     """Enum with hahomematic system events."""
 
     DELETE_DEVICES = "deleteDevices"
@@ -304,7 +325,7 @@ class HmSystemEvent(StrEnum):
     UPDATE_DEVICE = "updateDevice"
 
 
-class HmSysvarType(StrEnum):
+class SysvarType(StrEnum):
     """Enum for homematic sysvar types."""
 
     ALARM = "ALARM"
@@ -316,7 +337,7 @@ class HmSysvarType(StrEnum):
     STRING = "STRING"
 
 
-class HmType(StrEnum):
+class ParameterType(StrEnum):
     """Enum for homematic parameter types."""
 
     ACTION = "ACTION"  # Usually buttons, send Boolean to trigger
@@ -355,35 +376,35 @@ AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
 )
 
 CLICK_EVENTS: Final[tuple[str, ...]] = (
-    HmEvent.PRESS,
-    HmEvent.PRESS_CONT,
-    HmEvent.PRESS_LOCK,
-    HmEvent.PRESS_LONG,
-    HmEvent.PRESS_LONG_RELEASE,
-    HmEvent.PRESS_LONG_START,
-    HmEvent.PRESS_SHORT,
-    HmEvent.PRESS_UNLOCK,
+    Parameter.PRESS,
+    Parameter.PRESS_CONT,
+    Parameter.PRESS_LOCK,
+    Parameter.PRESS_LONG,
+    Parameter.PRESS_LONG_RELEASE,
+    Parameter.PRESS_LONG_START,
+    Parameter.PRESS_SHORT,
+    Parameter.PRESS_UNLOCK,
 )
 
 ENTITY_EVENTS: Final = (
-    HmEventType.IMPULSE,
-    HmEventType.KEYPRESS,
+    EventType.IMPULSE,
+    EventType.KEYPRESS,
 )
 
-IMPULSE_EVENTS: Final[tuple[str, ...]] = (HmEvent.SEQUENCE_OK,)
+IMPULSE_EVENTS: Final[tuple[str, ...]] = (Parameter.SEQUENCE_OK,)
 
 KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[dict[str, tuple[str, ...]]] = {
     "STATE": ("BINARY_BEHAVIOR",),
-    HmEvent.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    HmEvent.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    HmEvent.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    HmEvent.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
 }
 
 RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
-    HmEvent.CONFIG_PENDING,
-    HmEvent.STICKY_UN_REACH,
-    HmEvent.UN_REACH,
+    Parameter.CONFIG_PENDING,
+    Parameter.STICKY_UN_REACH,
+    Parameter.UN_REACH,
 )
 
 
@@ -409,7 +430,7 @@ class SystemVariableData(HubData):
     """Dataclass for system variables."""
 
     value: bool | float | int | str | None
-    data_type: HmSysvarType | None = None
+    data_type: SysvarType | None = None
     unit: str | None = None
     value_list: list[str] | None = None
     max_value: float | int | None = None

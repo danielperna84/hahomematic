@@ -6,10 +6,10 @@ from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
 
-from hahomematic.const import INIT_DATETIME, HmCallSource, HmEntityUsage
+from hahomematic.const import INIT_DATETIME, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import HmEntityDefinition
+from hahomematic.platforms.custom.const import EntityDefinition
 from hahomematic.platforms.custom.support import ExtendedConfig
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
@@ -32,7 +32,7 @@ class CustomEntity(BaseEntity):
         self,
         device: hmd.HmDevice,
         unique_identifier: str,
-        device_enum: HmEntityDefinition,
+        device_enum: EntityDefinition,
         device_def: dict[str, Any],
         entity_def: dict[int | tuple[int, ...], tuple[str, ...]],
         channel_no: int,
@@ -97,15 +97,15 @@ class CustomEntity(BaseEntity):
             usage=self._usage,
         )
 
-    def _get_entity_usage(self) -> HmEntityUsage:
+    def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
         if (
             secondary_channels := self._device_desc.get(hmed.ED_SECONDARY_CHANNELS)
         ) and self.channel_no in secondary_channels:
-            return HmEntityUsage.CE_SECONDARY
-        return HmEntityUsage.CE_PRIMARY
+            return EntityUsage.CE_SECONDARY
+        return EntityUsage.CE_PRIMARY
 
-    async def load_entity_value(self, call_source: HmCallSource) -> None:
+    async def load_entity_value(self, call_source: CallSource) -> None:
         """Init the entity values."""
         for entity in self._readable_entities:
             await entity.load_entity_value(call_source=call_source)
@@ -189,7 +189,7 @@ class CustomEntity(BaseEntity):
                     channel_address=channel_address, parameter=parameter
                 ):
                     if is_visible and entity.wrapped is False:
-                        entity.set_usage(HmEntityUsage.CE_VISIBLE)
+                        entity.set_usage(EntityUsage.CE_VISIBLE)
                     self._add_entity(field_name=field_name, entity=entity)
 
     def _add_entity(
@@ -200,7 +200,7 @@ class CustomEntity(BaseEntity):
             return
 
         if is_visible:
-            entity.set_usage(HmEntityUsage.CE_VISIBLE)
+            entity.set_usage(EntityUsage.CE_VISIBLE)
 
         entity.register_update_callback(self.update_entity)
         self.data_entities[field_name] = entity
@@ -227,7 +227,7 @@ class CustomEntity(BaseEntity):
                 channel_address=channel_address, parameter=parameter
             )
             if entity:
-                entity.set_usage(HmEntityUsage.ENTITY)
+                entity.set_usage(EntityUsage.ENTITY)
 
     def _mark_entity_by_custom_un_ignore_parameters(
         self, un_ignore_params_by_paramset_key: dict[str, tuple[str, ...]]
@@ -238,7 +238,7 @@ class CustomEntity(BaseEntity):
         for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
             for entity in self.device.generic_entities.values():
                 if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
-                    entity.set_usage(HmEntityUsage.ENTITY)
+                    entity.set_usage(EntityUsage.ENTITY)
 
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """Get entity."""

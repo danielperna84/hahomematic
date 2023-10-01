@@ -16,7 +16,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_CHANNEL_STATE,
     FIELD_ON_TIME_VALUE,
     FIELD_STATE,
-    HmEntityDefinition,
+    EntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
@@ -30,7 +30,7 @@ from hahomematic.platforms.support import OnTimeMixin
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-class HmStateChangeArg(StrEnum):
+class StateChangeArg(StrEnum):
     """Enum with switch state change arguments."""
 
     OFF = "off"
@@ -85,11 +85,11 @@ class CeSwitch(CustomEntity, OnTimeMixin):
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
-        if kwargs.get(HmStateChangeArg.ON_TIME) is not None:
+        if kwargs.get(StateChangeArg.ON_TIME) is not None:
             return True
-        if kwargs.get(HmStateChangeArg.ON) is not None and self.value is not True:
+        if kwargs.get(StateChangeArg.ON) is not None and self.value is not True:
             return True
-        if kwargs.get(HmStateChangeArg.OFF) is not None and self.value is not False:
+        if kwargs.get(StateChangeArg.OFF) is not None and self.value is not False:
             return True
         return super().is_state_change(**kwargs)
 
@@ -103,7 +103,7 @@ def make_ip_switch(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeSwitch,
-        device_enum=HmEntityDefinition.IP_SWITCH,
+        device_enum=EntityDefinition.IP_SWITCH,
         group_base_channels=group_base_channels,
         extended=extended,
     )

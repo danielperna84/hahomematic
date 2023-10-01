@@ -10,7 +10,7 @@ from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmParamsetKey, HmPlatform
+from hahomematic.const import HmPlatform, ParamsetKey
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -32,7 +32,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_TEMPERATURE_MAXIMUM,
     FIELD_TEMPERATURE_MINIMUM,
     FIELD_VALVE_STATE,
-    HmEntityDefinition,
+    EntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
@@ -58,7 +58,7 @@ _TEMP_CELSIUS: Final = "°C"
 HM_PRESET_MODE_PREFIX: Final = "week_program_"
 
 
-class HmStateChangeArg(StrEnum):
+class StateChangeArg(StrEnum):
     """Enum with climate state change arguments."""
 
     HVAC_MODE = "hvac_mode"
@@ -66,7 +66,7 @@ class HmStateChangeArg(StrEnum):
     TEMPERATURE = "temperature"
 
 
-class HmMode(StrEnum):
+class ModeHm(StrEnum):
     """Enum with the HM modes."""
 
     AUTO = "AUTO-MODE"  # 0
@@ -75,7 +75,7 @@ class HmMode(StrEnum):
     MANU = "MANU-MODE"  # 1
 
 
-class HmIPMode(IntEnum):
+class ModeHmIP(IntEnum):
     """Enum with the HmIP modes."""
 
     AUTO = 0
@@ -83,7 +83,7 @@ class HmIPMode(IntEnum):
     MANU = 1
 
 
-class HmHvacAction(StrEnum):
+class HvacAction(StrEnum):
     """Enum with the hvac actions."""
 
     COOL = "cooling"
@@ -92,7 +92,7 @@ class HmHvacAction(StrEnum):
     OFF = "off"
 
 
-class HmHvacMode(StrEnum):
+class HvacMode(StrEnum):
     """Enum with the hvac modes."""
 
     AUTO = "auto"
@@ -101,7 +101,7 @@ class HmHvacMode(StrEnum):
     OFF = "off"
 
 
-class HmPresetMode(StrEnum):
+class PresetMode(StrEnum):
     """Enum with preset modes."""
 
     AWAY = "away"
@@ -186,29 +186,29 @@ class BaseClimateEntity(CustomEntity):
         return _DEFAULT_TEMPERATURE_STEP
 
     @value_property
-    def preset_mode(self) -> HmPresetMode:
+    def preset_mode(self) -> PresetMode:
         """Return the current preset mode."""
-        return HmPresetMode.NONE
+        return PresetMode.NONE
 
     @value_property
-    def preset_modes(self) -> list[HmPresetMode]:
+    def preset_modes(self) -> list[PresetMode]:
         """Return available preset modes."""
-        return [HmPresetMode.NONE]
+        return [PresetMode.NONE]
 
     @value_property
-    def hvac_action(self) -> HmHvacAction | None:
+    def hvac_action(self) -> HvacAction | None:
         """Return the hvac action."""
         return None
 
     @value_property
-    def hvac_mode(self) -> HmHvacMode:
+    def hvac_mode(self) -> HvacMode:
         """Return hvac operation mode."""
-        return HmHvacMode.HEAT
+        return HvacMode.HEAT
 
     @value_property
-    def hvac_modes(self) -> list[HmHvacMode]:
+    def hvac_modes(self) -> list[HvacMode]:
         """Return the list of available hvac operation modes."""
-        return [HmHvacMode.HEAT]
+        return [HvacMode.HEAT]
 
     @config_property
     def supports_preset(self) -> bool:
@@ -237,12 +237,12 @@ class BaseClimateEntity(CustomEntity):
         )
 
     async def set_hvac_mode(
-        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+        self, hvac_mode: HvacMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new target hvac mode."""
 
     async def set_preset_mode(
-        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+        self, preset_mode: PresetMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new preset mode."""
 
@@ -260,15 +260,15 @@ class BaseClimateEntity(CustomEntity):
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            temperature := kwargs.get(HmStateChangeArg.TEMPERATURE)
+            temperature := kwargs.get(StateChangeArg.TEMPERATURE)
         ) is not None and temperature != self.target_temperature:
             return True
         if (
-            hvac_mode := kwargs.get(HmStateChangeArg.HVAC_MODE)
+            hvac_mode := kwargs.get(StateChangeArg.HVAC_MODE)
         ) is not None and hvac_mode != self.hvac_mode:
             return True
         if (
-            preset_mode := kwargs.get(HmStateChangeArg.PRESET_MODE)
+            preset_mode := kwargs.get(StateChangeArg.PRESET_MODE)
         ) is not None and preset_mode != self.preset_mode:
             return True
         return super().is_state_change(**kwargs)
@@ -307,49 +307,49 @@ class CeRfThermostat(BaseClimateEntity):
         )
 
     @value_property
-    def hvac_action(self) -> HmHvacAction | None:
+    def hvac_action(self) -> HvacAction | None:
         """Return the hvac action."""
         if self._e_valve_state.value is None:
             return None
-        if self.hvac_mode == HmHvacMode.OFF:
-            return HmHvacAction.OFF
+        if self.hvac_mode == HvacMode.OFF:
+            return HvacAction.OFF
         if self._e_valve_state.value and self._e_valve_state.value > 0:
-            return HmHvacAction.HEAT
-        return HmHvacAction.IDLE
+            return HvacAction.HEAT
+        return HvacAction.IDLE
 
     @value_property
-    def hvac_mode(self) -> HmHvacMode:
+    def hvac_mode(self) -> HvacMode:
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= _OFF_TEMPERATURE:
-            return HmHvacMode.OFF
-        if self._e_control_mode.value == HmMode.MANU:
-            return HmHvacMode.HEAT
-        return HmHvacMode.AUTO
+            return HvacMode.OFF
+        if self._e_control_mode.value == ModeHm.MANU:
+            return HvacMode.HEAT
+        return HvacMode.AUTO
 
     @value_property
-    def hvac_modes(self) -> list[HmHvacMode]:
+    def hvac_modes(self) -> list[HvacMode]:
         """Return the list of available hvac operation modes."""
-        return [HmHvacMode.AUTO, HmHvacMode.HEAT, HmHvacMode.OFF]
+        return [HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF]
 
     @value_property
-    def preset_mode(self) -> HmPresetMode:
+    def preset_mode(self) -> PresetMode:
         """Return the current preset mode."""
         if self._e_control_mode.value is None:
-            return HmPresetMode.NONE
-        if self._e_control_mode.value == HmMode.BOOST:
-            return HmPresetMode.BOOST
-        if self._e_control_mode.value == HmMode.AWAY:
-            return HmPresetMode.AWAY
-        return HmPresetMode.NONE
+            return PresetMode.NONE
+        if self._e_control_mode.value == ModeHm.BOOST:
+            return PresetMode.BOOST
+        if self._e_control_mode.value == ModeHm.AWAY:
+            return PresetMode.AWAY
+        return PresetMode.NONE
 
     @value_property
-    def preset_modes(self) -> list[HmPresetMode]:
+    def preset_modes(self) -> list[PresetMode]:
         """Return available preset modes."""
         return [
-            HmPresetMode.BOOST,
-            HmPresetMode.COMFORT,
-            HmPresetMode.ECO,
-            HmPresetMode.NONE,
+            PresetMode.BOOST,
+            PresetMode.COMFORT,
+            PresetMode.ECO,
+            PresetMode.NONE,
         ]
 
     @config_property
@@ -359,18 +359,18 @@ class CeRfThermostat(BaseClimateEntity):
 
     @bind_collector
     async def set_hvac_mode(
-        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+        self, hvac_mode: HvacMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new target hvac mode."""
         if not self.is_state_change(hvac_mode=hvac_mode):
             return
-        if hvac_mode == HmHvacMode.AUTO:
+        if hvac_mode == HvacMode.AUTO:
             await self._e_auto_mode.send_value(value=True, collector=collector)
-        elif hvac_mode == HmHvacMode.HEAT:
+        elif hvac_mode == HvacMode.HEAT:
             await self._e_manu_mode.send_value(
                 value=self._min_or_target_temperature, collector=collector
             )
-        elif hvac_mode == HmHvacMode.OFF:
+        elif hvac_mode == HvacMode.OFF:
             await self._e_manu_mode.send_value(value=self.target_temperature, collector=collector)
             # Disable validation here to allow setting a value,
             # that is out of the validation range.
@@ -380,16 +380,16 @@ class CeRfThermostat(BaseClimateEntity):
 
     @bind_collector
     async def set_preset_mode(
-        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+        self, preset_mode: PresetMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new preset mode."""
         if not self.is_state_change(preset_mode=preset_mode):
             return
-        if preset_mode == HmPresetMode.BOOST:
+        if preset_mode == PresetMode.BOOST:
             await self._e_boost_mode.send_value(value=True, collector=collector)
-        elif preset_mode == HmPresetMode.COMFORT:
+        elif preset_mode == PresetMode.COMFORT:
             await self._e_comfort_mode.send_value(value=True, collector=collector)
-        elif preset_mode == HmPresetMode.ECO:
+        elif preset_mode == PresetMode.ECO:
             await self._e_lowering_mode.send_value(value=True, collector=collector)
 
 
@@ -430,54 +430,54 @@ class CeIpThermostat(BaseClimateEntity):
         return True
 
     @value_property
-    def hvac_action(self) -> HmHvacAction | None:
+    def hvac_action(self) -> HvacAction | None:
         """Return the hvac action."""
         if self._e_state.value is None and self._e_level.value is None:
             return None
-        if self.hvac_mode == HmHvacMode.OFF:
-            return HmHvacAction.OFF
+        if self.hvac_mode == HvacMode.OFF:
+            return HvacAction.OFF
         if self._e_state.value is True or (
             self._e_level.value and self._e_level.value > _CLOSED_LEVEL
         ):
-            return HmHvacAction.HEAT if self._is_heating_mode else HmHvacAction.COOL
-        return HmHvacAction.IDLE
+            return HvacAction.HEAT if self._is_heating_mode else HvacAction.COOL
+        return HvacAction.IDLE
 
     @value_property
-    def hvac_mode(self) -> HmHvacMode:
+    def hvac_mode(self) -> HvacMode:
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= _OFF_TEMPERATURE:
-            return HmHvacMode.OFF
-        if self._e_set_point_mode.value == HmIPMode.MANU:
-            return HmHvacMode.HEAT if self._is_heating_mode else HmHvacMode.COOL
-        if self._e_set_point_mode.value == HmIPMode.AUTO:
-            return HmHvacMode.AUTO
-        return HmHvacMode.AUTO
+            return HvacMode.OFF
+        if self._e_set_point_mode.value == ModeHmIP.MANU:
+            return HvacMode.HEAT if self._is_heating_mode else HvacMode.COOL
+        if self._e_set_point_mode.value == ModeHmIP.AUTO:
+            return HvacMode.AUTO
+        return HvacMode.AUTO
 
     @value_property
-    def hvac_modes(self) -> list[HmHvacMode]:
+    def hvac_modes(self) -> list[HvacMode]:
         """Return the list of available hvac operation modes."""
         return [
-            HmHvacMode.AUTO,
-            HmHvacMode.HEAT if self._is_heating_mode else HmHvacMode.COOL,
-            HmHvacMode.OFF,
+            HvacMode.AUTO,
+            HvacMode.HEAT if self._is_heating_mode else HvacMode.COOL,
+            HvacMode.OFF,
         ]
 
     @value_property
-    def preset_mode(self) -> HmPresetMode:
+    def preset_mode(self) -> PresetMode:
         """Return the current preset mode."""
         if self._e_boost_mode.value:
-            return HmPresetMode.BOOST
-        if self._e_set_point_mode.value == HmIPMode.AWAY:
-            return HmPresetMode.AWAY
-        if self.hvac_mode == HmHvacMode.AUTO:
-            return self._current_profile_name if self._current_profile_name else HmPresetMode.NONE
-        return HmPresetMode.NONE
+            return PresetMode.BOOST
+        if self._e_set_point_mode.value == ModeHmIP.AWAY:
+            return PresetMode.AWAY
+        if self.hvac_mode == HvacMode.AUTO:
+            return self._current_profile_name if self._current_profile_name else PresetMode.NONE
+        return PresetMode.NONE
 
     @value_property
-    def preset_modes(self) -> list[HmPresetMode]:
+    def preset_modes(self) -> list[PresetMode]:
         """Return available preset modes."""
-        presets = [HmPresetMode.BOOST, HmPresetMode.NONE]
-        if self.hvac_mode == HmHvacMode.AUTO:
+        presets = [PresetMode.BOOST, PresetMode.NONE]
+        if self.hvac_mode == HvacMode.AUTO:
             presets.extend(self._profile_names)
         return presets
 
@@ -488,40 +488,40 @@ class CeIpThermostat(BaseClimateEntity):
 
     @bind_collector
     async def set_hvac_mode(
-        self, hvac_mode: HmHvacMode, collector: CallParameterCollector | None = None
+        self, hvac_mode: HvacMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new target hvac mode."""
         if not self.is_state_change(hvac_mode=hvac_mode):
             return
         # if switching hvac_mode then disable boost_mode
         if self._e_boost_mode.value:
-            await self.set_preset_mode(preset_mode=HmPresetMode.NONE, collector=collector)
+            await self.set_preset_mode(preset_mode=PresetMode.NONE, collector=collector)
 
-        if hvac_mode == HmHvacMode.AUTO:
-            await self._e_control_mode.send_value(value=HmIPMode.AUTO, collector=collector)
-        elif hvac_mode in (HmHvacMode.HEAT, HmHvacMode.COOL):
-            await self._e_control_mode.send_value(value=HmIPMode.MANU, collector=collector)
+        if hvac_mode == HvacMode.AUTO:
+            await self._e_control_mode.send_value(value=ModeHmIP.AUTO, collector=collector)
+        elif hvac_mode in (HvacMode.HEAT, HvacMode.COOL):
+            await self._e_control_mode.send_value(value=ModeHmIP.MANU, collector=collector)
             await self.set_temperature(
                 temperature=self._min_or_target_temperature, collector=collector
             )
-        elif hvac_mode == HmHvacMode.OFF:
-            await self._e_control_mode.send_value(value=HmIPMode.MANU, collector=collector)
+        elif hvac_mode == HvacMode.OFF:
+            await self._e_control_mode.send_value(value=ModeHmIP.MANU, collector=collector)
             await self.set_temperature(temperature=_OFF_TEMPERATURE, collector=collector)
 
     @bind_collector
     async def set_preset_mode(
-        self, preset_mode: HmPresetMode, collector: CallParameterCollector | None = None
+        self, preset_mode: PresetMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new preset mode."""
         if not self.is_state_change(preset_mode=preset_mode):
             return
-        if preset_mode == HmPresetMode.BOOST:
+        if preset_mode == PresetMode.BOOST:
             await self._e_boost_mode.send_value(value=True, collector=collector)
-        elif preset_mode == HmPresetMode.NONE:
+        elif preset_mode == PresetMode.NONE:
             await self._e_boost_mode.send_value(value=False, collector=collector)
         elif preset_mode in self._profile_names:
-            if self.hvac_mode != HmHvacMode.AUTO:
-                await self.set_hvac_mode(hvac_mode=HmHvacMode.AUTO, collector=collector)
+            if self.hvac_mode != HvacMode.AUTO:
+                await self.set_hvac_mode(hvac_mode=HvacMode.AUTO, collector=collector)
                 await self._e_boost_mode.send_value(value=False, collector=collector)
             if profile_idx := self._profiles.get(preset_mode):
                 await self._e_active_profile.send_value(value=profile_idx, collector=collector)
@@ -532,9 +532,9 @@ class CeIpThermostat(BaseClimateEntity):
         """Enable the away mode by calendar on thermostat."""
         await self._client.put_paramset(
             address=self._channel_address,
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             value={
-                "CONTROL_MODE": HmIPMode.AWAY,
+                "CONTROL_MODE": ModeHmIP.AWAY,
                 "PARTY_TIME_END": end.strftime(_PARTY_DATE_FORMAT),
                 "PARTY_TIME_START": start.strftime(_PARTY_DATE_FORMAT),
             },
@@ -542,7 +542,7 @@ class CeIpThermostat(BaseClimateEntity):
 
         await self._client.put_paramset(
             address=self._channel_address,
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             value={
                 "SET_POINT_TEMPERATURE": away_temperature,
             },
@@ -560,34 +560,34 @@ class CeIpThermostat(BaseClimateEntity):
         """Disable the away mode on thermostat."""
         await self._client.put_paramset(
             address=self._channel_address,
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             value={
-                "CONTROL_MODE": HmIPMode.AWAY,
+                "CONTROL_MODE": ModeHmIP.AWAY,
                 "PARTY_TIME_START": _PARTY_INIT_DATE,
                 "PARTY_TIME_END": _PARTY_INIT_DATE,
             },
         )
 
     @property
-    def _profile_names(self) -> list[HmPresetMode]:
+    def _profile_names(self) -> list[PresetMode]:
         """Return a collection of profile names."""
         return list(self._profiles.keys())
 
     @property
-    def _current_profile_name(self) -> HmPresetMode | None:
+    def _current_profile_name(self) -> PresetMode | None:
         """Return a profile index by name."""
-        inv_profiles: dict[int, HmPresetMode] = {v: k for k, v in self._profiles.items()}
+        inv_profiles: dict[int, PresetMode] = {v: k for k, v in self._profiles.items()}
         if self._e_active_profile.value is not None:
             return inv_profiles.get(int(self._e_active_profile.value))
         return None
 
     @property
-    def _profiles(self) -> dict[HmPresetMode, int]:
+    def _profiles(self) -> dict[PresetMode, int]:
         """Return the profile groups."""
-        profiles: dict[HmPresetMode, int] = {}
+        profiles: dict[PresetMode, int] = {}
         if self._e_active_profile.min and self._e_active_profile.max:
             for i in range(self._e_active_profile.min, self._e_active_profile.max + 1):
-                profiles[HmPresetMode(f"{HM_PRESET_MODE_PREFIX}{i}")] = i
+                profiles[PresetMode(f"{HM_PRESET_MODE_PREFIX}{i}")] = i
 
         return profiles
 
@@ -601,7 +601,7 @@ def make_simple_thermostat(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeSimpleRfThermostat,
-        device_enum=HmEntityDefinition.SIMPLE_RF_THERMOSTAT,
+        device_enum=EntityDefinition.SIMPLE_RF_THERMOSTAT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -616,7 +616,7 @@ def make_thermostat(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeRfThermostat,
-        device_enum=HmEntityDefinition.RF_THERMOSTAT,
+        device_enum=EntityDefinition.RF_THERMOSTAT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -631,7 +631,7 @@ def make_thermostat_group(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeRfThermostat,
-        device_enum=HmEntityDefinition.RF_THERMOSTAT_GROUP,
+        device_enum=EntityDefinition.RF_THERMOSTAT_GROUP,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -646,7 +646,7 @@ def make_ip_thermostat(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpThermostat,
-        device_enum=HmEntityDefinition.IP_THERMOSTAT,
+        device_enum=EntityDefinition.IP_THERMOSTAT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -661,7 +661,7 @@ def make_ip_thermostat_group(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpThermostat,
-        device_enum=HmEntityDefinition.IP_THERMOSTAT_GROUP,
+        device_enum=EntityDefinition.IP_THERMOSTAT_GROUP,
         group_base_channels=group_base_channels,
         extended=extended,
     )

@@ -6,13 +6,7 @@ import logging
 from typing import Final
 
 from hahomematic import central as hmcu
-from hahomematic.const import (
-    HmBackend,
-    HmSystemEvent,
-    HmSysvarType,
-    ProgramData,
-    SystemVariableData,
-)
+from hahomematic.const import Backend, ProgramData, SystemEvent, SystemVariableData, SysvarType
 from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericSystemVariable
@@ -30,7 +24,7 @@ _EXCLUDED: Final = [
 ]
 
 
-class HmHub:
+class Hub:
     """The HomeMatic hub. (CCU/HomeGear)."""
 
     def __init__(self, central: hmcu.CentralUnit) -> None:
@@ -81,7 +75,7 @@ class HmHub:
 
         if new_programs:
             self._central.fire_system_event_callback(
-                system_event=HmSystemEvent.HUB_REFRESHED, new_hub_entities=new_programs
+                system_event=SystemEvent.HUB_REFRESHED, new_hub_entities=new_programs
             )
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
@@ -103,7 +97,7 @@ class HmHub:
 
         # remove some variables in case of CCU Backend
         # - OldValue(s) are for internal calculations
-        if self._central.model is HmBackend.CCU:
+        if self._central.model is Backend.CCU:
             variables = _clean_variables(variables)
 
         if missing_variable_names := self._identify_missing_variable_names(variables=variables):
@@ -122,7 +116,7 @@ class HmHub:
 
         if new_sysvars:
             self._central.fire_system_event_callback(
-                system_event=HmSystemEvent.HUB_REFRESHED, new_hub_entities=new_sysvars
+                system_event=SystemEvent.HUB_REFRESHED, new_hub_entities=new_sysvars
             )
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:
@@ -142,15 +136,15 @@ class HmHub:
         data_type = data.data_type
         extended_sysvar = data.extended_sysvar
         if data_type:
-            if data_type in (HmSysvarType.ALARM, HmSysvarType.LOGIC):
+            if data_type in (SysvarType.ALARM, SysvarType.LOGIC):
                 if extended_sysvar:
                     return HmSysvarSwitch(central=self._central, data=data)
                 return HmSysvarBinarySensor(central=self._central, data=data)
-            if data_type == HmSysvarType.LIST and extended_sysvar:
+            if data_type == SysvarType.LIST and extended_sysvar:
                 return HmSysvarSelect(central=self._central, data=data)
-            if data_type in (HmSysvarType.HM_FLOAT, HmSysvarType.HM_INTEGER) and extended_sysvar:
+            if data_type in (SysvarType.HM_FLOAT, SysvarType.HM_INTEGER) and extended_sysvar:
                 return HmSysvarNumber(central=self._central, data=data)
-            if data_type == HmSysvarType.STRING and extended_sysvar:
+            if data_type == SysvarType.STRING and extended_sysvar:
                 return HmSysvarText(central=self._central, data=data)
 
         return HmSysvarSensor(central=self._central, data=data)
@@ -182,7 +176,7 @@ class HmHub:
         variable_names: dict[str, bool] = {x.name: x.extended_sysvar for x in variables}
         missing_variables: set[str] = set()
         for sysvar_entity in self._central.sysvar_entities.values():
-            if sysvar_entity.data_type == HmSysvarType.STRING:
+            if sysvar_entity.data_type == SysvarType.STRING:
                 continue
             ccu_name = sysvar_entity.ccu_var_name
             if ccu_name not in variable_names or (

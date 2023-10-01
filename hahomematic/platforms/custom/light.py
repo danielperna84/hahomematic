@@ -9,7 +9,7 @@ from enum import IntEnum, StrEnum
 import math
 from typing import Any, Final, TypedDict, Unpack
 
-from hahomematic.const import HmEntityUsage, HmEvent, HmPlatform
+from hahomematic.const import EntityUsage, HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -32,7 +32,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_RAMP_TIME_UNIT,
     FIELD_RAMP_TIME_VALUE,
     FIELD_SATURATION,
-    HmEntityDefinition,
+    EntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
@@ -45,14 +45,14 @@ from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.support import OnTimeMixin
 
 _DIMMER_OFF: Final = 0.0
-_HM_EFFECT_OFF: Final = "Off"
+_EFFECT_OFF: Final = "Off"
 _MAX_BRIGHTNESS: Final = 255.0
 _MAX_MIREDS: Final = 500
 _MIN_BRIGHTNESS: Final = 0.0
 _MIN_MIREDS: Final = 153
 
 
-class HmStateChangeArg(StrEnum):
+class StateChangeArg(StrEnum):
     """Enum with light state change arguments."""
 
     BRIGHTNESS = "brightness"
@@ -65,7 +65,7 @@ class HmStateChangeArg(StrEnum):
     RAMP_TIME = "ramp_time"
 
 
-class HmDeviceOperationMode(StrEnum):
+class DeviceOperationMode(StrEnum):
     """Enum with device operation modes."""
 
     PWM = "4_PWM"
@@ -74,7 +74,7 @@ class HmDeviceOperationMode(StrEnum):
     TUNABLE_WHITE = "2_TUNABLE_WHITE"
 
 
-class HmColorBehaviour(StrEnum):
+class ColorBehaviour(StrEnum):
     """Enum with color behaviours."""
 
     DO_NOT_CARE = "DO_NOT_CARE"
@@ -83,7 +83,7 @@ class HmColorBehaviour(StrEnum):
     ON = "ON"
 
 
-class HmColor(StrEnum):
+class FixedColor(StrEnum):
     """Enum with colors."""
 
     BLACK = "BLACK"
@@ -98,7 +98,7 @@ class HmColor(StrEnum):
     YELLOW = "YELLOW"
 
 
-class HmTimeUnit(IntEnum):
+class TimeUnit(IntEnum):
     """Enum with time units."""
 
     SECONDS = 0
@@ -107,35 +107,35 @@ class HmTimeUnit(IntEnum):
 
 
 _NO_COLOR: Final = (
-    HmColor.BLACK,
-    HmColor.DO_NOT_CARE,
-    HmColor.OLD_VALUE,
+    FixedColor.BLACK,
+    FixedColor.DO_NOT_CARE,
+    FixedColor.OLD_VALUE,
 )
 
 _EXCLUDE_FROM_COLOR_BEHAVIOUR: Final = (
-    HmColorBehaviour.DO_NOT_CARE,
-    HmColorBehaviour.OFF,
-    HmColorBehaviour.OLD_VALUE,
+    ColorBehaviour.DO_NOT_CARE,
+    ColorBehaviour.OFF,
+    ColorBehaviour.OLD_VALUE,
 )
 
 _OFF_COLOR_BEHAVIOUR: Final = (
-    HmColorBehaviour.DO_NOT_CARE,
-    HmColorBehaviour.OFF,
-    HmColorBehaviour.OLD_VALUE,
+    ColorBehaviour.DO_NOT_CARE,
+    ColorBehaviour.OFF,
+    ColorBehaviour.OLD_VALUE,
 )
 
 _FIXED_COLOR_SWITCHER: dict[str, tuple[float, float]] = {
-    HmColor.WHITE: (0.0, 0.0),
-    HmColor.RED: (0.0, 100.0),
-    HmColor.YELLOW: (60.0, 100.0),
-    HmColor.GREEN: (120.0, 100.0),
-    HmColor.TURQUOISE: (180.0, 100.0),
-    HmColor.BLUE: (240.0, 100.0),
-    HmColor.PURPLE: (300.0, 100.0),
+    FixedColor.WHITE: (0.0, 0.0),
+    FixedColor.RED: (0.0, 100.0),
+    FixedColor.YELLOW: (60.0, 100.0),
+    FixedColor.GREEN: (120.0, 100.0),
+    FixedColor.TURQUOISE: (180.0, 100.0),
+    FixedColor.BLUE: (240.0, 100.0),
+    FixedColor.PURPLE: (300.0, 100.0),
 }
 
 
-class HmLightOnArgs(TypedDict, total=False):
+class LightOnArgs(TypedDict, total=False):
     """Matcher for the light turn on arguments."""
 
     brightness: int
@@ -146,7 +146,7 @@ class HmLightOnArgs(TypedDict, total=False):
     ramp_time: float
 
 
-class HmLightOffArgs(TypedDict, total=False):
+class LightOffArgs(TypedDict, total=False):
     """Matcher for the light turn off arguments."""
 
     ramp_time: float
@@ -248,7 +248,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[HmLightOnArgs]
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
@@ -265,7 +265,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
 
     @bind_collector
     async def turn_off(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[HmLightOffArgs]
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOffArgs]
     ) -> None:
         """Turn the light off."""
         if not self.is_state_change(off=True, **kwargs):
@@ -297,34 +297,34 @@ class CeDimmer(CustomEntity, OnTimeMixin):
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            kwargs.get(HmStateChangeArg.ON) is not None
+            kwargs.get(StateChangeArg.ON) is not None
             and self.is_on is not True
             and len(kwargs) == 1
         ):
             return True
         if (
-            kwargs.get(HmStateChangeArg.OFF) is not None
+            kwargs.get(StateChangeArg.OFF) is not None
             and self.is_on is not False
             and len(kwargs) == 1
         ):
             return True
         if (
-            brightness := kwargs.get(HmStateChangeArg.BRIGHTNESS)
+            brightness := kwargs.get(StateChangeArg.BRIGHTNESS)
         ) is not None and brightness != self.brightness:
             return True
         if (
-            hs_color := kwargs.get(HmStateChangeArg.HS_COLOR)
+            hs_color := kwargs.get(StateChangeArg.HS_COLOR)
         ) is not None and hs_color != self.hs_color:
             return True
         if (
-            color_temp := kwargs.get(HmStateChangeArg.COLOR_TEMP)
+            color_temp := kwargs.get(StateChangeArg.COLOR_TEMP)
         ) is not None and color_temp != self.color_temp:
             return True
-        if (effect := kwargs.get(HmStateChangeArg.EFFECT)) is not None and effect != self.effect:
+        if (effect := kwargs.get(StateChangeArg.EFFECT)) is not None and effect != self.effect:
             return True
-        if kwargs.get(HmStateChangeArg.RAMP_TIME) is not None:
+        if kwargs.get(StateChangeArg.RAMP_TIME) is not None:
             return True
-        if kwargs.get(HmStateChangeArg.ON_TIME) is not None:
+        if kwargs.get(StateChangeArg.ON_TIME) is not None:
             return True
         return super().is_state_change(**kwargs)
 
@@ -353,7 +353,7 @@ class CeColorDimmer(CeDimmer):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[HmLightOnArgs]
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
@@ -371,7 +371,7 @@ class CeColorDimmerEffect(CeColorDimmer):
     """Class for HomeMatic dimmer with color entities."""
 
     _effect_list: list[str] = [
-        _HM_EFFECT_OFF,
+        _EFFECT_OFF,
         "Slow color change",
         "Medium color change",
         "Fast color change",
@@ -401,13 +401,13 @@ class CeColorDimmerEffect(CeColorDimmer):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[HmLightOnArgs]
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
             return
 
-        if "effect" not in kwargs and self.supports_effects and self.effect != _HM_EFFECT_OFF:
+        if "effect" not in kwargs and self.supports_effects and self.effect != _EFFECT_OFF:
             await self._e_effect.send_value(value=0, collector=collector)
 
         if self.supports_effects and (effect := kwargs.get("effect")) is not None:
@@ -434,7 +434,7 @@ class CeColorTempDimmer(CeDimmer):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[HmLightOnArgs]
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
@@ -493,14 +493,14 @@ class CeIpRGBWLight(CeDimmer):
     @config_property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
-        return self._e_device_operation_mode.value == HmDeviceOperationMode.TUNABLE_WHITE
+        return self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE
 
     @config_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return self._e_device_operation_mode.value in (
-            HmDeviceOperationMode.RGBW,
-            HmDeviceOperationMode.RGB,
+            DeviceOperationMode.RGBW,
+            DeviceOperationMode.RGB,
         )
 
     @config_property
@@ -509,7 +509,7 @@ class CeIpRGBWLight(CeDimmer):
         return True
 
     @config_property
-    def usage(self) -> HmEntityUsage:
+    def usage(self) -> EntityUsage:
         """
         Return the entity usage.
 
@@ -517,13 +517,13 @@ class CeIpRGBWLight(CeDimmer):
         """
         if (
             self._e_device_operation_mode.value
-            in (HmDeviceOperationMode.RGB, HmDeviceOperationMode.RGBW)
+            in (DeviceOperationMode.RGB, DeviceOperationMode.RGBW)
             and self.channel_no in (2, 3, 4)
         ) or (
-            self._e_device_operation_mode.value == HmDeviceOperationMode.TUNABLE_WHITE
+            self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE
             and self.channel_no in (3, 4)
         ):
-            return HmEntityUsage.NO_CREATE
+            return EntityUsage.NO_CREATE
         return self._usage
 
     @value_property
@@ -533,7 +533,7 @@ class CeIpRGBWLight(CeDimmer):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[HmLightOnArgs]
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
@@ -618,7 +618,7 @@ class CeIpFixedColorLight(CeDimmer):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[HmLightOnArgs]
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
@@ -627,7 +627,7 @@ class CeIpFixedColorLight(CeDimmer):
             simple_rgb_color = _convert_color(hs_color)
             await self._e_color.send_value(value=simple_rgb_color, collector=collector)
         elif self.color_name in _NO_COLOR:
-            await self._e_color.send_value(value=HmColor.WHITE, collector=collector)
+            await self._e_color.send_value(value=FixedColor.WHITE, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
 
@@ -682,7 +682,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
 
     @bind_collector
     async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[HmLightOnArgs]
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
         """Turn the light on."""
         if not self.is_state_change(on=True, **kwargs):
@@ -691,7 +691,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
         if (effect := kwargs.get("effect")) is not None and effect in self._effect_list:
             await self._e_effect.send_value(value=effect, collector=collector)
         elif self._e_effect.value not in self._effect_list:
-            await self._e_effect.send_value(value=HmColorBehaviour.ON, collector=collector)
+            await self._e_effect.send_value(value=ColorBehaviour.ON, collector=collector)
         elif (color_behaviour := self._e_effect.value) is not None:
             await self._e_effect.send_value(value=color_behaviour, collector=collector)
 
@@ -700,13 +700,13 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
 
 def _recalc_unit_timer(time: float) -> tuple[float, int]:
     """Recalculate unit and value of timer."""
-    ramp_time_unit = HmTimeUnit.SECONDS
+    ramp_time_unit = TimeUnit.SECONDS
     if time > 16343:
         time /= 60
-        ramp_time_unit = HmTimeUnit.MINUTES
+        ramp_time_unit = TimeUnit.MINUTES
     if time > 16343:
         time /= 60
-        ramp_time_unit = HmTimeUnit.HOURS
+        ramp_time_unit = TimeUnit.HOURS
     return time, ramp_time_unit
 
 
@@ -719,18 +719,18 @@ def _convert_color(color: tuple[float, float]) -> str:
     """
     hue: int = int(color[0])
     if int(color[1]) < 5:
-        return HmColor.WHITE
+        return FixedColor.WHITE
     if 30 < hue <= 90:
-        return HmColor.YELLOW
+        return FixedColor.YELLOW
     if 90 < hue <= 150:
-        return HmColor.GREEN
+        return FixedColor.GREEN
     if 150 < hue <= 210:
-        return HmColor.TURQUOISE
+        return FixedColor.TURQUOISE
     if 210 < hue <= 270:
-        return HmColor.BLUE
+        return FixedColor.BLUE
     if 270 < hue <= 330:
-        return HmColor.PURPLE
-    return HmColor.RED
+        return FixedColor.PURPLE
+    return FixedColor.RED
 
 
 def make_ip_dimmer(
@@ -742,7 +742,7 @@ def make_ip_dimmer(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
-        device_enum=HmEntityDefinition.IP_DIMMER,
+        device_enum=EntityDefinition.IP_DIMMER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -757,7 +757,7 @@ def make_rf_dimmer(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
-        device_enum=HmEntityDefinition.RF_DIMMER,
+        device_enum=EntityDefinition.RF_DIMMER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -772,7 +772,7 @@ def make_rf_dimmer_color(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeColorDimmer,
-        device_enum=HmEntityDefinition.RF_DIMMER_COLOR,
+        device_enum=EntityDefinition.RF_DIMMER_COLOR,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -787,7 +787,7 @@ def make_rf_dimmer_color_effect(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeColorDimmerEffect,
-        device_enum=HmEntityDefinition.RF_DIMMER_COLOR,
+        device_enum=EntityDefinition.RF_DIMMER_COLOR,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -802,7 +802,7 @@ def make_rf_dimmer_color_temp(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeColorTempDimmer,
-        device_enum=HmEntityDefinition.RF_DIMMER_COLOR_TEMP,
+        device_enum=EntityDefinition.RF_DIMMER_COLOR_TEMP,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -817,7 +817,7 @@ def make_rf_dimmer_with_virt_channel(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeDimmer,
-        device_enum=HmEntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL,
+        device_enum=EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -832,7 +832,7 @@ def make_ip_fixed_color_light(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpFixedColorLight,
-        device_enum=HmEntityDefinition.IP_FIXED_COLOR_LIGHT,
+        device_enum=EntityDefinition.IP_FIXED_COLOR_LIGHT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -847,7 +847,7 @@ def make_ip_simple_fixed_color_light_wired(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpFixedColorLightWired,
-        device_enum=HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED,
+        device_enum=EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -862,7 +862,7 @@ def make_ip_rgbw_light(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpRGBWLight,
-        device_enum=HmEntityDefinition.IP_RGBW_LIGHT,
+        device_enum=EntityDefinition.IP_RGBW_LIGHT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -887,8 +887,8 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
                         5,
                         6,
                     ): (
-                        HmEvent.PRESS_LONG,
-                        HmEvent.PRESS_SHORT,
+                        Parameter.PRESS_LONG,
+                        Parameter.PRESS_SHORT,
                         "SENSOR",
                     )
                 },

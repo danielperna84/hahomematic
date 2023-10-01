@@ -9,7 +9,7 @@ from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmEntityUsage, HmPlatform
+from hahomematic.const import EntityUsage, HmPlatform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -25,7 +25,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_LEVEL_COMBINED,
     FIELD_SECTION,
     FIELD_STOP,
-    HmEntityDefinition,
+    EntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
@@ -43,7 +43,7 @@ _OPEN: Final = 1.0  # must be float!
 _WD_CLOSED: Final = -0.005  # must be float! HM-Sec-Win
 
 
-class HmStateChangeArg(StrEnum):
+class StateChangeArg(StrEnum):
     """Enum with cover state change arguments."""
 
     CLOSE = "close"
@@ -55,14 +55,14 @@ class HmStateChangeArg(StrEnum):
     VENT = "vent"
 
 
-class HmCoverActivity(StrEnum):
+class CoverActivity(StrEnum):
     """Enum with cover activities."""
 
     CLOSING = "DOWN"
     OPENING = "UP"
 
 
-class HmCoverPosition(IntEnum):
+class CoverPosition(IntEnum):
     """Enum with cover positions."""
 
     OPEN = 100
@@ -70,14 +70,14 @@ class HmCoverPosition(IntEnum):
     CLOSED = 0
 
 
-class HmGarageDoorActivity(IntEnum):
+class GarageDoorActivity(IntEnum):
     """Enum with garage door commands."""
 
     CLOSING = 5
     OPENING = 2
 
 
-class HmGarageDoorCommand(StrEnum):
+class GarageDoorCommand(StrEnum):
     """Enum with garage door commands."""
 
     CLOSE = "CLOSE"
@@ -87,7 +87,7 @@ class HmGarageDoorCommand(StrEnum):
     STOP = "STOP"
 
 
-class HmGarageDoorState(StrEnum):
+class GarageDoorState(StrEnum):
     """Enum with garage door states."""
 
     CLOSED = "CLOSED"
@@ -118,7 +118,7 @@ class CeCover(CustomEntity):
     @property
     def _channel_level(self) -> float:
         """Return the channel level of the cover."""
-        if self._e_channel_level.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
+        if self._e_channel_level.value is not None and self.usage == EntityUsage.CE_PRIMARY:
             return float(self._e_channel_level.value)
         return self._e_level.value if self._e_level.value is not None else self._hm_closed_state
 
@@ -160,14 +160,14 @@ class CeCover(CustomEntity):
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == HmCoverActivity.OPENING
+            return str(self._e_direction.value) == CoverActivity.OPENING
         return None
 
     @value_property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == HmCoverActivity.CLOSING
+            return str(self._e_direction.value) == CoverActivity.CLOSING
         return None
 
     @bind_collector
@@ -191,12 +191,12 @@ class CeCover(CustomEntity):
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
-        if kwargs.get(HmStateChangeArg.OPEN) is not None and self._channel_level != _OPEN:
+        if kwargs.get(StateChangeArg.OPEN) is not None and self._channel_level != _OPEN:
             return True
-        if kwargs.get(HmStateChangeArg.CLOSE) is not None and self._channel_level != _CLOSED:
+        if kwargs.get(StateChangeArg.CLOSE) is not None and self._channel_level != _CLOSED:
             return True
         if (
-            position := kwargs.get(HmStateChangeArg.POSITION)
+            position := kwargs.get(StateChangeArg.POSITION)
         ) is not None and position != self.current_position:
             return True
         return super().is_state_change(**kwargs)
@@ -254,7 +254,7 @@ class CeBlind(CeCover):
     @property
     def _channel_tilt_level(self) -> float:
         """Return the channel level of the tilt."""
-        if self._e_channel_level_2.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
+        if self._e_channel_level_2.value is not None and self.usage == EntityUsage.CE_PRIMARY:
             return float(self._e_channel_level_2.value)
         return (
             self._e_level_2.value if self._e_level_2.value is not None else self._hm_closed_state
@@ -321,17 +321,17 @@ class CeBlind(CeCover):
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            tilt_position := kwargs.get(HmStateChangeArg.TILT_POSITION)
+            tilt_position := kwargs.get(StateChangeArg.TILT_POSITION)
         ) is not None and tilt_position != self.current_tilt_position:
             return True
         if (
-            kwargs.get(HmStateChangeArg.TILT_OPEN) is not None
-            and self.current_tilt_position != HmCoverPosition.OPEN
+            kwargs.get(StateChangeArg.TILT_OPEN) is not None
+            and self.current_tilt_position != CoverPosition.OPEN
         ):
             return True
         if (
-            kwargs.get(HmStateChangeArg.TILT_CLOSE) is not None
-            and self.current_tilt_position != HmCoverPosition.CLOSED
+            kwargs.get(StateChangeArg.TILT_CLOSE) is not None
+            and self.current_tilt_position != CoverPosition.CLOSED
         ):
             return True
         return super().is_state_change(**kwargs)
@@ -432,12 +432,12 @@ class CeGarage(CustomEntity):
     @value_property
     def current_position(self) -> int | None:
         """Return current position of the garage door ."""
-        if self._e_door_state.value == HmGarageDoorState.OPEN:
-            return HmCoverPosition.OPEN
-        if self._e_door_state.value == HmGarageDoorState.VENTILATION_POSITION:
-            return HmCoverPosition.VENT
-        if self._e_door_state.value == HmGarageDoorState.CLOSED:
-            return HmCoverPosition.CLOSED
+        if self._e_door_state.value == GarageDoorState.OPEN:
+            return CoverPosition.OPEN
+        if self._e_door_state.value == GarageDoorState.VENTILATION_POSITION:
+            return CoverPosition.VENT
+        if self._e_door_state.value == GarageDoorState.CLOSED:
+            return CoverPosition.CLOSED
         return None
 
     @bind_collector
@@ -461,21 +461,21 @@ class CeGarage(CustomEntity):
     def is_closed(self) -> bool | None:
         """Return if the garage door is closed."""
         if self._e_door_state.value is not None:
-            return str(self._e_door_state.value) == HmGarageDoorState.CLOSED
+            return str(self._e_door_state.value) == GarageDoorState.CLOSED
         return None
 
     @value_property
     def is_opening(self) -> bool | None:
         """Return if the garage door is opening."""
         if self._e_section.value is not None:
-            return int(self._e_section.value) == HmGarageDoorActivity.OPENING
+            return int(self._e_section.value) == GarageDoorActivity.OPENING
         return None
 
     @value_property
     def is_closing(self) -> bool | None:
         """Return if the garage door is closing."""
         if self._e_section.value is not None:
-            return int(self._e_section.value) == HmGarageDoorActivity.CLOSING
+            return int(self._e_section.value) == GarageDoorActivity.CLOSING
         return None
 
     @bind_collector
@@ -483,19 +483,19 @@ class CeGarage(CustomEntity):
         """Open the garage door."""
         if not self.is_state_change(open=True):
             return
-        await self._e_door_command.send_value(value=HmGarageDoorCommand.OPEN, collector=collector)
+        await self._e_door_command.send_value(value=GarageDoorCommand.OPEN, collector=collector)
 
     @bind_collector
     async def close(self, collector: CallParameterCollector | None = None) -> None:
         """Close the garage door."""
         if not self.is_state_change(close=True):
             return
-        await self._e_door_command.send_value(value=HmGarageDoorCommand.CLOSE, collector=collector)
+        await self._e_door_command.send_value(value=GarageDoorCommand.CLOSE, collector=collector)
 
     @bind_collector
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
-        await self._e_door_command.send_value(value=HmGarageDoorCommand.STOP, collector=collector)
+        await self._e_door_command.send_value(value=GarageDoorCommand.STOP, collector=collector)
 
     @bind_collector
     async def vent(self, collector: CallParameterCollector | None = None) -> None:
@@ -503,24 +503,24 @@ class CeGarage(CustomEntity):
         if not self.is_state_change(vent=True):
             return
         await self._e_door_command.send_value(
-            value=HmGarageDoorCommand.PARTIAL_OPEN, collector=collector
+            value=GarageDoorCommand.PARTIAL_OPEN, collector=collector
         )
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
-            kwargs.get(HmStateChangeArg.OPEN) is not None
-            and self.current_position != HmCoverPosition.OPEN
+            kwargs.get(StateChangeArg.OPEN) is not None
+            and self.current_position != CoverPosition.OPEN
         ):
             return True
         if (
-            kwargs.get(HmStateChangeArg.VENT) is not None
-            and self.current_position != HmCoverPosition.VENT
+            kwargs.get(StateChangeArg.VENT) is not None
+            and self.current_position != CoverPosition.VENT
         ):
             return True
         if (
-            kwargs.get(HmStateChangeArg.CLOSE) is not None
-            and self.current_position != HmCoverPosition.CLOSED
+            kwargs.get(StateChangeArg.CLOSE) is not None
+            and self.current_position != CoverPosition.CLOSED
         ):
             return True
         return super().is_state_change(**kwargs)
@@ -535,7 +535,7 @@ def make_ip_cover(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeCover,
-        device_enum=HmEntityDefinition.IP_COVER,
+        device_enum=EntityDefinition.IP_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -550,7 +550,7 @@ def make_rf_cover(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeCover,
-        device_enum=HmEntityDefinition.RF_COVER,
+        device_enum=EntityDefinition.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -565,7 +565,7 @@ def make_ip_blind(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpBlind,
-        device_enum=HmEntityDefinition.IP_COVER,
+        device_enum=EntityDefinition.IP_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -580,7 +580,7 @@ def make_ip_garage(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeGarage,
-        device_enum=HmEntityDefinition.IP_GARAGE,
+        device_enum=EntityDefinition.IP_GARAGE,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -595,7 +595,7 @@ def make_rf_blind(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeBlind,
-        device_enum=HmEntityDefinition.RF_COVER,
+        device_enum=EntityDefinition.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -610,7 +610,7 @@ def make_rf_window_drive(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeWindowDrive,
-        device_enum=HmEntityDefinition.RF_COVER,
+        device_enum=EntityDefinition.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
-from hahomematic.const import INIT_DATETIME, HmEntityUsage, HmSysvarType, HmType
+from hahomematic.const import INIT_DATETIME, EntityUsage, ParameterType, SysvarType
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms.support import (
     _check_channel_name_with_channel_no,
@@ -113,12 +113,12 @@ def test_check_or_create_directory() -> None:
 def test_parse_sys_var() -> None:
     """Test parse_sys_var."""
     assert parse_sys_var(data_type=None, raw_value="1.4") == "1.4"
-    assert parse_sys_var(data_type=HmSysvarType.STRING, raw_value="1.4") == "1.4"
-    assert parse_sys_var(data_type=HmSysvarType.HM_FLOAT, raw_value="1.4") == 1.4
-    assert parse_sys_var(data_type=HmSysvarType.HM_INTEGER, raw_value="1") == 1
-    assert parse_sys_var(data_type=HmSysvarType.ALARM, raw_value="true") is True
-    assert parse_sys_var(data_type=HmSysvarType.LIST, raw_value="1") == 1
-    assert parse_sys_var(data_type=HmSysvarType.LOGIC, raw_value="true") is True
+    assert parse_sys_var(data_type=SysvarType.STRING, raw_value="1.4") == "1.4"
+    assert parse_sys_var(data_type=SysvarType.HM_FLOAT, raw_value="1.4") == 1.4
+    assert parse_sys_var(data_type=SysvarType.HM_INTEGER, raw_value="1") == 1
+    assert parse_sys_var(data_type=SysvarType.ALARM, raw_value="true") is True
+    assert parse_sys_var(data_type=SysvarType.LIST, raw_value="1") == 1
+    assert parse_sys_var(data_type=SysvarType.LOGIC, raw_value="true") is True
 
 
 @pytest.mark.asyncio
@@ -204,7 +204,7 @@ async def test_custom_entity_name(factory: helper.Factory) -> None:
         device=device,
         channel_no=4,
         is_only_primary_channel=True,
-        usage=HmEntityUsage.CE_PRIMARY,
+        usage=EntityUsage.CE_PRIMARY,
     )
     assert name_data.full_name == "HmIP-BSM_VCU2128127"
     assert name_data.entity_name == ""
@@ -214,7 +214,7 @@ async def test_custom_entity_name(factory: helper.Factory) -> None:
         device=device,
         channel_no=4,
         is_only_primary_channel=False,
-        usage=HmEntityUsage.CE_SECONDARY,
+        usage=EntityUsage.CE_SECONDARY,
     )
     assert name_data.full_name == "HmIP-BSM_VCU2128127 vch4"
     assert name_data.entity_name == "vch4"
@@ -225,7 +225,7 @@ async def test_custom_entity_name(factory: helper.Factory) -> None:
         device=device,
         channel_no=5,
         is_only_primary_channel=True,
-        usage=HmEntityUsage.CE_PRIMARY,
+        usage=EntityUsage.CE_PRIMARY,
     )
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof"
     assert name_data.entity_name == "Roof"
@@ -235,7 +235,7 @@ async def test_custom_entity_name(factory: helper.Factory) -> None:
         device=device,
         channel_no=5,
         is_only_primary_channel=False,
-        usage=HmEntityUsage.CE_SECONDARY,
+        usage=EntityUsage.CE_SECONDARY,
     )
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof"
     assert name_data.entity_name == "Roof"
@@ -249,7 +249,7 @@ async def test_custom_entity_name(factory: helper.Factory) -> None:
             device=device,
             channel_no=5,
             is_only_primary_channel=False,
-            usage=HmEntityUsage.CE_SECONDARY,
+            usage=EntityUsage.CE_SECONDARY,
         )
         assert name_data.full_name == ""
         assert name_data.entity_name is None
@@ -294,17 +294,26 @@ async def test_updated_within_seconds() -> None:
 @pytest.mark.asyncio
 async def test_convert_value() -> None:
     """Test convert_value."""
-    assert convert_value(value=None, target_type=HmType.BOOL, value_list=None) is None
-    assert convert_value(value=True, target_type=HmType.BOOL, value_list=None) is True
-    assert convert_value(value="true", target_type=HmType.BOOL, value_list=None) is True
-    assert convert_value(value=1, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is True
-    assert convert_value(value=0, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is False
-    assert convert_value(value=2, target_type=HmType.BOOL, value_list=("CLOSED", "OPEN")) is False
-    assert convert_value(value="0.1", target_type=HmType.FLOAT, value_list=None) == 0.1
-    assert convert_value(value="1", target_type=HmType.INTEGER, value_list=None) == 1
-    assert convert_value(value="test", target_type=HmType.STRING, value_list=None) == "test"
-    assert convert_value(value="1", target_type=HmType.STRING, value_list=None) == "1"
-    assert convert_value(value=True, target_type=HmType.ACTION, value_list=None) is True
+    assert convert_value(value=None, target_type=ParameterType.BOOL, value_list=None) is None
+    assert convert_value(value=True, target_type=ParameterType.BOOL, value_list=None) is True
+    assert convert_value(value="true", target_type=ParameterType.BOOL, value_list=None) is True
+    assert (
+        convert_value(value=1, target_type=ParameterType.BOOL, value_list=("CLOSED", "OPEN"))
+        is True
+    )
+    assert (
+        convert_value(value=0, target_type=ParameterType.BOOL, value_list=("CLOSED", "OPEN"))
+        is False
+    )
+    assert (
+        convert_value(value=2, target_type=ParameterType.BOOL, value_list=("CLOSED", "OPEN"))
+        is False
+    )
+    assert convert_value(value="0.1", target_type=ParameterType.FLOAT, value_list=None) == 0.1
+    assert convert_value(value="1", target_type=ParameterType.INTEGER, value_list=None) == 1
+    assert convert_value(value="test", target_type=ParameterType.STRING, value_list=None) == "test"
+    assert convert_value(value="1", target_type=ParameterType.STRING, value_list=None) == "1"
+    assert convert_value(value=True, target_type=ParameterType.ACTION, value_list=None) is True
 
 
 @pytest.mark.asyncio

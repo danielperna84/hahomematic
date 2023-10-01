@@ -11,10 +11,10 @@ import orjson
 from hahomematic.client import _LOGGER, Client, _ClientConfig
 from hahomematic.const import (
     DEFAULT_ENCODING,
-    HmCallSource,
-    HmInterfaceName,
-    HmProxyInitState,
+    CallSource,
+    InterfaceName,
     ProgramData,
+    ProxyInitState,
     SystemInformation,
     SystemVariableData,
 )
@@ -47,13 +47,13 @@ class ClientLocal(Client):  # pragma: no cover
         """Return the supports_ping_pong info of the backend."""
         return True
 
-    async def proxy_init(self) -> HmProxyInitState:
+    async def proxy_init(self) -> ProxyInitState:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
-        return HmProxyInitState.INIT_SUCCESS
+        return ProxyInitState.INIT_SUCCESS
 
-    async def proxy_de_init(self) -> HmProxyInitState:
+    async def proxy_de_init(self) -> ProxyInitState:
         """De-init to stop CCU from sending events for this remote."""
-        return HmProxyInitState.DE_INIT_SUCCESS
+        return ProxyInitState.DE_INIT_SUCCESS
 
     def stop(self) -> None:
         """Stop depending services."""
@@ -117,7 +117,7 @@ class ClientLocal(Client):  # pragma: no cover
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
         return SystemInformation(
-            available_interfaces=[HmInterfaceName.BIDCOS_RF], serial=LOCAL_SERIAL
+            available_interfaces=[InterfaceName.BIDCOS_RF], serial=LOCAL_SERIAL
         )
 
     async def get_all_device_descriptions(self) -> Any:
@@ -161,7 +161,7 @@ class ClientLocal(Client):  # pragma: no cover
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        call_source: HmCallSource = HmCallSource.MANUAL_OR_SCHEDULED,
+        call_source: CallSource = CallSource.MANUAL_OR_SCHEDULED,
     ) -> Any:
         """Return a value from CCU."""
         return

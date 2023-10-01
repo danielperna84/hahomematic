@@ -5,7 +5,7 @@ from typing import cast
 
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.hub.sensor import HmSysvarSensor
 
@@ -25,7 +25,7 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     """Test HmSensor."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3941846:6", "VOLTAGE"))
-    assert sensor.usage == HmEntityUsage.ENTITY
+    assert sensor.usage == EntityUsage.ENTITY
     assert sensor.unit == "V"
     assert sensor.value_list is None
     assert sensor.value is None
@@ -38,7 +38,7 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
         HmSensor,
         central.get_generic_entity("VCU3941846:0", "RSSI_DEVICE"),
     )
-    assert sensor2.usage == HmEntityUsage.ENTITY
+    assert sensor2.usage == EntityUsage.ENTITY
     assert sensor2.unit == "dBm"
     assert sensor2.value_list is None
     assert sensor2.value is None
@@ -57,7 +57,7 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
         HmSensor,
         central.get_generic_entity("VCU8205532:1", "CONCENTRATION"),
     )
-    assert sensor3.usage == HmEntityUsage.ENTITY
+    assert sensor3.usage == EntityUsage.ENTITY
     assert sensor3.unit == "ppm"
     assert sensor3.value_list is None
     assert sensor3.value is None
@@ -68,7 +68,7 @@ async def test_hmsensor_srh(factory: helper.Factory) -> None:
     """Test HmSensor."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU7981740:1", "STATE"))
-    assert sensor.usage == HmEntityUsage.ENTITY
+    assert sensor.usage == EntityUsage.ENTITY
     assert sensor.unit is None
     assert sensor.value_list == ("CLOSED", "TILTED", "OPEN")
     assert sensor.value is None
@@ -83,14 +83,14 @@ async def test_hmsysvarsensor(factory: helper.Factory) -> None:
     """Test HmSysvarSensor."""
     central, _ = await factory.get_default_central({}, add_sysvars=True)
     sensor: HmSysvarSensor = cast(HmSysvarSensor, central.get_sysvar_entity("sv_list"))
-    assert sensor.usage == HmEntityUsage.ENTITY
+    assert sensor.usage == EntityUsage.ENTITY
     assert sensor.available is True
     assert sensor.unit is None
     assert sensor.value_list == ("v1", "v2", "v3")
     assert sensor.value == "v1"
 
     sensor2: HmSysvarSensor = cast(HmSysvarSensor, central.get_sysvar_entity("sv_float"))
-    assert sensor2.usage == HmEntityUsage.ENTITY
+    assert sensor2.usage == EntityUsage.ENTITY
     assert sensor2.unit is None
     assert sensor2.value_list is None
     assert sensor2.value == 23.2

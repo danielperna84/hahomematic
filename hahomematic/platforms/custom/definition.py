@@ -69,7 +69,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_TEMPERATURE_MAXIMUM,
     FIELD_TEMPERATURE_MINIMUM,
     FIELD_VALVE_STATE,
-    HmEntityDefinition,
+    EntityDefinition,
 )
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.support import generate_unique_identifier
@@ -124,13 +124,13 @@ SCHEMA_DEVICE_DESCRIPTION = vol.Schema(
         vol.Required(ED_DEFAULT_ENTITIES): SCHEMA_ED_ADDITIONAL_ENTITIES,
         vol.Required(ED_DEVICE_DEFINITIONS): vol.Schema(
             {
-                vol.Required(HmEntityDefinition): SCHEMA_ED_DEVICE_GROUPS,
+                vol.Required(EntityDefinition): SCHEMA_ED_DEVICE_GROUPS,
             }
         ),
     }
 )
 
-entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
+entity_definition: dict[str, dict[int | str | EntityDefinition, vol.Any]] = {
     ED_DEFAULT_ENTITIES: {
         0: (
             "DUTY_CYCLE",
@@ -146,7 +146,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
         4: ("BATTERY_STATE",),
     },
     ED_DEVICE_DEFINITIONS: {
-        HmEntityDefinition.IP_COVER: {
+        EntityDefinition.IP_COVER: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
                 ED_SECONDARY_CHANNELS: (2, 3),
@@ -166,7 +166,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_DIMMER: {
+        EntityDefinition.IP_DIMMER: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
                 ED_SECONDARY_CHANNELS: (2, 3),
@@ -182,7 +182,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_GARAGE: {
+        EntityDefinition.IP_GARAGE: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -197,7 +197,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 1: ("STATE",),
             },
         },
-        HmEntityDefinition.IP_FIXED_COLOR_LIGHT: {
+        EntityDefinition.IP_FIXED_COLOR_LIGHT: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
                 ED_SECONDARY_CHANNELS: (2, 3),
@@ -217,7 +217,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED: {
+        EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -231,7 +231,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT: {
+        EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -244,7 +244,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_RGBW_LIGHT: {
+        EntityDefinition.IP_RGBW_LIGHT: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
                 ED_SECONDARY_CHANNELS: (2, 3, 4),
@@ -267,7 +267,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_SWITCH: {
+        EntityDefinition.IP_SWITCH: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
                 ED_SECONDARY_CHANNELS: (2, 3),
@@ -292,7 +292,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 ),
             },
         },
-        HmEntityDefinition.IP_LOCK: {
+        EntityDefinition.IP_LOCK: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
                 ED_REPEATABLE_FIELDS: {
@@ -307,7 +307,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_SIREN: {
+        EntityDefinition.IP_SIREN: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 3,
                 ED_REPEATABLE_FIELDS: {
@@ -320,7 +320,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_SIREN_SMOKE: {
+        EntityDefinition.IP_SIREN_SMOKE: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 1,
                 ED_REPEATABLE_FIELDS: {
@@ -331,7 +331,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_THERMOSTAT: {
+        EntityDefinition.IP_THERMOSTAT: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -359,7 +359,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.IP_THERMOSTAT_GROUP: {
+        EntityDefinition.IP_THERMOSTAT_GROUP: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -388,7 +388,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
             },
             ED_INCLUDE_DEFAULT_ENTITIES: False,
         },
-        HmEntityDefinition.RF_COVER: {
+        EntityDefinition.RF_COVER: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -400,7 +400,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.RF_DIMMER: {
+        EntityDefinition.RF_DIMMER: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -410,7 +410,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.RF_DIMMER_COLOR: {
+        EntityDefinition.RF_DIMMER_COLOR: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -428,7 +428,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.RF_DIMMER_COLOR_TEMP: {
+        EntityDefinition.RF_DIMMER_COLOR_TEMP: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -443,7 +443,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL: {
+        EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_SECONDARY_CHANNELS: (1, 2),
@@ -454,7 +454,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.RF_LOCK: {
+        EntityDefinition.RF_LOCK: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -465,7 +465,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.RF_SWITCH: {
+        EntityDefinition.RF_SWITCH: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -483,7 +483,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 ),
             },
         },
-        HmEntityDefinition.RF_THERMOSTAT: {
+        EntityDefinition.RF_THERMOSTAT: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -508,7 +508,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
                 },
             },
         },
-        HmEntityDefinition.RF_THERMOSTAT_GROUP: {
+        EntityDefinition.RF_THERMOSTAT_GROUP: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_REPEATABLE_FIELDS: {
@@ -534,7 +534,7 @@ entity_definition: dict[str, dict[int | str | HmEntityDefinition, vol.Any]] = {
             },
             ED_INCLUDE_DEFAULT_ENTITIES: False,
         },
-        HmEntityDefinition.SIMPLE_RF_THERMOSTAT: {
+        EntityDefinition.SIMPLE_RF_THERMOSTAT: {
             ED_DEVICE_GROUP: {
                 ED_PRIMARY_CHANNEL: 0,
                 ED_VISIBLE_REPEATABLE_FIELDS: {
@@ -564,7 +564,7 @@ def validate_entity_definition() -> Any:
 def make_custom_entity(
     device: hmd.HmDevice,
     custom_entity_class: type,
-    device_enum: HmEntityDefinition,
+    device_enum: EntityDefinition,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[hmce.CustomEntity, ...]:
@@ -601,7 +601,7 @@ def make_custom_entity(
 def _create_entities(
     device: hmd.HmDevice,
     custom_entity_class: type,
-    device_enum: HmEntityDefinition,
+    device_enum: EntityDefinition,
     device_def: dict[str, vol.Any],
     entity_def: dict[int, tuple[str, ...]],
     channel_no: int | None = None,
@@ -635,18 +635,18 @@ def get_default_entities() -> dict[int | tuple[int, ...], tuple[str, ...]]:
     return entity_definition[ED_DEFAULT_ENTITIES]  # type: ignore[return-value]
 
 
-def get_include_default_entities(device_enum: HmEntityDefinition) -> bool:
+def get_include_default_entities(device_enum: EntityDefinition) -> bool:
     """Return if default entities should be included."""
     device = _get_device_definition(device_enum)
     return device.get(ED_INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES)
 
 
-def _get_device_definition(device_enum: HmEntityDefinition) -> dict[str, vol.Any]:
+def _get_device_definition(device_enum: EntityDefinition) -> dict[str, vol.Any]:
     """Return device from entity definitions."""
     return cast(dict[str, vol.Any], entity_definition[ED_DEVICE_DEFINITIONS][device_enum])
 
 
-def _get_device_group(device_enum: HmEntityDefinition, base_channel_no: int) -> dict[str, vol.Any]:
+def _get_device_group(device_enum: EntityDefinition, base_channel_no: int) -> dict[str, vol.Any]:
     """Return the device group."""
     device = _get_device_definition(device_enum)
     group = cast(dict[str, vol.Any], device[ED_DEVICE_GROUP])
@@ -685,7 +685,7 @@ def _rebase_entity_dict(
 
 
 def _get_device_entities(
-    device_enum: HmEntityDefinition, base_channel_no: int
+    device_enum: EntityDefinition, base_channel_no: int
 ) -> dict[int, tuple[str, ...]]:
     """Return the device entities."""
     additional_entities = (

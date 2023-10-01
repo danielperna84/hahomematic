@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.lock import CeIpLock, CeRfLock
 
 from tests import const, helper
@@ -24,7 +24,7 @@ async def test_cerflock(factory: helper.Factory) -> None:
     """Test CeRfLock."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     lock: CeRfLock = cast(CeRfLock, helper.get_prepared_custom_entity(central, "VCU0000146", 1))
-    assert lock.usage == HmEntityUsage.CE_PRIMARY
+    assert lock.usage == EntityUsage.CE_PRIMARY
 
     assert lock.is_locked is True
     await lock.unlock()
@@ -80,7 +80,7 @@ async def test_ceiplock(factory: helper.Factory) -> None:
     """Test CeIpLock."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     lock: CeIpLock = cast(CeIpLock, helper.get_prepared_custom_entity(central, "VCU9724704", 1))
-    assert lock.usage == HmEntityUsage.CE_PRIMARY
+    assert lock.usage == EntityUsage.CE_PRIMARY
 
     assert lock.is_locked is False
     await lock.lock()

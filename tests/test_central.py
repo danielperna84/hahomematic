@@ -10,12 +10,12 @@ import pytest
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     EVENT_AVAILABLE,
-    HmEntityUsage,
-    HmEvent,
-    HmEventType,
-    HmInterfaceEventType,
-    HmParamsetKey,
+    EntityUsage,
+    EventType,
     HmPlatform,
+    InterfaceEventType,
+    Parameter,
+    ParamsetKey,
 )
 from hahomematic.exceptions import HaHomematicException, NoClients
 from hahomematic.platforms.generic.number import HmFloat
@@ -80,7 +80,7 @@ async def test_device_unignore(factory: helper.Factory) -> None:
         is False
     )
     level1: HmFloat = cast(HmFloat, central1.get_generic_entity("VCU3609622:1", "LEVEL"))
-    assert level1.usage == HmEntityUsage.NO_CREATE
+    assert level1.usage == EntityUsage.NO_CREATE
     assert len(level1.device.generic_entities) == 22
 
     switch1: HmSwitch | None = None
@@ -114,13 +114,13 @@ async def test_device_unignore(factory: helper.Factory) -> None:
         is True
     )
     level2: HmFloat = cast(HmFloat, central2.get_generic_entity("VCU3609622:1", "LEVEL"))
-    assert level2.usage == HmEntityUsage.ENTITY
+    assert level2.usage == EntityUsage.ENTITY
     assert len(level2.device.generic_entities) == 23
     switch2: HmSwitch = cast(
         HmSwitch,
         central2.get_generic_entity("VCU3609622:1", "VALVE_ADAPTION"),
     )
-    assert switch2.usage == HmEntityUsage.ENTITY
+    assert switch2.usage == EntityUsage.ENTITY
 
 
 @pytest.mark.asyncio
@@ -270,7 +270,7 @@ async def test_central_callbacks(factory: helper.Factory) -> None:
     central, _ = await factory.get_default_central(TEST_DEVICES)
     central.fire_interface_event(
         interface_id="SOME_ID",
-        interface_event_type=HmInterfaceEventType.CALLBACK,
+        interface_event_type=InterfaceEventType.CALLBACK,
         data={EVENT_AVAILABLE: False},
     )
     assert factory.ha_event_mock.call_args_list[-1] == call(
@@ -296,9 +296,9 @@ async def test_central_services(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.get_all_system_variables(include_internal=True)
 
     assert len(mock_client.method_calls) == 37
-    await central.load_and_refresh_entity_data(paramset_key=HmParamsetKey.MASTER)
+    await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.MASTER)
     assert len(mock_client.method_calls) == 37
-    await central.load_and_refresh_entity_data(paramset_key=HmParamsetKey.VALUES)
+    await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.VALUES)
     assert len(mock_client.method_calls) == 70
 
     await central.get_system_variable(name="SysVar_Name")
@@ -321,13 +321,13 @@ async def test_central_services(factory: helper.Factory) -> None:
 
     await central.get_client(interface_id=const.INTERFACE_ID).set_value(
         channel_address="123",
-        paramset_key=HmParamsetKey.VALUES,
+        paramset_key=ParamsetKey.VALUES,
         parameter="LEVEL",
         value=1.0,
     )
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="123",
-        paramset_key=HmParamsetKey.VALUES,
+        paramset_key=ParamsetKey.VALUES,
         parameter="LEVEL",
         value=1.0,
     )
@@ -336,7 +336,7 @@ async def test_central_services(factory: helper.Factory) -> None:
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").set_value(
             channel_address="123",
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             parameter="LEVEL",
             value=1.0,
         )
@@ -344,7 +344,7 @@ async def test_central_services(factory: helper.Factory) -> None:
 
     await central.get_client(interface_id=const.INTERFACE_ID).put_paramset(
         address="123",
-        paramset_key=HmParamsetKey.VALUES,
+        paramset_key=ParamsetKey.VALUES,
         value={"LEVEL": 1.0},
     )
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -354,7 +354,7 @@ async def test_central_services(factory: helper.Factory) -> None:
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").put_paramset(
             address="123",
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             value={"LEVEL": 1.0},
         )
     assert len(mock_client.method_calls) == 75
@@ -426,7 +426,7 @@ async def test_ping_pong(factory: helper.Factory) -> None:
     interface_id = client.interface_id
     await client.check_connection_availability()
     assert central._ping_count[interface_id] == 1
-    central.event(interface_id, "", HmEvent.PONG, interface_id)
+    central.event(interface_id, "", Parameter.PONG, interface_id)
     assert central._ping_count[interface_id] == 0
 
 
@@ -443,17 +443,17 @@ async def test_ping_failure(factory: helper.Factory) -> None:
         count += 1
     assert central._ping_count[interface_id] == max_count
     assert factory.ha_event_mock.mock_calls[-1] == call(
-        HmEventType.INTERFACE,
+        EventType.INTERFACE,
         {
             "data": {"instance_name": "CentralTest"},
             "interface_id": "CentralTest-BidCos-RF",
-            "type": HmInterfaceEventType.PINGPONG,
+            "type": InterfaceEventType.PINGPONG,
         },
     )
     assert central._ping_pong_fired is True
     assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
-    central.event(interface_id, "", HmEvent.PONG, interface_id)
+    central.event(interface_id, "", Parameter.PONG, interface_id)
     assert len(factory.ha_event_mock.mock_calls) == 2
 
 
@@ -466,21 +466,21 @@ async def test_pong_failure(factory: helper.Factory) -> None:
     max_count = PING_PONG_MISMATCH_COUNT + 2
     assert central._ping_pong_fired is False
     while count < max_count:
-        central.event(interface_id, "", HmEvent.PONG, interface_id)
+        central.event(interface_id, "", Parameter.PONG, interface_id)
         count += 1
     assert central._ping_count[interface_id] == -max_count + 1
     assert factory.ha_event_mock.mock_calls[-1] == call(
-        HmEventType.INTERFACE,
+        EventType.INTERFACE,
         {
             "data": {"instance_name": "CentralTest"},
             "interface_id": "CentralTest-BidCos-RF",
-            "type": HmInterfaceEventType.PINGPONG,
+            "type": InterfaceEventType.PINGPONG,
         },
     )
     assert central._ping_pong_fired is True
     assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
-    central.event(interface_id, "", HmEvent.PONG, interface_id)
+    central.event(interface_id, "", Parameter.PONG, interface_id)
     assert len(factory.ha_event_mock.mock_calls) == 2
 
 
@@ -490,7 +490,7 @@ async def test_central_caches(factory: helper.Factory) -> None:
     central, client = await factory.get_default_central(TEST_DEVICES)
     assert len(central.device_descriptions._raw_device_descriptions[client.interface_id]) == 20
     assert len(central.paramset_descriptions._raw_paramset_descriptions[client.interface_id]) == 11
-    await central.clear_all_caches()
+    await central.clear_caches()
     assert central.device_descriptions._raw_device_descriptions.get(client.interface_id) is None
     assert (
         central.paramset_descriptions._raw_paramset_descriptions.get(client.interface_id) is None

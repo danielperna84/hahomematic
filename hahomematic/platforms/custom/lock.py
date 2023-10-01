@@ -18,7 +18,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_LOCK_TARGET_LEVEL,
     FIELD_OPEN,
     FIELD_STATE,
-    HmEntityDefinition,
+    EntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
@@ -29,14 +29,14 @@ from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
 
 
-class HmLockActivity(StrEnum):
+class LockActivity(StrEnum):
     """Enum with lock activities."""
 
     LOCKING = "DOWN"
     UNLOCKING = "UP"
 
 
-class HmLockState(StrEnum):
+class LockState(StrEnum):
     """Enum with lock states."""
 
     LOCKED = "LOCKED"
@@ -103,20 +103,20 @@ class CeIpLock(BaseLock):
     @value_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._e_lock_state.value == HmLockState.LOCKED
+        return self._e_lock_state.value == LockState.LOCKED
 
     @value_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == HmLockActivity.LOCKING
+            return str(self._e_direction.value) == LockActivity.LOCKING
         return None
 
     @value_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == HmLockActivity.UNLOCKING
+            return str(self._e_direction.value) == LockActivity.UNLOCKING
         return None
 
     @value_property
@@ -127,17 +127,17 @@ class CeIpLock(BaseLock):
     @bind_collector
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
-        await self._e_lock_target_level.send_value(value=HmLockState.LOCKED, collector=collector)
+        await self._e_lock_target_level.send_value(value=LockState.LOCKED, collector=collector)
 
     @bind_collector
     async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
-        await self._e_lock_target_level.send_value(value=HmLockState.UNLOCKED, collector=collector)
+        await self._e_lock_target_level.send_value(value=LockState.UNLOCKED, collector=collector)
 
     @bind_collector
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
-        await self._e_lock_target_level.send_value(value=HmLockState.OPEN, collector=collector)
+        await self._e_lock_target_level.send_value(value=LockState.OPEN, collector=collector)
 
 
 class CeRfLock(BaseLock):
@@ -162,20 +162,20 @@ class CeRfLock(BaseLock):
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == HmLockActivity.LOCKING
+            return str(self._e_direction.value) == LockActivity.LOCKING
         return None
 
     @value_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == HmLockActivity.UNLOCKING
+            return str(self._e_direction.value) == LockActivity.UNLOCKING
         return None
 
     @value_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._e_error.value is not None and self._e_error.value != HmLockState.NO_ERROR
+        return self._e_error.value is not None and self._e_error.value != LockState.NO_ERROR
 
     @bind_collector
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
@@ -202,7 +202,7 @@ def make_ip_lock(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpLock,
-        device_enum=HmEntityDefinition.IP_LOCK,
+        device_enum=EntityDefinition.IP_LOCK,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -217,7 +217,7 @@ def make_rf_lock(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeRfLock,
-        device_enum=HmEntityDefinition.RF_LOCK,
+        device_enum=EntityDefinition.RF_LOCK,
         group_base_channels=group_base_channels,
         extended=extended,
     )

@@ -9,7 +9,7 @@ import logging
 from typing import Any, Final, ParamSpec, TypeVar, cast
 
 from hahomematic import client as hmcl
-from hahomematic.const import HmSystemEvent
+from hahomematic.const import SystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
 
@@ -18,8 +18,10 @@ _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
 
+_INTERFACE_ID: Final = "interface_id"
 
-def callback_system_event(system_event: HmSystemEvent) -> Callable:
+
+def callback_system_event(system_event: SystemEvent) -> Callable:
     """Check if callback_system is set and call it AFTER original function."""
 
     def decorator_callback_system_event(
@@ -49,7 +51,7 @@ def callback_system_event(system_event: HmSystemEvent) -> Callable:
                 )
             try:
                 args = args[1:]
-                interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
+                interface_id: str = args[0] if len(args) > 1 else str(kwargs[_INTERFACE_ID])
                 if client := hmcl.get_client(interface_id=interface_id):
                     client.last_updated = datetime.now()
                     client.central.fire_system_event_callback(system_event=system_event, **kwargs)
@@ -82,7 +84,7 @@ def callback_event(func: Callable[_P, _R]) -> Callable[_P, _R]:
         """Execute the callback for an entity event."""
         try:
             args = args[1:]
-            interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
+            interface_id: str = args[0] if len(args) > 1 else str(kwargs[_INTERFACE_ID])
             if client := hmcl.get_client(interface_id=interface_id):
                 client.last_updated = datetime.now()
                 client.central.fire_entity_event_callback(*args, **kwargs)

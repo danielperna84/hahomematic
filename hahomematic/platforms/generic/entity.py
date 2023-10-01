@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmCallSource, HmEntityUsage, HmEvent, HmEventType, HmPlatform
+from hahomematic.const import CallSource, EntityUsage, EventType, HmPlatform, Parameter
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
@@ -40,11 +40,11 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         self.wrapped: bool = False
 
     @config_property
-    def usage(self) -> HmEntityUsage:
+    def usage(self) -> EntityUsage:
         """Return the entity usage."""
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
             return self._usage
-        return HmEntityUsage.ENTITY if force_enabled else HmEntityUsage.NO_CREATE
+        return EntityUsage.ENTITY if force_enabled else EntityUsage.NO_CREATE
 
     def event(self, value: Any) -> None:
         """Handle event for which this entity has subscribed."""
@@ -55,19 +55,23 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         self.update_value(value=new_value)
 
         # reload paramset_descriptions, if value has changed
-        if self._parameter == HmEvent.CONFIG_PENDING and new_value is False and old_value is True:
+        if (
+            self._parameter == Parameter.CONFIG_PENDING
+            and new_value is False
+            and old_value is True
+        ):
             self._central.create_task(
                 self.device.reload_paramset_descriptions(), name="reloadParamsetDescriptions"
             )
 
         # send device availability events
         if self._parameter in (
-            HmEvent.UN_REACH,
-            HmEvent.STICKY_UN_REACH,
+            Parameter.UN_REACH,
+            Parameter.STICKY_UN_REACH,
         ):
             self.device.update_device(self._unique_identifier)
             self._central.fire_ha_event_callback(
-                event_type=HmEventType.DEVICE_AVAILABILITY,
+                event_type=EventType.DEVICE_AVAILABILITY,
                 event_data=self.get_event_data(new_value),
             )
 
@@ -119,7 +123,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             parameter=self._parameter,
         )
 
-    def _get_entity_usage(self) -> HmEntityUsage:
+    def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
         if self._central.parameter_visibility.parameter_is_hidden(
             device_type=self.device.device_type,
@@ -127,12 +131,12 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             paramset_key=self._paramset_key,
             parameter=self._parameter,
         ):
-            return HmEntityUsage.NO_CREATE
+            return EntityUsage.NO_CREATE
 
         return (
-            HmEntityUsage.NO_CREATE
+            EntityUsage.NO_CREATE
             if self.device.has_custom_entity_definition
-            else HmEntityUsage.ENTITY
+            else EntityUsage.ENTITY
         )
 
     def is_state_change(self, value: hme.ParameterT) -> bool:
@@ -170,10 +174,10 @@ class WrapperEntity(hme.BaseEntity):
         self._update_callbacks = wrapped_entity._update_callbacks
         self._remove_callbacks = wrapped_entity._remove_callbacks
         # hide wrapped entity from HA
-        wrapped_entity.set_usage(HmEntityUsage.NO_CREATE)
+        wrapped_entity.set_usage(EntityUsage.NO_CREATE)
         wrapped_entity.wrapped = True
 
-    async def load_entity_value(self, call_source: HmCallSource) -> None:
+    async def load_entity_value(self, call_source: CallSource) -> None:
         """Init the entity data."""
         await self._wrapped_entity.load_entity_value(call_source=call_source)
 
@@ -181,9 +185,9 @@ class WrapperEntity(hme.BaseEntity):
         """Return any other attribute not explicitly defined in the class."""
         return getattr(self._wrapped_entity, *args)
 
-    def _get_entity_usage(self) -> HmEntityUsage:
+    def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
-        return HmEntityUsage.ENTITY
+        return EntityUsage.ENTITY
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""

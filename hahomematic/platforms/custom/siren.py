@@ -21,7 +21,7 @@ from hahomematic.platforms.custom.const import (
     FIELD_OPTICAL_ALARM_SELECTION,
     FIELD_SMOKE_DETECTOR_ALARM_STATUS,
     FIELD_SMOKE_DETECTOR_COMMAND,
-    HmEntityDefinition,
+    EntityDefinition,
 )
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
@@ -34,14 +34,14 @@ from hahomematic.platforms.generic.sensor import HmSensor
 _SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF: Final = "IDLE_OFF"
 
 
-class HmSirenCommand(StrEnum):
+class SirenCommand(StrEnum):
     """Enum with siren commands."""
 
     OFF = "INTRUSION_ALARM_OFF"
     ON = "INTRUSION_ALARM"
 
 
-class HmSirenOnArgs(TypedDict, total=False):
+class SirenOnArgs(TypedDict, total=False):
     """Matcher for the siren arguments."""
 
     acoustic_alarm: str
@@ -88,7 +88,7 @@ class BaseSiren(CustomEntity):
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
-        **kwargs: Unpack[HmSirenOnArgs],
+        **kwargs: Unpack[SirenOnArgs],
     ) -> None:
         """Turn the device on."""
 
@@ -149,7 +149,7 @@ class CeIpSiren(BaseSiren):
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
-        **kwargs: Unpack[HmSirenOnArgs],
+        **kwargs: Unpack[SirenOnArgs],
     ) -> None:
         """Turn the device on."""
 
@@ -232,17 +232,15 @@ class CeIpSirenSmoke(BaseSiren):
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
-        **kwargs: Unpack[HmSirenOnArgs],
+        **kwargs: Unpack[SirenOnArgs],
     ) -> None:
         """Turn the device on."""
-        await self._e_smoke_detector_command.send_value(
-            value=HmSirenCommand.ON, collector=collector
-        )
+        await self._e_smoke_detector_command.send_value(value=SirenCommand.ON, collector=collector)
 
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
         await self._e_smoke_detector_command.send_value(
-            value=HmSirenCommand.OFF, collector=collector
+            value=SirenCommand.OFF, collector=collector
         )
 
 
@@ -255,7 +253,7 @@ def make_ip_siren(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpSiren,
-        device_enum=HmEntityDefinition.IP_SIREN,
+        device_enum=EntityDefinition.IP_SIREN,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -270,7 +268,7 @@ def make_ip_siren_smoke(
     return hmed.make_custom_entity(
         device=device,
         custom_entity_class=CeIpSirenSmoke,
-        device_enum=HmEntityDefinition.IP_SIREN_SMOKE,
+        device_enum=EntityDefinition.IP_SIREN_SMOKE,
         group_base_channels=group_base_channels,
         extended=extended,
     )

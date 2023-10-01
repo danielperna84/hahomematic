@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.switch import CeSwitch
 from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.hub.switch import HmSysvarSwitch
@@ -25,7 +25,7 @@ async def test_ceswitch(factory: helper.Factory) -> None:
     """Test CeSwitch."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     switch: CeSwitch = cast(CeSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
-    assert switch.usage == HmEntityUsage.CE_PRIMARY
+    assert switch.usage == EntityUsage.CE_PRIMARY
 
     await switch.turn_off()
     assert switch.value is False
@@ -69,7 +69,7 @@ async def test_hmswitch(factory: helper.Factory) -> None:
     """Test HmSwitch."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
-    assert switch.usage == HmEntityUsage.NO_CREATE
+    assert switch.usage == EntityUsage.NO_CREATE
 
     assert switch.value is None
     await switch.turn_on()
@@ -126,7 +126,7 @@ async def test_hmsysvarswitch(factory: helper.Factory) -> None:
     """Test HmSysvarSwitch."""
     central, mock_client = await factory.get_default_central({}, add_sysvars=True)
     switch: HmSysvarSwitch = cast(HmSysvarSwitch, central.get_sysvar_entity("sv_alarm_ext"))
-    assert switch.usage == HmEntityUsage.ENTITY
+    assert switch.usage == EntityUsage.ENTITY
 
     assert switch.value is False
     await switch.send_variable(True)

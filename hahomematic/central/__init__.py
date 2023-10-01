@@ -35,17 +35,17 @@ from hahomematic.const import (
     EVENT_INSTANCE_NAME,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
-    HmDescription,
-    HmDeviceFirmwareState,
-    HmEntityUsage,
-    HmEvent,
-    HmEventType,
-    HmInterfaceEventType,
-    HmInterfaceName,
-    HmParamsetKey,
+    Description,
+    DeviceFirmwareState,
+    EntityUsage,
+    EventType,
     HmPlatform,
-    HmProxyInitState,
-    HmSystemEvent,
+    InterfaceEventType,
+    InterfaceName,
+    Parameter,
+    ParamsetKey,
+    ProxyInitState,
+    SystemEvent,
     SystemInformation,
 )
 from hahomematic.exceptions import (
@@ -61,7 +61,7 @@ from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.entity import BaseEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
-from hahomematic.platforms.hub import HmHub
+from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.platforms.update import HmUpdate
@@ -84,7 +84,7 @@ ConnectionProblemIssuer = JsonRpcAioHttpClient | XmlRpcProxy
 HM_INTERFACE_EVENT_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_INTERFACE_ID): str,
-        vol.Required(EVENT_TYPE): HmInterfaceEventType,
+        vol.Required(EVENT_TYPE): InterfaceEventType,
         vol.Required(EVENT_DATA): vol.Schema(
             {vol.Required(vol.Any(str)): vol.Schema(vol.Any(str, int, bool))}
         ),
@@ -168,7 +168,7 @@ class CentralUnit:
 
         CENTRAL_INSTANCES[self._name] = self
         self._connection_checker: Final = ConnectionChecker(self)
-        self._hub: HmHub = HmHub(central=self)
+        self._hub: Hub = Hub(central=self)
         self._version: str | None = None
 
     @property
@@ -268,7 +268,7 @@ class CentralUnit:
     async def start(self) -> None:
         """Start processing of the central unit."""
         if self._started:
-            _LOGGER.debug("START: Cental %s already started", self._name)
+            _LOGGER.debug("START: Central %s already started", self._name)
             return
         await self.parameter_visibility.load()
         if self.config.start_direct:
@@ -284,7 +284,7 @@ class CentralUnit:
     async def stop(self) -> None:
         """Stop processing of the central unit."""
         if not self._started:
-            _LOGGER.debug("STOP: Cental %s not started", self._name)
+            _LOGGER.debug("STOP: Central %s not started", self._name)
             return
         self._stop_connection_checker()
         await self._stop_clients()
@@ -331,7 +331,7 @@ class CentralUnit:
                 device.refresh_firmware_data()
 
     async def refresh_firmware_data_by_state(
-        self, device_firmware_states: tuple[HmDeviceFirmwareState, ...]
+        self, device_firmware_states: tuple[DeviceFirmwareState, ...]
     ) -> None:
         """Refresh device firmware data for processing devices."""
         for device in [
@@ -413,7 +413,7 @@ class CentralUnit:
             except BaseHomematicException as ex:
                 self.fire_interface_event(
                     interface_id=interface_config.interface_id,
-                    interface_event_type=HmInterfaceEventType.PROXY,
+                    interface_event_type=InterfaceEventType.PROXY,
                     data={EVENT_AVAILABLE: False},
                 )
                 _LOGGER.warning(
@@ -435,7 +435,7 @@ class CentralUnit:
     async def _init_clients(self) -> None:
         """Init clients of control unit, and start connection checker."""
         for client in self._clients.values():
-            if await client.proxy_init() == HmProxyInitState.INIT_SUCCESS:
+            if await client.proxy_init() == ProxyInitState.INIT_SUCCESS:
                 _LOGGER.debug("INIT_CLIENTS: client for %s initialized", client.interface_id)
 
     async def _de_init_clients(self) -> None:
@@ -452,7 +452,7 @@ class CentralUnit:
     def fire_interface_event(
         self,
         interface_id: str,
-        interface_event_type: HmInterfaceEventType,
+        interface_event_type: InterfaceEventType,
         data: dict[str, Any] | None = None,
     ) -> None:
         """Fire an event about the interface status."""
@@ -464,7 +464,7 @@ class CentralUnit:
         }
 
         self.fire_ha_event_callback(
-            event_type=HmEventType.INTERFACE,
+            event_type=EventType.INTERFACE,
             event_data=cast(dict[str, Any], HM_INTERFACE_EVENT_SCHEMA(event_data)),
         )
 
@@ -567,7 +567,7 @@ class CentralUnit:
             for be in self._entities.values()
             if (
                 be.unique_identifier not in existing_unique_ids
-                and be.usage != HmEntityUsage.NO_CREATE
+                and be.usage != EntityUsage.NO_CREATE
                 and be.platform == platform
             )
         ]
@@ -591,7 +591,7 @@ class CentralUnit:
         client: hmcl.Client | None = None
         for client in self._clients.values():
             if (
-                client.interface in (HmInterfaceName.HMIP_RF, HmInterfaceName.BIDCOS_RF)
+                client.interface in (InterfaceName.HMIP_RF, InterfaceName.BIDCOS_RF)
                 and client.available
             ):
                 return client
@@ -624,7 +624,7 @@ class CentralUnit:
 
     @property
     def has_clients(self) -> bool:
-        """Check if clients exists in central."""
+        """Check if all configured clients exists in central."""
         count_client = len(self._clients)
         count_client_defined = len(self.config.interface_configs)
         return count_client > 0 and count_client == count_client_defined
@@ -638,7 +638,7 @@ class CentralUnit:
             await self.data_cache.load()
         except orjson.JSONDecodeError:  # pragma: no cover
             _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._name)
-            await self.clear_all_caches()
+            await self.clear_caches()
 
     async def _create_devices(self) -> None:
         """Trigger creation of the objects that expose the functionality."""
@@ -696,7 +696,7 @@ class CentralUnit:
 
         if new_devices:
             self.fire_system_event_callback(
-                system_event=HmSystemEvent.DEVICES_CREATED, new_devices=new_devices
+                system_event=SystemEvent.DEVICES_CREATED, new_devices=new_devices
             )
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
@@ -721,7 +721,7 @@ class CentralUnit:
 
         await self.delete_devices(interface_id=interface_id, addresses=addresses)
 
-    @callback_system_event(system_event=HmSystemEvent.DELETE_DEVICES)
+    @callback_system_event(system_event=SystemEvent.DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices from central."""
         _LOGGER.debug(
@@ -733,7 +733,7 @@ class CentralUnit:
             if device := self._devices.get(address):
                 await self.remove_device(device=device)
 
-    @callback_system_event(system_event=HmSystemEvent.NEW_DEVICES)
+    @callback_system_event(system_event=SystemEvent.NEW_DEVICES)
     async def add_new_devices(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
@@ -762,14 +762,14 @@ class CentralUnit:
         async with self._sema_add_devices:
             # We need this list to avoid adding duplicates.
             known_addresses = [
-                dev_desc[HmDescription.ADDRESS]
+                dev_desc[Description.ADDRESS]
                 for dev_desc in self.device_descriptions.get_raw_device_descriptions(interface_id)
             ]
             client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
                     self.device_descriptions.add_device_description(interface_id, dev_desc)
-                    if dev_desc[HmDescription.ADDRESS] not in known_addresses:
+                    if dev_desc[Description.ADDRESS] not in known_addresses:
                         await client.fetch_paramset_descriptions(dev_desc)
                 except Exception as err:  # pragma: no cover
                     _LOGGER.error(
@@ -799,7 +799,7 @@ class CentralUnit:
 
         self.last_events[interface_id] = datetime.now()
         # No need to check the response of a XmlRPC-PING
-        if parameter == HmEvent.PONG:
+        if parameter == Parameter.PONG:
             if value == interface_id:
                 self._reduce_ping_count(interface_id=interface_id)
             return
@@ -824,7 +824,7 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
-    @callback_system_event(system_event=HmSystemEvent.LIST_DEVICES)
+    @callback_system_event(system_event=SystemEvent.LIST_DEVICES)
     def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
         result = self.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
@@ -918,11 +918,11 @@ class CentralUnit:
             return
         event_data: dict[str, Any] = {
             EVENT_INTERFACE_ID: interface_id,
-            EVENT_TYPE: HmInterfaceEventType.PINGPONG,
+            EVENT_TYPE: InterfaceEventType.PINGPONG,
             EVENT_DATA: {EVENT_INSTANCE_NAME: self.config.name},
         }
         self.fire_ha_event_callback(
-            event_type=HmEventType.INTERFACE,
+            event_type=EventType.INTERFACE,
             event_data=cast(dict[str, Any], HM_INTERFACE_EVENT_SCHEMA(event_data)),
         )
         _LOGGER.warning(
@@ -992,7 +992,7 @@ class CentralUnit:
     @measure_execution_time
     async def load_and_refresh_entity_data(self, paramset_key: str | None = None) -> None:
         """Refresh entity data."""
-        if paramset_key != HmParamsetKey.MASTER and self.data_cache.is_empty:
+        if paramset_key != ParamsetKey.MASTER and self.data_cache.is_empty:
             await self.data_cache.load()
         await self.data_cache.refresh_entity_data(paramset_key=paramset_key)
 
@@ -1072,16 +1072,12 @@ class CentralUnit:
         """Return the program button."""
         return self.program_entities.get(pid)
 
-    def clear_dynamic_caches(self) -> None:
-        """Clear all stored data."""
-        self.device_details.clear()
-        self.data_cache.clear()
-
-    async def clear_all_caches(self) -> None:
+    async def clear_caches(self) -> None:
         """Clear all stored data."""
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
-        self.clear_dynamic_caches()
+        self.device_details.clear()
+        self.data_cache.clear()
 
     def register_ha_event_callback(self, callback_handler: Callable) -> None:
         """Register ha_event callback in central."""
@@ -1092,7 +1088,7 @@ class CentralUnit:
         if callback_handler in self._callback_ha_event:
             self._callback_ha_event.remove(callback_handler)
 
-    def fire_ha_event_callback(self, event_type: HmEventType, event_data: dict[str, str]) -> None:
+    def fire_ha_event_callback(self, event_type: EventType, event_data: dict[str, str]) -> None:
         """
         Fire ha_event callback in central.
 
@@ -1167,7 +1163,7 @@ class CentralUnit:
         if callback_handler in self._callback_system_event:
             self._callback_system_event.remove(callback_handler)
 
-    def fire_system_event_callback(self, system_event: HmSystemEvent, **kwargs: Any) -> None:
+    def fire_system_event_callback(self, system_event: SystemEvent, **kwargs: Any) -> None:
         """
         Fire system_event callback in central.
 

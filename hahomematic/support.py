@@ -21,7 +21,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
-    HmSysvarType,
+    SysvarType,
 )
 from hahomematic.exceptions import HaHomematicException
 
@@ -77,15 +77,15 @@ def check_or_create_directory(directory: str) -> bool:
     return True
 
 
-def parse_sys_var(data_type: HmSysvarType | None, raw_value: Any) -> Any:
+def parse_sys_var(data_type: SysvarType | None, raw_value: Any) -> Any:
     """Parse system variables to fix type."""
     if not data_type:
         return raw_value
-    if data_type in (HmSysvarType.ALARM, HmSysvarType.LOGIC):
+    if data_type in (SysvarType.ALARM, SysvarType.LOGIC):
         return to_bool(raw_value)
-    if data_type == HmSysvarType.HM_FLOAT:
+    if data_type == SysvarType.HM_FLOAT:
         return float(raw_value)
-    if data_type in (HmSysvarType.HM_INTEGER, HmSysvarType.LIST):
+    if data_type in (SysvarType.HM_INTEGER, SysvarType.LIST):
         return int(raw_value)
     return raw_value
 

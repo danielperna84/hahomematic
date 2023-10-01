@@ -22,17 +22,17 @@ from hahomematic.const import (
     INIT_DATETIME,
     NO_CACHE_ENTRY,
     RELEVANT_INIT_PARAMETERS,
-    HmCallSource,
-    HmDataOperationResult,
-    HmDescription,
-    HmDeviceFirmwareState,
-    HmEvent,
-    HmEventType,
-    HmForcedDeviceAvailability,
-    HmInterfaceName,
-    HmManufacturer,
-    HmParamsetKey,
-    HmProductGroup,
+    CallSource,
+    DataOperationResult,
+    Description,
+    DeviceFirmwareState,
+    EventType,
+    ForcedDeviceAvailability,
+    InterfaceName,
+    Manufacturer,
+    Parameter,
+    ParamsetKey,
+    ProductGroup,
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.platforms.custom import definition as hmed, entity as hmce
@@ -71,21 +71,21 @@ class HmDevice(PayloadMixin):
         self.generic_events: Final[dict[tuple[str, str], GenericEvent]] = {}
         self.wrapper_entities: Final[dict[tuple[str, str], WrapperEntity]] = {}
         self._last_update: datetime = INIT_DATETIME
-        self._forced_availability: HmForcedDeviceAvailability = HmForcedDeviceAvailability.NOT_SET
+        self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
         self._update_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
         self._device_type: Final = str(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=HmDescription.TYPE,
+                parameter=Description.TYPE,
             )
         )
         self._sub_type: Final = str(
             central.device_descriptions.get_device_parameter(
                 interface_id=interface_id,
                 device_address=device_address,
-                parameter=HmDescription.SUBTYPE,
+                parameter=Description.SUBTYPE,
             )
         )
         self._manufacturer = self._identify_manufacturer()
@@ -119,7 +119,7 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
-                parameter=HmDescription.AVAILABLE_FIRMWARE,
+                parameter=Description.AVAILABLE_FIRMWARE,
             )
             or None
         )
@@ -127,60 +127,60 @@ class HmDevice(PayloadMixin):
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
-                parameter=HmDescription.FIRMWARE,
+                parameter=Description.FIRMWARE,
             )
         )
 
         try:
-            self._firmware_update_state = HmDeviceFirmwareState(
+            self._firmware_update_state = DeviceFirmwareState(
                 str(
                     self.central.device_descriptions.get_device_parameter(
                         interface_id=self._interface_id,
                         device_address=self._device_address,
-                        parameter=HmDescription.FIRMWARE_UPDATE_STATE,
+                        parameter=Description.FIRMWARE_UPDATE_STATE,
                     )
                 )
             )
         except ValueError:
-            self._firmware_update_state = HmDeviceFirmwareState.UP_TO_DATE
+            self._firmware_update_state = DeviceFirmwareState.UP_TO_DATE
 
         self._firmware_updatable = bool(
             self.central.device_descriptions.get_device_parameter(
                 interface_id=self._interface_id,
                 device_address=self._device_address,
-                parameter=HmDescription.FIRMWARE_UPDATABLE,
+                parameter=Description.FIRMWARE_UPDATABLE,
             )
         )
 
-    def _identify_manufacturer(self) -> HmManufacturer:
+    def _identify_manufacturer(self) -> Manufacturer:
         """Identify the manufacturer of a device."""
         if self.device_type.lower().startswith("hb"):
-            return HmManufacturer.HB
+            return Manufacturer.HB
         if self.device_type.lower().startswith("alpha"):
-            return HmManufacturer.MOEHLENHOFF
-        return HmManufacturer.EQ3
+            return Manufacturer.MOEHLENHOFF
+        return Manufacturer.EQ3
 
-    def _identify_product_group(self) -> HmProductGroup:
+    def _identify_product_group(self) -> ProductGroup:
         """Identify the product group of the homematic device."""
-        if self.interface == HmInterfaceName.HMIP_RF:
+        if self.interface == InterfaceName.HMIP_RF:
             l_device_type = self.device_type.lower()
             if l_device_type.startswith("hmipw"):
-                return HmProductGroup.HMIPW
+                return ProductGroup.HMIPW
             if l_device_type.startswith("hmip"):
-                return HmProductGroup.HMIP
-        if self.interface == HmInterfaceName.BIDCOS_WIRED:
-            return HmProductGroup.HMW
-        if self.interface == HmInterfaceName.BIDCOS_RF:
-            return HmProductGroup.HM
-        if self.interface == HmInterfaceName.VIRTUAL_DEVICES:
-            return HmProductGroup.VIRTUAL
-        return HmProductGroup.UNKNOWN
+                return ProductGroup.HMIP
+        if self.interface == InterfaceName.BIDCOS_WIRED:
+            return ProductGroup.HMW
+        if self.interface == InterfaceName.BIDCOS_RF:
+            return ProductGroup.HM
+        if self.interface == InterfaceName.VIRTUAL_DEVICES:
+            return ProductGroup.VIRTUAL
+        return ProductGroup.UNKNOWN
 
     @value_property
     def available(self) -> bool:
         """Return the availability of the device."""
-        if self._forced_availability != HmForcedDeviceAvailability.NOT_SET:
-            return self._forced_availability == HmForcedDeviceAvailability.FORCE_TRUE
+        if self._forced_availability != ForcedDeviceAvailability.NOT_SET:
+            return self._forced_availability == ForcedDeviceAvailability.FORCE_TRUE
         if (un_reach := self._e_unreach) is None:
             un_reach = self._e_sticky_un_reach
         if un_reach is not None and un_reach.value is not None:
@@ -220,7 +220,7 @@ class HmDevice(PayloadMixin):
         return self._firmware_updatable
 
     @config_property
-    def firmware_update_state(self) -> HmDeviceFirmwareState:
+    def firmware_update_state(self) -> DeviceFirmwareState:
         """Return the firmware update state of the device."""
         return self._firmware_update_state
 
@@ -255,7 +255,7 @@ class HmDevice(PayloadMixin):
         return self._name
 
     @config_property
-    def product_group(self) -> HmProductGroup:
+    def product_group(self) -> ProductGroup:
         """Return the product group of the device."""
         return self._product_group
 
@@ -277,17 +277,17 @@ class HmDevice(PayloadMixin):
     @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity."""
-        return self.generic_entities.get((f"{self._device_address}:0", HmEvent.UN_REACH))
+        return self.generic_entities.get((f"{self._device_address}:0", Parameter.UN_REACH))
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity."""
-        return self.generic_entities.get((f"{self._device_address}:0", HmEvent.STICKY_UN_REACH))
+        return self.generic_entities.get((f"{self._device_address}:0", Parameter.STICKY_UN_REACH))
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity."""
-        return self.generic_entities.get((f"{self._device_address}:0", HmEvent.CONFIG_PENDING))
+        return self.generic_entities.get((f"{self._device_address}:0", Parameter.CONFIG_PENDING))
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
@@ -374,7 +374,7 @@ class HmDevice(PayloadMixin):
         all_entities.extend(self.wrapper_entities.values())
         return all_entities
 
-    def get_channel_events(self, event_type: HmEventType) -> dict[int, list[GenericEvent]]:
+    def get_channel_events(self, event_type: EventType) -> dict[int, list[GenericEvent]]:
         """Return a list of specific events of a channel."""
         event_dict: dict[int, list[GenericEvent]] = {}
         if event_type not in ENTITY_EVENTS:
@@ -395,7 +395,7 @@ class HmDevice(PayloadMixin):
         """Return a generic event from device."""
         return self.generic_events.get((channel_address, parameter))
 
-    def set_forced_availability(self, forced_availability: HmForcedDeviceAvailability) -> None:
+    def set_forced_availability(self, forced_availability: ForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
         if self._forced_availability != forced_availability:
             self._forced_availability = forced_availability
@@ -511,7 +511,7 @@ class ValueCache:
                     channel_address=entity.channel_address,
                     paramset_key=entity.paramset_key,
                     parameter=entity.parameter,
-                    call_source=HmCallSource.HM_INIT,
+                    call_source=CallSource.HM_INIT,
                 )
                 entity.update_value(value=value)
         except BaseHomematicException as bhe:
@@ -528,9 +528,9 @@ class ValueCache:
         for entity in self._device.generic_entities.values():
             if (
                 entity.channel_no == 0
-                and entity.paramset_key == HmParamsetKey.VALUES
+                and entity.paramset_key == ParamsetKey.VALUES
                 and entity.parameter in RELEVANT_INIT_PARAMETERS
-            ) or entity.paramset_key == HmParamsetKey.MASTER:
+            ) or entity.paramset_key == ParamsetKey.MASTER:
                 entities.append(entity)
         return set(entities)
 
@@ -542,7 +542,7 @@ class ValueCache:
                     channel_address=event.channel_address,
                     paramset_key=event.paramset_key,
                     parameter=event.parameter,
-                    call_source=HmCallSource.HM_INIT,
+                    call_source=CallSource.HM_INIT,
                 )
                 event.update_value(value=value)
         except BaseHomematicException as bhe:
@@ -566,7 +566,7 @@ class ValueCache:
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        call_source: HmCallSource,
+        call_source: CallSource,
     ) -> Any:
         """Load data."""
         async with self._sema_get_or_load_value:
@@ -631,7 +631,7 @@ class ValueCache:
         """Load data from caches."""
         # Try to get data from central cache
         if (
-            paramset_key == HmParamsetKey.VALUES
+            paramset_key == ParamsetKey.VALUES
             and (
                 global_value := self._device.central.data_cache.get_data(
                     interface=self._device.interface,
@@ -676,7 +676,7 @@ class _DefinitionExporter:
         paramset_descriptions: dict[str, Any] = await self._client.get_all_paramset_descriptions(
             list(device_descriptions.values())
         )
-        device_type = device_descriptions[self._device_address][HmDescription.TYPE]
+        device_type = device_descriptions[self._device_address][Description.TYPE]
         filename = f"{device_type}.json"
 
         # anonymize device_descriptions
@@ -685,17 +685,17 @@ class _DefinitionExporter:
             if device_description == {}:
                 continue  # pragma: no cover
             new_device_description = copy(device_description)
-            new_device_description[HmDescription.ADDRESS] = self._anonymize_address(
-                address=new_device_description[HmDescription.ADDRESS]
+            new_device_description[Description.ADDRESS] = self._anonymize_address(
+                address=new_device_description[Description.ADDRESS]
             )
-            if new_device_description.get(HmDescription.PARENT):
-                new_device_description[HmDescription.PARENT] = new_device_description[
-                    HmDescription.ADDRESS
+            if new_device_description.get(Description.PARENT):
+                new_device_description[Description.PARENT] = new_device_description[
+                    Description.ADDRESS
                 ].split(":")[0]
-            elif new_device_description.get(HmDescription.CHILDREN):
-                new_device_description[HmDescription.CHILDREN] = [
+            elif new_device_description.get(Description.CHILDREN):
+                new_device_description[Description.CHILDREN] = [
                     self._anonymize_address(a)
-                    for a in new_device_description[HmDescription.CHILDREN]
+                    for a in new_device_description[Description.CHILDREN]
                 ]
             anonymize_device_descriptions.append(new_device_description)
 
@@ -725,12 +725,12 @@ class _DefinitionExporter:
         address_parts[0] = self._random_id
         return ":".join(address_parts)
 
-    async def _save(self, file_dir: str, filename: str, data: Any) -> HmDataOperationResult:
+    async def _save(self, file_dir: str, filename: str, data: Any) -> DataOperationResult:
         """Save file to disk."""
 
-        def _save() -> HmDataOperationResult:
+        def _save() -> DataOperationResult:
             if not check_or_create_directory(file_dir):
-                return HmDataOperationResult.NO_SAVE  # pragma: no cover
+                return DataOperationResult.NO_SAVE  # pragma: no cover
             with open(
                 file=os.path.join(file_dir, filename),
                 mode="wb",
@@ -738,6 +738,6 @@ class _DefinitionExporter:
                 fptr.write(
                     orjson.dumps(data, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS)
                 )
-            return HmDataOperationResult.SAVE_SUCCESS
+            return DataOperationResult.SAVE_SUCCESS
 
         return await self._central.async_add_executor_job(_save)

@@ -22,15 +22,15 @@ from hahomematic.const import (
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     NO_CACHE_ENTRY,
-    PARAM_CHANNEL_OPERATION_MODE,
-    HmCallSource,
-    HmDescription,
-    HmEntityUsage,
-    HmFlag,
-    HmOperations,
-    HmParamsetKey,
+    CallSource,
+    Description,
+    EntityUsage,
+    Flag,
     HmPlatform,
-    HmType,
+    Operations,
+    Parameter,
+    ParameterType,
+    ParamsetKey,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
@@ -125,17 +125,17 @@ class CallbackEntity(ABC):
         return self._unique_identifier
 
     @config_property
-    def usage(self) -> HmEntityUsage:
+    def usage(self) -> EntityUsage:
         """Return the entity usage."""
-        return HmEntityUsage.ENTITY
+        return EntityUsage.ENTITY
 
     @config_property
     def enabled_default(self) -> bool:
         """Return, if entity should be enabled based on usage attribute."""
         return self.usage in (
-            HmEntityUsage.CE_PRIMARY,
-            HmEntityUsage.ENTITY,
-            HmEntityUsage.EVENT,
+            EntityUsage.CE_PRIMARY,
+            EntityUsage.ENTITY,
+            EntityUsage.EVENT,
         )
 
     def register_update_callback(self, update_callback: Callable) -> None:
@@ -200,7 +200,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
             interface_id=device.interface_id
         )
 
-        self._usage: HmEntityUsage = self._get_entity_usage()
+        self._usage: EntityUsage = self._get_entity_usage()
         entity_name_data: Final = self._get_entity_name()
         self._channel_name: Final = entity_name_data.channel_name
         self._full_name: Final = entity_name_data.full_name
@@ -257,11 +257,11 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._name
 
     @config_property
-    def usage(self) -> HmEntityUsage:
+    def usage(self) -> EntityUsage:
         """Return the entity usage."""
         return self._usage
 
-    def set_usage(self, usage: HmEntityUsage) -> None:
+    def set_usage(self, usage: EntityUsage) -> None:
         """Set the entity usage."""
         self._usage = usage
 
@@ -273,7 +273,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         )
 
     @abstractmethod
-    async def load_entity_value(self, call_source: HmCallSource) -> None:
+    async def load_entity_value(self, call_source: CallSource) -> None:
         """Init the entity data."""
 
     @abstractmethod
@@ -281,7 +281,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Generate the name for the entity."""
 
     @abstractmethod
-    def _get_entity_usage(self) -> HmEntityUsage:
+    def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
 
     def __str__(self) -> str:
@@ -328,21 +328,21 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
         """Assign parameter data to instance variables."""
-        self._type: HmType = HmType(parameter_data[HmDescription.TYPE])
+        self._type: ParameterType = ParameterType(parameter_data[Description.TYPE])
         self._value_list: tuple[str, ...] | None = None
-        if HmDescription.VALUE_LIST in parameter_data:
-            self._value_list = tuple(parameter_data[HmDescription.VALUE_LIST])
-        self._max: ParameterT = self._convert_value(parameter_data[HmDescription.MAX])
-        self._min: ParameterT = self._convert_value(parameter_data[HmDescription.MIN])
+        if Description.VALUE_LIST in parameter_data:
+            self._value_list = tuple(parameter_data[Description.VALUE_LIST])
+        self._max: ParameterT = self._convert_value(parameter_data[Description.MAX])
+        self._min: ParameterT = self._convert_value(parameter_data[Description.MIN])
         self._default: ParameterT = self._convert_value(
-            parameter_data.get(HmDescription.DEFAULT, self._min)
+            parameter_data.get(Description.DEFAULT, self._min)
         )
-        flags: int = parameter_data[HmDescription.FLAGS]
-        self._visible: bool = flags & HmFlag.VISIBLE == HmFlag.VISIBLE
-        self._service: bool = flags & HmFlag.SERVICE == HmFlag.SERVICE
-        self._operations: int = parameter_data[HmDescription.OPERATIONS]
-        self._special: dict[str, Any] | None = parameter_data.get(HmDescription.SPECIAL)
-        self._raw_unit: str | None = parameter_data.get(HmDescription.UNIT)
+        flags: int = parameter_data[Description.FLAGS]
+        self._visible: bool = flags & Flag.VISIBLE == Flag.VISIBLE
+        self._service: bool = flags & Flag.SERVICE == Flag.SERVICE
+        self._operations: int = parameter_data[Description.OPERATIONS]
+        self._special: dict[str, Any] | None = parameter_data.get(Description.SPECIAL)
+        self._raw_unit: str | None = parameter_data.get(Description.UNIT)
         self._unit: str | None = self._fix_unit(raw_unit=self._raw_unit)
 
     @config_property
@@ -351,7 +351,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._default
 
     @config_property
-    def hmtype(self) -> HmType:
+    def hmtype(self) -> ParameterType:
         """Return the HomeMatic type."""
         return self._type
 
@@ -393,7 +393,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def is_readable(self) -> bool:
         """Return, if entity is readable."""
-        return bool(self._operations & HmOperations.READ)
+        return bool(self._operations & Operations.READ)
 
     @value_property
     def is_valid(self) -> bool:
@@ -403,7 +403,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def is_writeable(self) -> bool:
         """Return, if entity is writeable."""
-        return bool(self._operations & HmOperations.WRITE)
+        return bool(self._operations & Operations.WRITE)
 
     @value_property
     def last_update(self) -> datetime:
@@ -423,7 +423,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def supports_events(self) -> bool:
         """Return, if entity is supports events."""
-        return bool(self._operations & HmOperations.EVENT)
+        return bool(self._operations & Operations.EVENT)
 
     @config_property
     def unit(self) -> str | None:
@@ -444,7 +444,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
         cop: BaseParameterEntity | None = self.device.generic_entities.get(
-            (self._channel_address, PARAM_CHANNEL_OPERATION_MODE)
+            (self._channel_address, Parameter.CHANNEL_OPERATION_MODE)
         )
         if cop and cop.value:
             return str(cop.value)
@@ -476,7 +476,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
 
-    async def load_entity_value(self, call_source: HmCallSource) -> None:
+    async def load_entity_value(self, call_source: CallSource) -> None:
         """Init the entity data."""
         if hms.updated_within_seconds(last_update=self._last_update):
             return
@@ -523,7 +523,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             return None  # type: ignore[return-value]
         try:
             if (
-                self._type == HmType.BOOL
+                self._type == ParameterType.BOOL
                 and self._value_list is not None
                 and value is not None
                 and isinstance(value, str)
@@ -590,13 +590,13 @@ class CallParameterCollector:
                 for parameter, value in paramset.items():
                     if not await self._client.set_value(
                         channel_address=channel_address,
-                        paramset_key=HmParamsetKey.VALUES,
+                        paramset_key=ParamsetKey.VALUES,
                         parameter=parameter,
                         value=value,
                     ):
                         return False  # pragma: no cover
             elif not await self._client.put_paramset(
-                address=channel_address, paramset_key=HmParamsetKey.VALUES, value=paramset
+                address=channel_address, paramset_key=ParamsetKey.VALUES, value=paramset
             ):
                 return False  # pragma: no cover
         return True

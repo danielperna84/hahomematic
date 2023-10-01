@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.siren import CeIpSiren, CeIpSirenSmoke
 
 from tests import const, helper
@@ -24,7 +24,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
     """Test CeIpSiren."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     siren: CeIpSiren = cast(CeIpSiren, helper.get_prepared_custom_entity(central, "VCU8249617", 3))
-    assert siren.usage == HmEntityUsage.CE_PRIMARY
+    assert siren.usage == EntityUsage.CE_PRIMARY
 
     assert siren.is_on is False
     central.event(const.INTERFACE_ID, "VCU8249617:3", "ACOUSTIC_ALARM_ACTIVE", 1)
@@ -107,7 +107,7 @@ async def test_ceipsirensmoke(factory: helper.Factory) -> None:
     siren: CeIpSirenSmoke = cast(
         CeIpSirenSmoke, helper.get_prepared_custom_entity(central, "VCU2822385", 1)
     )
-    assert siren.usage == HmEntityUsage.CE_PRIMARY
+    assert siren.usage == EntityUsage.CE_PRIMARY
 
     assert siren.is_on is False
     central.event(const.INTERFACE_ID, "VCU2822385:1", "SMOKE_DETECTOR_ALARM_STATUS", 1)

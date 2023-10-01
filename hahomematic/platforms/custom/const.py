@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Final
 
 
-class HmEntityDefinition(StrEnum):
+class EntityDefinition(StrEnum):
     """Enum for entity definitions."""
 
     IP_COVER = "IPCover"
