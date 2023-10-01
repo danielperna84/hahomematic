@@ -348,7 +348,7 @@ class ParameterType(StrEnum):
     STRING = "STRING"
 
 
-AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
+PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.BINARY_SENSOR,
     HmPlatform.BUTTON,
     HmPlatform.CLIMATE,
@@ -365,7 +365,7 @@ AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.UPDATE,
 )
 
-AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
+HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.HUB_BINARY_SENSOR,
     HmPlatform.HUB_BUTTON,
     HmPlatform.HUB_NUMBER,
