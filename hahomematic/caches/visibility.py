@@ -23,9 +23,25 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 _FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 
+
 _PARAM_DEVICE_OPERATION_MODE: Final = "DEVICE_OPERATION_MODE"
 _PARAM_TEMPERATURE_MAXIMUM: Final = "TEMPERATURE_MAXIMUM"
 _PARAM_TEMPERATURE_MINIMUM: Final = "TEMPERATURE_MINIMUM"
+_PARAM_DIRECTION: Final = "DIRECTION"
+_PARAM_WORKING: Final = "WORKING"
+_PARAM_ERROR: Final = "ERROR"
+_PARAM_LOW_BAT: Final = "LOW_BAT"
+_PARAM_LOWBAT: Final = "LOWBAT"
+_PARAM_OPERATING_VOLTAGE = "OPERATING_VOLTAGE"
+_PARAM_CURRENT_ILLUMINATION = "CURRENT_ILLUMINATION"
+_PARAM_STATUS = "STATUS"
+_PARAM_LED_STATUS = "LED_STATUS"
+_PARAM_SMOKE_DETECTOR_ALARM_STATUS = "SMOKE_DETECTOR_ALARM_STATUS"
+_PARAM_ERROR_JAMMED = "ERROR_JAMMED"
+_PARAM_VALVE_STATE = "VALVE_STATE"
+_PARAM_ACTIVITY_STATE = "ACTIVITY_STATE"
+_PARAM_SECTION = "SECTION"
+_PARAM_LEVEL = "LEVEL"
 
 # Define which additional parameters from MASTER paramset should be created as entity.
 # By default these are also on the _HIDDEN_PARAMETERS, which prevents these entities
@@ -65,7 +81,7 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[dict[str, tuple[tuple[int, ...], tup
 
 # Some parameters are marked as INTERNAL in the paramset and not considered by default,
 # but some are required and should be added here.
-ALLOWED_INTERNAL_PARAMETERS: Final = ("DIRECTION",)
+ALLOWED_INTERNAL_PARAMETERS: Final = (_PARAM_DIRECTION,)
 
 
 # Ignore events for some devices
@@ -84,10 +100,10 @@ _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
     PARAM_CHANNEL_OPERATION_MODE,
     _PARAM_TEMPERATURE_MAXIMUM,
     _PARAM_TEMPERATURE_MINIMUM,
-    "ACTIVITY_STATE",
-    "DIRECTION",
-    "SECTION",
-    "WORKING",
+    _PARAM_ACTIVITY_STATE,
+    _PARAM_DIRECTION,
+    _PARAM_ACTIVITY_STATE,
+    _PARAM_WORKING,
 )
 
 # Parameters within the VALUES paramset for which we don't create entities.
@@ -192,25 +208,25 @@ _IGNORED_PARAMETERS_WILDCARDS_START: Final[tuple[str, ...]] = (
 
 # Parameters within the paramsets for which we create entities.
 _UN_IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
-    "HmIP-DLD": ("ERROR_JAMMED",),
-    "HmIP-SWSD": ("SMOKE_DETECTOR_ALARM_STATUS",),
-    "HM-OU-LED16": ("LED_STATUS",),
-    "HM-Sec-Win": ("DIRECTION", "WORKING", "ERROR", "STATUS"),
-    "HM-Sec-Key": ("DIRECTION", "ERROR"),
+    "HmIP-DLD": (_PARAM_ERROR_JAMMED,),
+    "HmIP-SWSD": (_PARAM_SMOKE_DETECTOR_ALARM_STATUS,),
+    "HM-OU-LED16": (_PARAM_LED_STATUS,),
+    "HM-Sec-Win": (_PARAM_DIRECTION, _PARAM_WORKING, _PARAM_ERROR, _PARAM_STATUS),
+    "HM-Sec-Key": (_PARAM_DIRECTION, _PARAM_ERROR),
     "HmIP-PCBS-BAT": (
-        "OPERATING_VOLTAGE",
-        "LOW_BAT",
+        _PARAM_OPERATING_VOLTAGE,
+        _PARAM_LOW_BAT,
     ),  # To override ignore for HmIP-PCBS
 }
 
 # Parameters by device within the VALUES paramset for which we don't create entities.
 _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
-    "CURRENT_ILLUMINATION": (
+    _PARAM_CURRENT_ILLUMINATION: (
         "HmIP-SMI",
         "HmIP-SMO",
         "HmIP-SPI",
     ),
-    "LOWBAT": (
+    _PARAM_LOWBAT: (
         "HM-LC-Sw1-DR",
         "HM-LC-Sw1-FM",
         "HM-LC-Sw1-PCB",
@@ -221,8 +237,8 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
         "HM-LC-Sw4-DR",
         "HM-SwI-3-FM",
     ),
-    "LOW_BAT": ("HmIP-BWTH", "HmIP-PCBS"),
-    "OPERATING_VOLTAGE": (
+    _PARAM_LOW_BAT: ("HmIP-BWTH", "HmIP-PCBS"),
+    _PARAM_OPERATING_VOLTAGE: (
         "ELV-SH-BS2",
         "HmIP-BDT",
         "HmIP-BROLL",
@@ -241,16 +257,16 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
         "HmIP-PS",
         "HmIP-SFD",
     ),
-    "VALVE_STATE": ("HmIPW-FALMOT-C12", "HmIP-FALMOT-C12"),
+    _PARAM_VALVE_STATE: ("HmIPW-FALMOT-C12", "HmIP-FALMOT-C12"),
 }
 
 # Some devices have parameters on multiple channels,
 # but we want to use it only from a certain channel.
-_ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {"LOWBAT": 0}
+_ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {_PARAM_LOWBAT: 0}
 
 # Entities that should be wrapped in a new entity on a new platform.
 _WRAP_ENTITY: Final[dict[str | tuple[str, ...], dict[str, HmPlatform]]] = {
-    ("HmIP-eTRV", "HmIP-HEATING"): {"LEVEL": HmPlatform.SENSOR},
+    ("HmIP-eTRV", "HmIP-HEATING"): {_PARAM_LEVEL: HmPlatform.SENSOR},
 }
 
 

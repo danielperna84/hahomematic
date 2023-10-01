@@ -6,9 +6,7 @@ from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
 from typing import Final
 
-DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = (
-    15  # check if connection is available via rpc ping every:
-)
+DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = 15  # check if connection is available via rpc ping
 DEFAULT_ENCODING: Final = "UTF-8"
 DEFAULT_JSON_SESSION_AGE: Final = 90
 DEFAULT_PING_PONG_MISMATCH_COUNT: Final = 10
@@ -25,7 +23,6 @@ REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marke
 
 DEFAULT_DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
 DEFAULT_PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
-
 
 # Password can be empty.
 # Allowed characters: A-Z, a-z, 0-9, .!$():;#-
