@@ -10,10 +10,10 @@ from hahomematic import central as hmcu, support as hms
 from hahomematic.const import (
     CLICK_EVENTS,
     DEFAULT_ENCODING,
-    HmEvent,
-    HmParam,
-    HmParamsetKey,
-    HmPlatform,
+    Event,
+    Parameter,
+    ParamsetKey,
+    Platform,
 )
 from hahomematic.platforms.custom.definition import get_required_parameters
 from hahomematic.platforms.generic import entity as hmge
@@ -32,37 +32,37 @@ _FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[dict[str, tuple[tuple[int, ...], tuple[str, ...]]]] = {
     "HmIP-DRBLI4": (
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
-        (HmParam.CHANNEL_OPERATION_MODE,),
+        (Parameter.CHANNEL_OPERATION_MODE,),
     ),
-    "HmIP-DRDI3": ((1, 2, 3), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-DRSI1": ((1,), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-DRSI4": ((1, 2, 3, 4), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-DSD-PCB": ((1,), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-FCI1": ((1,), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-FCI6": (tuple(range(1, 7)), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-FSI16": ((1,), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-MIO16-PCB": ((13, 14, 15, 16), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-MOD-RC8": (tuple(range(1, 9)), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIP-RGBW": ((0,), (HmParam.DEVICE_OPERATION_MODE,)),
-    "HmIPW-DRBL4": ((1, 5, 9, 13), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIPW-DRI16": (tuple(range(1, 17)), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIPW-DRI32": (tuple(range(1, 33)), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "HmIPW-FIO6": (tuple(range(1, 7)), (HmParam.CHANNEL_OPERATION_MODE,)),
-    "ALPHA-IP-RBG": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HM-CC-RT-DN": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HM-CC-VG-1": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HmIP-BWTH": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HmIP-HEATING": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HmIP-STH": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HmIP-WTH": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HmIP-eTRV": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HmIPW-STH": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
-    "HmIPW-WTH": ((1,), (HmParam.TEMPERATURE_MAXIMUM, HmParam.TEMPERATURE_MINIMUM)),
+    "HmIP-DRDI3": ((1, 2, 3), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-DRSI1": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-DRSI4": ((1, 2, 3, 4), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-DSD-PCB": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-FCI1": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-FCI6": (tuple(range(1, 7)), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-FSI16": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-MIO16-PCB": ((13, 14, 15, 16), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-MOD-RC8": (tuple(range(1, 9)), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-RGBW": ((0,), (Parameter.DEVICE_OPERATION_MODE,)),
+    "HmIPW-DRBL4": ((1, 5, 9, 13), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIPW-DRI16": (tuple(range(1, 17)), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIPW-DRI32": (tuple(range(1, 33)), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIPW-FIO6": (tuple(range(1, 7)), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "ALPHA-IP-RBG": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HM-CC-RT-DN": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HM-CC-VG-1": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-BWTH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-HEATING": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-WTH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-eTRV": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIPW-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIPW-WTH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
 }
 
 # Some parameters are marked as INTERNAL in the paramset and not considered by default,
 # but some are required and should be added here.
-ALLOWED_INTERNAL_PARAMETERS: Final = (HmParam.DIRECTION,)
+ALLOWED_INTERNAL_PARAMETERS: Final = (Parameter.DIRECTION,)
 
 # Ignore events for some devices
 _IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[dict[str, tuple[str, ...]]] = {
@@ -71,18 +71,18 @@ _IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[dict[str, tuple[str, ...]]] = {
 
 # Entities that will be created, but should be hidden.
 _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
-    HmEvent.CONFIG_PENDING,
-    HmEvent.ERROR,
-    HmEvent.STICKY_UN_REACH,
-    HmEvent.UN_REACH,
-    HmEvent.UPDATE_PENDING,
-    HmParam.ACTIVITY_STATE,
-    HmParam.CHANNEL_OPERATION_MODE,
-    HmParam.DIRECTION,
-    HmParam.SECTION,
-    HmParam.TEMPERATURE_MAXIMUM,
-    HmParam.TEMPERATURE_MINIMUM,
-    HmParam.WORKING,
+    Event.CONFIG_PENDING,
+    Event.ERROR,
+    Event.STICKY_UN_REACH,
+    Event.UN_REACH,
+    Event.UPDATE_PENDING,
+    Parameter.ACTIVITY_STATE,
+    Parameter.CHANNEL_OPERATION_MODE,
+    Parameter.DIRECTION,
+    Parameter.SECTION,
+    Parameter.TEMPERATURE_MAXIMUM,
+    Parameter.TEMPERATURE_MINIMUM,
+    Parameter.WORKING,
 )
 
 # Parameters within the VALUES paramset for which we don't create entities.
@@ -187,25 +187,25 @@ _IGNORED_PARAMETERS_WILDCARDS_START: Final[tuple[str, ...]] = (
 
 # Parameters within the paramsets for which we create entities.
 _UN_IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
-    "HmIP-DLD": (HmParam.ERROR_JAMMED,),
-    "HmIP-SWSD": (HmParam.SMOKE_DETECTOR_ALARM_STATUS,),
-    "HM-OU-LED16": (HmParam.LED_STATUS,),
-    "HM-Sec-Win": (HmParam.DIRECTION, HmParam.WORKING, HmParam.ERROR, HmParam.STATUS),
-    "HM-Sec-Key": (HmParam.DIRECTION, HmParam.ERROR),
+    "HmIP-DLD": (Parameter.ERROR_JAMMED,),
+    "HmIP-SWSD": (Parameter.SMOKE_DETECTOR_ALARM_STATUS,),
+    "HM-OU-LED16": (Parameter.LED_STATUS,),
+    "HM-Sec-Win": (Parameter.DIRECTION, Parameter.WORKING, Parameter.ERROR, Parameter.STATUS),
+    "HM-Sec-Key": (Parameter.DIRECTION, Parameter.ERROR),
     "HmIP-PCBS-BAT": (
-        HmParam.OPERATING_VOLTAGE,
-        HmParam.LOW_BAT,
+        Parameter.OPERATING_VOLTAGE,
+        Parameter.LOW_BAT,
     ),  # To override ignore for HmIP-PCBS
 }
 
 # Parameters by device within the VALUES paramset for which we don't create entities.
 _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
-    HmParam.CURRENT_ILLUMINATION: (
+    Parameter.CURRENT_ILLUMINATION: (
         "HmIP-SMI",
         "HmIP-SMO",
         "HmIP-SPI",
     ),
-    HmParam.LOWBAT: (
+    Parameter.LOWBAT: (
         "HM-LC-Sw1-DR",
         "HM-LC-Sw1-FM",
         "HM-LC-Sw1-PCB",
@@ -216,8 +216,8 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
         "HM-LC-Sw4-DR",
         "HM-SwI-3-FM",
     ),
-    HmParam.LOW_BAT: ("HmIP-BWTH", "HmIP-PCBS"),
-    HmParam.OPERATING_VOLTAGE: (
+    Parameter.LOW_BAT: ("HmIP-BWTH", "HmIP-PCBS"),
+    Parameter.OPERATING_VOLTAGE: (
         "ELV-SH-BS2",
         "HmIP-BDT",
         "HmIP-BROLL",
@@ -236,16 +236,16 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
         "HmIP-PS",
         "HmIP-SFD",
     ),
-    HmParam.VALVE_STATE: ("HmIPW-FALMOT-C12", "HmIP-FALMOT-C12"),
+    Parameter.VALVE_STATE: ("HmIPW-FALMOT-C12", "HmIP-FALMOT-C12"),
 }
 
 # Some devices have parameters on multiple channels,
 # but we want to use it only from a certain channel.
-_ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {HmParam.LOWBAT: 0}
+_ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {Parameter.LOWBAT: 0}
 
 # Entities that should be wrapped in a new entity on a new platform.
-_WRAP_ENTITY: Final[dict[str | tuple[str, ...], dict[str, HmPlatform]]] = {
-    ("HmIP-eTRV", "HmIP-HEATING"): {HmParam.LEVEL: HmPlatform.SENSOR},
+_WRAP_ENTITY: Final[dict[str | tuple[str, ...], dict[str, Platform]]] = {
+    ("HmIP-eTRV", "HmIP-HEATING"): {Parameter.LEVEL: Platform.SENSOR},
 }
 
 
@@ -263,8 +263,8 @@ class ParameterVisibilityCache:
         self._raw_un_ignore_list: Final[set[str]] = set(central.config.un_ignore_list or set())
         # paramset_key, parameter
         self._un_ignore_parameters_general: Final[dict[str, set[str]]] = {
-            HmParamsetKey.MASTER: set(),
-            HmParamsetKey.VALUES: set(),
+            ParamsetKey.MASTER: set(),
+            ParamsetKey.VALUES: set(),
         }
         self._ignore_parameters_by_device_lower: Final[dict[str, tuple[str, ...]]] = {
             parameter: tuple(device_type.lower() for device_type in device_types)
@@ -316,10 +316,10 @@ class ParameterVisibilityCache:
                 ):
                     self._un_ignore_parameters_by_device_paramset_key[device_type_l][
                         channel_no
-                    ] = {HmParamsetKey.MASTER: set()}
+                    ] = {ParamsetKey.MASTER: set()}
                 for parameter in parameters:
                     self._un_ignore_parameters_by_device_paramset_key[device_type_l][channel_no][
-                        HmParamsetKey.MASTER
+                        ParamsetKey.MASTER
                     ].add(parameter)
 
     def get_un_ignore_parameters(
@@ -356,7 +356,7 @@ class ParameterVisibilityCache:
         """Check if parameter can be ignored."""
         device_type_l = device_type.lower()
 
-        if paramset_key == HmParamsetKey.VALUES:
+        if paramset_key == ParamsetKey.VALUES:
             if self.parameter_is_un_ignored(
                 device_type=device_type,
                 channel_no=channel_no,
@@ -391,10 +391,10 @@ class ParameterVisibilityCache:
                 accept_channel := _ACCEPT_PARAMETER_ONLY_ON_CHANNEL.get(parameter)
             ) is not None and accept_channel != channel_no:
                 return True
-        if paramset_key == HmParamsetKey.MASTER:
+        if paramset_key == ParamsetKey.MASTER:
             if parameter in self._custom_un_ignore_parameters_by_device_paramset_key.get(
                 device_type_l, {}
-            ).get(channel_no, {}).get(HmParamsetKey.MASTER, []):
+            ).get(channel_no, {}).get(ParamsetKey.MASTER, []):
                 return False  # pragma: no cover
 
             dt_short = list(
@@ -405,7 +405,7 @@ class ParameterVisibilityCache:
             )
             if dt_short and parameter not in self._un_ignore_parameters_by_device_paramset_key.get(
                 dt_short[0], {}
-            ).get(channel_no, {}).get(HmParamsetKey.MASTER, []):
+            ).get(channel_no, {}).get(ParamsetKey.MASTER, []):
                 return True
 
         return False
@@ -533,7 +533,7 @@ class ParameterVisibilityCache:
                 paramset_key
             ].add(parameter)
 
-            if paramset_key == HmParamsetKey.MASTER:
+            if paramset_key == ParamsetKey.MASTER:
                 if device_type not in self._relevant_master_paramsets_by_device:
                     self._relevant_master_paramsets_by_device[device_type] = set()
                 self._relevant_master_paramsets_by_device[device_type].add(channel_no)
@@ -551,11 +551,11 @@ class ParameterVisibilityCache:
                 return
             paramset_key = data[0]
             parameter = data[1]
-            if paramset_key in (HmParamsetKey.VALUES, HmParamsetKey.MASTER):
+            if paramset_key in (ParamsetKey.VALUES, ParamsetKey.MASTER):
                 self._un_ignore_parameters_general[paramset_key].add(parameter)
         else:
             # add parameter
-            self._un_ignore_parameters_general[HmParamsetKey.VALUES].add(line)
+            self._un_ignore_parameters_general[ParamsetKey.VALUES].add(line)
 
     @lru_cache(maxsize=1024)
     def parameter_is_hidden(
@@ -589,9 +589,9 @@ class ParameterVisibilityCache:
 
         Required to load MASTER paramsets, which are not initialized by default.
         """
-        if paramset_key == HmParamsetKey.VALUES:
+        if paramset_key == ParamsetKey.VALUES:
             return True
-        if channel_no is not None and paramset_key == HmParamsetKey.MASTER:
+        if channel_no is not None and paramset_key == ParamsetKey.MASTER:
             for (
                 d_type,
                 channel_nos,
@@ -603,7 +603,7 @@ class ParameterVisibilityCache:
                     return True
         return False
 
-    def wrap_entity(self, wrapped_entity: hmge.GenericEntity) -> HmPlatform | None:
+    def wrap_entity(self, wrapped_entity: hmge.GenericEntity) -> Platform | None:
         """Check if parameter of a device should be wrapped to a different platform."""
         for devices, wrapper_def in _WRAP_ENTITY.items():
             if (

@@ -9,7 +9,7 @@ from enum import IntEnum, StrEnum
 import math
 from typing import Any, Final, TypedDict, Unpack
 
-from hahomematic.const import HmEntityUsage, HmEvent, HmPlatform
+from hahomematic.const import EntityUsage, Event, Platform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -155,7 +155,7 @@ class HmLightOffArgs(TypedDict, total=False):
 class CeDimmer(CustomEntity, OnTimeMixin):
     """Base class for HomeMatic light entities."""
 
-    _platform = HmPlatform.LIGHT
+    _platform = Platform.LIGHT
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -509,7 +509,7 @@ class CeIpRGBWLight(CeDimmer):
         return True
 
     @config_property
-    def usage(self) -> HmEntityUsage:
+    def usage(self) -> EntityUsage:
         """
         Return the entity usage.
 
@@ -523,7 +523,7 @@ class CeIpRGBWLight(CeDimmer):
             self._e_device_operation_mode.value == HmDeviceOperationMode.TUNABLE_WHITE
             and self.channel_no in (3, 4)
         ):
-            return HmEntityUsage.NO_CREATE
+            return EntityUsage.NO_CREATE
         return self._usage
 
     @value_property
@@ -887,8 +887,8 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
                         5,
                         6,
                     ): (
-                        HmEvent.PRESS_LONG,
-                        HmEvent.PRESS_SHORT,
+                        Event.PRESS_LONG,
+                        Event.PRESS_SHORT,
                         "SENSOR",
                     )
                 },

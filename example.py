@@ -35,7 +35,7 @@ class Example:
     def _systemcallback(self, name, *args, **kwargs):
         self.got_devices = True
         if (
-            name == const.HmSystemEvent.NEW_DEVICES
+            name == const.SystemEvent.NEW_DEVICES
             and kwargs
             and kwargs.get("device_descriptions")
             and len(kwargs["device_descriptions"]) > 0
@@ -43,7 +43,7 @@ class Example:
             self.got_devices = True
             return
         if (
-            name == const.HmSystemEvent.DEVICES_CREATED
+            name == const.SystemEvent.DEVICES_CREATED
             and kwargs
             and kwargs.get("new_devices")
             and len(kwargs["new_devices"]) > 0
@@ -64,17 +64,17 @@ class Example:
         interface_configs = {
             InterfaceConfig(
                 central_name=central_name,
-                interface=const.HmInterfaceName.HMIP_RF,
+                interface=const.InterfaceName.HMIP_RF,
                 port=2010,
             ),
             InterfaceConfig(
                 central_name=central_name,
-                interface=const.HmInterfaceName.BIDCOS_RF,
+                interface=const.InterfaceName.BIDCOS_RF,
                 port=2001,
             ),
             InterfaceConfig(
                 central_name=central_name,
-                interface=const.HmInterfaceName.VIRTUAL_DEVICES,
+                interface=const.InterfaceName.VIRTUAL_DEVICES,
                 port=9292,
                 remote_path="/groups",
             ),

@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.action import HmAction
 
 from tests import helper
@@ -26,7 +26,7 @@ async def test_hmaction(factory: helper.Factory) -> None:
         HmAction,
         central.get_generic_entity("VCU9724704:1", "LOCK_TARGET_LEVEL"),
     )
-    assert action.usage == HmEntityUsage.NO_CREATE
+    assert action.usage == EntityUsage.NO_CREATE
     assert action.is_readable is False
     assert action.value is None
     assert action.value_list == ("LOCKED", "UNLOCKED", "OPEN")

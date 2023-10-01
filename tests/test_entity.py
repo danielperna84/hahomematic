@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, call
 import pytest
 
 from hahomematic.caches.visibility import check_ignore_parameters_is_clean
-from hahomematic.const import HmCallSource, HmEntityUsage
+from hahomematic.const import CallSource, EntityUsage
 from hahomematic.platforms.custom.definition import (
     get_required_parameters,
     validate_entity_definition,
@@ -36,7 +36,7 @@ async def test_custom_entity_callback(factory: helper.Factory) -> None:
     """Test CeSwitch."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
     switch: CeSwitch = cast(CeSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
-    assert switch.usage == HmEntityUsage.CE_PRIMARY
+    assert switch.usage == EntityUsage.CE_PRIMARY
 
     device_updated_mock = MagicMock()
     device_removed_mock = MagicMock()
@@ -76,7 +76,7 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
     """Test CeSwitch."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
-    assert switch.usage == HmEntityUsage.NO_CREATE
+    assert switch.usage == EntityUsage.NO_CREATE
 
     device_updated_mock = MagicMock()
     device_removed_mock = MagicMock()
@@ -116,7 +116,7 @@ async def test_load_custom_entity(factory: helper.Factory) -> None:
     """Test load custom_entity."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     switch: HmSwitch = cast(HmSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
-    await switch.load_entity_value(call_source=HmCallSource.MANUAL_OR_SCHEDULED)
+    await switch.load_entity_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
     assert mock_client.method_calls[-2] == call.get_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
@@ -136,7 +136,7 @@ async def test_load_generic_entity(factory: helper.Factory) -> None:
     """Test load generic_entity."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
-    await switch.load_entity_value(call_source=HmCallSource.MANUAL_OR_SCHEDULED)
+    await switch.load_entity_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
     assert mock_client.method_calls[-1] == call.get_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
@@ -150,7 +150,7 @@ async def test_generic_wrapped_entity(factory: helper.Factory) -> None:
     """Test wrapped entity."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
     wrapped_entity: HmSensor = cast(HmSensor, central.get_wrapper_entity("VCU3609622:1", "LEVEL"))
-    assert wrapped_entity.usage == HmEntityUsage.ENTITY
+    assert wrapped_entity.usage == EntityUsage.ENTITY
 
 
 def test_custom_required_entities() -> None:

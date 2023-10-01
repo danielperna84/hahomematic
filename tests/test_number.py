@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.hub.number import HmSysvarNumber
 
@@ -29,7 +29,7 @@ async def test_hmfloat(factory: helper.Factory) -> None:
         HmFloat,
         central.get_generic_entity("VCU0000011:3", "LEVEL"),
     )
-    assert efloat.usage == HmEntityUsage.NO_CREATE
+    assert efloat.usage == EntityUsage.NO_CREATE
     assert efloat.unit == "%"
     assert efloat.value_list is None
     assert efloat.value is None
@@ -60,7 +60,7 @@ async def test_hmfloat_special(factory: helper.Factory) -> None:
         HmFloat,
         central.get_generic_entity("VCU0000054:2", "SETPOINT"),
     )
-    assert efloat.usage == HmEntityUsage.NO_CREATE
+    assert efloat.usage == EntityUsage.NO_CREATE
     assert efloat.unit == "°C"
     assert efloat.value_list is None
     assert efloat.value is None
@@ -91,7 +91,7 @@ async def test_hminteger(factory: helper.Factory) -> None:
         HmInteger,
         central.get_generic_entity("VCU4984404:1", "SET_POINT_MODE"),
     )
-    assert einteger.usage == HmEntityUsage.NO_CREATE
+    assert einteger.usage == EntityUsage.NO_CREATE
     assert einteger.unit is None
     assert einteger.min == 0
     assert einteger.max == 3
@@ -130,7 +130,7 @@ async def test_hmsysvarnumber(factory: helper.Factory) -> None:
         HmSysvarNumber,
         central.get_sysvar_entity("sv_float_ext"),
     )
-    assert enumber.usage == HmEntityUsage.ENTITY
+    assert enumber.usage == EntityUsage.ENTITY
     assert enumber.unit == "°C"
     assert enumber.min == 5.0
     assert enumber.max == 30.0

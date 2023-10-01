@@ -9,7 +9,7 @@ from abc import abstractmethod
 from enum import StrEnum
 from typing import Final, TypedDict, Unpack
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import Platform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -52,7 +52,7 @@ class HmSirenOnArgs(TypedDict, total=False):
 class BaseSiren(CustomEntity):
     """Class for HomeMatic siren entities."""
 
-    _platform = HmPlatform.SIREN
+    _platform = Platform.SIREN
 
     @value_property
     @abstractmethod

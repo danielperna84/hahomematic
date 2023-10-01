@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import Platform
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 class HmSysvarNumber(GenericSystemVariable):
     """Implementation of a sysvar number."""
 
-    _platform = HmPlatform.HUB_NUMBER
+    _platform = Platform.HUB_NUMBER
     _is_extended = True
 
     async def send_variable(self, value: float) -> None:

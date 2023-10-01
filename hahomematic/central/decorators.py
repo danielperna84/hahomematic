@@ -9,7 +9,7 @@ import logging
 from typing import Any, Final, ParamSpec, TypeVar, cast
 
 from hahomematic import client as hmcl
-from hahomematic.const import HmSystemEvent
+from hahomematic.const import SystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
 
@@ -21,7 +21,7 @@ _R = TypeVar("_R")
 _INTERFACE_ID: Final = "interface_id"
 
 
-def callback_system_event(system_event: HmSystemEvent) -> Callable:
+def callback_system_event(system_event: SystemEvent) -> Callable:
     """Check if callback_system is set and call it AFTER original function."""
 
     def decorator_callback_system_event(

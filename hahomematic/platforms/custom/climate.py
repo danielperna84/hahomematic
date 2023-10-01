@@ -10,7 +10,7 @@ from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmParamsetKey, HmPlatform
+from hahomematic.const import ParamsetKey, Platform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -120,7 +120,7 @@ class HmPresetMode(StrEnum):
 class BaseClimateEntity(CustomEntity):
     """Base HomeMatic climate entity."""
 
-    _platform = HmPlatform.CLIMATE
+    _platform = Platform.CLIMATE
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -532,7 +532,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Enable the away mode by calendar on thermostat."""
         await self._client.put_paramset(
             address=self._channel_address,
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             value={
                 "CONTROL_MODE": HmIPMode.AWAY,
                 "PARTY_TIME_END": end.strftime(_PARTY_DATE_FORMAT),
@@ -542,7 +542,7 @@ class CeIpThermostat(BaseClimateEntity):
 
         await self._client.put_paramset(
             address=self._channel_address,
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             value={
                 "SET_POINT_TEMPERATURE": away_temperature,
             },
@@ -560,7 +560,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Disable the away mode on thermostat."""
         await self._client.put_paramset(
             address=self._channel_address,
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             value={
                 "CONTROL_MODE": HmIPMode.AWAY,
                 "PARTY_TIME_START": _PARTY_INIT_DATE,

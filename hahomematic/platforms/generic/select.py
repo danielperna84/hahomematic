@@ -5,7 +5,7 @@ See https://www.home-assistant.io/integrations/select/.
 """
 from __future__ import annotations
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import Platform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
 
@@ -17,7 +17,7 @@ class HmSelect(GenericEntity[int | str, int | str]):
     This is a default platform that gets automatically generated.
     """
 
-    _platform = HmPlatform.SELECT
+    _platform = Platform.SELECT
 
     @value_property
     def value(self) -> str | None:  # type: ignore[override]

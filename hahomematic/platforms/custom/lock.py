@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from enum import StrEnum
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import Platform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -49,7 +49,7 @@ class HmLockState(StrEnum):
 class BaseLock(CustomEntity):
     """Class for HomematicIP lock entities."""
 
-    _platform = HmPlatform.LOCK
+    _platform = Platform.LOCK
 
     @value_property
     @abstractmethod

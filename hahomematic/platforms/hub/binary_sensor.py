@@ -5,7 +5,7 @@ See https://www.home-assistant.io/integrations/binary_sensor/.
 """
 from __future__ import annotations
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import Platform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 
@@ -13,7 +13,7 @@ from hahomematic.platforms.hub.entity import GenericSystemVariable
 class HmSysvarBinarySensor(GenericSystemVariable):
     """Implementation of a sysvar binary_sensor."""
 
-    _platform = HmPlatform.HUB_BINARY_SENSOR
+    _platform = Platform.HUB_BINARY_SENSOR
 
     @value_property
     def value(self) -> bool | None:

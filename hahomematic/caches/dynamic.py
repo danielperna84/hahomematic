@@ -10,8 +10,8 @@ from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
-    HmCallSource,
-    HmInterfaceName,
+    CallSource,
+    InterfaceName,
 )
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import get_device_address, updated_within_seconds
@@ -71,7 +71,7 @@ class DeviceDetailsCache:
 
     def get_interface(self, address: str) -> str:
         """Get interface from cache."""
-        return self._interface_cache.get(address) or HmInterfaceName.BIDCOS_RF
+        return self._interface_cache.get(address) or InterfaceName.BIDCOS_RF
 
     def add_device_channel_id(self, address: str, channel_id: str) -> None:
         """Add channel id for a channel."""
@@ -162,7 +162,7 @@ class CentralDataCache:
     async def refresh_entity_data(self, paramset_key: str | None = None) -> None:
         """Refresh entity data."""
         for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
-            await entity.load_entity_value(call_source=HmCallSource.HM_INIT)
+            await entity.load_entity_value(call_source=CallSource.HM_INIT)
 
     def add_data(self, all_device_data: dict[str, Any]) -> None:
         """Add data to cache."""

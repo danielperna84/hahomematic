@@ -8,7 +8,7 @@ from unittest.mock import call
 from freezegun import freeze_time
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.climate import (
     CeIpThermostat,
     CeRfThermostat,
@@ -40,7 +40,7 @@ async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
     climate: CeSimpleRfThermostat = cast(
         CeSimpleRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000054", 1)
     )
-    assert climate.usage == HmEntityUsage.CE_PRIMARY
+    assert climate.usage == EntityUsage.CE_PRIMARY
 
     assert climate.is_valid is False
     assert climate.state_uncertain is False
@@ -98,7 +98,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
     climate: CeRfThermostat = cast(
         CeRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000050", 4)
     )
-    assert climate.usage == HmEntityUsage.CE_PRIMARY
+    assert climate.usage == EntityUsage.CE_PRIMARY
     assert climate.min_temp == 5.0
     assert climate.max_temp == 30.5
     assert climate.supports_preset is True
@@ -202,7 +202,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     climate: CeIpThermostat = cast(
         CeIpThermostat, helper.get_prepared_custom_entity(central, "VCU1769958", 1)
     )
-    assert climate.usage == HmEntityUsage.CE_PRIMARY
+    assert climate.usage == EntityUsage.CE_PRIMARY
     assert climate.min_temp == 5.0
     assert climate.max_temp == 30.5
     assert climate.supports_preset is True

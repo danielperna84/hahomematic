@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import HmEntityUsage
+from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.light import (
     CeColorDimmer,
     CeColorDimmerEffect,
@@ -40,7 +40,7 @@ async def test_cedimmer(factory: helper.Factory) -> None:
     """Test CeDimmer."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
     light: CeDimmer = cast(CeDimmer, helper.get_prepared_custom_entity(central, "VCU1399816", 4))
-    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color is None
     assert light.supports_brightness is True
@@ -123,7 +123,7 @@ async def test_cecolordimmer(factory: helper.Factory) -> None:
     light: CeColorDimmer = cast(
         CeColorDimmer, helper.get_prepared_custom_entity(central, "VCU9973336", 9)
     )
-    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color == (0.0, 0.0)
     assert light.supports_brightness is True
@@ -203,7 +203,7 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
     light: CeColorDimmerEffect = cast(
         CeColorDimmerEffect, helper.get_prepared_custom_entity(central, "VCU3747418", 1)
     )
-    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color == (0.0, 0.0)
     assert light.supports_brightness is True
@@ -293,7 +293,7 @@ async def test_cecolortempdimmer(factory: helper.Factory) -> None:
     light: CeColorTempDimmer = cast(
         CeColorTempDimmer, helper.get_prepared_custom_entity(central, "VCU0000115", 1)
     )
-    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp == 500
     assert light.hs_color is None
     assert light.supports_brightness is True
@@ -354,7 +354,7 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     light: CeIpFixedColorLight = cast(
         CeIpFixedColorLight, helper.get_prepared_custom_entity(central, "VCU3716619", 8)
     )
-    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color == (0.0, 0.0)
     assert light.supports_brightness is True
@@ -504,7 +504,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     light: CeIpFixedColorLight = cast(
         CeIpFixedColorLight, helper.get_prepared_custom_entity(central, "VCU4704397", 8)
     )
-    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color == (0.0, 0.0)
     assert light.supports_brightness is True
@@ -749,7 +749,7 @@ async def test_ceiprgbwlight(factory: helper.Factory) -> None:
     light: CeIpRGBWLight = cast(
         CeIpRGBWLight, helper.get_prepared_custom_entity(central, "VCU5629873", 1)
     )
-    assert light.usage == HmEntityUsage.CE_PRIMARY
+    assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp is None
     assert light.hs_color is None
     assert light.supports_brightness is True

@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import Platform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 
@@ -18,7 +18,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 class HmSysvarSelect(GenericSystemVariable):
     """Implementation of a sysvar select entity."""
 
-    _platform = HmPlatform.HUB_SELECT
+    _platform = Platform.HUB_SELECT
     _is_extended = True
 
     @value_property

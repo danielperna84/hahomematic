@@ -9,7 +9,7 @@ from enum import StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import Platform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -41,7 +41,7 @@ class HmStateChangeArg(StrEnum):
 class CeSwitch(CustomEntity, OnTimeMixin):
     """Class for HomeMatic switch entities."""
 
-    _platform = HmPlatform.SWITCH
+    _platform = Platform.SWITCH
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""

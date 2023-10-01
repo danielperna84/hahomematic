@@ -1,6 +1,9 @@
 # Version 2023.10.0 (2023-10-1)
 
 - Code cleanup
+  - Remove Hm prefix from enums
+  - Use enum for parameters
+  - Use more existing constants
 
 # Version 2023.9.8 (2023-9-30)
 

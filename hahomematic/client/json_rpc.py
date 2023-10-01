@@ -30,10 +30,10 @@ from hahomematic.const import (
     REGA_SCRIPT_PATH,
     REGA_SCRIPT_SET_SYSTEM_VARIABLE,
     REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER,
-    HmSysvarType,
     ProgramData,
     SystemInformation,
     SystemVariableData,
+    SysvarType,
 )
 from hahomematic.exceptions import AuthFailure, ClientException
 from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
@@ -491,9 +491,9 @@ class JsonRpcAioHttpClient:
                     name = var[_NAME]
                     org_data_type = var[_TYPE]
                     raw_value = var[_VALUE]
-                    if org_data_type == HmSysvarType.NUMBER:
+                    if org_data_type == SysvarType.NUMBER:
                         data_type = (
-                            HmSysvarType.HM_FLOAT if "." in raw_value else HmSysvarType.HM_INTEGER
+                            SysvarType.HM_FLOAT if "." in raw_value else SysvarType.HM_INTEGER
                         )
                     else:
                         data_type = org_data_type

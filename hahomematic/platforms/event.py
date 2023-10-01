@@ -10,12 +10,12 @@ from hahomematic.const import (
     DEVICE_ERROR_EVENTS,
     ENTITY_EVENTS,
     IMPULSE_EVENTS,
-    HmDescription,
-    HmEntityUsage,
-    HmEventType,
-    HmOperations,
-    HmParamsetKey,
-    HmPlatform,
+    Description,
+    EntityUsage,
+    EventType,
+    Operations,
+    ParamsetKey,
+    Platform,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property
@@ -32,8 +32,8 @@ _LOGGER: Final = logging.getLogger(__name__)
 class GenericEvent(BaseParameterEntity[Any, Any]):
     """Base class for events."""
 
-    _platform = HmPlatform.EVENT
-    _event_type: HmEventType
+    _platform = Platform.EVENT
+    _event_type: EventType
 
     def __init__(
         self,
@@ -48,20 +48,20 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
             device=device,
             unique_identifier=unique_identifier,
             channel_address=channel_address,
-            paramset_key=HmParamsetKey.VALUES,
+            paramset_key=ParamsetKey.VALUES,
             parameter=parameter,
             parameter_data=parameter_data,
         )
 
     @config_property
-    def usage(self) -> HmEntityUsage:
+    def usage(self) -> EntityUsage:
         """Return the entity usage."""
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
             return self._usage
-        return HmEntityUsage.EVENT if force_enabled else HmEntityUsage.NO_CREATE
+        return EntityUsage.EVENT if force_enabled else EntityUsage.NO_CREATE
 
     @config_property
-    def event_type(self) -> HmEventType:
+    def event_type(self) -> EventType:
         """Return the event_type of the event."""
         return self._event_type
 
@@ -86,21 +86,21 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
             parameter=self._parameter,
         )
 
-    def _get_entity_usage(self) -> HmEntityUsage:
+    def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
-        return HmEntityUsage.EVENT
+        return EntityUsage.EVENT
 
 
 class ClickEvent(GenericEvent):
     """class for handling click events."""
 
-    _event_type = HmEventType.KEYPRESS
+    _event_type = EventType.KEYPRESS
 
 
 class DeviceErrorEvent(GenericEvent):
     """class for handling device error events."""
 
-    _event_type = HmEventType.DEVICE_ERROR
+    _event_type = EventType.DEVICE_ERROR
 
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
@@ -129,7 +129,7 @@ class DeviceErrorEvent(GenericEvent):
 class ImpulseEvent(GenericEvent):
     """class for handling impulse events."""
 
-    _event_type = HmEventType.IMPULSE
+    _event_type = EventType.IMPULSE
 
 
 def create_event_and_append_to_device(
@@ -139,7 +139,7 @@ def create_event_and_append_to_device(
     if device.central.parameter_visibility.parameter_is_ignored(
         device_type=device.device_type,
         channel_no=hms.get_channel_no(address=channel_address),
-        paramset_key=HmParamsetKey.VALUES,
+        paramset_key=ParamsetKey.VALUES,
         parameter=parameter,
     ):
         _LOGGER.debug(
@@ -162,7 +162,7 @@ def create_event_and_append_to_device(
         device.interface_id,
     )
     event_t: type[GenericEvent] | None = None
-    if parameter_data[HmDescription.OPERATIONS] & HmOperations.EVENT:
+    if parameter_data[Description.OPERATIONS] & Operations.EVENT:
         if parameter in CLICK_EVENTS:
             event_t = ClickEvent
         if parameter.startswith(DEVICE_ERROR_EVENTS):

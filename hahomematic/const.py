@@ -79,7 +79,7 @@ HM_VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
 )
 
 
-class HmBackend(StrEnum):
+class Backend(StrEnum):
     """Enum with supported hahomematic backends."""
 
     CCU = "CCU"
@@ -87,7 +87,7 @@ class HmBackend(StrEnum):
     PYDEVCCU = "PyDevCCU"
 
 
-class HmCallSource(StrEnum):
+class CallSource(StrEnum):
     """Enum with sources for calls."""
 
     HA_INIT: Final = "ha_init"
@@ -95,7 +95,7 @@ class HmCallSource(StrEnum):
     MANUAL_OR_SCHEDULED: Final = "manual_or_scheduled"
 
 
-class HmDataOperationResult(Enum):
+class DataOperationResult(Enum):
     """Enum with data operation results."""
 
     LOAD_FAIL: Final = 0
@@ -106,7 +106,7 @@ class HmDataOperationResult(Enum):
     NO_SAVE: Final = 21
 
 
-class HmDescription(StrEnum):
+class Description(StrEnum):
     """Enum with homematic device/paramset description attributes."""
 
     ADDRESS = "ADDRESS"
@@ -131,7 +131,7 @@ class HmDescription(StrEnum):
     VALUE_LIST = "VALUE_LIST"
 
 
-class HmDeviceFirmwareState(StrEnum):
+class DeviceFirmwareState(StrEnum):
     """Enum with homematic device firmware states."""
 
     UP_TO_DATE: Final = "UP_TO_DATE"
@@ -145,7 +145,7 @@ class HmDeviceFirmwareState(StrEnum):
     PERFORMING_UPDATE: Final = "PERFORMING_UPDATE"
 
 
-class HmEntityUsage(StrEnum):
+class EntityUsage(StrEnum):
     """Enum with information about usage in Home Assistant."""
 
     CE_PRIMARY: Final = "ce_primary"
@@ -156,7 +156,7 @@ class HmEntityUsage(StrEnum):
     NO_CREATE: Final = "entity_no_create"
 
 
-class HmEvent(StrEnum):
+class Event(StrEnum):
     """Enum with homematic events."""
 
     PRESS = "PRESS"
@@ -176,7 +176,7 @@ class HmEvent(StrEnum):
     UN_REACH = "UNREACH"
 
 
-class HmEventType(StrEnum):
+class EventType(StrEnum):
     """Enum with hahomematic event types."""
 
     DEVICE_AVAILABILITY: Final = "homematic.device_availability"
@@ -186,7 +186,7 @@ class HmEventType(StrEnum):
     KEYPRESS: Final = "homematic.keypress"
 
 
-class HmFlag(IntEnum):
+class Flag(IntEnum):
     """Enum with homematic flags."""
 
     VISIBLE = 1
@@ -196,7 +196,7 @@ class HmFlag(IntEnum):
     STICKY = 10  # This might be wrong. Documentation says 0x10 # not used
 
 
-class HmForcedDeviceAvailability(StrEnum):
+class ForcedDeviceAvailability(StrEnum):
     """Enum with hahomematic event types."""
 
     FORCE_FALSE: Final = "forced_not_available"
@@ -204,7 +204,7 @@ class HmForcedDeviceAvailability(StrEnum):
     NOT_SET: Final = "not_set"
 
 
-class HmManufacturer(StrEnum):
+class Manufacturer(StrEnum):
     """Enum with hahomematic system events."""
 
     EQ3 = "eQ-3"
@@ -212,7 +212,7 @@ class HmManufacturer(StrEnum):
     MOEHLENHOFF = "Möhlenhoff"
 
 
-class HmOperations(IntEnum):
+class Operations(IntEnum):
     """Enum with homematic operations."""
 
     NONE = 0  # not used
@@ -221,7 +221,7 @@ class HmOperations(IntEnum):
     EVENT = 4
 
 
-class HmParam(StrEnum):
+class Parameter(StrEnum):
     """Enum with homematic params."""
 
     ACTIVITY_STATE = "ACTIVITY_STATE"
@@ -245,14 +245,14 @@ class HmParam(StrEnum):
     WORKING = "WORKING"
 
 
-class HmParamsetKey(StrEnum):
+class ParamsetKey(StrEnum):
     """Enum with paramset keys."""
 
     MASTER = "MASTER"
     VALUES = "VALUES"
 
 
-class HmPlatform(StrEnum):
+class Platform(StrEnum):
     """Enum with platforms relevant for Home Assistant."""
 
     ACTION: Final = "action"
@@ -279,7 +279,7 @@ class HmPlatform(StrEnum):
     UPDATE: Final = "update"
 
 
-class HmProductGroup(StrEnum):
+class ProductGroup(StrEnum):
     """Enum with homematic product groups."""
 
     UNKNOWN: Final = "unknown"
@@ -290,7 +290,7 @@ class HmProductGroup(StrEnum):
     VIRTUAL: Final = "VirtualDevices"
 
 
-class HmInterfaceName(StrEnum):
+class InterfaceName(StrEnum):
     """Enum with homematic interface names."""
 
     BIDCOS_RF = "BidCos-RF"
@@ -299,7 +299,7 @@ class HmInterfaceName(StrEnum):
     VIRTUAL_DEVICES = "VirtualDevices"
 
 
-class HmInterfaceEventType(StrEnum):
+class InterfaceEventType(StrEnum):
     """Enum with hahomematic event types."""
 
     CALLBACK: Final = "callback"
@@ -307,7 +307,7 @@ class HmInterfaceEventType(StrEnum):
     PROXY: Final = "proxy"
 
 
-class HmProxyInitState(Enum):
+class ProxyInitState(Enum):
     """Enum with proxy handling results."""
 
     INIT_FAILED: Final = 0
@@ -317,7 +317,7 @@ class HmProxyInitState(Enum):
     DE_INIT_SKIPPED: Final = 16
 
 
-class HmSystemEvent(StrEnum):
+class SystemEvent(StrEnum):
     """Enum with hahomematic system events."""
 
     DELETE_DEVICES = "deleteDevices"
@@ -331,7 +331,7 @@ class HmSystemEvent(StrEnum):
     UPDATE_DEVICE = "updateDevice"
 
 
-class HmSysvarType(StrEnum):
+class SysvarType(StrEnum):
     """Enum for homematic sysvar types."""
 
     ALARM = "ALARM"
@@ -343,7 +343,7 @@ class HmSysvarType(StrEnum):
     STRING = "STRING"
 
 
-class HmType(StrEnum):
+class ParameterType(StrEnum):
     """Enum for homematic parameter types."""
 
     ACTION = "ACTION"  # Usually buttons, send Boolean to trigger
@@ -354,63 +354,63 @@ class HmType(StrEnum):
     STRING = "STRING"
 
 
-AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
-    HmPlatform.BINARY_SENSOR,
-    HmPlatform.BUTTON,
-    HmPlatform.CLIMATE,
-    HmPlatform.COVER,
-    HmPlatform.EVENT,
-    HmPlatform.LIGHT,
-    HmPlatform.LOCK,
-    HmPlatform.NUMBER,
-    HmPlatform.SELECT,
-    HmPlatform.SENSOR,
-    HmPlatform.SIREN,
-    HmPlatform.SWITCH,
-    HmPlatform.TEXT,
-    HmPlatform.UPDATE,
+AVAILABLE_HM_PLATFORMS: Final[tuple[Platform, ...]] = (
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.EVENT,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.TEXT,
+    Platform.UPDATE,
 )
 
-AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
-    HmPlatform.HUB_BINARY_SENSOR,
-    HmPlatform.HUB_BUTTON,
-    HmPlatform.HUB_NUMBER,
-    HmPlatform.HUB_SELECT,
-    HmPlatform.HUB_SENSOR,
-    HmPlatform.HUB_SWITCH,
-    HmPlatform.HUB_TEXT,
+AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[Platform, ...]] = (
+    Platform.HUB_BINARY_SENSOR,
+    Platform.HUB_BUTTON,
+    Platform.HUB_NUMBER,
+    Platform.HUB_SELECT,
+    Platform.HUB_SENSOR,
+    Platform.HUB_SWITCH,
+    Platform.HUB_TEXT,
 )
 
 CLICK_EVENTS: Final[tuple[str, ...]] = (
-    HmEvent.PRESS,
-    HmEvent.PRESS_CONT,
-    HmEvent.PRESS_LOCK,
-    HmEvent.PRESS_LONG,
-    HmEvent.PRESS_LONG_RELEASE,
-    HmEvent.PRESS_LONG_START,
-    HmEvent.PRESS_SHORT,
-    HmEvent.PRESS_UNLOCK,
+    Event.PRESS,
+    Event.PRESS_CONT,
+    Event.PRESS_LOCK,
+    Event.PRESS_LONG,
+    Event.PRESS_LONG_RELEASE,
+    Event.PRESS_LONG_START,
+    Event.PRESS_SHORT,
+    Event.PRESS_UNLOCK,
 )
 
 ENTITY_EVENTS: Final = (
-    HmEventType.IMPULSE,
-    HmEventType.KEYPRESS,
+    EventType.IMPULSE,
+    EventType.KEYPRESS,
 )
 
-IMPULSE_EVENTS: Final[tuple[str, ...]] = (HmEvent.SEQUENCE_OK,)
+IMPULSE_EVENTS: Final[tuple[str, ...]] = (Event.SEQUENCE_OK,)
 
 KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[dict[str, tuple[str, ...]]] = {
     "STATE": ("BINARY_BEHAVIOR",),
-    HmEvent.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    HmEvent.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    HmEvent.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    HmEvent.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Event.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Event.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Event.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Event.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
 }
 
 RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
-    HmEvent.CONFIG_PENDING,
-    HmEvent.STICKY_UN_REACH,
-    HmEvent.UN_REACH,
+    Event.CONFIG_PENDING,
+    Event.STICKY_UN_REACH,
+    Event.UN_REACH,
 )
 
 
@@ -436,7 +436,7 @@ class SystemVariableData(HubData):
     """Dataclass for system variables."""
 
     value: bool | float | int | str | None
-    data_type: HmSysvarType | None = None
+    data_type: SysvarType | None = None
     unit: str | None = None
     value_list: list[str] | None = None
     max_value: float | int | None = None

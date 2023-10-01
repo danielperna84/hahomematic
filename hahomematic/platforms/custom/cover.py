@@ -9,7 +9,7 @@ from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmEntityUsage, HmPlatform
+from hahomematic.const import EntityUsage, Platform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import (
@@ -99,7 +99,7 @@ class HmGarageDoorState(StrEnum):
 class CeCover(CustomEntity):
     """Class for HomeMatic cover entities."""
 
-    _platform = HmPlatform.COVER
+    _platform = Platform.COVER
     _hm_closed_state: float = _CLOSED
     _hm_open_state: float = _OPEN
 
@@ -118,7 +118,7 @@ class CeCover(CustomEntity):
     @property
     def _channel_level(self) -> float:
         """Return the channel level of the cover."""
-        if self._e_channel_level.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
+        if self._e_channel_level.value is not None and self.usage == EntityUsage.CE_PRIMARY:
             return float(self._e_channel_level.value)
         return self._e_level.value if self._e_level.value is not None else self._hm_closed_state
 
@@ -254,7 +254,7 @@ class CeBlind(CeCover):
     @property
     def _channel_tilt_level(self) -> float:
         """Return the channel level of the tilt."""
-        if self._e_channel_level_2.value is not None and self.usage == HmEntityUsage.CE_PRIMARY:
+        if self._e_channel_level_2.value is not None and self.usage == EntityUsage.CE_PRIMARY:
             return float(self._e_channel_level_2.value)
         return (
             self._e_level_2.value if self._e_level_2.value is not None else self._hm_closed_state
@@ -414,7 +414,7 @@ class CeIpBlind(CeBlind):
 class CeGarage(CustomEntity):
     """Class for HomeMatic garage entities."""
 
-    _platform = HmPlatform.COVER
+    _platform = Platform.COVER
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""

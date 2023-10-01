@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import Platform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallbackEntity
@@ -22,7 +22,7 @@ class HmUpdate(CallbackEntity):
     This is a default platform that gets automatically generated.
     """
 
-    _platform = HmPlatform.UPDATE
+    _platform = Platform.UPDATE
 
     def __init__(self, device: hmd.HmDevice) -> None:
         """Init the callback entity."""

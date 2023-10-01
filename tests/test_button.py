@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import HmEntityUsage, ProgramData
+from hahomematic.const import EntityUsage, ProgramData
 from hahomematic.platforms.generic.button import HmButton
 from hahomematic.platforms.hub.button import HmProgramButton
 
@@ -27,7 +27,7 @@ async def test_hmbutton(factory: helper.Factory) -> None:
         HmButton,
         central.get_generic_entity("VCU1437294:1", "RESET_MOTION"),
     )
-    assert button.usage == HmEntityUsage.ENTITY
+    assert button.usage == EntityUsage.ENTITY
     assert button.available is True
     assert button.is_readable is False
     assert button.value is None
@@ -51,7 +51,7 @@ async def test_hmprogrambutton(factory: helper.Factory) -> None:
     """Test HmProgramButton."""
     central, mock_client = await factory.get_default_central({}, add_programs=True)
     button: HmProgramButton = cast(HmProgramButton, central.get_program_button("pid1"))
-    assert button.usage == HmEntityUsage.ENTITY
+    assert button.usage == EntityUsage.ENTITY
     assert button.available is True
     assert button.is_active is True
     assert button.is_internal is False
@@ -71,7 +71,7 @@ async def test_hmprogrambutton(factory: helper.Factory) -> None:
     assert button.is_internal is True
 
     button2: HmProgramButton = cast(HmProgramButton, central.get_program_button("pid2"))
-    assert button2.usage == HmEntityUsage.ENTITY
+    assert button2.usage == EntityUsage.ENTITY
     assert button2.is_active is False
     assert button2.is_internal is False
     assert button2.ccu_program_name == "p_2"

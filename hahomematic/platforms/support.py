@@ -11,9 +11,9 @@ from hahomematic.const import (
     INIT_DATETIME,
     PROGRAM_ADDRESS,
     SYSVAR_ADDRESS,
-    HmDescription,
-    HmEntityUsage,
-    HmType,
+    Description,
+    EntityUsage,
+    ParameterType,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
@@ -236,7 +236,7 @@ def get_custom_entity_name(
     device: hmd.HmDevice,
     channel_no: int | None,
     is_only_primary_channel: bool,
-    usage: HmEntityUsage,
+    usage: EntityUsage,
 ) -> EntityNameData:
     """Get name for custom entity."""
     if channel_name := _get_base_name_from_channel_or_device(
@@ -249,7 +249,7 @@ def get_custom_entity_name(
         if _check_channel_name_with_channel_no(name=channel_name):
             c_name = channel_name.split(":")[0]
             p_name = channel_name.split(":")[1]
-            marker = "ch" if usage == HmEntityUsage.CE_PRIMARY else "vch"
+            marker = "ch" if usage == EntityUsage.CE_PRIMARY else "vch"
             p_name = f"{marker}{p_name}"
             return EntityNameData(
                 device_name=device.name, channel_name=c_name, parameter_name=p_name
@@ -331,31 +331,33 @@ def _check_channel_name_with_channel_no(name: str) -> bool:
     return False
 
 
-def convert_value(value: Any, target_type: HmType, value_list: tuple[str, ...] | None) -> Any:
+def convert_value(
+    value: Any, target_type: ParameterType, value_list: tuple[str, ...] | None
+) -> Any:
     """Convert a value to target_type."""
     if value is None:
         return None
-    if target_type == HmType.BOOL:
+    if target_type == ParameterType.BOOL:
         if value_list:
             # relevant for ENUMs retyped to a BOOL
             return _get_binary_sensor_value(value=value, value_list=value_list)
         if isinstance(value, str):
             return to_bool(value)
         return bool(value)
-    if target_type == HmType.FLOAT:
+    if target_type == ParameterType.FLOAT:
         return float(value)
-    if target_type == HmType.INTEGER:
+    if target_type == ParameterType.INTEGER:
         return int(float(value))
-    if target_type == HmType.STRING:
+    if target_type == ParameterType.STRING:
         return str(value)
     return value
 
 
 def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
-    if parameter_data[HmDescription.TYPE] == HmType.BOOL:
+    if parameter_data[Description.TYPE] == ParameterType.BOOL:
         return True
-    if value_list := parameter_data.get(HmDescription.VALUE_LIST):
+    if value_list := parameter_data.get(Description.VALUE_LIST):
         return tuple(value_list) in _BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
     return False
 

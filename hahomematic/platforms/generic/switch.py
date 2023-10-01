@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from hahomematic.const import HmPlatform, HmType
+from hahomematic.const import ParameterType, Platform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.entity import CallParameterCollector
 from hahomematic.platforms.generic.entity import GenericEntity
@@ -22,12 +22,12 @@ class HmSwitch(GenericEntity[bool, bool]):
     This is a default platform that gets automatically generated.
     """
 
-    _platform = HmPlatform.SWITCH
+    _platform = Platform.SWITCH
 
     @value_property
     def value(self) -> bool | None:  # type: ignore[override]
         """Get the value of the entity."""
-        if self._type == HmType.ACTION:
+        if self._type == ParameterType.ACTION:
             return False
         return self._value
 

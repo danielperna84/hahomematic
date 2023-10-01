@@ -10,9 +10,9 @@ from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
     IMPULSE_EVENTS,
-    HmDescription,
-    HmFlag,
-    HmOperations,
+    Description,
+    Flag,
+    Operations,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import create_custom_entity_and_append_to_device
@@ -65,7 +65,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         parameter=parameter,
                     )
                 )
-                if parameter_data[HmDescription.OPERATIONS] & HmOperations.EVENT and (
+                if parameter_data[Description.OPERATIONS] & Operations.EVENT and (
                     parameter in CLICK_EVENTS
                     or parameter.startswith(DEVICE_ERROR_EVENTS)
                     or parameter in IMPULSE_EVENTS
@@ -77,10 +77,10 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         parameter_data=parameter_data,
                     )
                 if (
-                    not parameter_data[HmDescription.OPERATIONS] & HmOperations.EVENT
-                    and not parameter_data[HmDescription.OPERATIONS] & HmOperations.WRITE
+                    not parameter_data[Description.OPERATIONS] & Operations.EVENT
+                    and not parameter_data[Description.OPERATIONS] & Operations.WRITE
                 ) or (
-                    parameter_data[HmDescription.FLAGS] & HmFlag.INTERNAL
+                    parameter_data[Description.FLAGS] & Flag.INTERNAL
                     and parameter not in ALLOWED_INTERNAL_PARAMETERS
                     and not parameter_is_un_ignored
                 ):
