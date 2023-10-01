@@ -25,12 +25,12 @@ class DeviceDetailsCache:
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device details cache."""
         self._central: Final = central
-        self._names_cache: Final[dict[str, str]] = {}
-        self._interface_cache: Final[dict[str, str]] = {}
-        self._device_channel_ids: Final[dict[str, str]] = {}
         self._channel_rooms: Final[dict[str, set[str]]] = {}
+        self._device_channel_ids: Final[dict[str, str]] = {}
         self._device_room: Final[dict[str, str]] = {}
         self._functions: Final[dict[str, set[str]]] = {}
+        self._interface_cache: Final[dict[str, str]] = {}
+        self._names_cache: Final[dict[str, str]] = {}
         self._last_updated = INIT_DATETIME
 
     async def load(self) -> None:
