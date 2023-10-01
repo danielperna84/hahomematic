@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from hahomematic.const import CallSource, EntityUsage, Event, EventType, Platform
+from hahomematic.const import CallSource, EntityUsage, EventType, HmPlatform, Parameter
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
@@ -55,15 +55,19 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         self.update_value(value=new_value)
 
         # reload paramset_descriptions, if value has changed
-        if self._parameter == Event.CONFIG_PENDING and new_value is False and old_value is True:
+        if (
+            self._parameter == Parameter.CONFIG_PENDING
+            and new_value is False
+            and old_value is True
+        ):
             self._central.create_task(
                 self.device.reload_paramset_descriptions(), name="reloadParamsetDescriptions"
             )
 
         # send device availability events
         if self._parameter in (
-            Event.UN_REACH,
-            Event.STICKY_UN_REACH,
+            Parameter.UN_REACH,
+            Parameter.STICKY_UN_REACH,
         ):
             self.device.update_device(self._unique_identifier)
             self._central.fire_ha_event_callback(
@@ -152,7 +156,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 class WrapperEntity(hme.BaseEntity):
     """Base class for entities that switch type of generic entities."""
 
-    def __init__(self, wrapped_entity: GenericEntity, new_platform: Platform) -> None:
+    def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform) -> None:
         """Initialize the entity."""
         if wrapped_entity.platform == new_platform:
             raise HaHomematicException(  # pragma: no cover

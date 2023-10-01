@@ -13,9 +13,9 @@ from hahomematic.const import (
     Description,
     EntityUsage,
     EventType,
+    HmPlatform,
     Operations,
     ParamsetKey,
-    Platform,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property
@@ -32,7 +32,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 class GenericEvent(BaseParameterEntity[Any, Any]):
     """Base class for events."""
 
-    _platform = Platform.EVENT
+    _platform = HmPlatform.EVENT
     _event_type: EventType
 
     def __init__(

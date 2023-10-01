@@ -156,26 +156,6 @@ class EntityUsage(StrEnum):
     NO_CREATE: Final = "entity_no_create"
 
 
-class Event(StrEnum):
-    """Enum with homematic events."""
-
-    PRESS = "PRESS"
-    PRESS_CONT = "PRESS_CONT"
-    PRESS_LOCK = "PRESS_LOCK"
-    PRESS_LONG = "PRESS_LONG"
-    PRESS_LONG_RELEASE = "PRESS_LONG_RELEASE"
-    PRESS_LONG_START = "PRESS_LONG_START"
-    PRESS_SHORT = "PRESS_SHORT"
-    PRESS_UNLOCK = "PRESS_UNLOCK"
-    CONFIG_PENDING = "CONFIG_PENDING"
-    ERROR = "ERROR"
-    UPDATE_PENDING = "UPDATE_PENDING"
-    PONG = "PONG"
-    SEQUENCE_OK = "SEQUENCE_OK"
-    STICKY_UN_REACH = "STICKY_UNREACH"
-    UN_REACH = "UNREACH"
-
-
 class EventType(StrEnum):
     """Enum with hahomematic event types."""
 
@@ -226,6 +206,7 @@ class Parameter(StrEnum):
 
     ACTIVITY_STATE = "ACTIVITY_STATE"
     CHANNEL_OPERATION_MODE = "CHANNEL_OPERATION_MODE"
+    CONFIG_PENDING = "CONFIG_PENDING"
     CURRENT_ILLUMINATION = "CURRENT_ILLUMINATION"
     DEVICE_OPERATION_MODE = "DEVICE_OPERATION_MODE"
     DIRECTION = "DIRECTION"
@@ -236,11 +217,24 @@ class Parameter(StrEnum):
     LOWBAT = "LOWBAT"
     LOW_BAT = "LOW_BAT"
     OPERATING_VOLTAGE = "OPERATING_VOLTAGE"
+    PONG = "PONG"
+    PRESS = "PRESS"
+    PRESS_CONT = "PRESS_CONT"
+    PRESS_LOCK = "PRESS_LOCK"
+    PRESS_LONG = "PRESS_LONG"
+    PRESS_LONG_RELEASE = "PRESS_LONG_RELEASE"
+    PRESS_LONG_START = "PRESS_LONG_START"
+    PRESS_SHORT = "PRESS_SHORT"
+    PRESS_UNLOCK = "PRESS_UNLOCK"
     SECTION = "SECTION"
+    SEQUENCE_OK = "SEQUENCE_OK"
     SMOKE_DETECTOR_ALARM_STATUS = "SMOKE_DETECTOR_ALARM_STATUS"
     STATUS = "STATUS"
+    STICKY_UN_REACH = "STICKY_UNREACH"
     TEMPERATURE_MAXIMUM = "TEMPERATURE_MAXIMUM"
     TEMPERATURE_MINIMUM = "TEMPERATURE_MINIMUM"
+    UN_REACH = "UNREACH"
+    UPDATE_PENDING = "UPDATE_PENDING"
     VALVE_STATE = "VALVE_STATE"
     WORKING = "WORKING"
 
@@ -252,7 +246,7 @@ class ParamsetKey(StrEnum):
     VALUES = "VALUES"
 
 
-class Platform(StrEnum):
+class HmPlatform(StrEnum):
     """Enum with platforms relevant for Home Assistant."""
 
     ACTION: Final = "action"
@@ -354,42 +348,42 @@ class ParameterType(StrEnum):
     STRING = "STRING"
 
 
-AVAILABLE_HM_PLATFORMS: Final[tuple[Platform, ...]] = (
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.CLIMATE,
-    Platform.COVER,
-    Platform.EVENT,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.NUMBER,
-    Platform.SELECT,
-    Platform.SENSOR,
-    Platform.SIREN,
-    Platform.SWITCH,
-    Platform.TEXT,
-    Platform.UPDATE,
+AVAILABLE_HM_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
+    HmPlatform.BINARY_SENSOR,
+    HmPlatform.BUTTON,
+    HmPlatform.CLIMATE,
+    HmPlatform.COVER,
+    HmPlatform.EVENT,
+    HmPlatform.LIGHT,
+    HmPlatform.LOCK,
+    HmPlatform.NUMBER,
+    HmPlatform.SELECT,
+    HmPlatform.SENSOR,
+    HmPlatform.SIREN,
+    HmPlatform.SWITCH,
+    HmPlatform.TEXT,
+    HmPlatform.UPDATE,
 )
 
-AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[Platform, ...]] = (
-    Platform.HUB_BINARY_SENSOR,
-    Platform.HUB_BUTTON,
-    Platform.HUB_NUMBER,
-    Platform.HUB_SELECT,
-    Platform.HUB_SENSOR,
-    Platform.HUB_SWITCH,
-    Platform.HUB_TEXT,
+AVAILABLE_HM_HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
+    HmPlatform.HUB_BINARY_SENSOR,
+    HmPlatform.HUB_BUTTON,
+    HmPlatform.HUB_NUMBER,
+    HmPlatform.HUB_SELECT,
+    HmPlatform.HUB_SENSOR,
+    HmPlatform.HUB_SWITCH,
+    HmPlatform.HUB_TEXT,
 )
 
 CLICK_EVENTS: Final[tuple[str, ...]] = (
-    Event.PRESS,
-    Event.PRESS_CONT,
-    Event.PRESS_LOCK,
-    Event.PRESS_LONG,
-    Event.PRESS_LONG_RELEASE,
-    Event.PRESS_LONG_START,
-    Event.PRESS_SHORT,
-    Event.PRESS_UNLOCK,
+    Parameter.PRESS,
+    Parameter.PRESS_CONT,
+    Parameter.PRESS_LOCK,
+    Parameter.PRESS_LONG,
+    Parameter.PRESS_LONG_RELEASE,
+    Parameter.PRESS_LONG_START,
+    Parameter.PRESS_SHORT,
+    Parameter.PRESS_UNLOCK,
 )
 
 ENTITY_EVENTS: Final = (
@@ -397,20 +391,20 @@ ENTITY_EVENTS: Final = (
     EventType.KEYPRESS,
 )
 
-IMPULSE_EVENTS: Final[tuple[str, ...]] = (Event.SEQUENCE_OK,)
+IMPULSE_EVENTS: Final[tuple[str, ...]] = (Parameter.SEQUENCE_OK,)
 
 KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[dict[str, tuple[str, ...]]] = {
     "STATE": ("BINARY_BEHAVIOR",),
-    Event.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    Event.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    Event.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    Event.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
 }
 
 RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
-    Event.CONFIG_PENDING,
-    Event.STICKY_UN_REACH,
-    Event.UN_REACH,
+    Parameter.CONFIG_PENDING,
+    Parameter.STICKY_UN_REACH,
+    Parameter.UN_REACH,
 )
 
 

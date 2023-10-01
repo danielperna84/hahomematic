@@ -14,8 +14,8 @@ from hahomematic.platforms.custom.light import (
     CeDimmer,
     CeIpFixedColorLight,
     CeIpRGBWLight,
-    HmColor,
-    HmColorBehaviour,
+    ColorBehaviour,
+    FixedColor,
 )
 
 from tests import const, helper
@@ -366,7 +366,7 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     assert light.effect_list is None
     assert light.brightness == 0
     assert light.is_on is False
-    assert light.color_name == HmColor.BLACK
+    assert light.color_name == FixedColor.BLACK
     assert light.channel_color_name is None
     assert light.channel_brightness is None
     assert light.channel_hs_color is None
@@ -388,56 +388,56 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
         channel_address="VCU3716619:8", paramset_key="VALUES", parameter="LEVEL", value=0.0
     )
     assert light.brightness == 0
-    assert light.color_name == HmColor.WHITE
+    assert light.color_name == FixedColor.WHITE
 
     await light.turn_on(hs_color=(350, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8", paramset_key="VALUES", value={"COLOR": 4, "LEVEL": 1.0}
     )
-    assert light.color_name == HmColor.RED
+    assert light.color_name == FixedColor.RED
 
     await light.turn_on(hs_color=(0.0, 0.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8", paramset_key="VALUES", value={"COLOR": 7, "LEVEL": 1.0}
     )
-    assert light.color_name == HmColor.WHITE
+    assert light.color_name == FixedColor.WHITE
 
     await light.turn_on(hs_color=(60.0, 50.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8", paramset_key="VALUES", value={"COLOR": 6, "LEVEL": 1.0}
     )
-    assert light.color_name == HmColor.YELLOW
+    assert light.color_name == FixedColor.YELLOW
 
     await light.turn_on(hs_color=(120, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8", paramset_key="VALUES", value={"COLOR": 2, "LEVEL": 1.0}
     )
-    assert light.color_name == HmColor.GREEN
+    assert light.color_name == FixedColor.GREEN
 
     await light.turn_on(hs_color=(180, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8", paramset_key="VALUES", value={"COLOR": 3, "LEVEL": 1.0}
     )
-    assert light.color_name == HmColor.TURQUOISE
+    assert light.color_name == FixedColor.TURQUOISE
 
     await light.turn_on(hs_color=(240, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8", paramset_key="VALUES", value={"COLOR": 1, "LEVEL": 1.0}
     )
-    assert light.color_name == HmColor.BLUE
+    assert light.color_name == FixedColor.BLUE
 
     await light.turn_on(hs_color=(300, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8", paramset_key="VALUES", value={"COLOR": 5, "LEVEL": 1.0}
     )
-    assert light.color_name == HmColor.PURPLE
+    assert light.color_name == FixedColor.PURPLE
 
     central.event(const.INTERFACE_ID, "VCU3716619:7", "LEVEL", 0.5)
     assert light.channel_brightness == 127
 
     central.event(const.INTERFACE_ID, "VCU3716619:7", "COLOR", 1)
     assert light.channel_hs_color == (240.0, 100.0)
-    assert light.channel_color_name == HmColor.BLUE
+    assert light.channel_color_name == FixedColor.BLUE
 
     await light.turn_off()
     light.set_on_time(18)
@@ -514,7 +514,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     assert light.supports_transition is True
     assert light.effect is None
     assert light.effect_list == [
-        HmColorBehaviour.ON,
+        ColorBehaviour.ON,
         "BLINKING_SLOW",
         "BLINKING_MIDDLE",
         "BLINKING_FAST",
@@ -527,7 +527,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     ]
     assert light.brightness == 0
     assert light.is_on is False
-    assert light.color_name == HmColor.BLACK
+    assert light.color_name == FixedColor.BLACK
     await light.turn_on()
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8",
@@ -535,7 +535,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 7, "LEVEL": 1.0},
     )
     assert light.brightness == 255
-    assert light.color_name == HmColor.WHITE
+    assert light.color_name == FixedColor.WHITE
 
     await light.turn_on(brightness=100)
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -544,16 +544,16 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "LEVEL": 0.39215686274509803},
     )
     assert light.brightness == 100
-    assert light.color_name == HmColor.WHITE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.WHITE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_off()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU4704397:8", paramset_key="VALUES", parameter="LEVEL", value=0.0
     )
     assert light.brightness == 0
-    assert light.color_name == HmColor.WHITE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.WHITE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(hs_color=(350, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -562,8 +562,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 4, "LEVEL": 1.0},
     )
     assert light.brightness == 255
-    assert light.color_name == HmColor.RED
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.RED
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(hs_color=(0.0, 0.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -572,8 +572,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 7, "LEVEL": 1.0},
     )
     assert light.brightness == 255
-    assert light.color_name == HmColor.WHITE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.WHITE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(hs_color=(60.0, 50.0))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -582,8 +582,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 6, "LEVEL": 1.0},
     )
     assert light.brightness == 255
-    assert light.color_name == HmColor.YELLOW
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.YELLOW
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(hs_color=(120, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -592,8 +592,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 2, "LEVEL": 1.0},
     )
     assert light.brightness == 255
-    assert light.color_name == HmColor.GREEN
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.GREEN
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(hs_color=(180, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -602,8 +602,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 3, "LEVEL": 1.0},
     )
     assert light.brightness == 255
-    assert light.color_name == HmColor.TURQUOISE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.TURQUOISE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(hs_color=(240, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -612,8 +612,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 1, "LEVEL": 1.0},
     )
     assert light.brightness == 255
-    assert light.color_name == HmColor.BLUE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.BLUE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(hs_color=(300, 50))
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -622,13 +622,13 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "COLOR": 5, "LEVEL": 1.0},
     )
     assert light.brightness == 255
-    assert light.color_name == HmColor.PURPLE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.PURPLE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_off()
     assert light.brightness == 0
-    assert light.color_name == HmColor.PURPLE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.PURPLE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(brightness=100)
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -637,8 +637,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "LEVEL": 0.39215686274509803},
     )
     assert light.brightness == 100
-    assert light.color_name == HmColor.PURPLE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.PURPLE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(brightness=33)
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -647,8 +647,8 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 1, "LEVEL": 0.12941176470588237},
     )
     assert light.brightness == 33
-    assert light.color_name == HmColor.PURPLE
-    assert light.effect == HmColorBehaviour.ON
+    assert light.color_name == FixedColor.PURPLE
+    assert light.effect == ColorBehaviour.ON
 
     await light.turn_on(effect="FLASH_MIDDLE")
     assert mock_client.method_calls[-1] == call.put_paramset(
@@ -657,7 +657,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 6, "LEVEL": 0.12941176470588237},
     )
     assert light.brightness == 33
-    assert light.color_name == HmColor.PURPLE
+    assert light.color_name == FixedColor.PURPLE
     assert light.effect == "FLASH_MIDDLE"
 
     await light.turn_on(brightness=66)
@@ -667,7 +667,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         value={"COLOR_BEHAVIOUR": 6, "LEVEL": 0.25882352941176473},
     )
     assert light.brightness == 66
-    assert light.color_name == HmColor.PURPLE
+    assert light.color_name == FixedColor.PURPLE
     assert light.effect == "FLASH_MIDDLE"
 
     await light.turn_off()

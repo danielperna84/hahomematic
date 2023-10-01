@@ -16,7 +16,7 @@ from hahomematic.platforms.custom.cover import (
     CeGarage,
     CeIpBlind,
     CeWindowDrive,
-    HmGarageDoorActivity,
+    GarageDoorActivity,
 )
 
 from tests import const, helper
@@ -495,13 +495,9 @@ async def test_cegarageho(factory: helper.Factory) -> None:
     central.event(const.INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
     assert cover.current_position == 100
 
-    central.event(
-        const.INTERFACE_ID, "VCU3574044:1", "SECTION", HmGarageDoorActivity.OPENING.value
-    )
+    central.event(const.INTERFACE_ID, "VCU3574044:1", "SECTION", GarageDoorActivity.OPENING.value)
     assert cover.is_opening is True
-    central.event(
-        const.INTERFACE_ID, "VCU3574044:1", "SECTION", HmGarageDoorActivity.CLOSING.value
-    )
+    central.event(const.INTERFACE_ID, "VCU3574044:1", "SECTION", GarageDoorActivity.CLOSING.value)
     assert cover.is_closing is True
 
     central.event(const.INTERFACE_ID, "VCU3574044:1", "SECTION", None)
@@ -592,9 +588,9 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
     central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 1)
     assert cover.current_position == 100
 
-    central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", HmGarageDoorActivity.OPENING)
+    central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", GarageDoorActivity.OPENING)
     assert cover.is_opening is True
-    central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", HmGarageDoorActivity.CLOSING)
+    central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", GarageDoorActivity.CLOSING)
     assert cover.is_closing is True
 
     central.event(const.INTERFACE_ID, "VCU6166407:1", "SECTION", None)

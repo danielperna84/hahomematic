@@ -7,14 +7,7 @@ import os
 from typing import Any, Final
 
 from hahomematic import central as hmcu, support as hms
-from hahomematic.const import (
-    CLICK_EVENTS,
-    DEFAULT_ENCODING,
-    Event,
-    Parameter,
-    ParamsetKey,
-    Platform,
-)
+from hahomematic.const import CLICK_EVENTS, DEFAULT_ENCODING, HmPlatform, Parameter, ParamsetKey
 from hahomematic.platforms.custom.definition import get_required_parameters
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.support import reduce_args
@@ -71,17 +64,17 @@ _IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[dict[str, tuple[str, ...]]] = {
 
 # Entities that will be created, but should be hidden.
 _HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
-    Event.CONFIG_PENDING,
-    Event.ERROR,
-    Event.STICKY_UN_REACH,
-    Event.UN_REACH,
-    Event.UPDATE_PENDING,
     Parameter.ACTIVITY_STATE,
     Parameter.CHANNEL_OPERATION_MODE,
+    Parameter.CONFIG_PENDING,
     Parameter.DIRECTION,
+    Parameter.ERROR,
     Parameter.SECTION,
+    Parameter.STICKY_UN_REACH,
     Parameter.TEMPERATURE_MAXIMUM,
     Parameter.TEMPERATURE_MINIMUM,
+    Parameter.UN_REACH,
+    Parameter.UPDATE_PENDING,
     Parameter.WORKING,
 )
 
@@ -244,8 +237,8 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {Parameter.LOWBAT: 0}
 
 # Entities that should be wrapped in a new entity on a new platform.
-_WRAP_ENTITY: Final[dict[str | tuple[str, ...], dict[str, Platform]]] = {
-    ("HmIP-eTRV", "HmIP-HEATING"): {Parameter.LEVEL: Platform.SENSOR},
+_WRAP_ENTITY: Final[dict[str | tuple[str, ...], dict[str, HmPlatform]]] = {
+    ("HmIP-eTRV", "HmIP-HEATING"): {Parameter.LEVEL: HmPlatform.SENSOR},
 }
 
 
@@ -603,7 +596,7 @@ class ParameterVisibilityCache:
                     return True
         return False
 
-    def wrap_entity(self, wrapped_entity: hmge.GenericEntity) -> Platform | None:
+    def wrap_entity(self, wrapped_entity: hmge.GenericEntity) -> HmPlatform | None:
         """Check if parameter of a device should be wrapped to a different platform."""
         for devices, wrapper_def in _WRAP_ENTITY.items():
             if (

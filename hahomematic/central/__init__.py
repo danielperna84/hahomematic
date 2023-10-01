@@ -38,12 +38,12 @@ from hahomematic.const import (
     Description,
     DeviceFirmwareState,
     EntityUsage,
-    Event,
     EventType,
+    HmPlatform,
     InterfaceEventType,
     InterfaceName,
+    Parameter,
     ParamsetKey,
-    Platform,
     ProxyInitState,
     SystemEvent,
     SystemInformation,
@@ -61,7 +61,7 @@ from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.entity import BaseEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
-from hahomematic.platforms.hub import HmHub
+from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.platforms.update import HmUpdate
@@ -168,7 +168,7 @@ class CentralUnit:
 
         CENTRAL_INSTANCES[self._name] = self
         self._connection_checker: Final = ConnectionChecker(self)
-        self._hub: HmHub = HmHub(central=self)
+        self._hub: Hub = Hub(central=self)
         self._version: str | None = None
 
     @property
@@ -556,7 +556,7 @@ class CentralUnit:
         return self._devices.get(d_address)
 
     def get_entities_by_platform(
-        self, platform: Platform, existing_unique_ids: list[str] | None = None
+        self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
     ) -> list[BaseEntity]:
         """Return all entities by platform."""
         if not existing_unique_ids:
@@ -598,7 +598,7 @@ class CentralUnit:
         return client
 
     def get_hub_entities_by_platform(
-        self, platform: Platform, existing_unique_ids: list[str] | None = None
+        self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
     ) -> list[GenericHubEntity]:
         """Return the hub entities by platform."""
         if not existing_unique_ids:
@@ -799,7 +799,7 @@ class CentralUnit:
 
         self.last_events[interface_id] = datetime.now()
         # No need to check the response of a XmlRPC-PING
-        if parameter == Event.PONG:
+        if parameter == Parameter.PONG:
             if value == interface_id:
                 self._reduce_ping_count(interface_id=interface_id)
             return

@@ -9,7 +9,7 @@ from typing import Any, Final, TypeVar, cast
 from hahomematic.const import INIT_DATETIME, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import HmEntityDefinition
+from hahomematic.platforms.custom.const import EntityDefinition
 from hahomematic.platforms.custom.support import ExtendedConfig
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
@@ -32,7 +32,7 @@ class CustomEntity(BaseEntity):
         self,
         device: hmd.HmDevice,
         unique_identifier: str,
-        device_enum: HmEntityDefinition,
+        device_enum: EntityDefinition,
         device_def: dict[str, Any],
         entity_def: dict[int | tuple[int, ...], tuple[str, ...]],
         channel_no: int,

@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from hahomematic.const import Platform, SysvarType
+from hahomematic.const import HmPlatform, SysvarType
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 
@@ -18,7 +18,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 class HmSysvarSensor(GenericSystemVariable):
     """Implementation of a sysvar sensor."""
 
-    _platform = Platform.HUB_SENSOR
+    _platform = HmPlatform.HUB_SENSOR
 
     @value_property
     def value(self) -> Any | None:

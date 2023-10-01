@@ -8,14 +8,14 @@ from __future__ import annotations
 from typing import Final
 
 from hahomematic import central as hmcu
-from hahomematic.const import PROGRAM_ADDRESS, HubData, Platform, ProgramData
+from hahomematic.const import PROGRAM_ADDRESS, HmPlatform, HubData, ProgramData
 from hahomematic.platforms.hub.entity import GenericHubEntity
 
 
 class HmProgramButton(GenericHubEntity):
     """Class for a HomeMatic program button."""
 
-    _platform = Platform.HUB_BUTTON
+    _platform = HmPlatform.HUB_BUTTON
 
     def __init__(
         self,

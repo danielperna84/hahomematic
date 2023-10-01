@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final
 
-from hahomematic.const import Platform
+from hahomematic.const import HmPlatform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
 
@@ -22,7 +22,7 @@ class HmSensor(GenericEntity[Any, None]):
     This is a default platform that gets automatically generated.
     """
 
-    _platform = Platform.SENSOR
+    _platform = HmPlatform.SENSOR
 
     @value_property
     def value(self) -> Any | None:

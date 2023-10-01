@@ -26,11 +26,11 @@ from hahomematic.const import (
     DataOperationResult,
     Description,
     DeviceFirmwareState,
-    Event,
     EventType,
     ForcedDeviceAvailability,
     InterfaceName,
     Manufacturer,
+    Parameter,
     ParamsetKey,
     ProductGroup,
 )
@@ -277,17 +277,17 @@ class HmDevice(PayloadMixin):
     @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity."""
-        return self.generic_entities.get((f"{self._device_address}:0", Event.UN_REACH))
+        return self.generic_entities.get((f"{self._device_address}:0", Parameter.UN_REACH))
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity."""
-        return self.generic_entities.get((f"{self._device_address}:0", Event.STICKY_UN_REACH))
+        return self.generic_entities.get((f"{self._device_address}:0", Parameter.STICKY_UN_REACH))
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity."""
-        return self.generic_entities.get((f"{self._device_address}:0", Event.CONFIG_PENDING))
+        return self.generic_entities.get((f"{self._device_address}:0", Parameter.CONFIG_PENDING))
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""

@@ -11,11 +11,11 @@ from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     EVENT_AVAILABLE,
     EntityUsage,
-    Event,
     EventType,
+    HmPlatform,
     InterfaceEventType,
+    Parameter,
     ParamsetKey,
-    Platform,
 )
 from hahomematic.exceptions import HaHomematicException, NoClients
 from hahomematic.platforms.generic.number import HmFloat
@@ -136,11 +136,11 @@ async def test_all_parameters(factory: helper.Factory) -> None:
 async def test_entities_by_platform(factory: helper.Factory) -> None:
     """Test entities_by_platform."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
-    ebp_sensor = central.get_entities_by_platform(platform=Platform.SENSOR)
+    ebp_sensor = central.get_entities_by_platform(platform=HmPlatform.SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 12
     ebp_sensor2 = central.get_entities_by_platform(
-        platform=Platform.SENSOR,
+        platform=HmPlatform.SENSOR,
         existing_unique_ids=["vcu6354483_1_actual_temperature"],
     )
     assert ebp_sensor2
@@ -151,21 +151,21 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
 async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     """Test hub_entities_by_platform."""
     central, _ = await factory.get_default_central({}, add_programs=True, add_sysvars=True)
-    ebp_sensor = central.get_hub_entities_by_platform(platform=Platform.HUB_SENSOR)
+    ebp_sensor = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 4
     ebp_sensor2 = central.get_hub_entities_by_platform(
-        platform=Platform.HUB_SENSOR,
+        platform=HmPlatform.HUB_SENSOR,
         existing_unique_ids=["test1234_sysvar_sv-string"],
     )
     assert ebp_sensor2
     assert len(ebp_sensor2) == 3
 
-    ebp_sensor3 = central.get_hub_entities_by_platform(platform=Platform.HUB_BUTTON)
+    ebp_sensor3 = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_BUTTON)
     assert ebp_sensor3
     assert len(ebp_sensor3) == 2
     ebp_sensor4 = central.get_hub_entities_by_platform(
-        platform=Platform.HUB_BUTTON, existing_unique_ids=["test1234_program_p-2"]
+        platform=HmPlatform.HUB_BUTTON, existing_unique_ids=["test1234_program_p-2"]
     )
     assert ebp_sensor4
     assert len(ebp_sensor4) == 1
@@ -426,7 +426,7 @@ async def test_ping_pong(factory: helper.Factory) -> None:
     interface_id = client.interface_id
     await client.check_connection_availability()
     assert central._ping_count[interface_id] == 1
-    central.event(interface_id, "", Event.PONG, interface_id)
+    central.event(interface_id, "", Parameter.PONG, interface_id)
     assert central._ping_count[interface_id] == 0
 
 
@@ -453,7 +453,7 @@ async def test_ping_failure(factory: helper.Factory) -> None:
     assert central._ping_pong_fired is True
     assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
-    central.event(interface_id, "", Event.PONG, interface_id)
+    central.event(interface_id, "", Parameter.PONG, interface_id)
     assert len(factory.ha_event_mock.mock_calls) == 2
 
 
@@ -466,7 +466,7 @@ async def test_pong_failure(factory: helper.Factory) -> None:
     max_count = PING_PONG_MISMATCH_COUNT + 2
     assert central._ping_pong_fired is False
     while count < max_count:
-        central.event(interface_id, "", Event.PONG, interface_id)
+        central.event(interface_id, "", Parameter.PONG, interface_id)
         count += 1
     assert central._ping_count[interface_id] == -max_count + 1
     assert factory.ha_event_mock.mock_calls[-1] == call(
@@ -480,7 +480,7 @@ async def test_pong_failure(factory: helper.Factory) -> None:
     assert central._ping_pong_fired is True
     assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
-    central.event(interface_id, "", Event.PONG, interface_id)
+    central.event(interface_id, "", Parameter.PONG, interface_id)
     assert len(factory.ha_event_mock.mock_calls) == 2
 
 

@@ -5,7 +5,7 @@ See https://www.home-assistant.io/integrations/text/.
 """
 from __future__ import annotations
 
-from hahomematic.const import Platform
+from hahomematic.const import HmPlatform
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
@@ -16,4 +16,4 @@ class HmText(GenericEntity[str, str]):
     This is a default platform that gets automatically generated.
     """
 
-    _platform = Platform.TEXT
+    _platform = HmPlatform.TEXT

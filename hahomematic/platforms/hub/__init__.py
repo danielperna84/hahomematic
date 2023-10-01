@@ -24,7 +24,7 @@ _EXCLUDED: Final = [
 ]
 
 
-class HmHub:
+class Hub:
     """The HomeMatic hub. (CCU/HomeGear)."""
 
     def __init__(self, central: hmcu.CentralUnit) -> None:

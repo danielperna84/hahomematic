@@ -5,7 +5,7 @@ See https://www.home-assistant.io/integrations/number/.
 """
 from __future__ import annotations
 
-from hahomematic.const import Platform
+from hahomematic.const import HmPlatform
 from hahomematic.platforms.entity import InputParameterT, ParameterT
 from hahomematic.platforms.generic.entity import GenericEntity
 
@@ -17,7 +17,7 @@ class BaseNumber(GenericEntity[ParameterT, InputParameterT]):
     This is a default platform that gets automatically generated.
     """
 
-    _platform = Platform.NUMBER
+    _platform = HmPlatform.NUMBER
 
 
 class HmFloat(BaseNumber[float, float | str]):

@@ -26,11 +26,11 @@ from hahomematic.const import (
     Description,
     EntityUsage,
     Flag,
+    HmPlatform,
     Operations,
     Parameter,
     ParameterType,
     ParamsetKey,
-    Platform,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
@@ -91,7 +91,7 @@ HM_EVENT_DATA_SCHEMA = vol.Schema(
 class CallbackEntity(ABC):
     """Base class for callback entities."""
 
-    _platform: Platform
+    _platform: HmPlatform
 
     def __init__(self, unique_identifier: str) -> None:
         """Init the callback entity."""
@@ -115,7 +115,7 @@ class CallbackEntity(ABC):
         """Return the name of the entity."""
 
     @config_property
-    def platform(self) -> Platform:
+    def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return self._platform
 
