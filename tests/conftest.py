@@ -56,7 +56,7 @@ async def central_unit_mini(pydev_ccu_mini: pydevccu.Server) -> CentralUnit:
     central = await helper.get_pydev_ccu_central_unit_full(client_session=None)
     yield central
     await central.stop()
-    await central.clear_all_caches()
+    await central.clear_caches()
 
 
 @pytest.fixture
@@ -91,7 +91,7 @@ async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
     central.unregister_ha_event_callback(ha_event_callback)
     central.unregister_system_event_callback(system_event_callback)
     await central.stop()
-    await central.clear_all_caches()
+    await central.clear_caches()
 
 
 @pytest.fixture

@@ -268,7 +268,7 @@ class CentralUnit:
     async def start(self) -> None:
         """Start processing of the central unit."""
         if self._started:
-            _LOGGER.debug("START: Cental %s already started", self._name)
+            _LOGGER.debug("START: Central %s already started", self._name)
             return
         await self.parameter_visibility.load()
         if self.config.start_direct:
@@ -284,7 +284,7 @@ class CentralUnit:
     async def stop(self) -> None:
         """Stop processing of the central unit."""
         if not self._started:
-            _LOGGER.debug("STOP: Cental %s not started", self._name)
+            _LOGGER.debug("STOP: Central %s not started", self._name)
             return
         self._stop_connection_checker()
         await self._stop_clients()
@@ -624,7 +624,7 @@ class CentralUnit:
 
     @property
     def has_clients(self) -> bool:
-        """Check if clients exists in central."""
+        """Check if all configured clients exists in central."""
         count_client = len(self._clients)
         count_client_defined = len(self.config.interface_configs)
         return count_client > 0 and count_client == count_client_defined
@@ -638,7 +638,7 @@ class CentralUnit:
             await self.data_cache.load()
         except orjson.JSONDecodeError:  # pragma: no cover
             _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._name)
-            await self.clear_all_caches()
+            await self.clear_caches()
 
     async def _create_devices(self) -> None:
         """Trigger creation of the objects that expose the functionality."""
@@ -1072,16 +1072,12 @@ class CentralUnit:
         """Return the program button."""
         return self.program_entities.get(pid)
 
-    def clear_dynamic_caches(self) -> None:
-        """Clear all stored data."""
-        self.device_details.clear()
-        self.data_cache.clear()
-
-    async def clear_all_caches(self) -> None:
+    async def clear_caches(self) -> None:
         """Clear all stored data."""
         await self.device_descriptions.clear()
         await self.paramset_descriptions.clear()
-        self.clear_dynamic_caches()
+        self.device_details.clear()
+        self.data_cache.clear()
 
     def register_ha_event_callback(self, callback_handler: Callable) -> None:
         """Register ha_event callback in central."""

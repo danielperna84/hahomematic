@@ -194,7 +194,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         data: dict[str, Any] = {
             device_address: self._device_descriptions.get(interface_id, {}).get(device_address, {})
         }
-        children = data[device_address]["CHILDREN"]
+        children = data[device_address][HmDescription.CHILDREN]
         for channel_address in children:
             data[channel_address] = self._device_descriptions.get(interface_id, {}).get(
                 channel_address, {}

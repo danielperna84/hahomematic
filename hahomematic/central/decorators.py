@@ -18,6 +18,8 @@ _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
 
+_INTERFACE_ID: Final = "interface_id"
+
 
 def callback_system_event(system_event: HmSystemEvent) -> Callable:
     """Check if callback_system is set and call it AFTER original function."""
@@ -49,7 +51,7 @@ def callback_system_event(system_event: HmSystemEvent) -> Callable:
                 )
             try:
                 args = args[1:]
-                interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
+                interface_id: str = args[0] if len(args) > 1 else str(kwargs[_INTERFACE_ID])
                 if client := hmcl.get_client(interface_id=interface_id):
                     client.last_updated = datetime.now()
                     client.central.fire_system_event_callback(system_event=system_event, **kwargs)
@@ -82,7 +84,7 @@ def callback_event(func: Callable[_P, _R]) -> Callable[_P, _R]:
         """Execute the callback for an entity event."""
         try:
             args = args[1:]
-            interface_id: str = args[0] if len(args) > 1 else str(kwargs["interface_id"])
+            interface_id: str = args[0] if len(args) > 1 else str(kwargs[_INTERFACE_ID])
             if client := hmcl.get_client(interface_id=interface_id):
                 client.last_updated = datetime.now()
                 client.central.fire_entity_event_callback(*args, **kwargs)

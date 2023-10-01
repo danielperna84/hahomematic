@@ -10,14 +10,22 @@ DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = (
     15  # check if connection is available via rpc ping every:
 )
 DEFAULT_ENCODING: Final = "UTF-8"
+DEFAULT_JSON_SESSION_AGE: Final = 90
 DEFAULT_PING_PONG_MISMATCH_COUNT: Final = 10
 DEFAULT_RECONNECT_WAIT: Final = 120  # wait with reconnect after a first ping was successful
 DEFAULT_TIMEOUT: Final = 60  # default timeout for a connection
 DEFAULT_TLS: Final = False
 DEFAULT_VERIFY_TLS: Final = False
 
+REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
+REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
+REGA_SCRIPT_PATH: Final = "../rega_scripts"
+REGA_SCRIPT_SET_SYSTEM_VARIABLE: Final = "set_system_variable.fn"
+REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marker.fn"
+
 DEFAULT_DEVICE_DESCRIPTIONS_DIR: Final = "export_device_descriptions"
 DEFAULT_PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
+
 
 # Password can be empty.
 # Allowed characters: A-Z, a-z, 0-9, .!$():;#-

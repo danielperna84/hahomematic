@@ -25,6 +25,11 @@ from hahomematic.const import (
     CONF_USERNAME,
     DEFAULT_ENCODING,
     PATH_JSON_RPC,
+    REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
+    REGA_SCRIPT_GET_SERIAL,
+    REGA_SCRIPT_PATH,
+    REGA_SCRIPT_SET_SYSTEM_VARIABLE,
+    REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER,
     HmSysvarType,
     ProgramData,
     SystemInformation,
@@ -35,13 +40,12 @@ from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-_MAX_JSON_SESSION_AGE: Final = 90
-
-_HASEXTMARKER: Final = "hasExtMarker"
+_CHANNEL_IDS: Final = "channelIds"
+_HAS_EXT_MARKER: Final = "hasExtMarker"
 _ID: Final = "id"
-_ISACTIVE: Final = "isActive"
-_ISINTERNAL: Final = "isInternal"
-_LASTEXECUTETIME: Final = "lastExecuteTime"
+_IS_ACTIVE: Final = "isActive"
+_IS_INTERNAL: Final = "isInternal"
+_LAST_EXECUTE_TIME: Final = "lastExecuteTime"
 _MAX_VALUE: Final = "maxValue"
 _MIN_VALUE: Final = "minValue"
 _NAME: Final = "name"
@@ -50,16 +54,11 @@ _P_ERROR: Final = "error"
 _P_MESSAGE: Final = "message"
 _P_RESULT: Final = "result"
 _SESSION_ID: Final = "_session_id_"
+_SERIAL: Final = "serial"
 _TYPE: Final = "type"
 _UNIT: Final = "unit"
 _VALUE: Final = "value"
 _VALUE_LIST: Final = "valueList"
-
-_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
-_REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
-_REGA_SCRIPT_PATH: Final = "../rega_scripts"
-_REGA_SCRIPT_SET_SYSTEM_VARIABLE: Final = "set_system_variable.fn"
-_REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER: Final = "get_system_variables_ext_marker.fn"
 
 
 class JsonRpcAioHttpClient:
@@ -126,7 +125,7 @@ class JsonRpcAioHttpClient:
         if self._last_session_id_refresh is None:
             return False
         delta = datetime.now() - self._last_session_id_refresh
-        if delta.seconds < _MAX_JSON_SESSION_AGE:
+        if delta.seconds < config.JSON_SESSION_AGE:
             return True
         return False
 
@@ -236,7 +235,7 @@ class JsonRpcAioHttpClient:
         if script_name in self._script_cache:
             return self._script_cache[script_name]
 
-        script_file = os.path.join(Path(__file__).resolve().parent, _REGA_SCRIPT_PATH, script_name)
+        script_file = os.path.join(Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name)
         if script := Path(script_file).read_text(encoding=DEFAULT_ENCODING):
             self._script_cache[script_name] = script
             return script
@@ -403,7 +402,7 @@ class JsonRpcAioHttpClient:
                     )
                     return False
                 response = await self._post_script(
-                    script_name=_REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
+                    script_name=REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
                 )
             else:
                 response = await self._post("SysVar.setFloat", params)
@@ -485,7 +484,7 @@ class JsonRpcAioHttpClient:
             if json_result := response[_P_RESULT]:
                 ext_markers = await self._get_system_variables_ext_markers()
                 for var in json_result:
-                    is_internal = var[_ISINTERNAL]
+                    is_internal = var[_IS_INTERNAL]
                     if include_internal is False and is_internal is True:
                         continue
                     var_id = var[_ID]
@@ -542,14 +541,12 @@ class JsonRpcAioHttpClient:
         ext_markers: dict[str, Any] = {}
 
         try:
-            response = await self._post_script(
-                script_name=_REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER
-            )
+            response = await self._post_script(script_name=REGA_SCRIPT_SYSTEM_VARIABLES_EXT_MARKER)
 
             _LOGGER.debug("GET_SYSTEM_VARIABLES_EXT_MARKERS: Getting system variables ext markers")
             if json_result := response[_P_RESULT]:
                 for data in json_result:
-                    ext_markers[data[_ID]] = data[_HASEXTMARKER]
+                    ext_markers[data[_ID]] = data[_HAS_EXT_MARKER]
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except JSONDecodeError as jderr:
             self._handle_exception_log(
@@ -572,13 +569,15 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_ROOM: Getting all rooms")
             if json_result := response[_P_RESULT]:
                 for room in json_result:
-                    if room["id"] not in channel_ids_room:
-                        channel_ids_room[room["id"]] = set()
-                    channel_ids_room[room["id"]].add(room["name"])
-                    for channel_id in room["channelIds"]:
+                    room_id = room[_ID]
+                    room_name = room[_NAME]
+                    if room_id not in channel_ids_room:
+                        channel_ids_room[room_id] = set()
+                    channel_ids_room[room_id].add(room_name)
+                    for channel_id in room[_CHANNEL_IDS]:
                         if channel_id not in channel_ids_room:
                             channel_ids_room[channel_id] = set()
-                        channel_ids_room[channel_id].add(room["name"])
+                        channel_ids_room[channel_id].add(room_name)
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
             self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
@@ -599,13 +598,15 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_FUNCTION: Getting all functions")
             if json_result := response[_P_RESULT]:
                 for function in json_result:
-                    if function["id"] not in channel_ids_function:
-                        channel_ids_function[function["id"]] = set()
-                    channel_ids_function[function["id"]].add(function["name"])
-                    for channel_id in function["channelIds"]:
+                    function_id = function[_ID]
+                    function_name = function[_NAME]
+                    if function_id not in channel_ids_function:
+                        channel_ids_function[function_id] = set()
+                    channel_ids_function[function_id].add(function_name)
+                    for channel_id in function[_CHANNEL_IDS]:
                         if channel_id not in channel_ids_function:
                             channel_ids_function[channel_id] = set()
-                        channel_ids_function[channel_id].add(function["name"])
+                        channel_ids_function[channel_id].add(function_name)
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except ClientException as clex:
             self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
@@ -642,7 +643,7 @@ class JsonRpcAioHttpClient:
         }
         try:
             response = await self._post_script(
-                script_name=_REGA_SCRIPT_FETCH_ALL_DEVICE_DATA, extra_params=params
+                script_name=REGA_SCRIPT_FETCH_ALL_DEVICE_DATA, extra_params=params
             )
 
             _LOGGER.debug(
@@ -680,13 +681,13 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("GET_ALL_PROGRAMS: Getting all programs")
             if json_result := response[_P_RESULT]:
                 for prog in json_result:
-                    is_internal = prog[_ISINTERNAL]
+                    is_internal = prog[_IS_INTERNAL]
                     if include_internal is False and is_internal is True:
                         continue
                     pid = prog[_ID]
                     name = prog[_NAME]
-                    is_active = prog[_ISACTIVE]
-                    last_execute_time = prog[_LASTEXECUTETIME]
+                    is_active = prog[_IS_ACTIVE]
+                    last_execute_time = prog[_LAST_EXECUTE_TIME]
 
                     all_programs.append(
                         ProgramData(
@@ -759,10 +760,10 @@ class JsonRpcAioHttpClient:
         """Get the serial of the backend."""
         _LOGGER.debug("GET_SERIAL: Getting the backend serial")
         try:
-            response = await self._post_script(script_name=_REGA_SCRIPT_GET_SERIAL)
+            response = await self._post_script(script_name=REGA_SCRIPT_GET_SERIAL)
 
             if json_result := response[_P_RESULT]:
-                serial: str = json_result["serial"]
+                serial: str = json_result[_SERIAL]
                 if len(serial) > 10:
                     serial = serial[-10:]
                 return serial

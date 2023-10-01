@@ -490,7 +490,7 @@ async def test_central_caches(factory: helper.Factory) -> None:
     central, client = await factory.get_default_central(TEST_DEVICES)
     assert len(central.device_descriptions._raw_device_descriptions[client.interface_id]) == 20
     assert len(central.paramset_descriptions._raw_paramset_descriptions[client.interface_id]) == 11
-    await central.clear_all_caches()
+    await central.clear_caches()
     assert central.device_descriptions._raw_device_descriptions.get(client.interface_id) is None
     assert (
         central.paramset_descriptions._raw_paramset_descriptions.get(client.interface_id) is None

@@ -23,6 +23,7 @@ _CONTEXT: Final = "context"
 _ENCODING_ISO_8859_1: Final = "ISO-8859-1"
 _TLS: Final = "tls"
 _VERIFY_TLS: Final = "verify_tls"
+
 _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION: Final[tuple[str, ...]] = (
     "getVersion",
     "init",
