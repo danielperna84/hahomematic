@@ -5,6 +5,7 @@ body:
     attributes:
       value: |
         This issue form is for reporting bugs only!
+        Language/Sprache: english/ deutsch
   - type: checkboxes
     attributes:
       label: I agree to the following
