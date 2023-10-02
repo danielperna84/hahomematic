@@ -68,10 +68,10 @@ class Client(ABC):
     async def init_client(self) -> None:
         """Init the client."""
         self.system_information = await self._get_system_information()
-        self._proxy = self._config.get_xml_rpc_proxy(
+        self._proxy = await self._config.get_xml_rpc_proxy(
             auth_enabled=self.system_information.auth_enabled
         )
-        self._proxy_read = self._config.get_xml_rpc_proxy(
+        self._proxy_read = await self._config.get_xml_rpc_proxy(
             auth_enabled=self.system_information.auth_enabled
         )
 
@@ -936,9 +936,9 @@ class _ClientConfig:
     async def get_client(self) -> Client:
         """Identify the used client."""
         client: Client | None = None
-        check_proxy = self._get_simple_xml_rpc_proxy()
+        check_proxy = await self._get_simple_xml_rpc_proxy()
         try:
-            if methods := await check_proxy.system.listMethods():
+            if methods := check_proxy.supported_methods:
                 # BidCos-Wired does not support getVersion()
                 self.version = (
                     cast(str, await check_proxy.getVersion()) if "getVersion" in methods else "0"
@@ -958,7 +958,7 @@ class _ClientConfig:
         except Exception as exc:
             raise NoConnection(f"Unable to connect {reduce_args(args=exc.args)}.") from exc
 
-    def get_xml_rpc_proxy(self, auth_enabled: bool | None = None) -> XmlRpcProxy:
+    async def get_xml_rpc_proxy(self, auth_enabled: bool | None = None) -> XmlRpcProxy:
         """Return a XmlRPC proxy for backend communication."""
         central_config = self.central.config
         xml_rpc_headers = (
@@ -969,7 +969,7 @@ class _ClientConfig:
             if auth_enabled
             else []
         )
-        return XmlRpcProxy(
+        xml_proxy = XmlRpcProxy(
             max_workers=1,
             interface_id=self.interface_id,
             connection_state=central_config.connection_state,
@@ -978,15 +978,17 @@ class _ClientConfig:
             tls=central_config.tls,
             verify_tls=central_config.verify_tls,
         )
+        await xml_proxy.do_init()
+        return xml_proxy
 
-    def _get_simple_xml_rpc_proxy(self) -> XmlRpcProxy:
+    async def _get_simple_xml_rpc_proxy(self) -> XmlRpcProxy:
         """Return a XmlRPC proxy for backend communication."""
         central_config = self.central.config
         xml_rpc_headers = build_headers(
             username=central_config.username,
             password=central_config.password,
         )
-        return XmlRpcProxy(
+        xml_proxy = XmlRpcProxy(
             max_workers=0,
             interface_id=self.interface_id,
             connection_state=central_config.connection_state,
@@ -995,6 +997,8 @@ class _ClientConfig:
             tls=central_config.tls,
             verify_tls=central_config.verify_tls,
         )
+        await xml_proxy.do_init()
+        return xml_proxy
 
 
 class InterfaceConfig:

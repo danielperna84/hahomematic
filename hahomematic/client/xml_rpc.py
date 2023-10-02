@@ -12,7 +12,7 @@ from typing import Any, Final, TypeVar
 import xmlrpc.client
 
 from hahomematic import central as hmcu
-from hahomematic.exceptions import AuthFailure, ClientException, NoConnection
+from hahomematic.exceptions import AuthFailure, ClientException, NoConnection, UnsupportedException
 from hahomematic.support import get_tls_context, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -24,11 +24,21 @@ _ENCODING_ISO_8859_1: Final = "ISO-8859-1"
 _TLS: Final = "tls"
 _VERIFY_TLS: Final = "verify_tls"
 
+
+class XmlRpcMethod(StrEnum):
+    """Enum for homematic json rpc methods types."""
+
+    GET_VERSION = "getVersion"
+    INIT = "init"
+    PING = "ping"
+    SYSTEM_LIST_METHODS = "system.listMethods"
+
+
 _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION: Final[tuple[str, ...]] = (
-    "getVersion",
-    "init",
-    "system.listMethods",
-    "ping",
+    XmlRpcMethod.GET_VERSION,
+    XmlRpcMethod.INIT,
+    XmlRpcMethod.PING,
+    XmlRpcMethod.SYSTEM_LIST_METHODS,
 )
 
 _SSL_ERROR_CODES: Final[dict[int, str]] = {
@@ -67,11 +77,24 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         )
         self._tls: Final[bool] = kwargs.pop(_TLS, False)
         self._verify_tls: Final[bool] = kwargs.pop(_VERIFY_TLS, True)
+        self._supported_methods: tuple[str, ...] = ()
         if self._tls:
             kwargs[_CONTEXT] = get_tls_context(self._verify_tls)
         xmlrpc.client.ServerProxy.__init__(  # type: ignore[misc]
             self, encoding=_ENCODING_ISO_8859_1, *args, **kwargs
         )
+
+    async def do_init(self) -> None:
+        """Init the xml rpc proxy."""
+        if supported_methods := await self.system.listMethods():
+            # ping is missing in VirtualDevices interface but can be used.
+            supported_methods.append(XmlRpcMethod.PING)
+            self._supported_methods = tuple(supported_methods)
+
+    @property
+    def supported_methods(self) -> tuple[str, ...]:
+        """Return the supported methods."""
+        return self._supported_methods
 
     def _async_add_proxy_executor_job(
         self, func: Callable[..., _T], *args: Any
@@ -87,6 +110,11 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         parent = xmlrpc.client.ServerProxy
         try:
             method = args[0]
+            if self._supported_methods and method not in self._supported_methods:
+                raise UnsupportedException(
+                    f"__ASYNC_REQUEST: method '{method} not supported by backend."
+                )
+
             if (
                 method in _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION
                 or not self._connection_state.has_issue(  # noqa: E501
