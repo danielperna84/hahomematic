@@ -315,7 +315,6 @@ class Client(ABC):
             )
         return None
 
-    # pylint: disable=invalid-name
     async def set_install_mode(
         self,
         on: bool = True,

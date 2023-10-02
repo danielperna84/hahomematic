@@ -1009,7 +1009,6 @@ class CentralUnit:
         else:
             _LOGGER.warning("Variable %s not found on %s", name, self.name)
 
-    # pylint: disable=invalid-name
     async def set_install_mode(
         self,
         interface_id: str,
