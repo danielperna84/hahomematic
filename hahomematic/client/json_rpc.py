@@ -62,7 +62,7 @@ _VALUE: Final = "value"
 _VALUE_LIST: Final = "valueList"
 
 
-class Method(StrEnum):
+class JsonRpcMethod(StrEnum):
     """Enum for homematic json rpc methods types."""
 
     CCU_GET_AUTH_ENABLED = "CCU.getAuthEnabled"
@@ -109,6 +109,7 @@ class JsonRpcAioHttpClient:
         self._script_cache: Final[dict[str, str]] = {}
         self._last_session_id_refresh: datetime | None = None
         self._session_id: str | None = None
+        self._supported_methods: tuple[str, ...] | None = None
 
     @property
     def is_activated(self) -> bool:
@@ -129,7 +130,7 @@ class JsonRpcAioHttpClient:
         """Renew JSON-RPC session or perform login."""
         if self._updated_within_seconds:
             return session_id
-        method = Method.SESSION_RENEW
+        method = JsonRpcMethod.SESSION_RENEW
         response = await self._do_post(
             session_id=session_id,
             method=method,
@@ -165,7 +166,7 @@ class JsonRpcAioHttpClient:
             CONF_USERNAME: self._username,
             CONF_PASSWORD: self._password,
         }
-        method = Method.SESSION_LOGIN
+        method = JsonRpcMethod.SESSION_LOGIN
         response = await self._do_post(
             session_id=False,
             method=method,
@@ -182,7 +183,7 @@ class JsonRpcAioHttpClient:
 
     async def _post(
         self,
-        method: Method,
+        method: JsonRpcMethod,
         extra_params: dict[str, str] | None = None,
         use_default_params: bool = True,
         keep_session: bool = True,
@@ -196,6 +197,9 @@ class JsonRpcAioHttpClient:
 
         if not session_id:
             raise ClientException("Error while logging in")
+
+        if self._supported_methods is None:
+            await self._check_supported_methods()
 
         response = await self._do_post(
             session_id=session_id,
@@ -230,6 +234,9 @@ class JsonRpcAioHttpClient:
         if not session_id:
             raise ClientException("Error while logging in")
 
+        if self._supported_methods is None:
+            await self._check_supported_methods()
+
         if (script := self._get_script(script_name=script_name)) is None:
             raise ClientException(f"Script file for {script_name} does not exist")
 
@@ -237,7 +244,7 @@ class JsonRpcAioHttpClient:
             for variable, value in extra_params.items():
                 script = script.replace(f"##{variable}##", value)
 
-        method = Method.REGA_RUN_SCRIPT
+        method = JsonRpcMethod.REGA_RUN_SCRIPT
         response = await self._do_post(
             session_id=session_id,
             method=method,
@@ -268,7 +275,7 @@ class JsonRpcAioHttpClient:
     async def _do_post(
         self,
         session_id: bool | str,
-        method: Method,
+        method: JsonRpcMethod,
         extra_params: dict[str, str] | None = None,
         use_default_params: bool = True,
     ) -> dict[str, Any] | Any:
@@ -367,7 +374,7 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("DO_LOGOUT: Not logged in. Not logging out.")
             return
 
-        method = Method.SESSION_LOGOUT
+        method = JsonRpcMethod.SESSION_LOGOUT
         params = {_SESSION_ID: session_id}
         try:
             await self._do_post(
@@ -391,7 +398,7 @@ class JsonRpcAioHttpClient:
             _ID: pid,
         }
         try:
-            response = await self._post(method=Method.PROGRAM_EXECUTE, extra_params=params)
+            response = await self._post(method=JsonRpcMethod.PROGRAM_EXECUTE, extra_params=params)
             _LOGGER.debug("EXECUTE_PROGRAM: Executing a program")
 
             if json_result := response[_P_RESULT]:
@@ -416,7 +423,9 @@ class JsonRpcAioHttpClient:
         try:
             if isinstance(value, bool):
                 params[_VALUE] = int(value)
-                response = await self._post(method=Method.SYSVAR_SET_BOOL, extra_params=params)
+                response = await self._post(
+                    method=JsonRpcMethod.SYSVAR_SET_BOOL, extra_params=params
+                )
             elif isinstance(value, str):
                 if re.findall("<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});", value):
                     _LOGGER.warning(
@@ -429,7 +438,9 @@ class JsonRpcAioHttpClient:
                     script_name=REGA_SCRIPT_SET_SYSTEM_VARIABLE, extra_params=params
                 )
             else:
-                response = await self._post(method=Method.SYSVAR_SET_FLOAT, extra_params=params)
+                response = await self._post(
+                    method=JsonRpcMethod.SYSVAR_SET_FLOAT, extra_params=params
+                )
 
             _LOGGER.debug("SET_SYSTEM_VARIABLE: Setting System variable")
             if json_result := response[_P_RESULT]:
@@ -454,7 +465,7 @@ class JsonRpcAioHttpClient:
         params = {_NAME: name}
         try:
             response = await self._post(
-                method=Method.SYSVAR_DELETE_SYSVAR_BY_NAME,
+                method=JsonRpcMethod.SYSVAR_DELETE_SYSVAR_BY_NAME,
                 extra_params=params,
             )
 
@@ -477,7 +488,7 @@ class JsonRpcAioHttpClient:
         try:
             params = {_NAME: name}
             response = await self._post(
-                method=Method.SYSVAR_GET_VALUE_BY_NAME,
+                method=JsonRpcMethod.SYSVAR_GET_VALUE_BY_NAME,
                 extra_params=params,
             )
 
@@ -501,7 +512,7 @@ class JsonRpcAioHttpClient:
         variables: list[SystemVariableData] = []
         try:
             response = await self._post(
-                method=Method.SYSVAR_GET_ALL,
+                method=JsonRpcMethod.SYSVAR_GET_ALL,
             )
 
             _LOGGER.debug("GET_ALL_SYSTEM_VARIABLES: Getting all system variables")
@@ -585,7 +596,7 @@ class JsonRpcAioHttpClient:
 
         try:
             response = await self._post(
-                method=Method.ROOM_GET_ALL,
+                method=JsonRpcMethod.ROOM_GET_ALL,
             )
 
             _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_ROOM: Getting all rooms")
@@ -614,7 +625,7 @@ class JsonRpcAioHttpClient:
 
         try:
             response = await self._post(
-                method=Method.SUBSECTION_GET_ALL,
+                method=JsonRpcMethod.SUBSECTION_GET_ALL,
             )
 
             _LOGGER.debug("GET_ALL_CHANNEL_IDS_PER_FUNCTION: Getting all functions")
@@ -643,7 +654,7 @@ class JsonRpcAioHttpClient:
 
         try:
             response = await self._post(
-                method=Method.DEVICE_LIST_ALL_DETAIL,
+                method=JsonRpcMethod.DEVICE_LIST_ALL_DETAIL,
             )
 
             _LOGGER.debug("GET_DEVICE_DETAILS: Getting the device details")
@@ -697,7 +708,7 @@ class JsonRpcAioHttpClient:
 
         try:
             response = await self._post(
-                method=Method.PROGRAM_GET_ALL,
+                method=JsonRpcMethod.PROGRAM_GET_ALL,
             )
 
             _LOGGER.debug("GET_ALL_PROGRAMS: Getting all programs")
@@ -739,7 +750,7 @@ class JsonRpcAioHttpClient:
         try:
             response = await self._do_post(
                 session_id=session_id,
-                method=Method.SYSTEM_LIST_METHODS,
+                method=JsonRpcMethod.SYSTEM_LIST_METHODS,
             )
 
             _LOGGER.debug("GET_SUPPORTED_METHODS: Getting the supported methods")
@@ -753,6 +764,20 @@ class JsonRpcAioHttpClient:
             return ()
 
         return supported_methods
+
+    async def _check_supported_methods(self) -> bool:
+        """Check, if all required api methods are supported by backend."""
+        if self._supported_methods is None:
+            self._supported_methods = await self._get_supported_methods()
+        if unsupport_methods := tuple(
+            [method for method in JsonRpcMethod if method not in self._supported_methods]
+        ):
+            _LOGGER.warning(
+                "CHECK_SUPPORTED_METHODS: methods not supported by backend: %s",
+                ", ".join(unsupport_methods),
+            )
+            return False
+        return True
 
     async def get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
@@ -777,7 +802,7 @@ class JsonRpcAioHttpClient:
         """Get the auth_enabled flag of the backend."""
         _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
 
-        response = await self._post(method=Method.CCU_GET_AUTH_ENABLED)
+        response = await self._post(method=JsonRpcMethod.CCU_GET_AUTH_ENABLED)
         if (json_result := response[_P_RESULT]) is not None:
             return bool(json_result)
         return None
@@ -788,7 +813,7 @@ class JsonRpcAioHttpClient:
 
         interfaces: list[str] = []
         response = await self._post(
-            method=Method.INTERFACE_LIST_INTERFACES,
+            method=JsonRpcMethod.INTERFACE_LIST_INTERFACES,
         )
 
         if json_result := response[_P_RESULT]:
@@ -800,7 +825,7 @@ class JsonRpcAioHttpClient:
         """Get the auth_enabled flag of the backend."""
         _LOGGER.debug("GET_HTTPS_REDIRECT_ENABLED: Getting the flag https_redirect_enabled")
 
-        response = await self._post(method=Method.CCU_GET_HTTPS_REDIRECT_ENABLED)
+        response = await self._post(method=JsonRpcMethod.CCU_GET_HTTPS_REDIRECT_ENABLED)
         if (json_result := response[_P_RESULT]) is not None:
             return bool(json_result)
         return None
