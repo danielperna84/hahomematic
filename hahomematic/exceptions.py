@@ -35,6 +35,14 @@ class ClientException(BaseHomematicException):
         super().__init__("ClientException", *args)
 
 
+class UnsupportedException(ClientException):
+    """hahomematic unsupported exception."""
+
+    def __init__(self, *args: Any) -> None:
+        """Init the UnsupportedException."""
+        super().__init__("UnsupportedException", *args)
+
+
 class NoConnection(BaseHomematicException):
     """hahomematic NoConnection exception."""
 

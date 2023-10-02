@@ -36,7 +36,7 @@ from hahomematic.const import (
     SystemVariableData,
     SysvarType,
 )
-from hahomematic.exceptions import AuthFailure, ClientException
+from hahomematic.exceptions import AuthFailure, ClientException, UnsupportedException
 from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -284,6 +284,8 @@ class JsonRpcAioHttpClient:
             raise ClientException("ClientSession not initialized")
         if not self._has_credentials:
             raise ClientException("No credentials set")
+        if self._supported_methods and method not in self._supported_methods:
+            raise UnsupportedException(f"POST: method '{method} not supported by backend.")
 
         params = _get_params(session_id, extra_params, use_default_params)
 
