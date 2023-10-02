@@ -32,6 +32,10 @@ class ClientLocal(Client):  # pragma: no cover
         self._local_resources = local_resources
         self._paramset_descriptions_cache: dict[str, Any] = {}
 
+    async def init_client(self) -> None:
+        """Init the client."""
+        self.system_information = await self._get_system_information()
+
     @property
     def available(self) -> bool:
         """Return the availability of the client."""
