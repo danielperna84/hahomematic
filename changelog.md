@@ -1,3 +1,7 @@
+# Version 2023.10.1 (2023-10-2)
+
+- Use enum for JsonRPC methods
+
 # Version 2023.10.0 (2023-10-1)
 
 - Code cleanup
