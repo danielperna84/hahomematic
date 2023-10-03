@@ -75,6 +75,14 @@ class HaHomematicException(BaseHomematicException):
         super().__init__("HaHomematicException", *args)
 
 
+class InternalBackendException(NoConnection):
+    """hahomematic InternalBackendException exception."""
+
+    def __init__(self, *args: Any) -> None:
+        """Init the InternalBackendException."""
+        super().__init__("InternalBackendException", *args)
+
+
 def _reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:
     """Return the first arg, if there is only one arg."""
     return args[0] if len(args) == 1 else args
