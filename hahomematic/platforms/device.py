@@ -514,12 +514,12 @@ class ValueCache:
                     call_source=CallSource.HM_INIT,
                 )
                 entity.update_value(value=value)
-        except BaseHomematicException as bhe:
+        except BaseHomematicException as ex:
             _LOGGER.debug(
                 "init_base_entities: Failed to init cache for channel0 %s, %s [%s]",
                 self._device.device_type,
                 self._device.device_address,
-                bhe,
+                ex,
             )
 
     def _get_base_entities(self) -> set[GenericEntity]:
@@ -545,12 +545,12 @@ class ValueCache:
                     call_source=CallSource.HM_INIT,
                 )
                 event.update_value(value=value)
-        except BaseHomematicException as bhe:
+        except BaseHomematicException as ex:
             _LOGGER.debug(
                 "init_base_events: Failed to init cache for channel0 %s, %s [%s]",
                 self._device.device_type,
                 self._device.device_address,
-                bhe,
+                ex,
             )
 
     def _get_readable_events(self) -> set[GenericEvent]:
@@ -589,13 +589,13 @@ class ValueCache:
                     parameter=parameter,
                     call_source=call_source,
                 )
-            except BaseHomematicException as bhe:
+            except BaseHomematicException as ex:
                 _LOGGER.debug(
                     "GET_OR_LOAD_VALUE: Failed to get data for %s, %s, %s: %s",
                     self._device.device_type,
                     channel_address,
                     parameter,
-                    bhe,
+                    ex,
                 )
             self._add_entry_to_device_cache(
                 channel_address=channel_address,
