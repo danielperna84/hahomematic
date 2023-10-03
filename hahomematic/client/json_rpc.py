@@ -36,7 +36,12 @@ from hahomematic.const import (
     SystemVariableData,
     SysvarType,
 )
-from hahomematic.exceptions import AuthFailure, ClientException, UnsupportedException
+from hahomematic.exceptions import (
+    AuthFailure,
+    ClientException,
+    InternalBackendException,
+    UnsupportedException,
+)
 from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -317,6 +322,8 @@ class JsonRpcAioHttpClient:
                     _LOGGER.debug(message)
                     if error_message.startswith("access denied"):
                         raise AuthFailure(message)
+                    if "internal error" in error_message:
+                        raise InternalBackendException(message)
                     raise ClientException(message)
 
                 return json_response
@@ -800,14 +807,21 @@ class JsonRpcAioHttpClient:
             raise
         return SystemInformation()
 
-    async def _get_auth_enabled(self) -> bool | None:
+    async def _get_auth_enabled(self) -> bool:
         """Get the auth_enabled flag of the backend."""
         _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
+        try:
+            response = await self._post(method=JsonRpcMethod.CCU_GET_AUTH_ENABLED)
+            if (json_result := response[_P_RESULT]) is not None:
+                return bool(json_result)
+        except InternalBackendException as ibe:
+            _LOGGER.warning(
+                "GET_AUTH_ENABLED: An internal error happened within your CCU. [%s] Fix or ignore it.",
+                reduce_args(args=ibe.args),
+            )
+            return True
 
-        response = await self._post(method=JsonRpcMethod.CCU_GET_AUTH_ENABLED)
-        if (json_result := response[_P_RESULT]) is not None:
-            return bool(json_result)
-        return None
+        return True
 
     async def _get_available_interfaces(self) -> list[str]:
         """Get all available interfaces from CCU / Homegear."""

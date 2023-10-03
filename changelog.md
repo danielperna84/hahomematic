@@ -1,3 +1,7 @@
+# Version 2023.10.2 (2023-10-3)
+
+- Catch 'internal error' on \_get_auth_enabled. Relevant for for CCU2 users
+
 # Version 2023.10.1 (2023-10-2)
 
 - Use enum for JsonRPC and XmlRPC methods
