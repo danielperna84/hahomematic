@@ -1,3 +1,7 @@
+# Version 2023.10.5 (2023-10-03)
+
+- Cleanup exception handling
+
 # Version 2023.10.4 (2023-10-03)
 
 - Reduce log output for InternalBackendException

@@ -8,16 +8,9 @@ import logging
 import os
 from pathlib import Path
 import re
-from ssl import SSLError
 from typing import Any, Final
 
-from aiohttp import (
-    ClientConnectorCertificateError,
-    ClientConnectorError,
-    ClientError,
-    ClientResponse,
-    ClientSession,
-)
+from aiohttp import ClientConnectorCertificateError, ClientError, ClientResponse, ClientSession
 import orjson
 
 from hahomematic import central as hmcu, config
@@ -38,8 +31,10 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import (
     AuthFailure,
+    BaseHomematicException,
     ClientException,
     InternalBackendException,
+    NoConnection,
     UnsupportedException,
 )
 from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
@@ -337,7 +332,7 @@ class JsonRpcAioHttpClient:
                 error_message = error[_P_MESSAGE]
                 message = f"{message}: {error_message}"
             raise ClientException(message)
-        except (AuthFailure, ClientException, InternalBackendException):
+        except BaseHomematicException:
             await self.logout()
             raise
         except ClientConnectorCertificateError as cccerr:
@@ -349,13 +344,10 @@ class JsonRpcAioHttpClient:
                     f"but this integration is not configured to use TLS"
                 )
             raise ClientException(message) from cccerr
-        except (ClientConnectorError, ClientError) as cce:
+        except (ClientError, OSError) as err:
             self.clear_session()
-            raise ClientException(cce) from cce
-        except SSLError as sslerr:
-            self.clear_session()
-            raise ClientException(sslerr) from sslerr
-        except (OSError, TypeError, Exception) as ex:
+            raise NoConnection(err) from err
+        except (TypeError, Exception) as ex:
             self.clear_session()
             raise ClientException(ex) from ex
 
@@ -377,8 +369,8 @@ class JsonRpcAioHttpClient:
         try:
             await self._do_logout(self._session_id)
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex)
 
     async def _do_logout(self, session_id: str | None) -> None:
         """Logout of CCU."""
@@ -419,8 +411,8 @@ class JsonRpcAioHttpClient:
                     str(json_result),
                 )
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, level=logging.WARNING)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, level=logging.WARNING)
             return False
 
         return True
@@ -461,8 +453,8 @@ class JsonRpcAioHttpClient:
                     str(json_result),
                 )
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, level=logging.WARNING)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, level=logging.WARNING)
             return False
 
         return True
@@ -486,8 +478,8 @@ class JsonRpcAioHttpClient:
                 deleted = json_result
                 _LOGGER.debug("DELETE_SYSTEM_VARIABLE: Deleted: %s", str(deleted))
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, level=logging.WARNING)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, level=logging.WARNING)
             return False
 
         return True
@@ -512,8 +504,8 @@ class JsonRpcAioHttpClient:
                 except Exception:
                     var = json_result == "true"
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, level=logging.WARNING)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, level=logging.WARNING)
             return None
 
         return var
@@ -575,8 +567,8 @@ class JsonRpcAioHttpClient:
                             name,
                         )
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex)
 
         return variables
 
@@ -624,8 +616,8 @@ class JsonRpcAioHttpClient:
                             channel_ids_room[channel_id] = set()
                         channel_ids_room[channel_id].add(room_name)
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, multiple_logs=False)
             return {}
 
         return channel_ids_room
@@ -653,8 +645,8 @@ class JsonRpcAioHttpClient:
                             channel_ids_function[channel_id] = set()
                         channel_ids_function[channel_id].add(function_name)
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, multiple_logs=False)
             return {}
 
         return channel_ids_function
@@ -673,8 +665,8 @@ class JsonRpcAioHttpClient:
             if json_result := response[_P_RESULT]:
                 device_details = json_result
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, multiple_logs=False)
             return []
 
         return device_details
@@ -697,10 +689,10 @@ class JsonRpcAioHttpClient:
             if json_result := response[_P_RESULT]:
                 all_device_data = json_result
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
+        except BaseHomematicException as ex:
             self._handle_exception_log(
                 iid=iid,
-                exception=clex,
+                exception=ex,
             )
         except JSONDecodeError as jderr:
             self._handle_exception_log(
@@ -744,8 +736,8 @@ class JsonRpcAioHttpClient:
                         )
                     )
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex)
             return []
 
         return all_programs
@@ -771,8 +763,8 @@ class JsonRpcAioHttpClient:
                     [method_description[_NAME] for method_description in json_result]
                 )
             self._connection_state.remove_issue(issuer=self, iid=iid)
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, multiple_logs=False)
             return ()
 
         return supported_methods
@@ -805,10 +797,10 @@ class JsonRpcAioHttpClient:
             ):
                 self._connection_state.remove_issue(issuer=self, iid=iid)
                 return system_information
-        except ClientException as clex:
-            self._handle_exception_log(iid=iid, exception=clex, multiple_logs=False)
+        except BaseHomematicException as ex:
+            self._handle_exception_log(iid=iid, exception=ex, multiple_logs=False)
             raise
-        return SystemInformation()
+        return SystemInformation(auth_enabled=True)
 
     async def _get_auth_enabled(self) -> bool:
         """Get the auth_enabled flag of the backend."""

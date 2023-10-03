@@ -396,9 +396,8 @@ class CentralUnit:
                     central=self, interface_config=interface_config, local_ip=local_ip
                 ):
                     if (
-                        interface_config.interface
-                        not in client.system_information.available_interfaces
-                    ):
+                        available_interfaces := client.system_information.available_interfaces
+                    ) and (interface_config.interface not in available_interfaces):
                         _LOGGER.debug(
                             "CREATE_CLIENTS failed: Interface: %s is not available for backend",
                             interface_config.interface,
