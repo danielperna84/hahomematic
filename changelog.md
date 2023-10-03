@@ -1,20 +1,24 @@
-# Version 2023.10.2 (2023-10-3)
+# Version 2023.10.3 (2023-10-03)
+
+- Small fix to re raise InternalBackendException
+
+# Version 2023.10.2 (2023-10-03)
 
 - Catch 'internal error' on \_get_auth_enabled. Relevant for for CCU2 users
 
-# Version 2023.10.1 (2023-10-2)
+# Version 2023.10.1 (2023-10-02)
 
 - Use enum for JsonRPC and XmlRPC methods
 - Get supported JsonRPC and XmlRPC methods and check against used methods
 
-# Version 2023.10.0 (2023-10-1)
+# Version 2023.10.0 (2023-10-01)
 
 - Code cleanup
   - Remove Hm prefix from enums
   - Use enum for parameters
   - Use more existing constants
 
-# Version 2023.9.8 (2023-9-30)
+# Version 2023.9.8 (2023-09-30)
 
 - Improve caching
   - Cleanup cache naming

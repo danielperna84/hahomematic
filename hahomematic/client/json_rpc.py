@@ -334,7 +334,7 @@ class JsonRpcAioHttpClient:
                 error_message = error[_P_MESSAGE]
                 message = f"{message}: {error_message}"
             raise ClientException(message)
-        except (AuthFailure, ClientException):
+        except (AuthFailure, ClientException, InternalBackendException):
             await self.logout()
             raise
         except ClientConnectorCertificateError as cccerr:
