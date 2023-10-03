@@ -319,11 +319,12 @@ class JsonRpcAioHttpClient:
                 if error := json_response[_P_ERROR]:
                     error_message = error[_P_MESSAGE]
                     message = f"POST method '{method}' failed: {error_message}"
-                    _LOGGER.debug(message)
                     if error_message.startswith("access denied"):
                         raise AuthFailure(message)
                     if "internal error" in error_message:
+                        message = f"An internal error happened within your backend (Fix or ignore it): {message}"
                         raise InternalBackendException(message)
+                    _LOGGER.debug(message)
                     raise ClientException(message)
 
                 return json_response
@@ -809,15 +810,18 @@ class JsonRpcAioHttpClient:
 
     async def _get_auth_enabled(self) -> bool:
         """Get the auth_enabled flag of the backend."""
+        iid = "GET_AUTH_ENABLED"
         _LOGGER.debug("GET_AUTH_ENABLED: Getting the flag auth_enabled")
         try:
             response = await self._post(method=JsonRpcMethod.CCU_GET_AUTH_ENABLED)
             if (json_result := response[_P_RESULT]) is not None:
                 return bool(json_result)
         except InternalBackendException as ibe:
-            _LOGGER.warning(
-                "GET_AUTH_ENABLED: An internal error happened within your CCU. [%s] Fix or ignore it.",
-                reduce_args(args=ibe.args),
+            self._handle_exception_log(
+                iid=iid,
+                exception=ibe,
+                level=logging.WARNING,
+                multiple_logs=False,
             )
             return True
 

@@ -1,3 +1,7 @@
+# Version 2023.10.4 (2023-10-03)
+
+- Reduce log output for InternalBackendException
+
 # Version 2023.10.3 (2023-10-03)
 
 - Small fix to re raise InternalBackendException
