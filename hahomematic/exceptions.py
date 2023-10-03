@@ -75,7 +75,7 @@ class HaHomematicException(BaseHomematicException):
         super().__init__("HaHomematicException", *args)
 
 
-class InternalBackendException(NoConnection):
+class InternalBackendException(BaseHomematicException):
     """hahomematic InternalBackendException exception."""
 
     def __init__(self, *args: Any) -> None:
