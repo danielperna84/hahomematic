@@ -320,9 +320,11 @@ class JsonRpcAioHttpClient:
                     error_message = error[_P_MESSAGE]
                     message = f"POST method '{method}' failed: {error_message}"
                     if error_message.startswith("access denied"):
+                        _LOGGER.debug(message)
                         raise AuthFailure(message)
                     if "internal error" in error_message:
                         message = f"An internal error happened within your backend (Fix or ignore it): {message}"
+                        _LOGGER.debug(message)
                         raise InternalBackendException(message)
                     _LOGGER.debug(message)
                     raise ClientException(message)
