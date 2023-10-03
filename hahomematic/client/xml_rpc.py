@@ -12,7 +12,13 @@ from typing import Any, Final, TypeVar
 import xmlrpc.client
 
 from hahomematic import central as hmcu
-from hahomematic.exceptions import AuthFailure, ClientException, NoConnection, UnsupportedException
+from hahomematic.exceptions import (
+    AuthFailure,
+    BaseHomematicException,
+    ClientException,
+    NoConnection,
+    UnsupportedException,
+)
 from hahomematic.support import get_tls_context, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -132,6 +138,8 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                 self._connection_state.remove_issue(issuer=self, iid=self.interface_id)
                 return result
             raise NoConnection(f"No connection to {self.interface_id}")
+        except BaseHomematicException:
+            raise
         except SSLError as sslerr:
             message = f"SSLError on {self.interface_id}: {reduce_args(args=sslerr.args)}"
             if sslerr.args[0] in _SSL_ERROR_CODES:
@@ -158,8 +166,6 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                 if per.errmsg == "Unauthorized":
                     raise AuthFailure(per) from per
                 raise NoConnection(per) from per
-        except NoConnection:
-            raise
         except Exception as ex:
             raise ClientException(ex) from ex
 
