@@ -1,3 +1,7 @@
+# Version 2023.10.5 (2023-10-05)
+
+- Add started property to central
+
 # Version 2023.10.4 (2023-10-03)
 
 - Cleanup exception handling

@@ -241,6 +241,11 @@ class CentralUnit:
         return self._name
 
     @property
+    def started(self) -> bool:
+        """Return if the central is started."""
+        return self._started
+
+    @property
     def supports_ping_pong(self) -> bool:
         """Return the backend supports ping pong."""
         if primary_client := self.primary_client:
