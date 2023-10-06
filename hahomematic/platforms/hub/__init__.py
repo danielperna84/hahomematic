@@ -68,7 +68,7 @@ class Hub:
         new_programs: list[HmProgramButton] = []
 
         for program_data in programs:
-            if entity := self._central.program_entities.get(program_data.pid):
+            if entity := self._central.get_program_button(pid=program_data.pid):
                 entity.update_data(data=program_data)
             else:
                 new_programs.append(self._create_program(data=program_data))
@@ -109,7 +109,7 @@ class Hub:
             name = sysvar.name
             value = sysvar.value
 
-            if entity := self._central.sysvar_entities.get(name):
+            if entity := self._central.get_sysvar_entity(name=name):
                 entity.update_value(value)
             else:
                 new_sysvars.append(self._create_system_variable(data=sysvar))
@@ -121,14 +121,14 @@ class Hub:
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:
         """Create program as entity."""
-        program_entity = HmProgramButton(central=self._central, data=data)
-        self._central.program_entities[data.pid] = program_entity
-        return program_entity
+        program_button = HmProgramButton(central=self._central, data=data)
+        self._central.add_program_button(program_button=program_button)
+        return program_button
 
     def _create_system_variable(self, data: SystemVariableData) -> GenericSystemVariable:
         """Create system variable as entity."""
         sysvar_entity = self._create_sysvar_entity(data=data)
-        self._central.sysvar_entities[data.name] = sysvar_entity
+        self._central.add_sysvar_entity(sysvar_entity=sysvar_entity)
         return sysvar_entity
 
     def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
@@ -152,23 +152,19 @@ class Hub:
     def _remove_program_entity(self, ids: tuple[str, ...]) -> None:
         """Remove sysvar entity from hub."""
         for pid in ids:
-            if pid in self._central.program_entities:
-                entity = self._central.program_entities[pid]
-                entity.remove_entity()
-                del self._central.program_entities[pid]
+            self._central.remove_program_button(pid=pid)
 
     def _remove_sysvar_entity(self, del_entities: tuple[str, ...]) -> None:
         """Remove sysvar entity from hub."""
         for name in del_entities:
-            if name in self._central.sysvar_entities:
-                entity = self._central.sysvar_entities[name]
-                entity.remove_entity()
-                del self._central.sysvar_entities[name]
+            self._central.remove_sysvar_entity(name=name)
 
     def _identify_missing_program_ids(self, programs: tuple[ProgramData, ...]) -> tuple[str, ...]:
         """Identify missing programs."""
         return tuple(
-            pid for pid in self._central.program_entities if pid not in [x.pid for x in programs]
+            program_button.pid
+            for program_button in self._central.program_buttons
+            if program_button.pid not in [x.pid for x in programs]
         )
 
     def _identify_missing_variable_names(
@@ -177,7 +173,7 @@ class Hub:
         """Identify missing variables."""
         variable_names: dict[str, bool] = {x.name: x.extended_sysvar for x in variables}
         missing_variables: list[str] = []
-        for sysvar_entity in self._central.sysvar_entities.values():
+        for sysvar_entity in self._central.sysvar_entities:
             if sysvar_entity.data_type == SysvarType.STRING:
                 continue
             ccu_name = sysvar_entity.ccu_var_name

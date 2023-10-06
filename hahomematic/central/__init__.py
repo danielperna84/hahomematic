@@ -146,9 +146,9 @@ class CentralUnit:
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
-        self.sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
+        self._sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         # {sysvar_name, program_button}U
-        self.program_entities: Final[dict[str, HmProgramButton]] = {}
+        self._program_buttons: Final[dict[str, HmProgramButton]] = {}
         # store last event received datetime by interface
         self.last_events: Final[dict[str, datetime]] = {}
         # Signature: (name, *args)
@@ -258,6 +258,37 @@ class CentralUnit:
         if client := self.primary_client:
             return client.system_information
         return SystemInformation()
+
+    @property
+    def sysvar_entities(self) -> tuple[GenericSystemVariable, ...]:
+        """Return the sysvar entities."""
+        return tuple(self._sysvar_entities.values())
+
+    def add_sysvar_entity(self, sysvar_entity: GenericSystemVariable) -> None:
+        """Add new program button."""
+        if (name := sysvar_entity.name) is not None:
+            self._sysvar_entities[name] = sysvar_entity
+
+    def remove_sysvar_entity(self, name: str) -> None:
+        """Remove a sysvar entity."""
+        if (sysvar_entity := self.get_sysvar_entity(name=name)) is not None:
+            sysvar_entity.remove_entity()
+            del self._sysvar_entities[name]
+
+    @property
+    def program_buttons(self) -> tuple[HmProgramButton, ...]:
+        """Return the program entities."""
+        return tuple(self._program_buttons.values())
+
+    def add_program_button(self, program_button: HmProgramButton) -> None:
+        """Add new program button."""
+        self._program_buttons[program_button.pid] = program_button
+
+    def remove_program_button(self, pid: str) -> None:
+        """Remove a program button."""
+        if (program_button := self.get_program_button(pid=pid)) is not None:
+            program_button.remove_entity()
+            del self._program_buttons[pid]
 
     @property
     def version(self) -> str | None:
@@ -610,9 +641,7 @@ class CentralUnit:
 
         return tuple(
             he
-            for he in (
-                tuple(self.program_entities.values()) + tuple(self.sysvar_entities.values())
-            )
+            for he in (self.program_buttons + self.sysvar_entities)
             if (he.unique_identifier not in existing_unique_ids and he.platform == platform)
         )
 
@@ -1003,7 +1032,7 @@ class CentralUnit:
 
     async def set_system_variable(self, name: str, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
-        if entity := self.sysvar_entities.get(name):
+        if entity := self.get_sysvar_entity(name=name):
             await entity.send_variable(value=value)
         else:
             _LOGGER.warning("Variable %s not found on %s", name, self.name)
@@ -1062,11 +1091,11 @@ class CentralUnit:
 
     def get_sysvar_entity(self, name: str) -> GenericSystemVariable | None:
         """Return the sysvar entity."""
-        return self.sysvar_entities.get(name)
+        return self._sysvar_entities.get(name)
 
     def get_program_button(self, pid: str) -> HmProgramButton | None:
         """Return the program button."""
-        return self.program_entities.get(pid)
+        return self._program_buttons.get(pid)
 
     async def clear_caches(self) -> None:
         """Clear all stored data."""
