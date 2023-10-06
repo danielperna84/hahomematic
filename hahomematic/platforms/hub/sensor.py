@@ -11,6 +11,7 @@ from typing import Any, Final
 from hahomematic.const import HmPlatform, SysvarType
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
+from hahomematic.platforms.support import get_value_from_value_list
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -23,12 +24,10 @@ class HmSysvarSensor(GenericSystemVariable):
     @value_property
     def value(self) -> Any | None:
         """Return the value."""
-        if (
-            self.data_type == SysvarType.LIST
-            and self._value is not None
-            and self.value_list is not None
+        if self.data_type == SysvarType.LIST and (
+            value := get_value_from_value_list(value=self._value, value_list=self.value_list)
         ):
-            return self.value_list[int(self._value)]
+            return value
         return _check_length_and_warn(name=self.ccu_var_name, value=self._value)
 
 

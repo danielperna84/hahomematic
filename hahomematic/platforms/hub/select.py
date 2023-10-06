@@ -11,6 +11,7 @@ from typing import Final
 from hahomematic.const import HmPlatform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
+from hahomematic.platforms.support import get_value_from_value_list
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ class HmSysvarSelect(GenericSystemVariable):
     @value_property
     def value(self) -> str | None:
         """Get the value of the entity."""
-        if self._value is not None and self._value_list is not None:
-            return self._value_list[int(self._value)]
+        if value := get_value_from_value_list(value=self._value, value_list=self.value_list):
+            return value
         return None
 
     async def send_variable(self, value: int | str) -> None:

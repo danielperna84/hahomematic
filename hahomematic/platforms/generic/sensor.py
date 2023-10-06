@@ -11,6 +11,7 @@ from typing import Any, Final
 from hahomematic.const import HmPlatform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.platforms.support import get_value_from_value_list
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -27,8 +28,8 @@ class HmSensor(GenericEntity[Any, None]):
     @value_property
     def value(self) -> Any | None:
         """Return the value."""
-        if self._value is not None and self._value_list is not None:
-            return self._value_list[int(self._value)]
+        if value := get_value_from_value_list(value=self._value, value_list=self.value_list):
+            return value
         if convert_func := self._get_converter_func():
             return convert_func(self._value)
         return self._value

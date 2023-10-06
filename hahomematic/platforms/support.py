@@ -381,3 +381,17 @@ def check_channel_is_the_only_primary_channel(
     if primary_channel == current_channel_no and device_has_multiple_channels is False:
         return True
     return False
+
+
+def get_value_from_value_list(
+    value: bool | float | int | str | None, value_list: tuple[str, ...] | list[str] | None
+) -> str | None:
+    """Check if value is in value list."""
+    if (
+        value is not None
+        and isinstance(value, int)
+        and value_list is not None
+        and value < len(value_list)
+    ):
+        return value_list[int(value)]
+    return None
