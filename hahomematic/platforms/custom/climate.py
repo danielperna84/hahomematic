@@ -207,7 +207,7 @@ class BaseClimateEntity(CustomEntity):
 
     @value_property
     def hvac_modes(self) -> tuple[HvacMode, ...]:
-        """Return the list of available hvac operation modes."""
+        """Return the available hvac operation modes."""
         return (HvacMode.HEAT,)
 
     @config_property
@@ -328,7 +328,7 @@ class CeRfThermostat(BaseClimateEntity):
 
     @value_property
     def hvac_modes(self) -> tuple[HvacMode, ...]:
-        """Return the list of available hvac operation modes."""
+        """Return the available hvac operation modes."""
         return (HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF)
 
     @value_property
@@ -455,7 +455,7 @@ class CeIpThermostat(BaseClimateEntity):
 
     @value_property
     def hvac_modes(self) -> tuple[HvacMode, ...]:
-        """Return the list of available hvac operation modes."""
+        """Return the available hvac operation modes."""
         return (
             HvacMode.AUTO,
             HvacMode.HEAT if self._is_heating_mode else HvacMode.COOL,

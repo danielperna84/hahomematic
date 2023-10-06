@@ -221,7 +221,7 @@ class DeviceDescriptionCache(BasePersistentCache):
     def _convert_device_description(
         self, interface_id: str, device_description: dict[str, Any]
     ) -> None:
-        """Convert provided list of device descriptions."""
+        """Convert provided dict of device descriptions."""
         if interface_id not in self._addresses:
             self._addresses[interface_id] = {}
         if interface_id not in self._device_descriptions:

@@ -579,7 +579,7 @@ class CentralUnit:
     def get_readable_generic_entities(
         self, paramset_key: str | None = None
     ) -> tuple[GenericEntity, ...]:
-        """Return a list of readable generic entities."""
+        """Return the readable generic entities."""
         return tuple(
             ge
             for ge in self._entities.values()
