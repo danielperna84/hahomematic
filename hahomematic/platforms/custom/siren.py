@@ -133,12 +133,12 @@ class CeIpSiren(BaseSiren):
     @value_property
     def available_tones(self) -> tuple[str, ...] | None:
         """Return a list of available tones."""
-        return self._e_acoustic_alarm_selection.value_list
+        return self._e_acoustic_alarm_selection.values
 
     @value_property
     def available_lights(self) -> tuple[str, ...] | None:
         """Return a list of available lights."""
-        return self._e_optical_alarm_selection.value_list
+        return self._e_optical_alarm_selection.values
 
     @config_property
     def supports_duration(self) -> bool:

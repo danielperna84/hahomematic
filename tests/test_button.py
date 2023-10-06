@@ -31,7 +31,7 @@ async def test_hmbutton(factory: helper.Factory) -> None:
     assert button.available is True
     assert button.is_readable is False
     assert button.value is None
-    assert button.value_list is None
+    assert button.values is None
     assert button.hmtype == "ACTION"
     await button.press()
     assert mock_client.method_calls[-1] == call.set_value(

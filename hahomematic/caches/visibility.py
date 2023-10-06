@@ -390,7 +390,7 @@ class ParameterVisibilityCache:
             ).get(channel_no, {}).get(ParamsetKey.MASTER, []):
                 return False  # pragma: no cover
 
-            dt_short = list(
+            dt_short = tuple(
                 filter(
                     device_type_l.startswith,
                     self._un_ignore_parameters_by_device_paramset_key,
@@ -453,7 +453,7 @@ class ParameterVisibilityCache:
         Additionally to _parameter_is_un_ignored these parameters
         from _RELEVANT_MASTER_PARAMSETS_BY_DEVICE are unignored.
         """
-        dt_short = list(
+        dt_short = tuple(
             filter(
                 device_type.lower().startswith,
                 self._un_ignore_parameters_by_device_paramset_key,

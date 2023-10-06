@@ -702,7 +702,7 @@ def _get_device_entities(
 
 def get_entity_configs(
     device_type: str,
-) -> list[CustomConfig | tuple[CustomConfig, ...]]:
+) -> tuple[CustomConfig | tuple[CustomConfig, ...], ...]:
     """Return the entity configs to create custom entities."""
     device_type = device_type.lower().replace("hb-", "hm-")
     funcs = []
@@ -711,7 +711,7 @@ def get_entity_configs(
             search_elements=platform_blacklisted_devices,
             compare_with=device_type,
         ):
-            return []
+            return ()
 
     for platform_devices in ALL_DEVICES:
         if func := _get_entity_config_by_platform(
@@ -719,7 +719,7 @@ def get_entity_configs(
             device_type=device_type,
         ):
             funcs.append(func)
-    return funcs
+    return tuple(funcs)
 
 
 def _get_entity_config_by_platform(

@@ -205,14 +205,14 @@ class CentralUnit:
         return False
 
     @property
-    def interface_ids(self) -> list[str]:
+    def interface_ids(self) -> tuple[str, ...]:
         """Return all associated interface ids."""
-        return list(self._clients)
+        return tuple(self._clients)
 
     @property
-    def interfaces(self) -> list[str]:
+    def interfaces(self) -> tuple[str, ...]:
         """Return all associated interfaces."""
-        return [client.interface for client in self._clients.values()]
+        return tuple(client.interface for client in self._clients.values())
 
     @property
     def is_alive(self) -> bool:
@@ -394,7 +394,7 @@ class CentralUnit:
             )
             return False
 
-        local_ip = await self._identify_callback_ip(list(self.config.interface_configs)[0].port)
+        local_ip = await self._identify_callback_ip(tuple(self.config.interface_configs)[0].port)
         for interface_config in self.config.interface_configs:
             try:
                 if client := await hmcl.create_client(
@@ -530,7 +530,7 @@ class CentralUnit:
                 raise NoClients("validate_config: No clients defined.")
 
             local_ip = await self._identify_callback_ip(
-                list(self.config.interface_configs)[0].port
+                tuple(self.config.interface_configs)[0].port
             )
             system_information = SystemInformation()
             for interface_config in self.config.interface_configs:
@@ -561,12 +561,12 @@ class CentralUnit:
 
     def get_entities_by_platform(
         self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
-    ) -> list[BaseEntity]:
+    ) -> tuple[BaseEntity, ...]:
         """Return all entities by platform."""
         if not existing_unique_ids:
             existing_unique_ids = []
 
-        return [
+        return tuple(
             be
             for be in self._entities.values()
             if (
@@ -574,13 +574,13 @@ class CentralUnit:
                 and be.usage != EntityUsage.NO_CREATE
                 and be.platform == platform
             )
-        ]
+        )
 
     def get_readable_generic_entities(
         self, paramset_key: str | None = None
-    ) -> list[GenericEntity]:
-        """Return a list of readable generic entities."""
-        return [
+    ) -> tuple[GenericEntity, ...]:
+        """Return the readable generic entities."""
+        return tuple(
             ge
             for ge in self._entities.values()
             if (
@@ -588,7 +588,7 @@ class CentralUnit:
                 and ge.is_readable
                 and ((paramset_key and ge.paramset_key == paramset_key) or paramset_key is None)
             )
-        ]
+        )
 
     def _get_primary_client(self) -> hmcl.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
@@ -603,24 +603,26 @@ class CentralUnit:
 
     def get_hub_entities_by_platform(
         self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
-    ) -> list[GenericHubEntity]:
+    ) -> tuple[GenericHubEntity, ...]:
         """Return the hub entities by platform."""
         if not existing_unique_ids:
             existing_unique_ids = []
 
-        return [
+        return tuple(
             he
-            for he in (list(self.program_entities.values()) + list(self.sysvar_entities.values()))
+            for he in (
+                tuple(self.program_entities.values()) + tuple(self.sysvar_entities.values())
+            )
             if (he.unique_identifier not in existing_unique_ids and he.platform == platform)
-        ]
+        )
 
-    def get_virtual_remotes(self) -> list[HmDevice]:
+    def get_virtual_remotes(self) -> tuple[HmDevice, ...]:
         """Get the virtual remote for the Client."""
-        return [
+        return tuple(
             cl.get_virtual_remote()  # type: ignore[misc]
             for cl in self._clients.values()
             if cl.get_virtual_remote() is not None
-        ]
+        )
 
     def has_client(self, interface_id: str) -> bool:
         """Check if client exists in central."""
@@ -739,7 +741,7 @@ class CentralUnit:
 
     @callback_system_event(system_event=SystemEvent.NEW_DEVICES)
     async def add_new_devices(
-        self, interface_id: str, device_descriptions: list[dict[str, Any]]
+        self, interface_id: str, device_descriptions: tuple[dict[str, Any], ...]
     ) -> None:
         """Add new devices to central unit."""
         await self._add_new_devices(
@@ -747,7 +749,7 @@ class CentralUnit:
         )
 
     async def _add_new_devices(
-        self, interface_id: str, device_descriptions: list[dict[str, Any]]
+        self, interface_id: str, device_descriptions: tuple[dict[str, Any], ...]
     ) -> None:
         """Add new devices to central unit."""
         _LOGGER.debug(

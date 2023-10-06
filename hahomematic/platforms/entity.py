@@ -329,9 +329,11 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
         """Assign parameter data to instance variables."""
         self._type: ParameterType = ParameterType(parameter_data[Description.TYPE])
-        self._value_list: tuple[str, ...] | None = None
-        if Description.VALUE_LIST in parameter_data:
-            self._value_list = tuple(parameter_data[Description.VALUE_LIST])
+        self._values = (
+            tuple(parameter_data[Description.VALUE_LIST])
+            if Description.VALUE_LIST in parameter_data
+            else None
+        )
         self._max: ParameterT = self._convert_value(parameter_data[Description.MAX])
         self._min: ParameterT = self._convert_value(parameter_data[Description.MIN])
         self._default: ParameterT = self._convert_value(
@@ -431,9 +433,9 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._unit
 
     @value_property
-    def value_list(self) -> tuple[str, ...] | None:
-        """Return the value_list."""
-        return self._value_list
+    def values(self) -> tuple[str, ...] | None:
+        """Return the values."""
+        return self._values
 
     @property
     def visible(self) -> bool:
@@ -524,17 +526,17 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         try:
             if (
                 self._type == ParameterType.BOOL
-                and self._value_list is not None
+                and self._values is not None
                 and value is not None
                 and isinstance(value, str)
             ):
                 return convert_value(  # type: ignore[no-any-return]
-                    value=self._value_list.index(value),
+                    value=self._values.index(value),
                     target_type=self._type,
-                    value_list=self.value_list,
+                    value_list=self.values,
                 )
             return convert_value(  # type: ignore[no-any-return]
-                value=value, target_type=self._type, value_list=self.value_list
+                value=value, target_type=self._type, value_list=self.values
             )
         except ValueError:  # pragma: no cover
             _LOGGER.debug(

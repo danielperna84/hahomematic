@@ -70,9 +70,9 @@ async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
     assert climate.current_temperature == 11.0
 
     assert climate.hvac_mode == HvacMode.HEAT
-    assert climate.hvac_modes == [HvacMode.HEAT]
+    assert climate.hvac_modes == (HvacMode.HEAT,)
     assert climate.preset_mode == PresetMode.NONE
-    assert climate.preset_modes == [PresetMode.NONE]
+    assert climate.preset_modes == (PresetMode.NONE,)
     assert climate.hvac_action is None
     central.event(const.INTERFACE_ID, "VCU0000054:1", "TEMPERATURE", 11.0)
 
@@ -125,7 +125,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
     assert climate.current_temperature == 11.0
 
     assert climate.hvac_mode == HvacMode.AUTO
-    assert climate.hvac_modes == [HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF]
+    assert climate.hvac_modes == (HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF)
     await climate.set_hvac_mode(HvacMode.HEAT)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000050:4", paramset_key="VALUES", parameter="MANU_MODE", value=12.0
@@ -152,12 +152,12 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
     assert climate.hvac_mode == HvacMode.AUTO
 
     assert climate.preset_mode == PresetMode.NONE
-    assert climate.preset_modes == [
+    assert climate.preset_modes == (
         PresetMode.BOOST,
         PresetMode.COMFORT,
         PresetMode.ECO,
         PresetMode.NONE,
-    ]
+    )
     await climate.set_preset_mode(PresetMode.BOOST)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000050:4",
@@ -232,7 +232,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     assert climate.current_temperature == 11.0
 
     assert climate.hvac_mode == HvacMode.AUTO
-    assert climate.hvac_modes == [HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF]
+    assert climate.hvac_modes == (HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF)
     assert climate.preset_mode == PresetMode.NONE
 
     await climate.set_hvac_mode(HvacMode.OFF)
@@ -254,10 +254,10 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     assert climate.hvac_mode == HvacMode.HEAT
 
     assert climate.preset_mode == PresetMode.NONE
-    assert climate.preset_modes == [
+    assert climate.preset_modes == (
         PresetMode.BOOST,
         PresetMode.NONE,
-    ]
+    )
     await climate.set_preset_mode(PresetMode.BOOST)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1769958:1", paramset_key="VALUES", parameter="BOOST_MODE", value=True
@@ -274,7 +274,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ModeHmIP.AUTO.value)
     central.event(const.INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)
     assert climate.hvac_mode == HvacMode.AUTO
-    assert climate.preset_modes == [
+    assert climate.preset_modes == (
         PresetMode.BOOST,
         PresetMode.NONE,
         "week_program_1",
@@ -283,7 +283,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         "week_program_4",
         "week_program_5",
         "week_program_6",
-    ]
+    )
     await climate.set_preset_mode(PresetMode.NONE)
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU1769958:1", paramset_key="VALUES", parameter="BOOST_MODE", value=False

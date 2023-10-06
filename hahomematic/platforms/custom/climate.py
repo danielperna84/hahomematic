@@ -191,9 +191,9 @@ class BaseClimateEntity(CustomEntity):
         return PresetMode.NONE
 
     @value_property
-    def preset_modes(self) -> list[PresetMode]:
+    def preset_modes(self) -> tuple[PresetMode, ...]:
         """Return available preset modes."""
-        return [PresetMode.NONE]
+        return (PresetMode.NONE,)
 
     @value_property
     def hvac_action(self) -> HvacAction | None:
@@ -206,9 +206,9 @@ class BaseClimateEntity(CustomEntity):
         return HvacMode.HEAT
 
     @value_property
-    def hvac_modes(self) -> list[HvacMode]:
-        """Return the list of available hvac operation modes."""
-        return [HvacMode.HEAT]
+    def hvac_modes(self) -> tuple[HvacMode, ...]:
+        """Return the available hvac operation modes."""
+        return (HvacMode.HEAT,)
 
     @config_property
     def supports_preset(self) -> bool:
@@ -327,9 +327,9 @@ class CeRfThermostat(BaseClimateEntity):
         return HvacMode.AUTO
 
     @value_property
-    def hvac_modes(self) -> list[HvacMode]:
-        """Return the list of available hvac operation modes."""
-        return [HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF]
+    def hvac_modes(self) -> tuple[HvacMode, ...]:
+        """Return the available hvac operation modes."""
+        return (HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF)
 
     @value_property
     def preset_mode(self) -> PresetMode:
@@ -343,14 +343,14 @@ class CeRfThermostat(BaseClimateEntity):
         return PresetMode.NONE
 
     @value_property
-    def preset_modes(self) -> list[PresetMode]:
+    def preset_modes(self) -> tuple[PresetMode, ...]:
         """Return available preset modes."""
-        return [
+        return (
             PresetMode.BOOST,
             PresetMode.COMFORT,
             PresetMode.ECO,
             PresetMode.NONE,
-        ]
+        )
 
     @config_property
     def supports_preset(self) -> bool:
@@ -454,13 +454,13 @@ class CeIpThermostat(BaseClimateEntity):
         return HvacMode.AUTO
 
     @value_property
-    def hvac_modes(self) -> list[HvacMode]:
-        """Return the list of available hvac operation modes."""
-        return [
+    def hvac_modes(self) -> tuple[HvacMode, ...]:
+        """Return the available hvac operation modes."""
+        return (
             HvacMode.AUTO,
             HvacMode.HEAT if self._is_heating_mode else HvacMode.COOL,
             HvacMode.OFF,
-        ]
+        )
 
     @value_property
     def preset_mode(self) -> PresetMode:
@@ -474,12 +474,12 @@ class CeIpThermostat(BaseClimateEntity):
         return PresetMode.NONE
 
     @value_property
-    def preset_modes(self) -> list[PresetMode]:
+    def preset_modes(self) -> tuple[PresetMode, ...]:
         """Return available preset modes."""
         presets = [PresetMode.BOOST, PresetMode.NONE]
         if self.hvac_mode == HvacMode.AUTO:
             presets.extend(self._profile_names)
-        return presets
+        return tuple(presets)
 
     @config_property
     def supports_preset(self) -> bool:
@@ -569,9 +569,9 @@ class CeIpThermostat(BaseClimateEntity):
         )
 
     @property
-    def _profile_names(self) -> list[PresetMode]:
+    def _profile_names(self) -> tuple[PresetMode, ...]:
         """Return a collection of profile names."""
-        return list(self._profiles.keys())
+        return tuple(self._profiles.keys())
 
     @property
     def _current_profile_name(self) -> PresetMode | None:

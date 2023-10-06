@@ -8,6 +8,7 @@ from __future__ import annotations
 from hahomematic.const import HmPlatform
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.platforms.support import get_value_from_value_list
 
 
 class HmSelect(GenericEntity[int | str, int | str]):
@@ -22,15 +23,17 @@ class HmSelect(GenericEntity[int | str, int | str]):
     @value_property
     def value(self) -> str | None:  # type: ignore[override]
         """Get the value of the entity."""
-        if self._value is not None and self._value_list is not None:
-            return self._value_list[int(self._value)]
+        if (
+            value := get_value_from_value_list(value=self._value, value_list=self.values)
+        ) is not None:
+            return value
         return str(self._default)
 
     def _prepare_value_for_sending(self, value: int | str, do_validate: bool = True) -> int | str:
         """Prepare value before sending."""
         # We allow setting the value via index as well, just in case.
-        if isinstance(value, int) and self._value_list and 0 <= value < len(self._value_list):
+        if isinstance(value, int) and self._values and 0 <= value < len(self._values):
             return value
-        if self._value_list and value in self._value_list:
-            return self._value_list.index(value)
+        if self._values and value in self._values:
+            return self._values.index(value)
         raise ValueError(f"Value not in value_list for {self.name}/{self.unique_identifier}")

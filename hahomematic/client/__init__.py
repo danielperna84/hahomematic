@@ -266,11 +266,13 @@ class Client(ABC):
         """Get single system variable from CCU / Homegear."""
 
     @abstractmethod
-    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> tuple[SystemVariableData, ...]:
         """Get all system variables from CCU / Homegear."""
 
     @abstractmethod
-    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+    async def get_all_programs(self, include_internal: bool) -> tuple[ProgramData, ...]:
         """Get all programs, if available."""
 
     @abstractmethod
@@ -294,21 +296,21 @@ class Client(ABC):
         return None
 
     @measure_execution_time
-    async def get_all_device_descriptions(self) -> list[dict[str, Any]] | None:
+    async def get_all_device_descriptions(self) -> tuple[dict[str, Any]] | None:
         """Get device descriptions from CCU / Homegear."""
         try:
-            return await self._proxy.listDevices()  # type: ignore[no-any-return]
+            return tuple(await self._proxy.listDevices())  # type: ignore[return-value]
         except BaseHomematicException as ex:
             _LOGGER.warning(
                 "GET_ALL_DEVICE_DESCRIPTIONS failed: %s [%s]", ex.name, reduce_args(args=ex.args)
             )
         return None
 
-    async def get_device_descriptions(self, device_address: str) -> list[dict[str, Any]] | None:
+    async def get_device_descriptions(self, device_address: str) -> tuple[dict[str, Any]] | None:
         """Get device descriptions from CCU / Homegear."""
         try:
             if device_descriptions := await self._proxy_read.getDeviceDescription(device_address):
-                return [device_descriptions]
+                return (device_descriptions,)
         except BaseHomematicException as ex:
             _LOGGER.warning(
                 "GET_DEVICE_DESCRIPTIONS failed: %s [%s]", ex.name, reduce_args(args=ex.args)
@@ -568,7 +570,7 @@ class Client(ABC):
         return None
 
     async def get_all_paramset_descriptions(
-        self, device_descriptions: list[dict[str, Any]]
+        self, device_descriptions: tuple[dict[str, Any], ...]
     ) -> dict[str, dict[str, Any]]:
         """Get all paramset descriptions for provided device descriptions."""
         all_paramsets: dict[str, dict[str, Any]] = {}
@@ -731,13 +733,15 @@ class ClientCCU(Client):
         """Get single system variable from CCU / Homegear."""
         return await self._json_rpc_client.get_system_variable(name=name)
 
-    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> tuple[SystemVariableData, ...]:
         """Get all system variables from CCU / Homegear."""
         return await self._json_rpc_client.get_all_system_variables(
             include_internal=include_internal
         )
 
-    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+    async def get_all_programs(self, include_internal: bool) -> tuple[ProgramData, ...]:
         """Get all programs, if available."""
         return await self._json_rpc_client.get_all_programs(include_internal=include_internal)
 
@@ -864,7 +868,9 @@ class ClientHomegear(Client):
                 "GET_SYSTEM_VARIABLE failed: %s [%s]", ex.name, reduce_args(args=ex.args)
             )
 
-    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> tuple[SystemVariableData, ...]:
         """Get all system variables from CCU / Homegear."""
         variables: list[SystemVariableData] = []
         try:
@@ -875,11 +881,11 @@ class ClientHomegear(Client):
             _LOGGER.warning(
                 "GET_ALL_SYSTEM_VARIABLES failed: %s [%s]", ex.name, reduce_args(args=ex.args)
             )
-        return variables
+        return tuple(variables)
 
-    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+    async def get_all_programs(self, include_internal: bool) -> tuple[ProgramData, ...]:
         """Get all programs, if available."""
-        return []
+        return ()
 
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms from Homegear."""
@@ -892,7 +898,7 @@ class ClientHomegear(Client):
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
         return SystemInformation(
-            available_interfaces=[InterfaceName.BIDCOS_RF], serial=HOMEGEAR_SERIAL
+            available_interfaces=(InterfaceName.BIDCOS_RF,), serial=HOMEGEAR_SERIAL
         )
 
 

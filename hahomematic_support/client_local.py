@@ -102,13 +102,15 @@ class ClientLocal(Client):  # pragma: no cover
         """Get single system variable from CCU / Homegear."""
         return "Empty"
 
-    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> tuple[SystemVariableData, ...]:
         """Get all system variables from CCU / Homegear."""
-        return []
+        return ()
 
-    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+    async def get_all_programs(self, include_internal: bool) -> tuple[ProgramData, ...]:
         """Get all programs, if available."""
-        return []
+        return ()
 
     async def get_all_rooms(self) -> dict[str, set[str]]:
         """Get all rooms, if available."""
@@ -121,7 +123,7 @@ class ClientLocal(Client):  # pragma: no cover
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
         return SystemInformation(
-            available_interfaces=[InterfaceName.BIDCOS_RF], serial=LOCAL_SERIAL
+            available_interfaces=(InterfaceName.BIDCOS_RF,), serial=LOCAL_SERIAL
         )
 
     async def get_all_device_descriptions(self) -> Any:

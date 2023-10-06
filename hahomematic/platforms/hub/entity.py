@@ -63,9 +63,7 @@ class GenericSystemVariable(GenericHubEntity):
         super().__init__(central=central, address=SYSVAR_ADDRESS, data=data)
         self.ccu_var_name: Final = data.name
         self.data_type: Final = data.data_type
-        self._value_list: Final[tuple[str, ...] | None] = (
-            tuple(data.value_list) if data.value_list else None
-        )
+        self._values: Final[tuple[str, ...] | None] = tuple(data.values) if data.values else None
         self._max: Final = data.max_value
         self._min: Final = data.min_value
         self._unit: Final = data.unit
@@ -82,9 +80,9 @@ class GenericSystemVariable(GenericHubEntity):
         return self._value
 
     @value_property
-    def value_list(self) -> tuple[str, ...] | None:
+    def values(self) -> tuple[str, ...] | None:
         """Return the value_list."""
-        return self._value_list
+        return self._values
 
     @config_property
     def max(self) -> float | int | None:

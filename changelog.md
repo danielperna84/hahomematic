@@ -1,6 +1,11 @@
 # Version 2023.10.5 (2023-10-05)
 
 - Add started property to central
+- Rename:
+  - value_list -> values
+  - effect_list -> effects
+- Add more checks to get/set value from/tp values
+- Use more tuple instead of list
 
 # Version 2023.10.4 (2023-10-03)
 

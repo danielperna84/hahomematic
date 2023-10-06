@@ -366,13 +366,13 @@ class HmDevice(PayloadMixin):
     def _set_last_update(self) -> None:
         self._last_update = datetime.now()
 
-    def get_all_entities(self) -> list[hmce.CustomEntity | GenericEntity | WrapperEntity]:
+    def get_all_entities(self) -> tuple[hmce.CustomEntity | GenericEntity | WrapperEntity, ...]:
         """Return all entities of a device."""
         all_entities: list[hmce.CustomEntity | GenericEntity | WrapperEntity] = []
         all_entities.extend(self.custom_entities.values())
         all_entities.extend(self.generic_entities.values())
         all_entities.extend(self.wrapper_entities.values())
-        return all_entities
+        return tuple(all_entities)
 
     def get_channel_events(self, event_type: EventType) -> dict[int, list[GenericEvent]]:
         """Return a list of specific events of a channel."""
@@ -674,7 +674,7 @@ class _DefinitionExporter:
             interface_id=self._interface_id, device_address=self._device_address
         )
         paramset_descriptions: dict[str, Any] = await self._client.get_all_paramset_descriptions(
-            list(device_descriptions.values())
+            tuple(device_descriptions.values())
         )
         device_type = device_descriptions[self._device_address][Description.TYPE]
         filename = f"{device_type}.json"

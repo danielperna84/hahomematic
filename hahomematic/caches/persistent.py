@@ -221,7 +221,7 @@ class DeviceDescriptionCache(BasePersistentCache):
     def _convert_device_description(
         self, interface_id: str, device_description: dict[str, Any]
     ) -> None:
-        """Convert provided list of device descriptions."""
+        """Convert provided dict of device descriptions."""
         if interface_id not in self._addresses:
             self._addresses[interface_id] = {}
         if interface_id not in self._device_descriptions:
@@ -301,9 +301,11 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """Return if interface is in paramset_descriptions cache."""
         return interface_id in self._raw_paramset_descriptions
 
-    def get_paramset_keys(self, interface_id: str, channel_address: str) -> list[str]:
+    def get_paramset_keys(self, interface_id: str, channel_address: str) -> tuple[str, ...]:
         """Get paramset_keys from paramset descriptions cache."""
-        return list(self._raw_paramset_descriptions.get(interface_id, {}).get(channel_address, []))
+        return tuple(
+            self._raw_paramset_descriptions.get(interface_id, {}).get(channel_address, [])
+        )
 
     def get_paramset_descriptions(
         self, interface_id: str, channel_address: str, paramset_key: str
@@ -336,7 +338,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
             return len(set(channels)) > 1
         return False
 
-    def get_all_readable_parameters(self) -> list[str]:
+    def get_all_readable_parameters(self) -> tuple[str, ...]:
         """Return all readable, eventing parameters from VALUES paramset."""
         parameters: set[str] = set()
         for channels in self._raw_paramset_descriptions.values():
@@ -346,7 +348,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
                     if operations & Operations.READ and operations & Operations.EVENT:
                         parameters.add(parameter)
 
-        return sorted(parameters)
+        return tuple(sorted(parameters))
 
     def get_channel_addresses_by_paramset_key(
         self, interface_id: str, device_address: str

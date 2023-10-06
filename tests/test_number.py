@@ -31,7 +31,7 @@ async def test_hmfloat(factory: helper.Factory) -> None:
     )
     assert efloat.usage == EntityUsage.NO_CREATE
     assert efloat.unit == "%"
-    assert efloat.value_list is None
+    assert efloat.values is None
     assert efloat.value is None
     await efloat.send_value(0.3)
     assert mock_client.method_calls[-1] == call.set_value(
@@ -62,7 +62,7 @@ async def test_hmfloat_special(factory: helper.Factory) -> None:
     )
     assert efloat.usage == EntityUsage.NO_CREATE
     assert efloat.unit == "°C"
-    assert efloat.value_list is None
+    assert efloat.values is None
     assert efloat.value is None
     await efloat.send_value(8.0)
     assert mock_client.method_calls[-1] == call.set_value(
@@ -95,7 +95,7 @@ async def test_hminteger(factory: helper.Factory) -> None:
     assert einteger.unit is None
     assert einteger.min == 0
     assert einteger.max == 3
-    assert einteger.value_list is None
+    assert einteger.values is None
     assert einteger.value is None
     await einteger.send_value(3)
     assert mock_client.method_calls[-1] == call.set_value(
@@ -134,7 +134,7 @@ async def test_hmsysvarnumber(factory: helper.Factory) -> None:
     assert enumber.unit == "°C"
     assert enumber.min == 5.0
     assert enumber.max == 30.0
-    assert enumber.value_list is None
+    assert enumber.values is None
     assert enumber.value == 23.2
 
     await enumber.send_variable(23.0)

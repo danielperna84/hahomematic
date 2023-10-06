@@ -510,7 +510,9 @@ class JsonRpcAioHttpClient:
 
         return var
 
-    async def get_all_system_variables(self, include_internal: bool) -> list[SystemVariableData]:
+    async def get_all_system_variables(
+        self, include_internal: bool
+    ) -> tuple[SystemVariableData, ...]:
         """Get all system variables from CCU / Homegear."""
         iid = "GET_ALL_SYSTEM_VARIABLES"
         variables: list[SystemVariableData] = []
@@ -536,9 +538,9 @@ class JsonRpcAioHttpClient:
                         data_type = org_data_type
                     extended_sysvar = ext_markers.get(var_id, False)
                     unit = var[_UNIT]
-                    value_list: list[str] | None = None
+                    value_list: tuple[str, ...] | None = None
                     if val_list := var.get(_VALUE_LIST):
-                        value_list = val_list.split(";")
+                        value_list = tuple(val_list.split(";"))
                     try:
                         value = parse_sys_var(data_type=data_type, raw_value=raw_value)
                         max_value = None
@@ -553,7 +555,7 @@ class JsonRpcAioHttpClient:
                                 data_type=data_type,
                                 unit=unit,
                                 value=value,
-                                value_list=value_list,
+                                values=value_list,
                                 max_value=max_value,
                                 min_value=min_value,
                                 extended_sysvar=extended_sysvar,
@@ -570,7 +572,7 @@ class JsonRpcAioHttpClient:
         except BaseHomematicException as ex:
             self._handle_exception_log(iid=iid, exception=ex)
 
-        return variables
+        return tuple(variables)
 
     async def _get_system_variables_ext_markers(self) -> dict[str, Any]:
         """Get all system variables from CCU / Homegear."""
@@ -651,10 +653,10 @@ class JsonRpcAioHttpClient:
 
         return channel_ids_function
 
-    async def get_device_details(self) -> list[dict[str, Any]]:
+    async def get_device_details(self) -> tuple[dict[str, Any], ...]:
         """Get the device details of the backend."""
         iid = "GET_DEVICE_DETAILS"
-        device_details: list[dict[str, Any]] = []
+        device_details: tuple[dict[str, Any], ...] = ()
 
         try:
             response = await self._post(
@@ -663,11 +665,11 @@ class JsonRpcAioHttpClient:
 
             _LOGGER.debug("GET_DEVICE_DETAILS: Getting the device details")
             if json_result := response[_P_RESULT]:
-                device_details = json_result
+                device_details = tuple(json_result)
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except BaseHomematicException as ex:
             self._handle_exception_log(iid=iid, exception=ex, multiple_logs=False)
-            return []
+            return ()
 
         return device_details
 
@@ -705,7 +707,7 @@ class JsonRpcAioHttpClient:
 
         return all_device_data
 
-    async def get_all_programs(self, include_internal: bool) -> list[ProgramData]:
+    async def get_all_programs(self, include_internal: bool) -> tuple[ProgramData, ...]:
         """Get the all programs of the backend."""
         iid = "GET_ALL_PROGRAMS"
         all_programs: list[ProgramData] = []
@@ -738,9 +740,9 @@ class JsonRpcAioHttpClient:
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except BaseHomematicException as ex:
             self._handle_exception_log(iid=iid, exception=ex)
-            return []
+            return ()
 
-        return all_programs
+        return tuple(all_programs)
 
     async def _get_supported_methods(self) -> tuple[str, ...]:
         """Get the supported methods of the backend."""
@@ -821,7 +823,7 @@ class JsonRpcAioHttpClient:
 
         return True
 
-    async def _get_available_interfaces(self) -> list[str]:
+    async def _get_available_interfaces(self) -> tuple[str, ...]:
         """Get all available interfaces from CCU / Homegear."""
         _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces")
 
@@ -833,7 +835,7 @@ class JsonRpcAioHttpClient:
         if json_result := response[_P_RESULT]:
             for interface in json_result:
                 interfaces.append(interface[_NAME])
-        return interfaces
+        return tuple(interfaces)
 
     async def _get_https_redirect_enabled(self) -> bool | None:
         """Get the auth_enabled flag of the backend."""
