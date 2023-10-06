@@ -62,12 +62,12 @@ class BaseSiren(CustomEntity):
     @value_property
     @abstractmethod
     def available_tones(self) -> tuple[str, ...] | None:
-        """Return a list of available tones."""
+        """Return available tones."""
 
     @value_property
     @abstractmethod
     def available_lights(self) -> tuple[str, ...] | None:
-        """Return a list of available lights."""
+        """Return available lights."""
 
     @config_property
     @abstractmethod
@@ -132,12 +132,12 @@ class CeIpSiren(BaseSiren):
 
     @value_property
     def available_tones(self) -> tuple[str, ...] | None:
-        """Return a list of available tones."""
+        """Return available tones."""
         return self._e_acoustic_alarm_selection.values
 
     @value_property
     def available_lights(self) -> tuple[str, ...] | None:
-        """Return a list of available lights."""
+        """Return available lights."""
         return self._e_optical_alarm_selection.values
 
     @config_property
@@ -216,12 +216,12 @@ class CeIpSirenSmoke(BaseSiren):
 
     @value_property
     def available_tones(self) -> tuple[str, ...] | None:
-        """Return a list of available tones."""
+        """Return available tones."""
         return None
 
     @value_property
     def available_lights(self) -> tuple[str, ...] | None:
-        """Return a list of available lights."""
+        """Return available lights."""
         return None
 
     @config_property

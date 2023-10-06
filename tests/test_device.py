@@ -45,23 +45,23 @@ async def test_device_availability(factory: helper.Factory) -> None:
     central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU6354483")
     assert device.available is True
-    for generic_entity in device.generic_entities.values():
+    for generic_entity in device.generic_entities:
         assert generic_entity.available is True
-    for custom_entity in device.custom_entities.values():
+    for custom_entity in device.custom_entities:
         assert custom_entity.available is True
 
     central.event(const.INTERFACE_ID, "VCU6354483:0", "UNREACH", 1)
     assert device.available is False
-    for generic_entity in device.generic_entities.values():
+    for generic_entity in device.generic_entities:
         assert generic_entity.available is False
-    for custom_entity in device.custom_entities.values():
+    for custom_entity in device.custom_entities:
         assert custom_entity.available is False
 
     central.event(const.INTERFACE_ID, "VCU6354483:0", "UNREACH", 0)
     assert device.available is True
-    for generic_entity in device.generic_entities.values():
+    for generic_entity in device.generic_entities:
         assert generic_entity.available is True
-    for custom_entity in device.custom_entities.values():
+    for custom_entity in device.custom_entities:
         assert custom_entity.available is True
 
 

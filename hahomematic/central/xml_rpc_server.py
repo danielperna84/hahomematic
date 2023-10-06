@@ -59,7 +59,7 @@ class RPCFunctions:
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(
                 central.add_new_devices(
-                    interface_id=interface_id, device_descriptions=device_descriptions
+                    interface_id=interface_id, device_descriptions=tuple(device_descriptions)
                 ),
                 name="newDevices",
             )
@@ -69,7 +69,7 @@ class RPCFunctions:
         central: hmcu.CentralUnit | None
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(
-                central.delete_devices(interface_id=interface_id, addresses=addresses),
+                central.delete_devices(interface_id=interface_id, addresses=tuple(addresses)),
                 name="deleteDevices",
             )
 
