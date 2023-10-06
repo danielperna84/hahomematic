@@ -50,7 +50,7 @@ class CustomEntity(BaseEntity):
             is_in_multiple_channels=hmed.is_multi_channel_device(device_type=device.device_type),
         )
         self._extended: Final = extended
-        self.data_entities: Final[dict[str, hmge.GenericEntity]] = {}
+        self._data_entities: Final[dict[str, hmge.GenericEntity]] = {}
         self._init_entities()
         self._init_entity_fields()
 
@@ -67,6 +67,11 @@ class CustomEntity(BaseEntity):
                 latest_update = entity_last_update
         return latest_update
 
+    @property
+    def has_data_entities(self) -> bool:
+        """Return if there are data entities."""
+        return len(self._data_entities) > 0
+
     @value_property
     def is_valid(self) -> bool:
         """Return if the state is valid."""
@@ -80,7 +85,7 @@ class CustomEntity(BaseEntity):
     @property
     def _readable_entities(self) -> tuple[hmge.GenericEntity, ...]:
         """Returns the list of readable entities."""
-        return tuple(ge for ge in self.data_entities.values() if ge.is_readable)
+        return tuple(ge for ge in self._data_entities.values() if ge.is_readable)
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
@@ -203,7 +208,7 @@ class CustomEntity(BaseEntity):
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
         entity.register_update_callback(self.update_entity)
-        self.data_entities[field_name] = entity
+        self._data_entities[field_name] = entity
 
     def _mark_entities(self, entity_def: dict[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
@@ -242,7 +247,7 @@ class CustomEntity(BaseEntity):
 
     def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
         """Get entity."""
-        if entity := self.data_entities.get(field_name):
+        if entity := self._data_entities.get(field_name):
             if not isinstance(entity, entity_type):
                 _LOGGER.debug(  # pragma: no cover
                     "GET_ENTITY: type mismatch for requested sub entity: "

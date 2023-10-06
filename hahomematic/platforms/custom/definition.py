@@ -624,7 +624,7 @@ def _create_entities(
         channel_no=channel_no,
         extended=extended,
     )
-    if len(entity.data_entities) > 0:
+    if entity.has_data_entities:
         device.add_entity(entity)
         entities.append(entity)
     return tuple(entities)
