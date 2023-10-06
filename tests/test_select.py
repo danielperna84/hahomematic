@@ -31,7 +31,7 @@ async def test_hmselect(factory: helper.Factory) -> None:
     assert select.unit is None
     assert select.min == "CLOSED"
     assert select.max == "OPEN"
-    assert select.value_list == ("CLOSED", "OPEN")
+    assert select.values == ("CLOSED", "OPEN")
     assert select.value == "CLOSED"
     await select.send_value("OPEN")
     assert mock_client.method_calls[-1] == call.set_value(
@@ -72,7 +72,7 @@ async def test_hmsysvarselect(factory: helper.Factory) -> None:
     assert select.unit is None
     assert select.min is None
     assert select.max is None
-    assert select.value_list == ("v1", "v2", "v3")
+    assert select.values == ("v1", "v2", "v3")
     assert select.value == "v1"
     await select.send_variable("v2")
     assert mock_client.method_calls[-1] == call.set_system_variable(name="sv_list_ext", value=1)

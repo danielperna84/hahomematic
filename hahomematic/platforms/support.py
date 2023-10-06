@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 import logging
 from typing import Any, Final
 
@@ -403,7 +404,7 @@ def get_index_of_value_from_value_list(
     """Check if value is in value list."""
     if (
         value is not None
-        and isinstance(value, str)
+        and isinstance(value, (str, StrEnum))
         and value_list is not None
         and value in value_list
     ):

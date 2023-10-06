@@ -431,18 +431,18 @@ class SystemVariableData(HubData):
 
     value: bool | float | int | str | None
     data_type: SysvarType | None = None
-    unit: str | None = None
-    value_list: list[str] | None = None
+    extended_sysvar: bool = False
     max_value: float | int | None = None
     min_value: float | int | None = None
-    extended_sysvar: bool = False
+    unit: str | None = None
+    values: tuple[str, ...] | None = None
 
 
 @dataclass(slots=True)
 class SystemInformation:
     """System information of the backend."""
 
-    available_interfaces: list[str] = field(default_factory=list)
+    available_interfaces: tuple[str, ...] = field(default_factory=tuple)
     auth_enabled: bool | None = None
     https_redirect_enabled: bool | None = None
     serial: str | None = None

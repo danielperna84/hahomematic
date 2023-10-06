@@ -33,7 +33,7 @@ async def test_hmsysvartext(factory: helper.Factory) -> None:
     assert text.usage == EntityUsage.ENTITY
 
     assert text.unit is None
-    assert text.value_list is None
+    assert text.values is None
     assert text.value == "test1"
     await text.send_variable("test23")
     assert mock_client.method_calls[-1] == call.set_system_variable(

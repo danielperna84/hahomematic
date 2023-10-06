@@ -49,7 +49,7 @@ async def test_cedimmer(factory: helper.Factory) -> None:
     assert light.supports_hs_color is False
     assert light.supports_transition is True
     assert light.effect is None
-    assert light.effect_list is None
+    assert light.effects is None
 
     assert light.brightness == 0
     assert light.brightness_pct == 0
@@ -212,7 +212,7 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
     assert light.supports_hs_color is True
     assert light.supports_transition is True
     assert light.effect is None
-    assert light.effect_list == [
+    assert light.effects == (
         "Off",
         "Slow color change",
         "Medium color change",
@@ -220,7 +220,7 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
         "Campfire",
         "Waterfall",
         "TV simulation",
-    ]
+    )
 
     assert light.brightness == 0
     await light.turn_on()
@@ -302,7 +302,7 @@ async def test_cecolortempdimmer(factory: helper.Factory) -> None:
     assert light.supports_hs_color is False
     assert light.supports_transition is True
     assert light.effect is None
-    assert light.effect_list is None
+    assert light.effects is None
     assert light.brightness == 0
     await light.turn_on()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -363,7 +363,7 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     assert light.supports_hs_color is True
     assert light.supports_transition is True
     assert light.effect is None
-    assert light.effect_list is None
+    assert light.effects is None
     assert light.brightness == 0
     assert light.is_on is False
     assert light.color_name == FixedColor.BLACK
@@ -513,7 +513,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     assert light.supports_hs_color is True
     assert light.supports_transition is True
     assert light.effect is None
-    assert light.effect_list == [
+    assert light.effects == (
         ColorBehaviour.ON,
         "BLINKING_SLOW",
         "BLINKING_MIDDLE",
@@ -524,7 +524,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         "BILLOW_SLOW",
         "BILLOW_MIDDLE",
         "BILLOW_FAST",
-    ]
+    )
     assert light.brightness == 0
     assert light.is_on is False
     assert light.color_name == FixedColor.BLACK
@@ -758,7 +758,7 @@ async def test_ceiprgbwlight(factory: helper.Factory) -> None:
     assert light.supports_hs_color is True
     assert light.supports_transition is True
     assert light.effect is None
-    assert light.effect_list == [
+    assert light.effects == (
         "NO_EFFECT",
         "EFFECT_01_END_CURRENT_PROFILE",
         "EFFECT_01_INTERRUPT_CURRENT_PROFILE",
@@ -780,7 +780,7 @@ async def test_ceiprgbwlight(factory: helper.Factory) -> None:
         "EFFECT_09_INTERRUPT_CURRENT_PROFILE",
         "EFFECT_10_END_CURRENT_PROFILE",
         "EFFECT_10_INTERRUPT_CURRENT_PROFILE",
-    ]
+    )
 
     assert light.brightness == 0
 

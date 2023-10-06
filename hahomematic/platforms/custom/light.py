@@ -224,7 +224,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
     @config_property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
-        return self.effect_list is not None and len(self.effect_list) > 0
+        return self.effects is not None and len(self.effects) > 0
 
     @config_property
     def supports_hs_color(self) -> bool:
@@ -242,7 +242,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         return None
 
     @value_property
-    def effect_list(self) -> tuple[str, ...] | None:
+    def effects(self) -> tuple[str, ...] | None:
         """Return the list of supported effects."""
         return None
 
@@ -370,7 +370,7 @@ class CeColorDimmer(CeDimmer):
 class CeColorDimmerEffect(CeColorDimmer):
     """Class for HomeMatic dimmer with color entities."""
 
-    _effect_list: list[str] = [
+    _effects: tuple[str, ...] = (
         _EFFECT_OFF,
         "Slow color change",
         "Medium color change",
@@ -378,7 +378,7 @@ class CeColorDimmerEffect(CeColorDimmer):
         "Campfire",
         "Waterfall",
         "TV simulation",
-    ]
+    )
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -391,13 +391,13 @@ class CeColorDimmerEffect(CeColorDimmer):
     def effect(self) -> str | None:
         """Return the current effect."""
         if self._e_effect.value is not None:
-            return self._effect_list[int(self._e_effect.value)]
+            return self._effects[int(self._e_effect.value)]
         return None
 
     @value_property
-    def effect_list(self) -> tuple[str, ...] | None:
+    def effects(self) -> tuple[str, ...] | None:
         """Return the list of supported effects."""
-        return tuple(self._effect_list)
+        return self._effects
 
     @bind_collector
     async def turn_on(
@@ -411,7 +411,7 @@ class CeColorDimmerEffect(CeColorDimmer):
             await self._e_effect.send_value(value=0, collector=collector)
 
         if self.supports_effects and (effect := kwargs.get("effect")) is not None:
-            if (effect_idx := self._effect_list.index(effect)) is not None:
+            if (effect_idx := self._effects.index(effect)) is not None:
                 await self._e_effect.send_value(value=effect_idx, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
@@ -527,9 +527,9 @@ class CeIpRGBWLight(CeDimmer):
         return self._usage
 
     @value_property
-    def effect_list(self) -> tuple[str, ...] | None:
+    def effects(self) -> tuple[str, ...] | None:
         """Return the list of supported effects."""
-        return tuple(self._e_effect.value_list or ())
+        return tuple(self._e_effect.values or ())
 
     @bind_collector
     async def turn_on(
@@ -659,12 +659,8 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
             field_name=FIELD_COLOR_BEHAVIOUR, entity_type=HmSelect
         )
         self._effect_list = (
-            [
-                item
-                for item in self._e_effect.value_list
-                if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR
-            ]
-            if (self._e_effect and self._e_effect.value_list)
+            [item for item in self._e_effect.values if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR]
+            if (self._e_effect and self._e_effect.values)
             else []
         )
 
@@ -676,7 +672,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
         return None
 
     @value_property
-    def effect_list(self) -> tuple[str, ...] | None:
+    def effects(self) -> tuple[str, ...] | None:
         """Return the list of supported effects."""
         return tuple(self._effect_list)
 

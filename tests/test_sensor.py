@@ -27,7 +27,7 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3941846:6", "VOLTAGE"))
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.unit == "V"
-    assert sensor.value_list is None
+    assert sensor.values is None
     assert sensor.value is None
     central.event(const.INTERFACE_ID, "VCU3941846:6", "VOLTAGE", 120)
     assert sensor.value == 120.0
@@ -40,7 +40,7 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     )
     assert sensor2.usage == EntityUsage.ENTITY
     assert sensor2.unit == "dBm"
-    assert sensor2.value_list is None
+    assert sensor2.values is None
     assert sensor2.value is None
     central.event(const.INTERFACE_ID, "VCU3941846:0", "RSSI_DEVICE", 24)
     assert sensor2.value == -24
@@ -59,7 +59,7 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     )
     assert sensor3.usage == EntityUsage.ENTITY
     assert sensor3.unit == "ppm"
-    assert sensor3.value_list is None
+    assert sensor3.values is None
     assert sensor3.value is None
 
 
@@ -70,7 +70,7 @@ async def test_hmsensor_srh(factory: helper.Factory) -> None:
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU7981740:1", "STATE"))
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.unit is None
-    assert sensor.value_list == ("CLOSED", "TILTED", "OPEN")
+    assert sensor.values == ("CLOSED", "TILTED", "OPEN")
     assert sensor.value is None
     central.event(const.INTERFACE_ID, "VCU7981740:1", "STATE", 0)
     assert sensor.value == "CLOSED"
@@ -86,11 +86,11 @@ async def test_hmsysvarsensor(factory: helper.Factory) -> None:
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.available is True
     assert sensor.unit is None
-    assert sensor.value_list == ("v1", "v2", "v3")
+    assert sensor.values == ("v1", "v2", "v3")
     assert sensor.value == "v1"
 
     sensor2: HmSysvarSensor = cast(HmSysvarSensor, central.get_sysvar_entity("sv_float"))
     assert sensor2.usage == EntityUsage.ENTITY
     assert sensor2.unit is None
-    assert sensor2.value_list is None
+    assert sensor2.values is None
     assert sensor2.value == 23.2

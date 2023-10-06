@@ -28,7 +28,9 @@ class HmSensor(GenericEntity[Any, None]):
     @value_property
     def value(self) -> Any | None:
         """Return the value."""
-        if value := get_value_from_value_list(value=self._value, value_list=self.value_list):
+        if (
+            value := get_value_from_value_list(value=self._value, value_list=self.values)
+        ) is not None:
             return value
         if convert_func := self._get_converter_func():
             return convert_func(self._value)

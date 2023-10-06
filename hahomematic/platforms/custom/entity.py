@@ -78,9 +78,9 @@ class CustomEntity(BaseEntity):
         return any(entity.state_uncertain for entity in self._readable_entities)
 
     @property
-    def _readable_entities(self) -> list[hmge.GenericEntity]:
+    def _readable_entities(self) -> tuple[hmge.GenericEntity, ...]:
         """Returns the list of readable entities."""
-        return [ge for ge in self.data_entities.values() if ge.is_readable]
+        return tuple(ge for ge in self.data_entities.values() if ge.is_readable)
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""

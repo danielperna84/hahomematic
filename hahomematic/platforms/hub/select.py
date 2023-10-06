@@ -25,19 +25,21 @@ class HmSysvarSelect(GenericSystemVariable):
     @value_property
     def value(self) -> str | None:
         """Get the value of the entity."""
-        if value := get_value_from_value_list(value=self._value, value_list=self.value_list):
+        if (
+            value := get_value_from_value_list(value=self._value, value_list=self.values)
+        ) is not None:
             return value
         return None
 
     async def send_variable(self, value: int | str) -> None:
         """Set the value of the entity."""
         # We allow setting the value via index as well, just in case.
-        if isinstance(value, int) and self._value_list:
-            if 0 <= value < len(self._value_list):
+        if isinstance(value, int) and self._values:
+            if 0 <= value < len(self._values):
                 await super().send_variable(value)
-        elif self._value_list:
-            if value in self._value_list:
-                await super().send_variable(self._value_list.index(value))
+        elif self._values:
+            if value in self._values:
+                await super().send_variable(self._values.index(value))
         else:
             _LOGGER.warning(
                 "Value not in value_list for %s/%s",

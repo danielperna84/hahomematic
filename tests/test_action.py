@@ -29,7 +29,7 @@ async def test_hmaction(factory: helper.Factory) -> None:
     assert action.usage == EntityUsage.NO_CREATE
     assert action.is_readable is False
     assert action.value is None
-    assert action.value_list == ("LOCKED", "UNLOCKED", "OPEN")
+    assert action.values == ("LOCKED", "UNLOCKED", "OPEN")
     assert action.hmtype == "ENUM"
     await action.send_value("OPEN")
     assert mock_client.method_calls[-1] == call.set_value(

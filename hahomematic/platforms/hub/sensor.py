@@ -24,8 +24,10 @@ class HmSysvarSensor(GenericSystemVariable):
     @value_property
     def value(self) -> Any | None:
         """Return the value."""
-        if self.data_type == SysvarType.LIST and (
-            value := get_value_from_value_list(value=self._value, value_list=self.value_list)
+        if (
+            self.data_type == SysvarType.LIST
+            and (value := get_value_from_value_list(value=self._value, value_list=self.values))
+            is not None
         ):
             return value
         return _check_length_and_warn(name=self.ccu_var_name, value=self._value)

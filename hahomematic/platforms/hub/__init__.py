@@ -47,7 +47,7 @@ class Hub:
 
     async def _update_program_entities(self, include_internal: bool) -> None:
         """Retrieve all program data and update program values."""
-        programs: list[ProgramData] = []
+        programs: tuple[ProgramData, ...] = ()
         if client := self._central.primary_client:
             programs = await client.get_all_programs(include_internal=include_internal)
         if not programs:
@@ -80,7 +80,7 @@ class Hub:
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
         """Retrieve all variable data and update hmvariable values."""
-        variables: list[SystemVariableData] = []
+        variables: tuple[SystemVariableData, ...] = ()
         if client := self._central.primary_client:
             variables = await client.get_all_system_variables(include_internal=include_internal)
         if not variables:
@@ -149,7 +149,7 @@ class Hub:
 
         return HmSysvarSensor(central=self._central, data=data)
 
-    def _remove_program_entity(self, ids: list[str]) -> None:
+    def _remove_program_entity(self, ids: tuple[str, ...]) -> None:
         """Remove sysvar entity from hub."""
         for pid in ids:
             if pid in self._central.program_entities:
@@ -157,7 +157,7 @@ class Hub:
                 entity.remove_entity()
                 del self._central.program_entities[pid]
 
-    def _remove_sysvar_entity(self, del_entities: set[str]) -> None:
+    def _remove_sysvar_entity(self, del_entities: tuple[str, ...]) -> None:
         """Remove sysvar entity from hub."""
         for name in del_entities:
             if name in self._central.sysvar_entities:
@@ -165,16 +165,18 @@ class Hub:
                 entity.remove_entity()
                 del self._central.sysvar_entities[name]
 
-    def _identify_missing_program_ids(self, programs: list[ProgramData]) -> list[str]:
+    def _identify_missing_program_ids(self, programs: tuple[ProgramData, ...]) -> tuple[str, ...]:
         """Identify missing programs."""
-        return [
+        return tuple(
             pid for pid in self._central.program_entities if pid not in [x.pid for x in programs]
-        ]
+        )
 
-    def _identify_missing_variable_names(self, variables: list[SystemVariableData]) -> set[str]:
+    def _identify_missing_variable_names(
+        self, variables: tuple[SystemVariableData, ...]
+    ) -> tuple[str, ...]:
         """Identify missing variables."""
         variable_names: dict[str, bool] = {x.name: x.extended_sysvar for x in variables}
-        missing_variables: set[str] = set()
+        missing_variables: list[str] = []
         for sysvar_entity in self._central.sysvar_entities.values():
             if sysvar_entity.data_type == SysvarType.STRING:
                 continue
@@ -182,8 +184,8 @@ class Hub:
             if ccu_name not in variable_names or (
                 sysvar_entity.is_extended is not variable_names.get(ccu_name)
             ):
-                missing_variables.add(ccu_name)
-        return missing_variables
+                missing_variables.append(ccu_name)
+        return tuple(missing_variables)
 
 
 def _is_excluded(variable: str, excludes: list[str]) -> bool:
@@ -191,6 +193,6 @@ def _is_excluded(variable: str, excludes: list[str]) -> bool:
     return any(marker in variable for marker in excludes)
 
 
-def _clean_variables(variables: list[SystemVariableData]) -> list[SystemVariableData]:
+def _clean_variables(variables: tuple[SystemVariableData, ...]) -> tuple[SystemVariableData, ...]:
     """Clean variables by removing excluded."""
-    return [sv for sv in variables if not _is_excluded(sv.name, _EXCLUDED)]
+    return tuple(sv for sv in variables if not _is_excluded(sv.name, _EXCLUDED))
