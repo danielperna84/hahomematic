@@ -236,7 +236,7 @@ class CustomEntity(BaseEntity):
         if not un_ignore_params_by_paramset_key:
             return  # pragma: no cover
         for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
-            for entity in self.device.generic_entities.values():
+            for entity in self.device.generic_entities:
                 if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
                     entity.set_usage(EntityUsage.ENTITY)
 
@@ -268,7 +268,7 @@ class NoneTypeEntity:
     min: Any = None
     unit: Any = None
     value: Any = None
-    value_list: list[Any] = []
+    values: list[Any] = []
     visible: Any = None
     channel_operation_mode: str | None = None
     is_hmtype = False

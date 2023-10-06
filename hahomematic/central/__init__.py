@@ -560,11 +560,11 @@ class CentralUnit:
         return self._devices.get(d_address)
 
     def get_entities_by_platform(
-        self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
+        self, platform: HmPlatform, existing_unique_ids: tuple[str, ...] | None = None
     ) -> tuple[BaseEntity, ...]:
         """Return all entities by platform."""
         if not existing_unique_ids:
-            existing_unique_ids = []
+            existing_unique_ids = ()
 
         return tuple(
             be
@@ -602,11 +602,11 @@ class CentralUnit:
         return client
 
     def get_hub_entities_by_platform(
-        self, platform: HmPlatform, existing_unique_ids: list[str] | None = None
+        self, platform: HmPlatform, existing_unique_ids: tuple[str, ...] | None = None
     ) -> tuple[GenericHubEntity, ...]:
         """Return the hub entities by platform."""
         if not existing_unique_ids:
-            existing_unique_ids = []
+            existing_unique_ids = ()
 
         return tuple(
             he
@@ -655,7 +655,7 @@ class CentralUnit:
         _LOGGER.debug("CREATE_DEVICES: Starting to create devices for %s", self._name)
 
         new_devices = set[HmDevice]()
-        for interface_id in self._clients:
+        for interface_id in self.interface_ids:
             if not self.paramset_descriptions.has_interface_id(interface_id=interface_id):
                 _LOGGER.debug(
                     "CREATE_DEVICES: Skipping interface %s, missing paramsets",
@@ -715,20 +715,13 @@ class CentralUnit:
 
         if (device := self._devices.get(device_address)) is None:
             return
-        addresses: list[str] = list(device.channels.keys())
-        addresses.append(device_address)
-        if len(addresses) == 0:
-            _LOGGER.debug(
-                "DELETE_DEVICE: Nothing to delete: interface_id = %s, device_address = %s",
-                interface_id,
-                device_address,
-            )
-            return
+        addresses = device.channel_addresses
+        addresses += (device_address,)
 
         await self.delete_devices(interface_id=interface_id, addresses=addresses)
 
     @callback_system_event(system_event=SystemEvent.DELETE_DEVICES)
-    async def delete_devices(self, interface_id: str, addresses: list[str]) -> None:
+    async def delete_devices(self, interface_id: str, addresses: tuple[str, ...]) -> None:
         """Delete devices from central."""
         _LOGGER.debug(
             "DELETE_DEVICES: interface_id = %s, addresses = %s",
@@ -766,11 +759,11 @@ class CentralUnit:
             return
 
         async with self._sema_add_devices:
-            # We need this list to avoid adding duplicates.
-            known_addresses = [
+            # We need this to avoid adding duplicates.
+            known_addresses = tuple(
                 dev_desc[Description.ADDRESS]
                 for dev_desc in self.device_descriptions.get_raw_device_descriptions(interface_id)
-            ]
+            )
             client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
@@ -1046,27 +1039,25 @@ class CentralUnit:
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Get entity by channel_address and parameter."""
         if device := self.get_device(address=channel_address):
-            return device.generic_entities.get((channel_address, parameter))
+            return device.get_generic_entity(channel_address=channel_address, parameter=parameter)
         return None
 
     def get_wrapper_entity(self, channel_address: str, parameter: str) -> WrapperEntity | None:
         """Return the hm wrapper_entity."""
         if device := self.get_device(address=channel_address):
-            return device.wrapper_entities.get((channel_address, parameter))
+            return device.get_wrapper_entity(channel_address=channel_address, parameter=parameter)
         return None
 
     def get_event(self, channel_address: str, parameter: str) -> GenericEvent | None:
         """Return the hm event."""
         if device := self.get_device(address=channel_address):
-            return device.generic_events.get((channel_address, parameter))
+            return device.get_generic_event(channel_address=channel_address, parameter=parameter)
         return None
 
-    def get_custom_entity(self, address: str, channel_no: int | None) -> CustomEntity | None:
+    def get_custom_entity(self, address: str, channel_no: int) -> CustomEntity | None:
         """Return the hm custom_entity."""
         if device := self.get_device(address=address):
-            for custom_entity in device.custom_entities.values():
-                if custom_entity.channel_no == channel_no:
-                    return custom_entity
+            return device.get_custom_entity(channel_no=channel_no)
         return None
 
     def get_sysvar_entity(self, name: str) -> GenericSystemVariable | None:
@@ -1270,7 +1261,7 @@ class CentralConfig:
         username: str,
         password: str,
         central_id: str,
-        interface_configs: set[hmcl.InterfaceConfig],
+        interface_configs: tuple[hmcl.InterfaceConfig, ...],
         default_callback_port: int,
         client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,

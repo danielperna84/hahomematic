@@ -445,8 +445,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
-        cop: BaseParameterEntity | None = self.device.generic_entities.get(
-            (self._channel_address, Parameter.CHANNEL_OPERATION_MODE)
+        cop: BaseParameterEntity | None = self.device.get_generic_entity(
+            channel_address=self._channel_address, parameter=Parameter.CHANNEL_OPERATION_MODE
         )
         if cop and cop.value:
             return str(cop.value)

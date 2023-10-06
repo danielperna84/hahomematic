@@ -43,7 +43,7 @@ async def test_central_full(central_unit_full) -> None:
     for device in central_unit_full.devices:
         if device.device_type not in data:
             data[device.device_type] = {}
-        for entity in device.generic_entities.values():
+        for entity in device.generic_entities:
             if entity.parameter not in data[device.device_type]:
                 data[device.device_type][entity.parameter] = f"{entity.hmtype}"
         pub_value_props = get_public_attributes_for_value_property(data_object=device)
@@ -53,7 +53,7 @@ async def test_central_full(central_unit_full) -> None:
 
     custom_entities = []
     for device in central_unit_full.devices:
-        custom_entities.extend(device.custom_entities.values())
+        custom_entities.extend(device.custom_entities)
 
     ce_channels = {}
     for custom_entity in custom_entities:
