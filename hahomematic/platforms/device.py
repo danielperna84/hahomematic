@@ -422,10 +422,7 @@ class HmDevice(PayloadMixin):
 
         return event_dict
 
-    def get_custom_entity(
-        self,
-        channel_no: int,
-    ) -> hmce.CustomEntity | None:
+    def get_custom_entity(self, channel_no: int) -> hmce.CustomEntity | None:
         """Return an entity from device."""
         for custom_entity in self.custom_entities:
             if custom_entity.channel_no == channel_no:
