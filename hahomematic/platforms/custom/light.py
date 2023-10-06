@@ -242,7 +242,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         return None
 
     @value_property
-    def effect_list(self) -> list[str] | None:
+    def effect_list(self) -> tuple[str, ...] | None:
         """Return the list of supported effects."""
         return None
 
@@ -395,9 +395,9 @@ class CeColorDimmerEffect(CeColorDimmer):
         return None
 
     @value_property
-    def effect_list(self) -> list[str] | None:
+    def effect_list(self) -> tuple[str, ...] | None:
         """Return the list of supported effects."""
-        return self._effect_list
+        return tuple(self._effect_list)
 
     @bind_collector
     async def turn_on(
@@ -527,9 +527,9 @@ class CeIpRGBWLight(CeDimmer):
         return self._usage
 
     @value_property
-    def effect_list(self) -> list[str] | None:
+    def effect_list(self) -> tuple[str, ...] | None:
         """Return the list of supported effects."""
-        return list(self._e_effect.value_list or ())
+        return tuple(self._e_effect.value_list or ())
 
     @bind_collector
     async def turn_on(
@@ -676,9 +676,9 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
         return None
 
     @value_property
-    def effect_list(self) -> list[str] | None:
+    def effect_list(self) -> tuple[str, ...] | None:
         """Return the list of supported effects."""
-        return self._effect_list
+        return tuple(self._effect_list)
 
     @bind_collector
     async def turn_on(

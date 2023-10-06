@@ -329,9 +329,11 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
         """Assign parameter data to instance variables."""
         self._type: ParameterType = ParameterType(parameter_data[Description.TYPE])
-        self._value_list: tuple[str, ...] | None = None
-        if Description.VALUE_LIST in parameter_data:
-            self._value_list = tuple(parameter_data[Description.VALUE_LIST])
+        self._value_list = (
+            tuple(parameter_data[Description.VALUE_LIST])
+            if Description.VALUE_LIST in parameter_data
+            else None
+        )
         self._max: ParameterT = self._convert_value(parameter_data[Description.MAX])
         self._min: ParameterT = self._convert_value(parameter_data[Description.MIN])
         self._default: ParameterT = self._convert_value(

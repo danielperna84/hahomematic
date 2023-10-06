@@ -395,3 +395,18 @@ def get_value_from_value_list(
     ):
         return value_list[int(value)]
     return None
+
+
+def get_index_of_value_from_value_list(
+    value: bool | float | int | str | None, value_list: tuple[str, ...] | list[str] | None
+) -> int | None:
+    """Check if value is in value list."""
+    if (
+        value is not None
+        and isinstance(value, str)
+        and value_list is not None
+        and value in value_list
+    ):
+        return value_list.index(value)
+
+    return None

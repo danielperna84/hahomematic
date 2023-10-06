@@ -10,6 +10,7 @@ from typing import Any
 
 from hahomematic.const import HmPlatform
 from hahomematic.platforms.generic.entity import GenericEntity
+from hahomematic.platforms.support import get_index_of_value_from_value_list
 
 
 class HmAction(GenericEntity[None, Any]):
@@ -24,11 +25,6 @@ class HmAction(GenericEntity[None, Any]):
 
     def _prepare_value_for_sending(self, value: Any, do_validate: bool = True) -> Any:
         """Prepare value before sending."""
-        if (
-            value is not None
-            and self._value_list
-            and isinstance(value, str)
-            and value in self._value_list
-        ):
-            return self._value_list.index(value)
+        if index := get_index_of_value_from_value_list(value=value, value_list=self._value_list):
+            return index
         return value
