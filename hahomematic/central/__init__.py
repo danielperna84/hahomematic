@@ -134,6 +134,7 @@ class CentralUnit:
         self.parameter_visibility: Final[ParameterVisibilityCache] = ParameterVisibilityCache(
             central=self
         )
+
         self._primary_client: hmcl.Client | None = None
         # {interface_id, client}
         self._clients: Final[dict[str, hmcl.Client]] = {}
