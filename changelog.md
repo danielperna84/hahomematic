@@ -6,6 +6,7 @@
   - effect_list -> effects
 - Add more checks to get/set value from/tp values
 - Use more tuple instead of list
+- Cleanup code
 
 # Version 2023.10.4 (2023-10-03)
 
