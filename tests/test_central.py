@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import cast
+from typing import Any, cast
 from unittest.mock import call, patch
 
 import pytest
@@ -139,9 +139,14 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor = central.get_entities_by_platform(platform=HmPlatform.SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 12
+
+    def _device_changed(self, *args: Any, **kwargs: Any) -> None:
+        """Handle device state changes."""
+
+    ebp_sensor[0].register_update_callback(update_callback=_device_changed)
     ebp_sensor2 = central.get_entities_by_platform(
         platform=HmPlatform.SENSOR,
-        existing_unique_ids=["vcu6354483_1_actual_temperature"],
+        exclude_subscribed=True,
     )
     assert ebp_sensor2
     assert len(ebp_sensor2) == 11
@@ -154,9 +159,14 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 4
+
+    def _device_changed(self, *args: Any, **kwargs: Any) -> None:
+        """Handle device state changes."""
+
+    ebp_sensor[0].register_update_callback(update_callback=_device_changed)
     ebp_sensor2 = central.get_hub_entities_by_platform(
         platform=HmPlatform.HUB_SENSOR,
-        existing_unique_ids=["test1234_sysvar_sv-string"],
+        exclude_subscribed=True,
     )
     assert ebp_sensor2
     assert len(ebp_sensor2) == 3
@@ -164,8 +174,9 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor3 = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_BUTTON)
     assert ebp_sensor3
     assert len(ebp_sensor3) == 2
+    ebp_sensor3[0].register_update_callback(update_callback=_device_changed)
     ebp_sensor4 = central.get_hub_entities_by_platform(
-        platform=HmPlatform.HUB_BUTTON, existing_unique_ids=["test1234_program_p-2"]
+        platform=HmPlatform.HUB_BUTTON, exclude_subscribed=True
     )
     assert ebp_sensor4
     assert len(ebp_sensor4) == 1

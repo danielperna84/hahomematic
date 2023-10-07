@@ -29,8 +29,7 @@ class GenericHubEntity(CallbackEntity):
             address=address,
             parameter=slugify(data.name),
         )
-        super().__init__(unique_identifier=unique_identifier)
-        self.central: Final = central
+        super().__init__(central=central, unique_identifier=unique_identifier)
         self._name: Final = self.get_name(data=data)
         self._full_name: Final = f"{self.central.name}_{self._name}"
 

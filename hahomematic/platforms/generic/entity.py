@@ -61,7 +61,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             and old_value is True
         ):
             self._central.create_task(
-                self.device.reload_paramset_descriptions(), name="reloadParamsetDescriptions"
+                self._device.reload_paramset_descriptions(), name="reloadParamsetDescriptions"
             )
 
         # send device availability events
@@ -69,7 +69,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             Parameter.UN_REACH,
             Parameter.STICKY_UN_REACH,
         ):
-            self.device.update_device(self._unique_identifier)
+            self._device.update_device(self._unique_identifier)
             self._central.fire_ha_event_callback(
                 event_type=EventType.DEVICE_AVAILABILITY,
                 event_data=self.get_event_data(new_value),
@@ -118,7 +118,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         """Create the name for the entity."""
         return get_entity_name(
             central=self._central,
-            device=self.device,
+            device=self._device,
             channel_no=self.channel_no,
             parameter=self._parameter,
         )
@@ -126,7 +126,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
     def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
         if self._central.parameter_visibility.parameter_is_hidden(
-            device_type=self.device.device_type,
+            device_type=self._device.device_type,
             channel_no=self.channel_no,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
@@ -135,7 +135,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 
         return (
             EntityUsage.NO_CREATE
-            if self.device.has_custom_entity_definition
+            if self._device.has_custom_entity_definition
             else EntityUsage.ENTITY
         )
 
@@ -193,7 +193,7 @@ class WrapperEntity(hme.BaseEntity):
         """Create the name for the entity."""
         return get_entity_name(
             central=self._central,
-            device=self.device,
+            device=self._device,
             channel_no=self.channel_no,
             parameter=self._parameter,
         )

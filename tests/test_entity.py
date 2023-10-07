@@ -41,8 +41,8 @@ async def test_custom_entity_callback(factory: helper.Factory) -> None:
     device_updated_mock = MagicMock()
     device_removed_mock = MagicMock()
 
-    switch.register_update_callback(device_updated_mock)
-    switch.register_remove_callback(device_removed_mock)
+    switch.register_update_callback(update_callback=device_updated_mock)
+    switch.register_remove_callback(remove_callback=device_removed_mock)
     assert switch.value is None
     assert (
         str(switch) == "address_path: switch/CentralTest-BidCos-RF/vcu2128127_4/, "
@@ -64,8 +64,8 @@ async def test_custom_entity_callback(factory: helper.Factory) -> None:
     assert factory.system_event_mock.call_args_list[-1] == call(
         "deleteDevices", interface_id="CentralTest-BidCos-RF", addresses=["VCU2128127"]
     )
-    switch.unregister_update_callback(device_updated_mock)
-    switch.unregister_remove_callback(device_removed_mock)
+    switch.unregister_update_callback(update_callback=device_updated_mock)
+    switch.unregister_remove_callback(remove_callback=device_removed_mock)
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()
@@ -81,8 +81,8 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
     device_updated_mock = MagicMock()
     device_removed_mock = MagicMock()
 
-    switch.register_update_callback(device_updated_mock)
-    switch.register_remove_callback(device_removed_mock)
+    switch.register_update_callback(update_callback=device_updated_mock)
+    switch.register_remove_callback(remove_callback=device_removed_mock)
     assert switch.value is None
     assert (
         str(switch) == "address_path: switch/CentralTest-BidCos-RF/vcu2128127_4_state/, "
@@ -104,8 +104,8 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
     assert factory.system_event_mock.call_args_list[-1] == call(
         "deleteDevices", interface_id="CentralTest-BidCos-RF", addresses=["VCU2128127"]
     )
-    switch.unregister_update_callback(device_updated_mock)
-    switch.unregister_remove_callback(device_removed_mock)
+    switch.unregister_update_callback(update_callback=device_updated_mock)
+    switch.unregister_remove_callback(remove_callback=device_removed_mock)
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()
