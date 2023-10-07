@@ -81,7 +81,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         """Create the name for the entity."""
         return get_event_name(
             central=self._central,
-            device=self.device,
+            device=self._device,
             channel_no=self.channel_no,
             parameter=self._parameter,
         )

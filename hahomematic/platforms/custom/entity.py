@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
 
-from hahomematic.const import INIT_DATETIME, CallSource, EntityUsage
+from hahomematic.const import INIT_DATETIME, CallBackSource, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import EntityDefinition
@@ -96,7 +96,7 @@ class CustomEntity(BaseEntity):
         )
         return get_custom_entity_name(
             central=self._central,
-            device=self.device,
+            device=self._device,
             channel_no=self.channel_no,
             is_only_primary_channel=is_only_primary_channel,
             usage=self._usage,
@@ -131,7 +131,7 @@ class CustomEntity(BaseEntity):
         """Init entity collection."""
         # Add repeating fields
         for field_name, parameter in self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {}).items():
-            entity = self.device.get_generic_entity(
+            entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity)
@@ -140,7 +140,7 @@ class CustomEntity(BaseEntity):
         for field_name, parameter in self._device_desc.get(
             hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
         ).items():
-            entity = self.device.get_generic_entity(
+            entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
             )
             self._add_entity(field_name=field_name, entity=entity, is_visible=True)
@@ -150,9 +150,9 @@ class CustomEntity(BaseEntity):
                 for channel_no, mapping in fixed_channels.items():
                     for field_name, parameter in mapping.items():
                         channel_address = get_channel_address(
-                            device_address=self.device.device_address, channel_no=channel_no
+                            device_address=self._device.device_address, channel_no=channel_no
                         )
-                        entity = self.device.get_generic_entity(
+                        entity = self._device.get_generic_entity(
                             channel_address=channel_address, parameter=parameter
                         )
                         self._add_entity(field_name=field_name, entity=entity)
@@ -178,7 +178,7 @@ class CustomEntity(BaseEntity):
         # add custom un_ignore entities
         self._mark_entity_by_custom_un_ignore_parameters(
             un_ignore_params_by_paramset_key=self._central.parameter_visibility.get_un_ignore_parameters(  # noqa: E501
-                device_type=self.device.device_type, channel_no=self.channel_no
+                device_type=self._device.device_type, channel_no=self.channel_no
             )
         )
 
@@ -188,9 +188,9 @@ class CustomEntity(BaseEntity):
         for channel_no, channel in fields.items():
             for field_name, parameter in channel.items():
                 channel_address = get_channel_address(
-                    device_address=self.device.device_address, channel_no=channel_no
+                    device_address=self._device.device_address, channel_no=channel_no
                 )
-                if entity := self.device.get_generic_entity(
+                if entity := self._device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
                     if is_visible and entity.wrapped is False:
@@ -207,7 +207,9 @@ class CustomEntity(BaseEntity):
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
-        entity.register_update_callback(self.update_entity)
+        entity.register_update_callback(
+            update_callback=self.update_entity, source=CallBackSource.INTERNAL
+        )
         self._data_entities[field_name] = entity
 
     def _mark_entities(self, entity_def: dict[int | tuple[int, ...], tuple[str, ...]]) -> None:
@@ -224,11 +226,11 @@ class CustomEntity(BaseEntity):
     def _mark_entity(self, channel_no: int | None, parameters: tuple[str, ...]) -> None:
         """Mark entity to be created in HA."""
         channel_address = get_channel_address(
-            device_address=self.device.device_address, channel_no=channel_no
+            device_address=self._device.device_address, channel_no=channel_no
         )
 
         for parameter in parameters:
-            entity = self.device.get_generic_entity(
+            entity = self._device.get_generic_entity(
                 channel_address=channel_address, parameter=parameter
             )
             if entity:
@@ -241,7 +243,7 @@ class CustomEntity(BaseEntity):
         if not un_ignore_params_by_paramset_key:
             return  # pragma: no cover
         for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
-            for entity in self.device.generic_entities:
+            for entity in self._device.generic_entities:
                 if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
                     entity.set_usage(EntityUsage.ENTITY)
 

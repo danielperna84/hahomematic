@@ -22,6 +22,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     NO_CACHE_ENTRY,
+    CallBackSource,
     CallSource,
     Description,
     EntityUsage,
@@ -93,8 +94,9 @@ class CallbackEntity(ABC):
 
     _platform: HmPlatform
 
-    def __init__(self, unique_identifier: str) -> None:
+    def __init__(self, central: hmcu.CentralUnit, unique_identifier: str) -> None:
         """Init the callback entity."""
+        self._central: Final = central
         self._unique_identifier: Final = unique_identifier
         self._update_callbacks: list[Callable] = []
         self._remove_callbacks: list[Callable] = []
@@ -103,6 +105,11 @@ class CallbackEntity(ABC):
     @abstractmethod
     def available(self) -> bool:
         """Return the availability of the device."""
+
+    @property
+    def central(self) -> hmcu.CentralUnit:
+        """Return the central unit."""
+        return self._central
 
     @config_property
     @abstractmethod
@@ -138,15 +145,27 @@ class CallbackEntity(ABC):
             EntityUsage.EVENT,
         )
 
-    def register_update_callback(self, update_callback: Callable) -> None:
+    def register_update_callback(
+        self, update_callback: Callable, source: CallBackSource = CallBackSource.HA
+    ) -> None:
         """Register update callback."""
         if callable(update_callback):
             self._update_callbacks.append(update_callback)
+        if source == CallBackSource.HA:
+            self._central.add_subscribed_entity_unique_identifier(
+                unique_identifier=self.unique_identifier
+            )
 
-    def unregister_update_callback(self, update_callback: Callable) -> None:
+    def unregister_update_callback(
+        self, update_callback: Callable, source: CallBackSource = CallBackSource.HA
+    ) -> None:
         """Unregister update callback."""
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
+        if source == CallBackSource.HA:
+            self._central.remove_subscribed_entity_unique_identifier(
+                unique_identifier=self.unique_identifier
+            )
 
     def register_remove_callback(self, remove_callback: Callable) -> None:
         """Register the remove callback."""
@@ -181,8 +200,8 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     ) -> None:
         """Initialize the entity."""
         PayloadMixin.__init__(self)
-        super().__init__(unique_identifier=unique_identifier)
-        self.device: Final = device
+        super().__init__(central=device.central, unique_identifier=unique_identifier)
+        self._device: Final[hmd.HmDevice] = device
         self._channel_no: Final = channel_no
         self._channel_address: Final[str] = hms.get_channel_address(
             device_address=device.device_address, channel_no=channel_no
@@ -191,7 +210,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
             central=device.central, address=self._channel_address
         )
         self._is_in_multiple_channels: Final = is_in_multiple_channels
-        self._central: Final[hmcu.CentralUnit] = device.central
         self._channel_type: Final = str(device.channels[self._channel_address].type)
         self._function: Final = self._central.device_details.get_function_text(
             address=self._channel_address
@@ -209,12 +227,12 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @property
     def address_path(self) -> str:
         """Return the address pass of the entity."""
-        return f"{self._platform}/{self.device.interface_id}/{self._unique_identifier}/"
+        return f"{self._platform}/{self._device.interface_id}/{self._unique_identifier}/"
 
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
-        return self.device.available
+        return self._device.available
 
     @config_property
     def channel_address(self) -> str:
@@ -235,6 +253,11 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def channel_unique_identifier(self) -> str:
         """Return the channel_unique_identifier of the entity."""
         return self._channel_unique_identifier
+
+    @property
+    def device(self) -> hmd.HmDevice:
+        """Return the device of the entity."""
+        return self._device
 
     @config_property
     def function(self) -> str | None:
@@ -269,7 +292,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Do what is needed when the value of the entity has been updated."""
         super().update_entity(*args, **kwargs)
         self._central.fire_entity_data_event_callback(
-            interface_id=self.device.interface_id, entity=self
+            interface_id=self._device.interface_id, entity=self
         )
 
     @abstractmethod
@@ -287,7 +310,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def __str__(self) -> str:
         """Provide some useful information."""
         return (
-            f"address_path: {self.address_path}, type: {self.device.device_type}, "
+            f"address_path: {self.address_path}, type: {self._device.device_type}, "
             f"name: {self.full_name}"
         )
 
@@ -445,7 +468,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
-        cop: BaseParameterEntity | None = self.device.get_generic_entity(
+        cop: BaseParameterEntity | None = self._device.get_generic_entity(
             channel_address=self._channel_address, parameter=Parameter.CHANNEL_OPERATION_MODE
         )
         if cop and cop.value:
@@ -488,7 +511,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             return
 
         self.update_value(
-            value=await self.device.value_cache.get_value(
+            value=await self._device.value_cache.get_value(
                 channel_address=self._channel_address,
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
@@ -511,8 +534,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def update_parameter_data(self) -> None:
         """Update parameter data."""
         self._assign_parameter_data(
-            parameter_data=self.device.central.paramset_descriptions.get_parameter_data(
-                interface_id=self.device.interface_id,
+            parameter_data=self._central.paramset_descriptions.get_parameter_data(
+                interface_id=self._device.interface_id,
                 channel_address=self._channel_address,
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
@@ -541,7 +564,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         except ValueError:  # pragma: no cover
             _LOGGER.debug(
                 "CONVERT_VALUE: conversion failed for %s, %s, %s, value: [%s]",
-                self.device.interface_id,
+                self._device.interface_id,
                 self._channel_address,
                 self._parameter,
                 value,
@@ -551,10 +574,10 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         event_data = {
-            EVENT_ADDRESS: self.device.device_address,
+            EVENT_ADDRESS: self._device.device_address,
             EVENT_CHANNEL_NO: self._channel_no,
-            EVENT_DEVICE_TYPE: self.device.device_type,
-            EVENT_INTERFACE_ID: self.device.interface_id,
+            EVENT_DEVICE_TYPE: self._device.device_type,
+            EVENT_INTERFACE_ID: self._device.interface_id,
             EVENT_PARAMETER: self._parameter,
         }
         if value is not None:
