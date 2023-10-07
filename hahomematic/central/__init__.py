@@ -608,11 +608,12 @@ class CentralUnit:
         return self._devices.get(d_address)
 
     def get_entities_by_platform(
-        self, platform: HmPlatform, existing_unique_ids: tuple[str, ...] | None = None
+        self, platform: HmPlatform, exclude_subscribed: bool | None = None
     ) -> tuple[BaseEntity, ...]:
         """Return all entities by platform."""
-        if not existing_unique_ids:
-            existing_unique_ids = ()
+        existing_unique_ids = (
+            self._subscribed_entity_unique_identifiers if exclude_subscribed else ()
+        )
 
         return tuple(
             be
@@ -650,17 +651,48 @@ class CentralUnit:
         return client
 
     def get_hub_entities_by_platform(
-        self, platform: HmPlatform, existing_unique_ids: tuple[str, ...] | None = None
+        self, platform: HmPlatform, exclude_subscribed: bool | None = None
     ) -> tuple[GenericHubEntity, ...]:
         """Return the hub entities by platform."""
-        if not existing_unique_ids:
-            existing_unique_ids = ()
+        existing_unique_ids = (
+            self._subscribed_entity_unique_identifiers if exclude_subscribed else ()
+        )
 
         return tuple(
             he
             for he in (self.program_buttons + self.sysvar_entities)
             if (he.unique_identifier not in existing_unique_ids and he.platform == platform)
         )
+
+    def get_update_entities(self, exclude_subscribed: bool | None = None) -> tuple[HmUpdate, ...]:
+        """Return the update entities."""
+        existing_unique_ids = (
+            self._subscribed_entity_unique_identifiers if exclude_subscribed else ()
+        )
+
+        return tuple(
+            device.update_entity
+            for device in self.devices
+            if device.update_entity
+            and device.update_entity.unique_identifier not in existing_unique_ids
+        )
+
+    def get_channel_events_by_event_type(
+        self, event_type: EventType, exclude_subscribed: bool | None = None
+    ) -> tuple[list[GenericEvent], ...]:
+        """Return all channel event entities."""
+        existing_unique_ids = (
+            self._subscribed_entity_unique_identifiers if exclude_subscribed else ()
+        )
+
+        hm_channel_events: list[list[GenericEvent]] = []
+        for device in self.devices:
+            for channel_events in device.get_channel_events(event_type=event_type).values():
+                if channel_events[0].channel_unique_identifier not in existing_unique_ids:
+                    hm_channel_events.append(channel_events)
+                    continue
+
+        return tuple(hm_channel_events)
 
     def get_virtual_remotes(self) -> tuple[HmDevice, ...]:
         """Get the virtual remote for the Client."""
