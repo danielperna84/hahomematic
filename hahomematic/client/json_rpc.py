@@ -538,9 +538,9 @@ class JsonRpcAioHttpClient:
                         data_type = org_data_type
                     extended_sysvar = ext_markers.get(var_id, False)
                     unit = var[_UNIT]
-                    value_list: tuple[str, ...] | None = None
+                    values: tuple[str, ...] | None = None
                     if val_list := var.get(_VALUE_LIST):
-                        value_list = tuple(val_list.split(";"))
+                        values = tuple(val_list.split(";"))
                     try:
                         value = parse_sys_var(data_type=data_type, raw_value=raw_value)
                         max_value = None
@@ -555,7 +555,7 @@ class JsonRpcAioHttpClient:
                                 data_type=data_type,
                                 unit=unit,
                                 value=value,
-                                values=value_list,
+                                values=values,
                                 max_value=max_value,
                                 min_value=min_value,
                                 extended_sysvar=extended_sysvar,
@@ -762,7 +762,7 @@ class JsonRpcAioHttpClient:
             _LOGGER.debug("GET_SUPPORTED_METHODS: Getting the supported methods")
             if json_result := response[_P_RESULT]:
                 supported_methods = tuple(
-                    [method_description[_NAME] for method_description in json_result]
+                    method_description[_NAME] for method_description in json_result
                 )
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except BaseHomematicException as ex:
@@ -776,7 +776,7 @@ class JsonRpcAioHttpClient:
         if self._supported_methods is None:
             self._supported_methods = await self._get_supported_methods()
         if unsupport_methods := tuple(
-            [method for method in JsonRpcMethod if method not in self._supported_methods]
+            method for method in JsonRpcMethod if method not in self._supported_methods
         ):
             _LOGGER.warning(
                 "CHECK_SUPPORTED_METHODS: methods not supported by backend: %s",

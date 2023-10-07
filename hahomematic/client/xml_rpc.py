@@ -158,7 +158,9 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
                 _LOGGER.error(message)
             raise NoConnection(message) from ose
         except xmlrpc.client.Fault as fex:
-            raise ClientException(fex) from fex
+            raise ClientException(
+                f"XMLRPC Fault from backend: {fex.faultCode} {fex.faultString}"
+            ) from fex
         except TypeError as terr:
             raise ClientException(terr) from terr
         except xmlrpc.client.ProtocolError as per:

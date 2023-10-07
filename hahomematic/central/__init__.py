@@ -399,7 +399,7 @@ class CentralUnit:
     ) -> None:
         """Refresh device descriptions."""
         if (
-            device_descriptions := await client.get_device_descriptions(
+            device_descriptions := await client.get_device_description(
                 device_address=device_address
             )
             if device_address

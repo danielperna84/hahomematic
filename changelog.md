@@ -1,4 +1,8 @@
-# Version 2023.10.5 (2023-10-05)
+# Version 2023.10.6 (2023-10-07)
+
+- Add faultCode and faultString to xmlrpc.client.Fault
+
+# Version 2023.10.5 (2023-10-07)
 
 - Add started property to central
 - Rename:

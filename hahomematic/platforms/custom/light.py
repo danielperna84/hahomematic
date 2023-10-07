@@ -529,7 +529,7 @@ class CeIpRGBWLight(CeDimmer):
     @value_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
-        return tuple(self._e_effect.values or ())
+        return self._e_effect.values or ()
 
     @bind_collector
     async def turn_on(
@@ -659,9 +659,13 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
             field_name=FIELD_COLOR_BEHAVIOUR, entity_type=HmSelect
         )
         self._effect_list = (
-            [item for item in self._e_effect.values if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR]
+            tuple(
+                str(item)
+                for item in self._e_effect.values
+                if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR
+            )
             if (self._e_effect and self._e_effect.values)
-            else []
+            else ()
         )
 
     @value_property
@@ -674,7 +678,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
     @value_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
-        return tuple(self._effect_list)
+        return self._effect_list
 
     @bind_collector
     async def turn_on(
