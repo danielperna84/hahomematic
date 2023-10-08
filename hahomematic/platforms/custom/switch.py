@@ -5,6 +5,7 @@ See https://www.home-assistant.io/integrations/switch/.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 import logging
 from typing import Any, Final
@@ -110,7 +111,7 @@ def make_ip_switch(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
     "HmIP-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
     "HmIP-BSL": CustomConfig(func=make_ip_switch, channels=(3,)),

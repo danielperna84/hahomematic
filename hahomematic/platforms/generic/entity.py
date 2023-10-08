@@ -1,6 +1,7 @@
 """Generic python representation of a CCU parameter."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
@@ -26,7 +27,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        parameter_data: dict[str, Any],
+        parameter_data: Mapping[str, Any],
     ) -> None:
         """Init the generic entity."""
         super().__init__(

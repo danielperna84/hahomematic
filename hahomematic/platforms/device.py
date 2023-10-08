@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from copy import copy
 from datetime import datetime
 import logging
@@ -194,7 +194,7 @@ class HmDevice(PayloadMixin):
         return self._available_firmware
 
     @property
-    def channels(self) -> dict[str, Channel]:
+    def channels(self) -> Mapping[str, Channel]:
         """Return the channels."""
         return self._channels
 
@@ -409,7 +409,7 @@ class HmDevice(PayloadMixin):
         all_entities.extend(self.wrapper_entities)
         return tuple(all_entities)
 
-    def get_channel_events(self, event_type: EventType) -> dict[int, list[GenericEvent]]:
+    def get_channel_events(self, event_type: EventType) -> Mapping[int, list[GenericEvent]]:
         """Return a list of specific events of a channel."""
         event_dict: dict[int, list[GenericEvent]] = {}
         if event_type not in ENTITY_EVENTS:
@@ -714,14 +714,14 @@ class _DefinitionExporter:
 
     async def export_data(self) -> None:
         """Export data."""
-        device_descriptions: dict[
+        device_descriptions: Mapping[
             str, Any
         ] = self._central.device_descriptions.get_device_with_channels(
             interface_id=self._interface_id, device_address=self._device_address
         )
-        paramset_descriptions: dict[str, Any] = await self._client.get_all_paramset_descriptions(
-            tuple(device_descriptions.values())
-        )
+        paramset_descriptions: Mapping[
+            str, Any
+        ] = await self._client.get_all_paramset_descriptions(tuple(device_descriptions.values()))
         device_type = device_descriptions[self._device_address][Description.TYPE]
         filename = f"{device_type}.json"
 

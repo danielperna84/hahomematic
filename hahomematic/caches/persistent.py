@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC
+from collections.abc import Mapping
 from datetime import datetime
 import logging
 import os
@@ -162,11 +163,11 @@ class DeviceDescriptionCache(BasePersistentCache):
             except KeyError:
                 _LOGGER.warning("REMOVE_DEVICE failed: Unable to delete: %s", address)
 
-    def get_addresses(self, interface_id: str) -> dict[str, list[str]]:
+    def get_addresses(self, interface_id: str) -> tuple[str, ...]:
         """Return the addresses by interface."""
-        return self._addresses.get(interface_id, {})
+        return tuple(self._addresses.get(interface_id, {}).keys())
 
-    def get_channels(self, interface_id: str, device_address: str) -> dict[str, Channel]:
+    def get_channels(self, interface_id: str, device_address: str) -> Mapping[str, Channel]:
         """Return the device channels by interface and device_address."""
         channels: dict[str, Channel] = {}
         for channel_address in self._addresses.get(interface_id, {}).get(device_address, []):
@@ -189,7 +190,9 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Return the device dict by interface and device_address."""
         return self._device_descriptions.get(interface_id, {}).get(device_address, {})
 
-    def get_device_with_channels(self, interface_id: str, device_address: str) -> dict[str, Any]:
+    def get_device_with_channels(
+        self, interface_id: str, device_address: str
+    ) -> Mapping[str, Any]:
         """Return the device dict by interface and device_address."""
         data: dict[str, Any] = {
             device_address: self._device_descriptions.get(interface_id, {}).get(device_address, {})

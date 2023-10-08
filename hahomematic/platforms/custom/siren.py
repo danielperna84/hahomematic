@@ -6,6 +6,7 @@ See https://www.home-assistant.io/integrations/siren/.
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from enum import StrEnum
 from typing import Final, TypedDict, Unpack
 
@@ -275,7 +276,7 @@ def make_ip_siren_smoke(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-ASIR": CustomConfig(func=make_ip_siren, channels=(0,)),
     "HmIP-SWSD": CustomConfig(func=make_ip_siren_smoke, channels=(0,)),
 }

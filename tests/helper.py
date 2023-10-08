@@ -43,7 +43,7 @@ class Factory:
         un_ignore_list: list[str] | None = None,
     ) -> CentralUnit:
         """Return a central based on give address_device_translation."""
-        interface_configs = (interface_config,) if interface_config else ()
+        interface_configs = {interface_config} if interface_config else set()
         central = CentralConfig(
             name=const.CENTRAL_NAME,
             host=const.CCU_HOST,

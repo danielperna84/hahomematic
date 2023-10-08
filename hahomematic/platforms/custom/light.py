@@ -5,6 +5,7 @@ See https://www.home-assistant.io/integrations/light/.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import IntEnum, StrEnum
 import math
 from typing import Any, Final, TypedDict, Unpack
@@ -124,7 +125,7 @@ _OFF_COLOR_BEHAVIOUR: Final = (
     ColorBehaviour.OLD_VALUE,
 )
 
-_FIXED_COLOR_SWITCHER: dict[str, tuple[float, float]] = {
+_FIXED_COLOR_SWITCHER: Mapping[str, tuple[float, float]] = {
     FixedColor.WHITE: (0.0, 0.0),
     FixedColor.RED: (0.0, 100.0),
     FixedColor.YELLOW: (60.0, 100.0),
@@ -869,7 +870,7 @@ def make_ip_rgbw_light(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 132": CustomConfig(func=make_rf_dimmer, channels=(1,)),
     "263 133": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "263 134": CustomConfig(func=make_rf_dimmer, channels=(1,)),

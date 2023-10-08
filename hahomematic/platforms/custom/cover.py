@@ -5,6 +5,7 @@ See https://www.home-assistant.io/integrations/cover/.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
@@ -615,7 +616,7 @@ def make_rf_window_drive(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 146": CustomConfig(func=make_rf_cover, channels=(1,)),
     "263 147": CustomConfig(func=make_rf_cover, channels=(1,)),
     "HM-LC-Bl1-FM": CustomConfig(func=make_rf_cover, channels=(1,)),

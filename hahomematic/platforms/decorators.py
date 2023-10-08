@@ -1,7 +1,7 @@
 """Decorators for entities used within hahomematic."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, Generic, TypeVar
 
 G = TypeVar("G")
@@ -74,7 +74,7 @@ class value_property(generic_property[G, S], property):
 
 def _get_public_attributes_by_decorator(
     data_object: Any, property_decorator: type
-) -> dict[str, Any]:
+) -> Mapping[str, Any]:
     """Return the object attributes by decorator."""
     pub_attributes = [
         y
@@ -85,14 +85,14 @@ def _get_public_attributes_by_decorator(
     return {x: getattr(data_object, x) for x in pub_attributes}
 
 
-def get_public_attributes_for_config_property(data_object: Any) -> dict[str, Any]:
+def get_public_attributes_for_config_property(data_object: Any) -> Mapping[str, Any]:
     """Return the object attributes by decorator config_property."""
     return _get_public_attributes_by_decorator(
         data_object=data_object, property_decorator=config_property
     )
 
 
-def get_public_attributes_for_value_property(data_object: Any) -> dict[str, Any]:
+def get_public_attributes_for_value_property(data_object: Any) -> Mapping[str, Any]:
     """Return the object attributes by decorator value_property."""
     return _get_public_attributes_by_decorator(
         data_object=data_object, property_decorator=value_property

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
@@ -33,8 +34,8 @@ class CustomEntity(BaseEntity):
         device: hmd.HmDevice,
         unique_identifier: str,
         device_enum: EntityDefinition,
-        device_def: dict[str, Any],
-        entity_def: dict[int | tuple[int, ...], tuple[str, ...]],
+        device_def: Mapping[str, Any],
+        entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]],
         channel_no: int,
         extended: ExtendedConfig | None = None,
     ) -> None:
@@ -212,7 +213,7 @@ class CustomEntity(BaseEntity):
         )
         self._data_entities[field_name] = entity
 
-    def _mark_entities(self, entity_def: dict[int | tuple[int, ...], tuple[str, ...]]) -> None:
+    def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
         if not entity_def:
             return
@@ -237,7 +238,7 @@ class CustomEntity(BaseEntity):
                 entity.set_usage(EntityUsage.ENTITY)
 
     def _mark_entity_by_custom_un_ignore_parameters(
-        self, un_ignore_params_by_paramset_key: dict[str, tuple[str, ...]]
+        self, un_ignore_params_by_paramset_key: Mapping[str, tuple[str, ...]]
     ) -> None:
         """Mark entities to be created in HA."""
         if not un_ignore_params_by_paramset_key:

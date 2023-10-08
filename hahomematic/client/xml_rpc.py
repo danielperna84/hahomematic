@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum, IntEnum, StrEnum
 import errno
@@ -208,7 +208,7 @@ def _cleanup_parameter(value: Any) -> Any:
     return value
 
 
-def _cleanup_paramset(paramset: dict[str, Any]) -> dict[str, Any]:
+def _cleanup_paramset(paramset: Mapping[str, Any]) -> dict[str, Any]:
     """Cleanup a single parameter."""
     new_paramset: dict[str, Any] = {}
     for name, value in paramset.items():

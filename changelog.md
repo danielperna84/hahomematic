@@ -1,6 +1,7 @@
 # Version 2023.10.6 (2023-10-07)
 
 - Add faultCode and faultString to xmlrpc.client.Fault
+- Use Mapping/Set for readonly access
 
 # Version 2023.10.5 (2023-10-07)
 

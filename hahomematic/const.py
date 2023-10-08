@@ -1,6 +1,7 @@
 """Constants used by hahomematic."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
@@ -400,7 +401,7 @@ ENTITY_EVENTS: Final = (
 
 IMPULSE_EVENTS: Final[tuple[str, ...]] = (Parameter.SEQUENCE_OK,)
 
-KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[dict[str, tuple[str, ...]]] = {
+KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[Mapping[str, tuple[str, ...]]] = {
     "STATE": ("BINARY_BEHAVIOR",),
     Parameter.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
     Parameter.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),

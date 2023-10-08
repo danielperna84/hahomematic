@@ -5,6 +5,7 @@ See https://www.home-assistant.io/integrations/climate/.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import IntEnum, StrEnum
 import logging
@@ -576,13 +577,13 @@ class CeIpThermostat(BaseClimateEntity):
     @property
     def _current_profile_name(self) -> PresetMode | None:
         """Return a profile index by name."""
-        inv_profiles: dict[int, PresetMode] = {v: k for k, v in self._profiles.items()}
+        inv_profiles = {v: k for k, v in self._profiles.items()}
         if self._e_active_profile.value is not None:
             return inv_profiles.get(int(self._e_active_profile.value))
         return None
 
     @property
-    def _profiles(self) -> dict[PresetMode, int]:
+    def _profiles(self) -> Mapping[PresetMode, int]:
         """Return the profile groups."""
         profiles: dict[PresetMode, int] = {}
         if self._e_active_profile.min and self._e_active_profile.max:
@@ -668,7 +669,7 @@ def make_ip_thermostat_group(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, channels=(1,)),
     "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, channels=(1,)),
     "BC-RT-TRX-CyN": CustomConfig(func=make_thermostat, channels=(1,)),

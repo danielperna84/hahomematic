@@ -6,6 +6,7 @@ See https://www.home-assistant.io/integrations/lock/.
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from enum import StrEnum
 
 from hahomematic.const import HmPlatform
@@ -224,7 +225,7 @@ def make_rf_lock(
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HM-Sec-Key": CustomConfig(
         func=make_rf_lock,
         channels=(1,),
