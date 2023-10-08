@@ -13,21 +13,7 @@ from typing import Any, Final
 from hahomematic.const import EntityUsage, HmPlatform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_CHANNEL_LEVEL,
-    FIELD_CHANNEL_LEVEL_2,
-    FIELD_CHANNEL_OPERATION_MODE,
-    FIELD_COMBINED_PARAMETER,
-    FIELD_DIRECTION,
-    FIELD_DOOR_COMMAND,
-    FIELD_DOOR_STATE,
-    FIELD_LEVEL,
-    FIELD_LEVEL_2,
-    FIELD_LEVEL_COMBINED,
-    FIELD_SECTION,
-    FIELD_STOP,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import EntityDefinition, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import value_property
@@ -107,13 +93,11 @@ class CeCover(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_direction: HmSensor = self._get_entity(
-            field_name=FIELD_DIRECTION, entity_type=HmSensor
-        )
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
-        self._e_stop: HmAction = self._get_entity(field_name=FIELD_STOP, entity_type=HmAction)
+        self._e_direction: HmSensor = self._get_entity(field=Field.DIRECTION, entity_type=HmSensor)
+        self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
+        self._e_stop: HmAction = self._get_entity(field=Field.STOP, entity_type=HmAction)
         self._e_channel_level: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
+            field=Field.CHANNEL_LEVEL, entity_type=HmSensor
         )
 
     @property
@@ -245,11 +229,11 @@ class CeBlind(CeCover):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_channel_level_2: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_LEVEL_2, entity_type=HmSensor
+            field=Field.CHANNEL_LEVEL_2, entity_type=HmSensor
         )
-        self._e_level_2: HmFloat = self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmFloat)
+        self._e_level_2: HmFloat = self._get_entity(field=Field.LEVEL_2, entity_type=HmFloat)
         self._e_combined: HmAction = self._get_entity(
-            field_name=FIELD_LEVEL_COMBINED, entity_type=HmAction
+            field=Field.LEVEL_COMBINED, entity_type=HmAction
         )
 
     @property
@@ -360,10 +344,10 @@ class CeIpBlind(CeBlind):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_channel_operation_mode: HmSelect = self._get_entity(
-            field_name=FIELD_CHANNEL_OPERATION_MODE, entity_type=HmSelect
+            field=Field.CHANNEL_OPERATION_MODE, entity_type=HmSelect
         )
         self._e_combined: HmAction = self._get_entity(
-            field_name=FIELD_COMBINED_PARAMETER, entity_type=HmAction
+            field=Field.COMBINED_PARAMETER, entity_type=HmAction
         )
 
     @value_property
@@ -419,14 +403,12 @@ class CeGarage(CustomEntity):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_door_state: HmSensor = self._get_entity(
-            field_name=FIELD_DOOR_STATE, entity_type=HmSensor
+            field=Field.DOOR_STATE, entity_type=HmSensor
         )
         self._e_door_command: HmAction = self._get_entity(
-            field_name=FIELD_DOOR_COMMAND, entity_type=HmAction
+            field=Field.DOOR_COMMAND, entity_type=HmAction
         )
-        self._e_section: HmSensor = self._get_entity(
-            field_name=FIELD_SECTION, entity_type=HmSensor
-        )
+        self._e_section: HmSensor = self._get_entity(field=Field.SECTION, entity_type=HmSensor)
 
     @value_property
     def current_position(self) -> int | None:

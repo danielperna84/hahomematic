@@ -13,12 +13,7 @@ from typing import Any, Final
 from hahomematic.const import HmPlatform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_CHANNEL_STATE,
-    FIELD_ON_TIME_VALUE,
-    FIELD_STATE,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import EntityDefinition, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import value_property
@@ -48,12 +43,12 @@ class CeSwitch(CustomEntity, OnTimeMixin):
         """Init the entity fields."""
         OnTimeMixin.__init__(self)
         super()._init_entity_fields()
-        self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
+        self._e_state: HmSwitch = self._get_entity(field=Field.STATE, entity_type=HmSwitch)
         self._e_on_time_value: HmAction = self._get_entity(
-            field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
+            field=Field.ON_TIME_VALUE, entity_type=HmAction
         )
         self._e_channel_state: HmBinarySensor = self._get_entity(
-            field_name=FIELD_CHANNEL_STATE, entity_type=HmBinarySensor
+            field=Field.CHANNEL_STATE, entity_type=HmBinarySensor
         )
 
     @value_property

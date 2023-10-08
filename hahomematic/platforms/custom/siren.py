@@ -13,17 +13,7 @@ from typing import Final, TypedDict, Unpack
 from hahomematic.const import HmPlatform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_ACOUSTIC_ALARM_ACTIVE,
-    FIELD_ACOUSTIC_ALARM_SELECTION,
-    FIELD_DURATION,
-    FIELD_DURATION_UNIT,
-    FIELD_OPTICAL_ALARM_ACTIVE,
-    FIELD_OPTICAL_ALARM_SELECTION,
-    FIELD_SMOKE_DETECTOR_ALARM_STATUS,
-    FIELD_SMOKE_DETECTOR_COMMAND,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import EntityDefinition, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import config_property, value_property
@@ -105,22 +95,20 @@ class CeIpSiren(BaseSiren):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_acoustic_alarm_active: HmBinarySensor = self._get_entity(
-            field_name=FIELD_ACOUSTIC_ALARM_ACTIVE, entity_type=HmBinarySensor
+            field=Field.ACOUSTIC_ALARM_ACTIVE, entity_type=HmBinarySensor
         )
         self._e_acoustic_alarm_selection: HmAction = self._get_entity(
-            field_name=FIELD_ACOUSTIC_ALARM_SELECTION, entity_type=HmAction
+            field=Field.ACOUSTIC_ALARM_SELECTION, entity_type=HmAction
         )
         self._e_optical_alarm_active: HmBinarySensor = self._get_entity(
-            field_name=FIELD_OPTICAL_ALARM_ACTIVE, entity_type=HmBinarySensor
+            field=Field.OPTICAL_ALARM_ACTIVE, entity_type=HmBinarySensor
         )
         self._e_optical_alarm_selection: HmAction = self._get_entity(
-            field_name=FIELD_OPTICAL_ALARM_SELECTION, entity_type=HmAction
+            field=Field.OPTICAL_ALARM_SELECTION, entity_type=HmAction
         )
-        self._e_duration: HmAction = self._get_entity(
-            field_name=FIELD_DURATION, entity_type=HmAction
-        )
+        self._e_duration: HmAction = self._get_entity(field=Field.DURATION, entity_type=HmAction)
         self._e_duration_unit: HmAction = self._get_entity(
-            field_name=FIELD_DURATION_UNIT, entity_type=HmAction
+            field=Field.DURATION_UNIT, entity_type=HmAction
         )
 
     @value_property
@@ -200,10 +188,10 @@ class CeIpSirenSmoke(BaseSiren):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_smoke_detector_alarm_status: HmSensor = self._get_entity(
-            field_name=FIELD_SMOKE_DETECTOR_ALARM_STATUS, entity_type=HmSensor
+            field=Field.SMOKE_DETECTOR_ALARM_STATUS, entity_type=HmSensor
         )
         self._e_smoke_detector_command: HmAction = self._get_entity(
-            field_name=FIELD_SMOKE_DETECTOR_COMMAND, entity_type=HmAction
+            field=Field.SMOKE_DETECTOR_COMMAND, entity_type=HmAction
         )
 
     @value_property

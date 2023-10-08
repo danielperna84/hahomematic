@@ -13,28 +13,7 @@ from typing import Any, Final, TypedDict, Unpack
 from hahomematic.const import EntityUsage, HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_CHANNEL_COLOR,
-    FIELD_CHANNEL_LEVEL,
-    FIELD_COLOR,
-    FIELD_COLOR_BEHAVIOUR,
-    FIELD_COLOR_LEVEL,
-    FIELD_COLOR_TEMPERATURE,
-    FIELD_DEVICE_OPERATION_MODE,
-    FIELD_DIRECTION,
-    FIELD_EFFECT,
-    FIELD_HUE,
-    FIELD_LEVEL,
-    FIELD_ON_TIME_UNIT,
-    FIELD_ON_TIME_VALUE,
-    FIELD_PROGRAM,
-    FIELD_RAMP_TIME_TO_OFF_UNIT,
-    FIELD_RAMP_TIME_TO_OFF_VALUE,
-    FIELD_RAMP_TIME_UNIT,
-    FIELD_RAMP_TIME_VALUE,
-    FIELD_SATURATION,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import EntityDefinition, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import config_property, value_property
@@ -162,15 +141,15 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         """Init the entity fields."""
         OnTimeMixin.__init__(self)
         super()._init_entity_fields()
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
+        self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
         self._e_channel_level: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
+            field=Field.CHANNEL_LEVEL, entity_type=HmSensor
         )
         self._e_on_time_value: HmAction = self._get_entity(
-            field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
+            field=Field.ON_TIME_VALUE, entity_type=HmAction
         )
         self._e_ramp_time_value: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction
+            field=Field.RAMP_TIME_VALUE, entity_type=HmAction
         )
 
     @value_property
@@ -336,7 +315,7 @@ class CeColorDimmer(CeDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color: HmInteger = self._get_entity(field_name=FIELD_COLOR, entity_type=HmInteger)
+        self._e_color: HmInteger = self._get_entity(field=Field.COLOR, entity_type=HmInteger)
 
     @value_property
     def hs_color(self) -> tuple[float, float] | None:
@@ -384,9 +363,7 @@ class CeColorDimmerEffect(CeColorDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_effect: HmInteger = self._get_entity(
-            field_name=FIELD_PROGRAM, entity_type=HmInteger
-        )
+        self._e_effect: HmInteger = self._get_entity(field=Field.PROGRAM, entity_type=HmInteger)
 
     @value_property
     def effect(self) -> str | None:
@@ -425,7 +402,7 @@ class CeColorTempDimmer(CeDimmer):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_color_level: HmFloat = self._get_entity(
-            field_name=FIELD_COLOR_LEVEL, entity_type=HmFloat
+            field=Field.COLOR_LEVEL, entity_type=HmFloat
         )
 
     @value_property
@@ -454,28 +431,26 @@ class CeIpRGBWLight(CeDimmer):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_activity_state: HmSensor = self._get_entity(
-            field_name=FIELD_DIRECTION, entity_type=HmSensor
+            field=Field.DIRECTION, entity_type=HmSensor
         )
         self._e_color_temperature_kelvin: HmInteger = self._get_entity(
-            field_name=FIELD_COLOR_TEMPERATURE, entity_type=HmInteger
+            field=Field.COLOR_TEMPERATURE, entity_type=HmInteger
         )
         self._e_device_operation_mode: HmSelect = self._get_entity(
-            field_name=FIELD_DEVICE_OPERATION_MODE, entity_type=HmSelect
+            field=Field.DEVICE_OPERATION_MODE, entity_type=HmSelect
         )
-        self._e_effect: HmAction = self._get_entity(field_name=FIELD_EFFECT, entity_type=HmAction)
-        self._e_hue: HmInteger = self._get_entity(field_name=FIELD_HUE, entity_type=HmInteger)
+        self._e_effect: HmAction = self._get_entity(field=Field.EFFECT, entity_type=HmAction)
+        self._e_hue: HmInteger = self._get_entity(field=Field.HUE, entity_type=HmInteger)
         self._e_ramp_time_to_off_unit: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_TO_OFF_UNIT, entity_type=HmAction
+            field=Field.RAMP_TIME_TO_OFF_UNIT, entity_type=HmAction
         )
         self._e_ramp_time_to_off_value: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_TO_OFF_VALUE, entity_type=HmAction
+            field=Field.RAMP_TIME_TO_OFF_VALUE, entity_type=HmAction
         )
         self._e_ramp_time_unit: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction
+            field=Field.RAMP_TIME_UNIT, entity_type=HmAction
         )
-        self._e_saturation: HmFloat = self._get_entity(
-            field_name=FIELD_SATURATION, entity_type=HmFloat
-        )
+        self._e_saturation: HmFloat = self._get_entity(field=Field.SATURATION, entity_type=HmFloat)
 
     @value_property
     def color_temp(self) -> int | None:
@@ -589,15 +564,15 @@ class CeIpFixedColorLight(CeDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color: HmSelect = self._get_entity(field_name=FIELD_COLOR, entity_type=HmSelect)
+        self._e_color: HmSelect = self._get_entity(field=Field.COLOR, entity_type=HmSelect)
         self._e_channel_color: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_COLOR, entity_type=HmSensor
+            field=Field.CHANNEL_COLOR, entity_type=HmSensor
         )
         self._e_on_time_unit: HmAction = self._get_entity(
-            field_name=FIELD_ON_TIME_UNIT, entity_type=HmAction
+            field=Field.ON_TIME_UNIT, entity_type=HmAction
         )
         self._e_ramp_time_unit: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction
+            field=Field.RAMP_TIME_UNIT, entity_type=HmAction
         )
 
     @value_property
@@ -657,7 +632,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_effect: HmSelect = self._get_entity(
-            field_name=FIELD_COLOR_BEHAVIOUR, entity_type=HmSelect
+            field=Field.COLOR_BEHAVIOUR, entity_type=HmSelect
         )
         self._effect_list = (
             tuple(
@@ -898,12 +873,12 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         CustomConfig(
             func=make_rf_dimmer_color,
             channels=(9, 10, 11),
-            extended=ExtendedConfig(fixed_channels={15: {FIELD_COLOR: "COLOR"}}),
+            extended=ExtendedConfig(fixed_channels={15: {Field.COLOR: "COLOR"}}),
         ),
         CustomConfig(
             func=make_rf_dimmer_color,
             channels=(12, 13, 14),
-            extended=ExtendedConfig(fixed_channels={16: {FIELD_COLOR: "COLOR"}}),
+            extended=ExtendedConfig(fixed_channels={16: {Field.COLOR: "COLOR"}}),
         ),
     ),
     "HM-DW-WM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4)),

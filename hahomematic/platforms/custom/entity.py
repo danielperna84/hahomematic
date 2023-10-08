@@ -10,7 +10,7 @@ from typing import Any, Final, TypeVar, cast
 from hahomematic.const import INIT_DATETIME, CallBackSource, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition
+from hahomematic.platforms.custom.const import EntityDefinition, Field
 from hahomematic.platforms.custom.support import ExtendedConfig
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
@@ -51,7 +51,7 @@ class CustomEntity(BaseEntity):
             is_in_multiple_channels=hmed.is_multi_channel_device(device_type=device.device_type),
         )
         self._extended: Final = extended
-        self._data_entities: Final[dict[str, hmge.GenericEntity]] = {}
+        self._data_entities: Final[dict[Field, hmge.GenericEntity]] = {}
         self._init_entities()
         self._init_entity_fields()
 
@@ -135,7 +135,7 @@ class CustomEntity(BaseEntity):
             entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
             )
-            self._add_entity(field_name=field_name, entity=entity)
+            self._add_entity(field=field_name, entity=entity)
 
         # Add visible repeating fields
         for field_name, parameter in self._device_desc.get(
@@ -144,7 +144,7 @@ class CustomEntity(BaseEntity):
             entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
             )
-            self._add_entity(field_name=field_name, entity=entity, is_visible=True)
+            self._add_entity(field=field_name, entity=entity, is_visible=True)
 
         if self._extended:
             if fixed_channels := self._extended.fixed_channels:
@@ -156,7 +156,7 @@ class CustomEntity(BaseEntity):
                         entity = self._device.get_generic_entity(
                             channel_address=channel_address, parameter=parameter
                         )
-                        self._add_entity(field_name=field_name, entity=entity)
+                        self._add_entity(field=field_name, entity=entity)
             if additional_entities := self._extended.additional_entities:
                 self._mark_entities(entity_def=additional_entities)
 
@@ -187,7 +187,7 @@ class CustomEntity(BaseEntity):
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
         for channel_no, channel in fields.items():
-            for field_name, parameter in channel.items():
+            for field, parameter in channel.items():
                 channel_address = get_channel_address(
                     device_address=self._device.device_address, channel_no=channel_no
                 )
@@ -196,10 +196,10 @@ class CustomEntity(BaseEntity):
                 ):
                     if is_visible and entity.wrapped is False:
                         entity.set_usage(EntityUsage.CE_VISIBLE)
-                    self._add_entity(field_name=field_name, entity=entity)
+                    self._add_entity(field=field, entity=entity)
 
     def _add_entity(
-        self, field_name: str, entity: hmge.GenericEntity | None, is_visible: bool = False
+        self, field: Field, entity: hmge.GenericEntity | None, is_visible: bool = False
     ) -> None:
         """Add entity to collection and register callback."""
         if not entity:
@@ -211,7 +211,7 @@ class CustomEntity(BaseEntity):
         entity.register_update_callback(
             update_callback=self.update_entity, source=CallBackSource.INTERNAL
         )
-        self._data_entities[field_name] = entity
+        self._data_entities[field] = entity
 
     def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
@@ -248,16 +248,16 @@ class CustomEntity(BaseEntity):
                 if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
                     entity.set_usage(EntityUsage.ENTITY)
 
-    def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
+    def _get_entity(self, field: Field, entity_type: type[_EntityT]) -> _EntityT:
         """Get entity."""
-        if entity := self._data_entities.get(field_name):
+        if entity := self._data_entities.get(field):
             if not isinstance(entity, entity_type):
                 _LOGGER.debug(  # pragma: no cover
                     "GET_ENTITY: type mismatch for requested sub entity: "
                     "expected: %s, but is %s for field name %s of entity %s",
                     entity_type.name,
                     type(entity),
-                    field_name,
+                    field,
                     self.name,
                 )
             return cast(entity_type, entity)  # type: ignore[valid-type]

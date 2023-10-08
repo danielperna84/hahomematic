@@ -14,27 +14,7 @@ from typing import Any, Final
 from hahomematic.const import HmPlatform, ParamsetKey
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_ACTIVE_PROFILE,
-    FIELD_AUTO_MODE,
-    FIELD_BOOST_MODE,
-    FIELD_COMFORT_MODE,
-    FIELD_CONTROL_MODE,
-    FIELD_HEATING_COOLING,
-    FIELD_HUMIDITY,
-    FIELD_LEVEL,
-    FIELD_LOWERING_MODE,
-    FIELD_MANU_MODE,
-    FIELD_PARTY_MODE,
-    FIELD_SET_POINT_MODE,
-    FIELD_SETPOINT,
-    FIELD_STATE,
-    FIELD_TEMPERATURE,
-    FIELD_TEMPERATURE_MAXIMUM,
-    FIELD_TEMPERATURE_MINIMUM,
-    FIELD_VALVE_STATE,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import EntityDefinition, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import config_property, value_property
@@ -126,20 +106,16 @@ class BaseClimateEntity(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_humidity: HmSensor = self._get_entity(
-            field_name=FIELD_HUMIDITY, entity_type=HmSensor
-        )
-        self._e_setpoint: HmFloat = self._get_entity(
-            field_name=FIELD_SETPOINT, entity_type=HmFloat
-        )
+        self._e_humidity: HmSensor = self._get_entity(field=Field.HUMIDITY, entity_type=HmSensor)
+        self._e_setpoint: HmFloat = self._get_entity(field=Field.SETPOINT, entity_type=HmFloat)
         self._e_temperature: HmSensor = self._get_entity(
-            field_name=FIELD_TEMPERATURE, entity_type=HmSensor
+            field=Field.TEMPERATURE, entity_type=HmSensor
         )
         self._e_temperature_maximum: HmFloat = self._get_entity(
-            field_name=FIELD_TEMPERATURE_MAXIMUM, entity_type=HmFloat
+            field=Field.TEMPERATURE_MAXIMUM, entity_type=HmFloat
         )
         self._e_temperature_minimum: HmFloat = self._get_entity(
-            field_name=FIELD_TEMPERATURE_MINIMUM, entity_type=HmFloat
+            field=Field.TEMPERATURE_MINIMUM, entity_type=HmFloat
         )
 
     @config_property
@@ -286,25 +262,21 @@ class CeRfThermostat(BaseClimateEntity):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_boost_mode: HmAction = self._get_entity(
-            field_name=FIELD_BOOST_MODE, entity_type=HmAction
+            field=Field.BOOST_MODE, entity_type=HmAction
         )
-        self._e_auto_mode: HmAction = self._get_entity(
-            field_name=FIELD_AUTO_MODE, entity_type=HmAction
-        )
-        self._e_manu_mode: HmAction = self._get_entity(
-            field_name=FIELD_MANU_MODE, entity_type=HmAction
-        )
+        self._e_auto_mode: HmAction = self._get_entity(field=Field.AUTO_MODE, entity_type=HmAction)
+        self._e_manu_mode: HmAction = self._get_entity(field=Field.MANU_MODE, entity_type=HmAction)
         self._e_comfort_mode: HmAction = self._get_entity(
-            field_name=FIELD_COMFORT_MODE, entity_type=HmAction
+            field=Field.COMFORT_MODE, entity_type=HmAction
         )
         self._e_lowering_mode: HmAction = self._get_entity(
-            field_name=FIELD_LOWERING_MODE, entity_type=HmAction
+            field=Field.LOWERING_MODE, entity_type=HmAction
         )
         self._e_control_mode: HmSensor = self._get_entity(
-            field_name=FIELD_CONTROL_MODE, entity_type=HmSensor
+            field=Field.CONTROL_MODE, entity_type=HmSensor
         )
         self._e_valve_state: HmSensor = self._get_entity(
-            field_name=FIELD_VALVE_STATE, entity_type=HmSensor
+            field=Field.VALVE_STATE, entity_type=HmSensor
         )
 
     @value_property
@@ -401,26 +373,26 @@ class CeIpThermostat(BaseClimateEntity):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_active_profile: HmInteger = self._get_entity(
-            field_name=FIELD_ACTIVE_PROFILE, entity_type=HmInteger
+            field=Field.ACTIVE_PROFILE, entity_type=HmInteger
         )
         self._e_boost_mode: HmSwitch = self._get_entity(
-            field_name=FIELD_BOOST_MODE, entity_type=HmSwitch
+            field=Field.BOOST_MODE, entity_type=HmSwitch
         )
         self._e_control_mode: HmAction = self._get_entity(
-            field_name=FIELD_CONTROL_MODE, entity_type=HmAction
+            field=Field.CONTROL_MODE, entity_type=HmAction
         )
         self._e_heating_mode: HmSelect = self._get_entity(
-            field_name=FIELD_HEATING_COOLING, entity_type=HmSelect
+            field=Field.HEATING_COOLING, entity_type=HmSelect
         )
         self._e_party_mode: HmBinarySensor = self._get_entity(
-            field_name=FIELD_PARTY_MODE, entity_type=HmBinarySensor
+            field=Field.PARTY_MODE, entity_type=HmBinarySensor
         )
         self._e_set_point_mode: HmInteger = self._get_entity(
-            field_name=FIELD_SET_POINT_MODE, entity_type=HmInteger
+            field=Field.SET_POINT_MODE, entity_type=HmInteger
         )
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
+        self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
         self._e_state: HmBinarySensor = self._get_entity(
-            field_name=FIELD_STATE, entity_type=HmBinarySensor
+            field=Field.STATE, entity_type=HmBinarySensor
         )
 
     @property
