@@ -6,7 +6,7 @@ This is the python representation of a CCU.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Set
 from concurrent.futures._base import CancelledError
 from datetime import datetime
 import logging
@@ -399,7 +399,7 @@ class CentralUnit:
     ) -> None:
         """Refresh device descriptions."""
         if (
-            device_descriptions := await client.get_device_descriptions(
+            device_descriptions := await client.get_device_description(
                 device_address=device_address
             )
             if device_address
@@ -1339,7 +1339,7 @@ class CentralConfig:
         username: str,
         password: str,
         central_id: str,
-        interface_configs: tuple[hmcl.InterfaceConfig, ...],
+        interface_configs: Set[hmcl.InterfaceConfig],
         default_callback_port: int,
         client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,

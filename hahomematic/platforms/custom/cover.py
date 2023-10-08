@@ -5,28 +5,15 @@ See https://www.home-assistant.io/integrations/cover/.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import EntityUsage, HmPlatform
+from hahomematic.const import EntityUsage, HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_CHANNEL_LEVEL,
-    FIELD_CHANNEL_LEVEL_2,
-    FIELD_CHANNEL_OPERATION_MODE,
-    FIELD_COMBINED_PARAMETER,
-    FIELD_DIRECTION,
-    FIELD_DOOR_COMMAND,
-    FIELD_DOOR_STATE,
-    FIELD_LEVEL,
-    FIELD_LEVEL_2,
-    FIELD_LEVEL_COMBINED,
-    FIELD_SECTION,
-    FIELD_STOP,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import value_property
@@ -106,13 +93,11 @@ class CeCover(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_direction: HmSensor = self._get_entity(
-            field_name=FIELD_DIRECTION, entity_type=HmSensor
-        )
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
-        self._e_stop: HmAction = self._get_entity(field_name=FIELD_STOP, entity_type=HmAction)
+        self._e_direction: HmSensor = self._get_entity(field=Field.DIRECTION, entity_type=HmSensor)
+        self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
+        self._e_stop: HmAction = self._get_entity(field=Field.STOP, entity_type=HmAction)
         self._e_channel_level: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
+            field=Field.CHANNEL_LEVEL, entity_type=HmSensor
         )
 
     @property
@@ -244,11 +229,11 @@ class CeBlind(CeCover):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_channel_level_2: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_LEVEL_2, entity_type=HmSensor
+            field=Field.CHANNEL_LEVEL_2, entity_type=HmSensor
         )
-        self._e_level_2: HmFloat = self._get_entity(field_name=FIELD_LEVEL_2, entity_type=HmFloat)
+        self._e_level_2: HmFloat = self._get_entity(field=Field.LEVEL_2, entity_type=HmFloat)
         self._e_combined: HmAction = self._get_entity(
-            field_name=FIELD_LEVEL_COMBINED, entity_type=HmAction
+            field=Field.LEVEL_COMBINED, entity_type=HmAction
         )
 
     @property
@@ -359,10 +344,10 @@ class CeIpBlind(CeBlind):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_channel_operation_mode: HmSelect = self._get_entity(
-            field_name=FIELD_CHANNEL_OPERATION_MODE, entity_type=HmSelect
+            field=Field.CHANNEL_OPERATION_MODE, entity_type=HmSelect
         )
         self._e_combined: HmAction = self._get_entity(
-            field_name=FIELD_COMBINED_PARAMETER, entity_type=HmAction
+            field=Field.COMBINED_PARAMETER, entity_type=HmAction
         )
 
     @value_property
@@ -418,14 +403,12 @@ class CeGarage(CustomEntity):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_door_state: HmSensor = self._get_entity(
-            field_name=FIELD_DOOR_STATE, entity_type=HmSensor
+            field=Field.DOOR_STATE, entity_type=HmSensor
         )
         self._e_door_command: HmAction = self._get_entity(
-            field_name=FIELD_DOOR_COMMAND, entity_type=HmAction
+            field=Field.DOOR_COMMAND, entity_type=HmAction
         )
-        self._e_section: HmSensor = self._get_entity(
-            field_name=FIELD_SECTION, entity_type=HmSensor
-        )
+        self._e_section: HmSensor = self._get_entity(field=Field.SECTION, entity_type=HmSensor)
 
     @value_property
     def current_position(self) -> int | None:
@@ -532,8 +515,8 @@ def make_ip_cover(
     """Create HomematicIP cover entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeCover,
-        device_enum=EntityDefinition.IP_COVER,
+        entity_class=CeCover,
+        device_profile=DeviceProfile.IP_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -547,8 +530,8 @@ def make_rf_cover(
     """Create HomeMatic classic cover entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeCover,
-        device_enum=EntityDefinition.RF_COVER,
+        entity_class=CeCover,
+        device_profile=DeviceProfile.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -562,8 +545,8 @@ def make_ip_blind(
     """Create HomematicIP cover entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpBlind,
-        device_enum=EntityDefinition.IP_COVER,
+        entity_class=CeIpBlind,
+        device_profile=DeviceProfile.IP_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -577,8 +560,8 @@ def make_ip_garage(
     """Create HomematicIP garage entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeGarage,
-        device_enum=EntityDefinition.IP_GARAGE,
+        entity_class=CeGarage,
+        device_profile=DeviceProfile.IP_GARAGE,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -592,8 +575,8 @@ def make_rf_blind(
     """Create HomeMatic classic cover entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeBlind,
-        device_enum=EntityDefinition.RF_COVER,
+        entity_class=CeBlind,
+        device_profile=DeviceProfile.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -607,15 +590,15 @@ def make_rf_window_drive(
     """Create HomeMatic classic window drive entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeWindowDrive,
-        device_enum=EntityDefinition.RF_COVER,
+        entity_class=CeWindowDrive,
+        device_profile=DeviceProfile.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 146": CustomConfig(func=make_rf_cover, channels=(1,)),
     "263 147": CustomConfig(func=make_rf_cover, channels=(1,)),
     "HM-LC-Bl1-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
@@ -633,13 +616,13 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         extended=ExtendedConfig(
             additional_entities={
                 1: (
-                    "DIRECTION",
-                    "WORKING",
-                    "ERROR",
+                    Parameter.DIRECTION,
+                    Parameter.WORKING,
+                    Parameter.ERROR,
                 ),
                 2: (
-                    "LEVEL",
-                    "STATUS",
+                    Parameter.LEVEL,
+                    Parameter.STATUS,
                 ),
             }
         ),
@@ -652,7 +635,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(9, 13, 17, 21),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
@@ -666,7 +649,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(1, 5, 9, 13),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),

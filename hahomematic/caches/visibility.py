@@ -1,6 +1,7 @@
 """Module about parameter visibility within hahomematic."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import lru_cache
 import logging
 import os
@@ -22,7 +23,9 @@ _FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 # from being display by default. Usually these enties are used within custom entities,
 # and not for general display.
 # {device_type: (channel_no, parameter)}
-_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[dict[str, tuple[tuple[int, ...], tuple[str, ...]]]] = {
+_RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
+    Mapping[str, tuple[tuple[int, ...], tuple[str, ...]]]
+] = {
     "HmIP-DRBLI4": (
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
         (Parameter.CHANNEL_OPERATION_MODE,),
@@ -58,7 +61,7 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[dict[str, tuple[tuple[int, ...], tup
 ALLOWED_INTERNAL_PARAMETERS: Final = (Parameter.DIRECTION,)
 
 # Ignore events for some devices
-_IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[dict[str, tuple[str, ...]]] = {
+_IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[Mapping[str, tuple[str, ...]]] = {
     "HmIP-PS": CLICK_EVENTS,
 }
 
@@ -179,7 +182,7 @@ _IGNORED_PARAMETERS_WILDCARDS_START: Final[tuple[str, ...]] = (
 
 
 # Parameters within the paramsets for which we create entities.
-_UN_IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
+_UN_IGNORE_PARAMETERS_BY_DEVICE: Final[Mapping[str, tuple[str, ...]]] = {
     "HmIP-DLD": (Parameter.ERROR_JAMMED,),
     "HmIP-SWSD": (Parameter.SMOKE_DETECTOR_ALARM_STATUS,),
     "HM-OU-LED16": (Parameter.LED_STATUS,),
@@ -192,7 +195,7 @@ _UN_IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
 }
 
 # Parameters by device within the VALUES paramset for which we don't create entities.
-_IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
+_IGNORE_PARAMETERS_BY_DEVICE: Final[Mapping[str, tuple[str, ...]]] = {
     Parameter.CURRENT_ILLUMINATION: (
         "HmIP-SMI",
         "HmIP-SMO",
@@ -234,10 +237,10 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[dict[str, tuple[str, ...]]] = {
 
 # Some devices have parameters on multiple channels,
 # but we want to use it only from a certain channel.
-_ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[dict[str, int]] = {Parameter.LOWBAT: 0}
+_ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[Mapping[str, int]] = {Parameter.LOWBAT: 0}
 
 # Entities that should be wrapped in a new entity on a new platform.
-_WRAP_ENTITY: Final[dict[str | tuple[str, ...], dict[str, HmPlatform]]] = {
+_WRAP_ENTITY: Final[Mapping[str | tuple[str, ...], Mapping[str, HmPlatform]]] = {
     ("HmIP-eTRV", "HmIP-HEATING"): {Parameter.LEVEL: HmPlatform.SENSOR},
 }
 
@@ -255,7 +258,7 @@ class ParameterVisibilityCache:
         self._required_parameters: Final = get_required_parameters()
         self._raw_un_ignore_list: Final[set[str]] = set(central.config.un_ignore_list or set())
         # paramset_key, parameter
-        self._un_ignore_parameters_general: Final[dict[str, set[str]]] = {
+        self._un_ignore_parameters_general: Final[Mapping[str, set[str]]] = {
             ParamsetKey.MASTER: set(),
             ParamsetKey.VALUES: set(),
         }
@@ -317,7 +320,7 @@ class ParameterVisibilityCache:
 
     def get_un_ignore_parameters(
         self, device_type: str, channel_no: int | None
-    ) -> dict[str, tuple[str, ...]]:
+    ) -> Mapping[str, tuple[str, ...]]:
         """Return un_ignore_parameters."""
         device_type_l = device_type.lower()
         un_ignore_parameters: dict[str, set[str]] = {}
@@ -667,7 +670,7 @@ def check_ignore_parameters_is_clean() -> bool:
 
 
 def _get_value_from_dict_by_wildcard_key(
-    search_elements: dict[str, Any],
+    search_elements: Mapping[str, Any],
     compare_with: str | None,
     do_wildcard_search: bool = True,
 ) -> Any | None:

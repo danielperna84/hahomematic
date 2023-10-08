@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from functools import wraps
 from inspect import getfullargspec
@@ -51,7 +51,7 @@ _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
 
-_FIX_UNIT_REPLACE: Final[dict[str, str]] = {
+_FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
     '"': "",
     "100%": "%",
     "% rF": "%",
@@ -60,7 +60,7 @@ _FIX_UNIT_REPLACE: Final[dict[str, str]] = {
     "m3": "m³",
 }
 
-_FIX_UNIT_BY_PARAM: Final[dict[str, str]] = {
+_FIX_UNIT_BY_PARAM: Final[Mapping[str, str]] = {
     "ACTUAL_TEMPERATURE": "°C",
     "CURRENT_ILLUMINATION": "lx",
     "HUMIDITY": "%",
@@ -329,7 +329,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         channel_address: str,
         paramset_key: str,
         parameter: str,
-        parameter_data: dict[str, Any],
+        parameter_data: Mapping[str, Any],
     ) -> None:
         """Initialize the entity."""
         self._paramset_key: Final[str] = paramset_key
@@ -349,7 +349,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         self._state_uncertain: bool = True
         self._assign_parameter_data(parameter_data=parameter_data)
 
-    def _assign_parameter_data(self, parameter_data: dict[str, Any]) -> None:
+    def _assign_parameter_data(self, parameter_data: Mapping[str, Any]) -> None:
         """Assign parameter data to instance variables."""
         self._type: ParameterType = ParameterType(parameter_data[Description.TYPE])
         self._values = (
@@ -366,7 +366,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         self._visible: bool = flags & Flag.VISIBLE == Flag.VISIBLE
         self._service: bool = flags & Flag.SERVICE == Flag.SERVICE
         self._operations: int = parameter_data[Description.OPERATIONS]
-        self._special: dict[str, Any] | None = parameter_data.get(Description.SPECIAL)
+        self._special: Mapping[str, Any] | None = parameter_data.get(Description.SPECIAL)
         self._raw_unit: str | None = parameter_data.get(Description.UNIT)
         self._unit: str | None = self._fix_unit(raw_unit=self._raw_unit)
 

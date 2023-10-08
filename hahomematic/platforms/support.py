@@ -1,6 +1,7 @@
 """Support for entities used within hahomematic."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
 import logging
@@ -27,7 +28,7 @@ from hahomematic.support import to_bool
 _LOGGER: Final = logging.getLogger(__name__)
 
 # dict with binary_sensor relevant value lists and the corresponding TRUE value
-_BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[dict[tuple[str, ...], str]] = {
+_BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[Mapping[tuple[str, ...], str]] = {
     ("CLOSED", "OPEN"): "OPEN",
     ("DRY", "RAIN"): "RAIN",
     ("STABLE", "NOT_STABLE"): "NOT_STABLE",
@@ -38,12 +39,12 @@ class PayloadMixin:
     """Mixin to add payload methods to class."""
 
     @property
-    def config_payload(self) -> dict[str, Any]:
+    def config_payload(self) -> Mapping[str, Any]:
         """Return the config payload."""
         return get_public_attributes_for_config_property(data_object=self)
 
     @property
-    def value_payload(self) -> dict[str, Any]:
+    def value_payload(self) -> Mapping[str, Any]:
         """Return the value payload."""
         return get_public_attributes_for_value_property(data_object=self)
 
@@ -354,7 +355,7 @@ def convert_value(
     return value
 
 
-def is_binary_sensor(parameter_data: dict[str, Any]) -> bool:
+def is_binary_sensor(parameter_data: Mapping[str, Any]) -> bool:
     """Check, if the sensor is a binary_sensor."""
     if parameter_data[Description.TYPE] == ParameterType.BOOL:
         return True
@@ -375,10 +376,12 @@ def _get_binary_sensor_value(value: int, value_list: tuple[str, ...]) -> bool:
 
 
 def check_channel_is_the_only_primary_channel(
-    current_channel_no: int | None, device_def: dict[str, Any], device_has_multiple_channels: bool
+    current_channel_no: int | None,
+    device_def: Mapping[str, Any],
+    device_has_multiple_channels: bool,
 ) -> bool:
     """Check if this channel is the only primary channel."""
-    primary_channel: int = device_def[hmed.ED_PRIMARY_CHANNEL]
+    primary_channel: int = device_def[hmed.ED.PRIMARY_CHANNEL]
     if primary_channel == current_channel_no and device_has_multiple_channels is False:
         return True
     return False

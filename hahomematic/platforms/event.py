@@ -1,6 +1,7 @@
 """Functions for event creation."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
@@ -41,7 +42,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         unique_identifier: str,
         channel_address: str,
         parameter: str,
-        parameter_data: dict[str, Any],
+        parameter_data: Mapping[str, Any],
     ) -> None:
         """Initialize the event handler."""
         super().__init__(
@@ -133,7 +134,7 @@ class ImpulseEvent(GenericEvent):
 
 
 def create_event_and_append_to_device(
-    device: hmd.HmDevice, channel_address: str, parameter: str, parameter_data: dict[str, Any]
+    device: hmd.HmDevice, channel_address: str, parameter: str, parameter_data: Mapping[str, Any]
 ) -> None:
     """Create action event entity."""
     if device.central.parameter_visibility.parameter_is_ignored(

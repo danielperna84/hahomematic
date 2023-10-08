@@ -1,6 +1,7 @@
 """Module for the dynamic caches."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 import logging
 from typing import Any, Final
@@ -51,7 +52,7 @@ class DeviceDetailsCache:
         self._last_updated = datetime.now()
 
     @property
-    def device_channel_ids(self) -> dict[str, str]:
+    def device_channel_ids(self) -> Mapping[str, str]:
         """Return device channel ids."""
         return self._device_channel_ids
 

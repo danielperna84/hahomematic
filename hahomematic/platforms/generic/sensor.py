@@ -5,6 +5,7 @@ See https://www.home-assistant.io/integrations/sensor/.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
@@ -62,7 +63,7 @@ def _fix_rssi(value: Any) -> int | None:
     return None
 
 
-CONVERTERS_BY_PARAM: dict[str, Any] = {
+CONVERTERS_BY_PARAM: Mapping[str, Any] = {
     "RSSI_PEER": _fix_rssi,
     "RSSI_DEVICE": _fix_rssi,
 }

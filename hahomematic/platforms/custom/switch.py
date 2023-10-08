@@ -5,19 +5,15 @@ See https://www.home-assistant.io/integrations/switch/.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_CHANNEL_STATE,
-    FIELD_ON_TIME_VALUE,
-    FIELD_STATE,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import value_property
@@ -47,12 +43,12 @@ class CeSwitch(CustomEntity, OnTimeMixin):
         """Init the entity fields."""
         OnTimeMixin.__init__(self)
         super()._init_entity_fields()
-        self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
+        self._e_state: HmSwitch = self._get_entity(field=Field.STATE, entity_type=HmSwitch)
         self._e_on_time_value: HmAction = self._get_entity(
-            field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
+            field=Field.ON_TIME_VALUE, entity_type=HmAction
         )
         self._e_channel_state: HmBinarySensor = self._get_entity(
-            field_name=FIELD_CHANNEL_STATE, entity_type=HmBinarySensor
+            field=Field.CHANNEL_STATE, entity_type=HmBinarySensor
         )
 
     @value_property
@@ -102,15 +98,15 @@ def make_ip_switch(
     """Create HomematicIP switch entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeSwitch,
-        device_enum=EntityDefinition.IP_SWITCH,
+        entity_class=CeSwitch,
+        device_profile=DeviceProfile.IP_SWITCH,
         group_base_channels=group_base_channels,
         extended=extended,
     )
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
     "HmIP-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
     "HmIP-BSL": CustomConfig(func=make_ip_switch, channels=(3,)),
@@ -120,7 +116,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(2,),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
@@ -129,7 +125,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(5, 9, 13, 17),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
@@ -149,7 +145,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(1, 5, 9, 13, 17, 21, 25, 29),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),

@@ -1,8 +1,10 @@
 """Support classes used by hahomematic custom entities."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+
+from hahomematic.platforms.custom.const import Field
 
 
 @dataclass(slots=True)
@@ -18,8 +20,8 @@ class CustomConfig:
 class ExtendedConfig:
     """Extended data for custom entity creation."""
 
-    fixed_channels: dict[int, dict[str, str]] | None = None
-    additional_entities: dict[int | tuple[int, ...], tuple[str, ...]] | None = None
+    fixed_channels: Mapping[int, Mapping[Field, str]] | None = None
+    additional_entities: Mapping[int | tuple[int, ...], tuple[str, ...]] | None = None
 
     @property
     def required_parameters(self) -> tuple[str, ...]:

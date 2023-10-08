@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
@@ -9,7 +10,7 @@ from typing import Any, Final, TypeVar, cast
 from hahomematic.const import INIT_DATETIME, CallBackSource, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.support import ExtendedConfig
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
@@ -32,14 +33,14 @@ class CustomEntity(BaseEntity):
         self,
         device: hmd.HmDevice,
         unique_identifier: str,
-        device_enum: EntityDefinition,
-        device_def: dict[str, Any],
-        entity_def: dict[int | tuple[int, ...], tuple[str, ...]],
+        device_profile: DeviceProfile,
+        device_def: Mapping[str, Any],
+        entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]],
         channel_no: int,
         extended: ExtendedConfig | None = None,
     ) -> None:
         """Initialize the entity."""
-        self._device_enum: Final = device_enum
+        self._device_profile: Final = device_profile
         # required for name in BaseEntity
         self._device_desc: Final = device_def
         self._entity_def: Final = entity_def
@@ -50,7 +51,7 @@ class CustomEntity(BaseEntity):
             is_in_multiple_channels=hmed.is_multi_channel_device(device_type=device.device_type),
         )
         self._extended: Final = extended
-        self._data_entities: Final[dict[str, hmge.GenericEntity]] = {}
+        self._data_entities: Final[dict[Field, hmge.GenericEntity]] = {}
         self._init_entities()
         self._init_entity_fields()
 
@@ -105,7 +106,7 @@ class CustomEntity(BaseEntity):
     def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
         if (
-            secondary_channels := self._device_desc.get(hmed.ED_SECONDARY_CHANNELS)
+            secondary_channels := self._device_desc.get(hmed.ED.SECONDARY_CHANNELS)
         ) and self.channel_no in secondary_channels:
             return EntityUsage.CE_SECONDARY
         return EntityUsage.CE_PRIMARY
@@ -130,20 +131,20 @@ class CustomEntity(BaseEntity):
     def _init_entities(self) -> None:
         """Init entity collection."""
         # Add repeating fields
-        for field_name, parameter in self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {}).items():
+        for field_name, parameter in self._device_desc.get(hmed.ED.REPEATABLE_FIELDS, {}).items():
             entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
             )
-            self._add_entity(field_name=field_name, entity=entity)
+            self._add_entity(field=field_name, entity=entity)
 
         # Add visible repeating fields
         for field_name, parameter in self._device_desc.get(
-            hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
+            hmed.ED.VISIBLE_REPEATABLE_FIELDS, {}
         ).items():
             entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
             )
-            self._add_entity(field_name=field_name, entity=entity, is_visible=True)
+            self._add_entity(field=field_name, entity=entity, is_visible=True)
 
         if self._extended:
             if fixed_channels := self._extended.fixed_channels:
@@ -155,24 +156,24 @@ class CustomEntity(BaseEntity):
                         entity = self._device.get_generic_entity(
                             channel_address=channel_address, parameter=parameter
                         )
-                        self._add_entity(field_name=field_name, entity=entity)
+                        self._add_entity(field=field_name, entity=entity)
             if additional_entities := self._extended.additional_entities:
                 self._mark_entities(entity_def=additional_entities)
 
         # Add device fields
         self._add_entities(
-            field_dict_name=hmed.ED_FIELDS,
+            field_dict_name=hmed.ED.FIELDS,
         )
         # Add visible device fields
         self._add_entities(
-            field_dict_name=hmed.ED_VISIBLE_FIELDS,
+            field_dict_name=hmed.ED.VISIBLE_FIELDS,
             is_visible=True,
         )
 
         # Add default device entities
         self._mark_entities(entity_def=self._entity_def)
         # add default entities
-        if hmed.get_include_default_entities(device_enum=self._device_enum):
+        if hmed.get_include_default_entities(device_profile=self._device_profile):
             self._mark_entities(entity_def=hmed.get_default_entities())
 
         # add custom un_ignore entities
@@ -182,11 +183,11 @@ class CustomEntity(BaseEntity):
             )
         )
 
-    def _add_entities(self, field_dict_name: str, is_visible: bool = False) -> None:
+    def _add_entities(self, field_dict_name: hmed.ED, is_visible: bool = False) -> None:
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
         for channel_no, channel in fields.items():
-            for field_name, parameter in channel.items():
+            for field, parameter in channel.items():
                 channel_address = get_channel_address(
                     device_address=self._device.device_address, channel_no=channel_no
                 )
@@ -195,10 +196,10 @@ class CustomEntity(BaseEntity):
                 ):
                     if is_visible and entity.wrapped is False:
                         entity.set_usage(EntityUsage.CE_VISIBLE)
-                    self._add_entity(field_name=field_name, entity=entity)
+                    self._add_entity(field=field, entity=entity)
 
     def _add_entity(
-        self, field_name: str, entity: hmge.GenericEntity | None, is_visible: bool = False
+        self, field: Field, entity: hmge.GenericEntity | None, is_visible: bool = False
     ) -> None:
         """Add entity to collection and register callback."""
         if not entity:
@@ -210,9 +211,9 @@ class CustomEntity(BaseEntity):
         entity.register_update_callback(
             update_callback=self.update_entity, source=CallBackSource.INTERNAL
         )
-        self._data_entities[field_name] = entity
+        self._data_entities[field] = entity
 
-    def _mark_entities(self, entity_def: dict[int | tuple[int, ...], tuple[str, ...]]) -> None:
+    def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
         if not entity_def:
             return
@@ -237,7 +238,7 @@ class CustomEntity(BaseEntity):
                 entity.set_usage(EntityUsage.ENTITY)
 
     def _mark_entity_by_custom_un_ignore_parameters(
-        self, un_ignore_params_by_paramset_key: dict[str, tuple[str, ...]]
+        self, un_ignore_params_by_paramset_key: Mapping[str, tuple[str, ...]]
     ) -> None:
         """Mark entities to be created in HA."""
         if not un_ignore_params_by_paramset_key:
@@ -247,16 +248,16 @@ class CustomEntity(BaseEntity):
                 if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
                     entity.set_usage(EntityUsage.ENTITY)
 
-    def _get_entity(self, field_name: str, entity_type: type[_EntityT]) -> _EntityT:
+    def _get_entity(self, field: Field, entity_type: type[_EntityT]) -> _EntityT:
         """Get entity."""
-        if entity := self._data_entities.get(field_name):
+        if entity := self._data_entities.get(field):
             if not isinstance(entity, entity_type):
                 _LOGGER.debug(  # pragma: no cover
                     "GET_ENTITY: type mismatch for requested sub entity: "
                     "expected: %s, but is %s for field name %s of entity %s",
                     entity_type.name,
                     type(entity),
-                    field_name,
+                    field,
                     self.name,
                 )
             return cast(entity_type, entity)  # type: ignore[valid-type]

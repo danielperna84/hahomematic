@@ -5,6 +5,7 @@ See https://www.home-assistant.io/integrations/light/.
 """
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import IntEnum, StrEnum
 import math
 from typing import Any, Final, TypedDict, Unpack
@@ -12,28 +13,7 @@ from typing import Any, Final, TypedDict, Unpack
 from hahomematic.const import EntityUsage, HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_CHANNEL_COLOR,
-    FIELD_CHANNEL_LEVEL,
-    FIELD_COLOR,
-    FIELD_COLOR_BEHAVIOUR,
-    FIELD_COLOR_LEVEL,
-    FIELD_COLOR_TEMPERATURE,
-    FIELD_DEVICE_OPERATION_MODE,
-    FIELD_DIRECTION,
-    FIELD_EFFECT,
-    FIELD_HUE,
-    FIELD_LEVEL,
-    FIELD_ON_TIME_UNIT,
-    FIELD_ON_TIME_VALUE,
-    FIELD_PROGRAM,
-    FIELD_RAMP_TIME_TO_OFF_UNIT,
-    FIELD_RAMP_TIME_TO_OFF_VALUE,
-    FIELD_RAMP_TIME_UNIT,
-    FIELD_RAMP_TIME_VALUE,
-    FIELD_SATURATION,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import config_property, value_property
@@ -124,7 +104,7 @@ _OFF_COLOR_BEHAVIOUR: Final = (
     ColorBehaviour.OLD_VALUE,
 )
 
-_FIXED_COLOR_SWITCHER: dict[str, tuple[float, float]] = {
+_FIXED_COLOR_SWITCHER: Mapping[str, tuple[float, float]] = {
     FixedColor.WHITE: (0.0, 0.0),
     FixedColor.RED: (0.0, 100.0),
     FixedColor.YELLOW: (60.0, 100.0),
@@ -161,15 +141,15 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         """Init the entity fields."""
         OnTimeMixin.__init__(self)
         super()._init_entity_fields()
-        self._e_level: HmFloat = self._get_entity(field_name=FIELD_LEVEL, entity_type=HmFloat)
+        self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
         self._e_channel_level: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_LEVEL, entity_type=HmSensor
+            field=Field.CHANNEL_LEVEL, entity_type=HmSensor
         )
         self._e_on_time_value: HmAction = self._get_entity(
-            field_name=FIELD_ON_TIME_VALUE, entity_type=HmAction
+            field=Field.ON_TIME_VALUE, entity_type=HmAction
         )
         self._e_ramp_time_value: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_VALUE, entity_type=HmAction
+            field=Field.RAMP_TIME_VALUE, entity_type=HmAction
         )
 
     @value_property
@@ -335,7 +315,7 @@ class CeColorDimmer(CeDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color: HmInteger = self._get_entity(field_name=FIELD_COLOR, entity_type=HmInteger)
+        self._e_color: HmInteger = self._get_entity(field=Field.COLOR, entity_type=HmInteger)
 
     @value_property
     def hs_color(self) -> tuple[float, float] | None:
@@ -383,9 +363,7 @@ class CeColorDimmerEffect(CeColorDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_effect: HmInteger = self._get_entity(
-            field_name=FIELD_PROGRAM, entity_type=HmInteger
-        )
+        self._e_effect: HmInteger = self._get_entity(field=Field.PROGRAM, entity_type=HmInteger)
 
     @value_property
     def effect(self) -> str | None:
@@ -424,7 +402,7 @@ class CeColorTempDimmer(CeDimmer):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_color_level: HmFloat = self._get_entity(
-            field_name=FIELD_COLOR_LEVEL, entity_type=HmFloat
+            field=Field.COLOR_LEVEL, entity_type=HmFloat
         )
 
     @value_property
@@ -453,28 +431,26 @@ class CeIpRGBWLight(CeDimmer):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_activity_state: HmSensor = self._get_entity(
-            field_name=FIELD_DIRECTION, entity_type=HmSensor
+            field=Field.DIRECTION, entity_type=HmSensor
         )
         self._e_color_temperature_kelvin: HmInteger = self._get_entity(
-            field_name=FIELD_COLOR_TEMPERATURE, entity_type=HmInteger
+            field=Field.COLOR_TEMPERATURE, entity_type=HmInteger
         )
         self._e_device_operation_mode: HmSelect = self._get_entity(
-            field_name=FIELD_DEVICE_OPERATION_MODE, entity_type=HmSelect
+            field=Field.DEVICE_OPERATION_MODE, entity_type=HmSelect
         )
-        self._e_effect: HmAction = self._get_entity(field_name=FIELD_EFFECT, entity_type=HmAction)
-        self._e_hue: HmInteger = self._get_entity(field_name=FIELD_HUE, entity_type=HmInteger)
+        self._e_effect: HmAction = self._get_entity(field=Field.EFFECT, entity_type=HmAction)
+        self._e_hue: HmInteger = self._get_entity(field=Field.HUE, entity_type=HmInteger)
         self._e_ramp_time_to_off_unit: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_TO_OFF_UNIT, entity_type=HmAction
+            field=Field.RAMP_TIME_TO_OFF_UNIT, entity_type=HmAction
         )
         self._e_ramp_time_to_off_value: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_TO_OFF_VALUE, entity_type=HmAction
+            field=Field.RAMP_TIME_TO_OFF_VALUE, entity_type=HmAction
         )
         self._e_ramp_time_unit: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction
+            field=Field.RAMP_TIME_UNIT, entity_type=HmAction
         )
-        self._e_saturation: HmFloat = self._get_entity(
-            field_name=FIELD_SATURATION, entity_type=HmFloat
-        )
+        self._e_saturation: HmFloat = self._get_entity(field=Field.SATURATION, entity_type=HmFloat)
 
     @value_property
     def color_temp(self) -> int | None:
@@ -529,7 +505,7 @@ class CeIpRGBWLight(CeDimmer):
     @value_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
-        return tuple(self._e_effect.values or ())
+        return self._e_effect.values or ()
 
     @bind_collector
     async def turn_on(
@@ -588,15 +564,15 @@ class CeIpFixedColorLight(CeDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_color: HmSelect = self._get_entity(field_name=FIELD_COLOR, entity_type=HmSelect)
+        self._e_color: HmSelect = self._get_entity(field=Field.COLOR, entity_type=HmSelect)
         self._e_channel_color: HmSensor = self._get_entity(
-            field_name=FIELD_CHANNEL_COLOR, entity_type=HmSensor
+            field=Field.CHANNEL_COLOR, entity_type=HmSensor
         )
         self._e_on_time_unit: HmAction = self._get_entity(
-            field_name=FIELD_ON_TIME_UNIT, entity_type=HmAction
+            field=Field.ON_TIME_UNIT, entity_type=HmAction
         )
         self._e_ramp_time_unit: HmAction = self._get_entity(
-            field_name=FIELD_RAMP_TIME_UNIT, entity_type=HmAction
+            field=Field.RAMP_TIME_UNIT, entity_type=HmAction
         )
 
     @value_property
@@ -656,12 +632,16 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_effect: HmSelect = self._get_entity(
-            field_name=FIELD_COLOR_BEHAVIOUR, entity_type=HmSelect
+            field=Field.COLOR_BEHAVIOUR, entity_type=HmSelect
         )
         self._effect_list = (
-            [item for item in self._e_effect.values if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR]
+            tuple(
+                str(item)
+                for item in self._e_effect.values
+                if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR
+            )
             if (self._e_effect and self._e_effect.values)
-            else []
+            else ()
         )
 
     @value_property
@@ -674,7 +654,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
     @value_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
-        return tuple(self._effect_list)
+        return self._effect_list
 
     @bind_collector
     async def turn_on(
@@ -737,8 +717,8 @@ def make_ip_dimmer(
     """Create HomematicIP dimmer entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeDimmer,
-        device_enum=EntityDefinition.IP_DIMMER,
+        entity_class=CeDimmer,
+        device_profile=DeviceProfile.IP_DIMMER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -752,8 +732,8 @@ def make_rf_dimmer(
     """Create HomeMatic classic dimmer entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeDimmer,
-        device_enum=EntityDefinition.RF_DIMMER,
+        entity_class=CeDimmer,
+        device_profile=DeviceProfile.RF_DIMMER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -767,8 +747,8 @@ def make_rf_dimmer_color(
     """Create HomeMatic classic dimmer with color entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeColorDimmer,
-        device_enum=EntityDefinition.RF_DIMMER_COLOR,
+        entity_class=CeColorDimmer,
+        device_profile=DeviceProfile.RF_DIMMER_COLOR,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -782,8 +762,8 @@ def make_rf_dimmer_color_effect(
     """Create HomeMatic classic dimmer and effect with color entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeColorDimmerEffect,
-        device_enum=EntityDefinition.RF_DIMMER_COLOR,
+        entity_class=CeColorDimmerEffect,
+        device_profile=DeviceProfile.RF_DIMMER_COLOR,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -797,8 +777,8 @@ def make_rf_dimmer_color_temp(
     """Create HomeMatic classic dimmer with color temperature entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeColorTempDimmer,
-        device_enum=EntityDefinition.RF_DIMMER_COLOR_TEMP,
+        entity_class=CeColorTempDimmer,
+        device_profile=DeviceProfile.RF_DIMMER_COLOR_TEMP,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -812,8 +792,8 @@ def make_rf_dimmer_with_virt_channel(
     """Create HomeMatic classic dimmer entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeDimmer,
-        device_enum=EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL,
+        entity_class=CeDimmer,
+        device_profile=DeviceProfile.RF_DIMMER_WITH_VIRT_CHANNEL,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -827,8 +807,8 @@ def make_ip_fixed_color_light(
     """Create fixed color light entities like HmIP-BSL."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpFixedColorLight,
-        device_enum=EntityDefinition.IP_FIXED_COLOR_LIGHT,
+        entity_class=CeIpFixedColorLight,
+        device_profile=DeviceProfile.IP_FIXED_COLOR_LIGHT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -842,8 +822,8 @@ def make_ip_simple_fixed_color_light_wired(
     """Create simple fixed color light entities like HmIPW-WRC6."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpFixedColorLightWired,
-        device_enum=EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED,
+        entity_class=CeIpFixedColorLightWired,
+        device_profile=DeviceProfile.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -857,15 +837,15 @@ def make_ip_rgbw_light(
     """Create simple fixed color light entities like HmIP-RGBW."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpRGBWLight,
-        device_enum=EntityDefinition.IP_RGBW_LIGHT,
+        entity_class=CeIpRGBWLight,
+        device_profile=DeviceProfile.IP_RGBW_LIGHT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 132": CustomConfig(func=make_rf_dimmer, channels=(1,)),
     "263 133": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "263 134": CustomConfig(func=make_rf_dimmer, channels=(1,)),
@@ -885,7 +865,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
                     ): (
                         Parameter.PRESS_LONG,
                         Parameter.PRESS_SHORT,
-                        "SENSOR",
+                        Parameter.SENSOR,
                     )
                 },
             ),
@@ -893,12 +873,12 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         CustomConfig(
             func=make_rf_dimmer_color,
             channels=(9, 10, 11),
-            extended=ExtendedConfig(fixed_channels={15: {FIELD_COLOR: "COLOR"}}),
+            extended=ExtendedConfig(fixed_channels={15: {Field.COLOR: Parameter.COLOR}}),
         ),
         CustomConfig(
             func=make_rf_dimmer_color,
             channels=(12, 13, 14),
-            extended=ExtendedConfig(fixed_channels={16: {FIELD_COLOR: "COLOR"}}),
+            extended=ExtendedConfig(fixed_channels={16: {Field.COLOR: Parameter.COLOR}}),
         ),
     ),
     "HM-DW-WM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4)),
@@ -937,7 +917,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(4, 8, 12),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
@@ -949,10 +929,10 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(11,),
         extended=ExtendedConfig(
             additional_entities={
-                1: ("CONCENTRATION",),
+                1: (Parameter.CONCENTRATION,),
                 4: (
-                    "HUMIDITY",
-                    "ACTUAL_TEMPERATURE",
+                    Parameter.HUMIDITY,
+                    Parameter.ACTUAL_TEMPERATURE,
                 ),
             }
         ),
@@ -962,7 +942,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(1, 5, 9),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),

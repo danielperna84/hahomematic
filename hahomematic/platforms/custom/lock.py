@@ -6,20 +6,13 @@ See https://www.home-assistant.io/integrations/lock/.
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from enum import StrEnum
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import (
-    FIELD_DIRECTION,
-    FIELD_ERROR,
-    FIELD_LOCK_STATE,
-    FIELD_LOCK_TARGET_LEVEL,
-    FIELD_OPEN,
-    FIELD_STATE,
-    EntityDefinition,
-)
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import value_property
@@ -91,14 +84,12 @@ class CeIpLock(BaseLock):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_lock_state: HmSensor = self._get_entity(
-            field_name=FIELD_LOCK_STATE, entity_type=HmSensor
+            field=Field.LOCK_STATE, entity_type=HmSensor
         )
         self._e_lock_target_level: HmAction = self._get_entity(
-            field_name=FIELD_LOCK_TARGET_LEVEL, entity_type=HmAction
+            field=Field.LOCK_TARGET_LEVEL, entity_type=HmAction
         )
-        self._e_direction: HmSensor = self._get_entity(
-            field_name=FIELD_DIRECTION, entity_type=HmSensor
-        )
+        self._e_direction: HmSensor = self._get_entity(field=Field.DIRECTION, entity_type=HmSensor)
 
     @value_property
     def is_locked(self) -> bool:
@@ -146,12 +137,10 @@ class CeRfLock(BaseLock):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_state: HmSwitch = self._get_entity(field_name=FIELD_STATE, entity_type=HmSwitch)
-        self._e_open: HmAction = self._get_entity(field_name=FIELD_OPEN, entity_type=HmAction)
-        self._e_direction: HmSensor = self._get_entity(
-            field_name=FIELD_DIRECTION, entity_type=HmSensor
-        )
-        self._e_error: HmSensor = self._get_entity(field_name=FIELD_ERROR, entity_type=HmSensor)
+        self._e_state: HmSwitch = self._get_entity(field=Field.STATE, entity_type=HmSwitch)
+        self._e_open: HmAction = self._get_entity(field=Field.OPEN, entity_type=HmAction)
+        self._e_direction: HmSensor = self._get_entity(field=Field.DIRECTION, entity_type=HmSensor)
+        self._e_error: HmSensor = self._get_entity(field=Field.ERROR, entity_type=HmSensor)
 
     @value_property
     def is_locked(self) -> bool:
@@ -201,8 +190,8 @@ def make_ip_lock(
     """Create HomematicIP lock entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpLock,
-        device_enum=EntityDefinition.IP_LOCK,
+        entity_class=CeIpLock,
+        device_profile=DeviceProfile.IP_LOCK,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -216,23 +205,23 @@ def make_rf_lock(
     """Create HomeMatic rf lock entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeRfLock,
-        device_enum=EntityDefinition.RF_LOCK,
+        entity_class=CeRfLock,
+        device_profile=DeviceProfile.RF_LOCK,
         group_base_channels=group_base_channels,
         extended=extended,
     )
 
 
 # Case for device model is not relevant
-DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
+DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HM-Sec-Key": CustomConfig(
         func=make_rf_lock,
         channels=(1,),
         extended=ExtendedConfig(
             additional_entities={
                 1: (
-                    "DIRECTION",
-                    "ERROR",
+                    Parameter.DIRECTION,
+                    Parameter.ERROR,
                 ),
             }
         ),
@@ -242,7 +231,7 @@ DEVICES: dict[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(0,),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ERROR_JAMMED",),
+                0: (Parameter.ERROR_JAMMED,),
             }
         ),
     ),
