@@ -9,10 +9,10 @@ from abc import abstractmethod
 from collections.abc import Mapping
 from enum import StrEnum
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition, Field
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import value_property
@@ -190,8 +190,8 @@ def make_ip_lock(
     """Create HomematicIP lock entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpLock,
-        device_enum=EntityDefinition.IP_LOCK,
+        entity_class=CeIpLock,
+        device_profile=DeviceProfile.IP_LOCK,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -205,8 +205,8 @@ def make_rf_lock(
     """Create HomeMatic rf lock entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeRfLock,
-        device_enum=EntityDefinition.RF_LOCK,
+        entity_class=CeRfLock,
+        device_profile=DeviceProfile.RF_LOCK,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -220,8 +220,8 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         extended=ExtendedConfig(
             additional_entities={
                 1: (
-                    "DIRECTION",
-                    "ERROR",
+                    Parameter.DIRECTION,
+                    Parameter.ERROR,
                 ),
             }
         ),
@@ -231,7 +231,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(0,),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ERROR_JAMMED",),
+                0: (Parameter.ERROR_JAMMED,),
             }
         ),
     ),

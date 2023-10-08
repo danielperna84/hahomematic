@@ -10,10 +10,10 @@ from enum import IntEnum, StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import EntityUsage, HmPlatform
+from hahomematic.const import EntityUsage, HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition, Field
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import value_property
@@ -515,8 +515,8 @@ def make_ip_cover(
     """Create HomematicIP cover entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeCover,
-        device_enum=EntityDefinition.IP_COVER,
+        entity_class=CeCover,
+        device_profile=DeviceProfile.IP_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -530,8 +530,8 @@ def make_rf_cover(
     """Create HomeMatic classic cover entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeCover,
-        device_enum=EntityDefinition.RF_COVER,
+        entity_class=CeCover,
+        device_profile=DeviceProfile.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -545,8 +545,8 @@ def make_ip_blind(
     """Create HomematicIP cover entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpBlind,
-        device_enum=EntityDefinition.IP_COVER,
+        entity_class=CeIpBlind,
+        device_profile=DeviceProfile.IP_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -560,8 +560,8 @@ def make_ip_garage(
     """Create HomematicIP garage entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeGarage,
-        device_enum=EntityDefinition.IP_GARAGE,
+        entity_class=CeGarage,
+        device_profile=DeviceProfile.IP_GARAGE,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -575,8 +575,8 @@ def make_rf_blind(
     """Create HomeMatic classic cover entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeBlind,
-        device_enum=EntityDefinition.RF_COVER,
+        entity_class=CeBlind,
+        device_profile=DeviceProfile.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -590,8 +590,8 @@ def make_rf_window_drive(
     """Create HomeMatic classic window drive entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeWindowDrive,
-        device_enum=EntityDefinition.RF_COVER,
+        entity_class=CeWindowDrive,
+        device_profile=DeviceProfile.RF_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -616,13 +616,13 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         extended=ExtendedConfig(
             additional_entities={
                 1: (
-                    "DIRECTION",
-                    "WORKING",
-                    "ERROR",
+                    Parameter.DIRECTION,
+                    Parameter.WORKING,
+                    Parameter.ERROR,
                 ),
                 2: (
-                    "LEVEL",
-                    "STATUS",
+                    Parameter.LEVEL,
+                    Parameter.STATUS,
                 ),
             }
         ),
@@ -635,7 +635,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(9, 13, 17, 21),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
@@ -649,7 +649,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(1, 5, 9, 13),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),

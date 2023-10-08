@@ -1,11 +1,11 @@
 """Constants used by hahomematic custom entities."""
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum, StrEnum
 
 
-class EntityDefinition(StrEnum):
-    """Enum for entity definitions."""
+class DeviceProfile(StrEnum):
+    """Enum for device profiles."""
 
     IP_COVER = "IPCover"
     IP_DIMMER = "IPDimmer"
@@ -33,7 +33,23 @@ class EntityDefinition(StrEnum):
     SIMPLE_RF_THERMOSTAT = "SimpleRfThermostat"
 
 
-class Field(StrEnum):
+class ED(StrEnum):
+    """Enum for entity definitions."""
+
+    DEFAULT_ENTITIES = "default_entities"
+    INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
+    DEVICE_GROUP = "device_group"
+    DEVICE_DEFINITIONS = "device_definitions"
+    ADDITIONAL_ENTITIES = "additional_entities"
+    FIELDS = "fields"
+    REPEATABLE_FIELDS = "repeatable_fields"
+    VISIBLE_REPEATABLE_FIELDS = "visible_repeatable_fields"
+    PRIMARY_CHANNEL = "primary_channel"
+    SECONDARY_CHANNELS = "secondary_channels"
+    VISIBLE_FIELDS = "visible_fields"
+
+
+class Field(Enum):
     """Enum for fields."""
 
     ACOUSTIC_ALARM_ACTIVE = "acoustic_alarm_active"

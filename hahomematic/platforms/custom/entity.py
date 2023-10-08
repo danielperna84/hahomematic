@@ -10,7 +10,7 @@ from typing import Any, Final, TypeVar, cast
 from hahomematic.const import INIT_DATETIME, CallBackSource, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition, Field
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.support import ExtendedConfig
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
@@ -33,14 +33,14 @@ class CustomEntity(BaseEntity):
         self,
         device: hmd.HmDevice,
         unique_identifier: str,
-        device_enum: EntityDefinition,
+        device_profile: DeviceProfile,
         device_def: Mapping[str, Any],
         entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]],
         channel_no: int,
         extended: ExtendedConfig | None = None,
     ) -> None:
         """Initialize the entity."""
-        self._device_enum: Final = device_enum
+        self._device_profile: Final = device_profile
         # required for name in BaseEntity
         self._device_desc: Final = device_def
         self._entity_def: Final = entity_def
@@ -106,7 +106,7 @@ class CustomEntity(BaseEntity):
     def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
         if (
-            secondary_channels := self._device_desc.get(hmed.ED_SECONDARY_CHANNELS)
+            secondary_channels := self._device_desc.get(hmed.ED.SECONDARY_CHANNELS)
         ) and self.channel_no in secondary_channels:
             return EntityUsage.CE_SECONDARY
         return EntityUsage.CE_PRIMARY
@@ -131,7 +131,7 @@ class CustomEntity(BaseEntity):
     def _init_entities(self) -> None:
         """Init entity collection."""
         # Add repeating fields
-        for field_name, parameter in self._device_desc.get(hmed.ED_REPEATABLE_FIELDS, {}).items():
+        for field_name, parameter in self._device_desc.get(hmed.ED.REPEATABLE_FIELDS, {}).items():
             entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
             )
@@ -139,7 +139,7 @@ class CustomEntity(BaseEntity):
 
         # Add visible repeating fields
         for field_name, parameter in self._device_desc.get(
-            hmed.ED_VISIBLE_REPEATABLE_FIELDS, {}
+            hmed.ED.VISIBLE_REPEATABLE_FIELDS, {}
         ).items():
             entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
@@ -162,18 +162,18 @@ class CustomEntity(BaseEntity):
 
         # Add device fields
         self._add_entities(
-            field_dict_name=hmed.ED_FIELDS,
+            field_dict_name=hmed.ED.FIELDS,
         )
         # Add visible device fields
         self._add_entities(
-            field_dict_name=hmed.ED_VISIBLE_FIELDS,
+            field_dict_name=hmed.ED.VISIBLE_FIELDS,
             is_visible=True,
         )
 
         # Add default device entities
         self._mark_entities(entity_def=self._entity_def)
         # add default entities
-        if hmed.get_include_default_entities(device_enum=self._device_enum):
+        if hmed.get_include_default_entities(device_profile=self._device_profile):
             self._mark_entities(entity_def=hmed.get_default_entities())
 
         # add custom un_ignore entities
@@ -183,7 +183,7 @@ class CustomEntity(BaseEntity):
             )
         )
 
-    def _add_entities(self, field_dict_name: str, is_visible: bool = False) -> None:
+    def _add_entities(self, field_dict_name: hmed.ED, is_visible: bool = False) -> None:
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
         for channel_no, channel in fields.items():

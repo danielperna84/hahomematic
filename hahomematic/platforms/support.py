@@ -381,7 +381,7 @@ def check_channel_is_the_only_primary_channel(
     device_has_multiple_channels: bool,
 ) -> bool:
     """Check if this channel is the only primary channel."""
-    primary_channel: int = device_def[hmed.ED_PRIMARY_CHANNEL]
+    primary_channel: int = device_def[hmed.ED.PRIMARY_CHANNEL]
     if primary_channel == current_channel_no and device_has_multiple_channels is False:
         return True
     return False

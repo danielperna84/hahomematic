@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from hahomematic.platforms.custom.const import Field
+
 
 @dataclass(slots=True)
 class CustomConfig:
@@ -18,7 +20,7 @@ class CustomConfig:
 class ExtendedConfig:
     """Extended data for custom entity creation."""
 
-    fixed_channels: Mapping[int, Mapping[str, str]] | None = None
+    fixed_channels: Mapping[int, Mapping[Field, str]] | None = None
     additional_entities: Mapping[int | tuple[int, ...], tuple[str, ...]] | None = None
 
     @property

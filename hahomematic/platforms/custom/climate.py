@@ -14,7 +14,7 @@ from typing import Any, Final
 from hahomematic.const import HmPlatform, ParamsetKey
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition, Field
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import config_property, value_property
@@ -573,8 +573,8 @@ def make_simple_thermostat(
     """Create SimpleRfThermostat entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeSimpleRfThermostat,
-        device_enum=EntityDefinition.SIMPLE_RF_THERMOSTAT,
+        entity_class=CeSimpleRfThermostat,
+        device_profile=DeviceProfile.SIMPLE_RF_THERMOSTAT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -588,8 +588,8 @@ def make_thermostat(
     """Create RfThermostat entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeRfThermostat,
-        device_enum=EntityDefinition.RF_THERMOSTAT,
+        entity_class=CeRfThermostat,
+        device_profile=DeviceProfile.RF_THERMOSTAT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -603,8 +603,8 @@ def make_thermostat_group(
     """Create RfThermostat group entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeRfThermostat,
-        device_enum=EntityDefinition.RF_THERMOSTAT_GROUP,
+        entity_class=CeRfThermostat,
+        device_profile=DeviceProfile.RF_THERMOSTAT_GROUP,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -618,8 +618,8 @@ def make_ip_thermostat(
     """Create IPThermostat entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpThermostat,
-        device_enum=EntityDefinition.IP_THERMOSTAT,
+        entity_class=CeIpThermostat,
+        device_profile=DeviceProfile.IP_THERMOSTAT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -633,8 +633,8 @@ def make_ip_thermostat_group(
     """Create IPThermostat group entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpThermostat,
-        device_enum=EntityDefinition.IP_THERMOSTAT_GROUP,
+        entity_class=CeIpThermostat,
+        device_profile=DeviceProfile.IP_THERMOSTAT_GROUP,
         group_base_channels=group_base_channels,
         extended=extended,
     )

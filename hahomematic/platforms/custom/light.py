@@ -13,7 +13,7 @@ from typing import Any, Final, TypedDict, Unpack
 from hahomematic.const import EntityUsage, HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition, Field
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import config_property, value_property
@@ -717,8 +717,8 @@ def make_ip_dimmer(
     """Create HomematicIP dimmer entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeDimmer,
-        device_enum=EntityDefinition.IP_DIMMER,
+        entity_class=CeDimmer,
+        device_profile=DeviceProfile.IP_DIMMER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -732,8 +732,8 @@ def make_rf_dimmer(
     """Create HomeMatic classic dimmer entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeDimmer,
-        device_enum=EntityDefinition.RF_DIMMER,
+        entity_class=CeDimmer,
+        device_profile=DeviceProfile.RF_DIMMER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -747,8 +747,8 @@ def make_rf_dimmer_color(
     """Create HomeMatic classic dimmer with color entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeColorDimmer,
-        device_enum=EntityDefinition.RF_DIMMER_COLOR,
+        entity_class=CeColorDimmer,
+        device_profile=DeviceProfile.RF_DIMMER_COLOR,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -762,8 +762,8 @@ def make_rf_dimmer_color_effect(
     """Create HomeMatic classic dimmer and effect with color entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeColorDimmerEffect,
-        device_enum=EntityDefinition.RF_DIMMER_COLOR,
+        entity_class=CeColorDimmerEffect,
+        device_profile=DeviceProfile.RF_DIMMER_COLOR,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -777,8 +777,8 @@ def make_rf_dimmer_color_temp(
     """Create HomeMatic classic dimmer with color temperature entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeColorTempDimmer,
-        device_enum=EntityDefinition.RF_DIMMER_COLOR_TEMP,
+        entity_class=CeColorTempDimmer,
+        device_profile=DeviceProfile.RF_DIMMER_COLOR_TEMP,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -792,8 +792,8 @@ def make_rf_dimmer_with_virt_channel(
     """Create HomeMatic classic dimmer entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeDimmer,
-        device_enum=EntityDefinition.RF_DIMMER_WITH_VIRT_CHANNEL,
+        entity_class=CeDimmer,
+        device_profile=DeviceProfile.RF_DIMMER_WITH_VIRT_CHANNEL,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -807,8 +807,8 @@ def make_ip_fixed_color_light(
     """Create fixed color light entities like HmIP-BSL."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpFixedColorLight,
-        device_enum=EntityDefinition.IP_FIXED_COLOR_LIGHT,
+        entity_class=CeIpFixedColorLight,
+        device_profile=DeviceProfile.IP_FIXED_COLOR_LIGHT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -822,8 +822,8 @@ def make_ip_simple_fixed_color_light_wired(
     """Create simple fixed color light entities like HmIPW-WRC6."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpFixedColorLightWired,
-        device_enum=EntityDefinition.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED,
+        entity_class=CeIpFixedColorLightWired,
+        device_profile=DeviceProfile.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -837,8 +837,8 @@ def make_ip_rgbw_light(
     """Create simple fixed color light entities like HmIP-RGBW."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpRGBWLight,
-        device_enum=EntityDefinition.IP_RGBW_LIGHT,
+        entity_class=CeIpRGBWLight,
+        device_profile=DeviceProfile.IP_RGBW_LIGHT,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -865,7 +865,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
                     ): (
                         Parameter.PRESS_LONG,
                         Parameter.PRESS_SHORT,
-                        "SENSOR",
+                        Parameter.SENSOR,
                     )
                 },
             ),
@@ -873,12 +873,12 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         CustomConfig(
             func=make_rf_dimmer_color,
             channels=(9, 10, 11),
-            extended=ExtendedConfig(fixed_channels={15: {Field.COLOR: "COLOR"}}),
+            extended=ExtendedConfig(fixed_channels={15: {Field.COLOR: Parameter.COLOR}}),
         ),
         CustomConfig(
             func=make_rf_dimmer_color,
             channels=(12, 13, 14),
-            extended=ExtendedConfig(fixed_channels={16: {Field.COLOR: "COLOR"}}),
+            extended=ExtendedConfig(fixed_channels={16: {Field.COLOR: Parameter.COLOR}}),
         ),
     ),
     "HM-DW-WM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4)),
@@ -917,7 +917,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(4, 8, 12),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
@@ -929,10 +929,10 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(11,),
         extended=ExtendedConfig(
             additional_entities={
-                1: ("CONCENTRATION",),
+                1: (Parameter.CONCENTRATION,),
                 4: (
-                    "HUMIDITY",
-                    "ACTUAL_TEMPERATURE",
+                    Parameter.HUMIDITY,
+                    Parameter.ACTUAL_TEMPERATURE,
                 ),
             }
         ),
@@ -942,7 +942,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(1, 5, 9),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),

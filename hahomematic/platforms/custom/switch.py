@@ -10,10 +10,10 @@ from enum import StrEnum
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition, Field
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import value_property
@@ -98,8 +98,8 @@ def make_ip_switch(
     """Create HomematicIP switch entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeSwitch,
-        device_enum=EntityDefinition.IP_SWITCH,
+        entity_class=CeSwitch,
+        device_profile=DeviceProfile.IP_SWITCH,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -116,7 +116,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(2,),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
@@ -125,7 +125,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(5, 9, 13, 17),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
@@ -145,7 +145,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         channels=(1, 5, 9, 13, 17, 21, 25, 29),
         extended=ExtendedConfig(
             additional_entities={
-                0: ("ACTUAL_TEMPERATURE",),
+                0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),

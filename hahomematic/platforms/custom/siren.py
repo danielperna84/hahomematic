@@ -13,7 +13,7 @@ from typing import Final, TypedDict, Unpack
 from hahomematic.const import HmPlatform
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import EntityDefinition, Field
+from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import config_property, value_property
@@ -241,8 +241,8 @@ def make_ip_siren(
     """Create HomematicIP siren entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpSiren,
-        device_enum=EntityDefinition.IP_SIREN,
+        entity_class=CeIpSiren,
+        device_profile=DeviceProfile.IP_SIREN,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -256,8 +256,8 @@ def make_ip_siren_smoke(
     """Create HomematicIP siren entities."""
     return hmed.make_custom_entity(
         device=device,
-        custom_entity_class=CeIpSirenSmoke,
-        device_enum=EntityDefinition.IP_SIREN_SMOKE,
+        entity_class=CeIpSirenSmoke,
+        device_profile=DeviceProfile.IP_SIREN_SMOKE,
         group_base_channels=group_base_channels,
         extended=extended,
     )
