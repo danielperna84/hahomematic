@@ -24,7 +24,7 @@ _FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 # and not for general display.
 # {device_type: (channel_no, parameter)}
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
-    Mapping[str, tuple[tuple[int, ...], tuple[str, ...]]]
+    Mapping[str, tuple[tuple[int, ...], tuple[Parameter, ...]]]
 ] = {
     "HmIP-DRBLI4": (
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
@@ -58,15 +58,15 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
 
 # Some parameters are marked as INTERNAL in the paramset and not considered by default,
 # but some are required and should be added here.
-ALLOWED_INTERNAL_PARAMETERS: Final = (Parameter.DIRECTION,)
+ALLOWED_INTERNAL_PARAMETERS: Final[tuple[Parameter, ...]] = (Parameter.DIRECTION,)
 
 # Ignore events for some devices
-_IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[Mapping[str, tuple[str, ...]]] = {
+_IGNORE_DEVICES_FOR_ENTITY_EVENTS: Final[Mapping[str, tuple[Parameter, ...]]] = {
     "HmIP-PS": CLICK_EVENTS,
 }
 
 # Entities that will be created, but should be hidden.
-_HIDDEN_PARAMETERS: Final[tuple[str, ...]] = (
+_HIDDEN_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.ACTIVITY_STATE,
     Parameter.CHANNEL_OPERATION_MODE,
     Parameter.CONFIG_PENDING,
@@ -182,7 +182,7 @@ _IGNORED_PARAMETERS_WILDCARDS_START: Final[tuple[str, ...]] = (
 
 
 # Parameters within the paramsets for which we create entities.
-_UN_IGNORE_PARAMETERS_BY_DEVICE: Final[Mapping[str, tuple[str, ...]]] = {
+_UN_IGNORE_PARAMETERS_BY_DEVICE: Final[Mapping[str, tuple[Parameter, ...]]] = {
     "HmIP-DLD": (Parameter.ERROR_JAMMED,),
     "HmIP-SWSD": (Parameter.SMOKE_DETECTOR_ALARM_STATUS,),
     "HM-OU-LED16": (Parameter.LED_STATUS,),
@@ -195,7 +195,7 @@ _UN_IGNORE_PARAMETERS_BY_DEVICE: Final[Mapping[str, tuple[str, ...]]] = {
 }
 
 # Parameters by device within the VALUES paramset for which we don't create entities.
-_IGNORE_PARAMETERS_BY_DEVICE: Final[Mapping[str, tuple[str, ...]]] = {
+_IGNORE_PARAMETERS_BY_DEVICE: Final[Mapping[Parameter, tuple[str, ...]]] = {
     Parameter.CURRENT_ILLUMINATION: (
         "HmIP-SMI",
         "HmIP-SMO",

@@ -381,6 +381,7 @@ class Client(ABC):
             )
             raise
 
+    @measure_execution_time
     async def _set_value(
         self,
         channel_address: str,
@@ -454,6 +455,7 @@ class Client(ABC):
             )
             raise
 
+    @measure_execution_time
     async def put_paramset(
         self,
         address: str,
@@ -721,6 +723,7 @@ class ClientCCU(Client):
         """Execute a program on CCU."""
         return await self._json_rpc_client.execute_program(pid=pid)
 
+    @measure_execution_time
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
         return await self._json_rpc_client.set_system_variable(name=name, value=value)
@@ -837,6 +840,7 @@ class ClientHomegear(Client):
         """Execute a program on Homegear."""
         return True
 
+    @measure_execution_time
     async def set_system_variable(self, name: str, value: Any) -> bool:
         """Set a system variable on CCU / Homegear."""
         try:

@@ -1,4 +1,9 @@
-# Version 2023.10.6 (2023-10-07)
+# Version 2023.10.7 (2023-10-08)
+
+- Adjust typing after move to more enums
+- Add measure_execution_time to writing methodes
+
+# Version 2023.10.6 (2023-10-08)
 
 - Add faultCode and faultString to xmlrpc.client.Fault
 - Use Mapping/Set for readonly access

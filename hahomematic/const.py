@@ -62,22 +62,7 @@ FILE_PARAMSETS: Final = "homematic_paramsets.json"
 
 MAX_CACHE_AGE: Final = 60
 
-DEVICE_ERROR_EVENTS: Final[tuple[str, ...]] = ("ERROR", "SENSOR_ERROR")
-
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
-
-# virtual remotes device_types
-VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
-    "HM-RCV-50",
-    "HMW-RCV-50",
-    "HmIP-RCV-50",
-)
-
-VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
-    "BidCoS-RF",
-    "HMW-RCV-50",
-    "HmIP-RCV-1",
-)
 
 
 class Backend(StrEnum):
@@ -287,6 +272,7 @@ class Parameter(StrEnum):
     SATURATION = "SATURATION"
     SECTION = "SECTION"
     SENSOR = "SENSOR"
+    SENSOR_ERROR = "SENSOR_ERROR"
     SEQUENCE_OK = "SEQUENCE_OK"
     SETPOINT = "SETPOINT"
     SET_POINT_MODE = "SET_POINT_MODE"
@@ -345,11 +331,11 @@ class HmPlatform(StrEnum):
 class ProductGroup(StrEnum):
     """Enum with homematic product groups."""
 
-    UNKNOWN: Final = "unknown"
-    HMIPW: Final = "HmIP-Wired"
-    HMIP: Final = "HmIP-RF"
-    HMW: Final = "BidCos-Wired"
     HM: Final = "BidCos-RF"
+    HMIP: Final = "HmIP-RF"
+    HMIPW: Final = "HmIP-Wired"
+    HMW: Final = "BidCos-Wired"
+    UNKNOWN: Final = "unknown"
     VIRTUAL: Final = "VirtualDevices"
 
 
@@ -417,6 +403,45 @@ class ParameterType(StrEnum):
     STRING = "STRING"
 
 
+CLICK_EVENTS: Final[tuple[Parameter, ...]] = (
+    Parameter.PRESS,
+    Parameter.PRESS_CONT,
+    Parameter.PRESS_LOCK,
+    Parameter.PRESS_LONG,
+    Parameter.PRESS_LONG_RELEASE,
+    Parameter.PRESS_LONG_START,
+    Parameter.PRESS_SHORT,
+    Parameter.PRESS_UNLOCK,
+)
+
+DEVICE_ERROR_EVENTS: Final[tuple[Parameter, ...]] = (Parameter.ERROR, Parameter.SENSOR_ERROR)
+
+ENTITY_EVENTS: Final[tuple[EventType, ...]] = (
+    EventType.IMPULSE,
+    EventType.KEYPRESS,
+)
+
+IMPULSE_EVENTS: Final[tuple[Parameter, ...]] = (Parameter.SEQUENCE_OK,)
+
+KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[Mapping[str, tuple[str, ...]]] = {
+    Parameter.STATE: ("BINARY_BEHAVIOR",),
+    Parameter.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+    Parameter.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
+}
+
+
+HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
+    HmPlatform.HUB_BINARY_SENSOR,
+    HmPlatform.HUB_BUTTON,
+    HmPlatform.HUB_NUMBER,
+    HmPlatform.HUB_SELECT,
+    HmPlatform.HUB_SENSOR,
+    HmPlatform.HUB_SWITCH,
+    HmPlatform.HUB_TEXT,
+)
+
 PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.BINARY_SENSOR,
     HmPlatform.BUTTON,
@@ -434,46 +459,23 @@ PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.UPDATE,
 )
 
-HUB_PLATFORMS: Final[tuple[HmPlatform, ...]] = (
-    HmPlatform.HUB_BINARY_SENSOR,
-    HmPlatform.HUB_BUTTON,
-    HmPlatform.HUB_NUMBER,
-    HmPlatform.HUB_SELECT,
-    HmPlatform.HUB_SENSOR,
-    HmPlatform.HUB_SWITCH,
-    HmPlatform.HUB_TEXT,
-)
-
-CLICK_EVENTS: Final[tuple[str, ...]] = (
-    Parameter.PRESS,
-    Parameter.PRESS_CONT,
-    Parameter.PRESS_LOCK,
-    Parameter.PRESS_LONG,
-    Parameter.PRESS_LONG_RELEASE,
-    Parameter.PRESS_LONG_START,
-    Parameter.PRESS_SHORT,
-    Parameter.PRESS_UNLOCK,
-)
-
-ENTITY_EVENTS: Final = (
-    EventType.IMPULSE,
-    EventType.KEYPRESS,
-)
-
-IMPULSE_EVENTS: Final[tuple[str, ...]] = (Parameter.SEQUENCE_OK,)
-
-KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[Mapping[str, tuple[str, ...]]] = {
-    "STATE": ("BINARY_BEHAVIOR",),
-    Parameter.PRESS_LONG: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    Parameter.PRESS_LONG_RELEASE: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    Parameter.PRESS_LONG_START: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-    Parameter.PRESS_SHORT: ("KEY_BEHAVIOR", "SWITCH_BEHAVIOR"),
-}
-
-RELEVANT_INIT_PARAMETERS: Final[tuple[str, ...]] = (
+RELEVANT_INIT_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.CONFIG_PENDING,
     Parameter.STICKY_UN_REACH,
     Parameter.UN_REACH,
+)
+
+# virtual remotes device_types
+VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
+    "HM-RCV-50",
+    "HMW-RCV-50",
+    "HmIP-RCV-50",
+)
+
+VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
+    "BidCoS-RF",
+    "HMW-RCV-50",
+    "HmIP-RCV-1",
 )
 
 
