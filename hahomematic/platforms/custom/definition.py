@@ -61,7 +61,7 @@ SCHEMA_DEVICE_DESCRIPTION = vol.Schema(
     }
 )
 
-ENTITY_DEFINITION: Mapping[str, Mapping[int | DeviceProfile, vol.Any]] = {
+ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
     ED.DEFAULT_ENTITIES: {
         0: (
             Parameter.DUTY_CYCLE,
@@ -533,8 +533,8 @@ def _create_entities(
     device: hmd.HmDevice,
     custom_entity_class: type,
     device_profile: DeviceProfile,
-    device_def: Mapping[str, vol.Any],
-    entity_def: Mapping[int, tuple[str, ...]],
+    device_def: Mapping[ED, Any],
+    entity_def: Mapping[int, tuple[Parameter, ...]],
     channel_no: int | None = None,
     extended: ExtendedConfig | None = None,
 ) -> tuple[hmce.CustomEntity, ...]:
@@ -561,7 +561,7 @@ def _create_entities(
     return tuple(entities)
 
 
-def get_default_entities() -> Mapping[int | tuple[int, ...], tuple[str, ...]]:
+def get_default_entities() -> Mapping[int | tuple[int, ...], tuple[Parameter, ...]]:
     """Return the default entities."""
     return ENTITY_DEFINITION[ED.DEFAULT_ENTITIES]  # type: ignore[return-value]
 
@@ -572,17 +572,15 @@ def get_include_default_entities(device_profile: DeviceProfile) -> bool:
     return device.get(ED.INCLUDE_DEFAULT_ENTITIES, DEFAULT_INCLUDE_DEFAULT_ENTITIES)
 
 
-def _get_device_definition(device_profile: DeviceProfile) -> Mapping[str, vol.Any]:
+def _get_device_definition(device_profile: DeviceProfile) -> Mapping[ED, Any]:
     """Return device from entity definitions."""
-    return cast(Mapping[str, vol.Any], ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device_profile])
+    return cast(Mapping[ED, Any], ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device_profile])
 
 
-def _get_device_group(
-    device_profile: DeviceProfile, base_channel_no: int
-) -> Mapping[str, vol.Any]:
+def _get_device_group(device_profile: DeviceProfile, base_channel_no: int) -> Mapping[ED, Any]:
     """Return the device group."""
     device = _get_device_definition(device_profile)
-    group = cast(dict[str, Any], device[ED.DEVICE_GROUP])
+    group = cast(dict[ED, Any], device[ED.DEVICE_GROUP])
     if group and base_channel_no == 0:
         return group
 
@@ -607,8 +605,8 @@ def _get_device_group(
 
 
 def _rebase_entity_dict(
-    entity_dict: str, group: Mapping[str, vol.Any], base_channel_no: int
-) -> Mapping[int, vol.Any]:
+    entity_dict: ED, group: Mapping[ED, Any], base_channel_no: int
+) -> Mapping[int, Any]:
     """Rebase entity_dict with base_channel_no."""
     new_fields = {}
     if fields := group.get(entity_dict):
@@ -619,14 +617,14 @@ def _rebase_entity_dict(
 
 def _get_device_entities(
     device_profile: DeviceProfile, base_channel_no: int
-) -> Mapping[int, tuple[str, ...]]:
+) -> Mapping[int, tuple[Parameter, ...]]:
     """Return the device entities."""
     additional_entities = (
         ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS]
         .get(device_profile, {})
         .get(ED.ADDITIONAL_ENTITIES, {})
     )
-    new_entities: dict[int, tuple[str, ...]] = {}
+    new_entities: dict[int, tuple[Parameter, ...]] = {}
     if additional_entities:
         for channel_no, field in additional_entities.items():
             new_entities[channel_no + base_channel_no] = field
@@ -689,9 +687,9 @@ def entity_definition_exists(device_type: str) -> bool:
     return len(get_entity_configs(device_type)) > 0
 
 
-def get_required_parameters() -> tuple[str, ...]:
+def get_required_parameters() -> tuple[Parameter, ...]:
     """Return all required parameters for custom entities."""
-    required_parameters: list[str] = []
+    required_parameters: list[Parameter] = []
     for channel in ENTITY_DEFINITION[ED.DEFAULT_ENTITIES]:
         required_parameters.extend(ENTITY_DEFINITION[ED.DEFAULT_ENTITIES][channel])
     for device in ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS]:

@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
+from hahomematic.const import Parameter
 from hahomematic.platforms.custom.const import Field
 
 
@@ -20,13 +21,13 @@ class CustomConfig:
 class ExtendedConfig:
     """Extended data for custom entity creation."""
 
-    fixed_channels: Mapping[int, Mapping[Field, str]] | None = None
-    additional_entities: Mapping[int | tuple[int, ...], tuple[str, ...]] | None = None
+    fixed_channels: Mapping[int, Mapping[Field, Parameter]] | None = None
+    additional_entities: Mapping[int | tuple[int, ...], tuple[Parameter, ...]] | None = None
 
     @property
-    def required_parameters(self) -> tuple[str, ...]:
+    def required_parameters(self) -> tuple[Parameter, ...]:
         """Return vol.Required parameters from extended config."""
-        required_parameters: list[str] = []
+        required_parameters: list[Parameter] = []
         if fixed_channels := self.fixed_channels:
             for mapping in fixed_channels.values():
                 required_parameters.extend(mapping.values())
