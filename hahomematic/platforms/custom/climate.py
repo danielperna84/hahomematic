@@ -655,6 +655,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
     "HmIP-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
     "HmIP-eTRV": CustomConfig(func=make_ip_thermostat, channels=(1,)),
+    "HmIPW-SCTHD": CustomConfig(func=make_ip_thermostat, channels=(1,)),
     "HmIPW-STH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
     "HmIPW-WTH": CustomConfig(func=make_ip_thermostat, channels=(1,)),
     "Thermostat AA": CustomConfig(func=make_ip_thermostat, channels=(1,)),

@@ -68,6 +68,7 @@ class Field(Enum):
     COLOR_TEMPERATURE = "color_temperature"
     COMBINED_PARAMETER = "combined_parameter"
     COMFORT_MODE = "comfort_mode"
+    CONCENTRATION = "concentration"
     CONTROL_MODE = "control_mode"
     CURRENT = "current"
     DEVICE_OPERATION_MODE = "device_operation_mode"

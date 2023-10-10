@@ -283,6 +283,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 ED.VISIBLE_FIELDS: {
                     0: {
                         Field.LEVEL: Parameter.LEVEL,
+                        Field.CONCENTRATION: Parameter.CONCENTRATION,
                     },
                     8: {
                         Field.STATE: Parameter.STATE,
