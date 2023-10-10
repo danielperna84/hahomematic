@@ -2,6 +2,7 @@
 
 - Adjust typing after move to more enums
 - Add measure_execution_time to writing methodes
+- Fix send sysvar #1249
 
 # Version 2023.10.6 (2023-10-08)
 
