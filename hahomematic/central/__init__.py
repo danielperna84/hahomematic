@@ -269,8 +269,8 @@ class CentralUnit:
 
     def add_sysvar_entity(self, sysvar_entity: GenericSystemVariable) -> None:
         """Add new program button."""
-        if (name := sysvar_entity.name) is not None:
-            self._sysvar_entities[name] = sysvar_entity
+        if (ccu_var_name := sysvar_entity.ccu_var_name) is not None:
+            self._sysvar_entities[ccu_var_name] = sysvar_entity
 
     def remove_sysvar_entity(self, name: str) -> None:
         """Remove a sysvar entity."""
