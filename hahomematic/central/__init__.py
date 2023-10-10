@@ -269,8 +269,8 @@ class CentralUnit:
 
     def add_sysvar_entity(self, sysvar_entity: GenericSystemVariable) -> None:
         """Add new program button."""
-        if (name := sysvar_entity.name) is not None:
-            self._sysvar_entities[name] = sysvar_entity
+        if (ccu_var_name := sysvar_entity.ccu_var_name) is not None:
+            self._sysvar_entities[ccu_var_name] = sysvar_entity
 
     def remove_sysvar_entity(self, name: str) -> None:
         """Remove a sysvar entity."""
@@ -1140,7 +1140,12 @@ class CentralUnit:
 
     def get_sysvar_entity(self, name: str) -> GenericSystemVariable | None:
         """Return the sysvar entity."""
-        return self._sysvar_entities.get(name)
+        if sysvar := self._sysvar_entities.get(name):
+            return sysvar
+        for sysvar in self._sysvar_entities.values():
+            if sysvar.name == name:
+                return sysvar
+        return None
 
     def get_program_button(self, pid: str) -> HmProgramButton | None:
         """Return the program button."""
