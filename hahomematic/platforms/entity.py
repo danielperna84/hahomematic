@@ -146,23 +146,23 @@ class CallbackEntity(ABC):
         )
 
     def register_update_callback(
-        self, update_callback: Callable, source: CallBackSource = CallBackSource.HA
+        self, update_callback: Callable, source: CallBackSource = CallBackSource.EXTERNAL
     ) -> None:
         """Register update callback."""
         if callable(update_callback):
             self._update_callbacks.append(update_callback)
-        if source == CallBackSource.HA:
+        if source == CallBackSource.EXTERNAL:
             self._central.add_subscribed_entity_unique_identifier(
                 unique_identifier=self.unique_identifier
             )
 
     def unregister_update_callback(
-        self, update_callback: Callable, source: CallBackSource = CallBackSource.HA
+        self, update_callback: Callable, source: CallBackSource = CallBackSource.EXTERNAL
     ) -> None:
         """Unregister update callback."""
         if update_callback in self._update_callbacks:
             self._update_callbacks.remove(update_callback)
-        if source == CallBackSource.HA:
+        if source == CallBackSource.EXTERNAL:
             self._central.remove_subscribed_entity_unique_identifier(
                 unique_identifier=self.unique_identifier
             )
