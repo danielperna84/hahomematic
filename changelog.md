@@ -2,6 +2,7 @@
 
 - Register external sources with custom identifier
 - Remove subscribed_entity_unique_identifiers
+- Rename custom_identifier to custom_id
 
 # Version 2023.10.7 (2023-10-10)
 

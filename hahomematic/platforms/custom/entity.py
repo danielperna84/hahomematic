@@ -211,16 +211,12 @@ class CustomEntity(BaseEntity):
         entity.register_internal_update_callback(update_callback=self.update_entity)
         self._data_entities[field] = entity
 
-    def unregister_update_callback(
-        self, update_callback: Callable, custom_identifier: str
-    ) -> None:
+    def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Unregister update callback."""
         for entity in self._data_entities.values():
             entity.unregister_internal_update_callback(update_callback=update_callback)
 
-        super().unregister_update_callback(
-            update_callback=update_callback, custom_identifier=custom_identifier
-        )
+        super().unregister_update_callback(update_callback=update_callback, custom_id=custom_id)
 
     def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""

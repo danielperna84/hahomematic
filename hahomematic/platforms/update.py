@@ -71,24 +71,22 @@ class HmUpdate(CallbackEntity):
         return self._device.firmware_update_state
 
     def register_update_callback(
-        self, update_callback: Callable, custom_identifier: str | None = None
+        self, update_callback: Callable, custom_id: str | None = None
     ) -> None:
         """Register update callback."""
         self._device.register_firmware_update_callback(update_callback)
-        if custom_identifier is not None:
-            if self._custom_identifier is not None:
+        if custom_id is not None:
+            if self._custom_id is not None:
                 raise HaHomematicException(
-                    f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_identifier}"
+                    f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
-            self._custom_identifier = custom_identifier
+            self._custom_id = custom_id
 
-    def unregister_update_callback(
-        self, update_callback: Callable, custom_identifier: str
-    ) -> None:
+    def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Unregister update callback."""
         self._device.unregister_firmware_update_callback(update_callback)
-        if custom_identifier is not None:
-            self._custom_identifier = None
+        if custom_id is not None:
+            self._custom_id = None
 
     async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Turn the update on."""

@@ -50,7 +50,7 @@ _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
-_DEFAULT_CUSTOM_IDENTIFIER: Final = "DEFAULT_CUSTOM_IDENTIFIER"
+_DEFAULT_CUSTOM_ID: Final = "custom_id"
 
 _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
     '"': "",
@@ -101,7 +101,7 @@ class CallbackEntity(ABC):
         self._unique_identifier: Final = unique_identifier
         self._update_callbacks: dict[Callable, str] = {}
         self._remove_callbacks: list[Callable] = []
-        self._custom_identifier: str | None = None
+        self._custom_id: str | None = None
 
     @property
     @abstractmethod
@@ -109,9 +109,9 @@ class CallbackEntity(ABC):
         """Return the availability of the device."""
 
     @property
-    def custom_identifier(self) -> str | None:
+    def custom_id(self) -> str | None:
         """Return the central unit."""
-        return self._custom_identifier
+        return self._custom_id
 
     @property
     def central(self) -> hmcu.CentralUnit:
@@ -155,39 +155,37 @@ class CallbackEntity(ABC):
     @property
     def is_registered_externally(self) -> bool:
         """Return if entity is registered externally."""
-        return self._custom_identifier is not None
+        return self._custom_id is not None
 
     def register_internal_update_callback(self, update_callback: Callable) -> None:
         """Register internal update callback."""
         self.register_update_callback(
-            update_callback=update_callback, custom_identifier=_DEFAULT_CUSTOM_IDENTIFIER
+            update_callback=update_callback, custom_id=_DEFAULT_CUSTOM_ID
         )
 
-    def register_update_callback(self, update_callback: Callable, custom_identifier: str) -> None:
+    def register_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Register update callback."""
         if callable(update_callback):
-            self._update_callbacks[update_callback] = custom_identifier
-        if custom_identifier != _DEFAULT_CUSTOM_IDENTIFIER:
-            if self._custom_identifier is not None:
+            self._update_callbacks[update_callback] = custom_id
+        if custom_id != _DEFAULT_CUSTOM_ID:
+            if self._custom_id is not None:
                 raise HaHomematicException(
-                    f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_identifier}"
+                    f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
-            self._custom_identifier = custom_identifier
+            self._custom_id = custom_id
 
     def unregister_internal_update_callback(self, update_callback: Callable) -> None:
         """Unregister update callback."""
         self.unregister_update_callback(
-            update_callback=update_callback, custom_identifier=_DEFAULT_CUSTOM_IDENTIFIER
+            update_callback=update_callback, custom_id=_DEFAULT_CUSTOM_ID
         )
 
-    def unregister_update_callback(
-        self, update_callback: Callable, custom_identifier: str
-    ) -> None:
+    def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Unregister update callback."""
         if update_callback in self._update_callbacks:
             del self._update_callbacks[update_callback]
-        if self.custom_identifier == custom_identifier:
-            self._custom_identifier = None
+        if self.custom_id == custom_id:
+            self._custom_id = None
 
     def register_remove_callback(self, remove_callback: Callable) -> None:
         """Register the remove callback."""
