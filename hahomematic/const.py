@@ -73,13 +73,6 @@ class Backend(StrEnum):
     PYDEVCCU = "PyDevCCU"
 
 
-class CallBackSource(Enum):
-    """Enum with sources for registered callbacks."""
-
-    EXTERNAL = 0
-    INTERNAL = 1
-
-
 class CallSource(StrEnum):
     """Enum with sources for calls."""
 

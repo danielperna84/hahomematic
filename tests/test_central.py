@@ -48,6 +48,19 @@ async def test_central_basics(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio
+async def test_device_get_entities(factory: helper.Factory) -> None:
+    """Test central/device get_entities."""
+    central, _ = await factory.get_default_central(
+        TEST_DEVICES, add_sysvars=True, add_programs=True
+    )
+    entities = central.get_entities()
+    assert entities
+
+    entities_reg = central.get_entities(registered_only=True)
+    assert entities_reg
+
+
+@pytest.mark.asyncio
 async def test_device_export(factory: helper.Factory) -> None:
     """Test device export."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -143,7 +156,9 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
     def _device_changed(self, *args: Any, **kwargs: Any) -> None:
         """Handle device state changes."""
 
-    ebp_sensor[0].register_update_callback(update_callback=_device_changed)
+    ebp_sensor[0].register_update_callback(
+        update_callback=_device_changed, custom_identifier="some_id"
+    )
     ebp_sensor2 = central.get_entities_by_platform(
         platform=HmPlatform.SENSOR,
         exclude_subscribed=True,
@@ -163,7 +178,9 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     def _device_changed(self, *args: Any, **kwargs: Any) -> None:
         """Handle device state changes."""
 
-    ebp_sensor[0].register_update_callback(update_callback=_device_changed)
+    ebp_sensor[0].register_update_callback(
+        update_callback=_device_changed, custom_identifier="some_id"
+    )
     ebp_sensor2 = central.get_hub_entities_by_platform(
         platform=HmPlatform.HUB_SENSOR,
         exclude_subscribed=True,
@@ -174,7 +191,9 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor3 = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_BUTTON)
     assert ebp_sensor3
     assert len(ebp_sensor3) == 2
-    ebp_sensor3[0].register_update_callback(update_callback=_device_changed)
+    ebp_sensor3[0].register_update_callback(
+        update_callback=_device_changed, custom_identifier="some_id"
+    )
     ebp_sensor4 = central.get_hub_entities_by_platform(
         platform=HmPlatform.HUB_BUTTON, exclude_subscribed=True
     )

@@ -22,7 +22,6 @@ from hahomematic.const import (
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     NO_CACHE_ENTRY,
-    CallBackSource,
     CallSource,
     Description,
     EntityUsage,
@@ -33,6 +32,7 @@ from hahomematic.const import (
     ParameterType,
     ParamsetKey,
 )
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.support import (
@@ -50,6 +50,7 @@ _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
+_DEFAULT_CUSTOM_IDENTIFIER: Final = "DEFAULT_CUSTOM_IDENTIFIER"
 
 _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
     '"': "",
@@ -98,13 +99,19 @@ class CallbackEntity(ABC):
         """Init the callback entity."""
         self._central: Final = central
         self._unique_identifier: Final = unique_identifier
-        self._update_callbacks: list[Callable] = []
+        self._update_callbacks: dict[Callable, str] = {}
         self._remove_callbacks: list[Callable] = []
+        self._custom_identifier: str | None = None
 
     @property
     @abstractmethod
     def available(self) -> bool:
         """Return the availability of the device."""
+
+    @property
+    def custom_identifier(self) -> str | None:
+        """Return the central unit."""
+        return self._custom_identifier
 
     @property
     def central(self) -> hmcu.CentralUnit:
@@ -145,24 +152,35 @@ class CallbackEntity(ABC):
             EntityUsage.EVENT,
         )
 
+    @property
+    def is_registered_externally(self) -> bool:
+        """Return if entity is registered externally."""
+        return self._custom_identifier is not None
+
     def register_update_callback(
-        self, update_callback: Callable, source: CallBackSource = CallBackSource.EXTERNAL
+        self, update_callback: Callable, custom_identifier: str = _DEFAULT_CUSTOM_IDENTIFIER
     ) -> None:
         """Register update callback."""
         if callable(update_callback):
-            self._update_callbacks.append(update_callback)
-        if source == CallBackSource.EXTERNAL:
+            self._update_callbacks[update_callback] = custom_identifier
+        if custom_identifier != _DEFAULT_CUSTOM_IDENTIFIER:
+            if self._custom_identifier is not None:
+                raise HaHomematicException(
+                    f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_identifier}"
+                )
+            self._custom_identifier = custom_identifier
             self._central.add_subscribed_entity_unique_identifier(
-                unique_identifier=self.unique_identifier
+                unique_identifier=self.unique_identifier, custom_identifier=custom_identifier
             )
 
     def unregister_update_callback(
-        self, update_callback: Callable, source: CallBackSource = CallBackSource.EXTERNAL
+        self, update_callback: Callable, custom_identifier: str = _DEFAULT_CUSTOM_IDENTIFIER
     ) -> None:
         """Unregister update callback."""
         if update_callback in self._update_callbacks:
-            self._update_callbacks.remove(update_callback)
-        if source == CallBackSource.EXTERNAL:
+            del self._update_callbacks[update_callback]
+        if self.custom_identifier == custom_identifier:
+            self._custom_identifier = None
             self._central.remove_subscribed_entity_unique_identifier(
                 unique_identifier=self.unique_identifier
             )

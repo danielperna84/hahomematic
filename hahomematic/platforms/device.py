@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Set
 from copy import copy
 from datetime import datetime
 import logging
@@ -28,6 +28,7 @@ from hahomematic.const import (
     DeviceFirmwareState,
     EventType,
     ForcedDeviceAvailability,
+    HmPlatform,
     InterfaceName,
     Manufacturer,
     Parameter,
@@ -440,6 +441,36 @@ class HmDevice(PayloadMixin):
     def get_wrapper_entity(self, channel_address: str, parameter: str) -> WrapperEntity | None:
         """Return a wrapper entity from device."""
         return self._wrapper_entities.get((channel_address, parameter))
+
+    def get_entities(
+        self, registered_only: bool = False
+    ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+        """Return all externally registered entities."""
+        all_entities: dict[HmPlatform, set[CallbackEntity]] = {}
+        for platform in HmPlatform:
+            all_entities[platform] = set()
+
+        def add_to_dict(entities: Mapping[Any, CallbackEntity]) -> None:
+            for entity in entities.values():
+                if (
+                    registered_only and entity.is_registered_externally
+                ) or registered_only is False:
+                    all_entities[entity.platform].add(entity)
+
+        add_to_dict(entities=self._custom_entities)
+        add_to_dict(entities=self._generic_entities)
+        add_to_dict(entities=self._generic_events)
+        add_to_dict(entities=self._wrapper_entities)
+
+        if (
+            self.update_entity
+            and (update_entity := self.update_entity)
+            and (registered_only and update_entity.is_registered_externally)
+            or registered_only is False
+        ):
+            all_entities[update_entity.platform].add(update_entity)
+
+        return all_entities
 
     def set_forced_availability(self, forced_availability: ForcedDeviceAvailability) -> None:
         """Set the availability of the device."""

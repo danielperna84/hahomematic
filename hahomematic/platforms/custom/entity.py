@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
 
-from hahomematic.const import INIT_DATETIME, CallBackSource, CallSource, EntityUsage
+from hahomematic.const import INIT_DATETIME, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
@@ -208,9 +208,7 @@ class CustomEntity(BaseEntity):
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
-        entity.register_update_callback(
-            update_callback=self.update_entity, source=CallBackSource.INTERNAL
-        )
+        entity.register_update_callback(update_callback=self.update_entity)
         self._data_entities[field] = entity
 
     def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:

@@ -1,4 +1,8 @@
-# Version 2023.10.7 (2023-10-08)
+# Version 2023.10.8 (2023-10-11)
+
+- Register external sources with custom identifier
+
+# Version 2023.10.7 (2023-10-10)
 
 - Adjust typing after move to more enums
 - Add measure_execution_time to writing methodes
