@@ -22,7 +22,7 @@ from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.generic.text import HmText
-from hahomematic.platforms.support import generate_unique_identifier, is_binary_sensor
+from hahomematic.platforms.support import generate_unique_id, is_binary_sensor
 
 _LOGGER: Final = logging.getLogger(__name__)
 _BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
@@ -49,13 +49,13 @@ def create_entity_and_append_to_device(
         )
         return
 
-    unique_identifier = generate_unique_identifier(
+    unique_id = generate_unique_id(
         central=device.central, address=channel_address, parameter=parameter
     )
-    if device.central.has_entity(unique_identifier=unique_identifier):
+    if device.central.has_entity(unique_id=unique_id):
         _LOGGER.debug(
             "CREATE_ENTITIES: Skipping %s (already exists)",
-            unique_identifier,
+            unique_id,
         )
         return
     _LOGGER.debug(
@@ -101,7 +101,7 @@ def create_entity_and_append_to_device(
     if entity_t:
         entity = entity_t(
             device=device,
-            unique_identifier=unique_identifier,
+            unique_id=unique_id,
             channel_address=channel_address,
             paramset_key=paramset_key,
             parameter=parameter,

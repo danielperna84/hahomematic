@@ -39,7 +39,7 @@ from hahomematic.platforms.support import (
     EntityNameData,
     PayloadMixin,
     convert_value,
-    generate_channel_unique_identifier,
+    generate_channel_unique_id,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -95,10 +95,10 @@ class CallbackEntity(ABC):
 
     _platform: HmPlatform
 
-    def __init__(self, central: hmcu.CentralUnit, unique_identifier: str) -> None:
+    def __init__(self, central: hmcu.CentralUnit, unique_id: str) -> None:
         """Init the callback entity."""
         self._central: Final = central
-        self._unique_identifier: Final = unique_identifier
+        self._unique_id: Final = unique_id
         self._update_callbacks: dict[Callable, str] = {}
         self._remove_callbacks: list[Callable] = []
         self._custom_id: str | None = None
@@ -134,9 +134,9 @@ class CallbackEntity(ABC):
         return self._platform
 
     @config_property
-    def unique_identifier(self) -> str:
-        """Return the unique_identifier."""
-        return self._unique_identifier
+    def unique_id(self) -> str:
+        """Return the unique_id."""
+        return self._unique_id
 
     @config_property
     def usage(self) -> EntityUsage:
@@ -214,19 +214,19 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def __init__(
         self,
         device: hmd.HmDevice,
-        unique_identifier: str,
+        unique_id: str,
         channel_no: int | None,
         is_in_multiple_channels: bool,
     ) -> None:
         """Initialize the entity."""
         PayloadMixin.__init__(self)
-        super().__init__(central=device.central, unique_identifier=unique_identifier)
+        super().__init__(central=device.central, unique_id=unique_id)
         self._device: Final[hmd.HmDevice] = device
         self._channel_no: Final = channel_no
         self._channel_address: Final[str] = hms.get_channel_address(
             device_address=device.device_address, channel_no=channel_no
         )
-        self._channel_unique_identifier: Final = generate_channel_unique_identifier(
+        self._channel_unique_id: Final = generate_channel_unique_id(
             central=device.central, address=self._channel_address
         )
         self._is_in_multiple_channels: Final = is_in_multiple_channels
@@ -247,7 +247,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @property
     def address_path(self) -> str:
         """Return the address pass of the entity."""
-        return f"{self._platform}/{self._device.interface_id}/{self._unique_identifier}/"
+        return f"{self._platform}/{self._device.interface_id}/{self._unique_id}/"
 
     @property
     def available(self) -> bool:
@@ -270,9 +270,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._channel_no
 
     @config_property
-    def channel_unique_identifier(self) -> str:
-        """Return the channel_unique_identifier of the entity."""
-        return self._channel_unique_identifier
+    def channel_unique_id(self) -> str:
+        """Return the channel_unique_id of the entity."""
+        return self._channel_unique_id
 
     @property
     def device(self) -> hmd.HmDevice:
@@ -345,7 +345,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def __init__(
         self,
         device: hmd.HmDevice,
-        unique_identifier: str,
+        unique_id: str,
         channel_address: str,
         paramset_key: str,
         parameter: str,
@@ -358,7 +358,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
         super().__init__(
             device=device,
-            unique_identifier=unique_identifier,
+            unique_id=unique_id,
             channel_no=hms.get_channel_no(address=channel_address),
             is_in_multiple_channels=device.central.paramset_descriptions.is_in_multiple_channels(
                 channel_address=channel_address, parameter=parameter

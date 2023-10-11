@@ -36,4 +36,4 @@ class HmSelect(GenericEntity[int | str, int | str]):
             return value
         if self._values and value in self._values:
             return self._values.index(value)
-        raise ValueError(f"Value not in value_list for {self.name}/{self.unique_identifier}")
+        raise ValueError(f"Value not in value_list for {self.name}/{self.unique_id}")

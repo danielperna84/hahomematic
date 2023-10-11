@@ -21,11 +21,7 @@ from hahomematic.const import (
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.entity import BaseParameterEntity
-from hahomematic.platforms.support import (
-    EntityNameData,
-    generate_unique_identifier,
-    get_event_name,
-)
+from hahomematic.platforms.support import EntityNameData, generate_unique_id, get_event_name
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -39,7 +35,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
     def __init__(
         self,
         device: hmd.HmDevice,
-        unique_identifier: str,
+        unique_id: str,
         channel_address: str,
         parameter: str,
         parameter_data: Mapping[str, Any],
@@ -47,7 +43,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         """Initialize the event handler."""
         super().__init__(
             device=device,
-            unique_identifier=unique_identifier,
+            unique_id=unique_id,
             channel_address=channel_address,
             paramset_key=ParamsetKey.VALUES,
             parameter=parameter,
@@ -149,7 +145,7 @@ def create_event_and_append_to_device(
             channel_address,
         )
         return
-    unique_identifier = generate_unique_identifier(
+    unique_id = generate_unique_id(
         central=device.central,
         address=channel_address,
         parameter=parameter,
@@ -173,7 +169,7 @@ def create_event_and_append_to_device(
     if event_t:
         event = event_t(
             device=device,
-            unique_identifier=unique_identifier,
+            unique_id=unique_id,
             channel_address=channel_address,
             parameter=parameter,
             parameter_data=parameter_data,

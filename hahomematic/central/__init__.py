@@ -140,7 +140,7 @@ class CentralUnit:
         self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
-        # {unique_identifier, entity}
+        # {unique_id, entity}
         self._entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
@@ -915,14 +915,14 @@ class CentralUnit:
     def add_entity(self, entity: BaseEntity) -> None:
         """Add entity to central collections."""
         if not isinstance(entity, GenericEvent):
-            if entity.unique_identifier in self._entities:
+            if entity.unique_id in self._entities:
                 _LOGGER.warning(
                     "Entity %s already registered in central %s",
-                    entity.unique_identifier,
+                    entity.unique_id,
                     self.name,
                 )
                 return
-            self._entities[entity.unique_identifier] = entity
+            self._entities[entity.unique_id] = entity
 
         if isinstance(entity, (GenericEntity, GenericEvent)) and entity.supports_events:
             if (
@@ -951,8 +951,8 @@ class CentralUnit:
 
     def remove_entity(self, entity: BaseEntity) -> None:
         """Remove entity to central collections."""
-        if entity.unique_identifier in self._entities:
-            del self._entities[entity.unique_identifier]
+        if entity.unique_id in self._entities:
+            del self._entities[entity.unique_id]
 
         if (
             isinstance(entity, (GenericEntity, GenericEvent))
@@ -961,9 +961,9 @@ class CentralUnit:
         ):
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
 
-    def has_entity(self, unique_identifier: str) -> bool:
-        """Check if unique_identifier is already added."""
-        return unique_identifier in self._entities
+    def has_entity(self, unique_id: str) -> bool:
+        """Check if unique_id is already added."""
+        return unique_id in self._entities
 
     def increase_ping_count(self, interface_id: str) -> None:
         """Increase the number of send ping events."""

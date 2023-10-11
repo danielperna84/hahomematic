@@ -14,7 +14,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.support import generate_unique_identifier
+from hahomematic.platforms.support import generate_unique_id
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -544,12 +544,12 @@ def _create_entities(
     channel_address = hms.get_channel_address(
         device_address=device.device_address, channel_no=channel_no
     )
-    unique_identifier = generate_unique_identifier(central=device.central, address=channel_address)
+    unique_id = generate_unique_id(central=device.central, address=channel_address)
     if channel_address not in device.channels:
         return tuple(entities)
     entity = custom_entity_class(
         device=device,
-        unique_identifier=unique_identifier,
+        unique_id=unique_id,
         device_profile=device_profile,
         device_def=device_def,
         entity_def=entity_def,

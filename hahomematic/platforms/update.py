@@ -13,7 +13,7 @@ from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallbackEntity
-from hahomematic.platforms.support import generate_unique_identifier
+from hahomematic.platforms.support import generate_unique_id
 
 
 class HmUpdate(CallbackEntity):
@@ -30,7 +30,7 @@ class HmUpdate(CallbackEntity):
         self._device: Final = device
         super().__init__(
             central=device.central,
-            unique_identifier=generate_unique_identifier(
+            unique_id=generate_unique_id(
                 central=device.central, address=device.device_address, parameter="Update"
             ),
         )

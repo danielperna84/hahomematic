@@ -12,7 +12,7 @@ from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms.support import (
     _check_channel_name_with_channel_no,
     convert_value,
-    generate_unique_identifier,
+    generate_unique_id,
     get_custom_entity_name,
     get_device_name,
     get_entity_name,
@@ -43,21 +43,21 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio
-async def test_generate_unique_identifier(factory: helper.Factory) -> None:
-    """Test generate_unique_identifier."""
+async def test_generate_unique_id(factory: helper.Factory) -> None:
+    """Test generate_unique_id."""
     central, _ = await factory.get_default_central({})
     assert (
-        generate_unique_identifier(central=central, address="VCU2128127", parameter="LEVEL")
+        generate_unique_id(central=central, address="VCU2128127", parameter="LEVEL")
         == "vcu2128127_level"
     )
     assert (
-        generate_unique_identifier(
+        generate_unique_id(
             central=central, address="VCU2128127", parameter="LEVEL", prefix="PREFIX"
         )
         == "prefix_vcu2128127_level"
     )
     assert (
-        generate_unique_identifier(central=central, address="INT0001", parameter="LEVEL")
+        generate_unique_id(central=central, address="INT0001", parameter="LEVEL")
         == "test1234_int0001_level"
     )
 

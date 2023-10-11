@@ -338,7 +338,7 @@ class HmDevice(PayloadMixin):
             self._wrapper_entities[(entity.channel_address, entity.parameter)] = entity
             self.register_update_callback(entity.update_entity)
         if isinstance(entity, hmce.CustomEntity):
-            self._custom_entities[entity.unique_identifier] = entity
+            self._custom_entities[entity.unique_id] = entity
         if isinstance(entity, GenericEvent):
             self._generic_events[(entity.channel_address, entity.parameter)] = entity
 
@@ -353,7 +353,7 @@ class HmDevice(PayloadMixin):
             del self._wrapper_entities[(entity.channel_address, entity.parameter)]
             self.unregister_update_callback(entity.update_entity)
         if isinstance(entity, hmce.CustomEntity):
-            del self._custom_entities[entity.unique_identifier]
+            del self._custom_entities[entity.unique_id]
         if isinstance(entity, GenericEvent):
             del self._generic_events[(entity.channel_address, entity.parameter)]
         entity.remove_entity()

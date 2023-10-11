@@ -32,7 +32,7 @@ class CustomEntity(BaseEntity):
     def __init__(
         self,
         device: hmd.HmDevice,
-        unique_identifier: str,
+        unique_id: str,
         device_profile: DeviceProfile,
         device_def: Mapping[str, Any],
         entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]],
@@ -46,7 +46,7 @@ class CustomEntity(BaseEntity):
         self._entity_def: Final = entity_def
         super().__init__(
             device=device,
-            unique_identifier=unique_identifier,
+            unique_id=unique_id,
             channel_no=channel_no,
             is_in_multiple_channels=hmed.is_multi_channel_device(device_type=device.device_type),
         )
