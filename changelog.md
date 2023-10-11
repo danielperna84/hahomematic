@@ -1,6 +1,7 @@
 # Version 2023.10.8 (2023-10-11)
 
 - Register external sources with custom identifier
+- Remove subscribed_entity_unique_identifiers
 
 # Version 2023.10.7 (2023-10-10)
 
