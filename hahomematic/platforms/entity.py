@@ -62,20 +62,20 @@ _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
 }
 
 _FIX_UNIT_BY_PARAM: Final[Mapping[str, str]] = {
-    "ACTUAL_TEMPERATURE": "°C",
-    "CURRENT_ILLUMINATION": "lx",
-    "HUMIDITY": "%",
-    "ILLUMINATION": "lx",
-    "LEVEL": "%",
-    "MASS_CONCENTRATION_PM_10_24H_AVERAGE": "µg/m³",
-    "MASS_CONCENTRATION_PM_1_24H_AVERAGE": "µg/m³",
-    "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE": "µg/m³",
-    "OPERATING_VOLTAGE": "V",
-    "RSSI_DEVICE": "dBm",
-    "RSSI_PEER": "dBm",
-    "SUNSHINEDURATION": "min",
-    "WIND_DIRECTION": "°",
-    "WIND_DIRECTION_RANGE": "°",
+    Parameter.ACTUAL_TEMPERATURE: "°C",
+    Parameter.CURRENT_ILLUMINATION: "lx",
+    Parameter.HUMIDITY: "%",
+    Parameter.ILLUMINATION: "lx",
+    Parameter.LEVEL: "%",
+    Parameter.MASS_CONCENTRATION_PM_10_24H_AVERAGE: "µg/m³",
+    Parameter.MASS_CONCENTRATION_PM_1_24H_AVERAGE: "µg/m³",
+    Parameter.MASS_CONCENTRATION_PM_2_5_24H_AVERAGE: "µg/m³",
+    Parameter.OPERATING_VOLTAGE: "V",
+    Parameter.RSSI_DEVICE: "dBm",
+    Parameter.RSSI_PEER: "dBm",
+    Parameter.SUNSHINE_DURATION: "min",
+    Parameter.WIND_DIRECTION: "°",
+    Parameter.WIND_DIRECTION_RANGE: "°",
 }
 
 EVENT_DATA_SCHEMA = vol.Schema(
