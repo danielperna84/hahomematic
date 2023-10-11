@@ -89,9 +89,6 @@ class HmUpdate(CallbackEntity):
         self._device.unregister_firmware_update_callback(update_callback)
         if custom_identifier is not None:
             self._custom_identifier = None
-            self._central.remove_subscribed_entity_unique_identifier(
-                unique_identifier=self.unique_identifier
-            )
 
     async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Turn the update on."""

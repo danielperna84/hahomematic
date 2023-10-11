@@ -148,8 +148,6 @@ class CentralUnit:
         self._sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         # {sysvar_name, program_button}U
         self._program_buttons: Final[dict[str, HmProgramButton]] = {}
-        # {unique_identifier}
-        self._subscribed_entity_unique_identifiers: Final[dict[str, str]] = {}
         # store last event received datetime by interface
         self.last_events: Final[dict[str, datetime]] = {}
         # Signature: (name, *args)
@@ -290,22 +288,6 @@ class CentralUnit:
         if (program_button := self.get_program_button(pid=pid)) is not None:
             program_button.remove_entity()
             del self._program_buttons[pid]
-
-    @property
-    def subscribed_entity_unique_identifiers(self) -> tuple[str, ...]:
-        """Return the unique identifiers of subscribed entities."""
-        return tuple(self._subscribed_entity_unique_identifiers)
-
-    def add_subscribed_entity_unique_identifier(
-        self, unique_identifier: str, custom_identifier: str
-    ) -> None:
-        """Add new program button."""
-        self._subscribed_entity_unique_identifiers[unique_identifier] = custom_identifier
-
-    def remove_subscribed_entity_unique_identifier(self, unique_identifier: str) -> None:
-        """Remove a program button."""
-        if unique_identifier in self._subscribed_entity_unique_identifiers:
-            del self._subscribed_entity_unique_identifiers[unique_identifier]
 
     @property
     def version(self) -> str | None:

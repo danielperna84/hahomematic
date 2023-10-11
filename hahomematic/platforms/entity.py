@@ -173,9 +173,6 @@ class CallbackEntity(ABC):
                     f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_identifier}"
                 )
             self._custom_identifier = custom_identifier
-            self._central.add_subscribed_entity_unique_identifier(
-                unique_identifier=self.unique_identifier, custom_identifier=custom_identifier
-            )
 
     def unregister_internal_update_callback(self, update_callback: Callable) -> None:
         """Unregister update callback."""
@@ -191,9 +188,6 @@ class CallbackEntity(ABC):
             del self._update_callbacks[update_callback]
         if self.custom_identifier == custom_identifier:
             self._custom_identifier = None
-            self._central.remove_subscribed_entity_unique_identifier(
-                unique_identifier=self.unique_identifier
-            )
 
     def register_remove_callback(self, remove_callback: Callable) -> None:
         """Register the remove callback."""
