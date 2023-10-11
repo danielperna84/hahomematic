@@ -157,9 +157,13 @@ class CallbackEntity(ABC):
         """Return if entity is registered externally."""
         return self._custom_identifier is not None
 
-    def register_update_callback(
-        self, update_callback: Callable, custom_identifier: str = _DEFAULT_CUSTOM_IDENTIFIER
-    ) -> None:
+    def register_internal_update_callback(self, update_callback: Callable) -> None:
+        """Register internal update callback."""
+        self.register_update_callback(
+            update_callback=update_callback, custom_identifier=_DEFAULT_CUSTOM_IDENTIFIER
+        )
+
+    def register_update_callback(self, update_callback: Callable, custom_identifier: str) -> None:
         """Register update callback."""
         if callable(update_callback):
             self._update_callbacks[update_callback] = custom_identifier
@@ -173,8 +177,14 @@ class CallbackEntity(ABC):
                 unique_identifier=self.unique_identifier, custom_identifier=custom_identifier
             )
 
+    def unregister_internal_update_callback(self, update_callback: Callable) -> None:
+        """Unregister update callback."""
+        self.unregister_update_callback(
+            update_callback=update_callback, custom_identifier=_DEFAULT_CUSTOM_IDENTIFIER
+        )
+
     def unregister_update_callback(
-        self, update_callback: Callable, custom_identifier: str = _DEFAULT_CUSTOM_IDENTIFIER
+        self, update_callback: Callable, custom_identifier: str
     ) -> None:
         """Unregister update callback."""
         if update_callback in self._update_callbacks:

@@ -83,7 +83,7 @@ class HmUpdate(CallbackEntity):
             self._custom_identifier = custom_identifier
 
     def unregister_update_callback(
-        self, update_callback: Callable, custom_identifier: str | None = None
+        self, update_callback: Callable, custom_identifier: str
     ) -> None:
         """Unregister update callback."""
         self._device.unregister_firmware_update_callback(update_callback)

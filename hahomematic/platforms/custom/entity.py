@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
@@ -208,8 +208,19 @@ class CustomEntity(BaseEntity):
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
-        entity.register_update_callback(update_callback=self.update_entity)
+        entity.register_internal_update_callback(update_callback=self.update_entity)
         self._data_entities[field] = entity
+
+    def unregister_update_callback(
+        self, update_callback: Callable, custom_identifier: str
+    ) -> None:
+        """Unregister update callback."""
+        for entity in self._data_entities.values():
+            entity.unregister_internal_update_callback(update_callback=update_callback)
+
+        super().unregister_update_callback(
+            update_callback=update_callback, custom_identifier=custom_identifier
+        )
 
     def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
