@@ -10,7 +10,7 @@ from hahomematic import central as hmcu
 from hahomematic.const import SYSVAR_ADDRESS, HubData, SystemVariableData
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallbackEntity
-from hahomematic.platforms.support import generate_unique_identifier
+from hahomematic.platforms.support import generate_unique_id
 from hahomematic.support import parse_sys_var
 
 
@@ -24,12 +24,12 @@ class GenericHubEntity(CallbackEntity):
         data: HubData,
     ) -> None:
         """Initialize the entity."""
-        unique_identifier: Final = generate_unique_identifier(
+        unique_id: Final = generate_unique_id(
             central=central,
             address=address,
             parameter=slugify(data.name),
         )
-        super().__init__(central=central, unique_identifier=unique_identifier)
+        super().__init__(central=central, unique_id=unique_id)
         self._name: Final = self.get_name(data=data)
         self._full_name: Final = f"{self.central.name}_{self._name}"
 

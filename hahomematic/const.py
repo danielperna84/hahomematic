@@ -73,30 +73,23 @@ class Backend(StrEnum):
     PYDEVCCU = "PyDevCCU"
 
 
-class CallBackSource(StrEnum):
-    """Enum with sources for registered callbacks."""
-
-    HA: Final = "ha_callback"
-    INTERNAL: Final = "hm_initernal"
-
-
 class CallSource(StrEnum):
     """Enum with sources for calls."""
 
-    HA_INIT: Final = "ha_init"
-    HM_INIT: Final = "hm_init"
-    MANUAL_OR_SCHEDULED: Final = "manual_or_scheduled"
+    HA_INIT = "ha_init"
+    HM_INIT = "hm_init"
+    MANUAL_OR_SCHEDULED = "manual_or_scheduled"
 
 
 class DataOperationResult(Enum):
     """Enum with data operation results."""
 
-    LOAD_FAIL: Final = 0
-    LOAD_SUCCESS: Final = 1
-    SAVE_FAIL: Final = 10
-    SAVE_SUCCESS: Final = 11
-    NO_LOAD: Final = 20
-    NO_SAVE: Final = 21
+    LOAD_FAIL = 0
+    LOAD_SUCCESS = 1
+    SAVE_FAIL = 10
+    SAVE_SUCCESS = 11
+    NO_LOAD = 20
+    NO_SAVE = 21
 
 
 class Description(StrEnum):
@@ -127,36 +120,36 @@ class Description(StrEnum):
 class DeviceFirmwareState(StrEnum):
     """Enum with homematic device firmware states."""
 
-    UP_TO_DATE: Final = "UP_TO_DATE"
-    LIVE_UP_TO_DATE: Final = "LIVE_UP_TO_DATE"
-    NEW_FIRMWARE_AVAILABLE: Final = "NEW_FIRMWARE_AVAILABLE"
-    LIVE_NEW_FIRMWARE_AVAILABLE: Final = "LIVE_NEW_FIRMWARE_AVAILABLE"
-    DELIVER_FIRMWARE_IMAGE: Final = "DELIVER_FIRMWARE_IMAGE"
-    LIVE_DELIVER_FIRMWARE_IMAGE: Final = "LIVE_DELIVER_FIRMWARE_IMAGE"
-    READY_FOR_UPDATE: Final = "READY_FOR_UPDATE"
-    DO_UPDATE_PENDING: Final = "DO_UPDATE_PENDING"
-    PERFORMING_UPDATE: Final = "PERFORMING_UPDATE"
+    UP_TO_DATE = "UP_TO_DATE"
+    LIVE_UP_TO_DATE = "LIVE_UP_TO_DATE"
+    NEW_FIRMWARE_AVAILABLE = "NEW_FIRMWARE_AVAILABLE"
+    LIVE_NEW_FIRMWARE_AVAILABLE = "LIVE_NEW_FIRMWARE_AVAILABLE"
+    DELIVER_FIRMWARE_IMAGE = "DELIVER_FIRMWARE_IMAGE"
+    LIVE_DELIVER_FIRMWARE_IMAGE = "LIVE_DELIVER_FIRMWARE_IMAGE"
+    READY_FOR_UPDATE = "READY_FOR_UPDATE"
+    DO_UPDATE_PENDING = "DO_UPDATE_PENDING"
+    PERFORMING_UPDATE = "PERFORMING_UPDATE"
 
 
 class EntityUsage(StrEnum):
     """Enum with information about usage in Home Assistant."""
 
-    CE_PRIMARY: Final = "ce_primary"
-    CE_SECONDARY: Final = "ce_secondary"
-    CE_VISIBLE: Final = "ce_visible"
-    ENTITY: Final = "entity"
-    EVENT: Final = "event"
-    NO_CREATE: Final = "entity_no_create"
+    CE_PRIMARY = "ce_primary"
+    CE_SECONDARY = "ce_secondary"
+    CE_VISIBLE = "ce_visible"
+    ENTITY = "entity"
+    EVENT = "event"
+    NO_CREATE = "entity_no_create"
 
 
 class EventType(StrEnum):
     """Enum with hahomematic event types."""
 
-    DEVICE_AVAILABILITY: Final = "homematic.device_availability"
-    DEVICE_ERROR: Final = "homematic.device_error"
-    IMPULSE: Final = "homematic.impulse"
-    INTERFACE: Final = "homematic.interface"
-    KEYPRESS: Final = "homematic.keypress"
+    DEVICE_AVAILABILITY = "homematic.device_availability"
+    DEVICE_ERROR = "homematic.device_error"
+    IMPULSE = "homematic.impulse"
+    INTERFACE = "homematic.interface"
+    KEYPRESS = "homematic.keypress"
 
 
 class Flag(IntEnum):
@@ -172,9 +165,9 @@ class Flag(IntEnum):
 class ForcedDeviceAvailability(StrEnum):
     """Enum with hahomematic event types."""
 
-    FORCE_FALSE: Final = "forced_not_available"
-    FORCE_TRUE: Final = "forced_available"
-    NOT_SET: Final = "not_set"
+    FORCE_FALSE = "forced_not_available"
+    FORCE_TRUE = "forced_available"
+    NOT_SET = "not_set"
 
 
 class Manufacturer(StrEnum):
@@ -233,6 +226,7 @@ class Parameter(StrEnum):
     HEATING_COOLING = "HEATING_COOLING"
     HUE = "HUE"
     HUMIDITY = "HUMIDITY"
+    ILLUMINATION = "ILLUMINATION"
     LED_STATUS = "LED_STATUS"
     LEVEL = "LEVEL"
     LEVEL_2 = "LEVEL_2"
@@ -244,6 +238,9 @@ class Parameter(StrEnum):
     LOWERING_MODE = "LOWERING_MODE"
     LOW_BAT = "LOW_BAT"
     MANU_MODE = "MANU_MODE"
+    MASS_CONCENTRATION_PM_10_24H_AVERAGE = "MASS_CONCENTRATION_PM_10_24H_AVERAGE"
+    MASS_CONCENTRATION_PM_1_24H_AVERAGE = "MASS_CONCENTRATION_PM_1_24H_AVERAGE"
+    MASS_CONCENTRATION_PM_2_5_24H_AVERAGE = "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE"
     ON_TIME = "ON_TIME"
     OPEN = "OPEN"
     OPERATING_VOLTAGE = "OPERATING_VOLTAGE"
@@ -284,6 +281,7 @@ class Parameter(StrEnum):
     STATUS = "STATUS"
     STICKY_UN_REACH = "STICKY_UNREACH"
     STOP = "STOP"
+    SUNSHINE_DURATION = "SUNSHINEDURATION"
     TEMPERATURE = "TEMPERATURE"
     TEMPERATURE_MAXIMUM = "TEMPERATURE_MAXIMUM"
     TEMPERATURE_MINIMUM = "TEMPERATURE_MINIMUM"
@@ -291,6 +289,8 @@ class Parameter(StrEnum):
     UPDATE_PENDING = "UPDATE_PENDING"
     VALVE_STATE = "VALVE_STATE"
     VOLTAGE = "VOLTAGE"
+    WIND_DIRECTION = "WIND_DIRECTION"
+    WIND_DIRECTION_RANGE = "WIND_DIRECTION_RANGE"
     WORKING = "WORKING"
 
 
@@ -304,39 +304,39 @@ class ParamsetKey(StrEnum):
 class HmPlatform(StrEnum):
     """Enum with platforms relevant for Home Assistant."""
 
-    ACTION: Final = "action"
-    BINARY_SENSOR: Final = "binary_sensor"
-    BUTTON: Final = "button"
-    CLIMATE: Final = "climate"
-    COVER: Final = "cover"
-    EVENT: Final = "event"
-    HUB_BINARY_SENSOR: Final = "hub_binary_sensor"
-    HUB_BUTTON: Final = "hub_button"
-    HUB_NUMBER: Final = "hub_number"
-    HUB_SELECT: Final = "hub_select"
-    HUB_SENSOR: Final = "hub_sensor"
-    HUB_SWITCH: Final = "hub_switch"
-    HUB_TEXT: Final = "hub_text"
-    LIGHT: Final = "light"
-    LOCK: Final = "lock"
-    NUMBER: Final = "number"
-    SELECT: Final = "select"
-    SENSOR: Final = "sensor"
-    SIREN: Final = "siren"
-    SWITCH: Final = "switch"
-    TEXT: Final = "text"
-    UPDATE: Final = "update"
+    ACTION = "action"
+    BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
+    CLIMATE = "climate"
+    COVER = "cover"
+    EVENT = "event"
+    HUB_BINARY_SENSOR = "hub_binary_sensor"
+    HUB_BUTTON = "hub_button"
+    HUB_NUMBER = "hub_number"
+    HUB_SELECT = "hub_select"
+    HUB_SENSOR = "hub_sensor"
+    HUB_SWITCH = "hub_switch"
+    HUB_TEXT = "hub_text"
+    LIGHT = "light"
+    LOCK = "lock"
+    NUMBER = "number"
+    SELECT = "select"
+    SENSOR = "sensor"
+    SIREN = "siren"
+    SWITCH = "switch"
+    TEXT = "text"
+    UPDATE = "update"
 
 
 class ProductGroup(StrEnum):
     """Enum with homematic product groups."""
 
-    HM: Final = "BidCos-RF"
-    HMIP: Final = "HmIP-RF"
-    HMIPW: Final = "HmIP-Wired"
-    HMW: Final = "BidCos-Wired"
-    UNKNOWN: Final = "unknown"
-    VIRTUAL: Final = "VirtualDevices"
+    HM = "BidCos-RF"
+    HMIP = "HmIP-RF"
+    HMIPW = "HmIP-Wired"
+    HMW = "BidCos-Wired"
+    UNKNOWN = "unknown"
+    VIRTUAL = "VirtualDevices"
 
 
 class InterfaceName(StrEnum):
@@ -351,19 +351,19 @@ class InterfaceName(StrEnum):
 class InterfaceEventType(StrEnum):
     """Enum with hahomematic event types."""
 
-    CALLBACK: Final = "callback"
-    PINGPONG: Final = "pingpong"
-    PROXY: Final = "proxy"
+    CALLBACK = "callback"
+    PINGPONG = "pingpong"
+    PROXY = "proxy"
 
 
 class ProxyInitState(Enum):
     """Enum with proxy handling results."""
 
-    INIT_FAILED: Final = 0
-    INIT_SUCCESS: Final = 1
-    DE_INIT_FAILED: Final = 4
-    DE_INIT_SUCCESS: Final = 8
-    DE_INIT_SKIPPED: Final = 16
+    INIT_FAILED = 0
+    INIT_SUCCESS = 1
+    DE_INIT_FAILED = 4
+    DE_INIT_SUCCESS = 8
+    DE_INIT_SKIPPED = 16
 
 
 class SystemEvent(StrEnum):

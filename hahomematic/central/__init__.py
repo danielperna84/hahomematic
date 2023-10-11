@@ -6,7 +6,7 @@ This is the python representation of a CCU.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Set
+from collections.abc import Awaitable, Callable, Coroutine, Mapping, Set
 from concurrent.futures._base import CancelledError
 from datetime import datetime
 import logging
@@ -58,7 +58,7 @@ from hahomematic.performance import measure_execution_time
 from hahomematic.platforms import create_entities_and_append_to_device
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.device import HmDevice
-from hahomematic.platforms.entity import BaseEntity
+from hahomematic.platforms.entity import BaseEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
 from hahomematic.platforms.hub import Hub
@@ -140,18 +140,14 @@ class CentralUnit:
         self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
-        # {unique_identifier, entity}
+        # {unique_id, entity}
         self._entities: Final[dict[str, BaseEntity]] = {}
-        # {unique_identifier, update_entity}
-        self._firmware_update_entities: Final[dict[str, HmUpdate]] = {}
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
         self._sysvar_entities: Final[dict[str, GenericSystemVariable]] = {}
         # {sysvar_name, program_button}U
         self._program_buttons: Final[dict[str, HmProgramButton]] = {}
-        # {unique_identifier}
-        self._subscribed_entity_unique_identifiers: Final[set[str]] = set()
         # store last event received datetime by interface
         self.last_events: Final[dict[str, datetime]] = {}
         # Signature: (name, *args)
@@ -292,20 +288,6 @@ class CentralUnit:
         if (program_button := self.get_program_button(pid=pid)) is not None:
             program_button.remove_entity()
             del self._program_buttons[pid]
-
-    @property
-    def subscribed_entity_unique_identifiers(self) -> tuple[str, ...]:
-        """Return the unique identifiers of subscribed entities."""
-        return tuple(self._subscribed_entity_unique_identifiers)
-
-    def add_subscribed_entity_unique_identifier(self, unique_identifier: str) -> None:
-        """Add new program button."""
-        self._subscribed_entity_unique_identifiers.add(unique_identifier)
-
-    def remove_subscribed_entity_unique_identifier(self, unique_identifier: str) -> None:
-        """Remove a program button."""
-        if unique_identifier in self._subscribed_entity_unique_identifiers:
-            self._subscribed_entity_unique_identifiers.remove(unique_identifier)
 
     @property
     def version(self) -> str | None:
@@ -607,21 +589,43 @@ class CentralUnit:
         d_address = get_device_address(address=address)
         return self._devices.get(d_address)
 
+    def get_entities(
+        self, registered_only: bool = False
+    ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+        """Return all externally registered entities."""
+        all_entities: dict[HmPlatform, set[CallbackEntity]] = {}
+        for platform in HmPlatform:
+            all_entities[platform] = set()
+        for device in self._devices.values():
+            for platform, entities in device.get_entities(registered_only=registered_only).items():
+                all_entities[platform].update(entities)
+
+        def add_to_dict(entities: Mapping[str, CallbackEntity]) -> None:
+            for entity in entities.values():
+                if (
+                    registered_only and entity.is_registered_externally
+                ) or registered_only is False:
+                    all_entities[entity.platform].add(entity)
+
+        add_to_dict(entities=self._sysvar_entities)
+        add_to_dict(entities=self._program_buttons)
+
+        return all_entities
+
     def get_entities_by_platform(
         self, platform: HmPlatform, exclude_subscribed: bool | None = None
     ) -> tuple[BaseEntity, ...]:
         """Return all entities by platform."""
-        existing_unique_ids = (
-            self._subscribed_entity_unique_identifiers if exclude_subscribed else ()
-        )
-
         return tuple(
             be
             for be in self._entities.values()
             if (
-                be.unique_identifier not in existing_unique_ids
-                and be.usage != EntityUsage.NO_CREATE
+                be.usage != EntityUsage.NO_CREATE
                 and be.platform == platform
+                and (
+                    not exclude_subscribed
+                    or (exclude_subscribed and be.is_registered_externally is False)
+                )
             )
         )
 
@@ -654,41 +658,39 @@ class CentralUnit:
         self, platform: HmPlatform, exclude_subscribed: bool | None = None
     ) -> tuple[GenericHubEntity, ...]:
         """Return the hub entities by platform."""
-        existing_unique_ids = (
-            self._subscribed_entity_unique_identifiers if exclude_subscribed else ()
-        )
-
         return tuple(
             he
             for he in (self.program_buttons + self.sysvar_entities)
-            if (he.unique_identifier not in existing_unique_ids and he.platform == platform)
+            if he.platform == platform
+            and (
+                not exclude_subscribed
+                or (exclude_subscribed and he.is_registered_externally is False)
+            )
+            and he.platform == platform
         )
 
     def get_update_entities(self, exclude_subscribed: bool | None = None) -> tuple[HmUpdate, ...]:
         """Return the update entities."""
-        existing_unique_ids = (
-            self._subscribed_entity_unique_identifiers if exclude_subscribed else ()
-        )
-
         return tuple(
             device.update_entity
             for device in self.devices
             if device.update_entity
-            and device.update_entity.unique_identifier not in existing_unique_ids
+            and (
+                not exclude_subscribed
+                or (exclude_subscribed and device.update_entity.is_registered_externally is False)
+            )
         )
 
     def get_channel_events_by_event_type(
         self, event_type: EventType, exclude_subscribed: bool | None = None
     ) -> tuple[list[GenericEvent], ...]:
         """Return all channel event entities."""
-        existing_unique_ids = (
-            self._subscribed_entity_unique_identifiers if exclude_subscribed else ()
-        )
-
         hm_channel_events: list[list[GenericEvent]] = []
         for device in self.devices:
             for channel_events in device.get_channel_events(event_type=event_type).values():
-                if channel_events[0].channel_unique_identifier not in existing_unique_ids:
+                if not exclude_subscribed or (
+                    exclude_subscribed and channel_events[0].is_registered_externally is False
+                ):
                     hm_channel_events.append(channel_events)
                     continue
 
@@ -913,14 +915,14 @@ class CentralUnit:
     def add_entity(self, entity: BaseEntity) -> None:
         """Add entity to central collections."""
         if not isinstance(entity, GenericEvent):
-            if entity.unique_identifier in self._entities:
+            if entity.unique_id in self._entities:
                 _LOGGER.warning(
                     "Entity %s already registered in central %s",
-                    entity.unique_identifier,
+                    entity.unique_id,
                     self.name,
                 )
                 return
-            self._entities[entity.unique_identifier] = entity
+            self._entities[entity.unique_id] = entity
 
         if isinstance(entity, (GenericEntity, GenericEvent)) and entity.supports_events:
             if (
@@ -949,8 +951,8 @@ class CentralUnit:
 
     def remove_entity(self, entity: BaseEntity) -> None:
         """Remove entity to central collections."""
-        if entity.unique_identifier in self._entities:
-            del self._entities[entity.unique_identifier]
+        if entity.unique_id in self._entities:
+            del self._entities[entity.unique_id]
 
         if (
             isinstance(entity, (GenericEntity, GenericEvent))
@@ -959,9 +961,9 @@ class CentralUnit:
         ):
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
 
-    def has_entity(self, unique_identifier: str) -> bool:
-        """Check if unique_identifier is already added."""
-        return unique_identifier in self._entities
+    def has_entity(self, unique_id: str) -> bool:
+        """Check if unique_id is already added."""
+        return unique_id in self._entities
 
     def increase_ping_count(self, interface_id: str) -> None:
         """Increase the number of send ping events."""

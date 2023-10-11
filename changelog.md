@@ -1,4 +1,11 @@
-# Version 2023.10.7 (2023-10-08)
+# Version 2023.10.8 (2023-10-11)
+
+- Register external sources with custom identifier
+- Remove subscribed_entity_unique_identifiers
+- Rename custom_identifier to custom_id
+- Rename unique_identifier to unique_id
+
+# Version 2023.10.7 (2023-10-10)
 
 - Adjust typing after move to more enums
 - Add measure_execution_time to writing methodes

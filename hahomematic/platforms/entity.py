@@ -22,7 +22,6 @@ from hahomematic.const import (
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     NO_CACHE_ENTRY,
-    CallBackSource,
     CallSource,
     Description,
     EntityUsage,
@@ -33,13 +32,14 @@ from hahomematic.const import (
     ParameterType,
     ParamsetKey,
 )
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.support import (
     EntityNameData,
     PayloadMixin,
     convert_value,
-    generate_channel_unique_identifier,
+    generate_channel_unique_id,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -50,6 +50,7 @@ _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
+_DEFAULT_CUSTOM_ID: Final = "custom_id"
 
 _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
     '"': "",
@@ -61,20 +62,20 @@ _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
 }
 
 _FIX_UNIT_BY_PARAM: Final[Mapping[str, str]] = {
-    "ACTUAL_TEMPERATURE": "°C",
-    "CURRENT_ILLUMINATION": "lx",
-    "HUMIDITY": "%",
-    "ILLUMINATION": "lx",
-    "LEVEL": "%",
-    "MASS_CONCENTRATION_PM_10_24H_AVERAGE": "µg/m³",
-    "MASS_CONCENTRATION_PM_1_24H_AVERAGE": "µg/m³",
-    "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE": "µg/m³",
-    "OPERATING_VOLTAGE": "V",
-    "RSSI_DEVICE": "dBm",
-    "RSSI_PEER": "dBm",
-    "SUNSHINEDURATION": "min",
-    "WIND_DIRECTION": "°",
-    "WIND_DIRECTION_RANGE": "°",
+    Parameter.ACTUAL_TEMPERATURE: "°C",
+    Parameter.CURRENT_ILLUMINATION: "lx",
+    Parameter.HUMIDITY: "%",
+    Parameter.ILLUMINATION: "lx",
+    Parameter.LEVEL: "%",
+    Parameter.MASS_CONCENTRATION_PM_10_24H_AVERAGE: "µg/m³",
+    Parameter.MASS_CONCENTRATION_PM_1_24H_AVERAGE: "µg/m³",
+    Parameter.MASS_CONCENTRATION_PM_2_5_24H_AVERAGE: "µg/m³",
+    Parameter.OPERATING_VOLTAGE: "V",
+    Parameter.RSSI_DEVICE: "dBm",
+    Parameter.RSSI_PEER: "dBm",
+    Parameter.SUNSHINE_DURATION: "min",
+    Parameter.WIND_DIRECTION: "°",
+    Parameter.WIND_DIRECTION_RANGE: "°",
 }
 
 EVENT_DATA_SCHEMA = vol.Schema(
@@ -94,17 +95,23 @@ class CallbackEntity(ABC):
 
     _platform: HmPlatform
 
-    def __init__(self, central: hmcu.CentralUnit, unique_identifier: str) -> None:
+    def __init__(self, central: hmcu.CentralUnit, unique_id: str) -> None:
         """Init the callback entity."""
         self._central: Final = central
-        self._unique_identifier: Final = unique_identifier
-        self._update_callbacks: list[Callable] = []
+        self._unique_id: Final = unique_id
+        self._update_callbacks: dict[Callable, str] = {}
         self._remove_callbacks: list[Callable] = []
+        self._custom_id: str | None = None
 
     @property
     @abstractmethod
     def available(self) -> bool:
         """Return the availability of the device."""
+
+    @property
+    def custom_id(self) -> str | None:
+        """Return the central unit."""
+        return self._custom_id
 
     @property
     def central(self) -> hmcu.CentralUnit:
@@ -127,9 +134,9 @@ class CallbackEntity(ABC):
         return self._platform
 
     @config_property
-    def unique_identifier(self) -> str:
-        """Return the unique_identifier."""
-        return self._unique_identifier
+    def unique_id(self) -> str:
+        """Return the unique_id."""
+        return self._unique_id
 
     @config_property
     def usage(self) -> EntityUsage:
@@ -145,27 +152,40 @@ class CallbackEntity(ABC):
             EntityUsage.EVENT,
         )
 
-    def register_update_callback(
-        self, update_callback: Callable, source: CallBackSource = CallBackSource.HA
-    ) -> None:
+    @property
+    def is_registered_externally(self) -> bool:
+        """Return if entity is registered externally."""
+        return self._custom_id is not None
+
+    def register_internal_update_callback(self, update_callback: Callable) -> None:
+        """Register internal update callback."""
+        self.register_update_callback(
+            update_callback=update_callback, custom_id=_DEFAULT_CUSTOM_ID
+        )
+
+    def register_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Register update callback."""
         if callable(update_callback):
-            self._update_callbacks.append(update_callback)
-        if source == CallBackSource.HA:
-            self._central.add_subscribed_entity_unique_identifier(
-                unique_identifier=self.unique_identifier
-            )
+            self._update_callbacks[update_callback] = custom_id
+        if custom_id != _DEFAULT_CUSTOM_ID:
+            if self._custom_id is not None:
+                raise HaHomematicException(
+                    f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
+                )
+            self._custom_id = custom_id
 
-    def unregister_update_callback(
-        self, update_callback: Callable, source: CallBackSource = CallBackSource.HA
-    ) -> None:
+    def unregister_internal_update_callback(self, update_callback: Callable) -> None:
+        """Unregister update callback."""
+        self.unregister_update_callback(
+            update_callback=update_callback, custom_id=_DEFAULT_CUSTOM_ID
+        )
+
+    def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Unregister update callback."""
         if update_callback in self._update_callbacks:
-            self._update_callbacks.remove(update_callback)
-        if source == CallBackSource.HA:
-            self._central.remove_subscribed_entity_unique_identifier(
-                unique_identifier=self.unique_identifier
-            )
+            del self._update_callbacks[update_callback]
+        if self.custom_id == custom_id:
+            self._custom_id = None
 
     def register_remove_callback(self, remove_callback: Callable) -> None:
         """Register the remove callback."""
@@ -194,19 +214,19 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def __init__(
         self,
         device: hmd.HmDevice,
-        unique_identifier: str,
+        unique_id: str,
         channel_no: int | None,
         is_in_multiple_channels: bool,
     ) -> None:
         """Initialize the entity."""
         PayloadMixin.__init__(self)
-        super().__init__(central=device.central, unique_identifier=unique_identifier)
+        super().__init__(central=device.central, unique_id=unique_id)
         self._device: Final[hmd.HmDevice] = device
         self._channel_no: Final = channel_no
         self._channel_address: Final[str] = hms.get_channel_address(
             device_address=device.device_address, channel_no=channel_no
         )
-        self._channel_unique_identifier: Final = generate_channel_unique_identifier(
+        self._channel_unique_id: Final = generate_channel_unique_id(
             central=device.central, address=self._channel_address
         )
         self._is_in_multiple_channels: Final = is_in_multiple_channels
@@ -227,7 +247,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @property
     def address_path(self) -> str:
         """Return the address pass of the entity."""
-        return f"{self._platform}/{self._device.interface_id}/{self._unique_identifier}/"
+        return f"{self._platform}/{self._device.interface_id}/{self._unique_id}/"
 
     @property
     def available(self) -> bool:
@@ -250,9 +270,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._channel_no
 
     @config_property
-    def channel_unique_identifier(self) -> str:
-        """Return the channel_unique_identifier of the entity."""
-        return self._channel_unique_identifier
+    def channel_unique_id(self) -> str:
+        """Return the channel_unique_id of the entity."""
+        return self._channel_unique_id
 
     @property
     def device(self) -> hmd.HmDevice:
@@ -325,7 +345,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def __init__(
         self,
         device: hmd.HmDevice,
-        unique_identifier: str,
+        unique_id: str,
         channel_address: str,
         paramset_key: str,
         parameter: str,
@@ -338,7 +358,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
         super().__init__(
             device=device,
-            unique_identifier=unique_identifier,
+            unique_id=unique_id,
             channel_no=hms.get_channel_no(address=channel_address),
             is_in_multiple_channels=device.central.paramset_descriptions.is_in_multiple_channels(
                 channel_address=channel_address, parameter=parameter

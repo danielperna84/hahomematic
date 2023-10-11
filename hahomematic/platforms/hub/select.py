@@ -44,5 +44,5 @@ class HmSysvarSelect(GenericSystemVariable):
             _LOGGER.warning(
                 "Value not in value_list for %s/%s",
                 self.name,
-                self.unique_identifier,
+                self.unique_id,
             )

@@ -185,7 +185,7 @@ def get_entity_name(
         return entity_name
 
     _LOGGER.debug(
-        "GET_ENTITY_NAME: Using unique_identifier for %s %s %s",
+        "GET_ENTITY_NAME: Using unique_id for %s %s %s",
         device.device_type,
         channel_address,
         parameter,
@@ -225,7 +225,7 @@ def get_event_name(
         return event_name
 
     _LOGGER.debug(
-        "GET_EVENT_NAME: Using unique_identifier for %s %s %s",
+        "GET_EVENT_NAME: Using unique_id for %s %s %s",
         device.device_type,
         channel_address,
         parameter,
@@ -259,7 +259,7 @@ def get_custom_entity_name(
         return EntityNameData(device_name=device.name, channel_name=channel_name)
 
     _LOGGER.debug(
-        "GET_CUSTOM_ENTITY_NAME: Using unique_identifier for %s %s %s",
+        "GET_CUSTOM_ENTITY_NAME: Using unique_id for %s %s %s",
         device.device_type,
         device.device_address,
         channel_no,
@@ -267,7 +267,7 @@ def get_custom_entity_name(
     return EntityNameData.empty()
 
 
-def generate_unique_identifier(
+def generate_unique_id(
     central: hmcu.CentralUnit,
     address: str,
     parameter: str | None = None,
@@ -279,30 +279,30 @@ def generate_unique_identifier(
     Central id is additionally used for heating groups.
     Prefix is used for events and buttons.
     """
-    unique_identifier = address.replace(":", "_").replace("-", "_")
+    unique_id = address.replace(":", "_").replace("-", "_")
     if parameter:
-        unique_identifier = f"{unique_identifier}_{parameter}"
+        unique_id = f"{unique_id}_{parameter}"
 
     if prefix:
-        unique_identifier = f"{prefix}_{unique_identifier}"
+        unique_id = f"{prefix}_{unique_id}"
     if (
         address in (PROGRAM_ADDRESS, SYSVAR_ADDRESS)
         or address.startswith("INT000")
         or address.split(":")[0] in VIRTUAL_REMOTE_ADDRESSES
     ):
-        return f"{central.config.central_id}_{unique_identifier}".lower()
-    return f"{unique_identifier}".lower()
+        return f"{central.config.central_id}_{unique_id}".lower()
+    return f"{unique_id}".lower()
 
 
-def generate_channel_unique_identifier(
+def generate_channel_unique_id(
     central: hmcu.CentralUnit,
     address: str,
 ) -> str:
     """Build unique identifier for a channel from address."""
-    unique_identifier = address.replace(":", "_").replace("-", "_")
+    unique_id = address.replace(":", "_").replace("-", "_")
     if address.split(":")[0] in VIRTUAL_REMOTE_ADDRESSES:
-        return f"{central.config.central_id}_{unique_identifier}".lower()
-    return unique_identifier.lower()
+        return f"{central.config.central_id}_{unique_id}".lower()
+    return unique_id.lower()
 
 
 def _get_base_name_from_channel_or_device(

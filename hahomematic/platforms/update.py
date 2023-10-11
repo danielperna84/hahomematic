@@ -8,11 +8,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Final
 
-from hahomematic.const import CallBackSource, HmPlatform
+from hahomematic.const import HmPlatform
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallbackEntity
-from hahomematic.platforms.support import generate_unique_identifier
+from hahomematic.platforms.support import generate_unique_id
 
 
 class HmUpdate(CallbackEntity):
@@ -29,7 +30,7 @@ class HmUpdate(CallbackEntity):
         self._device: Final = device
         super().__init__(
             central=device.central,
-            unique_identifier=generate_unique_identifier(
+            unique_id=generate_unique_id(
                 central=device.central, address=device.device_address, parameter="Update"
             ),
         )
@@ -70,24 +71,22 @@ class HmUpdate(CallbackEntity):
         return self._device.firmware_update_state
 
     def register_update_callback(
-        self, update_callback: Callable, source: CallBackSource = CallBackSource.HA
+        self, update_callback: Callable, custom_id: str | None = None
     ) -> None:
         """Register update callback."""
         self._device.register_firmware_update_callback(update_callback)
-        if source == CallBackSource.HA:
-            self._central.add_subscribed_entity_unique_identifier(
-                unique_identifier=self.unique_identifier
-            )
+        if custom_id is not None:
+            if self._custom_id is not None:
+                raise HaHomematicException(
+                    f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
+                )
+            self._custom_id = custom_id
 
-    def unregister_update_callback(
-        self, update_callback: Callable, source: CallBackSource = CallBackSource.HA
-    ) -> None:
+    def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Unregister update callback."""
         self._device.unregister_firmware_update_callback(update_callback)
-        if source == CallBackSource.HA:
-            self._central.remove_subscribed_entity_unique_identifier(
-                unique_identifier=self.unique_identifier
-            )
+        if custom_id is not None:
+            self._custom_id = None
 
     async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Turn the update on."""

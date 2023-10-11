@@ -23,7 +23,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
     def __init__(
         self,
         device: hmd.HmDevice,
-        unique_identifier: str,
+        unique_id: str,
         channel_address: str,
         paramset_key: str,
         parameter: str,
@@ -32,7 +32,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         """Init the generic entity."""
         super().__init__(
             device=device,
-            unique_identifier=unique_identifier,
+            unique_id=unique_id,
             channel_address=channel_address,
             paramset_key=paramset_key,
             parameter=parameter,
@@ -70,7 +70,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             Parameter.UN_REACH,
             Parameter.STICKY_UN_REACH,
         ):
-            self._device.update_device(self._unique_identifier)
+            self._device.update_device(self._unique_id)
             self._central.fire_ha_event_callback(
                 event_type=EventType.DEVICE_AVAILABILITY,
                 event_data=self.get_event_data(new_value),
@@ -167,7 +167,7 @@ class WrapperEntity(hme.BaseEntity):
         super().__init__(
             device=wrapped_entity.device,
             channel_no=wrapped_entity.channel_no,
-            unique_identifier=f"{wrapped_entity.unique_identifier}_{new_platform}",
+            unique_id=f"{wrapped_entity.unique_id}_{new_platform}",
             is_in_multiple_channels=wrapped_entity.is_in_multiple_channels,
         )
         self._platform = new_platform

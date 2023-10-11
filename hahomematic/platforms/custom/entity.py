@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
 
-from hahomematic.const import INIT_DATETIME, CallBackSource, CallSource, EntityUsage
+from hahomematic.const import INIT_DATETIME, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
@@ -32,7 +32,7 @@ class CustomEntity(BaseEntity):
     def __init__(
         self,
         device: hmd.HmDevice,
-        unique_identifier: str,
+        unique_id: str,
         device_profile: DeviceProfile,
         device_def: Mapping[str, Any],
         entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]],
@@ -46,7 +46,7 @@ class CustomEntity(BaseEntity):
         self._entity_def: Final = entity_def
         super().__init__(
             device=device,
-            unique_identifier=unique_identifier,
+            unique_id=unique_id,
             channel_no=channel_no,
             is_in_multiple_channels=hmed.is_multi_channel_device(device_type=device.device_type),
         )
@@ -208,10 +208,15 @@ class CustomEntity(BaseEntity):
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
-        entity.register_update_callback(
-            update_callback=self.update_entity, source=CallBackSource.INTERNAL
-        )
+        entity.register_internal_update_callback(update_callback=self.update_entity)
         self._data_entities[field] = entity
+
+    def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
+        """Unregister update callback."""
+        for entity in self._data_entities.values():
+            entity.unregister_internal_update_callback(update_callback=update_callback)
+
+        super().unregister_update_callback(update_callback=update_callback, custom_id=custom_id)
 
     def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
