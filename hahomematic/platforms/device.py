@@ -20,7 +20,6 @@ from hahomematic.const import (
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
-    PLATFORMS,
     RELEVANT_INIT_PARAMETERS,
     VIRTUAL_REMOTE_TYPES,
     CallSource,
@@ -333,7 +332,7 @@ class HmDevice(PayloadMixin):
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseEntity):
-            self.central.add_entity(entity=entity)
+            self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[(entity.channel_address, entity.parameter)] = entity
             self.register_update_callback(entity.update_entity)
@@ -348,7 +347,7 @@ class HmDevice(PayloadMixin):
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseEntity):
-            self.central.remove_entity(entity=entity)
+            self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[(entity.channel_address, entity.parameter)]
             self.unregister_update_callback(entity.update_entity)
@@ -408,7 +407,7 @@ class HmDevice(PayloadMixin):
     def get_entities(
         self,
         platform: HmPlatform | None = None,
-        exclude_no_create: bool = False,
+        exclude_no_create: bool = True,
         registered: bool | None = None,
     ) -> tuple[CallbackEntity, ...]:
         """Get all entities of the device."""
@@ -432,11 +431,11 @@ class HmDevice(PayloadMixin):
         )
 
     def get_entities_by_platform(
-        self, exclude_no_create: bool = False, registered: bool | None = None
+        self, exclude_no_create: bool = True, registered: bool | None = None
     ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
         """Return all externally registered entities."""
         entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
-        for platform in PLATFORMS:
+        for platform in HmPlatform:
             if platform == HmPlatform.EVENT:
                 continue
             entities_by_platform[platform] = set()

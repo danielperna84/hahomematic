@@ -37,7 +37,6 @@ from hahomematic.const import (
     EVENT_TYPE,
     Description,
     DeviceFirmwareState,
-    EntityUsage,
     EventType,
     HmPlatform,
     InterfaceEventType,
@@ -140,8 +139,6 @@ class CentralUnit:
         self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
-        # {unique_id, entity}
-        self._entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
@@ -592,7 +589,7 @@ class CentralUnit:
     def get_entities(
         self,
         platform: HmPlatform | None = None,
-        exclude_no_create: bool = False,
+        exclude_no_create: bool = True,
         registered: bool | None = None,
     ) -> tuple[CallbackEntity, ...]:
         """Return all externally registered entities."""
@@ -604,27 +601,7 @@ class CentralUnit:
                 )
             )
 
-        all_entities.extend(self._sysvar_entities.values())
-        all_entities.extend(self._program_buttons.values())
-
         return tuple(all_entities)
-
-    def get_entities_by_platform(
-        self, platform: HmPlatform, exclude_subscribed: bool | None = None
-    ) -> tuple[BaseEntity, ...]:
-        """Return all entities by platform."""
-        return tuple(
-            be
-            for be in self._entities.values()
-            if (
-                be.usage != EntityUsage.NO_CREATE
-                and be.platform == platform
-                and (
-                    not exclude_subscribed
-                    or (exclude_subscribed and be.is_registered_externally is False)
-                )
-            )
-        )
 
     def get_readable_generic_entities(
         self, paramset_key: str | None = None
@@ -632,7 +609,7 @@ class CentralUnit:
         """Return the readable generic entities."""
         return tuple(
             ge
-            for ge in self._entities.values()
+            for ge in self.get_entities()
             if (
                 isinstance(ge, GenericEntity)
                 and ge.is_readable
@@ -652,30 +629,23 @@ class CentralUnit:
         return client
 
     def get_hub_entities_by_platform(
-        self, platform: HmPlatform, exclude_subscribed: bool | None = None
+        self, platform: HmPlatform, registered: bool | None = None
     ) -> tuple[GenericHubEntity, ...]:
         """Return the hub entities by platform."""
         return tuple(
             he
             for he in (self.program_buttons + self.sysvar_entities)
             if he.platform == platform
-            and (
-                not exclude_subscribed
-                or (exclude_subscribed and he.is_registered_externally is False)
-            )
-            and he.platform == platform
+            and (registered is None or he.is_registered_externally == registered)
         )
 
-    def get_update_entities(self, exclude_subscribed: bool | None = None) -> tuple[HmUpdate, ...]:
+    def get_update_entities(self, registered: bool | None = None) -> tuple[HmUpdate, ...]:
         """Return the update entities."""
         return tuple(
             device.update_entity
             for device in self.devices
             if device.update_entity
-            and (
-                not exclude_subscribed
-                or (exclude_subscribed and device.update_entity.is_registered_externally is False)
-            )
+            and (registered is None or device.update_entity.is_registered_externally == registered)
         )
 
     def get_channel_events_by_event_type(
@@ -909,18 +879,8 @@ class CentralUnit:
         )
         return result
 
-    def add_entity(self, entity: BaseEntity) -> None:
-        """Add entity to central collections."""
-        if not isinstance(entity, GenericEvent):
-            if entity.unique_id in self._entities:
-                _LOGGER.warning(
-                    "Entity %s already registered in central %s",
-                    entity.unique_id,
-                    self.name,
-                )
-                return
-            self._entities[entity.unique_id] = entity
-
+    def add_event_subscription(self, entity: BaseEntity) -> None:
+        """Add entity to central event subscription."""
         if isinstance(entity, (GenericEntity, GenericEvent)) and entity.supports_events:
             if (
                 entity.channel_address,
@@ -946,21 +906,14 @@ class CentralUnit:
         self.device_details.remove_device(device=device)
         del self._devices[device.device_address]
 
-    def remove_entity(self, entity: BaseEntity) -> None:
-        """Remove entity to central collections."""
-        if entity.unique_id in self._entities:
-            del self._entities[entity.unique_id]
-
+    def remove_event_subscription(self, entity: BaseEntity) -> None:
+        """Remove event subscription from central collections."""
         if (
             isinstance(entity, (GenericEntity, GenericEvent))
             and entity.supports_events
             and (entity.channel_address, entity.parameter) in self._entity_event_subscriptions
         ):
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
-
-    def has_entity(self, unique_id: str) -> bool:
-        """Check if unique_id is already added."""
-        return unique_id in self._entities
 
     def increase_ping_count(self, interface_id: str) -> None:
         """Increase the number of send ping events."""

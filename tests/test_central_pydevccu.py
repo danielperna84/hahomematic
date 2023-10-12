@@ -27,7 +27,7 @@ async def test_central_mini(central_unit_mini) -> None:
     assert central_unit_mini.get_client(const.INTERFACE_ID).model == "PyDevCCU"
     assert central_unit_mini.primary_client.model == "PyDevCCU"
     assert len(central_unit_mini._devices) == 1
-    assert len(central_unit_mini._entities) == 28
+    assert len(central_unit_mini.get_entities(exclude_no_create=False)) == 29
 
 
 @pytest.mark.asyncio
@@ -66,7 +66,7 @@ async def test_central_full(central_unit_full) -> None:
         assert pub_config_props
 
     entity_types = {}
-    for entity in central_unit_full._entities.values():
+    for entity in central_unit_full.get_entities(exclude_no_create=False):
         if hasattr(entity, "hmtype"):
             if entity.hmtype not in entity_types:
                 entity_types[entity.hmtype] = {}
@@ -82,7 +82,7 @@ async def test_central_full(central_unit_full) -> None:
             assert pub_config_props
 
     parameters: list[tuple[str, int]] = []
-    for entity in central_unit_full._entities.values():
+    for entity in central_unit_full.get_entities(exclude_no_create=False):
         if (
             hasattr(entity, "parameter")
             and (entity.parameter, entity._operations) not in parameters
@@ -91,12 +91,12 @@ async def test_central_full(central_unit_full) -> None:
     parameters = sorted(parameters)
 
     units = set()
-    for entity in central_unit_full._entities.values():
+    for entity in central_unit_full.get_entities(exclude_no_create=False):
         if hasattr(entity, "unit"):
             units.add(entity.unit)
 
     usage_types: dict[EntityUsage, int] = {}
-    for entity in central_unit_full._entities.values():
+    for entity in central_unit_full.get_entities(exclude_no_create=False):
         if hasattr(entity, "usage"):
             if entity.usage not in usage_types:
                 usage_types[entity.usage] = 0
@@ -115,7 +115,7 @@ async def test_central_full(central_unit_full) -> None:
 
     assert usage_types[EntityUsage.NO_CREATE] == 3056
     assert usage_types[EntityUsage.CE_PRIMARY] == 187
-    assert usage_types[EntityUsage.ENTITY] == 3303
+    assert usage_types[EntityUsage.ENTITY] == 3675
     assert usage_types[EntityUsage.CE_VISIBLE] == 98
     assert usage_types[EntityUsage.CE_SECONDARY] == 148
 
@@ -137,4 +137,4 @@ async def test_central_full(central_unit_full) -> None:
         interface_id=const.INTERFACE_ID, addresses=del_addresses
     )
     assert len(central_unit_full._devices) == 0
-    assert len(central_unit_full._entities) == 0
+    assert len(central_unit_full.get_entities(exclude_no_create=False)) == 0
