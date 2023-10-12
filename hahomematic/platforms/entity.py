@@ -50,7 +50,7 @@ _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
-_DEFAULT_CUSTOM_ID: Final = "custom_id"
+DEFAULT_CUSTOM_ID: Final = "custom_id"
 
 _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
     '"': "",
@@ -159,15 +159,13 @@ class CallbackEntity(ABC):
 
     def register_internal_update_callback(self, update_callback: Callable) -> None:
         """Register internal update callback."""
-        self.register_update_callback(
-            update_callback=update_callback, custom_id=_DEFAULT_CUSTOM_ID
-        )
+        self.register_update_callback(update_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID)
 
     def register_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Register update callback."""
         if callable(update_callback):
             self._update_callbacks[update_callback] = custom_id
-        if custom_id != _DEFAULT_CUSTOM_ID:
+        if custom_id != DEFAULT_CUSTOM_ID:
             if self._custom_id is not None:
                 raise HaHomematicException(
                     f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
@@ -177,7 +175,7 @@ class CallbackEntity(ABC):
     def unregister_internal_update_callback(self, update_callback: Callable) -> None:
         """Unregister update callback."""
         self.unregister_update_callback(
-            update_callback=update_callback, custom_id=_DEFAULT_CUSTOM_ID
+            update_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID
         )
 
     def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
