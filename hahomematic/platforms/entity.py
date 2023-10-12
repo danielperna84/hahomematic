@@ -213,7 +213,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self,
         device: hmd.HmDevice,
         unique_id: str,
-        channel_no: int | None,
+        channel_no: int,
         is_in_multiple_channels: bool,
     ) -> None:
         """Initialize the entity."""
@@ -263,7 +263,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._channel_name
 
     @config_property
-    def channel_no(self) -> int | None:
+    def channel_no(self) -> int:
         """Return the channel_no of the entity."""
         return self._channel_no
 
@@ -357,7 +357,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         super().__init__(
             device=device,
             unique_id=unique_id,
-            channel_no=hms.get_channel_no(address=channel_address),
+            channel_no=hms.get_channel_no(address=channel_address),  # type: ignore[arg-type]
             is_in_multiple_channels=device.central.paramset_descriptions.is_in_multiple_channels(
                 channel_address=channel_address, parameter=parameter
             ),

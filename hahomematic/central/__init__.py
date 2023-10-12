@@ -6,7 +6,7 @@ This is the python representation of a CCU.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Mapping, Set
+from collections.abc import Awaitable, Callable, Coroutine, Set
 from concurrent.futures._base import CancelledError
 from datetime import datetime
 import logging
@@ -590,27 +590,24 @@ class CentralUnit:
         return self._devices.get(d_address)
 
     def get_entities(
-        self, registered_only: bool = False
-    ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+        self,
+        platform: HmPlatform | None = None,
+        exclude_no_create: bool = False,
+        registered: bool | None = None,
+    ) -> tuple[CallbackEntity, ...]:
         """Return all externally registered entities."""
-        all_entities: dict[HmPlatform, set[CallbackEntity]] = {}
-        for platform in HmPlatform:
-            all_entities[platform] = set()
+        all_entities: list[CallbackEntity] = []
         for device in self._devices.values():
-            for platform, entities in device.get_entities(registered_only=registered_only).items():
-                all_entities[platform].update(entities)
+            all_entities.extend(
+                device.get_entities(
+                    platform=platform, exclude_no_create=exclude_no_create, registered=registered
+                )
+            )
 
-        def add_to_dict(entities: Mapping[str, CallbackEntity]) -> None:
-            for entity in entities.values():
-                if (
-                    registered_only and entity.is_registered_externally
-                ) or registered_only is False:
-                    all_entities[entity.platform].add(entity)
+        all_entities.extend(self._sysvar_entities.values())
+        all_entities.extend(self._program_buttons.values())
 
-        add_to_dict(entities=self._sysvar_entities)
-        add_to_dict(entities=self._program_buttons)
-
-        return all_entities
+        return tuple(all_entities)
 
     def get_entities_by_platform(
         self, platform: HmPlatform, exclude_subscribed: bool | None = None

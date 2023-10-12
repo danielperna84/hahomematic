@@ -56,7 +56,7 @@ async def test_device_get_entities(factory: helper.Factory) -> None:
     entities = central.get_entities()
     assert entities
 
-    entities_reg = central.get_entities(registered_only=True)
+    entities_reg = central.get_entities(registered=True)
     assert entities_reg
 
 
