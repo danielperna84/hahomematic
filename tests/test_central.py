@@ -56,8 +56,8 @@ async def test_device_get_entities(factory: helper.Factory) -> None:
     entities = central.get_entities()
     assert entities
 
-    entities_reg = central.get_entities(registered_only=True)
-    assert entities_reg
+    entities_reg = central.get_entities(registered=True)
+    assert entities_reg == ()
 
 
 @pytest.mark.asyncio
@@ -149,7 +149,7 @@ async def test_all_parameters(factory: helper.Factory) -> None:
 async def test_entities_by_platform(factory: helper.Factory) -> None:
     """Test entities_by_platform."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
-    ebp_sensor = central.get_entities_by_platform(platform=HmPlatform.SENSOR)
+    ebp_sensor = central.get_entities(platform=HmPlatform.SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 12
 
@@ -157,10 +157,7 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
         """Handle device state changes."""
 
     ebp_sensor[0].register_update_callback(update_callback=_device_changed, custom_id="some_id")
-    ebp_sensor2 = central.get_entities_by_platform(
-        platform=HmPlatform.SENSOR,
-        exclude_subscribed=True,
-    )
+    ebp_sensor2 = central.get_entities(platform=HmPlatform.SENSOR, registered=False)
     assert ebp_sensor2
     assert len(ebp_sensor2) == 11
 
@@ -169,7 +166,7 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
 async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     """Test hub_entities_by_platform."""
     central, _ = await factory.get_default_central({}, add_programs=True, add_sysvars=True)
-    ebp_sensor = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_SENSOR)
+    ebp_sensor = central.get_hub_entities(platform=HmPlatform.HUB_SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 4
 
@@ -177,20 +174,18 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
         """Handle device state changes."""
 
     ebp_sensor[0].register_update_callback(update_callback=_device_changed, custom_id="some_id")
-    ebp_sensor2 = central.get_hub_entities_by_platform(
+    ebp_sensor2 = central.get_hub_entities(
         platform=HmPlatform.HUB_SENSOR,
-        exclude_subscribed=True,
+        registered=False,
     )
     assert ebp_sensor2
     assert len(ebp_sensor2) == 3
 
-    ebp_sensor3 = central.get_hub_entities_by_platform(platform=HmPlatform.HUB_BUTTON)
+    ebp_sensor3 = central.get_hub_entities(platform=HmPlatform.HUB_BUTTON)
     assert ebp_sensor3
     assert len(ebp_sensor3) == 2
     ebp_sensor3[0].register_update_callback(update_callback=_device_changed, custom_id="some_id")
-    ebp_sensor4 = central.get_hub_entities_by_platform(
-        platform=HmPlatform.HUB_BUTTON, exclude_subscribed=True
-    )
+    ebp_sensor4 = central.get_hub_entities(platform=HmPlatform.HUB_BUTTON, registered=False)
     assert ebp_sensor4
     assert len(ebp_sensor4) == 1
 
@@ -202,7 +197,7 @@ async def test_add_device(factory: helper.Factory) -> None:
         TEST_DEVICES, ignore_devices_on_create=["HmIP-BSM.json"]
     )
     assert len(central._devices) == 1
-    assert len(central._entities) == 23
+    assert len(central.get_entities(exclude_no_create=False)) == 24
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 9
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 2
@@ -210,7 +205,7 @@ async def test_add_device(factory: helper.Factory) -> None:
     dev_desc = helper.load_device_description(central=central, filename="HmIP-BSM.json")
     await central.add_new_devices(interface_id=const.INTERFACE_ID, device_descriptions=dev_desc)
     assert len(central._devices) == 2
-    assert len(central._entities) == 53
+    assert len(central.get_entities(exclude_no_create=False)) == 55
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 20
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 11
@@ -224,7 +219,7 @@ async def test_delete_device(factory: helper.Factory) -> None:
     """Test device delete_device."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
     assert len(central._devices) == 2
-    assert len(central._entities) == 53
+    assert len(central.get_entities(exclude_no_create=False)) == 55
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 20
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 11
@@ -232,7 +227,7 @@ async def test_delete_device(factory: helper.Factory) -> None:
 
     await central.delete_devices(interface_id=const.INTERFACE_ID, addresses=["VCU2128127"])
     assert len(central._devices) == 1
-    assert len(central._entities) == 23
+    assert len(central.get_entities(exclude_no_create=False)) == 24
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 9
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 2
@@ -256,15 +251,15 @@ async def test_virtual_remote_delete(factory: helper.Factory) -> None:
     await central.delete_device(interface_id=const.INTERFACE_ID, device_address="NOT_A_DEVICE_ID")
 
     assert len(central._devices) == 3
-    assert len(central._entities) == 350
+    assert len(central.get_entities()) == 350
     await central.delete_devices(
         interface_id=const.INTERFACE_ID, addresses=["VCU4264293", "VCU0000057"]
     )
     assert len(central._devices) == 1
-    assert len(central._entities) == 100
+    assert len(central.get_entities()) == 100
     await central.delete_device(interface_id=const.INTERFACE_ID, device_address="VCU0000001")
     assert len(central._devices) == 0
-    assert len(central._entities) == 0
+    assert len(central.get_entities()) == 0
     assert central.get_virtual_remotes() == ()
 
     await central.delete_device(interface_id=const.INTERFACE_ID, device_address="NOT_A_DEVICE_ID")
@@ -323,25 +318,25 @@ async def test_central_services(factory: helper.Factory) -> None:
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.MASTER)
     assert len(mock_client.method_calls) == 37
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.VALUES)
-    assert len(mock_client.method_calls) == 70
+    assert len(mock_client.method_calls) == 54
 
     await central.get_system_variable(name="SysVar_Name")
     assert mock_client.method_calls[-1] == call.get_system_variable("SysVar_Name")
 
-    assert len(mock_client.method_calls) == 71
+    assert len(mock_client.method_calls) == 55
     await central.set_system_variable(name="sv_alarm", value=True)
     assert mock_client.method_calls[-1] == call.set_system_variable(name="sv_alarm", value=True)
-    assert len(mock_client.method_calls) == 72
+    assert len(mock_client.method_calls) == 56
     await central.set_system_variable(name="SysVar_Name", value=True)
-    assert len(mock_client.method_calls) == 72
+    assert len(mock_client.method_calls) == 56
 
     await central.set_install_mode(interface_id=const.INTERFACE_ID)
     assert mock_client.method_calls[-1] == call.set_install_mode(
         on=True, t=60, mode=1, device_address=None
     )
-    assert len(mock_client.method_calls) == 73
+    assert len(mock_client.method_calls) == 57
     await central.set_install_mode(interface_id="NOT_A_VALID_INTERFACE_ID")
-    assert len(mock_client.method_calls) == 73
+    assert len(mock_client.method_calls) == 57
 
     await central.get_client(interface_id=const.INTERFACE_ID).set_value(
         channel_address="123",
@@ -355,7 +350,7 @@ async def test_central_services(factory: helper.Factory) -> None:
         parameter="LEVEL",
         value=1.0,
     )
-    assert len(mock_client.method_calls) == 74
+    assert len(mock_client.method_calls) == 58
 
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").set_value(
@@ -364,7 +359,7 @@ async def test_central_services(factory: helper.Factory) -> None:
             parameter="LEVEL",
             value=1.0,
         )
-    assert len(mock_client.method_calls) == 74
+    assert len(mock_client.method_calls) == 58
 
     await central.get_client(interface_id=const.INTERFACE_ID).put_paramset(
         address="123",
@@ -374,14 +369,14 @@ async def test_central_services(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="123", paramset_key="VALUES", value={"LEVEL": 1.0}
     )
-    assert len(mock_client.method_calls) == 75
+    assert len(mock_client.method_calls) == 59
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").put_paramset(
             address="123",
             paramset_key=ParamsetKey.VALUES,
             value={"LEVEL": 1.0},
         )
-    assert len(mock_client.method_calls) == 75
+    assert len(mock_client.method_calls) == 59
 
     assert (
         central.get_generic_entity(
@@ -410,7 +405,7 @@ async def test_central_direct(factory: helper.Factory) -> None:
     assert central.available is False
     assert central.system_information.serial == "0815_4711"
     assert len(central._devices) == 2
-    assert len(central._entities) == 53
+    assert len(central.get_entities(exclude_no_create=False)) == 55
     await central.stop()
 
 
@@ -435,7 +430,7 @@ async def test_central_without_interface_config(factory: helper.Factory) -> None
     assert central.available is True
     assert central.system_information.serial is None
     assert len(central._devices) == 0
-    assert len(central._entities) == 0
+    assert len(central.get_entities()) == 0
 
     assert await central.get_system_variable(name="SysVar_Name") is None
     assert central._get_virtual_remote("VCU4264293") is None

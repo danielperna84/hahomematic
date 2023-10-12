@@ -2,14 +2,23 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Collection, Mapping, Set
 import logging
 from typing import Final
 
 from hahomematic import central as hmcu
-from hahomematic.const import Backend, ProgramData, SystemEvent, SystemVariableData, SysvarType
+from hahomematic.const import (
+    HUB_PLATFORMS,
+    Backend,
+    HmPlatform,
+    ProgramData,
+    SystemEvent,
+    SystemVariableData,
+    SysvarType,
+)
 from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
 from hahomematic.platforms.hub.button import HmProgramButton
-from hahomematic.platforms.hub.entity import GenericSystemVariable
+from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
 from hahomematic.platforms.hub.number import HmSysvarNumber
 from hahomematic.platforms.hub.select import HmSysvarSelect
 from hahomematic.platforms.hub.sensor import HmSysvarSensor
@@ -75,7 +84,8 @@ class Hub:
 
         if new_programs:
             self._central.fire_system_event_callback(
-                system_event=SystemEvent.HUB_REFRESHED, new_hub_entities=new_programs
+                system_event=SystemEvent.HUB_REFRESHED,
+                new_hub_entities=_get_new_hub_entities(entities=new_programs),
             )
 
     async def _update_sysvar_entities(self, include_internal: bool = True) -> None:
@@ -116,7 +126,8 @@ class Hub:
 
         if new_sysvars:
             self._central.fire_system_event_callback(
-                system_event=SystemEvent.HUB_REFRESHED, new_hub_entities=new_sysvars
+                system_event=SystemEvent.HUB_REFRESHED,
+                new_hub_entities=_get_new_hub_entities(entities=new_sysvars),
             )
 
     def _create_program(self, data: ProgramData) -> HmProgramButton:
@@ -192,3 +203,18 @@ def _is_excluded(variable: str, excludes: list[str]) -> bool:
 def _clean_variables(variables: tuple[SystemVariableData, ...]) -> tuple[SystemVariableData, ...]:
     """Clean variables by removing excluded."""
     return tuple(sv for sv in variables if not _is_excluded(sv.name, _EXCLUDED))
+
+
+def _get_new_hub_entities(
+    entities: Collection[GenericHubEntity],
+) -> Mapping[HmPlatform, Set[GenericHubEntity]]:
+    """Return entities as platform dict."""
+    hm_hub_entities: dict[HmPlatform, set[GenericHubEntity]] = {}
+    for hm_hub_platform in HUB_PLATFORMS:
+        hm_hub_entities[hm_hub_platform] = set()
+
+    for hub_entity in entities:
+        if hub_entity.is_registered is False:
+            hm_hub_entities[hub_entity.platform].add(hub_entity)
+
+    return hm_hub_entities

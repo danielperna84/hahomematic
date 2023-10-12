@@ -26,6 +26,7 @@ from hahomematic.const import (
     DataOperationResult,
     Description,
     DeviceFirmwareState,
+    EntityUsage,
     EventType,
     ForcedDeviceAvailability,
     HmPlatform,
@@ -68,7 +69,8 @@ class HmDevice(PayloadMixin):
             interface_id,
             device_address,
         )
-        self._custom_entities: Final[dict[str, hmce.CustomEntity]] = {}
+        # {channel_no, entity}
+        self._custom_entities: Final[dict[int, hmce.CustomEntity]] = {}
         self._generic_entities: Final[dict[tuple[str, str], GenericEntity]] = {}
         self._generic_events: Final[dict[tuple[str, str], GenericEvent]] = {}
         self._wrapper_entities: Final[dict[tuple[str, str], WrapperEntity]] = {}
@@ -330,7 +332,7 @@ class HmDevice(PayloadMixin):
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseEntity):
-            self.central.add_entity(entity=entity)
+            self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[(entity.channel_address, entity.parameter)] = entity
             self.register_update_callback(entity.update_entity)
@@ -338,14 +340,14 @@ class HmDevice(PayloadMixin):
             self._wrapper_entities[(entity.channel_address, entity.parameter)] = entity
             self.register_update_callback(entity.update_entity)
         if isinstance(entity, hmce.CustomEntity):
-            self._custom_entities[entity.unique_id] = entity
+            self._custom_entities[entity.channel_no] = entity
         if isinstance(entity, GenericEvent):
             self._generic_events[(entity.channel_address, entity.parameter)] = entity
 
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseEntity):
-            self.central.remove_entity(entity=entity)
+            self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[(entity.channel_address, entity.parameter)]
             self.unregister_update_callback(entity.update_entity)
@@ -353,7 +355,7 @@ class HmDevice(PayloadMixin):
             del self._wrapper_entities[(entity.channel_address, entity.parameter)]
             self.unregister_update_callback(entity.update_entity)
         if isinstance(entity, hmce.CustomEntity):
-            del self._custom_entities[entity.unique_id]
+            del self._custom_entities[entity.channel_no]
         if isinstance(entity, GenericEvent):
             del self._generic_events[(entity.channel_address, entity.parameter)]
         entity.remove_entity()
@@ -402,21 +404,62 @@ class HmDevice(PayloadMixin):
     def _set_last_update(self) -> None:
         self._last_update = datetime.now()
 
-    def get_all_entities(self) -> tuple[hmce.CustomEntity | GenericEntity | WrapperEntity, ...]:
-        """Return all entities of a device."""
-        all_entities: list[hmce.CustomEntity | GenericEntity | WrapperEntity] = []
-        all_entities.extend(self.custom_entities)
-        all_entities.extend(self.generic_entities)
-        all_entities.extend(self.wrapper_entities)
-        return tuple(all_entities)
+    def get_entities(
+        self,
+        platform: HmPlatform | None = None,
+        exclude_no_create: bool = True,
+        registered: bool | None = None,
+    ) -> tuple[CallbackEntity, ...]:
+        """Get all entities of the device."""
+        all_entities: tuple[CallbackEntity, ...] = (
+            *self.custom_entities,
+            *self.generic_entities,
+            *self.wrapper_entities,
+            self._update_entity,  # type: ignore[arg-type]
+        )
 
-    def get_channel_events(self, event_type: EventType) -> Mapping[int, list[GenericEvent]]:
+        return tuple(
+            entity
+            for entity in all_entities
+            if entity is not None
+            and (platform is None or entity.platform == platform)
+            and (
+                (exclude_no_create and entity.usage != EntityUsage.NO_CREATE)
+                or exclude_no_create is False
+            )
+            and (registered is None or entity.is_registered == registered)
+        )
+
+    def get_entities_by_platform(
+        self, exclude_no_create: bool = True, registered: bool | None = None
+    ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+        """Return all externally registered entities."""
+        entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
+        for platform in HmPlatform:
+            if platform == HmPlatform.EVENT:
+                continue
+            entities_by_platform[platform] = set()
+
+        for entity in self.get_entities(
+            exclude_no_create=exclude_no_create, registered=registered
+        ):
+            entities_by_platform[entity.platform].add(entity)
+
+        return entities_by_platform
+
+    def get_channel_events(
+        self, event_type: EventType, registered: bool | None = None
+    ) -> Mapping[int, list[GenericEvent]]:
         """Return a list of specific events of a channel."""
         event_dict: dict[int, list[GenericEvent]] = {}
         if event_type not in ENTITY_EVENTS:
             return event_dict
         for event in self.generic_events:
-            if event.event_type == event_type and event.channel_no is not None:
+            if (
+                event.event_type == event_type
+                and (registered is None or event.is_registered == registered)
+                and event.channel_no is not None
+            ):
                 if event.channel_no not in event_dict:
                     event_dict[event.channel_no] = []
                 event_dict[event.channel_no].append(event)
@@ -425,10 +468,7 @@ class HmDevice(PayloadMixin):
 
     def get_custom_entity(self, channel_no: int) -> hmce.CustomEntity | None:
         """Return an entity from device."""
-        for custom_entity in self.custom_entities:
-            if custom_entity.channel_no == channel_no:
-                return custom_entity
-        return None
+        return self._custom_entities.get(channel_no)
 
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Return an entity from device."""
@@ -441,36 +481,6 @@ class HmDevice(PayloadMixin):
     def get_wrapper_entity(self, channel_address: str, parameter: str) -> WrapperEntity | None:
         """Return a wrapper entity from device."""
         return self._wrapper_entities.get((channel_address, parameter))
-
-    def get_entities(
-        self, registered_only: bool = False
-    ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
-        """Return all externally registered entities."""
-        all_entities: dict[HmPlatform, set[CallbackEntity]] = {}
-        for platform in HmPlatform:
-            all_entities[platform] = set()
-
-        def add_to_dict(entities: Mapping[Any, CallbackEntity]) -> None:
-            for entity in entities.values():
-                if (
-                    registered_only and entity.is_registered_externally
-                ) or registered_only is False:
-                    all_entities[entity.platform].add(entity)
-
-        add_to_dict(entities=self._custom_entities)
-        add_to_dict(entities=self._generic_entities)
-        add_to_dict(entities=self._generic_events)
-        add_to_dict(entities=self._wrapper_entities)
-
-        if (
-            self.update_entity
-            and (update_entity := self.update_entity)
-            and (registered_only and update_entity.is_registered_externally)
-            or registered_only is False
-        ):
-            all_entities[update_entity.platform].add(update_entity)
-
-        return all_entities
 
     def set_forced_availability(self, forced_availability: ForcedDeviceAvailability) -> None:
         """Set the availability of the device."""

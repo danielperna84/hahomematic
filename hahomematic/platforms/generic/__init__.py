@@ -52,12 +52,7 @@ def create_entity_and_append_to_device(
     unique_id = generate_unique_id(
         central=device.central, address=channel_address, parameter=parameter
     )
-    if device.central.has_entity(unique_id=unique_id):
-        _LOGGER.debug(
-            "CREATE_ENTITIES: Skipping %s (already exists)",
-            unique_id,
-        )
-        return
+
     _LOGGER.debug(
         "CREATE_ENTITIES: Creating entity for %s, %s, %s",
         channel_address,

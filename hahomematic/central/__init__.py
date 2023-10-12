@@ -30,6 +30,7 @@ from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
+    ENTITY_EVENTS,
     EVENT_AVAILABLE,
     EVENT_DATA,
     EVENT_INSTANCE_NAME,
@@ -37,7 +38,6 @@ from hahomematic.const import (
     EVENT_TYPE,
     Description,
     DeviceFirmwareState,
-    EntityUsage,
     EventType,
     HmPlatform,
     InterfaceEventType,
@@ -140,8 +140,6 @@ class CentralUnit:
         self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
-        # {unique_id, entity}
-        self._entities: Final[dict[str, BaseEntity]] = {}
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
@@ -590,44 +588,21 @@ class CentralUnit:
         return self._devices.get(d_address)
 
     def get_entities(
-        self, registered_only: bool = False
-    ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+        self,
+        platform: HmPlatform | None = None,
+        exclude_no_create: bool = True,
+        registered: bool | None = None,
+    ) -> tuple[CallbackEntity, ...]:
         """Return all externally registered entities."""
-        all_entities: dict[HmPlatform, set[CallbackEntity]] = {}
-        for platform in HmPlatform:
-            all_entities[platform] = set()
+        all_entities: list[CallbackEntity] = []
         for device in self._devices.values():
-            for platform, entities in device.get_entities(registered_only=registered_only).items():
-                all_entities[platform].update(entities)
-
-        def add_to_dict(entities: Mapping[str, CallbackEntity]) -> None:
-            for entity in entities.values():
-                if (
-                    registered_only and entity.is_registered_externally
-                ) or registered_only is False:
-                    all_entities[entity.platform].add(entity)
-
-        add_to_dict(entities=self._sysvar_entities)
-        add_to_dict(entities=self._program_buttons)
-
-        return all_entities
-
-    def get_entities_by_platform(
-        self, platform: HmPlatform, exclude_subscribed: bool | None = None
-    ) -> tuple[BaseEntity, ...]:
-        """Return all entities by platform."""
-        return tuple(
-            be
-            for be in self._entities.values()
-            if (
-                be.usage != EntityUsage.NO_CREATE
-                and be.platform == platform
-                and (
-                    not exclude_subscribed
-                    or (exclude_subscribed and be.is_registered_externally is False)
+            all_entities.extend(
+                device.get_entities(
+                    platform=platform, exclude_no_create=exclude_no_create, registered=registered
                 )
             )
-        )
+
+        return tuple(all_entities)
 
     def get_readable_generic_entities(
         self, paramset_key: str | None = None
@@ -635,7 +610,7 @@ class CentralUnit:
         """Return the readable generic entities."""
         return tuple(
             ge
-            for ge in self._entities.values()
+            for ge in self.get_entities()
             if (
                 isinstance(ge, GenericEntity)
                 and ge.is_readable
@@ -654,31 +629,24 @@ class CentralUnit:
                 return client
         return client
 
-    def get_hub_entities_by_platform(
-        self, platform: HmPlatform, exclude_subscribed: bool | None = None
+    def get_hub_entities(
+        self, platform: HmPlatform | None = None, registered: bool | None = None
     ) -> tuple[GenericHubEntity, ...]:
-        """Return the hub entities by platform."""
+        """Return the hub entities."""
         return tuple(
             he
             for he in (self.program_buttons + self.sysvar_entities)
-            if he.platform == platform
-            and (
-                not exclude_subscribed
-                or (exclude_subscribed and he.is_registered_externally is False)
-            )
-            and he.platform == platform
+            if (platform is None or he.platform == platform)
+            and (registered is None or he.is_registered == registered)
         )
 
-    def get_update_entities(self, exclude_subscribed: bool | None = None) -> tuple[HmUpdate, ...]:
+    def get_update_entities(self, registered: bool | None = None) -> tuple[HmUpdate, ...]:
         """Return the update entities."""
         return tuple(
             device.update_entity
             for device in self.devices
             if device.update_entity
-            and (
-                not exclude_subscribed
-                or (exclude_subscribed and device.update_entity.is_registered_externally is False)
-            )
+            and (registered is None or device.update_entity.is_registered == registered)
         )
 
     def get_channel_events_by_event_type(
@@ -689,7 +657,7 @@ class CentralUnit:
         for device in self.devices:
             for channel_events in device.get_channel_events(event_type=event_type).values():
                 if not exclude_subscribed or (
-                    exclude_subscribed and channel_events[0].is_registered_externally is False
+                    exclude_subscribed and channel_events[0].is_registered is False
                 ):
                     hm_channel_events.append(channel_events)
                     continue
@@ -781,8 +749,12 @@ class CentralUnit:
         _LOGGER.debug("CREATE_DEVICES: Finished creating devices for %s", self._name)
 
         if new_devices:
+            new_entities = _get_new_entities(new_devices=new_devices)
+            new_channel_events = _get_new_channel_events(new_devices=new_devices)
             self.fire_system_event_callback(
-                system_event=SystemEvent.DEVICES_CREATED, new_devices=new_devices
+                system_event=SystemEvent.DEVICES_CREATED,
+                new_entities=new_entities,
+                new_channel_events=new_channel_events,
             )
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
@@ -912,18 +884,8 @@ class CentralUnit:
         )
         return result
 
-    def add_entity(self, entity: BaseEntity) -> None:
-        """Add entity to central collections."""
-        if not isinstance(entity, GenericEvent):
-            if entity.unique_id in self._entities:
-                _LOGGER.warning(
-                    "Entity %s already registered in central %s",
-                    entity.unique_id,
-                    self.name,
-                )
-                return
-            self._entities[entity.unique_id] = entity
-
+    def add_event_subscription(self, entity: BaseEntity) -> None:
+        """Add entity to central event subscription."""
         if isinstance(entity, (GenericEntity, GenericEvent)) and entity.supports_events:
             if (
                 entity.channel_address,
@@ -949,21 +911,14 @@ class CentralUnit:
         self.device_details.remove_device(device=device)
         del self._devices[device.device_address]
 
-    def remove_entity(self, entity: BaseEntity) -> None:
-        """Remove entity to central collections."""
-        if entity.unique_id in self._entities:
-            del self._entities[entity.unique_id]
-
+    def remove_event_subscription(self, entity: BaseEntity) -> None:
+        """Remove event subscription from central collections."""
         if (
             isinstance(entity, (GenericEntity, GenericEvent))
             and entity.supports_events
             and (entity.channel_address, entity.parameter) in self._entity_event_subscriptions
         ):
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
-
-    def has_entity(self, unique_id: str) -> bool:
-        """Check if unique_id is already added."""
-        return unique_id in self._entities
 
     def increase_ping_count(self, interface_id: str) -> None:
         """Increase the number of send ping events."""
@@ -1510,3 +1465,36 @@ class CentralConnectionState:
                 reduce_args(args=exception.args),
                 extra_msg,
             )
+
+
+def _get_new_entities(
+    new_devices: set[HmDevice],
+) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+    """Return new entities by platform."""
+    entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
+    for platform in HmPlatform:
+        if platform == HmPlatform.EVENT:
+            continue
+        entities_by_platform[platform] = set()
+
+    for device in new_devices:
+        for platform, entities in device.get_entities_by_platform(
+            exclude_no_create=True, registered=False
+        ).items():
+            entities_by_platform[platform].update(entities)
+
+    return entities_by_platform
+
+
+def _get_new_channel_events(new_devices: set[HmDevice]) -> tuple[list[GenericEvent], ...]:
+    """Return new channel events by platform."""
+    channel_events: list[list[GenericEvent]] = []
+
+    for device in new_devices:
+        for event_type in ENTITY_EVENTS:
+            if hm_channel_events := device.get_channel_events(
+                event_type=event_type, registered=False
+            ).values():
+                channel_events.append(hm_channel_events)  # type: ignore[arg-type]
+
+    return tuple(channel_events)

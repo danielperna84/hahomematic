@@ -45,10 +45,10 @@ class Example:
         if (
             name == const.SystemEvent.DEVICES_CREATED
             and kwargs
-            and kwargs.get("new_devices")
-            and len(kwargs["new_devices"]) > 0
+            and kwargs.get("new_entities")
+            and len(kwargs["new_entities"]) > 0
         ):
-            if len(kwargs["new_devices"]) > 1:
+            if len(kwargs["new_entities"]) > 1:
                 self.got_devices = True
             return
 
