@@ -64,7 +64,6 @@ from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
-from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
     check_or_create_directory,
     check_password,
@@ -638,15 +637,6 @@ class CentralUnit:
             for he in (self.program_buttons + self.sysvar_entities)
             if (platform is None or he.platform == platform)
             and (registered is None or he.is_registered == registered)
-        )
-
-    def get_update_entities(self, registered: bool | None = None) -> tuple[HmUpdate, ...]:
-        """Return the update entities."""
-        return tuple(
-            device.update_entity
-            for device in self.devices
-            if device.update_entity
-            and (registered is None or device.update_entity.is_registered == registered)
         )
 
     def get_channel_events(
