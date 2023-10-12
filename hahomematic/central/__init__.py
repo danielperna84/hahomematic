@@ -649,16 +649,14 @@ class CentralUnit:
             and (registered is None or device.update_entity.is_registered == registered)
         )
 
-    def get_channel_events_by_event_type(
-        self, event_type: EventType, exclude_subscribed: bool | None = None
+    def get_channel_events(
+        self, event_type: EventType, registered: bool | None = None
     ) -> tuple[list[GenericEvent], ...]:
         """Return all channel event entities."""
         hm_channel_events: list[list[GenericEvent]] = []
         for device in self.devices:
             for channel_events in device.get_channel_events(event_type=event_type).values():
-                if not exclude_subscribed or (
-                    exclude_subscribed and channel_events[0].is_registered is False
-                ):
+                if registered is None or (channel_events[0].is_registered == registered):
                     hm_channel_events.append(channel_events)
                     continue
 
