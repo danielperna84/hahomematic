@@ -194,8 +194,8 @@ async def get_pydev_ccu_central_unit_full(client_session: ClientSession | None) 
         if (
             system_event == SystemEvent.DEVICES_CREATED
             and kwargs
-            and kwargs.get("new_devices")
-            and len(kwargs["new_devices"]) > 0
+            and kwargs.get("new_entities")
+            and len(kwargs["new_entities"]) > 0
         ):
             global GOT_DEVICES  # pylint: disable=global-statement
             GOT_DEVICES = True
