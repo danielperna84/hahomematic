@@ -629,14 +629,15 @@ class CentralUnit:
                 return client
         return client
 
-    def get_hub_entities_by_platform(
-        self, platform: HmPlatform, registered: bool | None = None
+    def get_hub_entities(
+        self, platform: HmPlatform | None = None, registered: bool | None = None
     ) -> tuple[GenericHubEntity, ...]:
-        """Return the hub entities by platform."""
+        """Return the hub entities."""
         return tuple(
             he
             for he in (self.program_buttons + self.sysvar_entities)
-            if he.platform == platform and (registered is None or he.is_registered == registered)
+            if (platform is None or he.platform == platform)
+            and (registered is None or he.is_registered == registered)
         )
 
     def get_update_entities(self, registered: bool | None = None) -> tuple[HmUpdate, ...]:
