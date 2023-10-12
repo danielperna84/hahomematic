@@ -427,7 +427,7 @@ class HmDevice(PayloadMixin):
                 (exclude_no_create and entity.usage != EntityUsage.NO_CREATE)
                 or exclude_no_create is False
             )
-            and (registered is None or entity.is_registered_externally == registered)
+            and (registered is None or entity.is_registered == registered)
         )
 
     def get_entities_by_platform(
@@ -457,7 +457,7 @@ class HmDevice(PayloadMixin):
         for event in self.generic_events:
             if (
                 event.event_type == event_type
-                and (registered is None or event.is_registered_externally == registered)
+                and (registered is None or event.is_registered == registered)
                 and event.channel_no is not None
             ):
                 if event.channel_no not in event_dict:

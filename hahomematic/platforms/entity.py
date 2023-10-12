@@ -153,7 +153,7 @@ class CallbackEntity(ABC):
         )
 
     @property
-    def is_registered_externally(self) -> bool:
+    def is_registered(self) -> bool:
         """Return if entity is registered externally."""
         return self._custom_id is not None
 

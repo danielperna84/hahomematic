@@ -635,8 +635,7 @@ class CentralUnit:
         return tuple(
             he
             for he in (self.program_buttons + self.sysvar_entities)
-            if he.platform == platform
-            and (registered is None or he.is_registered_externally == registered)
+            if he.platform == platform and (registered is None or he.is_registered == registered)
         )
 
     def get_update_entities(self, registered: bool | None = None) -> tuple[HmUpdate, ...]:
@@ -645,7 +644,7 @@ class CentralUnit:
             device.update_entity
             for device in self.devices
             if device.update_entity
-            and (registered is None or device.update_entity.is_registered_externally == registered)
+            and (registered is None or device.update_entity.is_registered == registered)
         )
 
     def get_channel_events_by_event_type(
@@ -656,7 +655,7 @@ class CentralUnit:
         for device in self.devices:
             for channel_events in device.get_channel_events(event_type=event_type).values():
                 if not exclude_subscribed or (
-                    exclude_subscribed and channel_events[0].is_registered_externally is False
+                    exclude_subscribed and channel_events[0].is_registered is False
                 ):
                     hm_channel_events.append(channel_events)
                     continue
