@@ -1,3 +1,7 @@
+# Version 2023.10.9 (2023-10-12)
+
+- Fix register_update_callback for update
+
 # Version 2023.10.8 (2023-10-11)
 
 - Register external sources with custom identifier

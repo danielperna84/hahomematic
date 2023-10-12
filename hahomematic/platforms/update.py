@@ -12,7 +12,7 @@ from hahomematic.const import HmPlatform
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
-from hahomematic.platforms.entity import CallbackEntity
+from hahomematic.platforms.entity import DEFAULT_CUSTOM_ID, CallbackEntity
 from hahomematic.platforms.support import generate_unique_id
 
 
@@ -70,12 +70,10 @@ class HmUpdate(CallbackEntity):
         """Latest version available for install."""
         return self._device.firmware_update_state
 
-    def register_update_callback(
-        self, update_callback: Callable, custom_id: str | None = None
-    ) -> None:
+    def register_update_callback(self, update_callback: Callable, custom_id: str) -> None:
         """Register update callback."""
         self._device.register_firmware_update_callback(update_callback)
-        if custom_id is not None:
+        if custom_id != DEFAULT_CUSTOM_ID:
             if self._custom_id is not None:
                 raise HaHomematicException(
                     f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
