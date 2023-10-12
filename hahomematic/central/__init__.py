@@ -6,7 +6,7 @@ This is the python representation of a CCU.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Set
+from collections.abc import Awaitable, Callable, Coroutine, Mapping, Set
 from concurrent.futures._base import CancelledError
 from datetime import datetime
 import logging
@@ -30,6 +30,7 @@ from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
+    ENTITY_EVENTS,
     EVENT_AVAILABLE,
     EVENT_DATA,
     EVENT_INSTANCE_NAME,
@@ -747,8 +748,12 @@ class CentralUnit:
         _LOGGER.debug("CREATE_DEVICES: Finished creating devices for %s", self._name)
 
         if new_devices:
+            new_entities = _get_new_entities(new_devices=new_devices)
+            new_channel_events = _get_new_channel_events(new_devices=new_devices)
             self.fire_system_event_callback(
-                system_event=SystemEvent.DEVICES_CREATED, new_devices=new_devices
+                system_event=SystemEvent.DEVICES_CREATED,
+                new_entities=new_entities,
+                new_channel_events=new_channel_events,
             )
 
     async def delete_device(self, interface_id: str, device_address: str) -> None:
@@ -1459,3 +1464,36 @@ class CentralConnectionState:
                 reduce_args(args=exception.args),
                 extra_msg,
             )
+
+
+def _get_new_entities(
+    new_devices: set[HmDevice],
+) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+    """Return new entities by platform."""
+    entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
+    for platform in HmPlatform:
+        if platform == HmPlatform.EVENT:
+            continue
+        entities_by_platform[platform] = set()
+
+    for device in new_devices:
+        for platform, entities in device.get_entities_by_platform(
+            exclude_no_create=True, registered=False
+        ).items():
+            entities_by_platform[platform].update(entities)
+
+    return entities_by_platform
+
+
+def _get_new_channel_events(new_devices: set[HmDevice]) -> tuple[list[GenericEvent], ...]:
+    """Return new channel events by platform."""
+    channel_events: list[list[GenericEvent]] = []
+
+    for device in new_devices:
+        for event_type in ENTITY_EVENTS:
+            if hm_channel_events := device.get_channel_events(
+                event_type=event_type, registered=False
+            ).values():
+                channel_events.append(hm_channel_events)  # type: ignore[arg-type]
+
+    return tuple(channel_events)

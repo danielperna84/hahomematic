@@ -2,6 +2,7 @@
 
 - Fix register_update_callback for update
 - Add filter options to device.get_entity\*
+- Send relevant entities instead of devices in callback
 
 # Version 2023.10.8 (2023-10-11)
 
