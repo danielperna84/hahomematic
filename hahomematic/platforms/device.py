@@ -20,6 +20,7 @@ from hahomematic.const import (
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
+    PLATFORMS,
     RELEVANT_INIT_PARAMETERS,
     VIRTUAL_REMOTE_TYPES,
     CallSource,
@@ -435,7 +436,7 @@ class HmDevice(PayloadMixin):
     ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
         """Return all externally registered entities."""
         entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
-        for platform in HmPlatform:
+        for platform in PLATFORMS:
             if platform == HmPlatform.EVENT:
                 continue
             entities_by_platform[platform] = set()
@@ -443,7 +444,8 @@ class HmDevice(PayloadMixin):
         for entity in self.get_entities(
             exclude_no_create=exclude_no_create, registered=registered
         ):
-            entities_by_platform[entity.platform].add(entity)
+            if entity.platform in PLATFORMS:
+                entities_by_platform[entity.platform].add(entity)
 
         return entities_by_platform
 

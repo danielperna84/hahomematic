@@ -1,3 +1,8 @@
+# Version 2023.10.10 (2023-10-12)
+
+- Align method signatures
+- Remove get_update_entities
+
 # Version 2023.10.9 (2023-10-12)
 
 - Fix register_update_callback for update
