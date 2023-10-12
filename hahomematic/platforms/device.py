@@ -422,7 +422,8 @@ class HmDevice(PayloadMixin):
         return tuple(
             entity
             for entity in all_entities
-            if (platform is None or entity.platform == platform)
+            if entity is not None
+            and (platform is None or entity.platform == platform)
             and (
                 (exclude_no_create and entity.usage != EntityUsage.NO_CREATE)
                 or exclude_no_create is False
