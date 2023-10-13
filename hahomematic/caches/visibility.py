@@ -8,9 +8,8 @@ import os
 from typing import Any, Final
 
 from hahomematic import central as hmcu, support as hms
-from hahomematic.const import CLICK_EVENTS, DEFAULT_ENCODING, HmPlatform, Parameter, ParamsetKey
+from hahomematic.const import CLICK_EVENTS, DEFAULT_ENCODING, Parameter, ParamsetKey
 from hahomematic.platforms.custom.definition import get_required_parameters
-from hahomematic.platforms.generic import entity as hmge
 from hahomematic.support import reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -238,11 +237,6 @@ _IGNORE_PARAMETERS_BY_DEVICE: Final[Mapping[Parameter, tuple[str, ...]]] = {
 # Some devices have parameters on multiple channels,
 # but we want to use it only from a certain channel.
 _ACCEPT_PARAMETER_ONLY_ON_CHANNEL: Final[Mapping[str, int]] = {Parameter.LOWBAT: 0}
-
-# Entities that should be wrapped in a new entity on a new platform.
-_WRAP_ENTITY: Final[Mapping[str | tuple[str, ...], Mapping[str, HmPlatform]]] = {
-    ("HmIP-eTRV", "HmIP-HEATING"): {Parameter.LEVEL: HmPlatform.SENSOR},
-}
 
 
 class ParameterVisibilityCache:
@@ -598,19 +592,6 @@ class ParameterVisibilityCache:
                 ):
                     return True
         return False
-
-    def wrap_entity(self, wrapped_entity: hmge.GenericEntity) -> HmPlatform | None:
-        """Check if parameter of a device should be wrapped to a different platform."""
-        for devices, wrapper_def in _WRAP_ENTITY.items():
-            if (
-                hms.element_matches_key(
-                    search_elements=devices,
-                    compare_with=wrapped_entity.device.device_type,
-                )
-                and wrapped_entity.parameter in wrapper_def
-            ):
-                return wrapper_def[wrapped_entity.parameter]
-        return None
 
     async def load(self) -> None:
         """Load custom un ignore parameters from disk."""

@@ -149,7 +149,10 @@ async def test_load_generic_entity(factory: helper.Factory) -> None:
 async def test_generic_wrapped_entity(factory: helper.Factory) -> None:
     """Test wrapped entity."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
-    wrapped_entity: HmSensor = cast(HmSensor, central.get_wrapper_entity("VCU3609622:1", "LEVEL"))
+    wrapped_entity: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3609622:1", "LEVEL"))
+    assert wrapped_entity._platform == "number"
+    assert wrapped_entity._is_forced_sensor is True
+    assert wrapped_entity.platform == "sensor"
     assert wrapped_entity.usage == EntityUsage.ENTITY
 
 

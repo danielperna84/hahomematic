@@ -18,7 +18,7 @@ from hahomematic.const import (
     ParamsetKey,
 )
 from hahomematic.exceptions import HaHomematicException, NoClients
-from hahomematic.platforms.generic.number import HmFloat
+from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.switch import HmSwitch
 
 from tests import const, helper
@@ -81,20 +81,22 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
 async def test_device_unignore(factory: helper.Factory) -> None:
     """Test device un ignore."""
     central1, _ = await factory.get_default_central(
-        {"VCU3609622": "HmIP-eTRV-2.json"},
+        {"VCU3609622": "HmIP-eTRV-2.json"}, un_ignore_list=["ACTIVE_PROFILE"]
     )
     assert (
         central1.parameter_visibility.parameter_is_un_ignored(
             device_type="HmIP-eTRV-2",
             channel_no=1,
             paramset_key="VALUES",
-            parameter="LEVEL",
+            parameter="ACTIVE_PROFILE",
         )
-        is False
+        is True
     )
-    level1: HmFloat = cast(HmFloat, central1.get_generic_entity("VCU3609622:1", "LEVEL"))
-    assert level1.usage == EntityUsage.NO_CREATE
-    assert len(level1.device.generic_entities) == 22
+    active_profile: HmInteger = cast(
+        HmInteger, central1.get_generic_entity("VCU3609622:1", "ACTIVE_PROFILE")
+    )
+    assert active_profile.usage == EntityUsage.ENTITY
+    assert len(active_profile.device.generic_entities) == 22
 
     switch1: HmSwitch | None = None
     with suppress(AssertionError):
