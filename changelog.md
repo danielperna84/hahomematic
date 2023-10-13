@@ -1,8 +1,11 @@
+# Version 2023.10.11 (2023-10-13)
+
+- Remove WrapperEntity
+- 
 # Version 2023.10.10 (2023-10-12)
 
 - Align method signatures
 - Remove get_update_entities
-- Remove WrapperEntity
 
 # Version 2023.10.9 (2023-10-12)
 
