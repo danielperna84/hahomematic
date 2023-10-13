@@ -5,8 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from hahomematic.const import CallSource, EntityUsage, EventType, HmPlatform, Parameter
-from hahomematic.exceptions import HaHomematicException
+from hahomematic.const import EntityUsage, EventType, Parameter
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.support import EntityNameData, get_entity_name
@@ -38,11 +37,12 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             parameter=parameter,
             parameter_data=parameter_data,
         )
-        self.wrapped: bool = False
 
     @config_property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
+        if self._is_forced_sensor:
+            return EntityUsage.ENTITY
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
             return self._usage
         return EntityUsage.ENTITY if force_enabled else EntityUsage.NO_CREATE
@@ -152,49 +152,3 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             return True
         _LOGGER.debug("NO_STATE_CHANGE: %s", self.name)
         return False
-
-
-class WrapperEntity(hme.BaseEntity):
-    """Base class for entities that switch type of generic entities."""
-
-    def __init__(self, wrapped_entity: GenericEntity, new_platform: HmPlatform) -> None:
-        """Initialize the entity."""
-        if wrapped_entity.platform == new_platform:
-            raise HaHomematicException(  # pragma: no cover
-                "Cannot create wrapped entity. platform must not be equivalent."
-            )
-        self._wrapped_entity: Final = wrapped_entity
-        super().__init__(
-            device=wrapped_entity.device,
-            channel_no=wrapped_entity.channel_no,
-            unique_id=f"{wrapped_entity.unique_id}_{new_platform}",
-            is_in_multiple_channels=wrapped_entity.is_in_multiple_channels,
-        )
-        self._platform = new_platform
-        # use callbacks from wrapped entity
-        self._update_callbacks = wrapped_entity._update_callbacks
-        self._remove_callbacks = wrapped_entity._remove_callbacks
-        # hide wrapped entity from HA
-        wrapped_entity.set_usage(EntityUsage.NO_CREATE)
-        wrapped_entity.wrapped = True
-
-    async def load_entity_value(self, call_source: CallSource) -> None:
-        """Init the entity data."""
-        await self._wrapped_entity.load_entity_value(call_source=call_source)
-
-    def __getattr__(self, *args: Any) -> Any:
-        """Return any other attribute not explicitly defined in the class."""
-        return getattr(self._wrapped_entity, *args)
-
-    def _get_entity_usage(self) -> EntityUsage:
-        """Generate the usage for the entity."""
-        return EntityUsage.ENTITY
-
-    def _get_entity_name(self) -> EntityNameData:
-        """Create the name for the entity."""
-        return get_entity_name(
-            central=self._central,
-            device=self._device,
-            channel_no=self.channel_no,
-            parameter=self._parameter,
-        )

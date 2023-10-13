@@ -194,7 +194,7 @@ class CustomEntity(BaseEntity):
                 if entity := self._device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
-                    if is_visible and entity.wrapped is False:
+                    if is_visible and entity.is_forced_sensor is False:
                         entity.set_usage(EntityUsage.CE_VISIBLE)
                     self._add_entity(field=field, entity=entity)
 

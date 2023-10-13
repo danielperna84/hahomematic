@@ -365,6 +365,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         self._value: ParameterT | None = None
         self._last_update: datetime = INIT_DATETIME
         self._state_uncertain: bool = True
+        self._is_forced_sensor: bool = False
         self._assign_parameter_data(parameter_data=parameter_data)
 
     def _assign_parameter_data(self, parameter_data: Mapping[str, Any]) -> None:
@@ -434,6 +435,11 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._raw_unit
 
     @property
+    def is_forced_sensor(self) -> bool:
+        """Return, if entity is forced to read only."""
+        return self._is_forced_sensor
+
+    @property
     def is_readable(self) -> bool:
         """Return, if entity is readable."""
         return bool(self._operations & Operations.READ)
@@ -446,12 +452,17 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @property
     def is_writeable(self) -> bool:
         """Return, if entity is writeable."""
-        return bool(self._operations & Operations.WRITE)
+        return False if self._is_forced_sensor else bool(self._operations & Operations.WRITE)
 
     @value_property
     def last_update(self) -> datetime:
         """Return the last updated datetime value."""
         return self._last_update
+
+    @config_property
+    def platform(self) -> HmPlatform:
+        """Return, the platform of the entity."""
+        return HmPlatform.SENSOR if self._is_forced_sensor else self._platform
 
     @value_property
     def state_uncertain(self) -> bool:
@@ -467,6 +478,13 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def supports_events(self) -> bool:
         """Return, if entity is supports events."""
         return bool(self._operations & Operations.EVENT)
+
+    @config_property
+    def unique_id(self) -> str:
+        """Return the unique_id."""
+        return (
+            f"{self._unique_id}_{HmPlatform.SENSOR}" if self._is_forced_sensor else self._unique_id
+        )
 
     @config_property
     def unit(self) -> str | None:
@@ -503,6 +521,25 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         if (cop := self._channel_operation_mode) is None:
             return None
         return cop in KEY_CHANNEL_OPERATION_MODE_VISIBILITY[self._parameter]
+
+    def force_to_sensor(self) -> None:
+        """Change the platform of the entity."""
+        if self.platform == HmPlatform.SENSOR:
+            _LOGGER.debug(
+                "Platform for %s is already %s. Doing nothing", self.full_name, HmPlatform.SENSOR
+            )
+            return
+        if self.platform not in (HmPlatform.NUMBER, HmPlatform.SELECT, HmPlatform.TEXT):
+            _LOGGER.debug(
+                "Platform %s for %s cannot be changed to %s",
+                self.platform,
+                self.full_name,
+                HmPlatform.SENSOR,
+            )
+        _LOGGER.debug(
+            "Changing the platform of %s to %s (read-only)", self.full_name, HmPlatform.SENSOR
+        )
+        self._is_forced_sensor = True
 
     def _fix_unit(self, raw_unit: str | None) -> str | None:
         """Replace given unit."""

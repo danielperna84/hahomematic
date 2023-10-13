@@ -28,7 +28,6 @@ async def test_device_general(factory: helper.Factory) -> None:
         "name: HmIP-BSM_VCU2128127, "
         "generic_entities: 27, "
         "custom_entities: 3, "
-        "wrapper_entities: 0, "
         "events: 6"
     )
     assert device.device_type == "HmIP-BSM"

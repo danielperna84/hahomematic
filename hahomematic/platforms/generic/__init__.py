@@ -1,6 +1,7 @@
 """Module for HaHomematic generic platforms."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
@@ -10,6 +11,7 @@ from hahomematic.const import (
     VIRTUAL_REMOTE_TYPES,
     Description,
     Operations,
+    Parameter,
     ParameterType,
 )
 from hahomematic.platforms import device as hmd
@@ -26,6 +28,11 @@ from hahomematic.platforms.support import generate_unique_id, is_binary_sensor
 
 _LOGGER: Final = logging.getLogger(__name__)
 _BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
+
+# Entities that should be wrapped in a new entity on a new platform.
+_SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
+    ("HmIP-eTRV", "HmIP-HEATING"): Parameter.LEVEL,
+}
 
 
 def create_entity_and_append_to_device(
@@ -109,6 +116,19 @@ def create_entity_and_append_to_device(
             parameter,
         )
         device.add_entity(entity)
-        if new_platform := device.central.parameter_visibility.wrap_entity(wrapped_entity=entity):
-            wrapper_entity = hmge.WrapperEntity(wrapped_entity=entity, new_platform=new_platform)
-            device.add_entity(wrapper_entity)
+        if _switch_to_read_only(entity=entity):
+            entity.force_to_sensor()
+
+
+def _switch_to_read_only(entity: hmge.GenericEntity) -> bool:
+    """Check if parameter of a device should be wrapped to a different platform."""
+    for devices, parameter in _SWITCH_ENTITY_TO_SENSOR.items():
+        if (
+            hms.element_matches_key(
+                search_elements=devices,
+                compare_with=entity.device.device_type,
+            )
+            and entity.parameter == parameter
+        ):
+            return True
+    return False

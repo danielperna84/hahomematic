@@ -60,7 +60,7 @@ from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.entity import BaseEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
-from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
+from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
@@ -1063,12 +1063,6 @@ class CentralUnit:
         """Get entity by channel_address and parameter."""
         if device := self.get_device(address=channel_address):
             return device.get_generic_entity(channel_address=channel_address, parameter=parameter)
-        return None
-
-    def get_wrapper_entity(self, channel_address: str, parameter: str) -> WrapperEntity | None:
-        """Return the hm wrapper_entity."""
-        if device := self.get_device(address=channel_address):
-            return device.get_wrapper_entity(channel_address=channel_address, parameter=parameter)
         return None
 
     def get_event(self, channel_address: str, parameter: str) -> GenericEvent | None:

@@ -9,7 +9,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import HmPlatform, Parameter
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import get_value_from_value_list
@@ -64,6 +64,6 @@ def _fix_rssi(value: Any) -> int | None:
 
 
 CONVERTERS_BY_PARAM: Mapping[str, Any] = {
-    "RSSI_PEER": _fix_rssi,
-    "RSSI_DEVICE": _fix_rssi,
+    Parameter.RSSI_PEER: _fix_rssi,
+    Parameter.RSSI_DEVICE: _fix_rssi,
 }

@@ -42,7 +42,7 @@ from hahomematic.platforms.custom import definition as hmed, entity as hmce
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import BaseEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
-from hahomematic.platforms.generic.entity import GenericEntity, WrapperEntity
+from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import CacheEntry, Channel, check_or_create_directory
@@ -74,7 +74,6 @@ class HmDevice(PayloadMixin):
         self._custom_entities: Final[dict[int, hmce.CustomEntity]] = {}
         self._generic_entities: Final[dict[tuple[str, str], GenericEntity]] = {}
         self._generic_events: Final[dict[tuple[str, str], GenericEvent]] = {}
-        self._wrapper_entities: Final[dict[tuple[str, str], WrapperEntity]] = {}
         self._last_update: datetime = INIT_DATETIME
         self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
         self._update_callbacks: Final[list[Callable]] = []
@@ -305,11 +304,6 @@ class HmDevice(PayloadMixin):
         return self._update_entity
 
     @property
-    def wrapper_entities(self) -> tuple[WrapperEntity, ...]:
-        """Return the wrapper entities."""
-        return tuple(self._wrapper_entities.values())
-
-    @property
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity."""
         return self.get_generic_entity(
@@ -337,9 +331,6 @@ class HmDevice(PayloadMixin):
         if isinstance(entity, GenericEntity):
             self._generic_entities[(entity.channel_address, entity.parameter)] = entity
             self.register_update_callback(entity.update_entity)
-        if isinstance(entity, WrapperEntity):
-            self._wrapper_entities[(entity.channel_address, entity.parameter)] = entity
-            self.register_update_callback(entity.update_entity)
         if isinstance(entity, hmce.CustomEntity):
             self._custom_entities[entity.channel_no] = entity
         if isinstance(entity, GenericEvent):
@@ -351,9 +342,6 @@ class HmDevice(PayloadMixin):
             self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[(entity.channel_address, entity.parameter)]
-            self.unregister_update_callback(entity.update_entity)
-        if isinstance(entity, WrapperEntity):
-            del self._wrapper_entities[(entity.channel_address, entity.parameter)]
             self.unregister_update_callback(entity.update_entity)
         if isinstance(entity, hmce.CustomEntity):
             del self._custom_entities[entity.channel_no]
@@ -374,10 +362,6 @@ class HmDevice(PayloadMixin):
         for custom_entity in self.custom_entities:
             self.remove_entity(custom_entity)
         self._custom_entities.clear()
-
-        for wrapper_entity in self.wrapper_entities:
-            self.remove_entity(wrapper_entity)
-        self._wrapper_entities.clear()
 
     def register_update_callback(self, update_callback: Callable) -> None:
         """Register update callback."""
@@ -415,7 +399,6 @@ class HmDevice(PayloadMixin):
         all_entities: tuple[CallbackEntity, ...] = (
             *self.custom_entities,
             *self.generic_entities,
-            *self.wrapper_entities,
             self._update_entity,  # type: ignore[arg-type]
         )
 
@@ -479,10 +462,6 @@ class HmDevice(PayloadMixin):
     def get_generic_event(self, channel_address: str, parameter: str) -> GenericEvent | None:
         """Return a generic event from device."""
         return self._generic_events.get((channel_address, parameter))
-
-    def get_wrapper_entity(self, channel_address: str, parameter: str) -> WrapperEntity | None:
-        """Return a wrapper entity from device."""
-        return self._wrapper_entities.get((channel_address, parameter))
 
     def set_forced_availability(self, forced_availability: ForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
@@ -575,7 +554,6 @@ class HmDevice(PayloadMixin):
             f"name: {self._name}, "
             f"generic_entities: {len(self._generic_entities)}, "
             f"custom_entities: {len(self._custom_entities)}, "
-            f"wrapper_entities: {len(self._wrapper_entities)}, "
             f"events: {len(self._generic_events)}"
         )
 
