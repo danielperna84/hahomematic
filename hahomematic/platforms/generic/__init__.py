@@ -116,12 +116,19 @@ def create_entity_and_append_to_device(
             parameter,
         )
         device.add_entity(entity)
-        if _switch_to_read_only(entity=entity):
+        if _check_switch_to_sensor(entity=entity):
             entity.force_to_sensor()
 
 
-def _switch_to_read_only(entity: hmge.GenericEntity) -> bool:
+def _check_switch_to_sensor(entity: hmge.GenericEntity) -> bool:
     """Check if parameter of a device should be wrapped to a different platform."""
+    if entity.device.central.parameter_visibility.parameter_is_un_ignored(
+        device_type=entity.device.device_type,
+        channel_no=entity.channel_no,
+        paramset_key=entity.paramset_key,
+        parameter=entity.parameter,
+    ):
+        return False
     for devices, parameter in _SWITCH_ENTITY_TO_SENSOR.items():
         if (
             hms.element_matches_key(
