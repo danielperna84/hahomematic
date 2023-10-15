@@ -1,6 +1,7 @@
-# Version 2023.10.12 (2023-10-14)
+# Version 2023.10.12 (2023-10-15)
 
 - Ignore switch to sensor if un ignored
+- Update un ignore documentation
 
 # Version 2023.10.11 (2023-10-13)
 
