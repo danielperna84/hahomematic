@@ -1,7 +1,12 @@
+# Version 2023.10.12 (2023-10-15)
+
+- Ignore switch to sensor if un ignored
+- Update un ignore documentation
+
 # Version 2023.10.11 (2023-10-13)
 
 - Remove WrapperEntity
-- 
+
 # Version 2023.10.10 (2023-10-12)
 
 - Align method signatures
@@ -23,7 +28,7 @@
 # Version 2023.10.7 (2023-10-10)
 
 - Adjust typing after move to more enums
-- Add measure_execution_time to writing methodes
+- Add measure_execution_time to writing methods
 - Fix send sysvar #1249
 - Add HmIPW-SCTHD
 
