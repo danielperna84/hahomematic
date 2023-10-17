@@ -83,36 +83,37 @@ _HIDDEN_PARAMETERS: Final[tuple[Parameter, ...]] = (
 # Parameters within the VALUES paramset for which we don't create entities.
 _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "ACCESS_AUTHORIZATION",
-    "ACOUSTIC_NOTIFICATION_SELECTION",  # ro
-    "ADAPTION_DRIVE",  # ro
+    "ACOUSTIC_NOTIFICATION_SELECTION",
+    "ADAPTION_DRIVE",
     "AES_KEY",
-    "ALARM_COUNT",  # ro
-    "ALL_LEDS",  # ro
-    "ARROW_DOWN",  # ro
-    "ARROW_UP",  # ro
-    "BACKLIGHT",  # ro
-    "BEEP",  # ro
-    "BELL",  # ro
-    "BLIND",  # ro
+    "ALARM_COUNT",
+    "ALL_LEDS",
+    "ARROW_DOWN",
+    "ARROW_UP",
+    "BACKLIGHT",
+    "BEEP",
+    "BELL",
+    "BLIND",
     "BOOST_STATE",
     "BOOST_TIME",
     "BOOT",
-    "BULB",  # ro
-    "CLEAR_WINDOW_OPEN_SYMBOL",  # ro
-    "CLOCK",  # ro
+    "BULB",
+    "CLEAR_ERROR",
+    "CLEAR_WINDOW_OPEN_SYMBOL",
+    "CLOCK",
     "CONTROL_DIFFERENTIAL_TEMPERATURE",
     "DATE_TIME_UNKNOWN",
     "DECISION_VALUE",
     "DEVICE_IN_BOOTLOADER",
-    "DISPLAY_DATA_ALIGNMENT",  # ro
-    "DISPLAY_DATA_BACKGROUND_COLOR",  # ro
-    "DISPLAY_DATA_COMMIT",  # ro
-    "DISPLAY_DATA_ICON",  # ro
-    "DISPLAY_DATA_ID",  # ro
-    "DISPLAY_DATA_ID",  # ro
-    "DISPLAY_DATA_STRING",  # ro
-    "DISPLAY_DATA_TEXT_COLOR",  # ro
-    "DOOR",  # ro
+    "DISPLAY_DATA_ALIGNMENT",
+    "DISPLAY_DATA_BACKGROUND_COLOR",
+    "DISPLAY_DATA_COMMIT",
+    "DISPLAY_DATA_ICON",
+    "DISPLAY_DATA_ID",
+    "DISPLAY_DATA_ID",
+    "DISPLAY_DATA_STRING",
+    "DISPLAY_DATA_TEXT_COLOR",
+    "DOOR",
     "EXTERNAL_CLOCK",
     "FROST_PROTECTION",
     "HUMIDITY_LIMITER",
@@ -121,27 +122,27 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "INCLUSION_UNSUPPORTED_DEVICE",
     "INHIBIT",
     "INSTALL_MODE",
-    "INTERVAL",  # ro
+    "INTERVAL",
     "LEVEL_REAL",
-    "OLD_LEVEL",  # ro
+    "OLD_LEVEL",
     "OVERFLOW",
     "OVERRUN",
     "PARTY_SET_POINT_TEMPERATURE",
     "PARTY_TEMPERATURE",
     "PARTY_TIME_END",
     "PARTY_TIME_START",
-    "PHONE",  # ro
+    "PHONE",
     "PROCESS",
     "QUICK_VETO_TIME",
     "RAMP_STOP",
     "RELOCK_DELAY",
-    "SCENE",  # ro
+    "SCENE",
     "SELF_CALIBRATION",
-    "SERVICE_COUNT",  # ro
+    "SERVICE_COUNT",
     "SET_SYMBOL_FOR_HEATING_PHASE",
-    "SHADING_SPEED",  # ro
-    "SHEV_POS",  # ro
-    "SPEED",  # ro
+    "SHADING_SPEED",
+    "SHEV_POS",
+    "SPEED",
     "STATE_UNCERTAIN",
     "SUBMIT",
     "SWITCH_POINT_OCCURED",
@@ -149,12 +150,12 @@ _IGNORED_PARAMETERS: Final[tuple[str, ...]] = (
     "TEMPERATURE_OUT_OF_RANGE",
     "TEXT",
     "TIME_OF_OPERATION",
-    "USER_COLOR",  # ro
-    "USER_PROGRAM",  # ro
+    "USER_COLOR",
+    "USER_PROGRAM",
     "VALVE_ADAPTION",
-    "WINDOW",  # ro
+    "WINDOW",
     "WIN_RELEASE",
-    "WIN_RELEASE_ACT",  # ro
+    "WIN_RELEASE_ACT",
 )
 
 # Ignore Parameter that end with
