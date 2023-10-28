@@ -113,6 +113,11 @@ class CallbackEntity(ABC):
         """Return the central unit."""
         return self._custom_id
 
+    @classmethod
+    def default_platform(cls) -> HmPlatform:
+        """Return, the platform of the entity."""
+        return cls._platform
+
     @property
     def central(self) -> hmcu.CentralUnit:
         """Return the central unit."""
