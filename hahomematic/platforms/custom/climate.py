@@ -507,17 +507,10 @@ class CeIpThermostat(BaseClimateEntity):
             address=self._channel_address,
             paramset_key=ParamsetKey.VALUES,
             value={
-                "CONTROL_MODE": ModeHmIP.AWAY,
-                "PARTY_TIME_END": end.strftime(_PARTY_DATE_FORMAT),
-                "PARTY_TIME_START": start.strftime(_PARTY_DATE_FORMAT),
-            },
-        )
-
-        await self._client.put_paramset(
-            address=self._channel_address,
-            paramset_key=ParamsetKey.VALUES,
-            value={
+                "SET_POINT_MODE": ModeHmIP.AWAY,
                 "SET_POINT_TEMPERATURE": away_temperature,
+                "PARTY_TIME_START": start.strftime(_PARTY_DATE_FORMAT),
+                "PARTY_TIME_END": end.strftime(_PARTY_DATE_FORMAT),
             },
         )
 
@@ -535,7 +528,7 @@ class CeIpThermostat(BaseClimateEntity):
             address=self._channel_address,
             paramset_key=ParamsetKey.VALUES,
             value={
-                "CONTROL_MODE": ModeHmIP.AWAY,
+                "SET_POINT_MODE": ModeHmIP.AWAY,
                 "PARTY_TIME_START": _PARTY_INIT_DATE,
                 "PARTY_TIME_END": _PARTY_INIT_DATE,
             },

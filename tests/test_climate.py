@@ -300,41 +300,37 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
 
     with freeze_time("2023-03-03 08:00:00"):
         await climate.enable_away_mode_by_duration(hours=100, away_temperature=17.0)
-    assert mock_client.method_calls[-2] == call.put_paramset(
+    assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU1769958:1",
         paramset_key="VALUES",
         value={
-            "CONTROL_MODE": 2,
-            "PARTY_TIME_END": "2023_03_07 12:00",
+            "SET_POINT_MODE": 2,
+            "SET_POINT_TEMPERATURE": 17.0,
             "PARTY_TIME_START": "2023_03_03 07:50",
+            "PARTY_TIME_END": "2023_03_07 12:00",
         },
     )
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1769958:1", paramset_key="VALUES", value={"SET_POINT_TEMPERATURE": 17.0}
-    )
+
     await climate.enable_away_mode_by_calendar(
         start=datetime(2000, 12, 1), end=datetime(2024, 12, 1), away_temperature=17.0
     )
-    assert mock_client.method_calls[-2] == call.put_paramset(
-        address="VCU1769958:1",
-        paramset_key="VALUES",
-        value={
-            "CONTROL_MODE": 2,
-            "PARTY_TIME_END": "2024_12_01 00:00",
-            "PARTY_TIME_START": "2000_12_01 00:00",
-        },
-    )
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU1769958:1",
         paramset_key="VALUES",
-        value={"SET_POINT_TEMPERATURE": 17.0},
+        value={
+            "SET_POINT_MODE": 2,
+            "SET_POINT_TEMPERATURE": 17.0,
+            "PARTY_TIME_START": "2000_12_01 00:00",
+            "PARTY_TIME_END": "2024_12_01 00:00",
+        },
     )
+
     await climate.disable_away_mode()
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU1769958:1",
         paramset_key="VALUES",
         value={
-            "CONTROL_MODE": 2,
+            "SET_POINT_MODE": 2,
             "PARTY_TIME_START": "2000_01_01 00:00",
             "PARTY_TIME_END": "2000_01_01 00:00",
         },
