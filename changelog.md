@@ -1,3 +1,7 @@
+# Version 2023.10.13 (2023-10-28)
+
+- Fix service enable_away_mode_by_calendar
+
 # Version 2023.10.12 (2023-10-15)
 
 - Ignore switch to sensor if un ignored
