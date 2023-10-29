@@ -131,6 +131,7 @@
 - Replace last_updated by last_refreshed
 - Rename fire events
 - Switch formatting from black to ruff-format
+- Use ignore parameter for unset level and tilt (HmIP blinds)
 
 # Version 2023.10.13 (2023-10-28)
 
