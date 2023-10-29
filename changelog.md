@@ -1,3 +1,7 @@
+# Version 2023.10.14 (2023-10-29)
+
+- Cleanup cover
+
 # Version 2023.10.13 (2023-10-28)
 
 - Fix service enable_away_mode_by_calendar

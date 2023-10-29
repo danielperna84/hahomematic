@@ -78,6 +78,10 @@ _FIX_UNIT_BY_PARAM: Final[Mapping[str, str]] = {
     Parameter.WIND_DIRECTION_RANGE: "°",
 }
 
+_MULTIPLIER_UNIT: Final[Mapping[str, int]] = {
+    "100%": 100,
+}
+
 EVENT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_ADDRESS): str,
@@ -392,7 +396,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         self._operations: int = parameter_data[Description.OPERATIONS]
         self._special: Mapping[str, Any] | None = parameter_data.get(Description.SPECIAL)
         self._raw_unit: str | None = parameter_data.get(Description.UNIT)
-        self._unit: str | None = self._fix_unit(raw_unit=self._raw_unit)
+        self._unit: str | None = self._cleanup_unit(raw_unit=self._raw_unit)
+        self._multiplier: int = self._get_multiplier(raw_unit=self._raw_unit)
 
     @config_property
     def default(self) -> ParameterT:
@@ -422,7 +427,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @config_property
     def multiplier(self) -> int:
         """Return multiplier value."""
-        return 100 if self._raw_unit and self._raw_unit == "100%" else 1
+        return self._multiplier
 
     @config_property
     def parameter(self) -> str:
@@ -546,7 +551,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         )
         self._is_forced_sensor = True
 
-    def _fix_unit(self, raw_unit: str | None) -> str | None:
+    def _cleanup_unit(self, raw_unit: str | None) -> str | None:
         """Replace given unit."""
         if new_unit := _FIX_UNIT_BY_PARAM.get(self._parameter):
             return new_unit
@@ -556,6 +561,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             if check in raw_unit:
                 return fix
         return raw_unit
+
+    def _get_multiplier(self, raw_unit: str | None) -> int:
+        """Replace given unit."""
+        if not raw_unit:
+            return 1
+        if multiplier := _MULTIPLIER_UNIT.get(raw_unit):
+            return multiplier
+        return 1
 
     @abstractmethod
     def event(self, value: Any) -> None:
