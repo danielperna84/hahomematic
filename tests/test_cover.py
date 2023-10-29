@@ -8,9 +8,9 @@ import pytest
 
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.cover import (
-    _CLOSED,
-    _OPEN,
-    _WD_CLOSED,
+    _CLOSED_LEVEL,
+    _OPEN_LEVEL,
+    _WD_CLOSED_LEVEL,
     CeBlind,
     CeCover,
     CeGarage,
@@ -43,7 +43,7 @@ async def test_cecover(factory: helper.Factory) -> None:
     assert cover.usage == EntityUsage.CE_PRIMARY
 
     assert cover.current_position == 0
-    assert cover._channel_level == _CLOSED
+    assert cover._channel_level == _CLOSED_LEVEL
     assert cover.is_closed is True
     await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
@@ -67,7 +67,7 @@ async def test_cecover(factory: helper.Factory) -> None:
         channel_address="VCU8537918:4",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=_CLOSED,
+        value=_CLOSED_LEVEL,
     )
     assert cover.current_position == 0
 
@@ -107,7 +107,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
     assert cover.usage == EntityUsage.CE_PRIMARY
 
     assert cover.current_position == 0
-    assert cover._channel_level == _CLOSED
+    assert cover._channel_level == _CLOSED_LEVEL
     assert cover.channel_operation_mode == "SHUTTER"
     assert cover.is_closed is True
     await cover.set_position(position=81)
@@ -127,7 +127,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
         parameter="COMBINED_PARAMETER",
         value="L2=100,L=100",
     )
-    central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", _OPEN)
+    central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", _OPEN_LEVEL)
     assert cover.current_position == 100
     await cover.close()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -136,7 +136,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=0",
     )
-    central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", _CLOSED)
+    central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", _CLOSED_LEVEL)
     assert cover.is_opening is None
     assert cover.is_closing is None
     central.event(const.INTERFACE_ID, "VCU7807849:1", "ACTIVITY_STATE", 1)
@@ -159,7 +159,7 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
     assert cover.usage == EntityUsage.CE_PRIMARY
 
     assert cover.current_position == 0
-    assert cover._channel_level == _WD_CLOSED
+    assert cover._channel_level == _WD_CLOSED_LEVEL
     assert cover.is_closed is True
     await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.set_value(
@@ -176,7 +176,7 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
         channel_address="VCU0000350:1",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=_OPEN,
+        value=_OPEN_LEVEL,
     )
     assert cover.current_position == 100
     await cover.close()
@@ -184,20 +184,20 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
         channel_address="VCU0000350:1",
         paramset_key="VALUES",
         parameter="LEVEL",
-        value=_WD_CLOSED,
+        value=_WD_CLOSED_LEVEL,
     )
     assert cover.current_position == 0
-    assert cover._channel_level == _WD_CLOSED
+    assert cover._channel_level == _WD_CLOSED_LEVEL
     assert cover.is_closed is True
 
     await cover.set_position(position=1)
     assert cover.current_position == 1
-    assert cover._channel_level == _CLOSED
+    assert cover._channel_level == _CLOSED_LEVEL
     assert cover.is_closed is False
 
     await cover.set_position(position=0.0)
     assert cover.current_position == 0
-    assert cover._channel_level == _WD_CLOSED
+    assert cover._channel_level == _WD_CLOSED_LEVEL
     assert cover.is_closed is True
 
 
@@ -228,7 +228,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         parameter="LEVEL_COMBINED",
         value="0xc8,0x00",
     )
-    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _OPEN)
+    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _OPEN_LEVEL)
     assert cover.current_position == 100
     assert cover.current_tilt_position == 0
 
@@ -239,7 +239,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         parameter="LEVEL_COMBINED",
         value="0x00,0x00",
     )
-    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _CLOSED)
+    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _CLOSED_LEVEL)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
 
@@ -250,7 +250,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         parameter="LEVEL_COMBINED",
         value="0x00,0xc8",
     )
-    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN)
+    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_LEVEL)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 100
 
@@ -272,7 +272,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         parameter="LEVEL_COMBINED",
         value="0x00,0x00",
     )
-    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED)
+    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
 
@@ -304,17 +304,17 @@ async def test_ceblind(factory: helper.Factory) -> None:
     )
 
     await cover.open_tilt()
-    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN)
+    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_LEVEL)
     call_count = len(mock_client.method_calls)
     await cover.open_tilt()
-    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN)
+    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_LEVEL)
     assert call_count == len(mock_client.method_calls)
 
     await cover.close_tilt()
-    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED)
+    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
     call_count = len(mock_client.method_calls)
     await cover.close_tilt()
-    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED)
+    central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
     assert call_count == len(mock_client.method_calls)
 
     central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.4)
@@ -421,12 +421,12 @@ async def test_ceipblind(factory: helper.Factory) -> None:
     assert cover._channel_tilt_level == 0.8
     assert cover.current_tilt_position == 80
 
-    central.event(const.INTERFACE_ID, "VCU1223813:3", "LEVEL", _CLOSED)
-    assert cover._channel_level == _CLOSED
+    central.event(const.INTERFACE_ID, "VCU1223813:3", "LEVEL", _CLOSED_LEVEL)
+    assert cover._channel_level == _CLOSED_LEVEL
     assert cover.current_position == 0
 
-    central.event(const.INTERFACE_ID, "VCU1223813:3", "LEVEL_2", _CLOSED)
-    assert cover._channel_tilt_level == _CLOSED
+    central.event(const.INTERFACE_ID, "VCU1223813:3", "LEVEL_2", _CLOSED_LEVEL)
+    assert cover._channel_tilt_level == _CLOSED_LEVEL
     assert cover.current_tilt_position == 0
 
 

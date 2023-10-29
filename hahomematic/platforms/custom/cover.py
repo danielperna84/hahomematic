@@ -25,9 +25,9 @@ from hahomematic.platforms.generic.sensor import HmSensor
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-_CLOSED: Final = 0.0  # must be float!
-_OPEN: Final = 1.0  # must be float!
-_WD_CLOSED: Final = -0.005  # must be float! HM-Sec-Win
+_CLOSED_LEVEL: Final[float] = 0.0  # must be float!
+_OPEN_LEVEL: Final[float] = 1.0  # must be float!
+_WD_CLOSED_LEVEL: Final[float] = -0.005  # must be float! HM-Sec-Win
 
 
 class StateChangeArg(StrEnum):
@@ -87,8 +87,8 @@ class CeCover(CustomEntity):
     """Class for HomeMatic cover entities."""
 
     _platform = HmPlatform.COVER
-    _closed_state: float = _CLOSED
-    _open_state: float = _OPEN
+    _closed_level: float = _CLOSED_LEVEL
+    _open_level: float = _OPEN_LEVEL
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -105,7 +105,7 @@ class CeCover(CustomEntity):
         """Return the channel level of the cover."""
         if self._e_channel_level.value is not None and self.usage == EntityUsage.CE_PRIMARY:
             return float(self._e_channel_level.value)
-        return self._e_level.value if self._e_level.value is not None else self._closed_state
+        return self._e_level.value if self._e_level.value is not None else self._closed_level
 
     @value_property
     def current_position(self) -> int:
@@ -115,8 +115,8 @@ class CeCover(CustomEntity):
     @bind_collector
     async def set_position(
         self,
-        position: float | None = None,
-        tilt_position: float | None = None,
+        position: int | None = None,
+        tilt_position: int | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the cover to a specific position."""
@@ -131,7 +131,7 @@ class CeCover(CustomEntity):
         tilt_level: float | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
-        """Move the cover to a specific position. Value range is 0.0 to 1.0."""
+        """Move the cover to a specific position. Value range is 0.0 to 1.01."""
         if level is None:
             return
         await self._e_level.send_value(value=level, collector=collector)
@@ -139,7 +139,7 @@ class CeCover(CustomEntity):
     @value_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        return self._channel_level == self._closed_state
+        return self._channel_level == self._closed_level
 
     @value_property
     def is_opening(self) -> bool | None:
@@ -160,14 +160,14 @@ class CeCover(CustomEntity):
         """Open the cover."""
         if not self.is_state_change(open=True):
             return
-        await self._set_level(level=self._open_state, collector=collector)
+        await self._set_level(level=self._open_level, collector=collector)
 
     @bind_collector
     async def close(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover."""
         if not self.is_state_change(close=True):
             return
-        await self._set_level(level=self._closed_state, collector=collector)
+        await self._set_level(level=self._closed_level, collector=collector)
 
     @bind_collector
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
@@ -176,9 +176,12 @@ class CeCover(CustomEntity):
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
-        if kwargs.get(StateChangeArg.OPEN) is not None and self._channel_level != _OPEN:
+        if kwargs.get(StateChangeArg.OPEN) is not None and self._channel_level != self._open_level:
             return True
-        if kwargs.get(StateChangeArg.CLOSE) is not None and self._channel_level != _CLOSED:
+        if (
+            kwargs.get(StateChangeArg.CLOSE) is not None
+            and self._channel_level != self._closed_level
+        ):
             return True
         if (
             position := kwargs.get(StateChangeArg.POSITION)
@@ -190,16 +193,16 @@ class CeCover(CustomEntity):
 class CeWindowDrive(CeCover):
     """Class for Homematic window drive."""
 
-    _closed_state: float = _WD_CLOSED
-    _open_state: float = _OPEN
+    _closed_level: float = _WD_CLOSED_LEVEL
+    _open_level: float = _OPEN_LEVEL
 
     @value_property
     def current_position(self) -> int:
         """Return current position of cover."""
-        level = self._e_level.value if self._e_level.value is not None else self._closed_state
-        if level == _WD_CLOSED:
-            level = _CLOSED
-        elif level == _CLOSED:
+        level = self._e_level.value if self._e_level.value is not None else self._closed_level
+        if level == _WD_CLOSED_LEVEL:
+            level = _CLOSED_LEVEL
+        elif level == _CLOSED_LEVEL:
             level = 0.01
         return int(level * 100)
 
@@ -209,13 +212,13 @@ class CeWindowDrive(CeCover):
         tilt_level: float | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
-        """Move the window drive to a specific position. Value range is -0.005 to 1.0."""
+        """Move the window drive to a specific position. Value range is -0.005 to 1.01."""
         if level is None:
             return
 
-        if level == _CLOSED:
-            wd_level = _WD_CLOSED
-        elif _CLOSED < level <= 0.01:
+        if level == _CLOSED_LEVEL:
+            wd_level = _WD_CLOSED_LEVEL
+        elif _CLOSED_LEVEL < level <= 0.01:
             wd_level = 0
         else:
             wd_level = level
@@ -241,7 +244,7 @@ class CeBlind(CeCover):
         """Return the channel level of the tilt."""
         if self._e_channel_level_2.value is not None and self.usage == EntityUsage.CE_PRIMARY:
             return float(self._e_channel_level_2.value)
-        return self._e_level_2.value if self._e_level_2.value is not None else self._closed_state
+        return self._e_level_2.value if self._e_level_2.value is not None else self._closed_level
 
     @value_property
     def current_tilt_position(self) -> int:
@@ -251,8 +254,8 @@ class CeBlind(CeCover):
     @bind_collector
     async def set_position(
         self,
-        position: float | None = None,
-        tilt_position: float | None = None,
+        position: int | None = None,
+        tilt_position: int | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the blind to a specific position."""
@@ -270,7 +273,11 @@ class CeBlind(CeCover):
         tilt_level: float | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
-        """Move the cover to a specific tilt level. Value range is 0.0 to 1.0."""
+        """
+        Move the cover to a specific tilt level. Value range is 0.0 to 1.01.
+
+        1.01 means no change.
+        """
         _level = level if level is not None else self.current_position / 100.0
         _tilt_level = tilt_level if tilt_level is not None else self.current_tilt_position / 100.0
         if self._e_combined.is_hmtype and (
@@ -287,14 +294,14 @@ class CeBlind(CeCover):
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
-        await self._set_level(tilt_level=self._open_state, collector=collector)
+        await self._set_level(tilt_level=self._open_level, collector=collector)
 
     @bind_collector
     async def close_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
         if not self.is_state_change(tilt_close=True):
             return
-        await self._set_level(tilt_level=self._closed_state, collector=collector)
+        await self._set_level(tilt_level=self._closed_level, collector=collector)
 
     @bind_collector
     async def stop_tilt(self, collector: CallParameterCollector | None = None) -> None:
@@ -361,8 +368,8 @@ class CeIpBlind(CeBlind):
         if not self.is_state_change(open=True, tilt_open=True):
             return
         await self._set_level(
-            level=self._open_state,
-            tilt_level=self._open_state,
+            level=self._open_level,
+            tilt_level=self._open_level,
             collector=collector,
         )
 
@@ -372,8 +379,8 @@ class CeIpBlind(CeBlind):
         if not self.is_state_change(close=True, tilt_close=True):
             return
         await self._set_level(
-            level=self._closed_state,
-            tilt_level=self._closed_state,
+            level=self._closed_level,
+            tilt_level=self._closed_level,
             collector=collector,
         )
 
@@ -424,18 +431,18 @@ class CeGarage(CustomEntity):
     @bind_collector
     async def set_position(
         self,
-        position: float | None = None,
-        tilt_position: float | None = None,
+        position: int | None = None,
+        tilt_position: int | None = None,
         collector: CallParameterCollector | None = None,
     ) -> None:
         """Move the garage door to a specific position."""
         if position is None:
             return
-        if 50.0 < position <= 100.0:
+        if 50 < position <= 100:
             await self.open(collector=collector)
-        if 10.0 < position <= 50.0:
+        if 10 < position <= 50:
             await self.vent(collector=collector)
-        if _CLOSED <= position <= 10.0:
+        if 0 <= position <= 10:
             await self.close(collector=collector)
 
     @value_property
