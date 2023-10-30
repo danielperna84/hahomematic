@@ -53,7 +53,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         new_value = self._convert_value(value)
         if self._value == new_value:
             self._set_last_refreshed()
-            self.fire_refresh_entity_event()
+            self.fire_refresh_entity_callback()
             return
         self.update_value(value=new_value)
 
@@ -72,7 +72,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             Parameter.UN_REACH,
             Parameter.STICKY_UN_REACH,
         ):
-            self._device.fire_update_device_event(self._unique_id)
+            self._device.fire_update_device_callback(self._unique_id)
             self._central.fire_ha_event_callback(
                 event_type=EventType.DEVICE_AVAILABILITY,
                 event_data=self.get_event_data(new_value),
