@@ -60,13 +60,26 @@ class CustomEntity(BaseEntity):
         """Init the entity fields."""
 
     @value_property
-    def last_update(self) -> datetime:
-        """Return the latest last_update timestamp."""
+    def last_updated(self) -> datetime:
+        """Return the latest last_updated timestamp."""
         latest_update: datetime = INIT_DATETIME
         for entity in self._readable_entities:
-            if (entity_last_update := entity.last_update) and entity_last_update > latest_update:
-                latest_update = entity_last_update
+            if (
+                entity_last_updated := entity.last_updated
+            ) and entity_last_updated > latest_update:
+                latest_update = entity_last_updated
         return latest_update
+
+    @value_property
+    def last_refreshed(self) -> datetime:
+        """Return the latest last_refreshed timestamp."""
+        latest_refreshed: datetime = INIT_DATETIME
+        for entity in self._readable_entities:
+            if (
+                entity_last_refreshed := entity.last_refreshed
+            ) and entity_last_refreshed > latest_refreshed:
+                latest_refreshed = entity_last_refreshed
+        return latest_refreshed
 
     @property
     def has_data_entities(self) -> bool:

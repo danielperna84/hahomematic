@@ -52,6 +52,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         old_value = self._value
         new_value = self._convert_value(value)
         if self._value == new_value:
+            self._set_last_refreshed()
             return
         self.update_value(value=new_value)
 
