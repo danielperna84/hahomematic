@@ -55,12 +55,12 @@ class OnTimeMixin:
     def __init__(self) -> None:
         """Init OnTimeMixin."""
         self._on_time: float | None = None
-        self._on_time_updated: datetime = INIT_DATETIME
+        self._on_time_set: datetime = INIT_DATETIME
 
     def set_on_time(self, on_time: float) -> None:
         """Set the on_time."""
         self._on_time = on_time
-        self._on_time_updated = datetime.now()
+        self._on_time_set = datetime.now()
 
     def get_on_time_and_cleanup(self) -> float | None:
         """Return the on_time and cleanup afterwards."""
@@ -68,11 +68,11 @@ class OnTimeMixin:
             return None
         # save values
         on_time = self._on_time
-        on_time_updated = self._on_time_updated
+        on_time_set = self._on_time_set
         # cleanup values
         self._on_time = None
-        self._on_time_updated = INIT_DATETIME
-        if not hms.updated_within_seconds(last_update=on_time_updated, max_age=5):
+        self._on_time_set = INIT_DATETIME
+        if not hms.changed_within_seconds(last_change=on_time_set, max_age=5):
             return None
         return on_time
 

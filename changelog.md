@@ -1,6 +1,7 @@
 # Version 2023.10.14 (2023-10-29)
 
 - Cleanup cover
+- Replace last_updated by last_refreshed
 
 # Version 2023.10.13 (2023-10-28)
 

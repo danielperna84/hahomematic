@@ -21,6 +21,7 @@ from hahomematic.platforms.support import (
 from hahomematic.support import (
     build_headers,
     build_xml_rpc_uri,
+    changed_within_seconds,
     check_or_create_directory,
     check_password,
     element_matches_key,
@@ -29,7 +30,6 @@ from hahomematic.support import (
     get_tls_context,
     parse_sys_var,
     to_bool,
-    updated_within_seconds,
 )
 
 from tests import helper
@@ -278,17 +278,17 @@ async def test_tls_context() -> None:
 
 
 @pytest.mark.asyncio
-async def test_updated_within_seconds() -> None:
+async def test_changed_within_seconds() -> None:
     """Test updated_within_seconds."""
     assert (
-        updated_within_seconds(last_update=(datetime.now() - timedelta(seconds=10)), max_age=60)
+        changed_within_seconds(last_change=(datetime.now() - timedelta(seconds=10)), max_age=60)
         is True
     )
     assert (
-        updated_within_seconds(last_update=(datetime.now() - timedelta(seconds=70)), max_age=60)
+        changed_within_seconds(last_change=(datetime.now() - timedelta(seconds=70)), max_age=60)
         is False
     )
-    assert updated_within_seconds(last_update=INIT_DATETIME, max_age=60) is False
+    assert changed_within_seconds(last_change=INIT_DATETIME, max_age=60) is False
 
 
 @pytest.mark.asyncio

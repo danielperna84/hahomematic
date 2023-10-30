@@ -372,7 +372,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             ),
         )
         self._value: ParameterT | None = None
-        self._last_update: datetime = INIT_DATETIME
+        self._last_updated: datetime = INIT_DATETIME
+        self._last_refreshed: datetime = INIT_DATETIME
         self._state_uncertain: bool = True
         self._is_forced_sensor: bool = False
         self._assign_parameter_data(parameter_data=parameter_data)
@@ -457,7 +458,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @value_property
     def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
-        return self._last_update > INIT_DATETIME
+        return self._last_updated > INIT_DATETIME
 
     @property
     def is_writeable(self) -> bool:
@@ -465,9 +466,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return False if self._is_forced_sensor else bool(self._operations & Operations.WRITE)
 
     @value_property
-    def last_update(self) -> datetime:
+    def last_updated(self) -> datetime:
         """Return the last updated datetime value."""
-        return self._last_update
+        return self._last_updated
+
+    @value_property
+    def last_refreshed(self) -> datetime:
+        """Return the last refreshed datetime value."""
+        return self._last_refreshed
 
     @config_property
     def platform(self) -> HmPlatform:
@@ -576,7 +582,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     async def load_entity_value(self, call_source: CallSource) -> None:
         """Init the entity data."""
-        if hms.updated_within_seconds(last_update=self._last_update):
+        if hms.changed_within_seconds(last_change=self._last_refreshed):
             return
 
         # Check, if entity is readable
@@ -595,13 +601,13 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def update_value(self, value: Any) -> None:
         """Update value of the entity."""
         if value == NO_CACHE_ENTRY:
-            if self.last_update != INIT_DATETIME:
+            if self.last_updated != INIT_DATETIME:
                 self._state_uncertain = True
                 self.update_entity()
             return
         self._value = self._convert_value(value)
         self._state_uncertain = False
-        self._set_last_update()
+        self._set_last_updated()
         self.update_entity()
 
     def update_parameter_data(self) -> None:
@@ -657,9 +663,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             event_data[EVENT_VALUE] = value
         return cast(dict[str, Any], EVENT_DATA_SCHEMA(event_data))
 
-    def _set_last_update(self) -> None:
+    def _set_last_updated(self, now: datetime = datetime.now()) -> None:
         """Set last_update to current datetime."""
-        self._last_update = datetime.now()
+        self._last_updated = now
+        self._set_last_refreshed(now=now)
+
+    def _set_last_refreshed(self, now: datetime = datetime.now()) -> None:
+        """Set last_update to current datetime."""
+        self._last_refreshed = now
 
 
 class CallParameterCollector:

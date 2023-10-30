@@ -15,7 +15,7 @@ from hahomematic.const import (
     InterfaceName,
 )
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import get_device_address, updated_within_seconds
+from hahomematic.support import changed_within_seconds, get_device_address
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -32,11 +32,11 @@ class DeviceDetailsCache:
         self._functions: Final[dict[str, set[str]]] = {}
         self._interface_cache: Final[dict[str, str]] = {}
         self._names_cache: Final[dict[str, str]] = {}
-        self._last_updated = INIT_DATETIME
+        self._last_refreshed = INIT_DATETIME
 
     async def load(self) -> None:
         """Fetch names from backend."""
-        if updated_within_seconds(last_update=self._last_updated, max_age=(MAX_CACHE_AGE / 2)):
+        if changed_within_seconds(last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)):
             return
         self.clear()
         _LOGGER.debug("load: Loading names for %s", self._central.name)
@@ -49,7 +49,7 @@ class DeviceDetailsCache:
         _LOGGER.debug("load: Loading functions for %s", self._central.name)
         self._functions.clear()
         self._functions.update(await self._get_all_functions())
-        self._last_updated = datetime.now()
+        self._last_refreshed = datetime.now()
 
     @property
     def device_channel_ids(self) -> Mapping[str, str]:
@@ -113,7 +113,7 @@ class DeviceDetailsCache:
         self._names_cache.clear()
         self._channel_rooms.clear()
         self._functions.clear()
-        self._last_updated = INIT_DATETIME
+        self._last_refreshed = INIT_DATETIME
 
     def _identify_device_room(self) -> None:
         """
@@ -139,21 +139,21 @@ class CentralDataCache:
         self._central: Final = central
         # { key, value}
         self._value_cache: Final[dict[str, Any]] = {}
-        self._last_updated = INIT_DATETIME
+        self._last_refreshed = INIT_DATETIME
 
     @property
     def is_empty(self) -> bool:
         """Return if cache is empty."""
         if len(self._value_cache) == 0:
             return True
-        if not updated_within_seconds(last_update=self._last_updated):
+        if not changed_within_seconds(last_change=self._last_refreshed):
             self.clear()
             return True
         return False
 
     async def load(self) -> None:
         """Fetch data from backend."""
-        if updated_within_seconds(last_update=self._last_updated, max_age=(MAX_CACHE_AGE / 2)):
+        if changed_within_seconds(last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)):
             return
         self.clear()
         _LOGGER.debug("load: device data for %s", self._central.name)
@@ -168,7 +168,7 @@ class CentralDataCache:
     def add_data(self, all_device_data: dict[str, Any]) -> None:
         """Add data to cache."""
         self._value_cache.update(all_device_data)
-        self._last_updated = datetime.now()
+        self._last_refreshed = datetime.now()
 
     def get_data(
         self,
@@ -185,4 +185,4 @@ class CentralDataCache:
     def clear(self) -> None:
         """Clear the cache."""
         self._value_cache.clear()
-        self._last_updated = INIT_DATETIME
+        self._last_refreshed = INIT_DATETIME
