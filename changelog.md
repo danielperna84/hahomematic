@@ -2,6 +2,7 @@
 
 - Cleanup cover
 - Replace last_updated by last_refreshed
+- Rename fire events
 
 # Version 2023.10.13 (2023-10-28)
 
