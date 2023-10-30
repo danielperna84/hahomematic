@@ -128,7 +128,7 @@ class CustomEntity(BaseEntity):
         """Init the entity values."""
         for entity in self._readable_entities:
             await entity.load_entity_value(call_source=call_source)
-        self.update_entity()
+        self.fire_update_entity_event()
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """
@@ -221,7 +221,7 @@ class CustomEntity(BaseEntity):
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
-        entity.register_internal_update_callback(update_callback=self.update_entity)
+        entity.register_internal_update_callback(update_callback=self.fire_update_entity_event)
         self._data_entities[field] = entity
 
     def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:

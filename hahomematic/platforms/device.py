@@ -45,7 +45,7 @@ from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
-from hahomematic.support import CacheEntry, Channel, check_or_create_directory
+from hahomematic.support import CacheEntry, Channel, check_or_create_directory, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -330,7 +330,7 @@ class HmDevice(PayloadMixin):
             self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[(entity.channel_address, entity.parameter)] = entity
-            self.register_update_callback(entity.update_entity)
+            self.register_update_callback(update_callback=entity.fire_update_entity_event)
         if isinstance(entity, hmce.CustomEntity):
             self._custom_entities[entity.channel_no] = entity
         if isinstance(entity, GenericEvent):
@@ -342,12 +342,12 @@ class HmDevice(PayloadMixin):
             self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[(entity.channel_address, entity.parameter)]
-            self.unregister_update_callback(entity.update_entity)
+            self.unregister_update_callback(update_callback=entity.fire_update_entity_event)
         if isinstance(entity, hmce.CustomEntity):
             del self._custom_entities[entity.channel_no]
         if isinstance(entity, GenericEvent):
             del self._generic_events[(entity.channel_address, entity.parameter)]
-        entity.remove_entity()
+        entity.fire_remove_entity_event()
 
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
@@ -468,7 +468,7 @@ class HmDevice(PayloadMixin):
         if self._forced_availability != forced_availability:
             self._forced_availability = forced_availability
             for entity in self.generic_entities:
-                entity.update_entity()
+                entity.fire_update_entity_event()
 
     async def export_device_definition(self) -> None:
         """Export the device definition for current device."""
@@ -538,13 +538,16 @@ class HmDevice(PayloadMixin):
         await self.central.paramset_descriptions.save()
         for entity in self.generic_entities:
             entity.update_parameter_data()
-        self.update_device()
+        self.fire_update_device_event()
 
-    def update_device(self, *args: Any) -> None:
-        """Do what is needed when the state of the entity has been updated."""
+    def fire_update_device_event(self, *args: Any) -> None:
+        """Do what is needed when the state of the device has been updated."""
         self._set_last_updated()
         for _callback in self._update_callbacks:
-            _callback(*args)
+            try:
+                _callback(*args)
+            except Exception as ex:
+                _LOGGER.warning("FIRE_UPDATE_DEVICE failed: %s", reduce_args(args=ex.args))
 
     def __str__(self) -> str:
         """Provide some useful information."""
