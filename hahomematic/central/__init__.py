@@ -268,7 +268,7 @@ class CentralUnit:
     def remove_sysvar_entity(self, name: str) -> None:
         """Remove a sysvar entity."""
         if (sysvar_entity := self.get_sysvar_entity(name=name)) is not None:
-            sysvar_entity.remove_entity()
+            sysvar_entity.fire_remove_entity_callback()
             del self._sysvar_entities[name]
 
     @property
@@ -283,7 +283,7 @@ class CentralUnit:
     def remove_program_button(self, pid: str) -> None:
         """Remove a program button."""
         if (program_button := self.get_program_button(pid=pid)) is not None:
-            program_button.remove_entity()
+            program_button.fire_remove_entity_callback()
             del self._program_buttons[pid]
 
     @property

@@ -41,6 +41,7 @@ from hahomematic.platforms.support import (
     convert_value,
     generate_channel_unique_id,
 )
+from hahomematic.support import reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -104,6 +105,7 @@ class CallbackEntity(ABC):
         self._central: Final = central
         self._unique_id: Final = unique_id
         self._update_callbacks: dict[Callable, str] = {}
+        self._refresh_callbacks: dict[Callable, str] = {}
         self._remove_callbacks: list[Callable] = []
         self._custom_id: str | None = None
 
@@ -194,6 +196,24 @@ class CallbackEntity(ABC):
         if self.custom_id == custom_id:
             self._custom_id = None
 
+    def register_refresh_callback(self, refresh_callback: Callable, custom_id: str) -> None:
+        """Register update callback."""
+        if callable(refresh_callback):
+            self._refresh_callbacks[refresh_callback] = custom_id
+        if custom_id != DEFAULT_CUSTOM_ID:
+            if self._custom_id is not None:
+                raise HaHomematicException(
+                    f"REGISTER_REFRESH_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
+                )
+            self._custom_id = custom_id
+
+    def unregister_refresh_callback(self, refresh_callback: Callable, custom_id: str) -> None:
+        """Unregister update callback."""
+        if refresh_callback in self._refresh_callbacks:
+            del self._refresh_callbacks[refresh_callback]
+        if self.custom_id == custom_id:
+            self._custom_id = None
+
     def register_remove_callback(self, remove_callback: Callable) -> None:
         """Register the remove callback."""
         if callable(remove_callback) and remove_callback not in self._remove_callbacks:
@@ -204,15 +224,29 @@ class CallbackEntity(ABC):
         if remove_callback in self._remove_callbacks:
             self._remove_callbacks.remove(remove_callback)
 
-    def update_entity(self, *args: Any, **kwargs: Any) -> None:
+    def fire_update_entity_callback(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated."""
         for _callback in self._update_callbacks:
-            _callback(*args, **kwargs)
+            try:
+                _callback(*args, **kwargs)
+            except Exception as ex:
+                _LOGGER.warning("FIRE_UPDATE_ENTITY_EVENT failed: %s", reduce_args(args=ex.args))
 
-    def remove_entity(self, *args: Any) -> None:
+    def fire_refresh_entity_callback(self, *args: Any, **kwargs: Any) -> None:
+        """Do what is needed when the value of the entity has been refreshed."""
+        for _callback in self._refresh_callbacks:
+            try:
+                _callback(*args, **kwargs)
+            except Exception as ex:
+                _LOGGER.warning("FIRE_REFRESH_ENTITY_EVENT failed: %s", reduce_args(args=ex.args))
+
+    def fire_remove_entity_callback(self, *args: Any) -> None:
         """Do what is needed when the entity has been removed."""
         for _callback in self._remove_callbacks:
-            _callback(*args)
+            try:
+                _callback(*args)
+            except Exception as ex:
+                _LOGGER.warning("FIRE_REMOVE_ENTITY_EVENT failed: %s", reduce_args(args=ex.args))
 
 
 class BaseEntity(CallbackEntity, PayloadMixin):
@@ -315,9 +349,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Set the entity usage."""
         self._usage = usage
 
-    def update_entity(self, *args: Any, **kwargs: Any) -> None:
+    def fire_update_entity_callback(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated."""
-        super().update_entity(*args, **kwargs)
+        super().fire_update_entity_callback(*args, **kwargs)
         self._central.fire_entity_data_event_callback(
             interface_id=self._device.interface_id, entity=self
         )
@@ -601,14 +635,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def update_value(self, value: Any) -> None:
         """Update value of the entity."""
         if value == NO_CACHE_ENTRY:
-            if self.last_updated != INIT_DATETIME:
+            if self.last_refreshed != INIT_DATETIME:
                 self._state_uncertain = True
-                self.update_entity()
+                self.fire_update_entity_callback()
             return
         self._value = self._convert_value(value)
         self._state_uncertain = False
         self._set_last_updated()
-        self.update_entity()
+        self.fire_update_entity_callback()
 
     def update_parameter_data(self) -> None:
         """Update parameter data."""

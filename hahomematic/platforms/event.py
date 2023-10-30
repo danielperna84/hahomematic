@@ -65,7 +65,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
         if self.event_type in ENTITY_EVENTS:
-            self.update_entity(parameter=self.parameter.lower())
+            self.fire_update_entity_callback(parameter=self.parameter.lower())
         self.fire_event(value)
 
     def fire_event(self, value: Any) -> None:

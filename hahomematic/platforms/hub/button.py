@@ -58,7 +58,7 @@ class HmProgramButton(GenericHubEntity):
             self.last_execute_time = data.last_execute_time
             do_update = True
         if do_update:
-            self.update_entity()
+            self.fire_update_entity_callback()
 
     async def press(self) -> None:
         """Handle the button press."""
