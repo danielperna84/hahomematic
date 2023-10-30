@@ -153,11 +153,11 @@ def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
     return channel_address, None
 
 
-def changed_within_seconds(last_refreshed: datetime, max_age: int | float = MAX_CACHE_AGE) -> bool:
+def changed_within_seconds(last_change: datetime, max_age: int | float = MAX_CACHE_AGE) -> bool:
     """Entity has been updated within X minutes."""
-    if last_refreshed == INIT_DATETIME:
+    if last_change == INIT_DATETIME:
         return False
-    delta = datetime.now() - last_refreshed
+    delta = datetime.now() - last_change
     if delta.seconds < max_age:
         return True
     return False
@@ -264,4 +264,4 @@ class CacheEntry:
         """Return if entry is valid."""
         if self.value == NO_CACHE_ENTRY:
             return False
-        return changed_within_seconds(last_refreshed=self.last_refresh)
+        return changed_within_seconds(last_change=self.last_refresh)

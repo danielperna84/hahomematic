@@ -36,9 +36,7 @@ class DeviceDetailsCache:
 
     async def load(self) -> None:
         """Fetch names from backend."""
-        if changed_within_seconds(
-            last_refreshed=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)
-        ):
+        if changed_within_seconds(last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)):
             return
         self.clear()
         _LOGGER.debug("load: Loading names for %s", self._central.name)
@@ -148,16 +146,14 @@ class CentralDataCache:
         """Return if cache is empty."""
         if len(self._value_cache) == 0:
             return True
-        if not changed_within_seconds(last_refreshed=self._last_refreshed):
+        if not changed_within_seconds(last_change=self._last_refreshed):
             self.clear()
             return True
         return False
 
     async def load(self) -> None:
         """Fetch data from backend."""
-        if changed_within_seconds(
-            last_refreshed=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)
-        ):
+        if changed_within_seconds(last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)):
             return
         self.clear()
         _LOGGER.debug("load: device data for %s", self._central.name)

@@ -582,7 +582,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     async def load_entity_value(self, call_source: CallSource) -> None:
         """Init the entity data."""
-        if hms.changed_within_seconds(last_refreshed=self._last_refreshed):
+        if hms.changed_within_seconds(last_change=self._last_refreshed):
             return
 
         # Check, if entity is readable

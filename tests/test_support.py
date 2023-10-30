@@ -281,14 +281,14 @@ async def test_tls_context() -> None:
 async def test_changed_within_seconds() -> None:
     """Test updated_within_seconds."""
     assert (
-        changed_within_seconds(last_refreshed=(datetime.now() - timedelta(seconds=10)), max_age=60)
+        changed_within_seconds(last_change=(datetime.now() - timedelta(seconds=10)), max_age=60)
         is True
     )
     assert (
-        changed_within_seconds(last_refreshed=(datetime.now() - timedelta(seconds=70)), max_age=60)
+        changed_within_seconds(last_change=(datetime.now() - timedelta(seconds=70)), max_age=60)
         is False
     )
-    assert changed_within_seconds(last_refreshed=INIT_DATETIME, max_age=60) is False
+    assert changed_within_seconds(last_change=INIT_DATETIME, max_age=60) is False
 
 
 @pytest.mark.asyncio

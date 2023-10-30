@@ -72,7 +72,7 @@ class OnTimeMixin:
         # cleanup values
         self._on_time = None
         self._on_time_set = INIT_DATETIME
-        if not hms.changed_within_seconds(last_refreshed=on_time_set, max_age=5):
+        if not hms.changed_within_seconds(last_change=on_time_set, max_age=5):
             return None
         return on_time
 
