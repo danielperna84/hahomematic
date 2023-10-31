@@ -51,7 +51,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         """Handle event for which this entity has subscribed."""
         old_value = self._value
         new_value = self._convert_value(value)
-        if self._value == new_value:
+        if old_value == new_value:
             self._set_last_refreshed()
             self.fire_refresh_entity_callback()
             return

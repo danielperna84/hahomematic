@@ -3,6 +3,7 @@
 - Cleanup cover
 - Replace last_updated by last_refreshed
 - Rename fire events
+- Switch formatting from black to ruff-format
 
 # Version 2023.10.13 (2023-10-28)
 

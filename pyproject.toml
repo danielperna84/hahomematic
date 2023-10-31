@@ -51,11 +51,6 @@ exclude = ["tests", "tests.*", "dist", "build"]
 [tool.setuptools.package-data]
 hahomematic = ["py.typed", "rega_scripts/*.fn"]
 
-[tool.black]
-target-version = ["py311"]
-exclude = 'generated'
-line-length = 99
-
 [tool.pylint.MAIN]
 py-version = "3.11"
 ignore = [
@@ -209,7 +204,7 @@ disable = [
     "format-string-without-interpolation", # F
     # "global-statement", # PLW0603, ruff catches new occurrences, needs more work
     "global-variable-not-assigned", # PLW0602
-    "implicit-str-concat", # ISC001
+    # "implicit-str-concat", # ISC001
     "import-self", # PLW0406
     "inconsistent-quotes", # Q000
     "invalid-envvar-default", # PLW1508

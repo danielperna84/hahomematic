@@ -280,7 +280,8 @@ class CustomEntity(BaseEntity):
                 )
             return cast(entity_type, entity)  # type: ignore[valid-type]
         return cast(
-            entity_type, NoneTypeEntity()  # type:ignore[valid-type]
+            entity_type,  # type:ignore[valid-type]
+            NoneTypeEntity(),
         )
 
 
