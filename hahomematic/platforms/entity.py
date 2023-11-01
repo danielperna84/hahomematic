@@ -492,7 +492,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @value_property
     def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
-        return self._last_updated > INIT_DATETIME
+        return self._last_refreshed > INIT_DATETIME
 
     @property
     def is_writeable(self) -> bool:
