@@ -1,3 +1,7 @@
+# Version 2023.11.0 (2023-11-01)
+
+- Use last_refreshed for validation check
+
 # Version 2023.10.14 (2023-10-29)
 
 - Cleanup cover
