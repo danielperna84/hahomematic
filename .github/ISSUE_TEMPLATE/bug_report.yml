@@ -10,7 +10,9 @@ body:
     attributes:
       label: I agree to the following
       options:
-        - label: I have read the [documentation](https://github.com/danielperna84/custom_homematic#custom_homematic)
+        - label: I have read the [documentation](https://github.com/danielperna84/custom_homematic#custom_homematic) right now
+          required: true
+        - label: I have read the [FAQs](https://github.com/danielperna84/custom_homematic#frequently-asked-questions) right now
           required: true
         - label: I am aware of the latest [release notes](https://github.com/danielperna84/custom_homematic/releases)
           required: true
