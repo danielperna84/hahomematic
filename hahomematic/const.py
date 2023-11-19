@@ -54,7 +54,7 @@ EVENT_DATA: Final = "data"
 EVENT_DEVICE_TYPE: Final = "device_type"
 EVENT_INSTANCE_NAME: Final = "instance_name"
 EVENT_INTERFACE_ID: Final = "interface_id"
-EVENT_OUTSTANDING_PONGS: Final = "outstanding_pongs"
+EVENT_PENDING_PONGS: Final = "pending_pongs"
 EVENT_PARAMETER: Final = "parameter"
 EVENT_SECONDS_SINCE_LAST_EVENT: Final = "seconds_since_last_event"
 EVENT_TYPE: Final = "type"
@@ -356,7 +356,7 @@ class InterfaceEventType(StrEnum):
     """Enum with hahomematic event types."""
 
     CALLBACK = "callback"
-    OUTSTANDING_PONG = "outstanding_pong"
+    PENDING_PONG = "pending_pong"
     PROXY = "proxy"
     UNKNOWN_PONG = "unknown_pong"
 

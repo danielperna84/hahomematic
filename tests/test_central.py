@@ -448,41 +448,41 @@ async def test_ping_pong(factory: helper.Factory) -> None:
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
     await client.check_connection_availability()
-    assert client._ping_pong_cache.outstanding_pong_count == 1
-    for ts_stored in list(client._ping_pong_cache._outstanding_pongs):
+    assert client._ping_pong_cache.pending_pong_count == 1
+    for ts_stored in list(client._ping_pong_cache._pending_pongs):
         central.event(
             interface_id,
             "",
             Parameter.PONG,
             f"{interface_id}#{ts_stored.strftime(DATETIME_FORMAT_MILLIS)}",
         )
-    assert client._ping_pong_cache.outstanding_pong_count == 0
+    assert client._ping_pong_cache.pending_pong_count == 0
 
 
 @pytest.mark.asyncio
-async def test_outstanding_pong_failure(factory: helper.Factory) -> None:
+async def test_pending_pong_failure(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 1
-    assert client._outstanding_pong_fired is False
+    assert client._pending_pong_fired is False
     while count < max_count:
         await client.check_connection_availability()
         count += 1
-    assert client._ping_pong_cache.outstanding_pong_count == max_count
+    assert client._ping_pong_cache.pending_pong_count == max_count
     assert factory.ha_event_mock.mock_calls[-1] == call(
         EventType.INTERFACE,
         {
             "data": {
                 "instance_name": "CentralTest",
-                "outstanding_pongs": 11,
+                "pending_pongs": 11,
             },
             "interface_id": "CentralTest-BidCos-RF",
-            "type": InterfaceEventType.OUTSTANDING_PONG,
+            "type": InterfaceEventType.PENDING_PONG,
         },
     )
-    assert client._outstanding_pong_fired is True
+    assert client._pending_pong_fired is True
     assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
     central.event(interface_id, "", Parameter.PONG, interface_id)
