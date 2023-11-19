@@ -70,8 +70,8 @@ class Client(ABC):
         self._is_callback_alive: bool = True
         self.last_updated: datetime = INIT_DATETIME
         self._ping_pong_cache: Final = PingPongCache(interface_id=client_config.interface_id)
-        self._pending_pong_fired: bool = False
-        self._unknown_pong_fired: bool = False
+        self._pending_pong_logged: bool = False
+        self._unknown_pong_logged: bool = False
 
         self._proxy: XmlRpcProxy
         self._proxy_read: XmlRpcProxy
@@ -355,15 +355,14 @@ class Client(ABC):
                 },
             }
 
-        if self._pending_pong_fired:
-            if self._ping_pong_cache.low_pending_pongs is True:
-                self.central.fire_ha_event_callback(
-                    event_type=EventType.INTERFACE,
-                    event_data=cast(
-                        dict[str, Any],
-                        hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(pending_pong_count=0)),
-                    ),
-                )
+        if self._ping_pong_cache.low_pending_pongs is True:
+            self.central.fire_ha_event_callback(
+                event_type=EventType.INTERFACE,
+                event_data=cast(
+                    dict[str, Any],
+                    hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(pending_pong_count=0)),
+                ),
+            )
             return
 
         if self._ping_pong_cache.check_pending_pongs() is False:
@@ -379,13 +378,16 @@ class Client(ABC):
             ),
         )
 
-        _LOGGER.warning(
-            "PING/PONG MISMATCH: There is a mismatch between send ping events and received pong events for HA instance %s. "
-            "Possible reason: Something is stuck on CCU, so try a restart.",
-            self.interface_id,
-        )
+        if self._pending_pong_logged is False:
+            _LOGGER.warning(
+                "Pending PONG Events: There is a mismatch between send ping events and received pong events for HA instance %s. "
+                "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
+                "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
+                "Possible reason 2: Something is stuck on CCU, so try a restart.",
+                self.interface_id,
+            )
 
-        self._pending_pong_fired = True
+        self._pending_pong_logged = True
 
     def _check_and_fire_unknown_pong_event(self) -> None:
         """Fire an event about the unknown pong status."""
@@ -400,15 +402,14 @@ class Client(ABC):
                 },
             }
 
-        if self._unknown_pong_fired:
-            if self._ping_pong_cache.low_unknown_pongs is True:
-                self.central.fire_ha_event_callback(
-                    event_type=EventType.INTERFACE,
-                    event_data=cast(
-                        dict[str, Any],
-                        hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(unknown_pong_count=0)),
-                    ),
-                )
+        if self._ping_pong_cache.low_unknown_pongs is True:
+            self.central.fire_ha_event_callback(
+                event_type=EventType.INTERFACE,
+                event_data=cast(
+                    dict[str, Any],
+                    hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(unknown_pong_count=0)),
+                ),
+            )
             return
 
         if self._ping_pong_cache.check_unknown_pongs() is False:
@@ -423,14 +424,15 @@ class Client(ABC):
                 ),
             ),
         )
-        _LOGGER.warning(
-            "PING/PONG MISMATCH: There is a mismatch between send ping events and received pong events for HA instance %s. "
-            "Possible reason: You are running multiple instances of HA with the same instance name configured for this integration. "
-            "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. ",
-            self.interface_id,
-        )
+        if self._unknown_pong_logged is False:
+            _LOGGER.warning(
+                "Unknown PONG Events received: There is a mismatch between send ping events and received pong events for interface %s. "
+                "Possible reason: You are running multiple instances of HA with the same instance name configured for this integration. "
+                "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. ",
+                self.interface_id,
+            )
 
-        self._unknown_pong_fired = True
+        self._unknown_pong_logged = True
 
     async def set_install_mode(
         self,
