@@ -257,7 +257,7 @@ class PingPongCache:
         """Check, if store contains too many pending pongs."""
         with self._sema:
             dt_now = datetime.now()
-            for ping_ts in self._pending_pongs:
+            for ping_ts in list(self._pending_pongs):
                 delta = dt_now - ping_ts
                 if delta.seconds > self._ttl:
                     self._pending_pongs.remove(ping_ts)
@@ -267,7 +267,7 @@ class PingPongCache:
         """Check, if store contains too many unknown pongs."""
         with self._sema:
             dt_now = datetime.now()
-            for pong_ts in self._unknown_pongs:
+            for pong_ts in list(self._unknown_pongs):
                 delta = dt_now - pong_ts
                 if delta.seconds > self._ttl:
                     self._unknown_pongs.remove(pong_ts)
