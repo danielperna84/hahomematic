@@ -206,6 +206,16 @@ class PingPongCache:
         self._unknown_pongs: set[datetime] = set()
 
     @property
+    def low_outstanding_pongs(self) -> bool:
+        """Return the outstanding pong count is low."""
+        return len(self._outstanding_pongs) < (self._allowed_delta / 2)
+
+    @property
+    def low_unknown_pongs(self) -> bool:
+        """Return the unknown pong count is low."""
+        return len(self._unknown_pongs) < (self._allowed_delta / 2)
+
+    @property
     def outstanding_pong_count(self) -> int:
         """Return the outstanding pong count."""
         return len(self._outstanding_pongs)

@@ -344,23 +344,41 @@ class Client(ABC):
 
     def _check_and_fire_outstanding_pong_event(self) -> None:
         """Fire an event about the outstanding pong status."""
+
+        def get_event_data(outstanding_pong_count: int) -> dict[str, Any]:
+            return {
+                EVENT_INTERFACE_ID: self.interface_id,
+                EVENT_TYPE: InterfaceEventType.OUTSTANDING_PONG,
+                EVENT_DATA: {
+                    EVENT_INSTANCE_NAME: self.central.config.name,
+                    EVENT_OUTSTANDING_PONGS: outstanding_pong_count,
+                },
+            }
+
         if self._outstanding_pong_fired:
+            if self._ping_pong_cache.low_outstanding_pongs is True:
+                self.central.fire_ha_event_callback(
+                    event_type=EventType.INTERFACE,
+                    event_data=cast(
+                        dict[str, Any],
+                        hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(outstanding_pong_count=0)),
+                    ),
+                )
             return
 
         if self._ping_pong_cache.check_outstanding_pongs() is False:
             return
 
-        event_data: dict[str, Any] = {
-            EVENT_INTERFACE_ID: self.interface_id,
-            EVENT_TYPE: InterfaceEventType.OUTSTANDING_PONG,
-            EVENT_DATA: {
-                EVENT_INSTANCE_NAME: self.central.config.name,
-                EVENT_OUTSTANDING_PONGS: self._ping_pong_cache.outstanding_pong_count,
-            },
-        }
         self.central.fire_ha_event_callback(
             event_type=EventType.INTERFACE,
-            event_data=cast(dict[str, Any], hmcu.INTERFACE_EVENT_SCHEMA(event_data)),
+            event_data=cast(
+                dict[str, Any],
+                hmcu.INTERFACE_EVENT_SCHEMA(
+                    get_event_data(
+                        outstanding_pong_count=self._ping_pong_cache.outstanding_pong_count
+                    )
+                ),
+            ),
         )
 
         _LOGGER.warning(
@@ -373,23 +391,39 @@ class Client(ABC):
 
     def _check_and_fire_unknown_pong_event(self) -> None:
         """Fire an event about the unknown pong status."""
+
+        def get_event_data(unknown_pong_count: int) -> dict[str, Any]:
+            return {
+                EVENT_INTERFACE_ID: self.interface_id,
+                EVENT_TYPE: InterfaceEventType.UNKNOWN_PONG,
+                EVENT_DATA: {
+                    EVENT_INSTANCE_NAME: self.central.config.name,
+                    EVENT_UNKNOWN_PONGS: unknown_pong_count,
+                },
+            }
+
         if self._unknown_pong_fired:
+            if self._ping_pong_cache.low_unknown_pongs is True:
+                self.central.fire_ha_event_callback(
+                    event_type=EventType.INTERFACE,
+                    event_data=cast(
+                        dict[str, Any],
+                        hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(unknown_pong_count=0)),
+                    ),
+                )
             return
 
         if self._ping_pong_cache.check_unknown_pongs() is False:
             return
 
-        event_data: dict[str, Any] = {
-            EVENT_INTERFACE_ID: self.interface_id,
-            EVENT_TYPE: InterfaceEventType.UNKNOWN_PONG,
-            EVENT_DATA: {
-                EVENT_INSTANCE_NAME: self.central.config.name,
-                EVENT_UNKNOWN_PONGS: self._ping_pong_cache.unknown_pong_count,
-            },
-        }
         self.central.fire_ha_event_callback(
             event_type=EventType.INTERFACE,
-            event_data=cast(dict[str, Any], hmcu.INTERFACE_EVENT_SCHEMA(event_data)),
+            event_data=cast(
+                dict[str, Any],
+                hmcu.INTERFACE_EVENT_SCHEMA(
+                    get_event_data(unknown_pong_count=self._ping_pong_cache.unknown_pong_count)
+                ),
+            ),
         )
         _LOGGER.warning(
             "PING/PONG MISMATCH: There is a mismatch between send ping events and received pong events for HA instance %s. "
