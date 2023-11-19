@@ -17,7 +17,7 @@ from hahomematic.const import (
     EVENT_DATA,
     EVENT_INSTANCE_NAME,
     EVENT_INTERFACE_ID,
-    EVENT_OUTSTANDING_PONGS,
+    EVENT_PENDING_PONGS,
     EVENT_SECONDS_SINCE_LAST_EVENT,
     EVENT_TYPE,
     EVENT_UNKNOWN_PONGS,
@@ -70,7 +70,7 @@ class Client(ABC):
         self._is_callback_alive: bool = True
         self.last_updated: datetime = INIT_DATETIME
         self._ping_pong_cache: Final = PingPongCache(interface_id=client_config.interface_id)
-        self._outstanding_pong_fired: bool = False
+        self._pending_pong_fired: bool = False
         self._unknown_pong_fired: bool = False
 
         self._proxy: XmlRpcProxy
@@ -333,40 +333,40 @@ class Client(ABC):
         """Increase the number of send ping events."""
         if self.supports_ping_pong is True:
             self._ping_pong_cache.handle_send_ping(ping_ts=ping_ts)
-            self._check_and_fire_outstanding_pong_event()
+            self._check_and_fire_pending_pong_event()
 
     def handle_received_pong(self, pong_ts: datetime) -> None:
         """Increase the number of send ping events."""
         if self.supports_ping_pong is True:
             self._ping_pong_cache.handle_received_pong(pong_ts=pong_ts)
-            self._check_and_fire_outstanding_pong_event()
+            self._check_and_fire_pending_pong_event()
             self._check_and_fire_unknown_pong_event()
 
-    def _check_and_fire_outstanding_pong_event(self) -> None:
-        """Fire an event about the outstanding pong status."""
+    def _check_and_fire_pending_pong_event(self) -> None:
+        """Fire an event about the pending pong status."""
 
-        def get_event_data(outstanding_pong_count: int) -> dict[str, Any]:
+        def get_event_data(pending_pong_count: int) -> dict[str, Any]:
             return {
                 EVENT_INTERFACE_ID: self.interface_id,
-                EVENT_TYPE: InterfaceEventType.OUTSTANDING_PONG,
+                EVENT_TYPE: InterfaceEventType.PENDING_PONG,
                 EVENT_DATA: {
                     EVENT_INSTANCE_NAME: self.central.config.name,
-                    EVENT_OUTSTANDING_PONGS: outstanding_pong_count,
+                    EVENT_PENDING_PONGS: pending_pong_count,
                 },
             }
 
-        if self._outstanding_pong_fired:
-            if self._ping_pong_cache.low_outstanding_pongs is True:
+        if self._pending_pong_fired:
+            if self._ping_pong_cache.low_pending_pongs is True:
                 self.central.fire_ha_event_callback(
                     event_type=EventType.INTERFACE,
                     event_data=cast(
                         dict[str, Any],
-                        hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(outstanding_pong_count=0)),
+                        hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(pending_pong_count=0)),
                     ),
                 )
             return
 
-        if self._ping_pong_cache.check_outstanding_pongs() is False:
+        if self._ping_pong_cache.check_pending_pongs() is False:
             return
 
         self.central.fire_ha_event_callback(
@@ -374,9 +374,7 @@ class Client(ABC):
             event_data=cast(
                 dict[str, Any],
                 hmcu.INTERFACE_EVENT_SCHEMA(
-                    get_event_data(
-                        outstanding_pong_count=self._ping_pong_cache.outstanding_pong_count
-                    )
+                    get_event_data(pending_pong_count=self._ping_pong_cache.pending_pong_count)
                 ),
             ),
         )
@@ -387,7 +385,7 @@ class Client(ABC):
             self.interface_id,
         )
 
-        self._outstanding_pong_fired = True
+        self._pending_pong_fired = True
 
     def _check_and_fire_unknown_pong_event(self) -> None:
         """Fire an event about the unknown pong status."""

@@ -202,13 +202,13 @@ class PingPongCache:
         self._allowed_delta = allowed_delta
         self._ttl = ttl
         self._sema: Final = threading.Semaphore()
-        self._outstanding_pongs: set[datetime] = set()
+        self._pending_pongs: set[datetime] = set()
         self._unknown_pongs: set[datetime] = set()
 
     @property
-    def low_outstanding_pongs(self) -> bool:
-        """Return the outstanding pong count is low."""
-        return len(self._outstanding_pongs) < (self._allowed_delta / 2)
+    def low_pending_pongs(self) -> bool:
+        """Return the pending pong count is low."""
+        return len(self._pending_pongs) < (self._allowed_delta / 2)
 
     @property
     def low_unknown_pongs(self) -> bool:
@@ -216,9 +216,9 @@ class PingPongCache:
         return len(self._unknown_pongs) < (self._allowed_delta / 2)
 
     @property
-    def outstanding_pong_count(self) -> int:
-        """Return the outstanding pong count."""
-        return len(self._outstanding_pongs)
+    def pending_pong_count(self) -> int:
+        """Return the pending pong count."""
+        return len(self._pending_pongs)
 
     @property
     def unknown_pong_count(self) -> int:
@@ -228,22 +228,22 @@ class PingPongCache:
     def handle_send_ping(self, ping_ts: datetime) -> None:
         """Handle send ping timestamp."""
         with self._sema:
-            self._outstanding_pongs.add(ping_ts)
+            self._pending_pongs.add(ping_ts)
             _LOGGER.debug(
-                "PINGPONGCACHE: Increase outstanding PING count: %s, %i",
+                "PINGPONGCACHE: Increase pending PING count: %s, %i",
                 self._interface_id,
-                self.outstanding_pong_count,
+                self.pending_pong_count,
             )
 
     def handle_received_pong(self, pong_ts: datetime) -> None:
         """Handle received pong timestamp."""
         with self._sema:
-            if pong_ts in self._outstanding_pongs:
-                self._outstanding_pongs.remove(pong_ts)
+            if pong_ts in self._pending_pongs:
+                self._pending_pongs.remove(pong_ts)
                 _LOGGER.debug(
-                    "PINGPONGCACHE: Reduce outstanding PING count: %s, %i",
+                    "PINGPONGCACHE: Reduce pending PING count: %s, %i",
                     self._interface_id,
-                    self.outstanding_pong_count,
+                    self.pending_pong_count,
                 )
             else:
                 self._unknown_pongs.add(pong_ts)
@@ -253,15 +253,15 @@ class PingPongCache:
                     self.unknown_pong_count,
                 )
 
-    def check_outstanding_pongs(self) -> bool:
-        """Check, if store contains too many outstanding pongs."""
+    def check_pending_pongs(self) -> bool:
+        """Check, if store contains too many pending pongs."""
         with self._sema:
             dt_now = datetime.now()
-            for ping_ts in self._outstanding_pongs:
+            for ping_ts in self._pending_pongs:
                 delta = dt_now - ping_ts
                 if delta.seconds > self._ttl:
-                    self._outstanding_pongs.remove(ping_ts)
-        return len(self._outstanding_pongs) > self._allowed_delta
+                    self._pending_pongs.remove(ping_ts)
+        return len(self._pending_pongs) > self._allowed_delta
 
     def check_unknown_pongs(self) -> bool:
         """Check, if store contains too many unknown pongs."""
