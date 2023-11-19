@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from datetime import datetime
 from typing import Any, cast
 from unittest.mock import call, patch
 
@@ -9,6 +10,7 @@ import pytest
 
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
+    DATETIME_FORMAT_MILLIS,
     EVENT_AVAILABLE,
     EntityUsage,
     EventType,
@@ -446,32 +448,41 @@ async def test_ping_pong(factory: helper.Factory) -> None:
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
     await client.check_connection_availability()
-    assert central._ping_count[interface_id] == 1
-    central.event(interface_id, "", Parameter.PONG, interface_id)
-    assert central._ping_count[interface_id] == 0
+    assert client._ping_pong_cache.outstanding_pong_count == 1
+    for ts_stored in list(client._ping_pong_cache._outstanding_pongs):
+        central.event(
+            interface_id,
+            "",
+            Parameter.PONG,
+            f"{interface_id}#{ts_stored.strftime(DATETIME_FORMAT_MILLIS)}",
+        )
+    assert client._ping_pong_cache.outstanding_pong_count == 0
 
 
 @pytest.mark.asyncio
-async def test_ping_failure(factory: helper.Factory) -> None:
+async def test_outstanding_pong_failure(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 1
-    assert central._ping_pong_fired is False
+    assert client._outstanding_pong_fired is False
     while count < max_count:
         await client.check_connection_availability()
         count += 1
-    assert central._ping_count[interface_id] == max_count
+    assert client._ping_pong_cache.outstanding_pong_count == max_count
     assert factory.ha_event_mock.mock_calls[-1] == call(
         EventType.INTERFACE,
         {
-            "data": {"instance_name": "CentralTest"},
+            "data": {
+                "instance_name": "CentralTest",
+                "outstanding_pongs": 11,
+            },
             "interface_id": "CentralTest-BidCos-RF",
-            "type": InterfaceEventType.PINGPONG,
+            "type": InterfaceEventType.OUTSTANDING_PONG,
         },
     )
-    assert central._ping_pong_fired is True
+    assert client._outstanding_pong_fired is True
     assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
     central.event(interface_id, "", Parameter.PONG, interface_id)
@@ -479,26 +490,35 @@ async def test_ping_failure(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio
-async def test_pong_failure(factory: helper.Factory) -> None:
+async def test_unknown_pong_failure(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
     count = 0
-    max_count = PING_PONG_MISMATCH_COUNT + 2
-    assert central._ping_pong_fired is False
+    max_count = PING_PONG_MISMATCH_COUNT + 1
+    assert client._unknown_pong_fired is False
     while count < max_count:
-        central.event(interface_id, "", Parameter.PONG, interface_id)
+        central.event(
+            interface_id,
+            "",
+            Parameter.PONG,
+            f"{interface_id}#{datetime.now().strftime(DATETIME_FORMAT_MILLIS)}",
+        )
         count += 1
-    assert central._ping_count[interface_id] == -max_count + 1
+
+    assert client._ping_pong_cache.unknown_pong_count == 11
     assert factory.ha_event_mock.mock_calls[-1] == call(
         EventType.INTERFACE,
         {
-            "data": {"instance_name": "CentralTest"},
+            "data": {
+                "instance_name": "CentralTest",
+                "unknown_pongs": 11,
+            },
             "interface_id": "CentralTest-BidCos-RF",
-            "type": InterfaceEventType.PINGPONG,
+            "type": InterfaceEventType.UNKNOWN_PONG,
         },
     )
-    assert central._ping_pong_fired is True
+    assert client._unknown_pong_fired is True
     assert len(factory.ha_event_mock.mock_calls) == 2
     # Check event fired only once
     central.event(interface_id, "", Parameter.PONG, interface_id)

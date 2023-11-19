@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2023.11.0"
+version     = "2023.11.1"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
@@ -423,7 +423,7 @@ select = [
     "G", # flake8-logging-format
     "I",  # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
-    "ISC001", # Implicitly concatenated string literals on one line
+    #"ISC001", # Implicitly concatenated string literals on one line
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase

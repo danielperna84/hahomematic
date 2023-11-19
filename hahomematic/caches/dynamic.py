@@ -4,9 +4,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 import logging
+import threading
 from typing import Any, Final
 
 from hahomematic import central as hmcu
+from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
@@ -186,3 +188,77 @@ class CentralDataCache:
         """Clear the cache."""
         self._value_cache.clear()
         self._last_refreshed = INIT_DATETIME
+
+
+class PingPongCache:
+    """Cache to collect ping/pong events with ttl."""
+
+    def __init__(
+        self, interface_id: str, allowed_delta: int = PING_PONG_MISMATCH_COUNT, ttl: int = 300
+    ):
+        """Initialize the cache with ttl."""
+        assert ttl > 0
+        self._interface_id = interface_id
+        self._allowed_delta = allowed_delta
+        self._ttl = ttl
+        self._sema: Final = threading.Semaphore()
+        self._outstanding_pongs: set[datetime] = set()
+        self._unknown_pongs: set[datetime] = set()
+
+    @property
+    def outstanding_pong_count(self) -> int:
+        """Return the outstanding pong count."""
+        return len(self._outstanding_pongs)
+
+    @property
+    def unknown_pong_count(self) -> int:
+        """Return the unknown pong count."""
+        return len(self._unknown_pongs)
+
+    def handle_send_ping(self, ping_ts: datetime) -> None:
+        """Handle send ping timestamp."""
+        with self._sema:
+            self._outstanding_pongs.add(ping_ts)
+            _LOGGER.debug(
+                "PINGPONGCACHE: Increase outstanding PING count: %s, %i",
+                self._interface_id,
+                self.outstanding_pong_count,
+            )
+
+    def handle_received_pong(self, pong_ts: datetime) -> None:
+        """Handle received pong timestamp."""
+        with self._sema:
+            if pong_ts in self._outstanding_pongs:
+                self._outstanding_pongs.remove(pong_ts)
+                _LOGGER.debug(
+                    "PINGPONGCACHE: Reduce outstanding PING count: %s, %i",
+                    self._interface_id,
+                    self.outstanding_pong_count,
+                )
+            else:
+                self._unknown_pongs.add(pong_ts)
+                _LOGGER.debug(
+                    "PINGPONGCACHE: Increase unknown PONG count: %s, %i",
+                    self._interface_id,
+                    self.unknown_pong_count,
+                )
+
+    def check_outstanding_pongs(self) -> bool:
+        """Check, if store contains too many outstanding pongs."""
+        with self._sema:
+            dt_now = datetime.now()
+            for ping_ts in self._outstanding_pongs:
+                delta = dt_now - ping_ts
+                if delta.seconds > self._ttl:
+                    self._outstanding_pongs.remove(ping_ts)
+        return len(self._outstanding_pongs) > self._allowed_delta
+
+    def check_unknown_pongs(self) -> bool:
+        """Check, if store contains too many unknown pongs."""
+        with self._sema:
+            dt_now = datetime.now()
+            for pong_ts in self._unknown_pongs:
+                delta = dt_now - pong_ts
+                if delta.seconds > self._ttl:
+                    self._unknown_pongs.remove(pong_ts)
+        return len(self._unknown_pongs) > self._allowed_delta
