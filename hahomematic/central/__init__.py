@@ -26,14 +26,13 @@ from hahomematic.central import xml_rpc_server as xmlrpc
 from hahomematic.central.decorators import callback_event, callback_system_event
 from hahomematic.client.json_rpc import JsonRpcAioHttpClient
 from hahomematic.client.xml_rpc import XmlRpcProxy
-from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
+    DATETIME_FORMAT_MILLIS,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
     ENTITY_EVENTS,
     EVENT_AVAILABLE,
     EVENT_DATA,
-    EVENT_INSTANCE_NAME,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
     Description,
@@ -97,9 +96,6 @@ class CentralUnit:
     def __init__(self, central_config: CentralConfig) -> None:
         """Init the central unit."""
         self._started: bool = False
-        self._ping_count: Final[dict[str, int]] = {}
-        self._ping_pong_fired: bool = False
-        self._sema_ping_count: Final = threading.Semaphore()
         self._sema_add_devices: Final = asyncio.Semaphore()
         self._tasks: Final[set[asyncio.Future[Any]]] = set()
         # Keep the config for the central
@@ -839,8 +835,15 @@ class CentralUnit:
         self.last_events[interface_id] = datetime.now()
         # No need to check the response of a XmlRPC-PING
         if parameter == Parameter.PONG:
-            if value == interface_id:
-                self._reduce_ping_count(interface_id=interface_id)
+            if "#" in value:
+                v_interface_id, v_timestamp = value.split("#")
+                if v_interface_id == interface_id:
+                    if (
+                        client := self.get_client(interface_id=interface_id)
+                    ) and client.supports_ping_pong:
+                        client.handle_received_pong(
+                            pong_ts=datetime.strptime(v_timestamp, DATETIME_FORMAT_MILLIS)
+                        )
             return
         if (channel_address, parameter) in self._entity_event_subscriptions:
             try:
@@ -907,54 +910,6 @@ class CentralUnit:
             and (entity.channel_address, entity.parameter) in self._entity_event_subscriptions
         ):
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
-
-    def increase_ping_count(self, interface_id: str) -> None:
-        """Increase the number of send ping events."""
-        if self.supports_ping_pong is True:
-            with self._sema_ping_count:
-                if (ping_count := self._ping_count.get(interface_id)) is not None:
-                    ping_count += 1
-                    self._ping_count[interface_id] = ping_count
-                    if ping_count > PING_PONG_MISMATCH_COUNT:
-                        self._fire_ping_pong_event(interface_id=interface_id)
-                    _LOGGER.debug("Increase Ping count: %s, %i", interface_id, ping_count)
-                else:
-                    self._ping_count[interface_id] = 1
-
-    def _reduce_ping_count(self, interface_id: str) -> None:
-        """Reduce the number of send ping events, by a received pong event."""
-        if self.supports_ping_pong is True:
-            with self._sema_ping_count:
-                if (ping_count := self._ping_count.get(interface_id)) is not None:
-                    ping_count -= 1
-                    self._ping_count[interface_id] = ping_count
-                    if ping_count < -PING_PONG_MISMATCH_COUNT:
-                        self._fire_ping_pong_event(interface_id=interface_id)
-                    _LOGGER.debug("Reduce Ping count: %s, %i", interface_id, ping_count)
-                else:
-                    self._ping_count[interface_id] = 0
-
-    def _fire_ping_pong_event(self, interface_id: str) -> None:
-        """Fire an event about the ping pong status."""
-        if self._ping_pong_fired:
-            return
-        event_data: dict[str, Any] = {
-            EVENT_INTERFACE_ID: interface_id,
-            EVENT_TYPE: InterfaceEventType.PINGPONG,
-            EVENT_DATA: {EVENT_INSTANCE_NAME: self.config.name},
-        }
-        self.fire_ha_event_callback(
-            event_type=EventType.INTERFACE,
-            event_data=cast(dict[str, Any], INTERFACE_EVENT_SCHEMA(event_data)),
-        )
-        _LOGGER.warning(
-            "PING/PONG MISMATCH: There is a mismatch between send ping events and received pong events for HA instance %s. "
-            "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
-            "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
-            "Possible reason 2: Something is stuck on CCU, so try a restart.",
-            self.config.name,
-        )
-        self._ping_pong_fired = True
 
     def create_task(self, target: Awaitable, name: str) -> None:
         """Add task to the executor pool."""

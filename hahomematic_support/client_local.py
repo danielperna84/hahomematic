@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 import importlib.resources
 import os
 from typing import Any, Final, cast
@@ -83,7 +84,7 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def check_connection_availability(self) -> bool:
         """Send ping to CCU to generate PONG event."""
-        self.central.increase_ping_count(interface_id=self.interface_id)
+        self.handle_send_ping(ping_ts=datetime.now())
         return True
 
     async def execute_program(self, pid: str) -> bool:

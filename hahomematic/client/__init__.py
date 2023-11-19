@@ -8,17 +8,26 @@ import logging
 from typing import Any, Final, cast
 
 from hahomematic import central as hmcu
+from hahomematic.caches.dynamic import PingPongCache
 from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
+    DATETIME_FORMAT_MILLIS,
     EVENT_AVAILABLE,
+    EVENT_DATA,
+    EVENT_INSTANCE_NAME,
+    EVENT_INTERFACE_ID,
+    EVENT_OUTSTANDING_PONGS,
     EVENT_SECONDS_SINCE_LAST_EVENT,
+    EVENT_TYPE,
+    EVENT_UNKNOWN_PONGS,
     HOMEGEAR_SERIAL,
     INIT_DATETIME,
     VIRTUAL_REMOTE_TYPES,
     Backend,
     CallSource,
     Description,
+    EventType,
     ForcedDeviceAvailability,
     InterfaceEventType,
     InterfaceName,
@@ -60,6 +69,9 @@ class Client(ABC):
         self._connection_error_count: int = 0
         self._is_callback_alive: bool = True
         self.last_updated: datetime = INIT_DATETIME
+        self._ping_pong_cache: Final = PingPongCache(interface_id=client_config.interface_id)
+        self._outstanding_pong_fired: bool = False
+        self._unknown_pong_fired: bool = False
 
         self._proxy: XmlRpcProxy
         self._proxy_read: XmlRpcProxy
@@ -316,6 +328,111 @@ class Client(ABC):
                 "GET_DEVICE_DESCRIPTIONS failed: %s [%s]", ex.name, reduce_args(args=ex.args)
             )
         return None
+
+    def handle_send_ping(self, ping_ts: datetime) -> None:
+        """Increase the number of send ping events."""
+        if self.supports_ping_pong is True:
+            self._ping_pong_cache.handle_send_ping(ping_ts=ping_ts)
+            self._check_and_fire_outstanding_pong_event()
+
+    def handle_received_pong(self, pong_ts: datetime) -> None:
+        """Increase the number of send ping events."""
+        if self.supports_ping_pong is True:
+            self._ping_pong_cache.handle_received_pong(pong_ts=pong_ts)
+            self._check_and_fire_outstanding_pong_event()
+            self._check_and_fire_unknown_pong_event()
+
+    def _check_and_fire_outstanding_pong_event(self) -> None:
+        """Fire an event about the outstanding pong status."""
+
+        def get_event_data(outstanding_pong_count: int) -> dict[str, Any]:
+            return {
+                EVENT_INTERFACE_ID: self.interface_id,
+                EVENT_TYPE: InterfaceEventType.OUTSTANDING_PONG,
+                EVENT_DATA: {
+                    EVENT_INSTANCE_NAME: self.central.config.name,
+                    EVENT_OUTSTANDING_PONGS: outstanding_pong_count,
+                },
+            }
+
+        if self._outstanding_pong_fired:
+            if self._ping_pong_cache.low_outstanding_pongs is True:
+                self.central.fire_ha_event_callback(
+                    event_type=EventType.INTERFACE,
+                    event_data=cast(
+                        dict[str, Any],
+                        hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(outstanding_pong_count=0)),
+                    ),
+                )
+            return
+
+        if self._ping_pong_cache.check_outstanding_pongs() is False:
+            return
+
+        self.central.fire_ha_event_callback(
+            event_type=EventType.INTERFACE,
+            event_data=cast(
+                dict[str, Any],
+                hmcu.INTERFACE_EVENT_SCHEMA(
+                    get_event_data(
+                        outstanding_pong_count=self._ping_pong_cache.outstanding_pong_count
+                    )
+                ),
+            ),
+        )
+
+        _LOGGER.warning(
+            "PING/PONG MISMATCH: There is a mismatch between send ping events and received pong events for HA instance %s. "
+            "Possible reason: Something is stuck on CCU, so try a restart.",
+            self.interface_id,
+        )
+
+        self._outstanding_pong_fired = True
+
+    def _check_and_fire_unknown_pong_event(self) -> None:
+        """Fire an event about the unknown pong status."""
+
+        def get_event_data(unknown_pong_count: int) -> dict[str, Any]:
+            return {
+                EVENT_INTERFACE_ID: self.interface_id,
+                EVENT_TYPE: InterfaceEventType.UNKNOWN_PONG,
+                EVENT_DATA: {
+                    EVENT_INSTANCE_NAME: self.central.config.name,
+                    EVENT_UNKNOWN_PONGS: unknown_pong_count,
+                },
+            }
+
+        if self._unknown_pong_fired:
+            if self._ping_pong_cache.low_unknown_pongs is True:
+                self.central.fire_ha_event_callback(
+                    event_type=EventType.INTERFACE,
+                    event_data=cast(
+                        dict[str, Any],
+                        hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(unknown_pong_count=0)),
+                    ),
+                )
+            return
+
+        if self._ping_pong_cache.check_unknown_pongs() is False:
+            return
+
+        self.central.fire_ha_event_callback(
+            event_type=EventType.INTERFACE,
+            event_data=cast(
+                dict[str, Any],
+                hmcu.INTERFACE_EVENT_SCHEMA(
+                    get_event_data(unknown_pong_count=self._ping_pong_cache.unknown_pong_count)
+                ),
+            ),
+        )
+        _LOGGER.warning(
+            "PING/PONG MISMATCH: There is a mismatch between send ping events and received pong events for HA instance %s. "
+            "Possible reason: You are running multiple instances of HA with the same instance name configured for this integration. "
+            "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. ",
+            self.interface_id,
+        )
+
+        self._unknown_pong_fired = True
 
     async def set_install_mode(
         self,
@@ -706,9 +823,12 @@ class ClientCCU(Client):
     async def check_connection_availability(self) -> bool:
         """Check if _proxy is still initialized."""
         try:
-            await self._proxy.ping(self.interface_id)
-            self.last_updated = datetime.now()
-            self.central.increase_ping_count(interface_id=self.interface_id)
+            dt_now = datetime.now()
+            await self._proxy.ping(
+                f"{self.interface_id}#{dt_now.strftime(DATETIME_FORMAT_MILLIS)}"
+            )
+            self.last_updated = dt_now
+            self.handle_send_ping(ping_ts=dt_now)
             return True
         except BaseHomematicException as ex:
             _LOGGER.debug(
@@ -824,8 +944,6 @@ class ClientHomegear(Client):
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
             self.last_updated = datetime.now()
-            if self.supports_ping_pong:
-                self.central.increase_ping_count(interface_id=self.interface_id)
             return True
         except BaseHomematicException as ex:
             _LOGGER.debug(

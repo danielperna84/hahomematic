@@ -31,7 +31,9 @@ DEFAULT_PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
 CCU_PASSWORD_PATTERN: Final = r"[A-Za-z0-9.!$():;#-]{0,}"
 
 IDENTIFIER_SEPARATOR: Final = "@"
-INIT_DATETIME: Final = datetime.strptime("01.01.1970 00:00:00", "%d.%m.%Y %H:%M:%S")
+DATETIME_FORMAT: Final = "%d.%m.%Y %H:%M:%S"
+DATETIME_FORMAT_MILLIS: Final = "%d.%m.%Y %H:%M:%S.%f'"
+INIT_DATETIME: Final = datetime.strptime("01.01.1970 00:00:00", DATETIME_FORMAT)
 IP_ANY_V4: Final = "0.0.0.0"
 PORT_ANY: Final = 0
 
@@ -46,15 +48,17 @@ CONF_PASSWORD: Final = "password"
 CONF_USERNAME: Final = "username"
 
 EVENT_ADDRESS: Final = "address"
-EVENT_INSTANCE_NAME: Final = "instance_name"
 EVENT_AVAILABLE: Final = "available"
 EVENT_CHANNEL_NO: Final = "channel_no"
 EVENT_DATA: Final = "data"
 EVENT_DEVICE_TYPE: Final = "device_type"
+EVENT_INSTANCE_NAME: Final = "instance_name"
 EVENT_INTERFACE_ID: Final = "interface_id"
+EVENT_OUTSTANDING_PONGS: Final = "outstanding_pongs"
 EVENT_PARAMETER: Final = "parameter"
 EVENT_SECONDS_SINCE_LAST_EVENT: Final = "seconds_since_last_event"
 EVENT_TYPE: Final = "type"
+EVENT_UNKNOWN_PONGS: Final = "unknown_pongs"
 EVENT_VALUE: Final = "value"
 
 FILE_DEVICES: Final = "homematic_devices.json"
@@ -352,8 +356,9 @@ class InterfaceEventType(StrEnum):
     """Enum with hahomematic event types."""
 
     CALLBACK = "callback"
-    PINGPONG = "pingpong"
+    OUTSTANDING_PONG = "outstanding_pong"
     PROXY = "proxy"
+    UNKNOWN_PONG = "unknown_pong"
 
 
 class ProxyInitState(Enum):
