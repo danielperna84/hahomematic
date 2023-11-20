@@ -1,6 +1,6 @@
-# Version 2023.11.1 (2023-11-19)
+# Version 2023.11.1 (2023-11-20)
 
-- Improve ping/pong mechanism
+- Improve ping/pong mechanism. Fire event, if mismatch is 15 within 5 Minutes
 
 # Version 2023.11.0 (2023-11-01)
 

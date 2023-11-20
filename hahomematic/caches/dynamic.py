@@ -8,7 +8,7 @@ import threading
 from typing import Any, Final
 
 from hahomematic import central as hmcu
-from hahomematic.config import PING_PONG_MISMATCH_COUNT
+from hahomematic.config import PING_PONG_MISMATCH_COUNT, PING_PONG_MISMATCH_COUNT_TTL
 from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
@@ -194,7 +194,10 @@ class PingPongCache:
     """Cache to collect ping/pong events with ttl."""
 
     def __init__(
-        self, interface_id: str, allowed_delta: int = PING_PONG_MISMATCH_COUNT, ttl: int = 300
+        self,
+        interface_id: str,
+        allowed_delta: int = PING_PONG_MISMATCH_COUNT,
+        ttl: int = PING_PONG_MISMATCH_COUNT_TTL,
     ):
         """Initialize the cache with ttl."""
         assert ttl > 0
