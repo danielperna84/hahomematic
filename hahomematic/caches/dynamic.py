@@ -8,7 +8,7 @@ import threading
 from typing import Any, Final
 
 from hahomematic import central as hmcu
-from hahomematic.config import PING_PONG_MISMATCH_COUNT
+from hahomematic.config import PING_PONG_MISMATCH_COUNT, PING_PONG_MISMATCH_COUNT_TTL
 from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
@@ -194,7 +194,10 @@ class PingPongCache:
     """Cache to collect ping/pong events with ttl."""
 
     def __init__(
-        self, interface_id: str, allowed_delta: int = PING_PONG_MISMATCH_COUNT, ttl: int = 300
+        self,
+        interface_id: str,
+        allowed_delta: int = PING_PONG_MISMATCH_COUNT,
+        ttl: int = PING_PONG_MISMATCH_COUNT_TTL,
     ):
         """Initialize the cache with ttl."""
         assert ttl > 0
@@ -206,13 +209,27 @@ class PingPongCache:
         self._unknown_pongs: set[datetime] = set()
 
     @property
+    def high_pending_pongs(self) -> bool:
+        """Check, if store contains too many pending pongs."""
+        self._cleanup_pending_pongs()
+        return len(self._pending_pongs) > self._allowed_delta
+
+    @property
+    def high_unknown_pongs(self) -> bool:
+        """Check, if store contains too many unknown pongs."""
+        self._cleanup_unknown_pongs()
+        return len(self._unknown_pongs) > self._allowed_delta
+
+    @property
     def low_pending_pongs(self) -> bool:
         """Return the pending pong count is low."""
+        self._cleanup_pending_pongs()
         return len(self._pending_pongs) < (self._allowed_delta / 2)
 
     @property
     def low_unknown_pongs(self) -> bool:
         """Return the unknown pong count is low."""
+        self._cleanup_unknown_pongs()
         return len(self._unknown_pongs) < (self._allowed_delta / 2)
 
     @property
@@ -253,22 +270,20 @@ class PingPongCache:
                     self.unknown_pong_count,
                 )
 
-    def check_pending_pongs(self) -> bool:
-        """Check, if store contains too many pending pongs."""
+    def _cleanup_pending_pongs(self) -> None:
+        """Cleanup too old pending pongs."""
         with self._sema:
             dt_now = datetime.now()
             for ping_ts in list(self._pending_pongs):
                 delta = dt_now - ping_ts
                 if delta.seconds > self._ttl:
                     self._pending_pongs.remove(ping_ts)
-        return len(self._pending_pongs) > self._allowed_delta
 
-    def check_unknown_pongs(self) -> bool:
-        """Check, if store contains too many unknown pongs."""
+    def _cleanup_unknown_pongs(self) -> None:
+        """Cleanup too old unknown pongs."""
         with self._sema:
             dt_now = datetime.now()
             for pong_ts in list(self._unknown_pongs):
                 delta = dt_now - pong_ts
                 if delta.seconds > self._ttl:
                     self._unknown_pongs.remove(pong_ts)
-        return len(self._unknown_pongs) > self._allowed_delta

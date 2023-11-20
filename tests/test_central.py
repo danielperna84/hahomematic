@@ -474,7 +474,7 @@ async def test_pending_pong_failure(factory: helper.Factory) -> None:
         {
             "data": {
                 "instance_name": "CentralTest",
-                "pending_pongs": 16,
+                "pong_mismatch_count": 16,
             },
             "interface_id": "CentralTest-BidCos-RF",
             "type": InterfaceEventType.PENDING_PONG,
@@ -505,7 +505,7 @@ async def test_unknown_pong_failure(factory: helper.Factory) -> None:
         {
             "data": {
                 "instance_name": "CentralTest",
-                "unknown_pongs": 16,
+                "pong_mismatch_count": 16,
             },
             "interface_id": "CentralTest-BidCos-RF",
             "type": InterfaceEventType.UNKNOWN_PONG,

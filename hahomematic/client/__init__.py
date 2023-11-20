@@ -17,10 +17,9 @@ from hahomematic.const import (
     EVENT_DATA,
     EVENT_INSTANCE_NAME,
     EVENT_INTERFACE_ID,
-    EVENT_PENDING_PONGS,
+    EVENT_PONG_MISMATCH_COUNT,
     EVENT_SECONDS_SINCE_LAST_EVENT,
     EVENT_TYPE,
-    EVENT_UNKNOWN_PONGS,
     HOMEGEAR_SERIAL,
     INIT_DATETIME,
     VIRTUAL_REMOTE_TYPES,
@@ -345,27 +344,21 @@ class Client(ABC):
     def _check_and_fire_pending_pong_event(self) -> None:
         """Fire an event about the pending pong status."""
 
-        def get_event_data(pending_pong_count: int) -> dict[str, Any]:
-            return {
-                EVENT_INTERFACE_ID: self.interface_id,
-                EVENT_TYPE: InterfaceEventType.PENDING_PONG,
-                EVENT_DATA: {
-                    EVENT_INSTANCE_NAME: self.central.config.name,
-                    EVENT_PENDING_PONGS: pending_pong_count,
-                },
-            }
-
         if self._ping_pong_cache.low_pending_pongs is True:
             self.central.fire_ha_event_callback(
                 event_type=EventType.INTERFACE,
                 event_data=cast(
                     dict[str, Any],
-                    hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(pending_pong_count=0)),
+                    hmcu.INTERFACE_EVENT_SCHEMA(
+                        self._get_pong_event_data(
+                            event_type=InterfaceEventType.PENDING_PONG, pong_mismatch_count=0
+                        )
+                    ),
                 ),
             )
             return
 
-        if self._ping_pong_cache.check_pending_pongs() is False:
+        if self._ping_pong_cache.high_pending_pongs is False:
             return
 
         self.central.fire_ha_event_callback(
@@ -373,7 +366,10 @@ class Client(ABC):
             event_data=cast(
                 dict[str, Any],
                 hmcu.INTERFACE_EVENT_SCHEMA(
-                    get_event_data(pending_pong_count=self._ping_pong_cache.pending_pong_count)
+                    self._get_pong_event_data(
+                        event_type=InterfaceEventType.PENDING_PONG,
+                        pong_mismatch_count=self._ping_pong_cache.pending_pong_count,
+                    )
                 ),
             ),
         )
@@ -392,27 +388,21 @@ class Client(ABC):
     def _check_and_fire_unknown_pong_event(self) -> None:
         """Fire an event about the unknown pong status."""
 
-        def get_event_data(unknown_pong_count: int) -> dict[str, Any]:
-            return {
-                EVENT_INTERFACE_ID: self.interface_id,
-                EVENT_TYPE: InterfaceEventType.UNKNOWN_PONG,
-                EVENT_DATA: {
-                    EVENT_INSTANCE_NAME: self.central.config.name,
-                    EVENT_UNKNOWN_PONGS: unknown_pong_count,
-                },
-            }
-
         if self._ping_pong_cache.low_unknown_pongs is True:
             self.central.fire_ha_event_callback(
                 event_type=EventType.INTERFACE,
                 event_data=cast(
                     dict[str, Any],
-                    hmcu.INTERFACE_EVENT_SCHEMA(get_event_data(unknown_pong_count=0)),
+                    hmcu.INTERFACE_EVENT_SCHEMA(
+                        self._get_pong_event_data(
+                            event_type=InterfaceEventType.UNKNOWN_PONG, pong_mismatch_count=0
+                        )
+                    ),
                 ),
             )
             return
 
-        if self._ping_pong_cache.check_unknown_pongs() is False:
+        if self._ping_pong_cache.high_unknown_pongs is False:
             return
 
         self.central.fire_ha_event_callback(
@@ -420,7 +410,10 @@ class Client(ABC):
             event_data=cast(
                 dict[str, Any],
                 hmcu.INTERFACE_EVENT_SCHEMA(
-                    get_event_data(unknown_pong_count=self._ping_pong_cache.unknown_pong_count)
+                    self._get_pong_event_data(
+                        event_type=InterfaceEventType.UNKNOWN_PONG,
+                        pong_mismatch_count=self._ping_pong_cache.unknown_pong_count,
+                    )
                 ),
             ),
         )
@@ -433,6 +426,18 @@ class Client(ABC):
             )
 
         self._unknown_pong_logged = True
+
+    def _get_pong_event_data(
+        self, event_type: InterfaceEventType, pong_mismatch_count: int
+    ) -> dict[str, Any]:
+        return {
+            EVENT_INTERFACE_ID: self.interface_id,
+            EVENT_TYPE: event_type,
+            EVENT_DATA: {
+                EVENT_INSTANCE_NAME: self.central.config.name,
+                EVENT_PONG_MISMATCH_COUNT: pong_mismatch_count,
+            },
+        }
 
     async def set_install_mode(
         self,
