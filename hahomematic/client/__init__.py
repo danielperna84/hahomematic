@@ -210,7 +210,7 @@ class Client(ABC):
         Connection is not connected, if three consecutive checks fail.
         Return connectivity state.
         """
-        if await self.check_connection_availability() is True:
+        if await self.check_connection_availability(handle_ping_pong=True) is True:
             self._connection_error_count = 0
         else:
             self._connection_error_count += 1
@@ -257,7 +257,7 @@ class Client(ABC):
         return True
 
     @abstractmethod
-    async def check_connection_availability(self) -> bool:
+    async def check_connection_availability(self, handle_ping_pong: bool) -> bool:
         """Send ping to CCU to generate PONG event."""
 
     @abstractmethod
@@ -343,101 +343,84 @@ class Client(ABC):
 
     def _check_and_fire_pending_pong_event(self) -> None:
         """Fire an event about the pending pong status."""
-
-        if self._ping_pong_cache.low_pending_pongs is True:
-            self.central.fire_ha_event_callback(
-                event_type=EventType.INTERFACE,
-                event_data=cast(
-                    dict[str, Any],
-                    hmcu.INTERFACE_EVENT_SCHEMA(
-                        self._get_pong_event_data(
-                            event_type=InterfaceEventType.PENDING_PONG, pong_mismatch_count=0
-                        )
-                    ),
-                ),
-            )
-            return
-
-        if self._ping_pong_cache.high_pending_pongs is False:
-            return
-
-        self.central.fire_ha_event_callback(
-            event_type=EventType.INTERFACE,
-            event_data=cast(
-                dict[str, Any],
-                hmcu.INTERFACE_EVENT_SCHEMA(
-                    self._get_pong_event_data(
-                        event_type=InterfaceEventType.PENDING_PONG,
-                        pong_mismatch_count=self._ping_pong_cache.pending_pong_count,
-                    )
-                ),
-            ),
+        self._check_and_fire_pong_event(
+            event_type=InterfaceEventType.PENDING_PONG,
+            pong_mismatch_count=self._ping_pong_cache.pending_pong_count,
         )
-
-        if self._pending_pong_logged is False:
-            _LOGGER.warning(
-                "Pending PONG Events: There is a mismatch between send ping events and received pong events for HA instance %s. "
-                "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
-                "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
-                "Possible reason 2: Something is stuck on CCU, so try a restart.",
-                self.interface_id,
-            )
-
-        self._pending_pong_logged = True
 
     def _check_and_fire_unknown_pong_event(self) -> None:
         """Fire an event about the unknown pong status."""
+        self._check_and_fire_pong_event(
+            event_type=InterfaceEventType.UNKNOWN_PONG,
+            pong_mismatch_count=self._ping_pong_cache.unknown_pong_count,
+        )
 
-        if self._ping_pong_cache.low_unknown_pongs is True:
+    def _check_and_fire_pong_event(
+        self, event_type: InterfaceEventType, pong_mismatch_count: int
+    ) -> None:
+        """Fire an event about the pong status."""
+
+        def _fire_event(mismatch_count: int) -> None:
             self.central.fire_ha_event_callback(
                 event_type=EventType.INTERFACE,
                 event_data=cast(
                     dict[str, Any],
                     hmcu.INTERFACE_EVENT_SCHEMA(
-                        self._get_pong_event_data(
-                            event_type=InterfaceEventType.UNKNOWN_PONG, pong_mismatch_count=0
-                        )
+                        {
+                            EVENT_INTERFACE_ID: self.interface_id,
+                            EVENT_TYPE: event_type,
+                            EVENT_DATA: {
+                                EVENT_INSTANCE_NAME: self.central.config.name,
+                                EVENT_PONG_MISMATCH_COUNT: mismatch_count,
+                            },
+                        }
                     ),
                 ),
             )
+
+        if (
+            self._ping_pong_cache.low_pending_pongs
+            and event_type == InterfaceEventType.PENDING_PONG
+        ):
+            _fire_event(mismatch_count=0)
+            self._pending_pong_logged = False
             return
 
-        if self._ping_pong_cache.high_unknown_pongs is False:
+        if (
+            self._ping_pong_cache.low_unknown_pongs
+            and event_type == InterfaceEventType.UNKNOWN_PONG
+        ):
+            self._unknown_pong_logged = False
             return
 
-        self.central.fire_ha_event_callback(
-            event_type=EventType.INTERFACE,
-            event_data=cast(
-                dict[str, Any],
-                hmcu.INTERFACE_EVENT_SCHEMA(
-                    self._get_pong_event_data(
-                        event_type=InterfaceEventType.UNKNOWN_PONG,
-                        pong_mismatch_count=self._ping_pong_cache.unknown_pong_count,
-                    )
-                ),
-            ),
-        )
-        if self._unknown_pong_logged is False:
-            _LOGGER.warning(
-                "Unknown PONG Events received: There is a mismatch between send ping events and received pong events for interface %s. "
-                "Possible reason: You are running multiple instances of HA with the same instance name configured for this integration. "
-                "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. ",
-                self.interface_id,
-            )
+        if (
+            self._ping_pong_cache.high_pending_pongs
+            and event_type == InterfaceEventType.PENDING_PONG
+        ):
+            _fire_event(mismatch_count=pong_mismatch_count)
+            if self._pending_pong_logged is False:
+                _LOGGER.warning(
+                    "Pending PONG mismatch: There is a mismatch between send ping events and received pong events for HA instance %s. "
+                    "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
+                    "Re-add one instance! Otherwise this HA instance will not receive update events from your CCU. "
+                    "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a CCU restart.",
+                    self.interface_id,
+                )
+            self._pending_pong_logged = True
 
-        self._unknown_pong_logged = True
-
-    def _get_pong_event_data(
-        self, event_type: InterfaceEventType, pong_mismatch_count: int
-    ) -> dict[str, Any]:
-        return {
-            EVENT_INTERFACE_ID: self.interface_id,
-            EVENT_TYPE: event_type,
-            EVENT_DATA: {
-                EVENT_INSTANCE_NAME: self.central.config.name,
-                EVENT_PONG_MISMATCH_COUNT: pong_mismatch_count,
-            },
-        }
+        if (
+            self._ping_pong_cache.high_unknown_pongs
+            and event_type == InterfaceEventType.UNKNOWN_PONG
+        ):
+            if self._unknown_pong_logged is False:
+                _LOGGER.warning(
+                    "Unknown PONG Mismatch: Your HA instance %s receives PONG events, that it hasn't send. "
+                    "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
+                    "Re-add one instance! Otherwise the other HA instance will not receive update events from your CCU. "
+                    "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a CCU restart.",
+                    self.interface_id,
+                )
+            self._unknown_pong_logged = True
 
     async def set_install_mode(
         self,
@@ -825,15 +808,16 @@ class ClientCCU(Client):
                 self.interface,
             )
 
-    async def check_connection_availability(self) -> bool:
+    async def check_connection_availability(self, handle_ping_pong: bool) -> bool:
         """Check if _proxy is still initialized."""
         try:
             dt_now = datetime.now()
+            if handle_ping_pong:
+                self.handle_send_ping(ping_ts=dt_now)
             await self._proxy.ping(
                 f"{self.interface_id}#{dt_now.strftime(DATETIME_FORMAT_MILLIS)}"
             )
             self.last_updated = dt_now
-            self.handle_send_ping(ping_ts=dt_now)
             return True
         except BaseHomematicException as ex:
             _LOGGER.debug(
@@ -944,7 +928,7 @@ class ClientHomegear(Client):
                     address,
                 )
 
-    async def check_connection_availability(self) -> bool:
+    async def check_connection_availability(self, handle_ping_pong: bool) -> bool:
         """Check if proxy is still initialized."""
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
@@ -1078,7 +1062,7 @@ class _ClientConfig:
                 else ClientCCU(client_config=self)
             ):
                 await client.init_client()
-                if await client.check_connection_availability():
+                if await client.check_connection_availability(handle_ping_pong=False):
                     return client
             raise NoConnection(f"No connection to {self.interface_id}")
         except BaseHomematicException:

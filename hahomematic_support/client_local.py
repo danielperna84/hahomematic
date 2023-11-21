@@ -82,9 +82,10 @@ class ClientLocal(Client):  # pragma: no cover
         """Return if XmlRPC-Server is alive based on received events for this client."""
         return True
 
-    async def check_connection_availability(self) -> bool:
+    async def check_connection_availability(self, handle_ping_pong: bool) -> bool:
         """Send ping to CCU to generate PONG event."""
-        self.handle_send_ping(ping_ts=datetime.now())
+        if handle_ping_pong:
+            self.handle_send_ping(ping_ts=datetime.now())
         return True
 
     async def execute_program(self, pid: str) -> bool:
