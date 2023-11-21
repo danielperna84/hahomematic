@@ -210,7 +210,7 @@ class Client(ABC):
         Connection is not connected, if three consecutive checks fail.
         Return connectivity state.
         """
-        if await self.check_connection_availability() is True:
+        if await self.check_connection_availability(handle_ping_pong=True) is True:
             self._connection_error_count = 0
         else:
             self._connection_error_count += 1
@@ -257,7 +257,7 @@ class Client(ABC):
         return True
 
     @abstractmethod
-    async def check_connection_availability(self) -> bool:
+    async def check_connection_availability(self, handle_ping_pong: bool) -> bool:
         """Send ping to CCU to generate PONG event."""
 
     @abstractmethod
@@ -825,7 +825,7 @@ class ClientCCU(Client):
                 self.interface,
             )
 
-    async def check_connection_availability(self) -> bool:
+    async def check_connection_availability(self, handle_ping_pong: bool) -> bool:
         """Check if _proxy is still initialized."""
         try:
             dt_now = datetime.now()
@@ -833,7 +833,8 @@ class ClientCCU(Client):
                 f"{self.interface_id}#{dt_now.strftime(DATETIME_FORMAT_MILLIS)}"
             )
             self.last_updated = dt_now
-            self.handle_send_ping(ping_ts=dt_now)
+            if handle_ping_pong:
+                self.handle_send_ping(ping_ts=dt_now)
             return True
         except BaseHomematicException as ex:
             _LOGGER.debug(
@@ -944,7 +945,7 @@ class ClientHomegear(Client):
                     address,
                 )
 
-    async def check_connection_availability(self) -> bool:
+    async def check_connection_availability(self, handle_ping_pong: bool) -> bool:
         """Check if proxy is still initialized."""
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
@@ -1078,7 +1079,7 @@ class _ClientConfig:
                 else ClientCCU(client_config=self)
             ):
                 await client.init_client()
-                if await client.check_connection_availability():
+                if await client.check_connection_availability(handle_ping_pong=False):
                     return client
             raise NoConnection(f"No connection to {self.interface_id}")
         except BaseHomematicException:

@@ -201,12 +201,13 @@ class PingPongCache:
     ):
         """Initialize the cache with ttl."""
         assert ttl > 0
-        self._interface_id = interface_id
-        self._allowed_delta = allowed_delta
-        self._ttl = ttl
-        self._sema: Final = threading.Semaphore()
-        self._pending_pongs: set[datetime] = set()
-        self._unknown_pongs: set[datetime] = set()
+        self._interface_id: Final = interface_id
+        self._allowed_delta: Final = allowed_delta
+        self._ttl: Final = ttl
+        self._pending_sema: Final = threading.Semaphore()
+        self._unknown_sema: Final = threading.Semaphore()
+        self._pending_pongs: Final[set[datetime]] = set()
+        self._unknown_pongs: Final[set[datetime]] = set()
 
     @property
     def high_pending_pongs(self) -> bool:
@@ -244,36 +245,41 @@ class PingPongCache:
 
     def handle_send_ping(self, ping_ts: datetime) -> None:
         """Handle send ping timestamp."""
-        with self._sema:
+        with self._pending_sema:
             self._pending_pongs.add(ping_ts)
             _LOGGER.debug(
-                "PINGPONGCACHE: Increase pending PING count: %s, %i",
+                "PING PONG CACHE: Increase pending PING count: %s, %i for ts: %s",
                 self._interface_id,
                 self.pending_pong_count,
+                ping_ts,
             )
 
     def handle_received_pong(self, pong_ts: datetime) -> None:
         """Handle received pong timestamp."""
-        with self._sema:
+        with self._pending_sema:
             if pong_ts in self._pending_pongs:
                 self._pending_pongs.remove(pong_ts)
                 _LOGGER.debug(
-                    "PINGPONGCACHE: Reduce pending PING count: %s, %i",
+                    "PING PONG CACHE: Reduce pending PING count: %s, %i for ts: %s",
                     self._interface_id,
                     self.pending_pong_count,
+                    pong_ts,
                 )
-            else:
-                self._unknown_pongs.add(pong_ts)
-                _LOGGER.debug(
-                    "PINGPONGCACHE: Increase unknown PONG count: %s, %i",
-                    self._interface_id,
-                    self.unknown_pong_count,
-                )
+                return
+
+        with self._unknown_sema:
+            self._unknown_pongs.add(pong_ts)
+            _LOGGER.debug(
+                "PING PONG CACHE: Increase unknown PONG count: %s, %i for ts: %s",
+                self._interface_id,
+                self.unknown_pong_count,
+                pong_ts,
+            )
 
     def _cleanup_pending_pongs(self) -> None:
         """Cleanup too old pending pongs."""
-        with self._sema:
-            dt_now = datetime.now()
+        dt_now = datetime.now()
+        with self._pending_sema:
             for ping_ts in list(self._pending_pongs):
                 delta = dt_now - ping_ts
                 if delta.seconds > self._ttl:
@@ -281,8 +287,8 @@ class PingPongCache:
 
     def _cleanup_unknown_pongs(self) -> None:
         """Cleanup too old unknown pongs."""
-        with self._sema:
-            dt_now = datetime.now()
+        dt_now = datetime.now()
+        with self._unknown_sema:
             for pong_ts in list(self._unknown_pongs):
                 delta = dt_now - pong_ts
                 if delta.seconds > self._ttl:

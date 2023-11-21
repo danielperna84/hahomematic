@@ -447,7 +447,7 @@ async def test_ping_pong(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
     interface_id = client.interface_id
-    await client.check_connection_availability()
+    await client.check_connection_availability(handle_ping_pong=True)
     assert client._ping_pong_cache.pending_pong_count == 1
     for ts_stored in list(client._ping_pong_cache._pending_pongs):
         central.event(
@@ -466,7 +466,7 @@ async def test_pending_pong_failure(factory: helper.Factory) -> None:
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 1
     while count < max_count:
-        await client.check_connection_availability()
+        await client.check_connection_availability(handle_ping_pong=True)
         count += 1
     assert client._ping_pong_cache.pending_pong_count == max_count
     assert factory.ha_event_mock.mock_calls[-1] == call(
