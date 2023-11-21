@@ -105,6 +105,7 @@ class Client(ABC):
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
         try:
             _LOGGER.debug("PROXY_INIT: init('%s', '%s')", self._config.init_url, self.interface_id)
+            self._clear_ping_pong_cache()
             await self._proxy.init(self._config.init_url, self.interface_id)
             self._mark_all_devices_forced_availability(
                 forced_availability=ForcedDeviceAvailability.NOT_SET
@@ -121,6 +122,12 @@ class Client(ABC):
             return ProxyInitState.INIT_FAILED
         self.last_updated = datetime.now()
         return ProxyInitState.INIT_SUCCESS
+
+    def _clear_ping_pong_cache(self) -> None:
+        """Clear the ping pong cache."""
+        self._ping_pong_cache.clear()
+        self._pending_pong_logged = False
+        self._unknown_pong_logged = False
 
     async def proxy_de_init(self) -> ProxyInitState:
         """De-init to stop CCU from sending events for this remote."""

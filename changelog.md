@@ -1,3 +1,7 @@
+# Version 2023.11.3 (2023-11-21)
+
+- Clear ping pong cache on proxy init
+
 # Version 2023.11.2 (2023-11-21)
 
 - Refactor ping pong, remove semaphore

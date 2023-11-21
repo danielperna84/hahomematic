@@ -240,6 +240,11 @@ class PingPongCache:
         """Return the unknown pong count."""
         return len(self._unknown_pongs)
 
+    def clear(self) -> None:
+        """Clear the cache."""
+        self._pending_pongs.clear()
+        self._unknown_pongs.clear()
+
     def handle_send_ping(self, ping_ts: datetime) -> None:
         """Handle send ping timestamp."""
         self._pending_pongs.add(ping_ts)
