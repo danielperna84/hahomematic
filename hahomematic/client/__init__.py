@@ -383,6 +383,14 @@ class Client(ABC):
             and event_type == InterfaceEventType.PENDING_PONG
         ):
             _fire_event(mismatch_count=0)
+            self._pending_pong_logged = False
+            return
+
+        if (
+            self._ping_pong_cache.low_unknown_pongs
+            and event_type == InterfaceEventType.UNKNOWN_PONG
+        ):
+            self._unknown_pong_logged = False
             return
 
         if (
