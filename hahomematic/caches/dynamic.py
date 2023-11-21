@@ -266,7 +266,7 @@ class PingPongCache:
             pong_mismatch_count=self.pending_pong_count,
         )
         _LOGGER.debug(
-            "PING PONG CACHE: Increase pending PING count: %s, %i for ts: %s",
+            "PING PONG CACHE: Increase pending PING count: %s - %i for ts: %s",
             self._interface_id,
             self.pending_pong_count,
             ping_ts,
@@ -281,7 +281,7 @@ class PingPongCache:
                 pong_mismatch_count=self.pending_pong_count,
             )
             _LOGGER.debug(
-                "PING PONG CACHE: Reduce pending PING count: %s, %i for ts: %s",
+                "PING PONG CACHE: Reduce pending PING count: %s - %i for ts: %s",
                 self._interface_id,
                 self.pending_pong_count,
                 pong_ts,
@@ -294,7 +294,7 @@ class PingPongCache:
             pong_mismatch_count=self.unknown_pong_count,
         )
         _LOGGER.debug(
-            "PING PONG CACHE: Increase unknown PONG count: %s, %i for ts: %s",
+            "PING PONG CACHE: Increase unknown PONG count: %s - %i for ts: %s",
             self._interface_id,
             self.unknown_pong_count,
             pong_ts,
@@ -303,10 +303,15 @@ class PingPongCache:
     def _cleanup_pending_pongs(self) -> None:
         """Cleanup too old pending pongs."""
         dt_now = datetime.now()
-        for ping_ts in list(self._pending_pongs):
-            delta = dt_now - ping_ts
+        for pong_ts in list(self._pending_pongs):
+            delta = dt_now - pong_ts
             if delta.seconds > self._ttl:
-                self._pending_pongs.remove(ping_ts)
+                _LOGGER.debug(
+                    "PING PONG CACHE: Removing expired pending PONG: %s for ts: %s",
+                    self._interface_id,
+                    pong_ts,
+                )
+                self._pending_pongs.remove(pong_ts)
 
     def _cleanup_unknown_pongs(self) -> None:
         """Cleanup too old unknown pongs."""
@@ -314,6 +319,11 @@ class PingPongCache:
         for pong_ts in list(self._unknown_pongs):
             delta = dt_now - pong_ts
             if delta.seconds > self._ttl:
+                _LOGGER.debug(
+                    "PING PONG CACHE: Removing expired unknown PONG: %s for ts: %s",
+                    self._interface_id,
+                    pong_ts,
+                )
                 self._unknown_pongs.remove(pong_ts)
 
     def _check_and_fire_pong_event(
