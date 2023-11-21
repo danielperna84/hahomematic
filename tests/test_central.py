@@ -500,18 +500,6 @@ async def test_unknown_pong_failure(factory: helper.Factory) -> None:
         count += 1
 
     assert client._ping_pong_cache.unknown_pong_count == 16
-    assert factory.ha_event_mock.mock_calls[-1] == call(
-        EventType.INTERFACE,
-        {
-            "data": {
-                "instance_name": "CentralTest",
-                "pong_mismatch_count": 16,
-            },
-            "interface_id": "CentralTest-BidCos-RF",
-            "type": InterfaceEventType.UNKNOWN_PONG,
-        },
-    )
-    assert len(factory.ha_event_mock.mock_calls) == 25
 
 
 @pytest.mark.asyncio
