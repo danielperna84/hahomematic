@@ -306,12 +306,13 @@ class PingPongCache:
         for pong_ts in list(self._pending_pongs):
             delta = dt_now - pong_ts
             if delta.seconds > self._ttl:
+                self._pending_pongs.remove(pong_ts)
                 _LOGGER.debug(
-                    "PING PONG CACHE: Removing expired pending PONG: %s for ts: %s",
+                    "PING PONG CACHE: Removing expired pending PONG: %s - %i for ts: %s",
                     self._interface_id,
+                    self.pending_pong_count,
                     pong_ts,
                 )
-                self._pending_pongs.remove(pong_ts)
 
     def _cleanup_unknown_pongs(self) -> None:
         """Cleanup too old unknown pongs."""
@@ -319,12 +320,13 @@ class PingPongCache:
         for pong_ts in list(self._unknown_pongs):
             delta = dt_now - pong_ts
             if delta.seconds > self._ttl:
+                self._unknown_pongs.remove(pong_ts)
                 _LOGGER.debug(
-                    "PING PONG CACHE: Removing expired unknown PONG: %s for ts: %s",
+                    "PING PONG CACHE: Removing expired unknown PONG: %s - %i or ts: %s",
                     self._interface_id,
+                    self.unknown_pong_count,
                     pong_ts,
                 )
-                self._unknown_pongs.remove(pong_ts)
 
     def _check_and_fire_pong_event(
         self, event_type: InterfaceEventType, pong_mismatch_count: int
