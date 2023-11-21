@@ -69,8 +69,7 @@ class Client(ABC):
         self._is_callback_alive: bool = True
         self.last_updated: datetime = INIT_DATETIME
         self._ping_pong_cache: Final = PingPongCache(interface_id=client_config.interface_id)
-        self._pending_pong_logged: bool = False
-        self._unknown_pong_logged: bool = False
+        self._pong_mismatch_logged: bool = False
 
         self._proxy: XmlRpcProxy
         self._proxy_read: XmlRpcProxy
@@ -343,102 +342,72 @@ class Client(ABC):
 
     def _check_and_fire_pending_pong_event(self) -> None:
         """Fire an event about the pending pong status."""
-
-        if self._ping_pong_cache.low_pending_pongs is True:
-            self.central.fire_ha_event_callback(
-                event_type=EventType.INTERFACE,
-                event_data=cast(
-                    dict[str, Any],
-                    hmcu.INTERFACE_EVENT_SCHEMA(
-                        self._get_pong_event_data(
-                            event_type=InterfaceEventType.PENDING_PONG, pong_mismatch_count=0
-                        )
-                    ),
-                ),
-            )
-            return
-
-        if self._ping_pong_cache.high_pending_pongs is False:
-            return
-
-        self.central.fire_ha_event_callback(
-            event_type=EventType.INTERFACE,
-            event_data=cast(
-                dict[str, Any],
-                hmcu.INTERFACE_EVENT_SCHEMA(
-                    self._get_pong_event_data(
-                        event_type=InterfaceEventType.PENDING_PONG,
-                        pong_mismatch_count=self._ping_pong_cache.pending_pong_count,
-                    )
-                ),
-            ),
+        self._check_and_fire_pong_event(
+            event_type=InterfaceEventType.PENDING_PONG,
+            pong_mismatch_count=self._ping_pong_cache.pending_pong_count,
         )
-
-        if self._pending_pong_logged is False:
-            _LOGGER.warning(
-                "Pending PONG Events: There is a mismatch between send ping events and received pong events for HA instance %s. "
-                "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
-                "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
-                "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.",
-                self.interface_id,
-            )
-
-        self._pending_pong_logged = True
 
     def _check_and_fire_unknown_pong_event(self) -> None:
         """Fire an event about the unknown pong status."""
+        self._check_and_fire_pong_event(
+            event_type=InterfaceEventType.UNKNOWN_PONG,
+            pong_mismatch_count=self._ping_pong_cache.unknown_pong_count,
+        )
 
-        if self._ping_pong_cache.low_unknown_pongs is True:
+    def _check_and_fire_pong_event(
+        self, event_type: InterfaceEventType, pong_mismatch_count: int
+    ) -> None:
+        """Fire an event about the pong status."""
+
+        def _fire_event(mismatch_count: int) -> None:
             self.central.fire_ha_event_callback(
                 event_type=EventType.INTERFACE,
                 event_data=cast(
                     dict[str, Any],
                     hmcu.INTERFACE_EVENT_SCHEMA(
-                        self._get_pong_event_data(
-                            event_type=InterfaceEventType.UNKNOWN_PONG, pong_mismatch_count=0
-                        )
+                        {
+                            EVENT_INTERFACE_ID: self.interface_id,
+                            EVENT_TYPE: event_type,
+                            EVENT_DATA: {
+                                EVENT_INSTANCE_NAME: self.central.config.name,
+                                EVENT_PONG_MISMATCH_COUNT: mismatch_count,
+                            },
+                        }
                     ),
                 ),
             )
+
+        if (
+            self._ping_pong_cache.low_pending_pongs
+            and event_type == InterfaceEventType.PENDING_PONG
+        ) or (
+            self._ping_pong_cache.low_unknown_pongs
+            and event_type == InterfaceEventType.UNKNOWN_PONG
+        ):
+            _fire_event(mismatch_count=0)
             return
 
-        if self._ping_pong_cache.high_unknown_pongs is False:
+        if (
+            self._ping_pong_cache.high_pending_pongs is False
+            and event_type == InterfaceEventType.PENDING_PONG
+        ) or (
+            self._ping_pong_cache.high_unknown_pongs is False
+            and event_type == InterfaceEventType.UNKNOWN_PONG
+        ):
             return
 
-        self.central.fire_ha_event_callback(
-            event_type=EventType.INTERFACE,
-            event_data=cast(
-                dict[str, Any],
-                hmcu.INTERFACE_EVENT_SCHEMA(
-                    self._get_pong_event_data(
-                        event_type=InterfaceEventType.UNKNOWN_PONG,
-                        pong_mismatch_count=self._ping_pong_cache.unknown_pong_count,
-                    )
-                ),
-            ),
-        )
-        if self._unknown_pong_logged is False:
+        _fire_event(mismatch_count=pong_mismatch_count)
+
+        if self._pong_mismatch_logged is False:
             _LOGGER.warning(
-                "Unknown PONG Events received: There is a mismatch between send ping events and received pong events for HA instance %s. "
+                "PING PONG Mismatch: There is a mismatch between send ping events and received pong events for HA instance %s. "
                 "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
                 "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
                 "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.",
                 self.interface_id,
             )
 
-        self._unknown_pong_logged = True
-
-    def _get_pong_event_data(
-        self, event_type: InterfaceEventType, pong_mismatch_count: int
-    ) -> dict[str, Any]:
-        return {
-            EVENT_INTERFACE_ID: self.interface_id,
-            EVENT_TYPE: event_type,
-            EVENT_DATA: {
-                EVENT_INSTANCE_NAME: self.central.config.name,
-                EVENT_PONG_MISMATCH_COUNT: pong_mismatch_count,
-            },
-        }
+        self._pong_mismatch_logged = True
 
     async def set_install_mode(
         self,

@@ -46,7 +46,9 @@ SCHEMA_ED_DEVICE_GROUPS = vol.Schema(
     {
         vol.Required(ED.DEVICE_GROUP.value): SCHEMA_ED_DEVICE_GROUP,
         vol.Optional(ED.ADDITIONAL_ENTITIES.value): SCHEMA_ED_ADDITIONAL_ENTITIES,
-        vol.Optional(ED.INCLUDE_DEFAULT_ENTITIES.value, DEFAULT_INCLUDE_DEFAULT_ENTITIES): bool,
+        vol.Optional(
+            ED.INCLUDE_DEFAULT_ENTITIES.value, default=DEFAULT_INCLUDE_DEFAULT_ENTITIES
+        ): bool,
     }
 )
 
