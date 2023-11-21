@@ -829,12 +829,12 @@ class ClientCCU(Client):
         """Check if _proxy is still initialized."""
         try:
             dt_now = datetime.now()
+            if handle_ping_pong:
+                self.handle_send_ping(ping_ts=dt_now)
             await self._proxy.ping(
                 f"{self.interface_id}#{dt_now.strftime(DATETIME_FORMAT_MILLIS)}"
             )
             self.last_updated = dt_now
-            if handle_ping_pong:
-                self.handle_send_ping(ping_ts=dt_now)
             return True
         except BaseHomematicException as ex:
             _LOGGER.debug(

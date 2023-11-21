@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 import logging
-import threading
 from typing import Any, Final
 
 from hahomematic import central as hmcu
@@ -158,7 +157,7 @@ class CentralDataCache:
         if changed_within_seconds(last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)):
             return
         self.clear()
-        _LOGGER.debug("load: device data for %s", self._central.name)
+        _LOGGER.debug("load: Loading device data for %s", self._central.name)
         for client in self._central.clients:
             await client.fetch_all_device_data()
 
@@ -204,8 +203,6 @@ class PingPongCache:
         self._interface_id: Final = interface_id
         self._allowed_delta: Final = allowed_delta
         self._ttl: Final = ttl
-        self._pending_sema: Final = threading.Semaphore()
-        self._unknown_sema: Final = threading.Semaphore()
         self._pending_pongs: Final[set[datetime]] = set()
         self._unknown_pongs: Final[set[datetime]] = set()
 
@@ -245,51 +242,46 @@ class PingPongCache:
 
     def handle_send_ping(self, ping_ts: datetime) -> None:
         """Handle send ping timestamp."""
-        with self._pending_sema:
-            self._pending_pongs.add(ping_ts)
-            _LOGGER.debug(
-                "PING PONG CACHE: Increase pending PING count: %s, %i for ts: %s",
-                self._interface_id,
-                self.pending_pong_count,
-                ping_ts,
-            )
+        self._pending_pongs.add(ping_ts)
+        _LOGGER.debug(
+            "PING PONG CACHE: Increase pending PING count: %s, %i for ts: %s",
+            self._interface_id,
+            self.pending_pong_count,
+            ping_ts,
+        )
 
     def handle_received_pong(self, pong_ts: datetime) -> None:
         """Handle received pong timestamp."""
-        with self._pending_sema:
-            if pong_ts in self._pending_pongs:
-                self._pending_pongs.remove(pong_ts)
-                _LOGGER.debug(
-                    "PING PONG CACHE: Reduce pending PING count: %s, %i for ts: %s",
-                    self._interface_id,
-                    self.pending_pong_count,
-                    pong_ts,
-                )
-                return
-
-        with self._unknown_sema:
-            self._unknown_pongs.add(pong_ts)
+        if pong_ts in self._pending_pongs:
+            self._pending_pongs.remove(pong_ts)
             _LOGGER.debug(
-                "PING PONG CACHE: Increase unknown PONG count: %s, %i for ts: %s",
+                "PING PONG CACHE: Reduce pending PING count: %s, %i for ts: %s",
                 self._interface_id,
-                self.unknown_pong_count,
+                self.pending_pong_count,
                 pong_ts,
             )
+            return
+
+        self._unknown_pongs.add(pong_ts)
+        _LOGGER.debug(
+            "PING PONG CACHE: Increase unknown PONG count: %s, %i for ts: %s",
+            self._interface_id,
+            self.unknown_pong_count,
+            pong_ts,
+        )
 
     def _cleanup_pending_pongs(self) -> None:
         """Cleanup too old pending pongs."""
         dt_now = datetime.now()
-        with self._pending_sema:
-            for ping_ts in list(self._pending_pongs):
-                delta = dt_now - ping_ts
-                if delta.seconds > self._ttl:
-                    self._pending_pongs.remove(ping_ts)
+        for ping_ts in list(self._pending_pongs):
+            delta = dt_now - ping_ts
+            if delta.seconds > self._ttl:
+                self._pending_pongs.remove(ping_ts)
 
     def _cleanup_unknown_pongs(self) -> None:
         """Cleanup too old unknown pongs."""
         dt_now = datetime.now()
-        with self._unknown_sema:
-            for pong_ts in list(self._unknown_pongs):
-                delta = dt_now - pong_ts
-                if delta.seconds > self._ttl:
-                    self._unknown_pongs.remove(pong_ts)
+        for pong_ts in list(self._unknown_pongs):
+            delta = dt_now - pong_ts
+            if delta.seconds > self._ttl:
+                self._unknown_pongs.remove(pong_ts)
