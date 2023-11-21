@@ -1,3 +1,7 @@
+# Version 2023.11.2 (2023-11-21)
+
+- Refactor ping pong, remove semaphore
+
 # Version 2023.11.1 (2023-11-20)
 
 - Improve ping/pong mechanism. Fire event, if mismatch is 15 within 5 Minutes
