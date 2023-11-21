@@ -379,7 +379,7 @@ class Client(ABC):
                 "Pending PONG Events: There is a mismatch between send ping events and received pong events for HA instance %s. "
                 "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
                 "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
-                "Possible reason 2: Something is stuck on CCU, so try a restart.",
+                "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.",
                 self.interface_id,
             )
 
@@ -419,9 +419,10 @@ class Client(ABC):
         )
         if self._unknown_pong_logged is False:
             _LOGGER.warning(
-                "Unknown PONG Events received: There is a mismatch between send ping events and received pong events for interface %s. "
-                "Possible reason: You are running multiple instances of HA with the same instance name configured for this integration. "
-                "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. ",
+                "Unknown PONG Events received: There is a mismatch between send ping events and received pong events for HA instance %s. "
+                "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
+                "Re-add one instance! Otherwise one HA instance will not receive update events from your CCU. "
+                "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a restart.",
                 self.interface_id,
             )
 
