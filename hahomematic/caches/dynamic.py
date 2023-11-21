@@ -4,15 +4,22 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from hahomematic import central as hmcu
 from hahomematic.config import PING_PONG_MISMATCH_COUNT, PING_PONG_MISMATCH_COUNT_TTL
 from hahomematic.const import (
+    EVENT_DATA,
+    EVENT_INSTANCE_NAME,
+    EVENT_INTERFACE_ID,
+    EVENT_PONG_MISMATCH_COUNT,
+    EVENT_TYPE,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     CallSource,
+    EventType,
+    InterfaceEventType,
     InterfaceName,
 )
 from hahomematic.platforms.device import HmDevice
@@ -194,17 +201,21 @@ class PingPongCache:
 
     def __init__(
         self,
+        central: hmcu.CentralUnit,
         interface_id: str,
         allowed_delta: int = PING_PONG_MISMATCH_COUNT,
         ttl: int = PING_PONG_MISMATCH_COUNT_TTL,
     ):
         """Initialize the cache with ttl."""
         assert ttl > 0
+        self._central: Final = central
         self._interface_id: Final = interface_id
         self._allowed_delta: Final = allowed_delta
         self._ttl: Final = ttl
         self._pending_pongs: Final[set[datetime]] = set()
         self._unknown_pongs: Final[set[datetime]] = set()
+        self._pending_pong_logged: bool = False
+        self._unknown_pong_logged: bool = False
 
     @property
     def high_pending_pongs(self) -> bool:
@@ -244,12 +255,18 @@ class PingPongCache:
         """Clear the cache."""
         self._pending_pongs.clear()
         self._unknown_pongs.clear()
+        self._pending_pong_logged = False
+        self._unknown_pong_logged = False
 
     def handle_send_ping(self, ping_ts: datetime) -> None:
         """Handle send ping timestamp."""
         self._pending_pongs.add(ping_ts)
+        self._check_and_fire_pong_event(
+            event_type=InterfaceEventType.PENDING_PONG,
+            pong_mismatch_count=self.pending_pong_count,
+        )
         _LOGGER.debug(
-            "PING PONG CACHE: Increase pending PING count: %s, %i for ts: %s",
+            "PING PONG CACHE: Increase pending PING count: %s - %i for ts: %s",
             self._interface_id,
             self.pending_pong_count,
             ping_ts,
@@ -259,8 +276,12 @@ class PingPongCache:
         """Handle received pong timestamp."""
         if pong_ts in self._pending_pongs:
             self._pending_pongs.remove(pong_ts)
+            self._check_and_fire_pong_event(
+                event_type=InterfaceEventType.PENDING_PONG,
+                pong_mismatch_count=self.pending_pong_count,
+            )
             _LOGGER.debug(
-                "PING PONG CACHE: Reduce pending PING count: %s, %i for ts: %s",
+                "PING PONG CACHE: Reduce pending PING count: %s - %i for ts: %s",
                 self._interface_id,
                 self.pending_pong_count,
                 pong_ts,
@@ -268,8 +289,12 @@ class PingPongCache:
             return
 
         self._unknown_pongs.add(pong_ts)
+        self._check_and_fire_pong_event(
+            event_type=InterfaceEventType.UNKNOWN_PONG,
+            pong_mismatch_count=self.unknown_pong_count,
+        )
         _LOGGER.debug(
-            "PING PONG CACHE: Increase unknown PONG count: %s, %i for ts: %s",
+            "PING PONG CACHE: Increase unknown PONG count: %s - %i for ts: %s",
             self._interface_id,
             self.unknown_pong_count,
             pong_ts,
@@ -278,10 +303,16 @@ class PingPongCache:
     def _cleanup_pending_pongs(self) -> None:
         """Cleanup too old pending pongs."""
         dt_now = datetime.now()
-        for ping_ts in list(self._pending_pongs):
-            delta = dt_now - ping_ts
+        for pong_ts in list(self._pending_pongs):
+            delta = dt_now - pong_ts
             if delta.seconds > self._ttl:
-                self._pending_pongs.remove(ping_ts)
+                self._pending_pongs.remove(pong_ts)
+                _LOGGER.debug(
+                    "PING PONG CACHE: Removing expired pending PONG: %s - %i for ts: %s",
+                    self._interface_id,
+                    self.pending_pong_count,
+                    pong_ts,
+                )
 
     def _cleanup_unknown_pongs(self) -> None:
         """Cleanup too old unknown pongs."""
@@ -290,3 +321,64 @@ class PingPongCache:
             delta = dt_now - pong_ts
             if delta.seconds > self._ttl:
                 self._unknown_pongs.remove(pong_ts)
+                _LOGGER.debug(
+                    "PING PONG CACHE: Removing expired unknown PONG: %s - %i or ts: %s",
+                    self._interface_id,
+                    self.unknown_pong_count,
+                    pong_ts,
+                )
+
+    def _check_and_fire_pong_event(
+        self, event_type: InterfaceEventType, pong_mismatch_count: int
+    ) -> None:
+        """Fire an event about the pong status."""
+
+        def _fire_event(mismatch_count: int) -> None:
+            self._central.fire_ha_event_callback(
+                event_type=EventType.INTERFACE,
+                event_data=cast(
+                    dict[str, Any],
+                    hmcu.INTERFACE_EVENT_SCHEMA(
+                        {
+                            EVENT_INTERFACE_ID: self._interface_id,
+                            EVENT_TYPE: event_type,
+                            EVENT_DATA: {
+                                EVENT_INSTANCE_NAME: self._central.config.name,
+                                EVENT_PONG_MISMATCH_COUNT: mismatch_count,
+                            },
+                        }
+                    ),
+                ),
+            )
+
+        if self.low_pending_pongs and event_type == InterfaceEventType.PENDING_PONG:
+            _fire_event(mismatch_count=0)
+            self._pending_pong_logged = False
+            return
+
+        if self.low_unknown_pongs and event_type == InterfaceEventType.UNKNOWN_PONG:
+            self._unknown_pong_logged = False
+            return
+
+        if self.high_pending_pongs and event_type == InterfaceEventType.PENDING_PONG:
+            _fire_event(mismatch_count=pong_mismatch_count)
+            if self._pending_pong_logged is False:
+                _LOGGER.warning(
+                    "Pending PONG mismatch: There is a mismatch between send ping events and received pong events for HA instance %s. "
+                    "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
+                    "Re-add one instance! Otherwise this HA instance will not receive update events from your CCU. "
+                    "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a CCU restart.",
+                    self._interface_id,
+                )
+            self._pending_pong_logged = True
+
+        if self.high_unknown_pongs and event_type == InterfaceEventType.UNKNOWN_PONG:
+            if self._unknown_pong_logged is False:
+                _LOGGER.warning(
+                    "Unknown PONG Mismatch: Your HA instance %s receives PONG events, that it hasn't send. "
+                    "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
+                    "Re-add one instance! Otherwise the other HA instance will not receive update events from your CCU. "
+                    "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a CCU restart.",
+                    self._interface_id,
+                )
+            self._unknown_pong_logged = True
