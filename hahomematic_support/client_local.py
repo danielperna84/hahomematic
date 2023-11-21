@@ -84,8 +84,8 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def check_connection_availability(self, handle_ping_pong: bool) -> bool:
         """Send ping to CCU to generate PONG event."""
-        if handle_ping_pong:
-            self.handle_send_ping(ping_ts=datetime.now())
+        if handle_ping_pong and self.supports_ping_pong:
+            self._ping_pong_cache.handle_send_ping(ping_ts=datetime.now())
         return True
 
     async def execute_program(self, pid: str) -> bool:

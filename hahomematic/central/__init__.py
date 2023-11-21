@@ -841,7 +841,7 @@ class CentralUnit:
                     if (
                         client := self.get_client(interface_id=interface_id)
                     ) and client.supports_ping_pong:
-                        client.handle_received_pong(
+                        client.ping_pong_cache.handle_received_pong(
                             pong_ts=datetime.strptime(v_timestamp, DATETIME_FORMAT_MILLIS)
                         )
             return
