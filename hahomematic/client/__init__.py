@@ -720,9 +720,12 @@ class ClientCCU(Client):
             dt_now = datetime.now()
             if handle_ping_pong and self.supports_ping_pong:
                 self._ping_pong_cache.handle_send_ping(ping_ts=dt_now)
-            await self._proxy.ping(
+            calllerId = (
                 f"{self.interface_id}#{dt_now.strftime(DATETIME_FORMAT_MILLIS)}"
+                if handle_ping_pong
+                else self.interface_id
             )
+            await self._proxy.ping(calllerId)
             self.last_updated = dt_now
             return True
         except BaseHomematicException as ex:

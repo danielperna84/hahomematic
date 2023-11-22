@@ -1,3 +1,7 @@
+# Version 2023.11.4 (2023-11-22)
+
+- Don't send ts with ping pong if it should not be handled
+
 # Version 2023.11.3 (2023-11-21)
 
 - Clear ping pong cache on proxy init
