@@ -1,3 +1,7 @@
+# Version 2023.11.5 (2023-11-29)
+
+- Add support for away_mode and bidcos devices
+
 # Version 2023.11.4 (2023-11-22)
 
 - Don't send ts with ping pong if it should not be handled
