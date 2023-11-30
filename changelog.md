@@ -1,3 +1,7 @@
+# Version 2023.12.0 (2023-12-01)
+
+- Add support for away_mode and classic homematic thermostats
+
 # Version 2023.11.4 (2023-11-22)
 
 - Don't send ts with ping pong if it should not be handled

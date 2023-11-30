@@ -365,6 +365,47 @@ class CeRfThermostat(BaseClimateEntity):
         elif preset_mode == PresetMode.ECO:
             await self._e_lowering_mode.send_value(value=True, collector=collector)
 
+    async def enable_away_mode_by_calendar(
+        self, start: datetime, end: datetime, away_temperature: float
+    ) -> None:
+        """Enable the away mode by calendar on thermostat."""
+        await self._client.set_value(
+            channel_address=self._channel_address,
+            paramset_key=ParamsetKey.VALUES,
+            parameter="PARTY_MODE_SUBMIT",
+            value=_party_mode_code(start=start, end=end, away_temperature=away_temperature),
+        )
+
+    async def enable_away_mode_by_duration(self, hours: int, away_temperature: float) -> None:
+        """Enable the away mode by duration on thermostat."""
+        start = datetime.now() - timedelta(minutes=10)
+        end = datetime.now() + timedelta(hours=hours)
+        await self.enable_away_mode_by_calendar(
+            start=start, end=end, away_temperature=away_temperature
+        )
+
+    async def disable_away_mode(self) -> None:
+        """Disable the away mode on thermostat."""
+        start = datetime.now() - timedelta(hours=11)
+        end = datetime.now() - timedelta(hours=10)
+
+        await self._client.set_value(
+            channel_address=self._channel_address,
+            paramset_key=ParamsetKey.VALUES,
+            parameter="PARTY_MODE_SUBMIT",
+            value=_party_mode_code(start=start, end=end, away_temperature=12.0),
+        )
+
+
+def _party_mode_code(start: datetime, end: datetime, away_temperature: float) -> str:
+    """
+    Create the party mode code.
+
+    e.g. 21.5,1200,20,10,16,1380,20,10,16
+    away_temperature,start_minutes_of_day, day(2), month(2), year(2), end_minutes_of_day, day(2), month(2), year(2)
+    """
+    return f"{away_temperature:.1f},{start.hour*60+start.minute},{start.strftime('%d,%m,%y')},{end.hour*60+end.minute},{end.strftime('%d,%m,%y')}"
+
 
 class CeIpThermostat(BaseClimateEntity):
     """HomematicIP thermostat like HmIP-eTRV-B."""

@@ -8,7 +8,7 @@ from unittest.mock import call
 from freezegun import freeze_time
 import pytest
 
-from hahomematic.const import EntityUsage
+from hahomematic.const import EntityUsage, ParamsetKey
 from hahomematic.platforms.custom.climate import (
     CeIpThermostat,
     CeRfThermostat,
@@ -193,6 +193,35 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await climate.set_hvac_mode(HvacMode.AUTO)
     assert call_count == len(mock_client.method_calls)
+
+    with freeze_time("2023-03-03 08:00:00"):
+        await climate.enable_away_mode_by_duration(hours=100, away_temperature=17.0)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000050:4",
+        paramset_key=ParamsetKey.VALUES,
+        parameter="PARTY_MODE_SUBMIT",
+        value="17.0,470,03,03,23,720,07,03,23",
+    )
+
+    with freeze_time("2023-03-03 08:00:00"):
+        await climate.enable_away_mode_by_calendar(
+            start=datetime(2000, 12, 1), end=datetime(2024, 12, 1), away_temperature=17.0
+        )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000050:4",
+        paramset_key=ParamsetKey.VALUES,
+        parameter="PARTY_MODE_SUBMIT",
+        value="17.0,0,01,12,00,0,01,12,24",
+    )
+
+    with freeze_time("2023-03-03 08:00:00"):
+        await climate.disable_away_mode()
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU0000050:4",
+        paramset_key=ParamsetKey.VALUES,
+        parameter="PARTY_MODE_SUBMIT",
+        value="12.0,1260,02,03,23,1320,02,03,23",
+    )
 
 
 @pytest.mark.asyncio
