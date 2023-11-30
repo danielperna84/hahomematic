@@ -1,6 +1,6 @@
-# Version 2023.11.5 (2023-11-29)
+# Version 2023.12.0 (2023-12-01)
 
-- Add support for away_mode and bidcos devices
+- Add support for away_mode and classic homematic thermostats
 
 # Version 2023.11.4 (2023-11-22)
 
