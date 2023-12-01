@@ -35,6 +35,7 @@ from hahomematic.const import (
     EVENT_DATA,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
+    IDENTIFIER_SEPARATOR,
     Description,
     DeviceFirmwareState,
     EventType,
@@ -1304,11 +1305,14 @@ class CentralConfig:
             return False
         if not check_password(self.password):
             return False
+        if IDENTIFIER_SEPARATOR in self.name:
+            _LOGGER.warning("CHECK_CONFIG: Name must not contain %s", IDENTIFIER_SEPARATOR)
+            return False
 
         try:
             check_or_create_directory(self.storage_folder)
         except BaseHomematicException:
-            _LOGGER.warning("CHECK_CONFIG: directory % cannot be created", self.storage_folder)
+            _LOGGER.warning("CHECK_CONFIG: directory %s cannot be created", self.storage_folder)
             return False
         return True
 
