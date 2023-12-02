@@ -73,7 +73,7 @@ def check_config(
     """Check config. Throws BaseHomematicException on failure."""
     config_failures: list[str] = []
     if extended_validation and central_name and IDENTIFIER_SEPARATOR in central_name:
-        config_failures.append(f"Name must not contain {IDENTIFIER_SEPARATOR}")
+        config_failures.append(f"Instance name must not contain {IDENTIFIER_SEPARATOR}")
     if not username:
         config_failures.append("Username must not be empty")
     if password is None:
