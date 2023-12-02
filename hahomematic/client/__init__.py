@@ -310,7 +310,7 @@ class Client(ABC):
     async def get_all_device_descriptions(self) -> tuple[dict[str, Any]] | None:
         """Get device descriptions from CCU / Homegear."""
         try:
-            return tuple(await self._proxy.listDevices())  # type: ignore[return-value]
+            return tuple(await self._proxy.listDevices())
         except BaseHomematicException as ex:
             _LOGGER.warning(
                 "GET_ALL_DEVICE_DESCRIPTIONS failed: %s [%s]", ex.name, reduce_args(args=ex.args)

@@ -35,6 +35,7 @@ from hahomematic.const import (
     EVENT_DATA,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
+    IDENTIFIER_SEPARATOR,
     Description,
     DeviceFirmwareState,
     EventType,
@@ -49,6 +50,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import (
     BaseHomematicException,
+    HaHomematicConfigException,
     HaHomematicException,
     NoClients,
     NoConnection,
@@ -1294,29 +1296,27 @@ class CentralConfig:
         """Return if caches should be used."""
         return self.start_direct is False
 
-    def check_config(self) -> bool:
-        """Check config."""
+    def check_config(self, extended_validation: bool = True) -> None:
+        """Check config. Throws BaseHomematicException on failure."""
+        if extended_validation and IDENTIFIER_SEPARATOR in self.name:
+            raise HaHomematicConfigException(f"Name must not contain {IDENTIFIER_SEPARATOR}")
+
         if not self.username:
-            _LOGGER.warning("CHECK_CONFIG: Username must not be empty")
-            return False
+            raise HaHomematicConfigException("Username must not be empty")
         if self.password is None:
-            _LOGGER.warning("CHECK_CONFIG: Password is required")  # type: ignore[unreachable]
-            return False
+            raise HaHomematicConfigException("Password is required")
         if not check_password(self.password):
-            return False
+            raise HaHomematicConfigException("Password is not valid")
+        check_or_create_directory(self.storage_folder)
 
+    def create_central(self, extended_validation: bool = True) -> CentralUnit:
+        """Create the central. Throws BaseHomematicException on validation failure."""
         try:
-            check_or_create_directory(self.storage_folder)
-        except BaseHomematicException:
-            _LOGGER.warning("CHECK_CONFIG: directory % cannot be created", self.storage_folder)
-            return False
-        return True
-
-    def create_central(self) -> CentralUnit:
-        """Return the central."""
-        if not self.check_config():
-            raise HaHomematicException("create_central: Config contains errors. See log files.")
-        return CentralUnit(self)
+            self.check_config(extended_validation=extended_validation)
+            return CentralUnit(self)
+        except BaseHomematicException as bhex:
+            _LOGGER.warning("CREATE_CENTRAL: Not able to create a central: %s", bhex)
+            raise
 
     def create_json_rpc_client(self) -> JsonRpcAioHttpClient:
         """Return the json rpc client."""

@@ -1,3 +1,7 @@
+# Version 2023.12.1 (2023-12-01)
+
+- Central name must not contain the identifier separator (@)
+
 # Version 2023.12.0 (2023-12-01)
 
 - Add support for away_mode and classic homematic thermostats
