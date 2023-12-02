@@ -1296,29 +1296,27 @@ class CentralConfig:
         """Return if caches should be used."""
         return self.start_direct is False
 
-    def check_config(self) -> None:
-        """Check config."""
-        if not self.username:
-            raise HaHomematicConfigException("CHECK_CONFIG: Username must not be empty")
-        if self.password is None:
-            raise HaHomematicConfigException("CHECK_CONFIG: Password is required")
-        if not check_password(self.password):
-            raise HaHomematicConfigException("CHECK_CONFIG: Password is not valid")
-        if IDENTIFIER_SEPARATOR in self.name:
-            raise HaHomematicConfigException(
-                f"CHECK_CONFIG: Name must not contain {IDENTIFIER_SEPARATOR}"
-            )
+    def check_config(self, extended_validation: bool = True) -> None:
+        """Check config. Throws BaseHomematicException on failure."""
+        if extended_validation and IDENTIFIER_SEPARATOR in self.name:
+            raise HaHomematicConfigException(f"Name must not contain {IDENTIFIER_SEPARATOR}")
 
+        if not self.username:
+            raise HaHomematicConfigException("Username must not be empty")
+        if self.password is None:
+            raise HaHomematicConfigException("Password is required")
+        if not check_password(self.password):
+            raise HaHomematicConfigException("Password is not valid")
         check_or_create_directory(self.storage_folder)
 
-    def create_central(self) -> CentralUnit:
-        """Return the central."""
+    def create_central(self, extended_validation: bool = True) -> CentralUnit:
+        """Create the central. Throws BaseHomematicException on validation failure."""
         try:
-            self.check_config()
+            self.check_config(extended_validation=extended_validation)
             return CentralUnit(self)
         except BaseHomematicException as bhex:
             _LOGGER.warning("CREATE_CENTRAL: Not able to create a central: %s", bhex)
-            raise  # HaHomematicException(bhex) from bhex
+            raise
 
     def create_json_rpc_client(self) -> JsonRpcAioHttpClient:
         """Return the json rpc client."""
