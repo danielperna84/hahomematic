@@ -5,6 +5,7 @@
 # Version 2023.12.0 (2023-12-01)
 
 - Add support for away_mode and classic homematic thermostats
+- Collect config validation errors
 
 # Version 2023.11.4 (2023-11-22)
 
