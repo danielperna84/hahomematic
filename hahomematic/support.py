@@ -18,12 +18,13 @@ from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
     FILE_DEVICES,
     FILE_PARAMSETS,
+    IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     SysvarType,
 )
-from hahomematic.exceptions import HaHomematicException
+from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -60,6 +61,31 @@ def build_headers(
     cred_bytes = f"{username}:{password}".encode()
     base64_message = base64.b64encode(cred_bytes).decode("utf-8")
     return [("Authorization", f"Basic {base64_message}")]
+
+
+def check_config(
+    central_name: str | None,
+    username: str | None,
+    password: str | None,
+    storage_folder: str,
+    extended_validation: bool = True,
+) -> list[str]:
+    """Check config. Throws BaseHomematicException on failure."""
+    config_failures: list[str] = []
+    if extended_validation and central_name and IDENTIFIER_SEPARATOR in central_name:
+        config_failures.append(f"Instance name must not contain {IDENTIFIER_SEPARATOR}")
+    if not username:
+        config_failures.append("Username must not be empty")
+    if password is None:
+        config_failures.append("Password is required")
+    if not check_password(password):
+        config_failures.append("Password is not valid")
+    try:
+        check_or_create_directory(storage_folder)
+    except BaseHomematicException as haex:
+        config_failures.append(reduce_args(haex.args)[0])
+
+    return config_failures
 
 
 def check_or_create_directory(directory: str) -> bool:

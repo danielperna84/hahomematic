@@ -35,7 +35,6 @@ from hahomematic.const import (
     EVENT_DATA,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
-    IDENTIFIER_SEPARATOR,
     Description,
     DeviceFirmwareState,
     EventType,
@@ -65,12 +64,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
-from hahomematic.support import (
-    check_or_create_directory,
-    check_password,
-    get_device_address,
-    reduce_args,
-)
+from hahomematic.support import check_config, get_device_address, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -1298,16 +1292,15 @@ class CentralConfig:
 
     def check_config(self, extended_validation: bool = True) -> None:
         """Check config. Throws BaseHomematicException on failure."""
-        if extended_validation and IDENTIFIER_SEPARATOR in self.name:
-            raise HaHomematicConfigException(f"Name must not contain {IDENTIFIER_SEPARATOR}")
-
-        if not self.username:
-            raise HaHomematicConfigException("Username must not be empty")
-        if self.password is None:
-            raise HaHomematicConfigException("Password is required")
-        if not check_password(self.password):
-            raise HaHomematicConfigException("Password is not valid")
-        check_or_create_directory(self.storage_folder)
+        if config_failures := check_config(
+            central_name=self.name,
+            username=self.username,
+            password=self.password,
+            storage_folder=self.storage_folder,
+            extended_validation=extended_validation,
+        ):
+            failures = ", ".join(config_failures)
+            raise HaHomematicConfigException(failures)
 
     def create_central(self, extended_validation: bool = True) -> CentralUnit:
         """Create the central. Throws BaseHomematicException on validation failure."""
