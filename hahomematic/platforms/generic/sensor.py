@@ -50,16 +50,17 @@ def _fix_rssi(value: Any) -> int | None:
 
     See https://github.com/danielperna84/hahomematic/blob/devel/docs/rssi_fix.md.
     """
-    if value is None or not isinstance(value, int):
+    if value is None:
         return None
-    if -127 < value < 0:
-        return value
-    if 1 < value < 127:
-        return value * -1
-    if -256 < value < -129:
-        return (value * -1) - 256
-    if 129 < value < 256:
-        return value - 256
+    if isinstance(value, int):
+        if -127 < value < 0:
+            return value
+        if 1 < value < 127:
+            return value * -1
+        if -256 < value < -129:
+            return (value * -1) - 256
+        if 129 < value < 256:
+            return value - 256
     return None
 
 

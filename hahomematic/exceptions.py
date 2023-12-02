@@ -75,6 +75,14 @@ class HaHomematicException(BaseHomematicException):
         super().__init__("HaHomematicException", *args)
 
 
+class HaHomematicConfigException(BaseHomematicException):
+    """hahomematic HaHomematicConfigException exception."""
+
+    def __init__(self, *args: Any) -> None:
+        """Init the HaHomematicConfigException."""
+        super().__init__("HaHomematicConfigException", *args)
+
+
 class InternalBackendException(BaseHomematicException):
     """hahomematic InternalBackendException exception."""
 

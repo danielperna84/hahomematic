@@ -50,6 +50,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import (
     BaseHomematicException,
+    HaHomematicConfigException,
     HaHomematicException,
     NoClients,
     NoConnection,
@@ -1295,32 +1296,29 @@ class CentralConfig:
         """Return if caches should be used."""
         return self.start_direct is False
 
-    def check_config(self) -> bool:
+    def check_config(self) -> None:
         """Check config."""
         if not self.username:
-            _LOGGER.warning("CHECK_CONFIG: Username must not be empty")
-            return False
+            raise HaHomematicConfigException("CHECK_CONFIG: Username must not be empty")
         if self.password is None:
-            _LOGGER.warning("CHECK_CONFIG: Password is required")  # type: ignore[unreachable]
-            return False
+            raise HaHomematicConfigException("CHECK_CONFIG: Password is required")
         if not check_password(self.password):
-            return False
+            raise HaHomematicConfigException("CHECK_CONFIG: Password is not valid")
         if IDENTIFIER_SEPARATOR in self.name:
-            _LOGGER.warning("CHECK_CONFIG: Name must not contain %s", IDENTIFIER_SEPARATOR)
-            return False
+            raise HaHomematicConfigException(
+                f"CHECK_CONFIG: Name must not contain {IDENTIFIER_SEPARATOR}"
+            )
 
-        try:
-            check_or_create_directory(self.storage_folder)
-        except BaseHomematicException:
-            _LOGGER.warning("CHECK_CONFIG: directory %s cannot be created", self.storage_folder)
-            return False
-        return True
+        check_or_create_directory(self.storage_folder)
 
     def create_central(self) -> CentralUnit:
         """Return the central."""
-        if not self.check_config():
-            raise HaHomematicException("create_central: Config contains errors. See log files.")
-        return CentralUnit(self)
+        try:
+            self.check_config()
+            return CentralUnit(self)
+        except BaseHomematicException as bhex:
+            _LOGGER.warning("CREATE_CENTRAL: Not able to create a central: %s", bhex)
+            raise  # HaHomematicException(bhex) from bhex
 
     def create_json_rpc_client(self) -> JsonRpcAioHttpClient:
         """Return the json rpc client."""
