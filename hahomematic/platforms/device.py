@@ -104,7 +104,7 @@ class HmDevice(PayloadMixin):
             device_type=self._device_type,
         )
         self.value_cache: Final = ValueCache(device=self)
-        self._room: Final = central.device_details.get_room(device_address=device_address)
+        self._rooms: Final = central.device_details.get_device_rooms(device_address=device_address)
         self._update_firmware_data()
         self._update_entity: Final = (
             HmUpdate(device=self) if self.device_type not in VIRTUAL_REMOTE_TYPES else None
@@ -290,8 +290,15 @@ class HmDevice(PayloadMixin):
 
     @config_property
     def room(self) -> str | None:
-        """Return the room of the device."""
-        return self._room
+        """Return the room of the device, if only one assigned in CCU."""
+        if self._rooms and len(self._rooms) == 1:
+            return list(self._rooms)[0]
+        return None
+
+    @config_property
+    def rooms(self) -> set[str]:
+        """Return all rooms of the device."""
+        return self._rooms
 
     @config_property
     def sub_type(self) -> str:

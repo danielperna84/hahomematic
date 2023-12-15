@@ -25,7 +25,7 @@ def callback_system_event(system_event: SystemEvent) -> Callable:
     """Check if callback_system is set and call it AFTER original function."""
 
     def decorator_callback_system_event(
-        func: Callable[_P, _R | Awaitable[_R]]
+        func: Callable[_P, _R | Awaitable[_R]],
     ) -> Callable[_P, _R | Awaitable[_R]]:
         """Decorate callback system events."""
 

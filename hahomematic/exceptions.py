@@ -107,7 +107,7 @@ def log_exception(
     """Decorate methods for exception logging."""
 
     def decorator_log_exception(
-        func: Callable[_P, _R | Awaitable[_R]]
+        func: Callable[_P, _R | Awaitable[_R]],
     ) -> Callable[_P, _R | Awaitable[_R]]:
         """Decorate log exception method."""
 
