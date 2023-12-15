@@ -270,6 +270,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._channel_unique_id: Final = generate_channel_unique_id(
             central=device.central, address=self._channel_address
         )
+        self._rooms: Final = self._central.device_details.get_channel_rooms(
+            channel_address=self._channel_address
+        )
         self._is_in_multiple_channels: Final = is_in_multiple_channels
         self._channel_type: Final = str(device.channels[self._channel_address].type)
         self._function: Final = self._central.device_details.get_function_text(
@@ -339,6 +342,18 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def name(self) -> str | None:
         """Return the name of the entity."""
         return self._name
+
+    @config_property
+    def room(self) -> str | None:
+        """Return the room, if only one exists."""
+        if self._rooms and len(self._rooms) == 1:
+            return list(self._rooms)[0]
+        return None
+
+    @config_property
+    def rooms(self) -> set[str]:
+        """Return the rooms assigned to an entity."""
+        return self._rooms
 
     @config_property
     def usage(self) -> EntityUsage:

@@ -1,3 +1,7 @@
+# Version 2023.12.2 (2023-12-15)
+
+- Save all rooms to entity model
+
 # Version 2023.12.1 (2023-12-01)
 
 - Central name must not contain the identifier separator (@)

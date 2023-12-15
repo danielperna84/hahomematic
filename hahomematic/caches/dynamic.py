@@ -23,7 +23,7 @@ from hahomematic.const import (
     InterfaceName,
 )
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import changed_within_seconds, get_device_address
+from hahomematic.support import changed_within_seconds
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -36,7 +36,6 @@ class DeviceDetailsCache:
         self._central: Final = central
         self._channel_rooms: Final[dict[str, set[str]]] = {}
         self._device_channel_ids: Final[dict[str, str]] = {}
-        self._device_room: Final[dict[str, str]] = {}
         self._functions: Final[dict[str, set[str]]] = {}
         self._interface_cache: Final[dict[str, str]] = {}
         self._names_cache: Final[dict[str, str]] = {}
@@ -53,7 +52,6 @@ class DeviceDetailsCache:
         _LOGGER.debug("load: Loading rooms for %s", self._central.name)
         self._channel_rooms.clear()
         self._channel_rooms.update(await self._get_all_rooms())
-        self._identify_device_room()
         _LOGGER.debug("load: Loading functions for %s", self._central.name)
         self._functions.clear()
         self._functions.update(await self._get_all_functions())
@@ -92,9 +90,17 @@ class DeviceDetailsCache:
             return await client.get_all_rooms()
         return {}
 
-    def get_room(self, device_address: str) -> str | None:
-        """Return room by device_address."""
-        return self._device_room.get(device_address)
+    def get_device_rooms(self, device_address: str) -> set[str]:
+        """Return all rooms by device_address."""
+        rooms: set[str] = set()
+        for channel_address, channel_rooms in self._channel_rooms.items():
+            if channel_address.startswith(device_address):
+                rooms.update(channel_rooms)
+        return rooms
+
+    def get_channel_rooms(self, channel_address: str) -> set[str]:
+        """Return rooms by channel_address."""
+        return self._channel_rooms.get(channel_address) or set()
 
     async def _get_all_functions(self) -> dict[str, set[str]]:
         """Get all functions, if available."""
@@ -122,21 +128,6 @@ class DeviceDetailsCache:
         self._channel_rooms.clear()
         self._functions.clear()
         self._last_refreshed = INIT_DATETIME
-
-    def _identify_device_room(self) -> None:
-        """
-        Identify a possible room of a device.
-
-        A room is relevant for a device, if there is only one room assigned to the channels.
-        """
-        device_rooms: dict[str, set[str]] = {}
-        for address, rooms in self._channel_rooms.items():
-            if (device_address := get_device_address(address=address)) not in device_rooms:
-                device_rooms[device_address] = set()
-            device_rooms[device_address].update(rooms)
-        for device_address, rooms in device_rooms.items():
-            if rooms and len(set(rooms)) == 1:
-                self._device_room[device_address] = list(set(rooms))[0]
 
 
 class CentralDataCache:
