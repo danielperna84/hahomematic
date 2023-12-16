@@ -8,7 +8,7 @@ from hahomematic.const import Parameter
 from hahomematic.platforms.custom.const import Field
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class CustomConfig:
     """Data for custom entity creation."""
 
@@ -17,7 +17,7 @@ class CustomConfig:
     extended: ExtendedConfig | None = None
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class ExtendedConfig:
     """Extended data for custom entity creation."""
 

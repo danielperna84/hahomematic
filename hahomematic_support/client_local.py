@@ -277,7 +277,7 @@ class ClientLocal(Client):  # pragma: no cover
         return await self.central.async_add_executor_job(_load)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class LocalRessources:
     """Dataclass with information for local client."""
 

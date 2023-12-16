@@ -358,7 +358,8 @@ class PingPongCache:
                     "Pending PONG mismatch: There is a mismatch between send ping events and received pong events for HA instance %s. "
                     "Possible reason 1: You are running multiple instances of HA with the same instance name configured for this integration. "
                     "Re-add one instance! Otherwise this HA instance will not receive update events from your CCU. "
-                    "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a CCU restart.",
+                    "Possible reason 2: Something is stuck on the CCU or hasn't been cleaned up. Therefore, try a CCU restart."
+                    "Possible reason 3: Your setup is misconfigured and HA is not able to receive events from the CCU.",
                     self._interface_id,
                 )
             self._pending_pong_logged = True
