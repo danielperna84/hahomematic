@@ -1,3 +1,7 @@
+# Version 2023.12.3 (2023-12-16)
+
+- Set attributes of dataclasses
+
 # Version 2023.12.2 (2023-12-15)
 
 - Save all rooms to entity model

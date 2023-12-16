@@ -484,14 +484,14 @@ VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
 )
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class HubData:
     """Dataclass for hub entities."""
 
     name: str
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class ProgramData(HubData):
     """Dataclass for programs."""
 
@@ -501,7 +501,7 @@ class ProgramData(HubData):
     last_execute_time: str
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class SystemVariableData(HubData):
     """Dataclass for system variables."""
 
@@ -514,7 +514,7 @@ class SystemVariableData(HubData):
     values: tuple[str, ...] | None = None
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class SystemInformation:
     """System information of the backend."""
 

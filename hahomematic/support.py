@@ -260,7 +260,7 @@ def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
         _delete_file(file_name=f"{instance_name}_{file_to_delete}")
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class Channel:
     """dataclass for a device channel."""
 
@@ -273,7 +273,7 @@ class Channel:
         return get_channel_no(self.address)
 
 
-@dataclass(slots=True)
+@dataclass(frozen=True, kw_only=True, slots=True)
 class CacheEntry:
     """An entry for the value cache."""
 
