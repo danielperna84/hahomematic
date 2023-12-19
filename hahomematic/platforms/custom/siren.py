@@ -263,7 +263,8 @@ def make_ip_siren_smoke(
     )
 
 
-# Case for device model is not relevant
+# Case for device model is not relevant.
+# HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-ASIR": CustomConfig(func=make_ip_siren, channels=(0,)),
     "HmIP-SWSD": CustomConfig(func=make_ip_siren_smoke, channels=(0,)),

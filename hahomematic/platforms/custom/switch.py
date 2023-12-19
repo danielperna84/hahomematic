@@ -105,7 +105,8 @@ def make_ip_switch(
     )
 
 
-# Case for device model is not relevant
+# Case for device model is not relevant.
+# HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "ELV-SH-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
     "HmIP-BS2": CustomConfig(func=make_ip_switch, channels=(3, 7)),
