@@ -674,7 +674,8 @@ def make_ip_thermostat_group(
     )
 
 
-# Case for device model is not relevant
+# Case for device model is not relevant.
+# HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "ALPHA-IP-RBG": CustomConfig(func=make_ip_thermostat, channels=(1,)),
     "BC-RT-TRX-CyG": CustomConfig(func=make_thermostat, channels=(1,)),

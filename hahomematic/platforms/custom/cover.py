@@ -604,10 +604,12 @@ def make_rf_window_drive(
     )
 
 
-# Case for device model is not relevant
+# Case for device model is not relevant.
+# HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 146": CustomConfig(func=make_rf_cover, channels=(1,)),
     "263 147": CustomConfig(func=make_rf_cover, channels=(1,)),
+    "HM-LC-Bl1-Velux": CustomConfig(func=make_rf_cover, channels=(1,)),  # HB-LC-Bl1-Velux
     "HM-LC-Bl1-FM": CustomConfig(func=make_rf_cover, channels=(1,)),
     "HM-LC-Bl1-FM-2": CustomConfig(func=make_rf_cover, channels=(1,)),
     "HM-LC-Bl1-PB-FM": CustomConfig(func=make_rf_cover, channels=(1,)),

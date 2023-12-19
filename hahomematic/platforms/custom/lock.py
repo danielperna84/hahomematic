@@ -212,7 +212,8 @@ def make_rf_lock(
     )
 
 
-# Case for device model is not relevant
+# Case for device model is not relevant.
+# HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HM-Sec-Key": CustomConfig(
         func=make_rf_lock,

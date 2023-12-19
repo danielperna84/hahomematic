@@ -1,3 +1,7 @@
+# Version 2023.12.4 (2023-12-19)
+
+- Add HB-LC-Bl1-Velux to cover
+
 # Version 2023.12.3 (2023-12-16)
 
 - Set attributes of dataclasses
