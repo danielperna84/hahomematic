@@ -1,3 +1,7 @@
+# Version 2024.1.0 (2024-01-03)
+
+- Add duration=0 when ramp_time used for HmIP-RGBW
+
 # Version 2023.12.4 (2023-12-19)
 
 - Add HB-LC-Bl1-Velux to cover

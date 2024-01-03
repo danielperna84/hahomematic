@@ -182,8 +182,10 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 ED.PRIMARY_CHANNEL: 1,
                 ED.SECONDARY_CHANNELS: (2, 3, 4),
                 ED.REPEATABLE_FIELDS: {
-                    Field.DIRECTION: Parameter.ACTIVITY_STATE,
                     Field.COLOR_TEMPERATURE: Parameter.COLOR_TEMPERATURE,
+                    Field.DIRECTION: Parameter.ACTIVITY_STATE,
+                    Field.ON_TIME_VALUE: Parameter.DURATION_VALUE,
+                    Field.ON_TIME_UNIT: Parameter.DURATION_UNIT,
                     Field.EFFECT: Parameter.EFFECT,
                     Field.HUE: Parameter.HUE,
                     Field.LEVEL: Parameter.LEVEL,
