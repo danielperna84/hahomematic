@@ -6,7 +6,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.const import EntityUsage
+from hahomematic.const import EntityUsage, ParamsetKey
 from hahomematic.platforms.custom.light import (
     CeColorDimmer,
     CeColorDimmerEffect,
@@ -16,6 +16,7 @@ from hahomematic.platforms.custom.light import (
     CeIpRGBWLight,
     ColorBehaviour,
     FixedColor,
+    TimeUnit,
 )
 
 from tests import const, helper
@@ -842,4 +843,19 @@ async def test_ceiprgbwlight(factory: helper.Factory) -> None:
     await light.turn_on(effect="EFFECT_01_END_CURRENT_PROFILE")
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU5629873:1", paramset_key="VALUES", value={"EFFECT": 1, "LEVEL": 1.0}
+    )
+
+    await light.turn_on(hs_color=(44, 66), ramp_time=5)
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU5629873:1",
+        paramset_key=ParamsetKey.VALUES,
+        value={
+            "HUE": 44,
+            "SATURATION": 0.66,
+            "DURATION_UNIT": TimeUnit.SECONDS,
+            "DURATION_VALUE": 0,
+            "RAMP_TIME_UNIT": TimeUnit.SECONDS,
+            "RAMP_TIME_VALUE": 5,
+            "LEVEL": 1.0,
+        },
     )

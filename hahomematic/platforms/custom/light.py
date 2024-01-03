@@ -439,6 +439,9 @@ class CeIpRGBWLight(CeDimmer):
         self._e_device_operation_mode: HmSelect = self._get_entity(
             field=Field.DEVICE_OPERATION_MODE, entity_type=HmSelect
         )
+        self._e_on_time_unit: HmAction = self._get_entity(
+            field=Field.ON_TIME_UNIT, entity_type=HmAction
+        )
         self._e_effect: HmAction = self._get_entity(field=Field.EFFECT, entity_type=HmAction)
         self._e_hue: HmInteger = self._get_entity(field=Field.HUE, entity_type=HmInteger)
         self._e_ramp_time_to_off_unit: HmAction = self._get_entity(
@@ -524,10 +527,21 @@ class CeIpRGBWLight(CeDimmer):
             await self._e_color_temperature_kelvin.send_value(
                 value=color_temp_kelvin, collector=collector
             )
+        if kwargs.get("on_time") is None and kwargs.get("ramp_time"):
+            await self._set_on_time_value(on_time=0, collector=collector)
         if self.supports_effects and (effect := kwargs.get("effect")) is not None:
             await self._e_effect.send_value(value=effect, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
+
+    @bind_collector
+    async def _set_on_time_value(
+        self, on_time: float, collector: CallParameterCollector | None = None
+    ) -> None:
+        """Set the on time value in seconds."""
+        on_time, on_time_unit = _recalc_unit_timer(time=on_time)
+        await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
+        await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
     async def _set_ramp_time_on_value(
         self, ramp_time: float, collector: CallParameterCollector | None = None
