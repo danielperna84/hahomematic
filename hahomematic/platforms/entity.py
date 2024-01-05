@@ -51,6 +51,8 @@ _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
+_COLLECTOR_ARGUMENT_NAME = "collector"
+
 DEFAULT_CUSTOM_ID: Final = "custom_id"
 
 _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
@@ -729,41 +731,47 @@ class CallParameterCollector:
         """Init the generator."""
         self._client: Final = client
         self._use_put_paramset: bool = True
-        self._paramsets: Final[dict[str, dict[str, Any]]] = {}
+        self._paramsets: Final[dict[int, dict[str, dict[str, Any]]]] = {}
 
     def add_entity(
-        self, entity: BaseParameterEntity, value: Any, use_put_paramset: bool = True
+        self,
+        entity: BaseParameterEntity,
+        value: Any,
+        collector_order: int,
+        use_put_paramset: bool = True,
     ) -> None:
         """Add a generic entity."""
         if use_put_paramset is False:
             self._use_put_paramset = False
-        if entity.channel_address not in self._paramsets:
-            self._paramsets[entity.channel_address] = {}
-        self._paramsets[entity.channel_address][entity.parameter] = value
+        if collector_order not in self._paramsets:
+            self._paramsets[collector_order] = {}
+        if entity.channel_address not in self._paramsets[collector_order]:
+            self._paramsets[collector_order][entity.channel_address] = {}
+        self._paramsets[collector_order][entity.channel_address][entity.parameter] = value
 
     async def send_data(self) -> bool:
         """Send data to backend."""
-        for channel_address, paramset in self._paramsets.items():
-            if len(paramset.values()) == 1 or self._use_put_paramset is False:
-                for parameter, value in paramset.items():
-                    if not await self._client.set_value(
-                        channel_address=channel_address,
-                        paramset_key=ParamsetKey.VALUES,
-                        parameter=parameter,
-                        value=value,
-                    ):
-                        return False  # pragma: no cover
-            elif not await self._client.put_paramset(
-                address=channel_address, paramset_key=ParamsetKey.VALUES, value=paramset
-            ):
-                return False  # pragma: no cover
+        for paramset_no in dict(sorted(self._paramsets.items())).values():
+            for channel_address, paramset in paramset_no.items():
+                if len(paramset.values()) == 1 or self._use_put_paramset is False:
+                    for parameter, value in paramset.items():
+                        if not await self._client.set_value(
+                            channel_address=channel_address,
+                            paramset_key=ParamsetKey.VALUES,
+                            parameter=parameter,
+                            value=value,
+                        ):
+                            return False  # pragma: no cover
+                elif not await self._client.put_paramset(
+                    address=channel_address, paramset_key=ParamsetKey.VALUES, value=paramset
+                ):
+                    return False  # pragma: no cover
         return True
 
 
 def bind_collector(func: _CallableT) -> _CallableT:
     """Decorate function to automatically add collector if not set."""
-    argument_name = "collector"
-    argument_index = getfullargspec(func).args.index(argument_name)
+    argument_index = getfullargspec(func).args.index(_COLLECTOR_ARGUMENT_NAME)
 
     @wraps(func)
     async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
@@ -771,13 +779,13 @@ def bind_collector(func: _CallableT) -> _CallableT:
         try:
             collector_exists = args[argument_index] is not None
         except IndexError:
-            collector_exists = kwargs.get(argument_name) is not None
+            collector_exists = kwargs.get(_COLLECTOR_ARGUMENT_NAME) is not None
 
         if collector_exists:
             return_value = await func(*args, **kwargs)
         else:
             collector = CallParameterCollector(client=args[0].device.client)
-            kwargs[argument_name] = collector
+            kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
             return_value = await func(*args, **kwargs)
             await collector.send_data()
         return return_value

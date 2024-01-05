@@ -263,12 +263,14 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
     assert light.hs_color == (0.0, 100.0)
 
     await light.turn_on(effect="Slow color change")
+
     assert mock_client.method_calls[-2] == call.set_value(
-        channel_address="VCU3747418:3", paramset_key="VALUES", parameter="PROGRAM", value=1
-    )
-    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU3747418:1", paramset_key="VALUES", parameter="LEVEL", value=1.0
     )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3747418:3", paramset_key="VALUES", parameter="PROGRAM", value=1
+    )
+
     assert light.effect == "Slow color change"
 
     central.event(const.INTERFACE_ID, "VCU3747418:2", "COLOR", 201)
@@ -285,6 +287,17 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
+
+    await light.turn_on(brightness=28, effect="Slow color change")
+    assert mock_client.method_calls[-2] == call.set_value(
+        channel_address="VCU3747418:1",
+        paramset_key="VALUES",
+        parameter="LEVEL",
+        value=0.10980392156862745,
+    )
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU3747418:3", paramset_key="VALUES", parameter="PROGRAM", value=1
+    )
 
 
 @pytest.mark.asyncio
