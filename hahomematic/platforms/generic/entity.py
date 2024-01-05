@@ -82,6 +82,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         self,
         value: hme.InputParameterT,
         collector: hme.CallParameterCollector | None = None,
+        collector_order: int = 50,
         do_validate: bool = True,
     ) -> None:
         """Send value to ccu, or use collector if set."""
@@ -98,7 +99,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 
         converted_value = self._convert_value(value=prepared_value)
         if collector:
-            collector.add_entity(self, value=converted_value)
+            collector.add_entity(self, value=converted_value, collector_order=collector_order)
             return
 
         if self._validate_state_change and not self.is_state_change(value=converted_value):

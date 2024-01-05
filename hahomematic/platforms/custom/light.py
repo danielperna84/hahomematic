@@ -386,11 +386,13 @@ class CeColorDimmerEffect(CeColorDimmer):
             return
 
         if "effect" not in kwargs and self.supports_effects and self.effect != _EFFECT_OFF:
-            await self._e_effect.send_value(value=0, collector=collector)
+            await self._e_effect.send_value(value=0, collector=collector, collector_order=5)
 
         if self.supports_effects and (effect := kwargs.get("effect")) is not None:
             if (effect_idx := self._effects.index(effect)) is not None:
-                await self._e_effect.send_value(value=effect_idx, collector=collector)
+                await self._e_effect.send_value(
+                    value=effect_idx, collector=collector, collector_order=95
+                )
 
         await super().turn_on(collector=collector, **kwargs)
 
