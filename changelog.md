@@ -1,6 +1,7 @@
 # Version 2024.1.1 (2024-01-05)
 
 - Allow ordered execution of collector paramsets
+- Add python 3.12 for github tests and pylint
 
 # Version 2024.1.0 (2024-01-03)
 
