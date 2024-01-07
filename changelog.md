@@ -1,3 +1,7 @@
+# Version 2024.1.3 (2024-01-07)
+
+- Add duration=111600 when ramp_time used for HmIP-RGBW
+
 # Version 2024.1.2 (2024-01-07)
 
 - Only consider relevant entities for HmIP-RGBW
