@@ -542,6 +542,7 @@ class CeIpRGBWLight(CeDimmer):
                 value=color_temp_kelvin, collector=collector
             )
         if kwargs.get("on_time") is None and kwargs.get("ramp_time"):
+            # 111600 is a special value for NOT_USED
             await self._set_on_time_value(on_time=111600, collector=collector)
         if self.supports_effects and (effect := kwargs.get("effect")) is not None:
             await self._e_effect.send_value(value=effect, collector=collector)
