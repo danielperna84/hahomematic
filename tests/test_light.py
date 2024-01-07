@@ -16,7 +16,6 @@ from hahomematic.platforms.custom.light import (
     CeIpRGBWLight,
     ColorBehaviour,
     FixedColor,
-    TimeUnit,
 )
 
 from tests import const, helper
@@ -459,7 +458,7 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8",
         paramset_key="VALUES",
-        value={"DURATION_UNIT": 0, "DURATION_VALUE": 18, "LEVEL": 1.0},
+        value={"DURATION_VALUE": 18, "LEVEL": 1.0},
     )
 
     await light.turn_off()
@@ -483,7 +482,7 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU3716619:8",
         paramset_key="VALUES",
-        value={"RAMP_TIME_UNIT": 0, "RAMP_TIME_VALUE": 18, "LEVEL": 1.0},
+        value={"RAMP_TIME_VALUE": 18, "LEVEL": 1.0},
     )
 
     await light.turn_on(ramp_time=17000)
@@ -691,7 +690,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8",
         paramset_key="VALUES",
-        value={"COLOR_BEHAVIOUR": 6, "DURATION_UNIT": 0, "DURATION_VALUE": 18, "LEVEL": 1.0},
+        value={"COLOR_BEHAVIOUR": 6, "DURATION_VALUE": 18, "LEVEL": 1.0},
     )
 
     await light.turn_off()
@@ -715,7 +714,7 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU4704397:8",
         paramset_key="VALUES",
-        value={"COLOR_BEHAVIOUR": 6, "RAMP_TIME_UNIT": 0, "RAMP_TIME_VALUE": 18, "LEVEL": 1.0},
+        value={"COLOR_BEHAVIOUR": 6, "RAMP_TIME_VALUE": 18, "LEVEL": 1.0},
     )
 
     await light.turn_on(ramp_time=17000)
@@ -865,9 +864,7 @@ async def test_ceiprgbwlight(factory: helper.Factory) -> None:
         value={
             "HUE": 44,
             "SATURATION": 0.66,
-            "DURATION_UNIT": TimeUnit.SECONDS,
             "DURATION_VALUE": 111600,
-            "RAMP_TIME_UNIT": TimeUnit.SECONDS,
             "RAMP_TIME_VALUE": 5,
             "LEVEL": 1.0,
         },
