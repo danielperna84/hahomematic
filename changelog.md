@@ -1,3 +1,7 @@
+# Version 2024.1.2 (2024-01-07)
+
+- Only consider relevant entities for HmIP-RGBW
+
 # Version 2024.1.1 (2024-01-05)
 
 - Allow ordered execution of collector paramsets

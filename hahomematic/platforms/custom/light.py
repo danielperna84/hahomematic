@@ -18,6 +18,7 @@ from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
+from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
@@ -470,6 +471,17 @@ class CeIpRGBWLight(CeDimmer):
         if self._e_hue.value is not None and self._e_saturation.value is not None:
             return self._e_hue.value, self._e_saturation.value * 100
         return None
+
+    @property
+    def _relevant_entities(self) -> tuple[hmge.GenericEntity, ...]:
+        """Returns the list of relevant entities. To be overridden by subclasses."""
+        if self._e_device_operation_mode.value == DeviceOperationMode.RGBW:
+            return self._e_hue, self._e_level, self._e_saturation, self._e_color_temperature_kelvin
+        if self._e_device_operation_mode.value == DeviceOperationMode.RGB:
+            return self._e_hue, self._e_level, self._e_saturation
+        if self._e_device_operation_mode.value == DeviceOperationMode.PWM:
+            return self._e_level, self._e_color_temperature_kelvin
+        return (self._e_level,)
 
     @config_property
     def supports_color_temperature(self) -> bool:

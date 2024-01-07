@@ -89,17 +89,22 @@ class CustomEntity(BaseEntity):
     @value_property
     def is_valid(self) -> bool:
         """Return if the state is valid."""
-        return all(entity.is_valid for entity in self._readable_entities)
+        return all(entity.is_valid for entity in self._relevant_entities)
 
     @value_property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
-        return any(entity.state_uncertain for entity in self._readable_entities)
+        return any(entity.state_uncertain for entity in self._relevant_entities)
 
     @property
     def _readable_entities(self) -> tuple[hmge.GenericEntity, ...]:
         """Returns the list of readable entities."""
         return tuple(ge for ge in self._data_entities.values() if ge.is_readable)
+
+    @property
+    def _relevant_entities(self) -> tuple[hmge.GenericEntity, ...]:
+        """Returns the list of relevant entities. To be overridden by subclasses."""
+        return self._readable_entities
 
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
