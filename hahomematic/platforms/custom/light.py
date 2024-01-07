@@ -479,7 +479,7 @@ class CeIpRGBWLight(CeDimmer):
             return self._e_hue, self._e_level, self._e_saturation, self._e_color_temperature_kelvin
         if self._e_device_operation_mode.value == DeviceOperationMode.RGB:
             return self._e_hue, self._e_level, self._e_saturation
-        if self._e_device_operation_mode.value == DeviceOperationMode.PWM:
+        if self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE:
             return self._e_level, self._e_color_temperature_kelvin
         return (self._e_level,)
 
