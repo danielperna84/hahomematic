@@ -706,6 +706,8 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
 def _recalc_unit_timer(time: float) -> tuple[float, int]:
     """Recalculate unit and value of timer."""
     ramp_time_unit = TimeUnit.SECONDS
+    if time == 111600:
+        return time, ramp_time_unit
     if time > 16343:
         time /= 60
         ramp_time_unit = TimeUnit.MINUTES

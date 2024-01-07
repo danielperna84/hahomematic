@@ -866,7 +866,7 @@ async def test_ceiprgbwlight(factory: helper.Factory) -> None:
             "HUE": 44,
             "SATURATION": 0.66,
             "DURATION_UNIT": TimeUnit.SECONDS,
-            "DURATION_VALUE": 0,
+            "DURATION_VALUE": 111600,
             "RAMP_TIME_UNIT": TimeUnit.SECONDS,
             "RAMP_TIME_VALUE": 5,
             "LEVEL": 1.0,
