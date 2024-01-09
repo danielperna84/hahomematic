@@ -1,3 +1,7 @@
+# Version 2024.1.5 (2024-01-09)
+
+- Remove effects from HmIP-RGBW when in PWM mode
+
 # Version 2024.1.4 (2024-01-07)
 
 - Fix relevant entities for HmIP-RGBW

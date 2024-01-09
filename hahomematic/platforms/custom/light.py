@@ -489,6 +489,15 @@ class CeIpRGBWLight(CeDimmer):
         return self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE
 
     @config_property
+    def supports_effects(self) -> bool:
+        """Flag if light supports effects."""
+        return (
+            self._e_device_operation_mode.value != DeviceOperationMode.PWM
+            and self.effects is not None
+            and len(self.effects) > 0
+        )
+
+    @config_property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return self._e_device_operation_mode.value in (
