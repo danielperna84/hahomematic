@@ -91,7 +91,7 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
     ],
 )
 @pytest.mark.asyncio
-async def test_device_unignore(
+async def test_device_unignore_etrv(
     factory: helper.Factory,
     line: str,
     parameter: str,
@@ -114,6 +114,42 @@ async def test_device_unignore(
     )
     generic_entity = central.get_generic_entity(f"VCU3609622:{channel_no}", parameter)
     if generic_entity:
+        assert generic_entity.usage == EntityUsage.ENTITY
+
+
+@pytest.mark.parametrize(
+    ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
+    [
+        ("LEVEL", "LEVEL", 3, "VALUES", True),
+        ("VALUES:LEVEL", "LEVEL", 3, "VALUES", True),
+        ("LEVEL@HmIP-BROLL:3:VALUES", "LEVEL", 3, "VALUES", True),
+    ],
+)
+@pytest.mark.asyncio
+async def test_device_unignore_broll(
+    factory: helper.Factory,
+    line: str,
+    parameter: str,
+    channel_no: int,
+    paramset_key: str,
+    expected_result: bool,
+) -> None:
+    """Test device un ignore."""
+    central, _ = await factory.get_default_central(
+        {"VCU8537918": "HmIP-BROLL.json"}, un_ignore_list=[line]
+    )
+    assert (
+        central.parameter_visibility.parameter_is_un_ignored(
+            device_type="HmIP-BROLL",
+            channel_no=channel_no,
+            paramset_key=paramset_key,
+            parameter=parameter,
+        )
+        is expected_result
+    )
+    generic_entity = central.get_generic_entity(f"VCU8537918:{channel_no}", parameter)
+    if expected_result:
+        assert generic_entity
         assert generic_entity.usage == EntityUsage.ENTITY
 
 

@@ -1,6 +1,7 @@
 # Version 2024.1.6 (2024-01-11)
 
 - Fix unignore doc and improve unignore tests
+- Move unignore check to entity
 
 # Version 2024.1.5 (2024-01-09)
 

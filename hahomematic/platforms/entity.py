@@ -422,6 +422,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
                 channel_address=channel_address, parameter=parameter
             ),
         )
+        self._is_unignored: Final[
+            bool
+        ] = self._central.parameter_visibility.parameter_is_un_ignored(
+            device_type=self._device.device_type,
+            channel_no=self._channel_no,
+            paramset_key=self._paramset_key,
+            parameter=self._parameter,
+        )
         self._value: ParameterT | None = None
         self._last_updated: datetime = INIT_DATETIME
         self._last_refreshed: datetime = INIT_DATETIME
@@ -465,6 +473,11 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def is_unit_fixed(self) -> bool:
         """Return if the unit is fixed."""
         return self._raw_unit != self._unit
+
+    @config_property
+    def is_unignored(self) -> bool:
+        """Return if the parameter is unignored."""
+        return self._is_unignored
 
     @config_property
     def max(self) -> ParameterT:
