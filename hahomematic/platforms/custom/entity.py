@@ -194,13 +194,6 @@ class CustomEntity(BaseEntity):
         if hmed.get_include_default_entities(device_profile=self._device_profile):
             self._mark_entities(entity_def=hmed.get_default_entities())
 
-        # add custom un_ignore entities
-        self._mark_entity_by_custom_un_ignore_parameters(
-            un_ignore_params_by_paramset_key=self._central.parameter_visibility.get_un_ignore_parameters(  # noqa: E501
-                device_type=self._device.device_type, channel_no=self.channel_no
-            )
-        )
-
     def _add_entities(self, field_dict_name: hmed.ED, is_visible: bool = False) -> None:
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
@@ -259,17 +252,6 @@ class CustomEntity(BaseEntity):
             )
             if entity:
                 entity.set_usage(EntityUsage.ENTITY)
-
-    def _mark_entity_by_custom_un_ignore_parameters(
-        self, un_ignore_params_by_paramset_key: Mapping[str, tuple[str, ...]]
-    ) -> None:
-        """Mark entities to be created in HA."""
-        if not un_ignore_params_by_paramset_key:
-            return  # pragma: no cover
-        for paramset_key, un_ignore_params in un_ignore_params_by_paramset_key.items():
-            for entity in self._device.generic_entities:
-                if entity.paramset_key == paramset_key and entity.parameter in un_ignore_params:
-                    entity.set_usage(EntityUsage.ENTITY)
 
     def _get_entity(self, field: Field, entity_type: type[_EntityT]) -> _EntityT:
         """Get entity."""

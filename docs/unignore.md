@@ -27,11 +27,11 @@ LEVEL
 FROST_PROTECTION
 ```
 
-### parameter with limitation to a device type:
+### parameter with limitation to a paramset:
 
 ```
-LEVEL@@HmIP-eTRV-2
-FROST_PROTECTION@HmIP-BWTH
+VALUES:LEVEL
+VALUES:FROST_PROTECTION
 ```
 
 ### parameter with limitation to a device type, channel and paramset type:
