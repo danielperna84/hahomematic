@@ -252,11 +252,18 @@ class ParameterVisibilityCache:
         self._storage_folder: Final = central.config.storage_folder
         self._required_parameters: Final = get_required_parameters()
         self._raw_un_ignore_list: Final[set[str]] = set(central.config.un_ignore_list or set())
+
+        # unignore from custom unignore files
         # paramset_key, parameter
-        self._un_ignore_parameters_general: Final[Mapping[str, set[str]]] = {
+        self._custom_un_ignore_parameters_general: Final[Mapping[str, set[str]]] = {
             ParamsetKey.MASTER: set(),
             ParamsetKey.VALUES: set(),
         }
+        # device_type, channel_no, paramset_key, parameter
+        self._custom_un_ignore_parameters_by_device_paramset_key: Final[
+            dict[str, dict[int | None, dict[str, set[str]]]]
+        ] = {}
+
         self._ignore_parameters_by_device_lower: Final[dict[str, tuple[str, ...]]] = {
             parameter: tuple(device_type.lower() for device_type in device_types)
             for parameter, device_types in _IGNORE_PARAMETERS_BY_DEVICE.items()
@@ -274,12 +281,6 @@ class ParameterVisibilityCache:
 
         # device_type, channel_no, paramset_key, set[parameter]
         self._un_ignore_parameters_by_device_paramset_key: Final[
-            dict[str, dict[int | None, dict[str, set[str]]]]
-        ] = {}
-
-        # unignore from custom unignore files
-        # device_type, channel_no, paramset_key, parameter
-        self._custom_un_ignore_parameters_by_device_paramset_key: Final[
             dict[str, dict[int | None, dict[str, set[str]]]]
         ] = {}
 
@@ -312,29 +313,6 @@ class ParameterVisibilityCache:
                     self._un_ignore_parameters_by_device_paramset_key[device_type_l][channel_no][
                         ParamsetKey.MASTER
                     ].add(parameter)
-
-    def get_un_ignore_parameters(
-        self, device_type: str, channel_no: int | None
-    ) -> Mapping[str, tuple[str, ...]]:
-        """Return un_ignore_parameters."""
-        device_type_l = device_type.lower()
-        un_ignore_parameters: dict[str, set[str]] = {}
-        if device_type_l is not None and channel_no is not None:
-            un_ignore_parameters = self._custom_un_ignore_parameters_by_device_paramset_key.get(
-                device_type_l, {}
-            ).get(channel_no, {})
-        for (
-            paramset_key,
-            un_ignore_params,
-        ) in self._un_ignore_parameters_general.items():
-            if paramset_key not in un_ignore_parameters:
-                un_ignore_parameters[paramset_key] = set()
-            un_ignore_parameters[paramset_key].update(un_ignore_params)
-
-        return {
-            paramset_key: tuple(parameters)
-            for paramset_key, parameters in un_ignore_parameters.items()
-        }
 
     @lru_cache(maxsize=4096)
     def parameter_is_ignored(
@@ -407,6 +385,7 @@ class ParameterVisibilityCache:
         channel_no: int | None,
         paramset_key: str,
         parameter: str,
+        custom_only: bool = False,
     ) -> bool:
         """
         Return if parameter is on an un_ignore list.
@@ -417,7 +396,7 @@ class ParameterVisibilityCache:
         device_type_l = device_type.lower()
 
         # check if parameter is in custom_un_ignore
-        if parameter in self._un_ignore_parameters_general[paramset_key]:
+        if parameter in self._custom_un_ignore_parameters_general[paramset_key]:
             return True
 
         # check if parameter is in custom_un_ignore with paramset_key
@@ -427,13 +406,14 @@ class ParameterVisibilityCache:
             return True  # pragma: no cover
 
         # check if parameter is in _UN_IGNORE_PARAMETERS_BY_DEVICE
-        if (
-            un_ignore_parameters := _get_value_from_dict_by_wildcard_key(
-                search_elements=self._un_ignore_parameters_by_device_lower,
-                compare_with=device_type_l,
-            )
-        ) and parameter in un_ignore_parameters:
-            return True
+        if not custom_only:
+            if (
+                un_ignore_parameters := _get_value_from_dict_by_wildcard_key(
+                    search_elements=self._un_ignore_parameters_by_device_lower,
+                    compare_with=device_type_l,
+                )
+            ) and parameter in un_ignore_parameters:
+                return True
 
         return False
 
@@ -444,7 +424,7 @@ class ParameterVisibilityCache:
         channel_no: int | None,
         paramset_key: str,
         parameter: str,
-        custom_un_ignore_only: bool = False,
+        custom_only: bool = False,
     ) -> bool:
         """
         Return if parameter is on an un_ignore list.
@@ -452,7 +432,7 @@ class ParameterVisibilityCache:
         Additionally to _parameter_is_un_ignored these parameters
         from _RELEVANT_MASTER_PARAMSETS_BY_DEVICE are unignored.
         """
-        if not custom_un_ignore_only:
+        if not custom_only:
             dt_short = tuple(
                 filter(
                     device_type.lower().startswith,
@@ -471,6 +451,7 @@ class ParameterVisibilityCache:
             channel_no=channel_no,
             paramset_key=paramset_key,
             parameter=parameter,
+            custom_only=custom_only,
         )
 
     def _add_line_to_cache(self, line: str) -> None:
@@ -545,10 +526,10 @@ class ParameterVisibilityCache:
             paramset_key = data[0]
             parameter = data[1]
             if paramset_key in (ParamsetKey.VALUES, ParamsetKey.MASTER):
-                self._un_ignore_parameters_general[paramset_key].add(parameter)
+                self._custom_un_ignore_parameters_general[paramset_key].add(parameter)
         else:
             # add parameter
-            self._un_ignore_parameters_general[ParamsetKey.VALUES].add(line)
+            self._custom_un_ignore_parameters_general[ParamsetKey.VALUES].add(line)
 
     @lru_cache(maxsize=1024)
     def parameter_is_hidden(
