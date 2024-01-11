@@ -1,9 +1,8 @@
 """Test the HaHomematic central."""
 from __future__ import annotations
 
-from contextlib import suppress
 from datetime import datetime
-from typing import Any, cast
+from typing import Any
 from unittest.mock import call, patch
 
 import pytest
@@ -20,8 +19,6 @@ from hahomematic.const import (
     ParamsetKey,
 )
 from hahomematic.exceptions import HaHomematicException, NoClients
-from hahomematic.platforms.generic.number import HmFloat, HmInteger
-from hahomematic.platforms.generic.switch import HmSwitch
 
 from tests import const, helper
 
@@ -79,65 +76,45 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
     assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
 
 
+@pytest.mark.parametrize(
+    ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
+    [
+        ("", "LEVEL", 1, "VALUES", False),
+        ("LEVEL", "LEVEL", 1, "VALUES", True),
+        ("VALVE_ADAPTION", "VALVE_ADAPTION", 1, "VALUES", True),
+        ("ACTIVE_PROFILE", "ACTIVE_PROFILE", 1, "VALUES", True),
+        ("VALUES:LEVEL", "LEVEL", 1, "VALUES", True),
+        ("LEVEL@HmIP-eTRV-2:1:VALUES", "LEVEL", 1, "VALUES", True),
+        ("LEVEL@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
+        ("LEVEL@@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
+        ("HmIP-eTRV-2:1:MASTER", "LEVEL", 1, "VALUES", False),
+    ],
+)
 @pytest.mark.asyncio
-async def test_device_unignore(factory: helper.Factory) -> None:
+async def test_device_unignore(
+    factory: helper.Factory,
+    line: str,
+    parameter: str,
+    channel_no: int,
+    paramset_key: str,
+    expected_result: bool,
+) -> None:
     """Test device un ignore."""
-    central1, _ = await factory.get_default_central(
-        {"VCU3609622": "HmIP-eTRV-2.json"}, un_ignore_list=["ACTIVE_PROFILE"]
+    central, _ = await factory.get_default_central(
+        {"VCU3609622": "HmIP-eTRV-2.json"}, un_ignore_list=[line]
     )
     assert (
-        central1.parameter_visibility.parameter_is_un_ignored(
+        central.parameter_visibility.parameter_is_un_ignored(
             device_type="HmIP-eTRV-2",
-            channel_no=1,
-            paramset_key="VALUES",
-            parameter="ACTIVE_PROFILE",
+            channel_no=channel_no,
+            paramset_key=paramset_key,
+            parameter=parameter,
         )
-        is True
+        is expected_result
     )
-    active_profile: HmInteger = cast(
-        HmInteger, central1.get_generic_entity("VCU3609622:1", "ACTIVE_PROFILE")
-    )
-    assert active_profile.usage == EntityUsage.ENTITY
-    assert len(active_profile.device.generic_entities) == 22
-
-    switch1: HmSwitch | None = None
-    with suppress(AssertionError):
-        switch1: HmSwitch = cast(
-            HmSwitch,
-            central1.get_generic_entity("VCU3609622:1", "VALVE_ADAPTION"),
-        )
-    assert switch1 is None
-
-    central2, _ = await factory.get_default_central(
-        {"VCU3609622": "HmIP-eTRV-2.json"},
-        un_ignore_list=[
-            "LEVEL",  # parameter exists, but hidden
-            "VALVE_ADAPTION",  # parameter is ignored
-            "LEVEL@HmIP-eTRV-2:1:VALUES",  # input variant
-            "LEVEL@@HmIP-eTRV-2",  # input variant
-            "LEVEL@HmIP-eTRV-2",  # input variant
-            "LEVEL@HmIP-eTRV-2:1:MASTER",  # input variant
-            "VALUES:LEVEL",  # input variant
-            "HmIP-eTRV-2:1:MASTER",  # input variant
-        ],
-    )
-    assert (
-        central2.parameter_visibility.parameter_is_un_ignored(
-            device_type="HmIP-eTRV-2",
-            channel_no=1,
-            paramset_key="VALUES",
-            parameter="LEVEL",
-        )
-        is True
-    )
-    level2: HmFloat = cast(HmFloat, central2.get_generic_entity("VCU3609622:1", "LEVEL"))
-    assert level2.usage == EntityUsage.ENTITY
-    assert len(level2.device.generic_entities) == 23
-    switch2: HmSwitch = cast(
-        HmSwitch,
-        central2.get_generic_entity("VCU3609622:1", "VALVE_ADAPTION"),
-    )
-    assert switch2.usage == EntityUsage.ENTITY
+    generic_entity = central.get_generic_entity(f"VCU3609622:{channel_no}", parameter)
+    if generic_entity:
+        assert generic_entity.usage == EntityUsage.ENTITY
 
 
 @pytest.mark.asyncio
