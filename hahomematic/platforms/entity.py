@@ -429,6 +429,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             channel_no=self._channel_no,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
+            custom_un_ignore_only=True,
         )
         self._value: ParameterT | None = None
         self._last_updated: datetime = INIT_DATETIME

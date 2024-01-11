@@ -444,6 +444,7 @@ class ParameterVisibilityCache:
         channel_no: int | None,
         paramset_key: str,
         parameter: str,
+        custom_un_ignore_only: bool = False,
     ) -> bool:
         """
         Return if parameter is on an un_ignore list.
@@ -451,18 +452,19 @@ class ParameterVisibilityCache:
         Additionally to _parameter_is_un_ignored these parameters
         from _RELEVANT_MASTER_PARAMSETS_BY_DEVICE are unignored.
         """
-        dt_short = tuple(
-            filter(
-                device_type.lower().startswith,
-                self._un_ignore_parameters_by_device_paramset_key,
+        if not custom_un_ignore_only:
+            dt_short = tuple(
+                filter(
+                    device_type.lower().startswith,
+                    self._un_ignore_parameters_by_device_paramset_key,
+                )
             )
-        )
 
-        # check if parameter is in _RELEVANT_MASTER_PARAMSETS_BY_DEVICE
-        if dt_short and parameter in self._un_ignore_parameters_by_device_paramset_key.get(
-            dt_short[0], {}
-        ).get(channel_no, {}).get(paramset_key, set()):
-            return True
+            # check if parameter is in _RELEVANT_MASTER_PARAMSETS_BY_DEVICE
+            if dt_short and parameter in self._un_ignore_parameters_by_device_paramset_key.get(
+                dt_short[0], {}
+            ).get(channel_no, {}).get(paramset_key, set()):
+                return True
 
         return self._parameter_is_un_ignored(
             device_type=device_type,
