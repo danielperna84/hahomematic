@@ -422,7 +422,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
                 channel_address=channel_address, parameter=parameter
             ),
         )
-        self._is_unignored: Final[
+        self._is_un_ignored: Final[
             bool
         ] = self._central.parameter_visibility.parameter_is_un_ignored(
             device_type=self._device.device_type,
@@ -476,9 +476,9 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._raw_unit != self._unit
 
     @config_property
-    def is_unignored(self) -> bool:
-        """Return if the parameter is unignored."""
-        return self._is_unignored
+    def is_un_ignored(self) -> bool:
+        """Return if the parameter is un ignored."""
+        return self._is_un_ignored
 
     @config_property
     def max(self) -> ParameterT:

@@ -430,7 +430,7 @@ class ParameterVisibilityCache:
         Return if parameter is on an un_ignore list.
 
         Additionally to _parameter_is_un_ignored these parameters
-        from _RELEVANT_MASTER_PARAMSETS_BY_DEVICE are unignored.
+        from _RELEVANT_MASTER_PARAMSETS_BY_DEVICE are un ignored.
         """
         if not custom_only:
             dt_short = tuple(

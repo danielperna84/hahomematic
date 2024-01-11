@@ -41,7 +41,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
     @config_property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
-        if self._is_forced_sensor or self._is_unignored:
+        if self._is_forced_sensor or self._is_un_ignored:
             return EntityUsage.ENTITY
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
             return self._usage
