@@ -69,7 +69,9 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 
             for entity in self._device.get_readable_entities(paramset_key=ParamsetKey.MASTER):
                 self._central.create_task(
-                    entity.load_entity_value(call_source=CallSource.MANUAL_OR_SCHEDULED),
+                    entity.load_entity_value(
+                        call_source=CallSource.MANUAL_OR_SCHEDULED, direct_call=True
+                    ),
                     name="reloadMasterData",
                 )
 

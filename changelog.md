@@ -1,6 +1,7 @@
 # Version 2024.1.7 (2024-01-12)
 
 - Reload master data after config pending event
+- Allow direct_call without cache wait time
 
 # Version 2024.1.6 (2024-01-11)
 

@@ -374,7 +374,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         )
 
     @abstractmethod
-    async def load_entity_value(self, call_source: CallSource) -> None:
+    async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
         """Init the entity data."""
 
     @abstractmethod
@@ -645,9 +645,9 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
 
-    async def load_entity_value(self, call_source: CallSource) -> None:
+    async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
         """Init the entity data."""
-        if hms.changed_within_seconds(last_change=self._last_refreshed):
+        if direct_call is False and hms.changed_within_seconds(last_change=self._last_refreshed):
             return
 
         # Check, if entity is readable
@@ -660,6 +660,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
                 call_source=call_source,
+                direct_call=direct_call,
             )
         )
 
