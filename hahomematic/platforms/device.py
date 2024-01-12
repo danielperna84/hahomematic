@@ -470,6 +470,14 @@ class HmDevice(PayloadMixin):
         """Return a generic event from device."""
         return self._generic_events.get((channel_address, parameter))
 
+    def get_readable_entities(self, paramset_key: ParamsetKey) -> tuple[GenericEntity, ...]:
+        """Return the list of readable master entities."""
+        return tuple(
+            ge
+            for ge in self._generic_entities.values()
+            if ge.is_readable and ge.paramset_key == paramset_key
+        )
+
     def set_forced_availability(self, forced_availability: ForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
         if self._forced_availability != forced_availability:

@@ -1,3 +1,7 @@
+# Version 2024.1.7 (2024-01-12)
+
+- Reload master data after config pending event
+
 # Version 2024.1.6 (2024-01-11)
 
 - Fix unignore doc and improve unignore tests
