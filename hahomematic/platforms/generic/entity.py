@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from hahomematic.const import EntityUsage, EventType, Parameter
+from hahomematic.const import CallSource, EntityUsage, EventType, Parameter, ParamsetKey
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.support import EntityNameData, get_entity_name
@@ -66,6 +66,12 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             self._central.create_task(
                 self._device.reload_paramset_descriptions(), name="reloadParamsetDescriptions"
             )
+
+            for entity in self._device.get_readable_entities(paramset_key=ParamsetKey.MASTER):
+                self._central.create_task(
+                    entity.load_entity_value(call_source=CallSource.MANUAL_OR_SCHEDULED),
+                    name="reloadMasterData",
+                )
 
         # send device availability events
         if self._parameter in (
