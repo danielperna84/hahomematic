@@ -41,9 +41,11 @@ class DeviceDetailsCache:
         self._names_cache: Final[dict[str, str]] = {}
         self._last_refreshed = INIT_DATETIME
 
-    async def load(self) -> None:
+    async def load(self, direct_call: bool = False) -> None:
         """Fetch names from backend."""
-        if changed_within_seconds(last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)):
+        if direct_call is False and changed_within_seconds(
+            last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)
+        ):
             return
         self.clear()
         _LOGGER.debug("load: Loading names for %s", self._central.name)
@@ -150,9 +152,11 @@ class CentralDataCache:
             return True
         return False
 
-    async def load(self) -> None:
+    async def load(self, direct_call: bool = False) -> None:
         """Fetch data from backend."""
-        if changed_within_seconds(last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)):
+        if direct_call is False and changed_within_seconds(
+            last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)
+        ):
             return
         self.clear()
         _LOGGER.debug("load: Loading device data for %s", self._central.name)

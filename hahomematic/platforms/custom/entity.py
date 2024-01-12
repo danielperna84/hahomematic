@@ -129,10 +129,10 @@ class CustomEntity(BaseEntity):
             return EntityUsage.CE_SECONDARY
         return EntityUsage.CE_PRIMARY
 
-    async def load_entity_value(self, call_source: CallSource) -> None:
+    async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
         """Init the entity values."""
         for entity in self._readable_entities:
-            await entity.load_entity_value(call_source=call_source)
+            await entity.load_entity_value(call_source=call_source, direct_call=direct_call)
         self.fire_update_entity_callback()
 
     def is_state_change(self, **kwargs: Any) -> bool:

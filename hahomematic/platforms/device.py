@@ -652,14 +652,18 @@ class ValueCache:
         paramset_key: str,
         parameter: str,
         call_source: CallSource,
+        direct_call: bool = False,
     ) -> Any:
         """Load data."""
         async with self._sema_get_or_load_value:
             if (
-                cached_value := self._get_value_from_cache(
-                    channel_address=channel_address,
-                    paramset_key=paramset_key,
-                    parameter=parameter,
+                direct_call is False
+                and (
+                    cached_value := self._get_value_from_cache(
+                        channel_address=channel_address,
+                        paramset_key=paramset_key,
+                        parameter=parameter,
+                    )
                 )
             ) != NO_CACHE_ENTRY:
                 return (
