@@ -665,7 +665,8 @@ class ValueCache:
                         parameter=parameter,
                     )
                 )
-            ) != NO_CACHE_ENTRY:
+                != NO_CACHE_ENTRY
+            ):
                 return (
                     NO_CACHE_ENTRY if cached_value == self._NO_VALUE_CACHE_ENTRY else cached_value
                 )
