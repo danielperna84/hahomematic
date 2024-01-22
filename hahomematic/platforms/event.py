@@ -101,26 +101,23 @@ class DeviceErrorEvent(GenericEvent):
 
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
-        old_value = self._value
-        new_value = self._convert_value(value)
-        if self._value == new_value:
-            return
-        self.update_value(value=new_value)
+
+        old_value, new_value = self.write_value(value=value)
 
         if (
-            isinstance(value, bool)
+            isinstance(new_value, bool)
             and (
-                (old_value is None and value is True)
-                or (isinstance(old_value, bool) and old_value != value)
+                (old_value is None and new_value is True)
+                or (isinstance(old_value, bool) and old_value != new_value)
             )
         ) or (
-            isinstance(value, int)
+            isinstance(new_value, int)
             and (
-                (old_value is None and value > 0)
-                or (isinstance(old_value, int) and old_value != value)
+                (old_value is None and new_value > 0)
+                or (isinstance(old_value, int) and old_value != new_value)
             )
         ):
-            self.fire_event(value=value)
+            self.fire_event(value=new_value)
 
 
 class ImpulseEvent(GenericEvent):
