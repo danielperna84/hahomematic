@@ -51,6 +51,8 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         """Handle event for which this entity has subscribed."""
 
         old_value, new_value = self.write_value(value=value)
+        if old_value == new_value:
+            return
 
         # reload paramset_descriptions, if value has changed
         if (

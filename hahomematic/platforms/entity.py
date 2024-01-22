@@ -672,23 +672,25 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     def write_value(self, value: Any) -> tuple[ParameterT, ParameterT]:
         """Update value of the entity."""
-        self._old_value = self._value
-        new_value = self._convert_value(value)
+        old_value = self._value
         if value == NO_CACHE_ENTRY:
             if self.last_refreshed != INIT_DATETIME:
                 self._state_uncertain = True
                 self.fire_update_entity_callback()
-            return (self._old_value, new_value)  # type: ignore[return-value]
-        if self._old_value == new_value:
+            return (old_value, None)  # type: ignore[return-value]
+
+        new_value = self._convert_value(value)
+        if old_value == new_value:
             self._set_last_refreshed()
             self.fire_refresh_entity_callback()
-            return (self._old_value, new_value)
+            return (old_value, new_value)
 
+        self._old_value = old_value
         self._value = new_value
         self._state_uncertain = False
         self._set_last_updated()
         self.fire_update_entity_callback()
-        return (self._old_value, new_value)  # type: ignore[return-value]
+        return (old_value, new_value)  # type: ignore[return-value]
 
     def update_parameter_data(self) -> None:
         """Update parameter data."""
