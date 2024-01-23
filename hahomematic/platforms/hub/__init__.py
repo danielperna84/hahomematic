@@ -120,7 +120,7 @@ class Hub:
             value = sysvar.value
 
             if entity := self._central.get_sysvar_entity(name=name):
-                entity.update_value(value)
+                entity.write_value(value)
             else:
                 new_sysvars.append(self._create_system_variable(data=sysvar))
 
