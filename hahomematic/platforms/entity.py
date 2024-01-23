@@ -432,6 +432,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             custom_only=True,
         )
         self._value: ParameterT | None = None
+        self._old_value: ParameterT | None = None
         self._last_updated: datetime = INIT_DATETIME
         self._last_refreshed: datetime = INIT_DATETIME
         self._state_uncertain: bool = True
@@ -539,6 +540,11 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def last_refreshed(self) -> datetime:
         """Return the last refreshed datetime value."""
         return self._last_refreshed
+
+    @value_property
+    def old_value(self) -> ParameterT | None:
+        """Return the old value of the entity."""
+        return self._old_value
 
     @config_property
     def platform(self) -> HmPlatform:
@@ -654,7 +660,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         if not self.is_readable:
             return
 
-        self.update_value(
+        self.write_value(
             value=await self._device.value_cache.get_value(
                 channel_address=self._channel_address,
                 paramset_key=self._paramset_key,
@@ -664,17 +670,27 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             )
         )
 
-    def update_value(self, value: Any) -> None:
+    def write_value(self, value: Any) -> tuple[ParameterT | None, ParameterT | None]:
         """Update value of the entity."""
+        old_value = self._value
         if value == NO_CACHE_ENTRY:
             if self.last_refreshed != INIT_DATETIME:
                 self._state_uncertain = True
                 self.fire_update_entity_callback()
-            return
-        self._value = self._convert_value(value)
+            return (old_value, None)
+
+        new_value = self._convert_value(value)
+        if old_value == new_value:
+            self._set_last_refreshed()
+            self.fire_refresh_entity_callback()
+            return (old_value, new_value)
+
+        self._old_value = old_value
+        self._value = new_value
         self._state_uncertain = False
         self._set_last_updated()
         self.fire_update_entity_callback()
+        return (old_value, new_value)
 
     def update_parameter_data(self) -> None:
         """Update parameter data."""

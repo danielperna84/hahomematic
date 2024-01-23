@@ -1,3 +1,7 @@
+# Version 2024.1.8 (2024-01-12)
+
+- Store old_value in entity model
+
 # Version 2024.1.7 (2024-01-12)
 
 - Reload master data after config pending event

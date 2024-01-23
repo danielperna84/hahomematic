@@ -598,7 +598,7 @@ class ValueCache:
                     parameter=entity.parameter,
                     call_source=CallSource.HM_INIT,
                 )
-                entity.update_value(value=value)
+                entity.write_value(value=value)
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "init_base_entities: Failed to init cache for channel0 %s, %s [%s]",
@@ -629,7 +629,7 @@ class ValueCache:
                     parameter=event.parameter,
                     call_source=CallSource.HM_INIT,
                 )
-                event.update_value(value=value)
+                event.write_value(value=value)
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "init_base_events: Failed to init cache for channel0 %s, %s [%s]",
