@@ -94,7 +94,7 @@ class CeIpLock(BaseLock):
     @value_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._e_lock_state.value == LockState.LOCKED
+        return self._e_lock_state.value == LockState.LOCKED  # type: ignore[no-any-return]
 
     @value_property
     def is_locking(self) -> bool | None:

@@ -145,12 +145,12 @@ class BaseClimateEntity(CustomEntity):
     @value_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        return self._e_humidity.value
+        return self._e_humidity.value  # type: ignore[no-any-return]
 
     @value_property
     def current_temperature(self) -> float | None:
         """Return current temperature."""
-        return self._e_temperature.value
+        return self._e_temperature.value  # type: ignore[no-any-return]
 
     @value_property
     def target_temperature(self) -> float | None:
