@@ -602,7 +602,7 @@ class CeIpFixedColorLight(CeDimmer):
     @value_property
     def channel_color_name(self) -> str | None:
         """Return the name of the channel color."""
-        return self._e_channel_color.value
+        return self._e_channel_color.value  # type: ignore[no-any-return]
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""

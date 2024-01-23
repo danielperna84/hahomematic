@@ -67,11 +67,17 @@ class GenericSystemVariable(GenericHubEntity):
         self._min: Final = data.min_value
         self._unit: Final = data.unit
         self._value = data.value
+        self._old_value: bool | float | int | str | None = None
 
     @property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.central.available
+
+    @value_property
+    def old_value(self) -> Any | None:
+        """Return the old value."""
+        return self._old_value
 
     @value_property
     def value(self) -> Any | None:
@@ -109,22 +115,22 @@ class GenericSystemVariable(GenericHubEntity):
             return data.name
         return f"Sv_{data.name}"
 
-    def update_value(self, value: Any) -> None:
+    def write_value(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
+        old_value = self._value
         if self.data_type:
             value = parse_sys_var(data_type=self.data_type, raw_value=value)
-        else:
-            old_value = self._value
-            if isinstance(old_value, bool):
-                value = bool(value)
-            elif isinstance(old_value, int):
-                value = int(value)
-            elif isinstance(old_value, str):
-                value = str(value)
-            elif isinstance(old_value, float):
-                value = float(value)
+        elif isinstance(old_value, bool):
+            value = bool(value)
+        elif isinstance(old_value, int):
+            value = int(value)
+        elif isinstance(old_value, str):
+            value = str(value)
+        elif isinstance(old_value, float):
+            value = float(value)
 
-        if self._value != value:
+        if old_value != value:
+            self._old_value = old_value
             self._value = value
             self.fire_update_entity_callback()
 
@@ -134,4 +140,4 @@ class GenericSystemVariable(GenericHubEntity):
             await client.set_system_variable(
                 name=self.ccu_var_name, value=parse_sys_var(self.data_type, value)
             )
-        self.update_value(value=value)
+        self.write_value(value=value)

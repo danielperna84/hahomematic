@@ -56,5 +56,5 @@ async def test_hmsysvarbinarysensor(factory: helper.Factory) -> None:
     assert binary_sensor.is_extended is False
     assert binary_sensor.data_type == "LOGIC"
     with pytest.raises(TypeError):
-        binary_sensor.update_value(None)
+        binary_sensor.write_value(None)
     assert binary_sensor.value is False

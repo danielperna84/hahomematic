@@ -27,7 +27,7 @@ class HmSensor(GenericEntity[Any, None]):
     _platform = HmPlatform.SENSOR
 
     @value_property
-    def value(self) -> Any | None:
+    def value(self) -> Any:
         """Return the value."""
         if (
             value := get_value_from_value_list(value=self._value, value_list=self.values)
