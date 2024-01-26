@@ -83,11 +83,12 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
         ("LEVEL", "LEVEL", 1, "VALUES", True),
         ("VALVE_ADAPTION", "VALVE_ADAPTION", 1, "VALUES", True),
         ("ACTIVE_PROFILE", "ACTIVE_PROFILE", 1, "VALUES", True),
-        ("VALUES:LEVEL", "LEVEL", 1, "VALUES", True),
         ("LEVEL@HmIP-eTRV-2:1:VALUES", "LEVEL", 1, "VALUES", True),
         ("LEVEL@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("LEVEL@@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("HmIP-eTRV-2:1:MASTER", "LEVEL", 1, "VALUES", False),
+        ("GLOBAL_BUTTON_LOCK@HmIP-eTRV-2:0:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
+        ("HmIP-eTRV-2:0@GLOBAL_BUTTON_LOCK:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
     ],
 )
 @pytest.mark.asyncio
@@ -121,8 +122,8 @@ async def test_device_unignore_etrv(
     ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
     [
         ("LEVEL", "LEVEL", 3, "VALUES", True),
-        ("VALUES:LEVEL", "LEVEL", 3, "VALUES", True),
         ("LEVEL@HmIP-BROLL:3:VALUES", "LEVEL", 3, "VALUES", True),
+        ("HmIP-BROLL:3@LEVEL:VALUES", "LEVEL", 3, "VALUES", True),
     ],
 )
 @pytest.mark.asyncio
@@ -148,6 +149,49 @@ async def test_device_unignore_broll(
         is expected_result
     )
     generic_entity = central.get_generic_entity(f"VCU8537918:{channel_no}", parameter)
+    if expected_result:
+        assert generic_entity
+        assert generic_entity.usage == EntityUsage.ENTITY
+
+
+@pytest.mark.parametrize(
+    ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
+    [
+        ("GLOBAL_BUTTON_LOCK@HM-TC-IT-WM-W-EU:MASTER", "GLOBAL_BUTTON_LOCK", None, "MASTER", True),
+        (
+            "HM-TC-IT-WM-W-EU:@GLOBAL_BUTTON_LOCK:MASTER",
+            "GLOBAL_BUTTON_LOCK",
+            None,
+            "MASTER",
+            True,
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_device_unignore_hm(
+    factory: helper.Factory,
+    line: str,
+    parameter: str,
+    channel_no: int | None,
+    paramset_key: str,
+    expected_result: bool,
+) -> None:
+    """Test device un ignore."""
+    central, _ = await factory.get_default_central(
+        {"VCU0000341": "HM-TC-IT-WM-W-EU.json"}, un_ignore_list=[line]
+    )
+    assert (
+        central.parameter_visibility.parameter_is_un_ignored(
+            device_type="HM-TC-IT-WM-W-EU",
+            channel_no=channel_no,
+            paramset_key=paramset_key,
+            parameter=parameter,
+        )
+        is expected_result
+    )
+    generic_entity = central.get_generic_entity(
+        f"VCU0000341:{channel_no}" if channel_no else "VCU0000341", parameter
+    )
     if expected_result:
         assert generic_entity
         assert generic_entity.usage == EntityUsage.ENTITY
@@ -331,29 +375,29 @@ async def test_central_services(factory: helper.Factory) -> None:
     await central.fetch_sysvar_data()
     assert mock_client.method_calls[-1] == call.get_all_system_variables(include_internal=True)
 
-    assert len(mock_client.method_calls) == 37
+    assert len(mock_client.method_calls) == 39
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.MASTER)
-    assert len(mock_client.method_calls) == 37
+    assert len(mock_client.method_calls) == 39
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.VALUES)
-    assert len(mock_client.method_calls) == 54
+    assert len(mock_client.method_calls) == 56
 
     await central.get_system_variable(name="SysVar_Name")
     assert mock_client.method_calls[-1] == call.get_system_variable("SysVar_Name")
 
-    assert len(mock_client.method_calls) == 55
+    assert len(mock_client.method_calls) == 57
     await central.set_system_variable(name="sv_alarm", value=True)
     assert mock_client.method_calls[-1] == call.set_system_variable(name="sv_alarm", value=True)
-    assert len(mock_client.method_calls) == 56
+    assert len(mock_client.method_calls) == 58
     await central.set_system_variable(name="SysVar_Name", value=True)
-    assert len(mock_client.method_calls) == 56
+    assert len(mock_client.method_calls) == 58
 
     await central.set_install_mode(interface_id=const.INTERFACE_ID)
     assert mock_client.method_calls[-1] == call.set_install_mode(
         on=True, t=60, mode=1, device_address=None
     )
-    assert len(mock_client.method_calls) == 57
+    assert len(mock_client.method_calls) == 59
     await central.set_install_mode(interface_id="NOT_A_VALID_INTERFACE_ID")
-    assert len(mock_client.method_calls) == 57
+    assert len(mock_client.method_calls) == 59
 
     await central.get_client(interface_id=const.INTERFACE_ID).set_value(
         channel_address="123",
@@ -367,7 +411,7 @@ async def test_central_services(factory: helper.Factory) -> None:
         parameter="LEVEL",
         value=1.0,
     )
-    assert len(mock_client.method_calls) == 58
+    assert len(mock_client.method_calls) == 60
 
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").set_value(
@@ -376,7 +420,7 @@ async def test_central_services(factory: helper.Factory) -> None:
             parameter="LEVEL",
             value=1.0,
         )
-    assert len(mock_client.method_calls) == 58
+    assert len(mock_client.method_calls) == 60
 
     await central.get_client(interface_id=const.INTERFACE_ID).put_paramset(
         address="123",
@@ -386,14 +430,14 @@ async def test_central_services(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="123", paramset_key="VALUES", value={"LEVEL": 1.0}
     )
-    assert len(mock_client.method_calls) == 59
+    assert len(mock_client.method_calls) == 61
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").put_paramset(
             address="123",
             paramset_key=ParamsetKey.VALUES,
             value={"LEVEL": 1.0},
         )
-    assert len(mock_client.method_calls) == 59
+    assert len(mock_client.method_calls) == 61
 
     assert (
         central.get_generic_entity(

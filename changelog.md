@@ -1,3 +1,8 @@
+# Version 2024.1.9 (2024-01-26)
+
+- Move product group identification to client
+- Add new pattern for unignore
+
 # Version 2024.1.8 (2024-01-12)
 
 - Store old_value in entity model

@@ -95,6 +95,22 @@ class Client(ABC):
         """Return the ping pong cache."""
         return self._ping_pong_cache
 
+    def get_product_group(self, device_type: str) -> ProductGroup:
+        """Return the product group."""
+        if self.interface == InterfaceName.HMIP_RF:
+            l_device_type = device_type.lower()
+            if l_device_type.startswith("hmipw"):
+                return ProductGroup.HMIPW
+            if l_device_type.startswith("hmip"):
+                return ProductGroup.HMIP
+        if self.interface == InterfaceName.BIDCOS_WIRED:
+            return ProductGroup.HMW
+        if self.interface == InterfaceName.BIDCOS_RF:
+            return ProductGroup.HM
+        if self.interface == InterfaceName.VIRTUAL_DEVICES:
+            return ProductGroup.VIRTUAL
+        return ProductGroup.UNKNOWN
+
     @property
     @abstractmethod
     def supports_ping_pong(self) -> bool:
@@ -541,23 +557,16 @@ class Client(ABC):
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
         for paramset_key in device_description.get(Description.PARAMSETS, []):
-            if (channel_no := get_channel_no(address)) is None:
-                # No paramsets at root device
-                continue
-
+            channel_no = get_channel_no(address)
             device_type = (
                 device_description[Description.TYPE]
                 if channel_no is None
                 else device_description[Description.PARENT_TYPE]
             )
-            if (
-                only_relevant
-                and channel_no
-                and not self.central.parameter_visibility.is_relevant_paramset(
-                    device_type=device_type,
-                    channel_no=channel_no,
-                    paramset_key=paramset_key,
-                )
+            if only_relevant and not self.central.parameter_visibility.is_relevant_paramset(
+                device_type=device_type,
+                channel_no=channel_no,
+                paramset_key=paramset_key,
             ):
                 continue
             if paramset_description := await self._get_paramset_description(

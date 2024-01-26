@@ -31,7 +31,6 @@ from hahomematic.const import (
     EventType,
     ForcedDeviceAvailability,
     HmPlatform,
-    InterfaceName,
     Manufacturer,
     Parameter,
     ParamsetKey,
@@ -93,7 +92,7 @@ class HmDevice(PayloadMixin):
             )
         )
         self._manufacturer = self._identify_manufacturer()
-        self._product_group: Final = self._identify_product_group()
+        self._product_group: Final = self.client.get_product_group(self._device_type)
         # marker if device will be created as custom entity
         self._has_custom_entity_definition: Final = hmed.entity_definition_exists(
             device_type=self._device_type
@@ -163,22 +162,6 @@ class HmDevice(PayloadMixin):
         if self.device_type.lower().startswith("alpha"):
             return Manufacturer.MOEHLENHOFF
         return Manufacturer.EQ3
-
-    def _identify_product_group(self) -> ProductGroup:
-        """Identify the product group of the homematic device."""
-        if self.interface == InterfaceName.HMIP_RF:
-            l_device_type = self.device_type.lower()
-            if l_device_type.startswith("hmipw"):
-                return ProductGroup.HMIPW
-            if l_device_type.startswith("hmip"):
-                return ProductGroup.HMIP
-        if self.interface == InterfaceName.BIDCOS_WIRED:
-            return ProductGroup.HMW
-        if self.interface == InterfaceName.BIDCOS_RF:
-            return ProductGroup.HM
-        if self.interface == InterfaceName.VIRTUAL_DEVICES:
-            return ProductGroup.VIRTUAL
-        return ProductGroup.UNKNOWN
 
     @value_property
     def available(self) -> bool:
