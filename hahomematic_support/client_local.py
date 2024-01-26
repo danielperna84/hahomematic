@@ -14,6 +14,7 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     CallSource,
     InterfaceName,
+    ProductGroup,
     ProgramData,
     ProxyInitState,
     SystemInformation,
@@ -46,6 +47,19 @@ class ClientLocal(Client):  # pragma: no cover
     def model(self) -> str:
         """Return the model of the backend."""
         return BACKEND_LOCAL
+
+    def get_product_group(self, device_type: str) -> ProductGroup:
+        """Return the product group."""
+        l_device_type = device_type.lower()
+        if l_device_type.startswith("hmipw"):
+            return ProductGroup.HMIPW
+        if l_device_type.startswith("hmip"):
+            return ProductGroup.HMIP
+        if l_device_type.startswith("hmw"):
+            return ProductGroup.HMW
+        if l_device_type.startswith("hm"):
+            return ProductGroup.HM
+        return ProductGroup.UNKNOWN
 
     @property
     def supports_ping_pong(self) -> bool:
