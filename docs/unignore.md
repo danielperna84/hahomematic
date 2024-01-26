@@ -20,18 +20,11 @@ To use the _unignore mechanism_ create a file named `unignore`(no prefix!) in th
 
 ## Examples:
 
-### parameter only:
+### parameter only (only valid for paramset VALUES):
 
 ```
 LEVEL
 FROST_PROTECTION
-```
-
-### parameter with limitation to a paramset:
-
-```
-VALUES:LEVEL
-VALUES:FROST_PROTECTION
 ```
 
 ### parameter with limitation to a device type, channel and paramset type:

@@ -234,7 +234,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         self._device_descriptions[interface_id][address] = device_description
 
         if ":" not in address and address not in self._addresses[interface_id]:
-            self._addresses[interface_id][address] = []
+            self._addresses[interface_id][address] = [address]
         if ":" in address:
             device_address = get_device_address(address)
             if device_address not in self._addresses[interface_id]:

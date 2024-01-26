@@ -175,6 +175,8 @@ def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
     """Return the device part of an address."""
     if ":" in channel_address:
         device_address, channel_no = channel_address.split(":")
+        if channel_no in (None, "None"):
+            return device_address, None
         return device_address, int(channel_no)
     return channel_address, None
 

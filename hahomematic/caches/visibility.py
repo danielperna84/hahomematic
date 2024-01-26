@@ -474,7 +474,7 @@ class ParameterVisibilityCache:
                 return
             parameter = data[0]
             device_data = data[1].split(":")
-            if len(device_data) != 3:
+            if len(device_data) not in (2, 3):
                 _LOGGER.warning(
                     "ADD_LINE_TO_CACHE failed: "
                     "Could not add line '%s' to un ignore cache. "
@@ -483,8 +483,14 @@ class ParameterVisibilityCache:
                 )
                 return
             device_type = device_data[0].lower()
-            channel_no = int(device_data[1])
-            paramset_key = device_data[2]
+            channel_no: int | None = None
+            paramset_key: str = ParamsetKey.VALUES
+            if len(device_data) == 2:
+                paramset_key = device_data[1]
+            if len(device_data) == 3:
+                channel_no = int(device_data[1])
+                paramset_key = device_data[2]
+
             if device_type not in self._custom_un_ignore_parameters_by_device_paramset_key:
                 self._custom_un_ignore_parameters_by_device_paramset_key[device_type] = {}
             if (
@@ -511,22 +517,6 @@ class ParameterVisibilityCache:
                 if device_type not in self._relevant_master_paramsets_by_device:
                     self._relevant_master_paramsets_by_device[device_type] = set()
                 self._relevant_master_paramsets_by_device[device_type].add(channel_no)
-
-        elif ":" in line:
-            # add parameter:paramset_key
-            data = line.split(":")
-            if len(data) != 2:
-                _LOGGER.warning(
-                    "ADD_LINE_TO_CACHE failed: "
-                    "Could not add line '%s' to un ignore cache. "
-                    "2 arguments expected: e.g. TEMPERATURE:VALUES",
-                    line,
-                )
-                return
-            paramset_key = data[0]
-            parameter = data[1]
-            if paramset_key in (ParamsetKey.VALUES, ParamsetKey.MASTER):
-                self._custom_un_ignore_parameters_general[paramset_key].add(parameter)
         else:
             # add parameter
             self._custom_un_ignore_parameters_general[ParamsetKey.VALUES].add(line)
@@ -565,7 +555,7 @@ class ParameterVisibilityCache:
         """
         if paramset_key == ParamsetKey.VALUES:
             return True
-        if channel_no is not None and paramset_key == ParamsetKey.MASTER:
+        if paramset_key == ParamsetKey.MASTER:
             for (
                 d_type,
                 channel_nos,

@@ -83,11 +83,11 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
         ("LEVEL", "LEVEL", 1, "VALUES", True),
         ("VALVE_ADAPTION", "VALVE_ADAPTION", 1, "VALUES", True),
         ("ACTIVE_PROFILE", "ACTIVE_PROFILE", 1, "VALUES", True),
-        ("VALUES:LEVEL", "LEVEL", 1, "VALUES", True),
         ("LEVEL@HmIP-eTRV-2:1:VALUES", "LEVEL", 1, "VALUES", True),
         ("LEVEL@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("LEVEL@@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("HmIP-eTRV-2:1:MASTER", "LEVEL", 1, "VALUES", False),
+        ("GLOBAL_BUTTON_LOCK@HmIP-eTRV-2:0:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
     ],
 )
 @pytest.mark.asyncio
@@ -121,7 +121,6 @@ async def test_device_unignore_etrv(
     ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
     [
         ("LEVEL", "LEVEL", 3, "VALUES", True),
-        ("VALUES:LEVEL", "LEVEL", 3, "VALUES", True),
         ("LEVEL@HmIP-BROLL:3:VALUES", "LEVEL", 3, "VALUES", True),
     ],
 )
@@ -148,6 +147,42 @@ async def test_device_unignore_broll(
         is expected_result
     )
     generic_entity = central.get_generic_entity(f"VCU8537918:{channel_no}", parameter)
+    if expected_result:
+        assert generic_entity
+        assert generic_entity.usage == EntityUsage.ENTITY
+
+
+@pytest.mark.parametrize(
+    ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
+    [
+        ("GLOBAL_BUTTON_LOCK@HM-TC-IT-WM-W-EU:MASTER", "GLOBAL_BUTTON_LOCK", None, "MASTER", True),
+    ],
+)
+@pytest.mark.asyncio
+async def test_device_unignore_hm(
+    factory: helper.Factory,
+    line: str,
+    parameter: str,
+    channel_no: int | None,
+    paramset_key: str,
+    expected_result: bool,
+) -> None:
+    """Test device un ignore."""
+    central, _ = await factory.get_default_central(
+        {"VCU0000341": "HM-TC-IT-WM-W-EU.json"}, un_ignore_list=[line]
+    )
+    assert (
+        central.parameter_visibility.parameter_is_un_ignored(
+            device_type="HM-TC-IT-WM-W-EU",
+            channel_no=channel_no,
+            paramset_key=paramset_key,
+            parameter=parameter,
+        )
+        is expected_result
+    )
+    generic_entity = central.get_generic_entity(
+        f"VCU0000341:{channel_no}" if channel_no else "VCU0000341", parameter
+    )
     if expected_result:
         assert generic_entity
         assert generic_entity.usage == EntityUsage.ENTITY
