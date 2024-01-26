@@ -88,6 +88,7 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
         ("LEVEL@@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("HmIP-eTRV-2:1:MASTER", "LEVEL", 1, "VALUES", False),
         ("GLOBAL_BUTTON_LOCK@HmIP-eTRV-2:0:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
+        ("HmIP-eTRV-2:0@GLOBAL_BUTTON_LOCK:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
     ],
 )
 @pytest.mark.asyncio
@@ -122,6 +123,7 @@ async def test_device_unignore_etrv(
     [
         ("LEVEL", "LEVEL", 3, "VALUES", True),
         ("LEVEL@HmIP-BROLL:3:VALUES", "LEVEL", 3, "VALUES", True),
+        ("HmIP-BROLL:3@LEVEL:VALUES", "LEVEL", 3, "VALUES", True),
     ],
 )
 @pytest.mark.asyncio
@@ -156,6 +158,13 @@ async def test_device_unignore_broll(
     ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
     [
         ("GLOBAL_BUTTON_LOCK@HM-TC-IT-WM-W-EU:MASTER", "GLOBAL_BUTTON_LOCK", None, "MASTER", True),
+        (
+            "HM-TC-IT-WM-W-EU:@GLOBAL_BUTTON_LOCK:MASTER",
+            "GLOBAL_BUTTON_LOCK",
+            None,
+            "MASTER",
+            True,
+        ),
     ],
 )
 @pytest.mark.asyncio
@@ -366,9 +375,9 @@ async def test_central_services(factory: helper.Factory) -> None:
     await central.fetch_sysvar_data()
     assert mock_client.method_calls[-1] == call.get_all_system_variables(include_internal=True)
 
-    assert len(mock_client.method_calls) == 37
+    assert len(mock_client.method_calls) == 39
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.MASTER)
-    assert len(mock_client.method_calls) == 37
+    assert len(mock_client.method_calls) == 39
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.VALUES)
     assert len(mock_client.method_calls) == 54
 
