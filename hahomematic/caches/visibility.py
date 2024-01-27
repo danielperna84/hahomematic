@@ -485,17 +485,16 @@ class ParameterVisibilityCache:
             data = line.split("@")
             if len(data) == 2:
                 if ":" in data[0]:
-                    channel_data = data[0].split(":")
+                    param_data = data[0].split(":")
+                    if len(param_data) == 2:
+                        parameter = param_data[0]
+                        paramset_key = param_data[1]
+                if ":" in data[1]:
+                    channel_data = data[1].split(":")
                     if len(channel_data) == 2:
                         device_type = channel_data[0].lower()
                         _channel_no = channel_data[1]
                         channel_no = int(_channel_no) if _channel_no.isnumeric() else None
-
-                if ":" in data[1]:
-                    param_data = data[1].split(":")
-                    if len(param_data) == 2:
-                        parameter = param_data[0]
-                        paramset_key = param_data[1]
 
         if device_type is not None and parameter is not None and paramset_key is not None:
             return device_type, channel_no, parameter, paramset_key

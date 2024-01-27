@@ -27,12 +27,12 @@ LEVEL
 FROST_PROTECTION
 ```
 
-### parameter with limitation to a device type, channel and paramset type (deprecated):
+### parameter with limitation to a device type, channel and paramset type (> 1.55.0):
 
 ```
-HmIP-eTRV-2:0@GLOBAL_BUTTON_LOCK:MASTER
-HmIP-BROLL:3@LEVEL:VALUES
-HM-TC-IT-WM-W-EU:@GLOBAL_BUTTON_LOCK:MASTER (channel is empty!)
+GLOBAL_BUTTON_LOCK:MASTER@HmIP-eTRV-2:0
+LEVEL:VALUES@HmIP-BROLL:3
+GLOBAL_BUTTON_LOCK:MASTER@HM-TC-IT-WM-W-EU: (channel is empty!)
 ```
 
 ### parameter with limitation to a device type, channel and paramset type (deprecated):
