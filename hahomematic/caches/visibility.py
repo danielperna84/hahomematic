@@ -535,6 +535,11 @@ class ParameterVisibilityCache:
                     "ADD_UNIGNORE_ENTRY: channel_no must be an integer or None for paramset_key Master."
                 )
                 return
+            if device_type == _UN_IGNORE_WILDCARD:
+                _LOGGER.warning(
+                    "ADD_UNIGNORE_ENTRY: device_type must be set for paramset_key Master."
+                )
+                return
 
             # device_type, channel_no, paramset_key, parameter
         if device_type not in self._custom_un_ignore_parameters_by_device_paramset_key:
