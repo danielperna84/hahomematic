@@ -89,6 +89,9 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
         ("HmIP-eTRV-2:1:MASTER", "LEVEL", 1, "VALUES", False),
         ("GLOBAL_BUTTON_LOCK@HmIP-eTRV-2:0:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
         ("GLOBAL_BUTTON_LOCK:MASTER@HmIP-eTRV-2:0", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
+        ("LEVEL:VALUES@all:all", "LEVEL", 1, "VALUES", True),
+        ("LEVEL:VALUES@HmIP-eTRV-2:all", "LEVEL", 1, "VALUES", True),
+        ("LEVEL:VALUES@all:1", "LEVEL", 1, "VALUES", True),
     ],
 )
 @pytest.mark.asyncio
@@ -124,6 +127,9 @@ async def test_device_unignore_etrv(
         ("LEVEL", "LEVEL", 3, "VALUES", True),
         ("LEVEL@HmIP-BROLL:3:VALUES", "LEVEL", 3, "VALUES", True),
         ("LEVEL:VALUES@HmIP-BROLL:3", "LEVEL", 3, "VALUES", True),
+        ("LEVEL:VALUES@all:3", "LEVEL", 3, "VALUES", True),
+        ("LEVEL:VALUES@all:3", "LEVEL", 4, "VALUES", False),
+        ("LEVEL:VALUES@HmIP-BROLL:all", "LEVEL", 3, "VALUES", True),
     ],
 )
 @pytest.mark.asyncio
@@ -164,6 +170,20 @@ async def test_device_unignore_broll(
             None,
             "MASTER",
             True,
+        ),
+        (
+            "GLOBAL_BUTTON_LOCK:MASTER@all:",
+            "GLOBAL_BUTTON_LOCK",
+            None,
+            "MASTER",
+            False,
+        ),
+        (
+            "GLOBAL_BUTTON_LOCK:MASTER@HM-TC-IT-WM-W-EU:all",
+            "GLOBAL_BUTTON_LOCK",
+            None,
+            "MASTER",
+            False,
         ),
     ],
 )
