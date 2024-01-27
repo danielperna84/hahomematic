@@ -89,6 +89,7 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
         ("HmIP-eTRV-2:1:MASTER", "LEVEL", 1, "VALUES", False),
         ("GLOBAL_BUTTON_LOCK@HmIP-eTRV-2:0:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
         ("GLOBAL_BUTTON_LOCK:MASTER@HmIP-eTRV-2:0", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
+        ("LEVEL:VALUES@all:all", "LEVEL", 1, "VALUES", True),
     ],
 )
 @pytest.mark.asyncio

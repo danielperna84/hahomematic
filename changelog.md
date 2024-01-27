@@ -1,7 +1,8 @@
 # Version 2024.1.9 (2024-01-26)
 
 - Move product group identification to client
-- Add new pattern for unignore
+- Add new pattern for unignore (parameter:paramset_key@device_type:channel_no)
+- Allow all as unignore parameter for device_type and channel_no
 
 # Version 2024.1.8 (2024-01-12)
 
