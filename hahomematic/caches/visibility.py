@@ -509,15 +509,14 @@ class ParameterVisibilityCache:
                     else:
                         _LOGGER.warning(
                             "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
-                            "Only one ':' expected in %s",
+                            "Only one ':' expected in param_data",
                             line,
-                            param_data,
                         )
                         return None
                 else:
                     _LOGGER.warning(
                         "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
-                        "No ':' before '@'. Expected format: 'paramset_key:parameter@device_type:channel_no'",
+                        "No ':' before '@'",
                         line,
                     )
                     return None
@@ -536,15 +535,14 @@ class ParameterVisibilityCache:
                     else:
                         _LOGGER.warning(
                             "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
-                            "Only one ':' expected in %s",
+                            "Only one ':' expected in channel_data",
                             line,
-                            channel_data,
                         )
                         return None
                 else:
                     _LOGGER.warning(
                         "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
-                        "No ':' after '@'. Expected format: 'paramset_key:parameter@device_type:channel_no'",
+                        "No ':' after '@'",
                         line,
                     )
                     return None
