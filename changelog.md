@@ -1,3 +1,7 @@
+# Version 2024.1.10 (2024-01-28)
+
+- Remove old complex format for unignore
+
 # Version 2024.1.9 (2024-01-26)
 
 - Move product group identification to client
