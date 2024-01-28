@@ -258,7 +258,7 @@ class ParameterVisibilityCache:
         self._custom_un_ignore_parameters: Final[set[str]] = set()
 
         # device_type, channel_no, paramset_key, parameter
-        self._custom_un_ignore_parameters_complex: Final[
+        self._custom_un_ignore_complex: Final[
             dict[str, dict[int | str | None, dict[str, set[str]]]]
         ] = {}
 
@@ -359,7 +359,7 @@ class ParameterVisibilityCache:
             ) is not None and accept_channel != channel_no:
                 return True
         if paramset_key == ParamsetKey.MASTER:
-            if parameter in self._custom_un_ignore_parameters_complex.get(device_type_l, {}).get(
+            if parameter in self._custom_un_ignore_complex.get(device_type_l, {}).get(
                 channel_no, {}
             ).get(ParamsetKey.MASTER, []):
                 return False  # pragma: no cover
@@ -399,7 +399,7 @@ class ParameterVisibilityCache:
 
         # check if parameter is in custom_un_ignore with paramset_key
         if (
-            (custom_un_ignore := self._custom_un_ignore_parameters_complex)
+            (custom_un_ignore := self._custom_un_ignore_complex)
             and (
                 channel_values := custom_un_ignore.get(device_type_l)
                 or custom_un_ignore.get(_UN_IGNORE_WILDCARD)
@@ -584,17 +584,13 @@ class ParameterVisibilityCache:
                 return
 
             # device_type, channel_no, paramset_key, parameter
-        if device_type not in self._custom_un_ignore_parameters_complex:
-            self._custom_un_ignore_parameters_complex[device_type] = {}
-        if channel_no not in self._custom_un_ignore_parameters_complex[device_type]:
-            self._custom_un_ignore_parameters_complex[device_type][channel_no] = {}
-        if paramset_key not in self._custom_un_ignore_parameters_complex[device_type][channel_no]:
-            self._custom_un_ignore_parameters_complex[device_type][channel_no][
-                paramset_key
-            ] = set()
-        self._custom_un_ignore_parameters_complex[device_type][channel_no][paramset_key].add(
-            parameter
-        )
+        if device_type not in self._custom_un_ignore_complex:
+            self._custom_un_ignore_complex[device_type] = {}
+        if channel_no not in self._custom_un_ignore_complex[device_type]:
+            self._custom_un_ignore_complex[device_type][channel_no] = {}
+        if paramset_key not in self._custom_un_ignore_complex[device_type][channel_no]:
+            self._custom_un_ignore_complex[device_type][channel_no][paramset_key] = set()
+        self._custom_un_ignore_complex[device_type][channel_no][paramset_key].add(parameter)
 
     @lru_cache(maxsize=1024)
     def parameter_is_hidden(
