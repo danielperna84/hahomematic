@@ -254,11 +254,9 @@ class ParameterVisibilityCache:
         self._raw_un_ignore_list: Final[set[str]] = set(central.config.un_ignore_list or set())
 
         # unignore from custom unignore files
-        # paramset_key, parameter
-        self._custom_un_ignore_parameters_general: Final[Mapping[str, set[str]]] = {
-            ParamsetKey.MASTER: set(),
-            ParamsetKey.VALUES: set(),
-        }
+        # parameter
+        self._custom_un_ignore_parameters_general: Final[set[str]] = set()
+
         # device_type, channel_no, paramset_key, parameter
         self._custom_un_ignore_parameters_by_device_paramset_key: Final[
             dict[str, dict[int | str | None, dict[str, set[str]]]]
@@ -396,7 +394,10 @@ class ParameterVisibilityCache:
         device_type_l = device_type.lower()
 
         # check if parameter is in custom_un_ignore
-        if parameter in self._custom_un_ignore_parameters_general[paramset_key]:
+        if (
+            paramset_key == ParamsetKey.VALUES
+            and parameter in self._custom_un_ignore_parameters_general
+        ):
             return True
 
         # check if parameter is in custom_un_ignore with paramset_key
@@ -466,21 +467,26 @@ class ParameterVisibilityCache:
     def _add_line_to_cache(self, line: str) -> None:
         """Add line to from un ignore file to cache."""
 
-        line_details = self._get_unignore_line_details(line=line)
-        if isinstance(line_details, str):
-            self._add_line_to_cache_old(line=line_details)
-            return
+        if line_details := self._get_unignore_line_details(line=line):
+            if isinstance(line_details, str):
+                self._custom_un_ignore_parameters_general.add(line)
+                return
 
-        self._add_unignore_entry(
-            device_type=line_details[0],
-            channel_no=line_details[1],
-            parameter=line_details[2],
-            paramset_key=line_details[3],
-        )
+            self._add_complex_unignore_entry(
+                device_type=line_details[0],
+                channel_no=line_details[1],
+                parameter=line_details[2],
+                paramset_key=line_details[3],
+            )
+        else:
+            _LOGGER.warning(
+                "ADD_LINE_TO_CACHE failed: No supported format detected for un ignore line '%s'. ",
+                line,
+            )
 
     def _get_unignore_line_details(
         self, line: str
-    ) -> tuple[str, int | str | None, str, str] | str:
+    ) -> tuple[str, int | str | None, str, str] | str | None:
         """
         Check the format of the line for un_ignore file.
 
@@ -500,6 +506,20 @@ class ParameterVisibilityCache:
                     if len(param_data) == 2:
                         parameter = param_data[0]
                         paramset_key = param_data[1]
+                    else:
+                        _LOGGER.warning(
+                            "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                            "Only one ':' expected in param_data",
+                            line,
+                        )
+                        return None
+                else:
+                    _LOGGER.warning(
+                        "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                        "No ':' before '@'",
+                        line,
+                    )
+                    return None
                 if ":" in data[1]:
                     channel_data = data[1].split(":")
                     if len(channel_data) == 2:
@@ -512,32 +532,57 @@ class ParameterVisibilityCache:
                             if _channel_no == ""
                             else _channel_no
                         )
+                    else:
+                        _LOGGER.warning(
+                            "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                            "Only one ':' expected in channel_data",
+                            line,
+                        )
+                        return None
+                else:
+                    _LOGGER.warning(
+                        "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                        "No ':' after '@'",
+                        line,
+                    )
+                    return None
+            else:
+                _LOGGER.warning(
+                    "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                    "Only one @ expected",
+                    line,
+                )
+                return None
+        elif ":" in line:
+            _LOGGER.warning(
+                "GET_UNIGNORE_LINE_DETAILS failed: No supported format detected for un ignore line '%s'. ",
+                line,
+            )
+            return None
 
         if device_type is not None and parameter is not None and paramset_key is not None:
             return device_type, channel_no, parameter, paramset_key
-        _LOGGER.debug(
-            "GET_UNIGNORE_LINE_DETAILS: line '%s' is in old_format or wrong. Please read the docs and switch to the new format.",
-            line,
-        )
         return line
 
-    def _add_unignore_entry(
+    def _add_complex_unignore_entry(
         self, device_type: str, channel_no: int | str | None, paramset_key: str, parameter: str
     ) -> None:
         """Add line to un ignore cache."""
         if paramset_key == ParamsetKey.MASTER:
             if isinstance(channel_no, int) or channel_no is None:
+                # add master channel for a device to fetch paramset descriptions
                 if device_type not in self._relevant_master_paramsets_by_device:
                     self._relevant_master_paramsets_by_device[device_type] = set()
                 self._relevant_master_paramsets_by_device[device_type].add(channel_no)
             else:
                 _LOGGER.warning(
-                    "ADD_UNIGNORE_ENTRY: channel_no must be an integer or None for paramset_key Master."
+                    "ADD_UNIGNORE_ENTRY: channel_no '%s' must be an integer or None for paramset_key MASTER.",
+                    channel_no,
                 )
                 return
             if device_type == _UN_IGNORE_WILDCARD:
                 _LOGGER.warning(
-                    "ADD_UNIGNORE_ENTRY: device_type must be set for paramset_key Master."
+                    "ADD_UNIGNORE_ENTRY: device_type must be set for paramset_key MASTER."
                 )
                 return
 
@@ -558,73 +603,6 @@ class ParameterVisibilityCache:
         self._custom_un_ignore_parameters_by_device_paramset_key[device_type][channel_no][
             paramset_key
         ].add(parameter)
-
-    def _add_line_to_cache_old(self, line: str) -> None:
-        """
-        Add line to from un ignore file to cache.
-
-        Add data to relevant_master_paramsets_by_device and
-        un_ignore_parameters_by_device from file.
-        """
-        if "@" in line:
-            # add parameter@devicetype:channel_no:paramset_key
-            data = line.split("@")
-            if len(data) != 2:
-                _LOGGER.warning(
-                    "ADD_LINE_TO_CACHE failed: "
-                    "Could not add line '%s' to un ignore cache. "
-                    "Only one @ expected",
-                    line,
-                )
-                return
-            parameter = data[0]
-            device_data = data[1].split(":")
-            if len(device_data) not in (2, 3):
-                _LOGGER.warning(
-                    "ADD_LINE_TO_CACHE failed: "
-                    "Could not add line '%s' to un ignore cache. "
-                    "4 arguments expected: e.g. TEMPERATURE@HmIP-BWTH:1:VALUES",
-                    line,
-                )
-                return
-            device_type = device_data[0].lower()
-            channel_no: int | None = None
-            paramset_key: str = ParamsetKey.VALUES
-            if len(device_data) == 2:
-                paramset_key = device_data[1]
-            if len(device_data) == 3:
-                channel_no = int(device_data[1])
-                paramset_key = device_data[2]
-
-            if device_type not in self._custom_un_ignore_parameters_by_device_paramset_key:
-                self._custom_un_ignore_parameters_by_device_paramset_key[device_type] = {}
-            if (
-                channel_no
-                not in self._custom_un_ignore_parameters_by_device_paramset_key[device_type]
-            ):
-                self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
-                    channel_no
-                ] = {}
-            if (
-                paramset_key
-                not in self._custom_un_ignore_parameters_by_device_paramset_key[device_type][
-                    channel_no
-                ]
-            ):
-                self._custom_un_ignore_parameters_by_device_paramset_key[device_type][channel_no][
-                    paramset_key
-                ] = set()
-            self._custom_un_ignore_parameters_by_device_paramset_key[device_type][channel_no][
-                paramset_key
-            ].add(parameter)
-
-            if paramset_key == ParamsetKey.MASTER:
-                if device_type not in self._relevant_master_paramsets_by_device:
-                    self._relevant_master_paramsets_by_device[device_type] = set()
-                self._relevant_master_paramsets_by_device[device_type].add(channel_no)
-        else:
-            # add parameter
-            self._custom_un_ignore_parameters_general[ParamsetKey.VALUES].add(line)
 
     @lru_cache(maxsize=1024)
     def parameter_is_hidden(

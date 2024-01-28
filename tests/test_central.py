@@ -83,15 +83,18 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
         ("LEVEL", "LEVEL", 1, "VALUES", True),
         ("VALVE_ADAPTION", "VALVE_ADAPTION", 1, "VALUES", True),
         ("ACTIVE_PROFILE", "ACTIVE_PROFILE", 1, "VALUES", True),
-        ("LEVEL@HmIP-eTRV-2:1:VALUES", "LEVEL", 1, "VALUES", True),
+        ("LEVEL@HmIP-eTRV-2:1:VALUES", "LEVEL", 1, "VALUES", False),
         ("LEVEL@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("LEVEL@@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("HmIP-eTRV-2:1:MASTER", "LEVEL", 1, "VALUES", False),
-        ("GLOBAL_BUTTON_LOCK@HmIP-eTRV-2:0:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
+        ("GLOBAL_BUTTON_LOCK@HmIP-eTRV-2:0:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", False),
         ("GLOBAL_BUTTON_LOCK:MASTER@HmIP-eTRV-2:0", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
         ("LEVEL:VALUES@all:all", "LEVEL", 1, "VALUES", True),
         ("LEVEL:VALUES@HmIP-eTRV-2:all", "LEVEL", 1, "VALUES", True),
         ("LEVEL:VALUES@all:1", "LEVEL", 1, "VALUES", True),
+        ("LEVEL:VALUES@all", "LEVEL", 1, "VALUES", False),
+        ("LEVEL::VALUES@all:1", "LEVEL", 1, "VALUES", False),
+        ("LEVEL:VALUES@all::1", "LEVEL", 1, "VALUES", False),
     ],
 )
 @pytest.mark.asyncio
@@ -125,7 +128,7 @@ async def test_device_unignore_etrv(
     ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
     [
         ("LEVEL", "LEVEL", 3, "VALUES", True),
-        ("LEVEL@HmIP-BROLL:3:VALUES", "LEVEL", 3, "VALUES", True),
+        ("LEVEL@HmIP-BROLL:3:VALUES", "LEVEL", 3, "VALUES", False),
         ("LEVEL:VALUES@HmIP-BROLL:3", "LEVEL", 3, "VALUES", True),
         ("LEVEL:VALUES@all:3", "LEVEL", 3, "VALUES", True),
         ("LEVEL:VALUES@all:3", "LEVEL", 4, "VALUES", False),
@@ -163,7 +166,13 @@ async def test_device_unignore_broll(
 @pytest.mark.parametrize(
     ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
     [
-        ("GLOBAL_BUTTON_LOCK@HM-TC-IT-WM-W-EU:MASTER", "GLOBAL_BUTTON_LOCK", None, "MASTER", True),
+        (
+            "GLOBAL_BUTTON_LOCK@HM-TC-IT-WM-W-EU:MASTER",
+            "GLOBAL_BUTTON_LOCK",
+            None,
+            "MASTER",
+            False,
+        ),
         (
             "GLOBAL_BUTTON_LOCK:MASTER@HM-TC-IT-WM-W-EU:",
             "GLOBAL_BUTTON_LOCK",

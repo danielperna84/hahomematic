@@ -20,7 +20,7 @@ To use the _unignore mechanism_ create a file named `unignore`(no prefix!) in th
 
 ## Examples:
 
-### parameter only (only valid for paramset VALUES) (deprecated):
+### parameter only (only valid for paramset VALUES):
 
 ```
 LEVEL
@@ -33,11 +33,4 @@ FROST_PROTECTION
 GLOBAL_BUTTON_LOCK:MASTER@HmIP-eTRV-2:0
 LEVEL:VALUES@HmIP-BROLL:3
 GLOBAL_BUTTON_LOCK:MASTER@HM-TC-IT-WM-W-EU: (channel is empty!)
-```
-
-### parameter with limitation to a device type, channel and paramset type (deprecated):
-
-```
-LEVEL@HmIP-eTRV-2:1:VALUES
-FROST_PROTECTION@HmIP-BWTH:1:VALUES
 ```
