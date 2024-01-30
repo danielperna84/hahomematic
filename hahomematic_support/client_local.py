@@ -154,7 +154,7 @@ class ClientLocal(Client):  # pragma: no cover
         if local_device_descriptions := cast(
             list[Any],
             await self._load_all_json_files(
-                package=self._local_resources.package,
+                anchor=self._local_resources.anchor,
                 resource=self._local_resources.device_description_dir,
                 include_list=list(self._local_resources.address_device_translation.values()),
                 exclude_list=self._local_resources.ignore_devices_on_create,
@@ -227,7 +227,7 @@ class ClientLocal(Client):  # pragma: no cover
             )
             and (
                 data := await self._load_json_file(
-                    package=self._local_resources.package,
+                    anchor=self._local_resources.anchor,
                     resource=self._local_resources.paramset_description_dir,
                     filename=file_name,
                 )
@@ -256,7 +256,7 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def _load_all_json_files(
         self,
-        package: str,
+        anchor: str,
         resource: str,
         include_list: list[str] | None = None,
         exclude_list: list[str] | None = None,
@@ -267,19 +267,19 @@ class ClientLocal(Client):  # pragma: no cover
         if not exclude_list:
             exclude_list = []
         result: list[Any] = []
-        resource_path = os.path.join(str(importlib.resources.files(package=package)), resource)
+        resource_path = os.path.join(str(importlib.resources.files(anchor)), resource)
         for filename in os.listdir(resource_path):
             if filename not in include_list or filename in exclude_list:
                 continue
             if file_content := await self._load_json_file(
-                package=package, resource=resource, filename=filename
+                anchor=anchor, resource=resource, filename=filename
             ):
                 result.append(file_content)
         return result
 
-    async def _load_json_file(self, package: str, resource: str, filename: str) -> Any | None:
+    async def _load_json_file(self, anchor: str, resource: str, filename: str) -> Any | None:
         """Load json file from disk into dict."""
-        package_path = str(importlib.resources.files(package=package))
+        package_path = str(importlib.resources.files(anchor))
 
         def _load() -> Any | None:
             with open(
@@ -297,6 +297,6 @@ class LocalRessources:
 
     address_device_translation: dict[str, str]
     ignore_devices_on_create: list[str]
-    package: str = "pydevccu"
+    anchor: str = "pydevccu"
     device_description_dir: str = "device_descriptions"
     paramset_description_dir: str = "paramset_descriptions"
