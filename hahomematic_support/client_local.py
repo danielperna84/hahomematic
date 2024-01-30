@@ -154,7 +154,7 @@ class ClientLocal(Client):  # pragma: no cover
         if local_device_descriptions := cast(
             list[Any],
             await self._load_all_json_files(
-                anchor=self._local_resources.package,
+                anchor=self._local_resources.anchor,
                 resource=self._local_resources.device_description_dir,
                 include_list=list(self._local_resources.address_device_translation.values()),
                 exclude_list=self._local_resources.ignore_devices_on_create,
@@ -227,7 +227,7 @@ class ClientLocal(Client):  # pragma: no cover
             )
             and (
                 data := await self._load_json_file(
-                    anchor=self._local_resources.package,
+                    anchor=self._local_resources.anchor,
                     resource=self._local_resources.paramset_description_dir,
                     filename=file_name,
                 )
@@ -297,6 +297,6 @@ class LocalRessources:
 
     address_device_translation: dict[str, str]
     ignore_devices_on_create: list[str]
-    package: str = "pydevccu"
+    anchor: str = "pydevccu"
     device_description_dir: str = "device_descriptions"
     paramset_description_dir: str = "paramset_descriptions"
