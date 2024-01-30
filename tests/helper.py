@@ -157,7 +157,7 @@ def get_prepared_custom_entity(
 def load_device_description(central: CentralUnit, filename: str) -> Any:
     """Load device description."""
     dev_desc = _load_json_file(
-        package="pydevccu", resource="device_descriptions", filename=filename
+        anchor="pydevccu", resource="device_descriptions", filename=filename
     )
     assert dev_desc
     return dev_desc
@@ -174,9 +174,9 @@ def get_mock(instance, **kwargs):
     return mock
 
 
-def _load_json_file(package: str, resource: str, filename: str) -> Any | None:
+def _load_json_file(anchor: str, resource: str, filename: str) -> Any | None:
     """Load json file from disk into dict."""
-    package_path = str(importlib.resources.files(anchor=package))
+    package_path = str(importlib.resources.files(anchor))
     with open(
         file=os.path.join(package_path, resource, filename),
         encoding=hahomematic_const.DEFAULT_ENCODING,
