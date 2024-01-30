@@ -62,7 +62,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                 )
                 # required to fix hm master paramset operation values
                 if parameter_data[Description.OPERATIONS] == 0 and parameter_is_un_ignored:
-                    parameter_data[Description.OPERATIONS] = 6
+                    parameter_data[Description.OPERATIONS] = 3
 
                 if parameter_data[Description.OPERATIONS] & Operations.EVENT and (
                     parameter in CLICK_EVENTS

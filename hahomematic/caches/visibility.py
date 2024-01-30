@@ -398,19 +398,22 @@ class ParameterVisibilityCache:
             return True
 
         # check if parameter is in custom_un_ignore with paramset_key
-        if (
-            (custom_un_ignore := self._custom_un_ignore_complex)
-            and (
-                channel_values := custom_un_ignore.get(device_type_l)
-                or custom_un_ignore.get(_UN_IGNORE_WILDCARD)
-            )
-            and (
-                paramset_key_values := channel_values.get(channel_no)
-                or channel_values.get(_UN_IGNORE_WILDCARD)
-            )
-            and parameter in paramset_key_values.get(paramset_key, set())
-        ):
-            return True  # pragma: no cover
+
+        search_matrix = (
+            (device_type_l, channel_no),
+            (_UN_IGNORE_WILDCARD, channel_no),
+            (device_type_l, _UN_IGNORE_WILDCARD),
+            (_UN_IGNORE_WILDCARD, _UN_IGNORE_WILDCARD),
+        )
+
+        for dtl, cno in search_matrix:
+            if (
+                (custom_un_ignore := self._custom_un_ignore_complex)
+                and (channel_values := custom_un_ignore.get(dtl))
+                and (paramset_key_values := channel_values.get(cno))
+                and parameter in paramset_key_values.get(paramset_key, set())
+            ):
+                return True  # pragma: no cover
 
         # check if parameter is in _UN_IGNORE_PARAMETERS_BY_DEVICE
         if not custom_only:
