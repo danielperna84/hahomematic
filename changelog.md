@@ -1,3 +1,7 @@
+# Version 2024.X.XX (2024-01-28)
+
+- Remove deprecation warnings for py3.12
+
 # Version 2024.1.10 (2024-01-28)
 
 - Remove old complex format for unignore

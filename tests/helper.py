@@ -176,7 +176,7 @@ def get_mock(instance, **kwargs):
 
 def _load_json_file(package: str, resource: str, filename: str) -> Any | None:
     """Load json file from disk into dict."""
-    package_path = str(importlib.resources.files(package=package))
+    package_path = str(importlib.resources.files(anchor=package))
     with open(
         file=os.path.join(package_path, resource, filename),
         encoding=hahomematic_const.DEFAULT_ENCODING,
