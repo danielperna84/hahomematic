@@ -473,7 +473,7 @@ class ParameterVisibilityCache:
 
         if line_details := self._get_unignore_line_details(line=line):
             if isinstance(line_details, str):
-                self._custom_un_ignore_parameters.add(line)
+                self._custom_un_ignore_parameters.add(line_details)
                 return
 
             self._add_complex_unignore_entry(
@@ -563,7 +563,12 @@ class ParameterVisibilityCache:
                 line,
             )
             return None
-
+        if (
+            device_type == _UN_IGNORE_WILDCARD
+            and channel_no == _UN_IGNORE_WILDCARD
+            and paramset_key == ParamsetKey.VALUES
+        ):
+            return parameter
         if device_type is not None and parameter is not None and paramset_key is not None:
             return device_type, channel_no, parameter, paramset_key
         return line
