@@ -1,6 +1,7 @@
 # Version 2024.2.0 (2024-02-01)
 
 - Ignore empty unignore line
+- All MASTER parameters must be unignored
 
 # Version 2024.1.11 (2024-01-31)
 
