@@ -226,6 +226,91 @@ async def test_device_unignore_hm(
         assert generic_entity.usage == EntityUsage.ENTITY
 
 
+@pytest.mark.parametrize(
+    ("lines", "parameter", "channel_no", "paramset_key", "expected_result"),
+    [
+        (["DECISION_VALUE:VALUES@all:all"], "DECISION_VALUE", 3, "VALUES", True),
+        (["INHIBIT:VALUES@HM-ES-PMSw1-Pl:1"], "INHIBIT", 1, "VALUES", True),
+        (["WORKING:VALUES@all:all"], "WORKING", 1, "VALUES", True),
+        (["AVERAGING:MASTER@HM-ES-PMSw1-Pl:2"], "AVERAGING", 2, "MASTER", True),
+        (
+            ["DECISION_VALUE:VALUES@all:all", "AVERAGING:MASTER@HM-ES-PMSw1-Pl:2"],
+            "DECISION_VALUE",
+            3,
+            "VALUES",
+            True,
+        ),
+        (
+            [
+                "DECISION_VALUE:VALUES@HM-ES-PMSw1-Pl:3",
+                "INHIBIT:VALUES@HM-ES-PMSw1-Pl:1",
+                "WORKING:VALUES@HM-ES-PMSw1-Pl:1",
+                "AVERAGING:MASTER@HM-ES-PMSw1-Pl:2",
+            ],
+            "DECISION_VALUE",
+            3,
+            "VALUES",
+            True,
+        ),
+        (
+            [
+                "DECISION_VALUE:VALUES@HM-ES-PMSw1-Pl:3",
+                "INHIBIT:VALUES@HM-ES-PMSw1-Pl:1",
+                "WORKING:VALUES@HM-ES-PMSw1-Pl:1",
+                "AVERAGING:MASTER@HM-ES-PMSw1-Pl:2",
+            ],
+            "AVERAGING",
+            2,
+            "MASTER",
+            True,
+        ),
+        (
+            ["DECISION_VALUE", "INHIBIT:VALUES", "WORKING", "AVERAGING:MASTER@HM-ES-PMSw1-Pl:2"],
+            "AVERAGING",
+            2,
+            "MASTER",
+            True,
+        ),
+        (
+            ["DECISION_VALUE", "INHIBIT:VALUES", "WORKING", "AVERAGING:MASTER@HM-ES-PMSw1-Pl:2"],
+            "DECISION_VALUE",
+            3,
+            "VALUES",
+            True,
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_device_unignore_hm2(
+    factory: helper.Factory,
+    lines: list[str],
+    parameter: str,
+    channel_no: int | None,
+    paramset_key: str,
+    expected_result: bool,
+) -> None:
+    """Test device un ignore."""
+    central, _ = await factory.get_default_central(
+        {"VCU0000137": "HM-ES-PMSw1-Pl.json"}, un_ignore_list=lines
+    )
+
+    assert (
+        central.parameter_visibility.parameter_is_un_ignored(
+            device_type="HM-ES-PMSw1-Pl",
+            channel_no=channel_no,
+            paramset_key=paramset_key,
+            parameter=parameter,
+        )
+        is expected_result
+    )
+    generic_entity = central.get_generic_entity(
+        f"VCU0000137:{channel_no}" if channel_no else "VCU0000137", parameter
+    )
+    if expected_result:
+        assert generic_entity
+        assert generic_entity.usage == EntityUsage.ENTITY
+
+
 @pytest.mark.asyncio
 async def test_all_parameters(factory: helper.Factory) -> None:
     """Test all_parameters."""
