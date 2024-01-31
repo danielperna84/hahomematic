@@ -474,6 +474,10 @@ class ParameterVisibilityCache:
     def _add_line_to_cache(self, line: str) -> None:
         """Add line to from un ignore file to cache."""
 
+        # ignore empty line
+        if not line.strip():
+            return None
+
         if line_details := self._get_unignore_line_details(line=line):
             if isinstance(line_details, str):
                 self._custom_un_ignore_values_parameters.add(line_details)

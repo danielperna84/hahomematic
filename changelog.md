@@ -1,3 +1,7 @@
+# Version 2024.2.0 (2024-02-01)
+
+- Ignore empty unignore line
+
 # Version 2024.1.11 (2024-01-31)
 
 - Remove deprecation warnings for py3.12
