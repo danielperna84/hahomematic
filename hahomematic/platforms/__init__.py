@@ -13,6 +13,7 @@ from hahomematic.const import (
     Description,
     Flag,
     Operations,
+    ParamsetKey,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import create_custom_entity_and_append_to_device
@@ -60,9 +61,15 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         parameter=parameter,
                     )
                 )
-                # required to fix hm master paramset operation values
-                if parameter_data[Description.OPERATIONS] == 0 and parameter_is_un_ignored:
-                    parameter_data[Description.OPERATIONS] = 3
+
+                if paramset_key == ParamsetKey.MASTER:
+                    # All MASTER parameters must be un ignored
+                    if not parameter_is_un_ignored:
+                        continue
+
+                    # required to fix hm master paramset operation values
+                    if parameter_is_un_ignored and parameter_data[Description.OPERATIONS] == 0:
+                        parameter_data[Description.OPERATIONS] = 3
 
                 if parameter_data[Description.OPERATIONS] & Operations.EVENT and (
                     parameter in CLICK_EVENTS
