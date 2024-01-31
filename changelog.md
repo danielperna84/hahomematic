@@ -1,7 +1,7 @@
-# Version 2024.1.11 (2024-01-30)
+# Version 2024.1.11 (2024-01-31)
 
 - Remove deprecation warnings for py3.12
-- Fix unignore search
+- Fix/improve unignore search
 
 # Version 2024.1.10 (2024-01-28)
 
