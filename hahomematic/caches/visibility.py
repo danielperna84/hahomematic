@@ -400,11 +400,15 @@ class ParameterVisibilityCache:
         # check if parameter is in custom_un_ignore with paramset_key
 
         search_matrix = (
-            (device_type_l, channel_no),
-            (_UN_IGNORE_WILDCARD, channel_no),
-            (device_type_l, _UN_IGNORE_WILDCARD),
-            (_UN_IGNORE_WILDCARD, _UN_IGNORE_WILDCARD),
-        ) if paramset_key == ParamsetKey.VALUES else ((device_type_l, channel_no),)
+            (
+                (device_type_l, channel_no),
+                (device_type_l, _UN_IGNORE_WILDCARD),
+                (_UN_IGNORE_WILDCARD, channel_no),
+                (_UN_IGNORE_WILDCARD, _UN_IGNORE_WILDCARD),
+            )
+            if paramset_key == ParamsetKey.VALUES
+            else ((device_type_l, channel_no),)
+        )
 
         for dtl, cno in search_matrix:
             if (
