@@ -255,7 +255,7 @@ class ParameterVisibilityCache:
 
         # unignore from custom unignore files
         # parameter
-        self._custom_un_ignore_parameters: Final[set[str]] = set()
+        self._custom_un_ignore_values_parameters: Final[set[str]] = set()
 
         # device_type, channel_no, paramset_key, parameter
         self._custom_un_ignore_complex: Final[
@@ -394,7 +394,10 @@ class ParameterVisibilityCache:
         device_type_l = device_type.lower()
 
         # check if parameter is in custom_un_ignore
-        if paramset_key == ParamsetKey.VALUES and parameter in self._custom_un_ignore_parameters:
+        if (
+            paramset_key == ParamsetKey.VALUES
+            and parameter in self._custom_un_ignore_values_parameters
+        ):
             return True
 
         # check if parameter is in custom_un_ignore with paramset_key
@@ -473,7 +476,7 @@ class ParameterVisibilityCache:
 
         if line_details := self._get_unignore_line_details(line=line):
             if isinstance(line_details, str):
-                self._custom_un_ignore_parameters.add(line_details)
+                self._custom_un_ignore_values_parameters.add(line_details)
                 return
 
             self._add_complex_unignore_entry(
