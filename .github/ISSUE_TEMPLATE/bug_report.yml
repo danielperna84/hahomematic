@@ -18,7 +18,7 @@ body:
           required: true
         - label: I am aware that an integration that was installed via HACS also needs to be updated via HACS
           required: true
-        - label: The Backend (CCU/Homegear/...) is working as expected, devices ar teached in and are controllable by its own UI.
+        - label: The Backend (CCU/Homegear/...) is working as expected, devices are taught in and are controllable by its own UI.
           required: true
         - label: I am running the latest version of the custom_component (and Home Assistant)
           required: true
