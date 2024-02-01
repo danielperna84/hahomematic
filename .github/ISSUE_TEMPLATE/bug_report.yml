@@ -16,10 +16,12 @@ body:
           required: true
         - label: I am aware of the latest [release notes](https://github.com/danielperna84/custom_homematic/releases)
           required: true
-        - label: The Backend (CCU/Homegear/...) is working as expected and connected devices are controllable by its own UI.
+        - label: I am aware that an integration that was installed via HACS also needs to be updated via HACS
+          required: true
+        - label: The Backend (CCU/Homegear/...) is working as expected, devices ar teached in and are controllable by its own UI.
           required: true
         - label: I am running the latest version of the custom_component (and Home Assistant)
-          required: false
+          required: true
   - type: textarea
     validations:
       required: true
@@ -40,13 +42,13 @@ body:
       required: true
     attributes:
       label: What version of HomematicIP (local) has the issue?
-      placeholder: 1.3x.x
+      placeholder: 1.5x.x
       description: >
         Can be found in: HACS -> Integrations
   - type: input
     attributes:
       label: What was the last working version of HomematicIP (local)?
-      placeholder: 1.3x.x
+      placeholder: 1.5x.x
       description: >
         If known, otherwise leave blank.
   - type: dropdown
@@ -84,7 +86,7 @@ body:
   - type: input
     attributes:
       label: What hardware are you running for your system?
-      placeholder: Proxmox, Pi3, Pi4
+      placeholder: Proxmox, Pi3, Pi4, Pi5
       description: >
         If known, otherwise leave blank.
   - type: markdown
@@ -95,8 +97,6 @@ body:
     attributes:
       label: Which config details do you use
       options:
-        - label: Username and password
-          required: false
         - label: TLS
           required: false
         - label: callback data ([see](https://github.com/danielperna84/custom_homematic#callback_host-and-callback_port))
@@ -116,7 +116,7 @@ body:
 
   - type: textarea
     attributes:
-      label: Diagnostics information
+      label: Diagnostics information (no logs here)
       placeholder: "drag-and-drop the diagnostics data file here (do not copy-and-paste the content)"
       description: >-
         This integrations provides the ability to [download diagnostic data](https://www.home-assistant.io/docs/configuration/troubleshooting/#debug-logs-and-diagnostics).
@@ -127,7 +127,7 @@ body:
         It generally allows pinpointing defects and thus resolving issues faster.
   - type: textarea
     attributes:
-      label: Anything in the logs that might be useful for us? The log (full log) is the best source to support trouble shooting!
+      label: Log file extract. Anything in the logs that might be useful for us? The log (Setting/System/Logs -> load full log) is the best source to support trouble shooting!
       description: For example, error message, or stack traces. Don't switch to DEBUG level if not requested.
       render: txt
   - type: textarea
