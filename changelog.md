@@ -1,3 +1,7 @@
+# Version 2024.2.1 (2024-02-02)
+
+- Accept float as input for int numbers
+
 # Version 2024.2.0 (2024-02-01)
 
 - Ignore empty unignore line

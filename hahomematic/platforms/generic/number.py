@@ -6,11 +6,11 @@ See https://www.home-assistant.io/integrations/number/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms.entity import InputParameterT, ParameterT
+from hahomematic.platforms.entity import ParameterT
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
-class BaseNumber(GenericEntity[ParameterT, InputParameterT]):
+class BaseNumber(GenericEntity[ParameterT, int | float | str]):
     """
     Implementation of a number.
 
@@ -20,18 +20,20 @@ class BaseNumber(GenericEntity[ParameterT, InputParameterT]):
     _platform = HmPlatform.NUMBER
 
 
-class HmFloat(BaseNumber[float, float | str]):
+class HmFloat(BaseNumber[float]):
     """
     Implementation of a Float.
 
     This is a default platform that gets automatically generated.
     """
 
-    def _prepare_value_for_sending(self, value: float | str, do_validate: bool = True) -> float:
+    def _prepare_value_for_sending(
+        self, value: int | float | str, do_validate: bool = True
+    ) -> float:
         """Prepare value before sending."""
         if not do_validate or (
             value is not None
-            and isinstance(value, float)
+            and isinstance(value, int | float)
             and self._min <= float(value) <= self._max
         ):
             return float(value)
@@ -43,17 +45,21 @@ class HmFloat(BaseNumber[float, float | str]):
         )
 
 
-class HmInteger(BaseNumber[int, int | str]):
+class HmInteger(BaseNumber[int]):
     """
     Implementation of an Integer.
 
     This is a default platform that gets automatically generated.
     """
 
-    def _prepare_value_for_sending(self, value: int | str, do_validate: bool = True) -> int:
+    def _prepare_value_for_sending(
+        self, value: int | float | str, do_validate: bool = True
+    ) -> int:
         """Prepare value before sending."""
         if not do_validate or (
-            value is not None and isinstance(value, int) and self._min <= int(value) <= self._max
+            value is not None
+            and isinstance(value, int | float)
+            and self._min <= int(value) <= self._max
         ):
             return int(value)
         if self._special and isinstance(value, str) and value in self._special:

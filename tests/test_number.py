@@ -105,6 +105,16 @@ async def test_hminteger(factory: helper.Factory) -> None:
         value=3,
     )
     assert einteger.value == 3
+
+    await einteger.send_value(1.0)
+    assert mock_client.method_calls[-1] == call.set_value(
+        channel_address="VCU4984404:1",
+        paramset_key="VALUES",
+        parameter="SET_POINT_MODE",
+        value=1,
+    )
+    assert einteger.value == 1
+
     central.event(const.INTERFACE_ID, "VCU4984404:1", "SET_POINT_MODE", 2)
     assert einteger.value == 2
     await einteger.send_value(6)
