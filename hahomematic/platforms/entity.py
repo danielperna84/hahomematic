@@ -393,7 +393,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         )
 
 
-InputParameterT = TypeVar("InputParameterT", bool, int, float, str, int | str, float | str, None)
+InputParameterT = TypeVar("InputParameterT", bool, int, float, str, int | float | str, None)
 ParameterT = TypeVar("ParameterT", bool, int, float, str, int | str, None)
 
 

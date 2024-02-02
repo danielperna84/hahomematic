@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2024.2.0"
+version     = "2024.2.1"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
@@ -496,7 +496,7 @@ lint.ignore = [
     "UP038", # Use `X | Y` in `isinstance` call instead of `(X, Y)`
 ]
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
