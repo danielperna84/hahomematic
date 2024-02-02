@@ -943,7 +943,7 @@ class CentralUnit:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
             return task
-        except (CancelledError, asyncio.TimeoutError) as err:  # pragma: no cover
+        except (TimeoutError, CancelledError) as err:  # pragma: no cover
             message = f"async_add_executor_job: task cancelled for {self._name} [{reduce_args(args=err.args)}]"
             _LOGGER.debug(message)
             raise HaHomematicException(message) from err

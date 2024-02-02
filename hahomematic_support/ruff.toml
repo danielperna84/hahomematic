@@ -1,7 +1,7 @@
 # This extend our general Ruff rules specifically for hahomematic_support
 extend = "../pyproject.toml"
 
-[isort]
+[lint.isort]
 known-first-party = [
     "hahomematic",
     "hahomematic_support"
