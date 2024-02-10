@@ -31,11 +31,13 @@ FROST_PROTECTION
 ### parameter with limitation to a device type, channel and paramset type (> 1.55.0):
 
 ```
-GLOBAL_BUTTON_LOCK:MASTER@HmIP-eTRV-2:0 
+GLOBAL_BUTTON_LOCK:MASTER@HmIP-eTRV-2:0
 LEVEL:VALUES@HmIP-BROLL:3
 GLOBAL_BUTTON_LOCK:MASTER@HM-TC-IT-WM-W-EU: (channel is empty!)
 ```
+
 Wildcards can be used for device_type and channel for parameters from VALUES the paramaset:
+
 ```
 LEVEL:VALUES@all:3  # (LEVEL on channel 3 for all device types)
 LEVEL:VALUES@HmIP-BROLL:all  # (LEVEL on all channels for HmIP-BROLL)
@@ -45,3 +47,14 @@ LEVEL:VALUES@all:all  # (LEVEL on all channels for all device types) equivalent 
 # Known limitations
 
 Parameters from `MASTER` paramset of HM-Classic (BidCos) devices can be changed, but need a manual refresh, by calling the service `homeassistant.update_entity`.
+
+# ignore
+
+There is also an option to ignore the automatic creation of a custom entities for a specific device type:
+The line must start with `ignore_` to enable this mechanism.
+
+```
+ignore_HmIP-BROLL
+```
+
+This is useful, if you want to create your own entities based on HA templates. Ignoring a device_type gives you access to the raw data of this device.

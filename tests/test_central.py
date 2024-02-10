@@ -311,6 +311,53 @@ async def test_device_unignore_hm2(
         assert generic_entity.usage == EntityUsage.ENTITY
 
 
+@pytest.mark.parametrize(
+    ("lines", "device_type", "address", "expected_result"),
+    [
+        (
+            ["ignore_HmIP-BWTH"],
+            "HmIP-BWTH",
+            "VCU1769958",
+            True,
+        ),
+        (
+            ["ignore_HmIP-2BWTH"],
+            "HmIP-BWTH",
+            "VCU1769958",
+            False,
+        ),
+        (
+            ["ignore_HmIP-eTRV"],
+            "HmIP-eTRV-2",
+            "VCU3609622",
+            True,
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_ignore_deviec_type(
+    factory: helper.Factory,
+    lines: list[str],
+    device_type: str,
+    address: str,
+    expected_result: bool,
+) -> None:
+    """Test device un ignore."""
+    central, _ = await factory.get_default_central(
+        {"VCU1769958": "HmIP-BWTH.json", "VCU3609622": "HmIP-eTRV-2.json"}, un_ignore_list=lines
+    )
+
+    assert (
+        central.parameter_visibility.device_type_is_ignored(device_type=device_type)
+        is expected_result
+    )
+    if device := central.get_device(address=address):
+        if expected_result:
+            assert len(device.custom_entities) == 0
+        else:
+            assert len(device.custom_entities) > 0
+
+
 @pytest.mark.asyncio
 async def test_all_parameters(factory: helper.Factory) -> None:
     """Test all_parameters."""
