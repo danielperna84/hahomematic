@@ -10,12 +10,13 @@ from typing import Any, Final
 from hahomematic import central as hmcu, support as hms
 from hahomematic.const import CLICK_EVENTS, DEFAULT_ENCODING, Parameter, ParamsetKey
 from hahomematic.platforms.custom.definition import get_required_parameters
-from hahomematic.support import reduce_args
+from hahomematic.support import element_matches_key, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 _FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
 _UN_IGNORE_WILDCARD: Final = "all"
+_IGNORE_DEVICE_TYPE: Final = "ignore_"
 
 # Define which additional parameters from MASTER paramset should be created as entity.
 # By default these are also on the _HIDDEN_PARAMETERS, which prevents these entities
@@ -261,7 +262,7 @@ class ParameterVisibilityCache:
         self._custom_un_ignore_complex: Final[
             dict[str, dict[int | str | None, dict[str, set[str]]]]
         ] = {}
-
+        self._ignore_custom_device_type: Final[list[str]] = []
         self._ignore_parameters_by_device_lower: Final[dict[str, tuple[str, ...]]] = {
             parameter: tuple(device_type.lower() for device_type in device_types)
             for parameter, device_types in _IGNORE_PARAMETERS_BY_DEVICE.items()
@@ -311,6 +312,15 @@ class ParameterVisibilityCache:
                     self._un_ignore_parameters_by_device_paramset_key[device_type_l][channel_no][
                         ParamsetKey.MASTER
                     ].add(parameter)
+
+    @lru_cache(maxsize=256)
+    def device_type_is_ignored(self, device_type: str) -> bool:
+        """Check if a device type should be ignored for custom entities."""
+        return element_matches_key(
+            search_elements=self._ignore_custom_device_type,
+            compare_with=device_type.lower(),
+            do_wildcard_search=True,
+        )
 
     @lru_cache(maxsize=4096)
     def parameter_is_ignored(
@@ -477,6 +487,10 @@ class ParameterVisibilityCache:
         # ignore empty line
         if not line.strip():
             return None
+
+        if line.lower().startswith(_IGNORE_DEVICE_TYPE):
+            self._ignore_custom_device_type.append(line.lower().replace(_IGNORE_DEVICE_TYPE, ""))
+            return
 
         if line_details := self._get_unignore_line_details(line=line):
             if isinstance(line_details, str):

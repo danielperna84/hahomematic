@@ -16,6 +16,15 @@ def create_custom_entity_and_append_to_device(
     device: hmd.HmDevice,
 ) -> None:
     """Decides which default platform should be used, and creates the required entities."""
+
+    if device.ignore_for_custom_entity:
+        _LOGGER.debug(
+            "CREATE_ENTITIES: Ignoring: %s, %s, %s due to device_type_is_ignored",
+            device.interface_id,
+            device.device_address,
+            device.device_type,
+        )
+        return
     if entity_definition_exists(device.device_type):
         _LOGGER.debug(
             "CREATE_ENTITIES: Handling custom entity integration: %s, %s, %s",

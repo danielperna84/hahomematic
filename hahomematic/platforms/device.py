@@ -91,11 +91,15 @@ class HmDevice(PayloadMixin):
                 parameter=Description.SUBTYPE,
             )
         )
+        self._ignore_for_custom_entity: Final[
+            bool
+        ] = central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
         self._manufacturer = self._identify_manufacturer()
         self._product_group: Final = self.client.get_product_group(self._device_type)
         # marker if device will be created as custom entity
-        self._has_custom_entity_definition: Final = hmed.entity_definition_exists(
-            device_type=self._device_type
+        self._has_custom_entity_definition: Final = (
+            hmed.entity_definition_exists(device_type=self._device_type)
+            and not self._ignore_for_custom_entity
         )
         self._name: Final = get_device_name(
             central=central,
@@ -250,6 +254,11 @@ class HmDevice(PayloadMixin):
     def interface_id(self) -> str:
         """Return the interface_id of the device."""
         return self._interface_id
+
+    @config_property
+    def ignore_for_custom_entity(self) -> bool:
+        """Return if device should be ignored for custom entity."""
+        return self._ignore_for_custom_entity
 
     @property
     def has_custom_entity_definition(self) -> bool:
