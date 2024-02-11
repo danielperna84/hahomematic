@@ -49,13 +49,6 @@ class CoverActivity(StrEnum):
     OPENING = "UP"
 
 
-class HdmCoverActivity(IntEnum):
-    """Enum with Hdm specific cover activities."""
-
-    CLOSING = 2
-    OPENING = 1
-
-
 class CoverPosition(IntEnum):
     """Enum with cover positions."""
 
@@ -88,6 +81,13 @@ class GarageDoorState(StrEnum):
     OPEN = "OPEN"
     VENTILATION_POSITION = "VENTILATION_POSITION"
     POSITION_UNKNOWN = "_POSITION_UNKNOWN"
+
+
+class HdmCoverActivity(IntEnum):
+    """Enum with Hdm specific cover activities."""
+
+    CLOSING = 2
+    OPENING = 1
 
 
 class CeCover(CustomEntity):
@@ -152,20 +152,14 @@ class CeCover(CustomEntity):
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._e_direction.value is not None:
-            return (
-                str(self._e_direction.value) == CoverActivity.OPENING
-                or self._e_direction.value == HdmCoverActivity.OPENING
-            )
+            return str(self._e_direction.value) == CoverActivity.OPENING
         return None
 
     @value_property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._e_direction.value is not None:
-            return (
-                str(self._e_direction.value) == CoverActivity.CLOSING
-                or self._e_direction.value == HdmCoverActivity.CLOSING
-            )
+            return str(self._e_direction.value) == CoverActivity.CLOSING
         return None
 
     @bind_collector
@@ -527,6 +521,24 @@ class CeGarage(CustomEntity):
         return super().is_state_change(**kwargs)
 
 
+class CeIpHdm(CeIpBlind):
+    """Class for HomematicIP hdm entities."""
+
+    @value_property
+    def is_opening(self) -> bool | None:
+        """Return if the cover is opening."""
+        if self._e_direction.value is not None:
+            return int(self._e_direction.value) == HdmCoverActivity.OPENING
+        return None
+
+    @value_property
+    def is_closing(self) -> bool | None:
+        """Return if the cover is closing."""
+        if self._e_direction.value is not None:
+            return int(self._e_direction.value) == HdmCoverActivity.CLOSING
+        return None
+
+
 def make_ip_cover(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
@@ -582,6 +594,21 @@ def make_ip_garage(
         device=device,
         entity_class=CeGarage,
         device_profile=DeviceProfile.IP_GARAGE,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
+def make_ip_hdm(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[CustomEntity, ...]:
+    """Create HomematicIP hdm entities."""
+    return hmed.make_custom_entity(
+        device=device,
+        entity_class=CeIpHdm,
+        device_profile=DeviceProfile.IP_COVER,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -663,7 +690,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     ),
     "HmIP-FBL": CustomConfig(func=make_ip_blind, channels=(3,)),
     "HmIP-FROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
-    "HmIP-HDM": CustomConfig(func=make_ip_blind, channels=(0,)),
+    "HmIP-HDM": CustomConfig(func=make_ip_hdm, channels=(0,)),
     "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, channels=(1,)),
     "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, channels=(1,)),
     "HmIPW-DRBL4": CustomConfig(
