@@ -136,8 +136,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 ED.FIELDS: {
                     1: {
                         Field.DIRECTION: Parameter.ACTIVITY_STATE,
-                        Field.CHANNEL_LEVEL: Parameter.LEVEL,
-                        Field.CHANNEL_LEVEL_2: Parameter.LEVEL_2,
                         Field.LEVEL: Parameter.LEVEL,
                         Field.LEVEL_2: Parameter.LEVEL_2,
                         Field.STOP: Parameter.STOP,
