@@ -130,6 +130,22 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 1: (Parameter.STATE,),
             },
         },
+        DeviceProfile.IP_HDM: {
+            ED.DEVICE_GROUP: {
+                ED.PRIMARY_CHANNEL: 1,
+                ED.FIELDS: {
+                    1: {
+                        Field.DIRECTION: Parameter.ACTIVITY_STATE,
+                        Field.LEVEL: Parameter.LEVEL,
+                        Field.LEVEL_2: Parameter.LEVEL_2,
+                        Field.STOP: Parameter.STOP,
+                    },
+                    2: {
+                        Field.COMBINED_PARAMETER: Parameter.COMBINED_PARAMETER,
+                    },
+                },
+            },
+        },
         DeviceProfile.IP_FIXED_COLOR_LIGHT: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
