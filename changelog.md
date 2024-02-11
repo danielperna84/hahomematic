@@ -1,6 +1,7 @@
-# Version 2024.2.2 (2024-02-10)
+# Version 2024.2.2 (2024-02-11)
 
 - Add option to un ignore mechanism to ignore the automatic creation of custom entities by device type
+- Remove incomplete/wrong custom mapping for HBW-LC-RGBWW-IN6-DR
 
 # Version 2024.2.1 (2024-02-02)
 
