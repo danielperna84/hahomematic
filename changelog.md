@@ -1,6 +1,7 @@
 # Version 2024.2.2 (2024-02-10)
 
 - Add option to un ignore mechanism to ignore the automatic creation of custom entities by device type
+- Add hdm cover activity by @sander76
 
 # Version 2024.2.1 (2024-02-02)
 
