@@ -19,7 +19,7 @@ def create_custom_entity_and_append_to_device(
 
     if device.ignore_for_custom_entity:
         _LOGGER.debug(
-            "CREATE_ENTITIES: Ignoring: %s, %s, %s due to device_type_is_ignored",
+            "CREATE_ENTITIES: Ignoring for custom entity: %s, %s, %s due to ignored",
             device.interface_id,
             device.device_address,
             device.device_type,

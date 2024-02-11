@@ -897,38 +897,6 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 132": CustomConfig(func=make_rf_dimmer, channels=(1,)),
     "263 133": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "263 134": CustomConfig(func=make_rf_dimmer, channels=(1,)),
-    "HBW-LC-RGBWW-IN6-DR": (
-        CustomConfig(
-            func=make_rf_dimmer,
-            channels=(7, 8),
-            extended=ExtendedConfig(
-                additional_entities={
-                    (
-                        1,
-                        2,
-                        3,
-                        4,
-                        5,
-                        6,
-                    ): (
-                        Parameter.PRESS_LONG,
-                        Parameter.PRESS_SHORT,
-                        Parameter.SENSOR,
-                    )
-                },
-            ),
-        ),
-        CustomConfig(
-            func=make_rf_dimmer_color,
-            channels=(9, 10, 11),
-            extended=ExtendedConfig(fixed_channels={15: {Field.COLOR: Parameter.COLOR}}),
-        ),
-        CustomConfig(
-            func=make_rf_dimmer_color,
-            channels=(12, 13, 14),
-            extended=ExtendedConfig(fixed_channels={16: {Field.COLOR: Parameter.COLOR}}),
-        ),
-    ),
     "HM-DW-WM": CustomConfig(func=make_rf_dimmer, channels=(1, 2, 3, 4)),
     "HM-LC-AO-SM": CustomConfig(func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "HM-LC-DW-WM": CustomConfig(func=make_rf_dimmer_color_temp, channels=(1, 3, 5)),

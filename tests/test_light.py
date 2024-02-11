@@ -8,7 +8,6 @@ import pytest
 
 from hahomematic.const import EntityUsage, ParamsetKey
 from hahomematic.platforms.custom.light import (
-    CeColorDimmer,
     CeColorDimmerEffect,
     CeColorTempDimmer,
     CeDimmer,
@@ -28,7 +27,6 @@ TEST_DEVICES: dict[str, str] = {
     "VCU0000098": "HM-DW-WM.json",
     "VCU4704397": "HmIPW-WRC6.json",
     "VCU0000122": "HM-LC-Dim1L-CV.json",
-    "VCU9973336": "HBW-LC-RGBWW-IN6-DR.json",
     "VCU5629873": "HmIP-RGBW.json",
 }
 
@@ -105,85 +103,6 @@ async def test_cedimmer(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.put_paramset(
         address="VCU1399816:4", paramset_key="VALUES", value={"ON_TIME": 0.5, "LEVEL": 1.0}
     )
-
-    await light.turn_on()
-    call_count = len(mock_client.method_calls)
-    await light.turn_on()
-    assert call_count == len(mock_client.method_calls)
-
-    await light.turn_off()
-    call_count = len(mock_client.method_calls)
-    await light.turn_off()
-    assert call_count == len(mock_client.method_calls)
-
-
-async def test_cecolordimmer(factory: helper.Factory) -> None:
-    """Test CeColorDimmer."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
-    light: CeColorDimmer = cast(
-        CeColorDimmer, helper.get_prepared_custom_entity(central, "VCU9973336", 9)
-    )
-    assert light.usage == EntityUsage.CE_PRIMARY
-    assert light.color_temp is None
-    assert light.hs_color == (0.0, 0.0)
-    assert light.supports_brightness is True
-    assert light.supports_color_temperature is False
-    assert light.supports_effects is False
-    assert light.supports_hs_color is True
-    assert light.supports_transition is True
-    assert light.effect is None
-
-    assert light.brightness == 0
-    assert light.brightness_pct == 0
-    await light.turn_on()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU9973336:9", paramset_key="VALUES", parameter="LEVEL", value=1.0
-    )
-    assert light.brightness == 255
-    await light.turn_on(brightness=28)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU9973336:9",
-        paramset_key="VALUES",
-        parameter="LEVEL",
-        value=0.10980392156862745,
-    )
-    assert light.brightness == 28
-    await light.turn_off()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU9973336:9", paramset_key="VALUES", parameter="LEVEL", value=0.0
-    )
-    assert light.brightness == 0
-
-    assert light.hs_color == (0.0, 0.0)
-    await light.turn_on(hs_color=(44.4, 69.3))
-    assert mock_client.method_calls[-2] == call.set_value(
-        channel_address="VCU9973336:15", paramset_key="VALUES", parameter="COLOR", value=25
-    )
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU9973336:9", paramset_key="VALUES", parameter="LEVEL", value=1.0
-    )
-    assert light.hs_color == (45.0, 100)
-
-    await light.turn_on(hs_color=(0, 50))
-    assert mock_client.method_calls[-2] == call.set_value(
-        channel_address="VCU9973336:15", paramset_key="VALUES", parameter="COLOR", value=0
-    )
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU9973336:9", paramset_key="VALUES", parameter="LEVEL", value=1.0
-    )
-    assert light.hs_color == (0.0, 100.0)
-    await light.turn_on(hs_color=(0, 1))
-    assert mock_client.method_calls[-2] == call.set_value(
-        channel_address="VCU9973336:15", paramset_key="VALUES", parameter="COLOR", value=200
-    )
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU9973336:9", paramset_key="VALUES", parameter="LEVEL", value=1.0
-    )
-    assert light.hs_color == (0.0, 0.0)
-    central.event(const.INTERFACE_ID, "VCU9973336:15", "COLOR", 201)
-    assert light.hs_color == (0.0, 0.0)
-    central.event(const.INTERFACE_ID, "VCU9973336:15", "COLOR", None)
-    assert light.hs_color == (0.0, 0.0)
 
     await light.turn_on()
     call_count = len(mock_client.method_calls)

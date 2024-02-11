@@ -113,13 +113,13 @@ async def test_central_full(central_unit_full) -> None:
     ) as fptr:
         fptr.write(orjson.dumps(addresses, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS))
 
-    assert usage_types[EntityUsage.NO_CREATE] == 3086
-    assert usage_types[EntityUsage.CE_PRIMARY] == 189
-    assert usage_types[EntityUsage.ENTITY] == 3719
+    assert usage_types[EntityUsage.NO_CREATE] == 3060
+    assert usage_types[EntityUsage.CE_PRIMARY] == 181
+    assert usage_types[EntityUsage.ENTITY] == 3745
     assert usage_types[EntityUsage.CE_VISIBLE] == 102
     assert usage_types[EntityUsage.CE_SECONDARY] == 148
 
-    assert len(ce_channels) == 116
+    assert len(ce_channels) == 115
     assert len(entity_types) == 6
     assert len(parameters) == 190
 
