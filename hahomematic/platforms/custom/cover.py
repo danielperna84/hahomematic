@@ -49,6 +49,13 @@ class CoverActivity(StrEnum):
     OPENING = "UP"
 
 
+class HdmCoverActivity(IntEnum):
+    """Enum with Hdm specific cover activities."""
+
+    CLOSING = 2
+    OPENING = 1
+
+
 class CoverPosition(IntEnum):
     """Enum with cover positions."""
 
@@ -152,14 +159,20 @@ class CeCover(CustomEntity):
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == CoverActivity.OPENING
+            return (
+                str(self._e_direction.value) == CoverActivity.OPENING
+                or self._e_direction.value == HdmCoverActivity.OPENING
+            )
         return None
 
     @value_property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._e_direction.value is not None:
-            return str(self._e_direction.value) == CoverActivity.CLOSING
+            return (
+                str(self._e_direction.value) == CoverActivity.CLOSING
+                or self._e_direction.value == HdmCoverActivity.CLOSING
+            )
         return None
 
     @bind_collector
