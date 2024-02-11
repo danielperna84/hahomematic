@@ -574,6 +574,21 @@ def make_ip_garage(
     )
 
 
+def make_ip_hdm(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[CustomEntity, ...]:
+    """Create HomematicIP cover entities."""
+    return hmed.make_custom_entity(
+        device=device,
+        entity_class=CeIpBlind,
+        device_profile=DeviceProfile.IP_HDM,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
 def make_rf_blind(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
@@ -650,7 +665,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     ),
     "HmIP-FBL": CustomConfig(func=make_ip_blind, channels=(3,)),
     "HmIP-FROLL": CustomConfig(func=make_ip_cover, channels=(3,)),
-    "HmIP-HDM": CustomConfig(func=make_ip_blind, channels=(0,)),
+    "HmIP-HDM": CustomConfig(func=make_ip_hdm, channels=(0,)),
     "HmIP-MOD-HO": CustomConfig(func=make_ip_garage, channels=(1,)),
     "HmIP-MOD-TM": CustomConfig(func=make_ip_garage, channels=(1,)),
     "HmIPW-DRBL4": CustomConfig(
