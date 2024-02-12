@@ -1,7 +1,13 @@
+# Version 2024.2.3 (2024-02-12)
+
+- Rename func to make_ce_func
+- Add fixed mapping for HBW-LC-RGBWW-IN6-DR
+- Fix mapping of HmIP-HDM
+
 # Version 2024.2.2 (2024-02-11)
 
 - Add option to un ignore mechanism to ignore the automatic creation of custom entities by device type
-- Remove incomplete/wrong custom mapping for HBW-LC-RGBWW-IN6-DR
+- Remove incomplete/wrong mapping for HBW-LC-RGBWW-IN6-DR
 - Fix mapping of HmIP-HDM
 
 # Version 2024.2.1 (2024-02-02)

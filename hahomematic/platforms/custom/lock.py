@@ -216,7 +216,7 @@ def make_rf_lock(
 # HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HM-Sec-Key": CustomConfig(
-        func=make_rf_lock,
+        make_ce_func=make_rf_lock,
         channels=(1,),
         extended=ExtendedConfig(
             additional_entities={
@@ -228,7 +228,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
         ),
     ),
     "HmIP-DLD": CustomConfig(
-        func=make_ip_lock,
+        make_ce_func=make_ip_lock,
         channels=(0,),
         extended=ExtendedConfig(
             additional_entities={
