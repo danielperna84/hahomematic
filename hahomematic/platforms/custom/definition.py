@@ -140,9 +140,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                         Field.LEVEL_2: Parameter.LEVEL_2,
                         Field.STOP: Parameter.STOP,
                     },
-                    2: {
-                        Field.COMBINED_PARAMETER: Parameter.COMBINED_PARAMETER,
-                    },
                 },
             },
         },

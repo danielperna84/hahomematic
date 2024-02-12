@@ -456,22 +456,16 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
     await cover.set_position(position=81)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3560967:2",
-        paramset_key="VALUES",
-        parameter="COMBINED_PARAMETER",
-        value="L2=0,L=81",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.81}
     )
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.81)
     assert cover.current_position == 81
     assert cover.current_tilt_position == 0
 
     await cover.open()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3560967:2",
-        paramset_key="VALUES",
-        parameter="COMBINED_PARAMETER",
-        value="L2=100,L=100",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 1.0}
     )
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 1.0)
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 1.0)
@@ -479,11 +473,8 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
     assert cover.current_tilt_position == 100
 
     await cover.close()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3560967:2",
-        paramset_key="VALUES",
-        parameter="COMBINED_PARAMETER",
-        value="L2=0,L=0",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
     )
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.0)
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.0)
@@ -491,33 +482,24 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
     assert cover.current_tilt_position == 0
 
     await cover.open_tilt()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3560967:2",
-        paramset_key="VALUES",
-        parameter="COMBINED_PARAMETER",
-        value="L2=100,L=0",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 0.0}
     )
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 1.0)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 100
 
     await cover.set_position(tilt_position=45)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3560967:2",
-        paramset_key="VALUES",
-        parameter="COMBINED_PARAMETER",
-        value="L2=45,L=0",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.45, "LEVEL": 0.0}
     )
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.45)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 45
 
     await cover.close_tilt()
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3560967:2",
-        paramset_key="VALUES",
-        parameter="COMBINED_PARAMETER",
-        value="L2=0,L=0",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
     )
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.0)
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.0)
@@ -525,11 +507,8 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
     assert cover.current_tilt_position == 0
 
     await cover.set_position(position=10, tilt_position=20)
-    assert mock_client.method_calls[-1] == call.set_value(
-        channel_address="VCU3560967:2",
-        paramset_key="VALUES",
-        parameter="COMBINED_PARAMETER",
-        value="L2=20,L=10",
+    assert mock_client.method_calls[-1] == call.put_paramset(
+        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.2, "LEVEL": 0.1}
     )
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.1)
     central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.2)

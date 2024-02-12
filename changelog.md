@@ -2,6 +2,7 @@
 
 - Rename func to make_ce_func
 - Add fixed mapping for HBW-LC-RGBWW-IN6-DR
+- Fix mapping of HmIP-HDM
 
 # Version 2024.2.2 (2024-02-11)
 
