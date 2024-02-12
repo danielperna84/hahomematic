@@ -12,7 +12,7 @@ from hahomematic.platforms.custom.const import Field
 class CustomConfig:
     """Data for custom entity creation."""
 
-    func: Callable
+    make_ce_func: Callable
     channels: tuple[int, ...]
     extended: ExtendedConfig | None = None
 

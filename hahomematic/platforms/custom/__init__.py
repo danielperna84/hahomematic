@@ -36,10 +36,14 @@ def create_custom_entity_and_append_to_device(
         # Call the custom creation function.
         for entity_configs in get_entity_configs(device.device_type):
             if isinstance(entity_configs, CustomConfig):
-                entity_configs.func(device, entity_configs.channels, entity_configs.extended)
+                entity_configs.make_ce_func(
+                    device, entity_configs.channels, entity_configs.extended
+                )
             else:
                 for entity_config in entity_configs:
-                    entity_config.func(device, entity_config.channels, entity_config.extended)
+                    entity_config.make_ce_func(
+                        device, entity_config.channels, entity_config.extended
+                    )
 
 
 def _importlibs() -> None:
