@@ -1,6 +1,7 @@
 # Version 2024.2.3 (2024-02-12)
 
 - Rename func to make_ce_func
+- Add fixed custom mapping for HBW-LC-RGBWW-IN6-DR
 
 # Version 2024.2.2 (2024-02-11)
 

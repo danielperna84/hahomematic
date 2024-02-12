@@ -897,6 +897,38 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 132": CustomConfig(make_ce_func=make_rf_dimmer, channels=(1,)),
     "263 133": CustomConfig(make_ce_func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "263 134": CustomConfig(make_ce_func=make_rf_dimmer, channels=(1,)),
+    "HBW-LC-RGBWW-IN6-DR": (
+        CustomConfig(
+            make_ce_func=make_rf_dimmer,
+            channels=(7, 8, 9, 10, 11, 12),
+            extended=ExtendedConfig(
+                additional_entities={
+                    (
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                    ): (
+                        Parameter.PRESS_LONG,
+                        Parameter.PRESS_SHORT,
+                        Parameter.SENSOR,
+                    )
+                },
+            ),
+        ),
+        CustomConfig(
+            make_ce_func=make_rf_dimmer_color,
+            channels=(13,),
+            extended=ExtendedConfig(fixed_channels={15: {Field.COLOR: Parameter.COLOR}}),
+        ),
+        CustomConfig(
+            make_ce_func=make_rf_dimmer_color,
+            channels=(14,),
+            extended=ExtendedConfig(fixed_channels={16: {Field.COLOR: Parameter.COLOR}}),
+        ),
+    ),
     "HM-DW-WM": CustomConfig(make_ce_func=make_rf_dimmer, channels=(1, 2, 3, 4)),
     "HM-LC-AO-SM": CustomConfig(make_ce_func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "HM-LC-DW-WM": CustomConfig(make_ce_func=make_rf_dimmer_color_temp, channels=(1, 3, 5)),
