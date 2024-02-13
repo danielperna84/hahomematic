@@ -12,7 +12,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.support import ExtendedConfig
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.support import (
@@ -37,6 +37,7 @@ class CustomEntity(BaseEntity):
         device_def: Mapping[str, Any],
         entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]],
         channel_no: int,
+        base_channel_no: int,
         extended: ExtendedConfig | None = None,
     ) -> None:
         """Initialize the entity."""
@@ -44,6 +45,7 @@ class CustomEntity(BaseEntity):
         # required for name in BaseEntity
         self._device_desc: Final = device_def
         self._entity_def: Final = entity_def
+        self._base_channel_no: int = base_channel_no
         super().__init__(
             device=device,
             unique_id=unique_id,
@@ -54,6 +56,11 @@ class CustomEntity(BaseEntity):
         self._data_entities: Final[dict[Field, hmge.GenericEntity]] = {}
         self._init_entities()
         self._init_entity_fields()
+
+    @config_property
+    def base_channel_no(self) -> int | None:
+        """Return the base channel no of the entity."""
+        return self._base_channel_no
 
     @abstractmethod
     def _init_entity_fields(self) -> None:
@@ -215,7 +222,9 @@ class CustomEntity(BaseEntity):
         """Add entity to collection and register callback."""
         if not entity:
             return
-
+        self.device.add_sub_device_channel(
+            channel_no=self._channel_no, base_channel_no=self._base_channel_no
+        )
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 

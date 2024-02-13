@@ -55,6 +55,8 @@ class HmDevice(PayloadMixin):
     def __init__(self, central: hmcu.CentralUnit, interface_id: str, device_address: str) -> None:
         """Initialize the device object."""
         PayloadMixin.__init__(self)
+        # channel_no, base_channel_no
+        self._sub_device_channels: Final[dict[int, int]] = {}
         self.central: Final = central
         self._interface_id: Final = interface_id
         self._interface: Final = central.device_details.get_interface(device_address)
@@ -322,6 +324,19 @@ class HmDevice(PayloadMixin):
         return self.get_generic_entity(
             channel_address=f"{self._device_address}:0", parameter=Parameter.CONFIG_PENDING
         )
+
+    def add_sub_device_channel(self, channel_no: int, base_channel_no: int) -> None:
+        """Assign channel no to base channel no."""
+        if base_channel_no not in self._sub_device_channels:
+            self._sub_device_channels[base_channel_no] = base_channel_no
+        if channel_no not in self._sub_device_channels:
+            self._sub_device_channels[channel_no] = base_channel_no
+        elif self._sub_device_channels[channel_no] != base_channel_no:
+            return None
+
+    def get_sub_device_channel(self, channel_no: int) -> int | None:
+        """Return the sub device channel."""
+        return self._sub_device_channels.get(channel_no)
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
