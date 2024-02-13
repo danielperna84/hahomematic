@@ -24,6 +24,7 @@ class DeviceProfile(StrEnum):
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
     RF_DIMMER_COLOR = "RfDimmer_Color"
+    RF_DIMMER_COLOR_FIXED = "RfDimmer_Color_Fixed"
     RF_DIMMER_COLOR_TEMP = "RfDimmer_Color_Temp"
     RF_DIMMER_WITH_VIRT_CHANNEL = "RfDimmerWithVirtChannel"
     RF_LOCK = "RfLock"

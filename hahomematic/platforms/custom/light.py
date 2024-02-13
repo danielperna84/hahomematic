@@ -801,6 +801,21 @@ def make_rf_dimmer_color(
     )
 
 
+def make_rf_dimmer_color_fixed(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[CustomEntity, ...]:
+    """Create HomeMatic classic dimmer with fixed color entities."""
+    return hmed.make_custom_entity(
+        device=device,
+        entity_class=CeColorDimmer,
+        device_profile=DeviceProfile.RF_DIMMER_COLOR_FIXED,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
 def make_rf_dimmer_color_effect(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
@@ -919,12 +934,12 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
             ),
         ),
         CustomConfig(
-            make_ce_func=make_rf_dimmer_color,
+            make_ce_func=make_rf_dimmer_color_fixed,
             channels=(13,),
             extended=ExtendedConfig(fixed_channels={15: {Field.COLOR: Parameter.COLOR}}),
         ),
         CustomConfig(
-            make_ce_func=make_rf_dimmer_color,
+            make_ce_func=make_rf_dimmer_color_fixed,
             channels=(14,),
             extended=ExtendedConfig(fixed_channels={16: {Field.COLOR: Parameter.COLOR}}),
         ),
