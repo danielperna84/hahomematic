@@ -806,7 +806,7 @@ def make_rf_dimmer_color_fixed(
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[CustomEntity, ...]:
-    """Create HomeMatic classic dimmer with color entities."""
+    """Create HomeMatic classic dimmer with fixed color entities."""
     return hmed.make_custom_entity(
         device=device,
         entity_class=CeColorDimmer,
