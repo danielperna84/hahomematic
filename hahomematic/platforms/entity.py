@@ -301,6 +301,11 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._device.available
 
     @config_property
+    def base_channel_no(self) -> int | None:
+        """Return the base channel no of the entity."""
+        return self._device.get_sub_device_channel(channel_no=self._channel_no)
+
+    @config_property
     def channel_address(self) -> str:
         """Return the channel_address of the entity."""
         return self._channel_address

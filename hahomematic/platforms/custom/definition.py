@@ -526,8 +526,8 @@ def make_custom_entity(
 
     entity_def = _get_device_entities(device_profile, group_base_channels[0])
 
-    for base_channel in group_base_channels:
-        device_def = _get_device_group(device_profile, base_channel)
+    for base_channel_no in group_base_channels:
+        device_def = _get_device_group(device_profile, base_channel_no)
         channels = [device_def[ED.PRIMARY_CHANNEL]]
         if secondary_channels := device_def.get(ED.SECONDARY_CHANNELS):
             channels.extend(secondary_channels)
@@ -540,6 +540,7 @@ def make_custom_entity(
                     device_def=device_def,
                     entity_def=entity_def,
                     channel_no=channel_no,
+                    base_channel_no=base_channel_no,
                     extended=extended,
                 )
             )
@@ -554,6 +555,7 @@ def _create_entities(
     device_def: Mapping[ED, Any],
     entity_def: Mapping[int, tuple[Parameter, ...]],
     channel_no: int | None = None,
+    base_channel_no: int | None = None,
     extended: ExtendedConfig | None = None,
 ) -> tuple[hmce.CustomEntity, ...]:
     """Create custom entities."""
@@ -571,6 +573,7 @@ def _create_entities(
         device_def=device_def,
         entity_def=entity_def,
         channel_no=channel_no,
+        base_channel_no=base_channel_no,
         extended=extended,
     )
     if entity.has_data_entities:
