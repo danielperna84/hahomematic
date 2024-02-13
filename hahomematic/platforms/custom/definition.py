@@ -377,6 +377,16 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 },
             },
         },
+        DeviceProfile.RF_DIMMER_COLOR_FIXED: {
+            ED.DEVICE_GROUP: {
+                ED.PRIMARY_CHANNEL: 0,
+                ED.REPEATABLE_FIELDS: {
+                    Field.LEVEL: Parameter.LEVEL,
+                    Field.ON_TIME_VALUE: Parameter.ON_TIME,
+                    Field.RAMP_TIME_VALUE: Parameter.RAMP_TIME,
+                },
+            },
+        },
         DeviceProfile.RF_DIMMER_COLOR_TEMP: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,

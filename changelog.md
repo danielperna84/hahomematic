@@ -1,6 +1,7 @@
 # Version 2024.2.4 (2024-02-13)
 
 - Group entities to sub devices / base channels
+- Add mapping for fixed color channel
 
 # Version 2024.2.3 (2024-02-12)
 
