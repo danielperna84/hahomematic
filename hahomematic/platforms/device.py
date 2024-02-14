@@ -243,6 +243,11 @@ class HmDevice(PayloadMixin):
         return tuple(self._generic_entities.values())
 
     @config_property
+    def has_sub_devices(self) -> bool:
+        """Return if device has multiple sub device channels."""
+        return len(set(self._sub_device_channels.values())) > 1
+
+    @config_property
     def identifier(self) -> str:
         """Return the identifier of the device."""
         return f"{self._device_address}{IDENTIFIER_SEPARATOR}{self._interface_id}"
