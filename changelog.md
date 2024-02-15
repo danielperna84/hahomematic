@@ -2,6 +2,7 @@
 
 - Group entities to sub devices / base channels
 - Add mapping for fixed color channel
+- Refactor entity name data
 
 # Version 2024.2.3 (2024-02-12)
 

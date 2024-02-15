@@ -285,10 +285,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         )
 
         self._usage: EntityUsage = self._get_entity_usage()
-        entity_name_data: Final = self._get_entity_name()
-        self._channel_name: Final = entity_name_data.channel_name
-        self._full_name: Final = entity_name_data.full_name
-        self._name: Final = entity_name_data.entity_name
+        self._entity_name_data: Final = self._get_entity_name()
 
     @property
     def address_path(self) -> str:
@@ -309,11 +306,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def channel_address(self) -> str:
         """Return the channel_address of the entity."""
         return self._channel_address
-
-    @config_property
-    def channel_name(self) -> str:
-        """Return the channel_name of the entity."""
-        return self._channel_name
 
     @config_property
     def channel_no(self) -> int:
@@ -338,7 +330,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @config_property
     def full_name(self) -> str:
         """Return the full name of the entity."""
-        return self._full_name
+        return self._entity_name_data.full_name
 
     @config_property
     def is_in_multiple_channels(self) -> bool:
@@ -348,7 +340,12 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @config_property
     def name(self) -> str | None:
         """Return the name of the entity."""
-        return self._name
+        return self._entity_name_data.entity_name
+
+    @property
+    def name_data(self) -> EntityNameData:
+        """Return the entity name data of the entity."""
+        return self._entity_name_data
 
     @config_property
     def room(self) -> str | None:
