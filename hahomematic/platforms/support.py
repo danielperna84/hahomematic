@@ -84,49 +84,55 @@ class EntityNameData:
         self, device_name: str, channel_name: str, parameter_name: str | None = None
     ) -> None:
         """Init the EntityNameData class."""
-        self._device_name = device_name
-        self._channel_name = channel_name
-        self._parameter_name = parameter_name
-
-    @property
-    def channel_name(self) -> str:
-        """Return the channel_name of the entity only name."""
-        if (
-            self._device_name
-            and self._channel_name
-            and self._channel_name.startswith(self._device_name)
-        ):
-            return self._channel_name.replace(self._device_name, "").strip()
-
-        return self._channel_name.strip()
+        self.device_name: Final = device_name
+        self.channel_name: Final = self._get_channel_name(
+            device_name=device_name, channel_name=channel_name
+        )
+        self.entity_name: Final = self._get_entity_name(
+            device_name=device_name, channel_name=channel_name, parameter_name=parameter_name
+        )
+        self.full_name: Final = (
+            f"{device_name} {self.entity_name}".strip() if self.entity_name else device_name
+        )
+        self.parameter_name = parameter_name
+        self.sub_device_name = channel_name if channel_name else device_name
 
     @staticmethod
     def empty() -> EntityNameData:
         """Return an empty EntityNameData."""
         return EntityNameData(device_name="", channel_name="")
 
-    @property
-    def entity_name(self) -> str | None:
-        """Return the name of the entity only name."""
-        if self._device_name and self._name and self._name.startswith(self._device_name):
-            return self._name[len(self._device_name) :].lstrip()
-        return self._name
+    @staticmethod
+    def _get_channel_name(device_name: str, channel_name: str) -> str:
+        """Return the channel_name of the entity only name."""
+        if device_name and channel_name and channel_name.startswith(device_name):
+            return channel_name.replace(device_name, "").strip()
 
-    @property
-    def full_name(self) -> str:
-        """Return the full name of the entity."""
-        if self.entity_name:
-            return f"{self._device_name} {self.entity_name}".strip()
-        return self._device_name
+        return channel_name.strip()
 
-    @property
-    def _name(self) -> str | None:
-        """Return the name of the entity."""
-        if self._channel_name and self._parameter_name:
-            return f"{self._channel_name} {self._parameter_name}".strip()
-        if self._channel_name:
-            return self._channel_name.strip()
+    @staticmethod
+    def _get_channel_parameter_name(channel_name: str, parameter_name: str | None) -> str | None:
+        """Return the channel parameter name of the entity."""
+        if channel_name and parameter_name:
+            return f"{channel_name} {parameter_name}".strip()
+        if channel_name:
+            return channel_name.strip()
         return None
+
+    def _get_entity_name(
+        self, device_name: str, channel_name: str, parameter_name: str | None
+    ) -> str | None:
+        """Return the name of the entity only name."""
+        channel_parameter_name = self._get_channel_parameter_name(
+            channel_name=channel_name, parameter_name=parameter_name
+        )
+        if (
+            device_name
+            and channel_parameter_name
+            and channel_parameter_name.startswith(device_name)
+        ):
+            return channel_parameter_name[len(device_name) :].lstrip()
+        return channel_parameter_name
 
 
 def get_device_name(central: hmcu.CentralUnit, device_address: str, device_type: str) -> str:
