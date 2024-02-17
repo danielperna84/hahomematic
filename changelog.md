@@ -1,3 +1,7 @@
+# Version 2024.2.5 (2024-02-17)
+
+- Add HBW-LC4-IN4-DR
+
 # Version 2024.2.4 (2024-02-13)
 
 - Group entities to sub devices / base channels
