@@ -4,6 +4,7 @@ Module for action entities.
 Actions are used to send data for write only parameters to backend.
 There is no corresponding HA platform.
 """
+
 from __future__ import annotations
 
 from typing import Any

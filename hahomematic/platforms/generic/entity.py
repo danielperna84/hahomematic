@@ -1,4 +1,5 @@
 """Generic python representation of a CCU parameter."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

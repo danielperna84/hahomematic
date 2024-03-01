@@ -1,4 +1,5 @@
 """Tests for light entities of hahomematic."""
+
 from __future__ import annotations
 
 from typing import cast

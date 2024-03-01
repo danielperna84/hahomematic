@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 """Commandline tool to query HomeMatic hubs via XML-RPC."""
+
 from __future__ import annotations
 
 import argparse

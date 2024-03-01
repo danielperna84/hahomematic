@@ -1,4 +1,5 @@
 """Module for the Device class."""
+
 from __future__ import annotations
 
 import asyncio
@@ -93,9 +94,9 @@ class HmDevice(PayloadMixin):
                 parameter=Description.SUBTYPE,
             )
         )
-        self._ignore_for_custom_entity: Final[
-            bool
-        ] = central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
+        self._ignore_for_custom_entity: Final[bool] = (
+            central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
+        )
         self._manufacturer = self._identify_manufacturer()
         self._product_group: Final = self.client.get_product_group(self._device_type)
         # marker if device will be created as custom entity
@@ -770,10 +771,10 @@ class _DefinitionExporter:
 
     async def export_data(self) -> None:
         """Export data."""
-        device_descriptions: Mapping[
-            str, Any
-        ] = self._central.device_descriptions.get_device_with_channels(
-            interface_id=self._interface_id, device_address=self._device_address
+        device_descriptions: Mapping[str, Any] = (
+            self._central.device_descriptions.get_device_with_channels(
+                interface_id=self._interface_id, device_address=self._device_address
+            )
         )
         paramset_descriptions: Mapping[
             str, Any
@@ -804,9 +805,9 @@ class _DefinitionExporter:
         # anonymize paramset_descriptions
         anonymize_paramset_descriptions: dict[str, Any] = {}
         for address, paramset_description in paramset_descriptions.items():
-            anonymize_paramset_descriptions[
-                self._anonymize_address(address=address)
-            ] = paramset_description
+            anonymize_paramset_descriptions[self._anonymize_address(address=address)] = (
+                paramset_description
+            )
 
         # Save device_descriptions for device to file.
         await self._save(

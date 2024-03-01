@@ -3,6 +3,7 @@ Module for entities implemented using the lock platform.
 
 See https://www.home-assistant.io/integrations/lock/.
 """
+
 from __future__ import annotations
 
 from abc import abstractmethod

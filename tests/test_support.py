@@ -1,4 +1,5 @@
 """Tests for switch entities of hahomematic."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -92,19 +93,25 @@ def test_check_or_create_directory() -> None:
     ):
         assert check_or_create_directory(directory="tmpdir_1") is True
 
-    with patch(
-        "os.path.exists",
-        return_value=False,
-    ), patch(
-        "os.makedirs",
-        return_value=None,
+    with (
+        patch(
+            "os.path.exists",
+            return_value=False,
+        ),
+        patch(
+            "os.makedirs",
+            return_value=None,
+        ),
     ):
         assert check_or_create_directory(directory="tmpdir_1") is True
 
-    with patch(
-        "os.path.exists",
-        return_value=False,
-    ), patch("os.makedirs", side_effect=OSError("bla bla")):
+    with (
+        patch(
+            "os.path.exists",
+            return_value=False,
+        ),
+        patch("os.makedirs", side_effect=OSError("bla bla")),
+    ):
         with pytest.raises(HaHomematicException) as exc:
             check_or_create_directory(directory="tmpdir_ex")
         assert exc

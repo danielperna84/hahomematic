@@ -1,4 +1,5 @@
 """Example for hahomematic."""
+
 # !/usr/bin/python3
 from __future__ import annotations
 
@@ -481,9 +482,10 @@ class Example:
         # it while initializing.
         config.CACHE_DIR = "cache"
 
-        with patch(
-            "hahomematic.central.CentralUnit._get_primary_client", return_value=client
-        ), patch("hahomematic.client._ClientConfig.get_client", return_value=client):
+        with (
+            patch("hahomematic.central.CentralUnit._get_primary_client", return_value=client),
+            patch("hahomematic.client._ClientConfig.get_client", return_value=client),
+        ):
             await self.central.start()
             await self.central._refresh_device_descriptions(client=client)
 

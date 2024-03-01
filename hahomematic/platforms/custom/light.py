@@ -3,6 +3,7 @@ Module for entities implemented using the light platform.
 
 See https://www.home-assistant.io/integrations/light/.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping

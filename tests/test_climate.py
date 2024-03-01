@@ -1,4 +1,5 @@
 """Tests for climate entities of hahomematic."""
+
 from __future__ import annotations
 
 from datetime import datetime

@@ -3,6 +3,7 @@ Module for hub entities implemented using the switch platform.
 
 See https://www.home-assistant.io/integrations/switch/.
 """
+
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform

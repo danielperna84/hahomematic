@@ -3,6 +3,7 @@ Module for entities implemented using the switch platform.
 
 See https://www.home-assistant.io/integrations/switch/.
 """
+
 from __future__ import annotations
 
 from typing import Final

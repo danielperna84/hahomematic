@@ -1,4 +1,5 @@
 """Module for HaHomematic custom platforms."""
+
 from __future__ import annotations
 
 import importlib

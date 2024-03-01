@@ -1,4 +1,5 @@
 """Test the HaHomematic central."""
+
 from __future__ import annotations
 
 import os

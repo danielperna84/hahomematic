@@ -4,6 +4,7 @@ XML-RPC server module.
 Provides the XML-RPC server which handles communication
 with the CCU or Homegear.
 """
+
 from __future__ import annotations
 
 import logging

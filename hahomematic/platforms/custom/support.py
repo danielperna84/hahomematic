@@ -1,4 +1,5 @@
 """Support classes used by hahomematic custom entities."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping

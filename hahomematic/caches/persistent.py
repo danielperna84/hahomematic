@@ -1,4 +1,5 @@
 """Module for the persistent caches."""
+
 from __future__ import annotations
 
 from abc import ABC
@@ -288,9 +289,9 @@ class ParamsetDescriptionCache(BasePersistentCache):
         if paramset_key not in self._raw_paramset_descriptions[interface_id][channel_address]:
             self._raw_paramset_descriptions[interface_id][channel_address][paramset_key] = {}
 
-        self._raw_paramset_descriptions[interface_id][channel_address][
-            paramset_key
-        ] = paramset_description
+        self._raw_paramset_descriptions[interface_id][channel_address][paramset_key] = (
+            paramset_description
+        )
 
     async def remove_device(self, device: HmDevice) -> None:
         """Remove device paramset descriptions from cache."""

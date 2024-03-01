@@ -3,6 +3,7 @@ Module for hub entities implemented using the select platform.
 
 See https://www.home-assistant.io/integrations/select/.
 """
+
 from __future__ import annotations
 
 import logging

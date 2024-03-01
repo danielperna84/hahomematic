@@ -1,4 +1,5 @@
 """Functions for entity creation."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -424,14 +425,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
                 channel_address=channel_address, parameter=parameter
             ),
         )
-        self._is_un_ignored: Final[
-            bool
-        ] = self._central.parameter_visibility.parameter_is_un_ignored(
-            device_type=self._device.device_type,
-            channel_no=self._channel_no,
-            paramset_key=self._paramset_key,
-            parameter=self._parameter,
-            custom_only=True,
+        self._is_un_ignored: Final[bool] = (
+            self._central.parameter_visibility.parameter_is_un_ignored(
+                device_type=self._device.device_type,
+                channel_no=self._channel_no,
+                paramset_key=self._paramset_key,
+                parameter=self._parameter,
+                custom_only=True,
+            )
         )
         self._value: ParameterT | None = None
         self._old_value: ParameterT | None = None

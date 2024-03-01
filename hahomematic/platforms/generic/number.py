@@ -3,6 +3,7 @@ Module for entities implemented using the number platform.
 
 See https://www.home-assistant.io/integrations/number/.
 """
+
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
