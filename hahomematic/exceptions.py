@@ -1,4 +1,5 @@
 """Module for HaHomematicExceptions."""
+
 from __future__ import annotations
 
 import asyncio

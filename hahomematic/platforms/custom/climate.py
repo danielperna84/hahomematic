@@ -3,6 +3,7 @@ Module for entities implemented using the climate platform.
 
 See https://www.home-assistant.io/integrations/climate/.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping

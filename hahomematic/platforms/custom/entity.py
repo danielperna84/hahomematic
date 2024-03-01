@@ -1,4 +1,5 @@
 """Module with base class for custom entities."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

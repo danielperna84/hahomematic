@@ -3,6 +3,7 @@ Module for entities implemented using the cover platform.
 
 See https://www.home-assistant.io/integrations/cover/.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping

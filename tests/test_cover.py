@@ -1,4 +1,5 @@
 """Tests for cover entities of hahomematic."""
+
 from __future__ import annotations
 
 from typing import cast

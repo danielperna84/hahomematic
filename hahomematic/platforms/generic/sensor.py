@@ -3,6 +3,7 @@ Module for entities implemented using the sensor platform.
 
 See https://www.home-assistant.io/integrations/sensor/.
 """
+
 from __future__ import annotations
 
 from collections.abc import Mapping

@@ -1,4 +1,5 @@
 """Module for HaHomematic generic platforms."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

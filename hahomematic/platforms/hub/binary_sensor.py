@@ -3,6 +3,7 @@ Module for hub entities implemented using the binary_sensor platform.
 
 See https://www.home-assistant.io/integrations/binary_sensor/.
 """
+
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform

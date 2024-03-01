@@ -3,6 +3,7 @@ CentralUnit module.
 
 This is the python representation of a CCU.
 """
+
 from __future__ import annotations
 
 import asyncio

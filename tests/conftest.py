@@ -1,4 +1,5 @@
 """Test support for hahomematic."""
+
 from __future__ import annotations
 
 import logging

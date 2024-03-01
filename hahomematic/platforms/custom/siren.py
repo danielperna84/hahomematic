@@ -3,6 +3,7 @@ Module for entities implemented using the siren platform.
 
 See https://www.home-assistant.io/integrations/siren/.
 """
+
 from __future__ import annotations
 
 from abc import abstractmethod

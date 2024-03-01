@@ -3,6 +3,7 @@ Module for hub entities implemented using the button platform.
 
 See https://www.home-assistant.io/integrations/boton/.
 """
+
 from __future__ import annotations
 
 from typing import Final

@@ -1,4 +1,5 @@
 """Tests for json rpc client of hahomematic."""
+
 from __future__ import annotations
 
 import json

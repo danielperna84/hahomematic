@@ -3,6 +3,7 @@ Module for entities implemented using the update platform.
 
 See https://www.home-assistant.io/integrations/update/.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
