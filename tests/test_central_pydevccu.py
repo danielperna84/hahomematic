@@ -114,22 +114,22 @@ async def test_central_full(central_unit_full) -> None:
     ) as fptr:
         fptr.write(orjson.dumps(addresses, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS))
 
-    assert usage_types[EntityUsage.NO_CREATE] == 3086
-    assert usage_types[EntityUsage.CE_PRIMARY] == 189
-    assert usage_types[EntityUsage.ENTITY] == 3719
+    assert usage_types[EntityUsage.NO_CREATE] == 3134
+    assert usage_types[EntityUsage.CE_PRIMARY] == 194
+    assert usage_types[EntityUsage.ENTITY] == 3787
     assert usage_types[EntityUsage.CE_VISIBLE] == 102
     assert usage_types[EntityUsage.CE_SECONDARY] == 146
 
-    assert len(ce_channels) == 116
+    assert len(ce_channels) == 118
     assert len(entity_types) == 6
-    assert len(parameters) == 190
+    assert len(parameters) == 215
 
-    assert len(central_unit_full._devices) == 379
+    assert len(central_unit_full._devices) == 383
     virtual_remotes = ["VCU4264293", "VCU0000057", "VCU0000001"]
     await central_unit_full.delete_devices(
         interface_id=const.INTERFACE_ID, addresses=virtual_remotes
     )
-    assert len(central_unit_full._devices) == 376
+    assert len(central_unit_full._devices) == 380
     del_addresses = list(
         central_unit_full.device_descriptions.get_device_descriptions(const.INTERFACE_ID)
     )
