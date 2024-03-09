@@ -921,6 +921,30 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
             7,
             8,
         ),
+        extended=ExtendedConfig(
+            additional_entities={
+                1: (
+                    Parameter.PRESS_LONG,
+                    Parameter.PRESS_SHORT,
+                    Parameter.SENSOR,
+                ),
+                2: (
+                    Parameter.PRESS_LONG,
+                    Parameter.PRESS_SHORT,
+                    Parameter.SENSOR,
+                ),
+                3: (
+                    Parameter.PRESS_LONG,
+                    Parameter.PRESS_SHORT,
+                    Parameter.SENSOR,
+                ),
+                4: (
+                    Parameter.PRESS_LONG,
+                    Parameter.PRESS_SHORT,
+                    Parameter.SENSOR,
+                ),
+            }
+        ),
     ),
     "HBW-LC-RGBWW-IN6-DR": (
         CustomConfig(
