@@ -1,3 +1,7 @@
+# Version 2024.3.1 (2024-03-09)
+
+- Add additional parameter to HBW-LC4-IN4-DR
+
 # Version 2024.3.0 (2024-03-01)
 
 - Add HBW-LC4-IN4-DR
