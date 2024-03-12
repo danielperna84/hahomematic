@@ -1,6 +1,7 @@
-# Version 2024.3.1 (2024-03-09)
+# Version 2024.3.1 (2024-03-12)
 
 - Add additional parameter to HBW-LC4-IN4-DR
+- Add check if init is running in the main thread
 
 # Version 2024.3.0 (2024-03-01)
 

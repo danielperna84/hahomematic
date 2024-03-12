@@ -11,6 +11,7 @@ import asyncio
 import logging
 import signal
 import sys
+import threading
 from typing import Final
 
 from hahomematic import central as hmcu
@@ -31,5 +32,5 @@ def signal_handler(sig, frame):  # type: ignore[no-untyped-def]
         asyncio.run_coroutine_threadsafe(central.stop(), asyncio.get_running_loop())
 
 
-if sys.stdout.isatty():
+if threading.current_thread() is threading.main_thread() and sys.stdout.isatty():
     signal.signal(signal.SIGINT, signal_handler)

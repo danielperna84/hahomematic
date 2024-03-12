@@ -3,7 +3,7 @@
 
 coverage==7.4.3
 freezegun==1.4.0
-mypy==1.8.0
+mypy==1.9.0
 pip==24.0
 pre-commit==3.6.2
 pydevccu==0.1.8
@@ -15,6 +15,6 @@ pytest-asyncio==0.23.5
 pytest-cov==4.1.0
 pytest-rerunfailures==13.0
 pytest-socket==0.7.0
-pytest-timeout==2.2.0
-pytest==8.0.2
-types-python-slugify==8.0.2.20240127
+pytest-timeout==2.3.1
+pytest==8.1.1
+types-python-slugify==8.0.2.20240310
