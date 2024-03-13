@@ -681,7 +681,7 @@ def get_entity_configs(
             platform_devices=platform_devices,
             device_type=device_type,
         ):
-            funcs.append(func)
+            funcs.append(func)  # noqa:PERF401
     return tuple(funcs)
 
 
