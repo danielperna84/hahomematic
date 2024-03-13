@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "hahomematic"
-version     = "2024.3.1"
+version     = "2024.3.2"
 license     = {text = "MIT License"}
 description = "Homematic interface for Home Assistant running on Python 3."
 readme      = "README.md"
@@ -53,7 +53,7 @@ exclude = ["tests", "tests.*", "dist", "build"]
 hahomematic = ["py.typed", "rega_scripts/*.fn"]
 
 [tool.pylint.MAIN]
-py-version = "3.11"
+py-version = "3.12"
 ignore = [
     "tests",
 ]

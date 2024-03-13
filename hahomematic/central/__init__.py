@@ -7,7 +7,7 @@ This is the python representation of a CCU.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Mapping, Set
+from collections.abc import Callable, Coroutine, Mapping, Set
 from concurrent.futures._base import CancelledError
 from datetime import datetime
 import logging
@@ -908,7 +908,7 @@ class CentralUnit:
         ):
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
 
-    def create_task(self, target: Awaitable, name: str) -> None:
+    def create_task(self, target: Coroutine[Any, Any, Any], name: str) -> None:
         """Add task to the executor pool."""
         try:
             self._loop.call_soon_threadsafe(self._async_create_task, target, name)

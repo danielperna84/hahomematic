@@ -1,5 +1,5 @@
 """
-hahomematic is a Python 3 (>= 3.11) module for Home Assistant.
+hahomematic is a Python 3 module for Home Assistant.
 
 The lib interacts with HomeMatic and HomematicIP devices.
 https://github.com/danielperna84/hahomematic
