@@ -2,6 +2,7 @@
 
 - Remove python 3.11 for github tests and pylint
 - Use py 3.12 for mypy and pylint
+- Use more list comprehension
 
 # Version 2024.3.1 (2024-03-12)
 

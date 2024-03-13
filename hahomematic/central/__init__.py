@@ -283,10 +283,7 @@ class CentralUnit:
     def version(self) -> str | None:
         """Return the version of the backend."""
         if self._version is None:
-            versions: list[str] = []
-            for client in self._clients.values():
-                if client.version:
-                    versions.append(client.version)
+            versions = [client.version for client in self._clients.values() if client.version]
             self._version = max(versions) if versions else None
         return self._version
 

@@ -622,15 +622,16 @@ class ValueCache:
 
     def _get_base_entities(self) -> set[GenericEntity]:
         """Get entities of channel 0 and master."""
-        entities: list[GenericEntity] = []
-        for entity in self._device.generic_entities:
+        return {
+            entity
+            for entity in self._device.generic_entities
             if (
                 entity.channel_no == 0
                 and entity.paramset_key == ParamsetKey.VALUES
                 and entity.parameter in RELEVANT_INIT_PARAMETERS
-            ) or entity.paramset_key == ParamsetKey.MASTER:
-                entities.append(entity)
-        return set(entities)
+            )
+            or entity.paramset_key == ParamsetKey.MASTER
+        }
 
     async def init_readable_events(self) -> None:
         """Load data by get_value."""
@@ -653,11 +654,7 @@ class ValueCache:
 
     def _get_readable_events(self) -> set[GenericEvent]:
         """Get readable events."""
-        events: list[GenericEvent] = []
-        for event in self._device.generic_events:
-            if event.is_readable:
-                events.append(event)
-        return set(events)
+        return {event for event in self._device.generic_events if event.is_readable}
 
     async def get_value(
         self,
