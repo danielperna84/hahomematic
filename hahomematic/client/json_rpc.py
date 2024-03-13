@@ -828,15 +828,13 @@ class JsonRpcAioHttpClient:
         """Get all available interfaces from CCU / Homegear."""
         _LOGGER.debug("GET_AVAILABLE_INTERFACES: Getting all available interfaces")
 
-        interfaces: list[str] = []
         response = await self._post(
             method=JsonRpcMethod.INTERFACE_LIST_INTERFACES,
         )
 
         if json_result := response[_P_RESULT]:
-            for interface in json_result:
-                interfaces.append(interface[_NAME])
-        return tuple(interfaces)
+            return tuple(interface[_NAME] for interface in json_result)
+        return ()
 
     async def _get_https_redirect_enabled(self) -> bool | None:
         """Get the auth_enabled flag of the backend."""

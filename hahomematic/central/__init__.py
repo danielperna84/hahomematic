@@ -283,10 +283,7 @@ class CentralUnit:
     def version(self) -> str | None:
         """Return the version of the backend."""
         if self._version is None:
-            versions: list[str] = []
-            for client in self._clients.values():
-                if client.version:
-                    versions.append(client.version)
+            versions = [client.version for client in self._clients.values() if client.version]
             self._version = max(versions) if versions else None
         return self._version
 
@@ -1426,6 +1423,6 @@ def _get_new_channel_events(new_devices: set[HmDevice]) -> tuple[list[GenericEve
             if hm_channel_events := device.get_channel_events(
                 event_type=event_type, registered=False
             ).values():
-                channel_events.append(hm_channel_events)  # type: ignore[arg-type]
+                channel_events.append(hm_channel_events)  # type: ignore[arg-type] # noqa:PERF401
 
     return tuple(channel_events)

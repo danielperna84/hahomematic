@@ -717,15 +717,21 @@ def check_ignore_parameters_is_clean() -> bool:
     for params in _UN_IGNORE_PARAMETERS_BY_DEVICE.values():
         un_ignore_parameters_by_device.extend(params)
 
-    should_not_be_ignored: list[str] = []
-    for parameter in get_required_parameters():
-        if (
-            parameter in _IGNORED_PARAMETERS
-            or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
-            or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
-        ) and parameter not in un_ignore_parameters_by_device:
-            should_not_be_ignored.append(parameter)
-    return len(should_not_be_ignored) == 0
+    return (
+        len(
+            [
+                parameter
+                for parameter in get_required_parameters()
+                if (
+                    parameter in _IGNORED_PARAMETERS
+                    or parameter.endswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_END))
+                    or parameter.startswith(tuple(_IGNORED_PARAMETERS_WILDCARDS_START))
+                )
+                and parameter not in un_ignore_parameters_by_device
+            ]
+        )
+        == 0
+    )
 
 
 def _get_value_from_dict_by_wildcard_key(
