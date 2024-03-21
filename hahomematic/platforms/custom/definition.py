@@ -216,6 +216,24 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 },
             },
         },
+        DeviceProfile.IP_DRG_DALI: {
+            ED.DEVICE_GROUP: {
+                ED.PRIMARY_CHANNEL: 1,
+                ED.REPEATABLE_FIELDS: {
+                    Field.COLOR_TEMPERATURE: Parameter.COLOR_TEMPERATURE,
+                    Field.ON_TIME_VALUE: Parameter.DURATION_VALUE,
+                    Field.ON_TIME_UNIT: Parameter.DURATION_UNIT,
+                    Field.EFFECT: Parameter.EFFECT,
+                    Field.HUE: Parameter.HUE,
+                    Field.LEVEL: Parameter.LEVEL,
+                    Field.RAMP_TIME_TO_OFF_UNIT: Parameter.RAMP_TIME_TO_OFF_UNIT,
+                    Field.RAMP_TIME_TO_OFF_VALUE: Parameter.RAMP_TIME_TO_OFF_VALUE,
+                    Field.RAMP_TIME_UNIT: Parameter.RAMP_TIME_UNIT,
+                    Field.RAMP_TIME_VALUE: Parameter.RAMP_TIME_VALUE,
+                    Field.SATURATION: Parameter.SATURATION,
+                },
+            },
+        },
         DeviceProfile.IP_SWITCH: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
