@@ -18,7 +18,7 @@ TEST_DEVICES: dict[str, str] = {}
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def no_test_hmtext(factory: helper.Factory) -> None:
     """Test HmText. There are currently no text entities."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -26,7 +26,7 @@ async def no_test_hmtext(factory: helper.Factory) -> None:
     assert text.usage == EntityUsage.ENTITY
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmsysvartext(factory: helper.Factory) -> None:
     """Test HmSysvarText. There are currently no text entities."""
     central, mock_client = await factory.get_default_central({}, add_sysvars=True)

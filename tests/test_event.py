@@ -20,7 +20,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_clickevent(factory: helper.Factory) -> None:
     """Test ClickEvent."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -41,7 +41,7 @@ async def test_clickevent(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_impulseevent(factory: helper.Factory) -> None:
     """Test ImpulseEvent."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -62,7 +62,7 @@ async def test_impulseevent(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_deviceerrorevent(factory: helper.Factory) -> None:
     """Test DeviceErrorEvent."""
     central, _ = await factory.get_default_central(TEST_DEVICES)

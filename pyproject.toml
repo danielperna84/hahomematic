@@ -410,10 +410,14 @@ line-length = 99
 
 lint.select = [
     "B002", # Python does not support the unary prefix increment
+    "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
+    "B015", # Pointless comparison. Did you mean to assign a value? Otherwise, prepend assert or remove it.
+    "B018", # Found useless attribute access. Either assign it to a variable or remove it.
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
+    "B032", # Possible unintentional type annotation (using :). Did you mean to assign (using =)?
     "B904", # Use raise from to specify exception cause
     "C",  # complexity
     "COM818", # Trailing comma on bare tuple prohibited
@@ -425,6 +429,7 @@ lint.select = [
     "G", # flake8-logging-format
     "I",  # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
+    "LOG", # flake8-logging
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
@@ -435,7 +440,9 @@ lint.select = [
     "PLE", # pylint
     "PLR", # pylint
     "PLW", # pylint
+    "PT", # flake8-pytest-style
     "Q000", # Double quotes found but single quotes preferred
+    "RSE", # flake8-raise
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "S102", # Use of exec detected
     "S103",  # bad-file-permissions
@@ -488,6 +495,8 @@ lint.ignore = [
     "PLR0911", # Too many return statements ({returns} > {max_returns})
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
+    "PT004", # Fixture {fixture} does not return anything, add leading underscore
+    "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
     "PLR0915", # Too many statements ({statements} > {max_statements})
     "PLR2004",  # Magic value used in comparison, consider replacing {value} with a constant variable
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target

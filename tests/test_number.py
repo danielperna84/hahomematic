@@ -22,7 +22,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmfloat(factory: helper.Factory) -> None:
     """Test HmFloat."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -53,7 +53,7 @@ async def test_hmfloat(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmfloat_special(factory: helper.Factory) -> None:
     """Test HmFloat."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -84,7 +84,7 @@ async def test_hmfloat_special(factory: helper.Factory) -> None:
     assert efloat.value == 100.0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hminteger(factory: helper.Factory) -> None:
     """Test HmInteger."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -133,7 +133,7 @@ async def test_hminteger(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmsysvarnumber(factory: helper.Factory) -> None:
     """Test HmSysvarNumber."""
     central, mock_client = await factory.get_default_central({}, add_sysvars=True)

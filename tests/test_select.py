@@ -20,7 +20,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmselect(factory: helper.Factory) -> None:
     """Test HmSelect."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -64,7 +64,7 @@ async def test_hmselect(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmsysvarselect(factory: helper.Factory) -> None:
     """Test HmSysvarSelect."""
     central, mock_client = await factory.get_default_central({}, add_sysvars=True)
