@@ -1013,6 +1013,9 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HM-LC-RGBW-WM": CustomConfig(make_ce_func=make_rf_dimmer_color_effect, channels=(1,)),
     "HMW-LC-Dim1L-DR": CustomConfig(make_ce_func=make_rf_dimmer, channels=(3,)),
     "HSS-DX": CustomConfig(make_ce_func=make_rf_dimmer, channels=(1,)),
+    "HmIP-DRG-DALI": CustomConfig(
+        make_ce_func=make_ip_rgbw_light, channels=tuple(range(1, 49, 1))
+    ),
     "HmIP-BDT": CustomConfig(make_ce_func=make_ip_dimmer, channels=(3,)),
     "HmIP-BSL": CustomConfig(make_ce_func=make_ip_fixed_color_light, channels=(7, 11)),
     "HmIP-DRDI3": CustomConfig(
