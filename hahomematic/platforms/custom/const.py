@@ -10,6 +10,7 @@ class DeviceProfile(StrEnum):
 
     IP_COVER = "IPCover"
     IP_DIMMER = "IPDimmer"
+    IP_DRG_DALI = "IPDRGDALI"
     IP_FIXED_COLOR_LIGHT = "IPFixedColorLight"
     IP_GARAGE = "IPGarage"
     IP_HDM = "IPHdm"

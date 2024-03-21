@@ -21,7 +21,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmsensor_psm(factory: helper.Factory) -> None:
     """Test HmSensor."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -64,7 +64,7 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     assert sensor3.value is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmsensor_srh(factory: helper.Factory) -> None:
     """Test HmSensor."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -79,7 +79,7 @@ async def test_hmsensor_srh(factory: helper.Factory) -> None:
     assert sensor.value == "OPEN"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hmsysvarsensor(factory: helper.Factory) -> None:
     """Test HmSysvarSensor."""
     central, _ = await factory.get_default_central({}, add_sysvars=True)

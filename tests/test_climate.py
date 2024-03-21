@@ -34,7 +34,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
     """Test CeSimpleRfThermostat."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -92,7 +92,7 @@ async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == last_call
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cerfthermostat(factory: helper.Factory) -> None:
     """Test CeRfThermostat."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -225,7 +225,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceipthermostat(factory: helper.Factory) -> None:
     """Test CeIpThermostat."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)

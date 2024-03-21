@@ -37,7 +37,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cecover(factory: helper.Factory) -> None:
     """Test CeCover."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -101,7 +101,7 @@ async def test_cecover(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceipblind_dr(factory: helper.Factory) -> None:
     """Test CeIpBlind DIN Rail."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -151,7 +151,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
     assert cover.current_position == 50
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cewindowdrive(factory: helper.Factory) -> None:
     """Test CeWindowDrive."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -203,7 +203,7 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
     assert cover.is_closed is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceblind(factory: helper.Factory) -> None:
     """Test CeBlind."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -325,7 +325,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceipblind(factory: helper.Factory) -> None:
     """Test CeIpBlind."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -447,7 +447,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceipblind_hdm(factory: helper.Factory) -> None:
     """Test CeIpBlind HDM."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -532,7 +532,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cegarageho(factory: helper.Factory) -> None:
     """Test CeGarageHO."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -625,7 +625,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cegaragetm(factory: helper.Factory) -> None:
     """Test CeGarageTM."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)

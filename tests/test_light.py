@@ -36,7 +36,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cedimmer(factory: helper.Factory) -> None:
     """Test CeDimmer."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -118,7 +118,7 @@ async def test_cedimmer(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cecolordimmereffect(factory: helper.Factory) -> None:
     """Test CeColorDimmerEffect."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -221,7 +221,7 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_cecolortempdimmer(factory: helper.Factory) -> None:
     """Test CeColorTempDimmer."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -282,7 +282,7 @@ async def test_cecolortempdimmer(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     """Test CeIpFixedColorLight."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -432,7 +432,7 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     assert call_count == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
     """Test CeIpFixedColorLight."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)

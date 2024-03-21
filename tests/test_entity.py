@@ -32,7 +32,7 @@ def test_validate_entity_definition() -> None:
     assert validate_entity_definition() is not None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_custom_entity_callback(factory: helper.Factory) -> None:
     """Test CeSwitch."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -72,7 +72,7 @@ async def test_custom_entity_callback(factory: helper.Factory) -> None:
     device_removed_mock.assert_called_with()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_generic_entity_callback(factory: helper.Factory) -> None:
     """Test CeSwitch."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -112,7 +112,7 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
     device_removed_mock.assert_called_with()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_load_custom_entity(factory: helper.Factory) -> None:
     """Test load custom_entity."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -132,7 +132,7 @@ async def test_load_custom_entity(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_load_generic_entity(factory: helper.Factory) -> None:
     """Test load generic_entity."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -146,7 +146,7 @@ async def test_load_generic_entity(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_generic_wrapped_entity(factory: helper.Factory) -> None:
     """Test wrapped entity."""
     central, _ = await factory.get_default_central(TEST_DEVICES)

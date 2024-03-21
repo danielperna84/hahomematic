@@ -20,7 +20,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceipsiren(factory: helper.Factory) -> None:
     """Test CeIpSiren."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -101,7 +101,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
     assert (call_count + 1) == len(mock_client.method_calls)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ceipsirensmoke(factory: helper.Factory) -> None:
     """Test CeIpSirenSmoke."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)

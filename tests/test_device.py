@@ -16,7 +16,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_general(factory: helper.Factory) -> None:
     """Test device availability."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -39,7 +39,7 @@ async def test_device_general(factory: helper.Factory) -> None:
     assert len(device.channels) == 11
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_availability(factory: helper.Factory) -> None:
     """Test device availability."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -65,7 +65,7 @@ async def test_device_availability(factory: helper.Factory) -> None:
         assert custom_entity.available is True
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_config_pending(factory: helper.Factory) -> None:
     """Test device availability."""
     central, _ = await factory.get_default_central(TEST_DEVICES)

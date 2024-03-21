@@ -31,7 +31,7 @@ TEST_DEVICES: dict[str, str] = {
 # pylint: disable=protected-access
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_central_basics(factory: helper.Factory) -> None:
     """Test central basics."""
     central, client = await factory.get_default_central(TEST_DEVICES)
@@ -47,7 +47,7 @@ async def test_central_basics(factory: helper.Factory) -> None:
     assert entities
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_get_entities(factory: helper.Factory) -> None:
     """Test central/device get_entities."""
     central, _ = await factory.get_default_central(
@@ -60,7 +60,7 @@ async def test_device_get_entities(factory: helper.Factory) -> None:
     assert entities_reg == ()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_export(factory: helper.Factory) -> None:
     """Test device export."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -68,7 +68,7 @@ async def test_device_export(factory: helper.Factory) -> None:
     await device.export_device_definition()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_identify_callback_ip(factory: helper.Factory) -> None:
     """Test identify_callback_ip."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -98,7 +98,7 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
         ("LEVEL:VALUES@all::1", "LEVEL", 1, "VALUES", False),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_unignore_etrv(
     factory: helper.Factory,
     line: str,
@@ -136,7 +136,7 @@ async def test_device_unignore_etrv(
         ("LEVEL:VALUES@HmIP-BROLL:all", "LEVEL", 3, "VALUES", True),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_unignore_broll(
     factory: helper.Factory,
     line: str,
@@ -197,7 +197,7 @@ async def test_device_unignore_broll(
         ),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_unignore_hm(
     factory: helper.Factory,
     line: str,
@@ -281,7 +281,7 @@ async def test_device_unignore_hm(
         ),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_device_unignore_hm2(
     factory: helper.Factory,
     lines: list[str],
@@ -335,7 +335,7 @@ async def test_device_unignore_hm2(
         ),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ignore_deviec_type(
     factory: helper.Factory,
     lines: list[str],
@@ -359,7 +359,7 @@ async def test_ignore_deviec_type(
             assert len(device.custom_entities) > 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_all_parameters(factory: helper.Factory) -> None:
     """Test all_parameters."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -368,7 +368,7 @@ async def test_all_parameters(factory: helper.Factory) -> None:
     assert len(parameters) == 43
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_entities_by_platform(factory: helper.Factory) -> None:
     """Test entities_by_platform."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -385,7 +385,7 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
     assert len(ebp_sensor2) == 11
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     """Test hub_entities_by_platform."""
     central, _ = await factory.get_default_central({}, add_programs=True, add_sysvars=True)
@@ -413,7 +413,7 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     assert len(ebp_sensor4) == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_add_device(factory: helper.Factory) -> None:
     """Test add_device."""
     central, _ = await factory.get_default_central(
@@ -437,7 +437,7 @@ async def test_add_device(factory: helper.Factory) -> None:
     assert len(central._devices) == 2
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_delete_device(factory: helper.Factory) -> None:
     """Test device delete_device."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -457,7 +457,7 @@ async def test_delete_device(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_virtual_remote_delete(factory: helper.Factory) -> None:
     """Test device delete."""
     central, _ = await factory.get_default_central(
@@ -488,7 +488,7 @@ async def test_virtual_remote_delete(factory: helper.Factory) -> None:
     await central.delete_device(interface_id=const.INTERFACE_ID, device_address="NOT_A_DEVICE_ID")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_central_not_alive(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_unpatched_default_central({}, do_mock_client=False)
@@ -506,7 +506,7 @@ async def test_central_not_alive(factory: helper.Factory) -> None:
     assert central.is_alive is False
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_central_callbacks(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, _ = await factory.get_default_central(TEST_DEVICES)
@@ -525,7 +525,7 @@ async def test_central_callbacks(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_central_services(factory: helper.Factory) -> None:
     """Test central fetch sysvar and programs."""
     central, mock_client = await factory.get_default_central(
@@ -610,7 +610,7 @@ async def test_central_services(factory: helper.Factory) -> None:
     assert central.get_generic_entity(channel_address="VCU6354483", parameter="DUTY_CYCLE") is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_central_direct(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_unpatched_default_central(
@@ -632,7 +632,7 @@ async def test_central_direct(factory: helper.Factory) -> None:
     await central.stop()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_central_without_interface_config(factory: helper.Factory) -> None:
     """Test central other methods."""
     central = await factory.get_raw_central(interface_config=None)
@@ -661,7 +661,7 @@ async def test_central_without_interface_config(factory: helper.Factory) -> None
     await central.stop()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_ping_pong(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
@@ -678,7 +678,7 @@ async def test_ping_pong(factory: helper.Factory) -> None:
     assert client.ping_pong_cache.pending_pong_count == 0
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_pending_pong_failure(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
@@ -702,7 +702,7 @@ async def test_pending_pong_failure(factory: helper.Factory) -> None:
     assert len(factory.ha_event_mock.mock_calls) == 9
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_unknown_pong_failure(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
@@ -721,7 +721,7 @@ async def test_unknown_pong_failure(factory: helper.Factory) -> None:
     assert client.ping_pong_cache.unknown_pong_count == 16
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_central_caches(factory: helper.Factory) -> None:
     """Test central cache."""
     central, client = await factory.get_default_central(TEST_DEVICES)
@@ -734,7 +734,7 @@ async def test_central_caches(factory: helper.Factory) -> None:
     )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_central_getter(factory: helper.Factory) -> None:
     """Test central getter."""
     central, _ = await factory.get_default_central(TEST_DEVICES)

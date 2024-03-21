@@ -507,11 +507,6 @@ class CeIpRGBWLight(CeDimmer):
         )
 
     @config_property
-    def supports_transition(self) -> bool:
-        """Flag if light supports transition."""
-        return True
-
-    @config_property
     def usage(self) -> EntityUsage:
         """
         Return the entity usage.
@@ -528,6 +523,113 @@ class CeIpRGBWLight(CeDimmer):
         ):
             return EntityUsage.NO_CREATE
         return self._usage
+
+    @value_property
+    def effects(self) -> tuple[str, ...] | None:
+        """Return the supported effects."""
+        return self._e_effect.values or ()
+
+    @bind_collector
+    async def turn_on(
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
+    ) -> None:
+        """Turn the light on."""
+        if not self.is_state_change(on=True, **kwargs):
+            return
+        if (hs_color := kwargs.get("hs_color")) is not None:
+            hue, ksaturation = hs_color
+            saturation = ksaturation / 100
+            await self._e_hue.send_value(value=int(hue), collector=collector)
+            await self._e_saturation.send_value(value=saturation, collector=collector)
+        if color_temp := kwargs.get("color_temp"):
+            color_temp_kelvin = math.floor(1000000 / color_temp)
+            await self._e_color_temperature_kelvin.send_value(
+                value=color_temp_kelvin, collector=collector
+            )
+        if kwargs.get("on_time") is None and kwargs.get("ramp_time"):
+            # 111600 is a special value for NOT_USED
+            await self._set_on_time_value(on_time=111600, collector=collector)
+        if self.supports_effects and (effect := kwargs.get("effect")) is not None:
+            await self._e_effect.send_value(value=effect, collector=collector)
+
+        await super().turn_on(collector=collector, **kwargs)
+
+    @bind_collector
+    async def _set_on_time_value(
+        self, on_time: float, collector: CallParameterCollector | None = None
+    ) -> None:
+        """Set the on time value in seconds."""
+        on_time, on_time_unit = _recalc_unit_timer(time=on_time)
+        if on_time_unit:
+            await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
+        await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
+
+    async def _set_ramp_time_on_value(
+        self, ramp_time: float, collector: CallParameterCollector | None = None
+    ) -> None:
+        """Set the ramp time value in seconds."""
+        ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
+        if ramp_time_unit:
+            await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
+        await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
+
+    async def _set_ramp_time_off_value(
+        self, ramp_time: float, collector: CallParameterCollector | None = None
+    ) -> None:
+        """Set the ramp time value in seconds."""
+        ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
+        if ramp_time_unit:
+            await self._e_ramp_time_to_off_unit.send_value(
+                value=ramp_time_unit, collector=collector
+            )
+        await self._e_ramp_time_to_off_value.send_value(
+            value=float(ramp_time), collector=collector
+        )
+
+
+class CeIpDrgDaliLight(CeDimmer):
+    """Class for HomematicIP HmIP-DRG-DALI light entities."""
+
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_color_temperature_kelvin: HmInteger = self._get_entity(
+            field=Field.COLOR_TEMPERATURE, entity_type=HmInteger
+        )
+        self._e_on_time_unit: HmAction = self._get_entity(
+            field=Field.ON_TIME_UNIT, entity_type=HmAction
+        )
+        self._e_effect: HmAction = self._get_entity(field=Field.EFFECT, entity_type=HmAction)
+        self._e_hue: HmInteger = self._get_entity(field=Field.HUE, entity_type=HmInteger)
+        self._e_ramp_time_to_off_unit: HmAction = self._get_entity(
+            field=Field.RAMP_TIME_TO_OFF_UNIT, entity_type=HmAction
+        )
+        self._e_ramp_time_to_off_value: HmAction = self._get_entity(
+            field=Field.RAMP_TIME_TO_OFF_VALUE, entity_type=HmAction
+        )
+        self._e_ramp_time_unit: HmAction = self._get_entity(
+            field=Field.RAMP_TIME_UNIT, entity_type=HmAction
+        )
+        self._e_saturation: HmFloat = self._get_entity(field=Field.SATURATION, entity_type=HmFloat)
+
+    @value_property
+    def color_temp(self) -> int | None:
+        """Return the color temperature in mireds of this light between min/max mireds."""
+        if not self._e_color_temperature_kelvin.value:
+            return None
+        return math.floor(1000000 / self._e_color_temperature_kelvin.value)
+
+    @value_property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        if self._e_hue.value is not None and self._e_saturation.value is not None:
+            return self._e_hue.value, self._e_saturation.value * 100
+        return None
+
+    @property
+    def _relevant_entities(self) -> tuple[hmge.GenericEntity, ...]:
+        """Returns the list of relevant entities. To be overridden by subclasses."""
+        return self._e_hue, self._e_level, self._e_saturation, self._e_color_temperature_kelvin
 
     @value_property
     def effects(self) -> tuple[str, ...] | None:
@@ -907,6 +1009,21 @@ def make_ip_rgbw_light(
     )
 
 
+def make_ip_drg_dali_light(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[CustomEntity, ...]:
+    """Create color light entities like HmIP-DRG-DALI."""
+    return hmed.make_custom_entity(
+        device=device,
+        entity_class=CeIpDrgDaliLight,
+        device_profile=DeviceProfile.IP_DRG_DALI,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
 # Case for device model is not relevant.
 # HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
@@ -1013,6 +1130,9 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HM-LC-RGBW-WM": CustomConfig(make_ce_func=make_rf_dimmer_color_effect, channels=(1,)),
     "HMW-LC-Dim1L-DR": CustomConfig(make_ce_func=make_rf_dimmer, channels=(3,)),
     "HSS-DX": CustomConfig(make_ce_func=make_rf_dimmer, channels=(1,)),
+    "HmIP-DRG-DALI": CustomConfig(
+        make_ce_func=make_ip_drg_dali_light, channels=tuple(range(1, 49, 1))
+    ),
     "HmIP-BDT": CustomConfig(make_ce_func=make_ip_dimmer, channels=(3,)),
     "HmIP-BSL": CustomConfig(make_ce_func=make_ip_fixed_color_light, channels=(7, 11)),
     "HmIP-DRDI3": CustomConfig(

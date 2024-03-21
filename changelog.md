@@ -1,8 +1,9 @@
-# Version 2024.3.3 (2024-03-13)
+# Version 2024.3.2 (2024-03-21)
 
 - Remove python 3.11 for github tests and pylint
 - Use py 3.12 for mypy and pylint
 - Use more list comprehension
+- Customize HmIP-DRG-DALI
 
 # Version 2024.3.1 (2024-03-12)
 
