@@ -27,6 +27,7 @@ from hahomematic.platforms.generic.sensor import HmSensor
 _LOGGER: Final = logging.getLogger(__name__)
 
 _CLOSED_LEVEL: Final[float] = 0.0  # must be float!
+_IGNORE_LEVEL: Final[float] = 1.01  # must be float!
 _OPEN_LEVEL: Final[float] = 1.0  # must be float!
 _WD_CLOSED_LEVEL: Final[float] = -0.005  # must be float! HM-Sec-Win
 
@@ -90,6 +91,7 @@ class CeCover(CustomEntity):
     _platform = HmPlatform.COVER
     _closed_level: float = _CLOSED_LEVEL
     _open_level: float = _OPEN_LEVEL
+    _ignore_level: float | None = None
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -279,8 +281,12 @@ class CeBlind(CeCover):
 
         1.01 means no change.
         """
-        _level = level if level is not None else self.current_position / 100.0
-        _tilt_level = tilt_level if tilt_level is not None else self.current_tilt_position / 100.0
+        ignore_level = self._ignore_level if self._ignore_level else self.current_position / 100.0
+        ignore_tilt_level = (
+            self._ignore_level if self._ignore_level else self.current_tilt_position / 100.0
+        )
+        _level = level if level is not None else ignore_level
+        _tilt_level = tilt_level if tilt_level is not None else ignore_tilt_level
         if self._e_combined.is_hmtype and (
             combined_parameter := self._get_combined_value(level=_level, tilt_level=_tilt_level)
         ):
@@ -357,6 +363,7 @@ class CeIpBlind(CeBlind):
         self._e_combined: HmAction = self._get_entity(
             field=Field.COMBINED_PARAMETER, entity_type=HmAction
         )
+        self._ignore_level = _IGNORE_LEVEL
 
     @value_property
     def channel_operation_mode(self) -> str | None:

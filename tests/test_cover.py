@@ -117,7 +117,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
         channel_address="VCU7807849:2",
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
-        value="L2=0,L=81",
+        value="L2=101,L=81",
     )
     central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -339,7 +339,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
-        value="L2=0,L=81",
+        value="L2=101,L=81",
     )
     central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -374,7 +374,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
-        value="L2=100,L=0",
+        value="L2=100,L=101",
     )
     central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 1.0)
     assert cover.current_position == 0
@@ -385,7 +385,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
-        value="L2=45,L=0",
+        value="L2=45,L=101",
     )
     central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.45)
     assert cover.current_position == 0
@@ -396,7 +396,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         channel_address="VCU1223813:4",
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
-        value="L2=0,L=0",
+        value="L2=0,L=101",
     )
     central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.0)
     central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.0)
