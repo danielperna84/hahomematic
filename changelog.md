@@ -1,3 +1,7 @@
+# Version 2024.4.0 (2024-04-02)
+
+- Remove support for python 3.11
+
 # Version 2024.3.2 (2024-03-21)
 
 - Remove python 3.11 for github tests and pylint
