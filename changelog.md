@@ -1,3 +1,8 @@
+# Version 2024.4.1 (2024-04-05)
+
+- Fix register refreshed entity
+- Refactor callback naming
+
 # Version 2024.4.0 (2024-04-02)
 
 - Remove support for python 3.11
