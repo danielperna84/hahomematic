@@ -133,7 +133,7 @@ class GenericSystemVariable(GenericHubEntity):
         if old_value != value:
             self._old_value = old_value
             self._value = value
-            self.fire_update_entity_callback()
+            self.fire_entity_updated_callback()
 
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""

@@ -379,7 +379,9 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
     def _device_changed(self, *args: Any, **kwargs: Any) -> None:
         """Handle device state changes."""
 
-    ebp_sensor[0].register_update_callback(update_callback=_device_changed, custom_id="some_id")
+    ebp_sensor[0].register_entity_updated_callback(
+        entity_updated_callback=_device_changed, custom_id="some_id"
+    )
     ebp_sensor2 = central.get_entities(platform=HmPlatform.SENSOR, registered=False)
     assert ebp_sensor2
     assert len(ebp_sensor2) == 11
@@ -396,7 +398,9 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     def _device_changed(self, *args: Any, **kwargs: Any) -> None:
         """Handle device state changes."""
 
-    ebp_sensor[0].register_update_callback(update_callback=_device_changed, custom_id="some_id")
+    ebp_sensor[0].register_entity_updated_callback(
+        entity_updated_callback=_device_changed, custom_id="some_id"
+    )
     ebp_sensor2 = central.get_hub_entities(
         platform=HmPlatform.HUB_SENSOR,
         registered=False,
@@ -407,7 +411,9 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor3 = central.get_hub_entities(platform=HmPlatform.HUB_BUTTON)
     assert ebp_sensor3
     assert len(ebp_sensor3) == 2
-    ebp_sensor3[0].register_update_callback(update_callback=_device_changed, custom_id="some_id")
+    ebp_sensor3[0].register_entity_updated_callback(
+        entity_updated_callback=_device_changed, custom_id="some_id"
+    )
     ebp_sensor4 = central.get_hub_entities(platform=HmPlatform.HUB_BUTTON, registered=False)
     assert ebp_sensor4
     assert len(ebp_sensor4) == 1
