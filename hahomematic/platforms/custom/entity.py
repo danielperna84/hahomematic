@@ -141,7 +141,7 @@ class CustomEntity(BaseEntity):
         """Init the entity values."""
         for entity in self._readable_entities:
             await entity.load_entity_value(call_source=call_source, direct_call=direct_call)
-        self.fire_update_entity_callback()
+        self.fire_entity_updated_callback()
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """
@@ -229,15 +229,21 @@ class CustomEntity(BaseEntity):
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
-        entity.register_internal_update_callback(update_callback=self.fire_update_entity_callback)
+        entity.register_internal_entity_updated_callback(
+            entity_updated_callback=self.fire_entity_updated_callback
+        )
         self._data_entities[field] = entity
 
-    def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
+    def unregister_entity_updated_callback(
+        self, entity_updated_callback: Callable, custom_id: str
+    ) -> None:
         """Unregister update callback."""
         for entity in self._data_entities.values():
-            entity.unregister_internal_update_callback(update_callback=update_callback)
+            entity.unregister_internal_update_callback(update_callback=entity_updated_callback)
 
-        super().unregister_update_callback(update_callback=update_callback, custom_id=custom_id)
+        super().unregister_entity_updated_callback(
+            entity_updated_callback=entity_updated_callback, custom_id=custom_id
+        )
 
     def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""

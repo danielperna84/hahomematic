@@ -350,7 +350,7 @@ class HmDevice(PayloadMixin):
             self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[(entity.channel_address, entity.parameter)] = entity
-            self.register_update_callback(update_callback=entity.fire_update_entity_callback)
+            self.register_update_callback(update_callback=entity.fire_entity_updated_callback)
         if isinstance(entity, hmce.CustomEntity):
             self._custom_entities[entity.channel_no] = entity
         if isinstance(entity, GenericEvent):
@@ -362,12 +362,12 @@ class HmDevice(PayloadMixin):
             self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[(entity.channel_address, entity.parameter)]
-            self.unregister_update_callback(update_callback=entity.fire_update_entity_callback)
+            self.unregister_update_callback(update_callback=entity.fire_entity_updated_callback)
         if isinstance(entity, hmce.CustomEntity):
             del self._custom_entities[entity.channel_no]
         if isinstance(entity, GenericEvent):
             del self._generic_events[(entity.channel_address, entity.parameter)]
-        entity.fire_remove_entity_callback()
+        entity.fire_entity_removed_callback()
 
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
@@ -496,7 +496,7 @@ class HmDevice(PayloadMixin):
         if self._forced_availability != forced_availability:
             self._forced_availability = forced_availability
             for entity in self.generic_entities:
-                entity.fire_update_entity_callback()
+                entity.fire_entity_updated_callback()
 
     async def export_device_definition(self) -> None:
         """Export the device definition for current device."""

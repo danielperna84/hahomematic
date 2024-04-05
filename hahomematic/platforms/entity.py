@@ -107,9 +107,9 @@ class CallbackEntity(ABC):
         """Init the callback entity."""
         self._central: Final = central
         self._unique_id: Final = unique_id
-        self._update_callbacks: dict[Callable, str] = {}
-        self._refresh_callbacks: dict[Callable, str] = {}
-        self._remove_callbacks: list[Callable] = []
+        self._entity_updated_callbacks: dict[Callable, str] = {}
+        self._entity_refreshed_callbacks: dict[Callable, str] = {}
+        self._entity_removed_callbacks: list[Callable] = []
         self._custom_id: str | None = None
 
     @property
@@ -171,85 +171,100 @@ class CallbackEntity(ABC):
         """Return if entity is registered externally."""
         return self._custom_id is not None
 
-    def register_internal_update_callback(self, update_callback: Callable) -> None:
-        """Register internal update callback."""
-        self.register_update_callback(update_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID)
+    def register_internal_entity_updated_callback(self, entity_updated_callback: Callable) -> None:
+        """Register internal entity updated callback."""
+        self.register_entity_updated_callback(
+            entity_updated_callback=entity_updated_callback, custom_id=DEFAULT_CUSTOM_ID
+        )
 
-    def register_update_callback(self, update_callback: Callable, custom_id: str) -> None:
-        """Register update callback."""
-        if callable(update_callback):
-            self._update_callbacks[update_callback] = custom_id
+    def register_entity_updated_callback(
+        self, entity_updated_callback: Callable, custom_id: str
+    ) -> None:
+        """Register entity updated callback."""
+        if callable(entity_updated_callback):
+            self._entity_updated_callbacks[entity_updated_callback] = custom_id
         if custom_id != DEFAULT_CUSTOM_ID:
-            if self._custom_id is not None:
+            if self._custom_id is not None and self._custom_id != custom_id:
                 raise HaHomematicException(
-                    f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
+                    f"REGISTER_ENTITY_UPDATED_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
 
     def unregister_internal_update_callback(self, update_callback: Callable) -> None:
-        """Unregister update callback."""
-        self.unregister_update_callback(
-            update_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID
+        """Unregister entity updated callback."""
+        self.unregister_entity_updated_callback(
+            entity_updated_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID
         )
 
-    def unregister_update_callback(self, update_callback: Callable, custom_id: str) -> None:
-        """Unregister update callback."""
-        if update_callback in self._update_callbacks:
-            del self._update_callbacks[update_callback]
+    def unregister_entity_updated_callback(
+        self, entity_updated_callback: Callable, custom_id: str
+    ) -> None:
+        """Unregister entity updated callback."""
+        if entity_updated_callback in self._entity_updated_callbacks:
+            del self._entity_updated_callbacks[entity_updated_callback]
         if self.custom_id == custom_id:
             self._custom_id = None
 
-    def register_refresh_callback(self, refresh_callback: Callable, custom_id: str) -> None:
-        """Register update callback."""
-        if callable(refresh_callback):
-            self._refresh_callbacks[refresh_callback] = custom_id
+    def register_entity_refreshed_callback(
+        self, entity_refreshed_callback: Callable, custom_id: str
+    ) -> None:
+        """Register entity updated callback."""
+        if callable(entity_refreshed_callback):
+            self._entity_refreshed_callbacks[entity_refreshed_callback] = custom_id
         if custom_id != DEFAULT_CUSTOM_ID:
-            if self._custom_id is not None:
+            if self._custom_id is not None and self._custom_id != custom_id:
                 raise HaHomematicException(
-                    f"REGISTER_REFRESH_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
+                    f"REGISTER_ENTITY_REFRESHED_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
 
-    def unregister_refresh_callback(self, refresh_callback: Callable, custom_id: str) -> None:
-        """Unregister update callback."""
-        if refresh_callback in self._refresh_callbacks:
-            del self._refresh_callbacks[refresh_callback]
+    def unregister_entity_refreshed_callback(
+        self, entity_refreshed_callback: Callable, custom_id: str
+    ) -> None:
+        """Unregister entity updated callback."""
+        if entity_refreshed_callback in self._entity_refreshed_callbacks:
+            del self._entity_refreshed_callbacks[entity_refreshed_callback]
         if self.custom_id == custom_id:
             self._custom_id = None
 
-    def register_remove_callback(self, remove_callback: Callable) -> None:
-        """Register the remove callback."""
-        if callable(remove_callback) and remove_callback not in self._remove_callbacks:
-            self._remove_callbacks.append(remove_callback)
+    def register_entity_removed_callback(self, entity_removed_callback: Callable) -> None:
+        """Register the entity removed callback."""
+        if (
+            callable(entity_removed_callback)
+            and entity_removed_callback not in self._entity_removed_callbacks
+        ):
+            self._entity_removed_callbacks.append(entity_removed_callback)
 
-    def unregister_remove_callback(self, remove_callback: Callable) -> None:
-        """Unregister the remove callback."""
-        if remove_callback in self._remove_callbacks:
-            self._remove_callbacks.remove(remove_callback)
+    def unregister_entity_removed_callback(self, entity_removed_callback: Callable) -> None:
+        """Unregister the entity removed callback."""
+        if entity_removed_callback in self._entity_removed_callbacks:
+            self._entity_removed_callbacks.remove(entity_removed_callback)
 
-    def fire_update_entity_callback(self, *args: Any, **kwargs: Any) -> None:
+    def fire_entity_updated_callback(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated."""
-        for _callback in self._update_callbacks:
+        for _callback in self._entity_updated_callbacks:
             try:
                 _callback(*args, **kwargs)
             except Exception as ex:
-                _LOGGER.warning("FIRE_UPDATE_ENTITY_EVENT failed: %s", reduce_args(args=ex.args))
+                _LOGGER.warning("FIRE_ENTITY_UPDATED_EVENT failed: %s", reduce_args(args=ex.args))
 
-    def fire_refresh_entity_callback(self, *args: Any, **kwargs: Any) -> None:
+    def fire_entity_refreshed_callback(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been refreshed."""
-        for _callback in self._refresh_callbacks:
+        for _callback in self._entity_refreshed_callbacks:
             try:
                 _callback(*args, **kwargs)
             except Exception as ex:
-                _LOGGER.warning("FIRE_REFRESH_ENTITY_EVENT failed: %s", reduce_args(args=ex.args))
+                _LOGGER.warning(
+                    "FIRE_ENTITY_REFRESHED_EVENT failed: %s", reduce_args(args=ex.args)
+                )
 
-    def fire_remove_entity_callback(self, *args: Any) -> None:
+    def fire_entity_removed_callback(self, *args: Any) -> None:
         """Do what is needed when the entity has been removed."""
-        for _callback in self._remove_callbacks:
+        for _callback in self._entity_removed_callbacks:
             try:
                 _callback(*args)
             except Exception as ex:
-                _LOGGER.warning("FIRE_REMOVE_ENTITY_EVENT failed: %s", reduce_args(args=ex.args))
+                _LOGGER.warning("FIRE_ENTITY_REMOVED_EVENT failed: %s", reduce_args(args=ex.args))
 
 
 class BaseEntity(CallbackEntity, PayloadMixin):
@@ -369,9 +384,9 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Set the entity usage."""
         self._usage = usage
 
-    def fire_update_entity_callback(self, *args: Any, **kwargs: Any) -> None:
+    def fire_entity_updated_callback(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated."""
-        super().fire_update_entity_callback(*args, **kwargs)
+        super().fire_entity_updated_callback(*args, **kwargs)
         self._central.fire_entity_data_event_callback(
             interface_id=self._device.interface_id, entity=self
         )
@@ -679,20 +694,20 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         if value == NO_CACHE_ENTRY:
             if self.last_refreshed != INIT_DATETIME:
                 self._state_uncertain = True
-                self.fire_update_entity_callback()
+                self.fire_entity_updated_callback()
             return (old_value, None)
 
         new_value = self._convert_value(value)
         if old_value == new_value:
             self._set_last_refreshed()
-            self.fire_refresh_entity_callback()
+            self.fire_entity_refreshed_callback()
             return (old_value, new_value)
 
         self._old_value = old_value
         self._value = new_value
         self._state_uncertain = False
         self._set_last_updated()
-        self.fire_update_entity_callback()
+        self.fire_entity_updated_callback()
         return (old_value, new_value)
 
     def update_parameter_data(self) -> None:
