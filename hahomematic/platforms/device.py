@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping, Set
+from collections.abc import Callable, Mapping, Set as AbstractSet
 from copy import copy
 from datetime import datetime
 import logging
@@ -436,7 +436,7 @@ class HmDevice(PayloadMixin):
 
     def get_entities_by_platform(
         self, exclude_no_create: bool = True, registered: bool | None = None
-    ) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+    ) -> Mapping[HmPlatform, AbstractSet[CallbackEntity]]:
         """Return all externally registered entities."""
         entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
         for platform in PLATFORMS:

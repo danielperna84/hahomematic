@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Mapping, Set
+from collections.abc import Collection, Mapping, Set as AbstractSet
 import logging
 from typing import Final
 
@@ -208,7 +208,7 @@ def _clean_variables(variables: tuple[SystemVariableData, ...]) -> tuple[SystemV
 
 def _get_new_hub_entities(
     entities: Collection[GenericHubEntity],
-) -> Mapping[HmPlatform, Set[GenericHubEntity]]:
+) -> Mapping[HmPlatform, AbstractSet[GenericHubEntity]]:
     """Return entities as platform dict."""
     hm_hub_entities: dict[HmPlatform, set[GenericHubEntity]] = {}
     for hm_hub_platform in HUB_PLATFORMS:

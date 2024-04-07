@@ -179,7 +179,7 @@ class XmlRpcServer(threading.Thread):
         self._simple_xml_rpc_server.register_instance(RPCFunctions(self), allow_dotted_names=True)
         self._centrals: Final[dict[str, hmcu.CentralUnit]] = {}
 
-    def __new__(cls, local_port: int) -> XmlRpcServer:
+    def __new__(cls, local_port: int) -> XmlRpcServer:  # noqa: PYI034
         """Create new XmlRPC server."""
         if (xml_rpc := cls._instances.get(local_port)) is None:
             _LOGGER.debug("Creating XmlRpc server")
