@@ -831,13 +831,14 @@ class CentralUnit:
         if parameter == Parameter.PONG:
             if "#" in value:
                 v_interface_id, v_timestamp = value.split("#")
-                if v_interface_id == interface_id:
-                    if (
-                        client := self.get_client(interface_id=interface_id)
-                    ) and client.supports_ping_pong:
-                        client.ping_pong_cache.handle_received_pong(
-                            pong_ts=datetime.strptime(v_timestamp, DATETIME_FORMAT_MILLIS)
-                        )
+                if (
+                    v_interface_id == interface_id
+                    and (client := self.get_client(interface_id=interface_id))
+                    and client.supports_ping_pong
+                ):
+                    client.ping_pong_cache.handle_received_pong(
+                        pong_ts=datetime.strptime(v_timestamp, DATETIME_FORMAT_MILLIS)
+                    )
             return
         if (channel_address, parameter) in self._entity_event_subscriptions:
             try:

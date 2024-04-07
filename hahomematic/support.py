@@ -220,17 +220,14 @@ def element_matches_key(
             )  # or search_elements.lower().startswith(compare_with.lower())
         return compare_with.lower() == search_elements.lower()
     if isinstance(search_elements, Collection):
-        if isinstance(search_elements, dict):
-            if (
-                match_key := _get_search_key(
-                    search_elements=search_elements, search_key=search_key
-                )
-                if search_key
-                else None
-            ):
-                if (elements := search_elements.get(match_key)) is None:
-                    return False
-                search_elements = elements
+        if isinstance(search_elements, dict) and (
+            match_key := _get_search_key(search_elements=search_elements, search_key=search_key)
+            if search_key
+            else None
+        ):
+            if (elements := search_elements.get(match_key)) is None:
+                return False
+            search_elements = elements
         for element in search_elements:
             if do_wildcard_search:
                 if compare_with.lower().startswith(element.lower()):

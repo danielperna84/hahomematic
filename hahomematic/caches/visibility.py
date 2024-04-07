@@ -433,14 +433,17 @@ class ParameterVisibilityCache:
                 return True  # pragma: no cover
 
         # check if parameter is in _UN_IGNORE_PARAMETERS_BY_DEVICE
-        if not custom_only:
-            if (
+        if (
+            not custom_only
+            and (
                 un_ignore_parameters := _get_value_from_dict_by_wildcard_key(
                     search_elements=self._un_ignore_parameters_by_device_lower,
                     compare_with=device_type_l,
                 )
-            ) and parameter in un_ignore_parameters:
-                return True
+            )
+            and parameter in un_ignore_parameters
+        ):
+            return True
 
         return False
 
