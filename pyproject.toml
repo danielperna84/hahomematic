@@ -440,6 +440,7 @@ lint.select = [
     "PLR", # pylint
     "PLW", # pylint
     "PT", # flake8-pytest-style
+    "PYI", # flake8-pyi
     "Q000", # Double quotes found but single quotes preferred
     "RSE", # flake8-raise
     "RUF006", # Store a reference to the return value of asyncio.create_task
@@ -496,6 +497,9 @@ lint.ignore = [
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
     "PT004", # Fixture {fixture} does not return anything, add leading underscore
     "PT011", # pytest.raises({exception}) is too broad, set the `match` parameter or use a more specific exception
+    "PYI024", # Use typing.NamedTuple instead of collections.namedtuple
+    "PYI036",
+    "PYI041",
     "PLR0915", # Too many statements ({statements} > {max_statements})
     "PLR2004",  # Magic value used in comparison, consider replacing {value} with a constant variable
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target

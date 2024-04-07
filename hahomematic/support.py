@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import Callable, Collection
+from collections.abc import Collection
 import contextlib
 from dataclasses import dataclass
 from datetime import datetime
@@ -13,7 +13,7 @@ import os
 import re
 import socket
 import ssl
-from typing import Any, Final, TypeVar
+from typing import Any, Final
 
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
@@ -28,8 +28,6 @@ from hahomematic.const import (
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 
 _LOGGER: Final = logging.getLogger(__name__)
-
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 
 def reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:

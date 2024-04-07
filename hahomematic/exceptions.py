@@ -10,7 +10,6 @@ from typing import Any, Final, ParamSpec, TypeVar, cast
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _P = ParamSpec("_P")
 _R = TypeVar("_R")
 

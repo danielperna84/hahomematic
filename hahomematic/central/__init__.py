@@ -7,7 +7,7 @@ This is the python representation of a CCU.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping, Set
+from collections.abc import Callable, Coroutine, Mapping, Set as AbstractSet
 from concurrent.futures._base import CancelledError
 from datetime import datetime
 import logging
@@ -1232,7 +1232,7 @@ class CentralConfig:
         username: str,
         password: str,
         central_id: str,
-        interface_configs: Set[hmcl.InterfaceConfig],
+        interface_configs: AbstractSet[hmcl.InterfaceConfig],
         default_callback_port: int,
         client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,
@@ -1397,7 +1397,7 @@ class CentralConnectionState:
 
 def _get_new_entities(
     new_devices: set[HmDevice],
-) -> Mapping[HmPlatform, Set[CallbackEntity]]:
+) -> Mapping[HmPlatform, AbstractSet[CallbackEntity]]:
     """Return new entities by platform."""
     entities_by_platform: dict[HmPlatform, set[CallbackEntity]] = {}
     for platform in HmPlatform:
