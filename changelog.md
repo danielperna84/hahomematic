@@ -1,3 +1,8 @@
+# Version 2024.4.2 (2024-04-08)
+
+- Adjust cache max size
+- Update ruff rules
+
 # Version 2024.4.1 (2024-04-05)
 
 - Fix register refreshed entity
