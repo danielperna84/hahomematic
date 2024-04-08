@@ -42,7 +42,7 @@ from hahomematic.platforms.support import (
     convert_value,
     generate_channel_unique_id,
 )
-from hahomematic.support import reduce_args
+from hahomematic.support import loop_safe, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -237,6 +237,7 @@ class CallbackEntity(ABC):
             except Exception as ex:
                 _LOGGER.warning("FIRE_entity_updated_EVENT failed: %s", reduce_args(args=ex.args))
 
+    @loop_safe
     def fire_device_removed_callback(self, *args: Any) -> None:
         """Do what is needed when the entity has been removed."""
         for callback_handler in self._device_removed_callbacks:
