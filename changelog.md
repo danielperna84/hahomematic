@@ -1,3 +1,7 @@
+# Version 2024.4.3 (2024-04-08)
+
+- Restructure \_check_connection
+
 # Version 2024.4.2 (2024-04-08)
 
 - Adjust cache max size

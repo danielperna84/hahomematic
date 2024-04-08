@@ -13,6 +13,7 @@ from datetime import datetime
 import logging
 import socket
 import threading
+from time import sleep
 from typing import Any, Final, TypeVar, cast
 
 from aiohttp import ClientSession
@@ -1167,8 +1168,10 @@ class ConnectionChecker(threading.Thread):
             "run: Init connection checker to server %s",
             self._central.name,
         )
-
-        self._central.run_coroutine(self._check_connection())
+        while self._active:
+            self._central.run_coroutine(self._check_connection())
+            if self._active:
+                sleep(config.CONNECTION_CHECKER_INTERVAL)
 
     def stop(self) -> None:
         """To stop the ConnectionChecker."""
@@ -1176,50 +1179,44 @@ class ConnectionChecker(threading.Thread):
 
     async def _check_connection(self) -> None:
         """Periodically check connection to backend."""
-        while self._active:
-            _LOGGER.debug(
-                "check_connection: Checking connection to server %s",
-                self._central.name,
+        _LOGGER.debug(
+            "check_connection: Checking connection to server %s",
+            self._central.name,
+        )
+        try:
+            if not self._central.has_clients:
+                _LOGGER.warning(
+                    "CHECK_CONNECTION failed: No clients exist. "
+                    "Trying to create clients for server %s",
+                    self._central.name,
+                )
+                await self._central.restart_clients()
+            else:
+                reconnects: list[Any] = []
+                for interface_id in self._central.interface_ids:
+                    # check:
+                    #  - client is available
+                    #  - client is connected
+                    #  - interface callback is alive
+                    client = self._central.get_client(interface_id=interface_id)
+                    if (
+                        client.available is False
+                        or not await client.is_connected()
+                        or not client.is_callback_alive()
+                    ):
+                        reconnects.append(client.reconnect())
+                if reconnects:
+                    await asyncio.gather(*reconnects)
+                    if self._central.available:
+                        await self._central.load_and_refresh_entity_data()
+        except NoConnection as nex:
+            _LOGGER.error("CHECK_CONNECTION failed: no connection: %s", reduce_args(args=nex.args))
+        except Exception as err:
+            _LOGGER.error(
+                "CHECK_CONNECTION failed: %s [%s]",
+                type(err).__name__,
+                reduce_args(args=err.args),
             )
-            try:
-                if not self._central.has_clients:
-                    _LOGGER.warning(
-                        "CHECK_CONNECTION failed: No clients exist. "
-                        "Trying to create clients for server %s",
-                        self._central.name,
-                    )
-                    await self._central.restart_clients()
-                else:
-                    reconnects: list[Any] = []
-                    for interface_id in self._central.interface_ids:
-                        # check:
-                        #  - client is available
-                        #  - client is connected
-                        #  - interface callback is alive
-                        client = self._central.get_client(interface_id=interface_id)
-                        if (
-                            client.available is False
-                            or not await client.is_connected()
-                            or not client.is_callback_alive()
-                        ):
-                            reconnects.append(client.reconnect())
-                    if reconnects:
-                        await asyncio.gather(*reconnects)
-                        if self._central.available:
-                            await self._central.load_and_refresh_entity_data()
-            except NoConnection as nex:
-                _LOGGER.error(
-                    "CHECK_CONNECTION failed: no connection: %s", reduce_args(args=nex.args)
-                )
-                continue
-            except Exception as err:
-                _LOGGER.error(
-                    "CHECK_CONNECTION failed: %s [%s]",
-                    type(err).__name__,
-                    reduce_args(args=err.args),
-                )
-            if self._active:
-                await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
 
 
 class CentralConfig:
