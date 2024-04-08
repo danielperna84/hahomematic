@@ -7,7 +7,7 @@ from collections.abc import Collection
 import contextlib
 from dataclasses import dataclass
 from datetime import datetime
-from functools import cache
+from functools import lru_cache
 import logging
 import os
 import re
@@ -169,7 +169,7 @@ def get_channel_no(address: str) -> int | None:
     return get_split_channel_address(channel_address=address)[1]
 
 
-@cache
+@lru_cache(maxsize=2048)
 def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
     """Return the device part of an address."""
     if ":" in channel_address:
