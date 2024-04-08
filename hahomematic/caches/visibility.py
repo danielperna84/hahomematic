@@ -322,7 +322,7 @@ class ParameterVisibilityCache:
             do_wildcard_search=True,
         )
 
-    @lru_cache(maxsize=2048)
+    @lru_cache(maxsize=1024)
     def parameter_is_ignored(
         self,
         device_type: str,
@@ -628,7 +628,7 @@ class ParameterVisibilityCache:
             self._custom_un_ignore_complex[device_type][channel_no][paramset_key] = set()
         self._custom_un_ignore_complex[device_type][channel_no][paramset_key].add(parameter)
 
-    @lru_cache(maxsize=2048)
+    @lru_cache(maxsize=1024)
     def parameter_is_hidden(
         self,
         device_type: str,
