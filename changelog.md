@@ -1,4 +1,8 @@
-# Version 2024.4.3 (2024-04-08)
+# Version 2024.4.4 (2024-04-09)
+
+- Unify entity update/refresh events
+
+# Version 2024.4.3 (2024-04-09)
 
 - Restructure check_connection
 - Make xml_rpc event async

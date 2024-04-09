@@ -239,7 +239,9 @@ class CustomEntity(BaseEntity):
     ) -> None:
         """Unregister update callback."""
         for entity in self._data_entities.values():
-            entity.unregister_internal_update_callback(update_callback=entity_updated_callback)
+            entity.unregister_internal_entity_updated_callback(
+                update_callback=entity_updated_callback
+            )
 
         super().unregister_entity_updated_callback(
             entity_updated_callback=entity_updated_callback, custom_id=custom_id
