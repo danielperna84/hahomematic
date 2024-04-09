@@ -1,6 +1,8 @@
 # Version 2024.4.3 (2024-04-08)
 
-- Restructure \_check_connection
+- Restructure check_connection
+- Make xml_rpc event async
+- Block central stop until tasks are finished
 
 # Version 2024.4.2 (2024-04-08)
 

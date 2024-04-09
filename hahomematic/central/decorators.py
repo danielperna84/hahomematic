@@ -70,13 +70,15 @@ def callback_system_event(system_event: SystemEvent) -> Callable:
     return decorator_callback_system_event
 
 
-def callback_event(func: Callable[_P, _R]) -> Callable[_P, _R]:
+def callback_event(
+    func: Callable[_P, _R],
+) -> Callable:
     """Check if callback_event is set and call it AFTER original function."""
 
     @wraps(func)
-    def wrapper_callback_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+    async def async_wrapper_callback_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         """Wrap callback events."""
-        return_value = func(*args, **kwargs)
+        return_value = cast(_R, await func(*args, **kwargs))  # type: ignore[misc]
         _exec_callback_entity_event(*args, **kwargs)
         return return_value
 
@@ -96,4 +98,4 @@ def callback_event(func: Callable[_P, _R]) -> Callable[_P, _R]:
                 f"args-exception callback_event [{reduce_args(args=err.args)}]"
             ) from err
 
-    return wrapper_callback_event
+    return async_wrapper_callback_event

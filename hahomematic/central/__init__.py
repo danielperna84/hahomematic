@@ -7,13 +7,13 @@ This is the python representation of a CCU.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping, Set as AbstractSet
+from collections.abc import Callable, Collection, Coroutine, Mapping, Set as AbstractSet
 from concurrent.futures._base import CancelledError
 from datetime import datetime
 import logging
 import socket
 import threading
-from time import sleep
+from time import monotonic, sleep
 from typing import Any, Final, TypeVar, cast
 
 from aiohttp import ClientSession
@@ -29,6 +29,7 @@ from hahomematic.central.decorators import callback_event, callback_system_event
 from hahomematic.client.json_rpc import JsonRpcAioHttpClient
 from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.const import (
+    BLOCK_LOG_TIMEOUT,
     DATETIME_FORMAT_MILLIS,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
@@ -66,7 +67,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
-from hahomematic.support import check_config, get_device_address, reduce_args
+from hahomematic.support import cancelling, check_config, get_device_address, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -330,6 +331,9 @@ class CentralUnit:
         _LOGGER.debug("STOP: Removing instance")
         if self._name in CENTRAL_INSTANCES:
             del CENTRAL_INSTANCES[self._name]
+
+        # wait until tasks are finished
+        await self.block_till_done()
 
         while self._has_active_threads:
             await asyncio.sleep(1)
@@ -815,7 +819,9 @@ class CentralUnit:
             await self._create_devices()
 
     @callback_event
-    def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
+    async def event(
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
+    ) -> None:
         """If a device emits some sort event, we will handle it here."""
         _LOGGER.debug(
             "EVENT: interface_id = %s, channel_address = %s, parameter = %s, value = %s",
@@ -906,6 +912,43 @@ class CentralUnit:
             and (entity.channel_address, entity.parameter) in self._entity_event_subscriptions
         ):
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
+
+    async def block_till_done(self) -> None:
+        """Code from HA. Block until all pending work is done."""
+        # To flush out any call_soon_threadsafe
+        await asyncio.sleep(0)
+        start_time: float | None = None
+        current_task = asyncio.current_task()
+        while tasks := [
+            task for task in self._tasks if task is not current_task and not cancelling(task)
+        ]:
+            await self._await_and_log_pending(tasks)
+
+            if start_time is None:
+                # Avoid calling monotonic() until we know
+                # we may need to start logging blocked tasks.
+                start_time = 0
+            elif start_time == 0:
+                # If we have waited twice then we set the start
+                # time
+                start_time = monotonic()
+            elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
+                # We have waited at least three loops and new tasks
+                # continue to block. At this point we start
+                # logging all waiting tasks.
+                for task in tasks:
+                    _LOGGER.debug("Waiting for task: %s", task)
+
+    async def _await_and_log_pending(self, pending: Collection[asyncio.Future[Any]]) -> None:
+        """Code from HA. Await and log tasks that take a long time."""
+        wait_time = 0
+        while pending:
+            _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
+            if not pending:
+                return
+            wait_time += BLOCK_LOG_TIMEOUT
+            for task in pending:
+                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
     def create_task(self, target: Coroutine[Any, Any, Any], name: str) -> None:
         """Add task to the executor pool."""

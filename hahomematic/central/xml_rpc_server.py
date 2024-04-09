@@ -31,11 +31,14 @@ class RPCFunctions:
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """If a device emits some sort event, we will handle it here."""
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.event(
-                interface_id=interface_id,
-                channel_address=channel_address,
-                parameter=parameter,
-                value=value,
+            central.create_task(
+                central.event(
+                    interface_id=interface_id,
+                    channel_address=channel_address,
+                    parameter=parameter,
+                    value=value,
+                ),
+                name=f"event-{interface_id}-{channel_address}-{parameter}",
             )
 
     @callback_system_event(system_event=SystemEvent.ERROR)
@@ -62,7 +65,7 @@ class RPCFunctions:
                 central.add_new_devices(
                     interface_id=interface_id, device_descriptions=tuple(device_descriptions)
                 ),
-                name="newDevices",
+                name=f"newDevices-{interface_id}",
             )
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
@@ -71,7 +74,7 @@ class RPCFunctions:
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(
                 central.delete_devices(interface_id=interface_id, addresses=tuple(addresses)),
-                name="deleteDevices",
+                name=f"deleteDevices-{interface_id}",
             )
 
     @callback_system_event(system_event=SystemEvent.UPDATE_DEVICE)

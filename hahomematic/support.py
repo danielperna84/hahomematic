@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 from collections.abc import Collection
 import contextlib
@@ -289,3 +290,8 @@ class CacheEntry:
         if self.value == NO_CACHE_ENTRY:
             return False
         return changed_within_seconds(last_change=self.last_refresh)
+
+
+def cancelling(task: asyncio.Future[Any]) -> bool:
+    """Return True if task is cancelling."""
+    return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())

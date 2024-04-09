@@ -31,11 +31,11 @@ async def test_hmbinarysensor(factory: helper.Factory) -> None:
     assert binary_sensor.value is False
     assert binary_sensor.is_writeable is False
     assert binary_sensor.visible is True
-    central.event(const.INTERFACE_ID, "VCU5864966:1", "STATE", 1)
+    await central.event(const.INTERFACE_ID, "VCU5864966:1", "STATE", 1)
     assert binary_sensor.value is True
-    central.event(const.INTERFACE_ID, "VCU5864966:1", "STATE", 0)
+    await central.event(const.INTERFACE_ID, "VCU5864966:1", "STATE", 0)
     assert binary_sensor.value is False
-    central.event(const.INTERFACE_ID, "VCU5864966:1", "STATE", None)
+    await central.event(const.INTERFACE_ID, "VCU5864966:1", "STATE", None)
     assert binary_sensor.value is False
 
     call_count = len(mock_client.method_calls)
