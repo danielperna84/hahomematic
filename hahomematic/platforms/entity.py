@@ -108,7 +108,6 @@ class CallbackEntity(ABC):
         self._central: Final = central
         self._unique_id: Final = unique_id
         self._entity_updated_callbacks: dict[Callable, str] = {}
-        self._entity_refreshed_callbacks: dict[Callable, str] = {}
         self._entity_removed_callbacks: list[Callable] = []
         self._custom_id: str | None = None
 
@@ -186,11 +185,11 @@ class CallbackEntity(ABC):
         if custom_id != DEFAULT_CUSTOM_ID:
             if self._custom_id is not None and self._custom_id != custom_id:
                 raise HaHomematicException(
-                    f"REGISTER_ENTITY_UPDATED_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
+                    f"REGISTER_entity_updated_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
 
-    def unregister_internal_update_callback(self, update_callback: Callable) -> None:
+    def unregister_internal_entity_updated_callback(self, update_callback: Callable) -> None:
         """Unregister entity updated callback."""
         self.unregister_entity_updated_callback(
             entity_updated_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID
@@ -202,28 +201,6 @@ class CallbackEntity(ABC):
         """Unregister entity updated callback."""
         if entity_updated_callback in self._entity_updated_callbacks:
             del self._entity_updated_callbacks[entity_updated_callback]
-        if self.custom_id == custom_id:
-            self._custom_id = None
-
-    def register_entity_refreshed_callback(
-        self, entity_refreshed_callback: Callable, custom_id: str
-    ) -> None:
-        """Register entity updated callback."""
-        if callable(entity_refreshed_callback):
-            self._entity_refreshed_callbacks[entity_refreshed_callback] = custom_id
-        if custom_id != DEFAULT_CUSTOM_ID:
-            if self._custom_id is not None and self._custom_id != custom_id:
-                raise HaHomematicException(
-                    f"REGISTER_ENTITY_REFRESHED_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
-                )
-            self._custom_id = custom_id
-
-    def unregister_entity_refreshed_callback(
-        self, entity_refreshed_callback: Callable, custom_id: str
-    ) -> None:
-        """Unregister entity updated callback."""
-        if entity_refreshed_callback in self._entity_refreshed_callbacks:
-            del self._entity_refreshed_callbacks[entity_refreshed_callback]
         if self.custom_id == custom_id:
             self._custom_id = None
 
@@ -241,22 +218,12 @@ class CallbackEntity(ABC):
             self._entity_removed_callbacks.remove(entity_removed_callback)
 
     def fire_entity_updated_callback(self, *args: Any, **kwargs: Any) -> None:
-        """Do what is needed when the value of the entity has been updated."""
+        """Do what is needed when the value of the entity has been updated/refreshed."""
         for _callback in self._entity_updated_callbacks:
             try:
                 _callback(*args, **kwargs)
             except Exception as ex:
-                _LOGGER.warning("FIRE_ENTITY_UPDATED_EVENT failed: %s", reduce_args(args=ex.args))
-
-    def fire_entity_refreshed_callback(self, *args: Any, **kwargs: Any) -> None:
-        """Do what is needed when the value of the entity has been refreshed."""
-        for _callback in self._entity_refreshed_callbacks:
-            try:
-                _callback(*args, **kwargs)
-            except Exception as ex:
-                _LOGGER.warning(
-                    "FIRE_ENTITY_REFRESHED_EVENT failed: %s", reduce_args(args=ex.args)
-                )
+                _LOGGER.warning("FIRE_entity_updated_EVENT failed: %s", reduce_args(args=ex.args))
 
     def fire_entity_removed_callback(self, *args: Any) -> None:
         """Do what is needed when the entity has been removed."""
@@ -700,7 +667,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         new_value = self._convert_value(value)
         if old_value == new_value:
             self._set_last_refreshed()
-            self.fire_entity_refreshed_callback()
+            self.fire_entity_updated_callback(is_refresh=True)
             return (old_value, new_value)
 
         self._old_value = old_value
