@@ -31,11 +31,14 @@ class RPCFunctions:
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """If a device emits some sort event, we will handle it here."""
         if central := self._xml_rpc_server.get_central(interface_id):
-            central.event(
-                interface_id=interface_id,
-                channel_address=channel_address,
-                parameter=parameter,
-                value=value,
+            central.create_task(
+                central.event(
+                    interface_id=interface_id,
+                    channel_address=channel_address,
+                    parameter=parameter,
+                    value=value,
+                ),
+                name=f"event-{interface_id}-{channel_address}-{parameter}",
             )
 
     @callback_system_event(system_event=SystemEvent.ERROR)

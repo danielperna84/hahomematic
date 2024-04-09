@@ -815,7 +815,9 @@ class CentralUnit:
             await self._create_devices()
 
     @callback_event
-    def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
+    async def event(
+        self, interface_id: str, channel_address: str, parameter: str, value: Any
+    ) -> None:
         """If a device emits some sort event, we will handle it here."""
         _LOGGER.debug(
             "EVENT: interface_id = %s, channel_address = %s, parameter = %s, value = %s",

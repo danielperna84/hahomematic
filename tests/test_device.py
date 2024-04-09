@@ -50,14 +50,14 @@ async def test_device_availability(factory: helper.Factory) -> None:
     for custom_entity in device.custom_entities:
         assert custom_entity.available is True
 
-    central.event(const.INTERFACE_ID, "VCU6354483:0", "UNREACH", 1)
+    await central.event(const.INTERFACE_ID, "VCU6354483:0", "UNREACH", 1)
     assert device.available is False
     for generic_entity in device.generic_entities:
         assert generic_entity.available is False
     for custom_entity in device.custom_entities:
         assert custom_entity.available is False
 
-    central.event(const.INTERFACE_ID, "VCU6354483:0", "UNREACH", 0)
+    await central.event(const.INTERFACE_ID, "VCU6354483:0", "UNREACH", 0)
     assert device.available is True
     for generic_entity in device.generic_entities:
         assert generic_entity.available is True
@@ -72,10 +72,10 @@ async def test_device_config_pending(factory: helper.Factory) -> None:
     device = central.get_device(address="VCU2128127")
     assert device._e_config_pending.value is False
     last_save = central.paramset_descriptions.last_save
-    central.event(const.INTERFACE_ID, "VCU2128127:0", "CONFIG_PENDING", True)
+    await central.event(const.INTERFACE_ID, "VCU2128127:0", "CONFIG_PENDING", True)
     assert device._e_config_pending.value is True
     assert last_save == central.paramset_descriptions.last_save
-    central.event(const.INTERFACE_ID, "VCU2128127:0", "CONFIG_PENDING", False)
+    await central.event(const.INTERFACE_ID, "VCU2128127:0", "CONFIG_PENDING", False)
     assert device._e_config_pending.value is False
     await asyncio.sleep(2)
     assert last_save != central.paramset_descriptions.last_save

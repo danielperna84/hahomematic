@@ -675,7 +675,7 @@ async def test_ping_pong(factory: helper.Factory) -> None:
     await client.check_connection_availability(handle_ping_pong=True)
     assert client.ping_pong_cache.pending_pong_count == 1
     for ts_stored in list(client.ping_pong_cache._pending_pongs):
-        central.event(
+        await central.event(
             interface_id,
             "",
             Parameter.PONG,
@@ -716,7 +716,7 @@ async def test_unknown_pong_failure(factory: helper.Factory) -> None:
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 1
     while count < max_count:
-        central.event(
+        await central.event(
             interface_id,
             "",
             Parameter.PONG,

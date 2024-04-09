@@ -27,7 +27,7 @@ async def test_clickevent(factory: helper.Factory) -> None:
     event: ClickEvent = cast(ClickEvent, central.get_event("VCU2128127:1", "PRESS_SHORT"))
     assert event.usage == EntityUsage.EVENT
     assert event.event_type == EventType.KEYPRESS
-    central.event(const.INTERFACE_ID, "VCU2128127:1", "PRESS_SHORT", True)
+    await central.event(const.INTERFACE_ID, "VCU2128127:1", "PRESS_SHORT", True)
     assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.keypress",
         {
@@ -48,7 +48,7 @@ async def test_impulseevent(factory: helper.Factory) -> None:
     event: ImpulseEvent = cast(ImpulseEvent, central.get_event("VCU0000263:1", "SEQUENCE_OK"))
     assert event.usage == EntityUsage.EVENT
     assert event.event_type == EventType.IMPULSE
-    central.event(const.INTERFACE_ID, "VCU0000263:1", "SEQUENCE_OK", True)
+    await central.event(const.INTERFACE_ID, "VCU0000263:1", "SEQUENCE_OK", True)
     assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.impulse",
         {
@@ -72,7 +72,7 @@ async def test_deviceerrorevent(factory: helper.Factory) -> None:
     )
     assert event.usage == EntityUsage.EVENT
     assert event.event_type == EventType.DEVICE_ERROR
-    central.event(const.INTERFACE_ID, "VCU2128127:0", "ERROR_OVERHEAT", True)
+    await central.event(const.INTERFACE_ID, "VCU2128127:0", "ERROR_OVERHEAT", True)
     assert factory.ha_event_mock.call_args_list[-1] == call(
         "homematic.device_error",
         {
