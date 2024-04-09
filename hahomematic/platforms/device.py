@@ -350,7 +350,9 @@ class HmDevice(PayloadMixin):
             self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[(entity.channel_address, entity.parameter)] = entity
-            self.register_update_callback(update_callback=entity.fire_entity_updated_callback)
+            self.register_device_updated_callback(
+                device_updated_callback=entity.fire_entity_updated_callback
+            )
         if isinstance(entity, hmce.CustomEntity):
             self._custom_entities[entity.channel_no] = entity
         if isinstance(entity, GenericEvent):
@@ -362,7 +364,9 @@ class HmDevice(PayloadMixin):
             self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[(entity.channel_address, entity.parameter)]
-            self.unregister_update_callback(update_callback=entity.fire_entity_updated_callback)
+            self.unregister_device_updated_callback(
+                device_updated_callback=entity.fire_entity_updated_callback
+            )
         if isinstance(entity, hmce.CustomEntity):
             del self._custom_entities[entity.channel_no]
         if isinstance(entity, GenericEvent):
@@ -383,15 +387,18 @@ class HmDevice(PayloadMixin):
             self.remove_entity(custom_entity)
         self._custom_entities.clear()
 
-    def register_update_callback(self, update_callback: Callable) -> None:
+    def register_device_updated_callback(self, device_updated_callback: Callable) -> None:
         """Register update callback."""
-        if callable(update_callback) and update_callback not in self._device_updated_callbacks:
-            self._device_updated_callbacks.append(update_callback)
+        if (
+            callable(device_updated_callback)
+            and device_updated_callback not in self._device_updated_callbacks
+        ):
+            self._device_updated_callbacks.append(device_updated_callback)
 
-    def unregister_update_callback(self, update_callback: Callable) -> None:
+    def unregister_device_updated_callback(self, device_updated_callback: Callable) -> None:
         """Remove update callback."""
-        if update_callback in self._device_updated_callbacks:
-            self._device_updated_callbacks.remove(update_callback)
+        if device_updated_callback in self._device_updated_callbacks:
+            self._device_updated_callbacks.remove(device_updated_callback)
 
     def register_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
         """Register firmware update callback."""
@@ -575,7 +582,7 @@ class HmDevice(PayloadMixin):
             try:
                 callback_handler(*args)
             except Exception as ex:
-                _LOGGER.warning("FIRE_UPDATE_DEVICE failed: %s", reduce_args(args=ex.args))
+                _LOGGER.warning("FIRE_DEVICE_UPDATED failed: %s", reduce_args(args=ex.args))
 
     def __str__(self) -> str:
         """Provide some useful information."""
