@@ -65,7 +65,7 @@ class RPCFunctions:
                 central.add_new_devices(
                     interface_id=interface_id, device_descriptions=tuple(device_descriptions)
                 ),
-                name="newDevices",
+                name=f"newDevices-{interface_id}",
             )
 
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
@@ -74,7 +74,7 @@ class RPCFunctions:
         if central := self._xml_rpc_server.get_central(interface_id):
             central.create_task(
                 central.delete_devices(interface_id=interface_id, addresses=tuple(addresses)),
-                name="deleteDevices",
+                name=f"deleteDevices-{interface_id}",
             )
 
     @callback_system_event(system_event=SystemEvent.UPDATE_DEVICE)
