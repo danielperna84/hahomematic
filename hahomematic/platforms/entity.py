@@ -110,6 +110,8 @@ class CallbackEntity(ABC):
         self._entity_updated_callbacks: dict[Callable, str] = {}
         self._device_removed_callbacks: list[Callable] = []
         self._custom_id: str | None = None
+        self._last_updated: datetime = INIT_DATETIME
+        self._last_refreshed: datetime = INIT_DATETIME
 
     @property
     @abstractmethod
@@ -135,6 +137,16 @@ class CallbackEntity(ABC):
     @abstractmethod
     def full_name(self) -> str:
         """Return the full name of the entity."""
+
+    @value_property
+    def last_updated(self) -> datetime:
+        """Return the last updated datetime value."""
+        return self._last_updated
+
+    @value_property
+    def last_refreshed(self) -> datetime:
+        """Return the last refreshed datetime value."""
+        return self._last_refreshed
 
     @config_property
     @abstractmethod
@@ -232,6 +244,15 @@ class CallbackEntity(ABC):
                 callback_handler(*args)
             except Exception as ex:
                 _LOGGER.warning("FIRE_DEVICE_REMOVED_EVENT failed: %s", reduce_args(args=ex.args))
+
+    def _set_last_updated(self, now: datetime = datetime.now()) -> None:
+        """Set last_update to current datetime."""
+        self._last_updated = now
+        self._set_last_refreshed(now=now)
+
+    def _set_last_refreshed(self, now: datetime = datetime.now()) -> None:
+        """Set last_update to current datetime."""
+        self._last_refreshed = now
 
 
 class BaseEntity(CallbackEntity, PayloadMixin):
@@ -668,10 +689,10 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         if old_value == new_value:
             self._set_last_refreshed()
         else:
+            self._set_last_updated()
             self._old_value = old_value
             self._value = new_value
             self._state_uncertain = False
-            self._set_last_updated()
         self.fire_entity_updated_callback()
         return (old_value, new_value)
 
@@ -727,15 +748,6 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         if value is not None:
             event_data[EVENT_VALUE] = value
         return cast(dict[str, Any], EVENT_DATA_SCHEMA(event_data))
-
-    def _set_last_updated(self, now: datetime = datetime.now()) -> None:
-        """Set last_update to current datetime."""
-        self._last_updated = now
-        self._set_last_refreshed(now=now)
-
-    def _set_last_refreshed(self, now: datetime = datetime.now()) -> None:
-        """Set last_update to current datetime."""
-        self._last_refreshed = now
 
 
 class CallParameterCollector:

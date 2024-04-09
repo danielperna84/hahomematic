@@ -130,10 +130,14 @@ class GenericSystemVariable(GenericHubEntity):
         elif isinstance(old_value, float):
             value = float(value)
 
-        if old_value != value:
+        if old_value == value:
+            self._set_last_refreshed()
+        else:
+            self._set_last_updated()
             self._old_value = old_value
             self._value = value
-            self.fire_entity_updated_callback()
+
+        self.fire_entity_updated_callback()
 
     async def send_variable(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""

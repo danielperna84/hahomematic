@@ -525,8 +525,8 @@ class HmDevice(PayloadMixin):
             or old_firmware_update_state != self._firmware_update_state
             or old_firmware_updatable != self._firmware_updatable
         ):
-            for _callback in self._firmware_update_callbacks:
-                _callback()
+            for callback_handler in self._firmware_update_callbacks:
+                callback_handler()
 
     async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Update the firmware of the homematic device."""
