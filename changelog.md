@@ -1,3 +1,7 @@
+# Version 2024.4.5 (2024-04-09)
+
+- Align callback naming
+
 # Version 2024.4.4 (2024-04-09)
 
 - Unify entity update/refresh events

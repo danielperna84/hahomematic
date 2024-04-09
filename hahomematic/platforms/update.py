@@ -35,6 +35,7 @@ class HmUpdate(CallbackEntity):
                 central=device.central, address=device.device_address, parameter="Update"
             ),
         )
+        self._set_last_updated()
 
     @property
     def available(self) -> bool:
@@ -102,3 +103,4 @@ class HmUpdate(CallbackEntity):
         await self._device.central.refresh_firmware_data(
             device_address=self._device.device_address
         )
+        self._set_last_updated()

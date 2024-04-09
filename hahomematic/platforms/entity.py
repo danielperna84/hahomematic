@@ -108,8 +108,10 @@ class CallbackEntity(ABC):
         self._central: Final = central
         self._unique_id: Final = unique_id
         self._entity_updated_callbacks: dict[Callable, str] = {}
-        self._entity_removed_callbacks: list[Callable] = []
+        self._device_removed_callbacks: list[Callable] = []
         self._custom_id: str | None = None
+        self._last_updated: datetime = INIT_DATETIME
+        self._last_refreshed: datetime = INIT_DATETIME
 
     @property
     @abstractmethod
@@ -135,6 +137,16 @@ class CallbackEntity(ABC):
     @abstractmethod
     def full_name(self) -> str:
         """Return the full name of the entity."""
+
+    @value_property
+    def last_updated(self) -> datetime:
+        """Return the last updated datetime value."""
+        return self._last_updated
+
+    @value_property
+    def last_refreshed(self) -> datetime:
+        """Return the last refreshed datetime value."""
+        return self._last_refreshed
 
     @config_property
     @abstractmethod
@@ -204,34 +216,43 @@ class CallbackEntity(ABC):
         if self.custom_id == custom_id:
             self._custom_id = None
 
-    def register_entity_removed_callback(self, entity_removed_callback: Callable) -> None:
-        """Register the entity removed callback."""
+    def register_device_removed_callback(self, device_removed_callback: Callable) -> None:
+        """Register the device removed callback."""
         if (
-            callable(entity_removed_callback)
-            and entity_removed_callback not in self._entity_removed_callbacks
+            callable(device_removed_callback)
+            and device_removed_callback not in self._device_removed_callbacks
         ):
-            self._entity_removed_callbacks.append(entity_removed_callback)
+            self._device_removed_callbacks.append(device_removed_callback)
 
-    def unregister_entity_removed_callback(self, entity_removed_callback: Callable) -> None:
-        """Unregister the entity removed callback."""
-        if entity_removed_callback in self._entity_removed_callbacks:
-            self._entity_removed_callbacks.remove(entity_removed_callback)
+    def unregister_device_removed_callback(self, device_removed_callback: Callable) -> None:
+        """Unregister the device removed callback."""
+        if device_removed_callback in self._device_removed_callbacks:
+            self._device_removed_callbacks.remove(device_removed_callback)
 
     def fire_entity_updated_callback(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated/refreshed."""
-        for _callback in self._entity_updated_callbacks:
+        for callback_handler in self._entity_updated_callbacks:
             try:
-                _callback(*args, **kwargs)
+                callback_handler(*args, **kwargs)
             except Exception as ex:
                 _LOGGER.warning("FIRE_entity_updated_EVENT failed: %s", reduce_args(args=ex.args))
 
-    def fire_entity_removed_callback(self, *args: Any) -> None:
+    def fire_device_removed_callback(self, *args: Any) -> None:
         """Do what is needed when the entity has been removed."""
-        for _callback in self._entity_removed_callbacks:
+        for callback_handler in self._device_removed_callbacks:
             try:
-                _callback(*args)
+                callback_handler(*args)
             except Exception as ex:
-                _LOGGER.warning("FIRE_ENTITY_REMOVED_EVENT failed: %s", reduce_args(args=ex.args))
+                _LOGGER.warning("FIRE_DEVICE_REMOVED_EVENT failed: %s", reduce_args(args=ex.args))
+
+    def _set_last_updated(self, now: datetime = datetime.now()) -> None:
+        """Set last_update to current datetime."""
+        self._last_updated = now
+        self._set_last_refreshed(now=now)
+
+    def _set_last_refreshed(self, now: datetime = datetime.now()) -> None:
+        """Set last_update to current datetime."""
+        self._last_refreshed = now
 
 
 class BaseEntity(CallbackEntity, PayloadMixin):
@@ -667,13 +688,11 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         new_value = self._convert_value(value)
         if old_value == new_value:
             self._set_last_refreshed()
-            self.fire_entity_updated_callback(is_refresh=True)
-            return (old_value, new_value)
-
-        self._old_value = old_value
-        self._value = new_value
-        self._state_uncertain = False
-        self._set_last_updated()
+        else:
+            self._set_last_updated()
+            self._old_value = old_value
+            self._value = new_value
+            self._state_uncertain = False
         self.fire_entity_updated_callback()
         return (old_value, new_value)
 
@@ -729,15 +748,6 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         if value is not None:
             event_data[EVENT_VALUE] = value
         return cast(dict[str, Any], EVENT_DATA_SCHEMA(event_data))
-
-    def _set_last_updated(self, now: datetime = datetime.now()) -> None:
-        """Set last_update to current datetime."""
-        self._last_updated = now
-        self._set_last_refreshed(now=now)
-
-    def _set_last_refreshed(self, now: datetime = datetime.now()) -> None:
-        """Set last_update to current datetime."""
-        self._last_refreshed = now
 
 
 class CallParameterCollector:

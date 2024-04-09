@@ -144,16 +144,16 @@ class CentralUnit:
         self.last_events: Final[dict[str, datetime]] = {}
         # Signature: (name, *args)
         # e.g. DEVICES_CREATED, HUB_REFRESHED
-        self._callback_system_event: Final[set[Callable]] = set()
+        self._system_event_callbacks: Final[set[Callable]] = set()
         # Signature: (interface_id, channel_address, parameter, value)
         # Re-Fired events from CCU for parameter updates
-        self._callback_entity_event: Final[set[Callable]] = set()
+        self._entity_event_callbacks: Final[set[Callable]] = set()
         # Signature: (interface_id, entity)
         # Fires parameter data updates as events with entity.
-        self._callback_entity_data_event: Final[set[Callable]] = set()
+        self._entity_data_event_callbacks: Final[set[Callable]] = set()
         # Signature: (event_type, event_data)
         # Events like INTERFACE, KEYPRESS, ...
-        self._callback_ha_event: Final[set[Callable]] = set()
+        self._ha_event_callbacks: Final[set[Callable]] = set()
 
         self.json_rpc_client: Final[JsonRpcAioHttpClient] = central_config.create_json_rpc_client()
 
@@ -263,7 +263,7 @@ class CentralUnit:
     def remove_sysvar_entity(self, name: str) -> None:
         """Remove a sysvar entity."""
         if (sysvar_entity := self.get_sysvar_entity(name=name)) is not None:
-            sysvar_entity.fire_entity_removed_callback()
+            sysvar_entity.fire_device_removed_callback()
             del self._sysvar_entities[name]
 
     @property
@@ -278,7 +278,7 @@ class CentralUnit:
     def remove_program_button(self, pid: str) -> None:
         """Remove a program button."""
         if (program_button := self.get_program_button(pid=pid)) is not None:
-            program_button.fire_entity_removed_callback()
+            program_button.fire_device_removed_callback()
             del self._program_buttons[pid]
 
     @property
@@ -1091,14 +1091,14 @@ class CentralUnit:
         self.device_details.clear()
         self.data_cache.clear()
 
-    def register_ha_event_callback(self, callback_handler: Callable) -> None:
+    def register_ha_event_callback(self, ha_event_callback: Callable) -> None:
         """Register ha_event callback in central."""
-        self._callback_ha_event.add(callback_handler)
+        self._ha_event_callbacks.add(ha_event_callback)
 
-    def unregister_ha_event_callback(self, callback_handler: Callable) -> None:
+    def unregister_ha_event_callback(self, ha_event_callback: Callable) -> None:
         """RUn register ha_event callback in central."""
-        if callback_handler in self._callback_ha_event:
-            self._callback_ha_event.remove(callback_handler)
+        if ha_event_callback in self._ha_event_callbacks:
+            self._ha_event_callbacks.remove(ha_event_callback)
 
     def fire_ha_event_callback(self, event_type: EventType, event_data: dict[str, str]) -> None:
         """
@@ -1106,7 +1106,7 @@ class CentralUnit:
 
         # Events like INTERFACE, KEYPRESS, ...
         """
-        for callback_handler in self._callback_ha_event:
+        for callback_handler in self._ha_event_callbacks:
             try:
                 callback_handler(event_type, event_data)
             except Exception as ex:
@@ -1114,14 +1114,14 @@ class CentralUnit:
                     "FIRE_HA_EVENT_CALLBACK: Unable to call handler: %s", reduce_args(args=ex.args)
                 )
 
-    def register_entity_event_callback(self, callback_handler: Callable) -> None:
+    def register_entity_event_callback(self, entity_event_callback: Callable) -> None:
         """Register entity_event callback in central."""
-        self._callback_entity_event.add(callback_handler)
+        self._entity_event_callbacks.add(entity_event_callback)
 
-    def unregister_entity_event_callback(self, callback_handler: Callable) -> None:
+    def unregister_entity_event_callback(self, entity_event_callback: Callable) -> None:
         """Un register entity_event callback in central."""
-        if callback_handler in self._callback_entity_event:
-            self._callback_entity_event.remove(callback_handler)
+        if entity_event_callback in self._entity_event_callbacks:
+            self._entity_event_callbacks.remove(entity_event_callback)
 
     def fire_entity_event_callback(
         self, interface_id: str, channel_address: str, parameter: str, value: Any
@@ -1132,7 +1132,7 @@ class CentralUnit:
         Not used by HA.
         Re-Fired events from CCU for parameter updates.
         """
-        for callback_handler in self._callback_entity_event:
+        for callback_handler in self._entity_event_callbacks:
             try:
                 callback_handler(interface_id, channel_address, parameter, value)
             except Exception as ex:
@@ -1141,14 +1141,14 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
-    def register_entity_data_event_callback(self, callback_handler: Callable) -> None:
+    def register_entity_data_event_callback(self, entity_data_event_callback: Callable) -> None:
         """Register entity_event callback in central."""
-        self._callback_entity_data_event.add(callback_handler)
+        self._entity_data_event_callbacks.add(entity_data_event_callback)
 
-    def unregister_entity_data_event_callback(self, callback_handler: Callable) -> None:
+    def unregister_entity_data_event_callback(self, entity_data_event_callback: Callable) -> None:
         """Un register entity_event callback in central."""
-        if callback_handler in self._callback_entity_data_event:
-            self._callback_entity_data_event.remove(callback_handler)
+        if entity_data_event_callback in self._entity_data_event_callbacks:
+            self._entity_data_event_callbacks.remove(entity_data_event_callback)
 
     def fire_entity_data_event_callback(self, interface_id: str, entity: BaseEntity) -> None:
         """
@@ -1157,7 +1157,7 @@ class CentralUnit:
         Not used by HA.
         Fires parameter data updates as events with entity.
         """
-        for callback_handler in self._callback_entity_data_event:
+        for callback_handler in self._entity_data_event_callbacks:
             try:
                 callback_handler(interface_id, entity)
             except Exception as ex:
@@ -1166,14 +1166,14 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
-    def register_system_event_callback(self, callback_handler: Callable) -> None:
+    def register_system_event_callback(self, system_event_callback: Callable) -> None:
         """Register system_event callback in central."""
-        self._callback_system_event.add(callback_handler)
+        self._system_event_callbacks.add(system_event_callback)
 
-    def unregister_system_event_callback(self, callback_handler: Callable) -> None:
+    def unregister_system_event_callback(self, system_event_callback: Callable) -> None:
         """Un register system_event callback in central."""
-        if callback_handler in self._callback_system_event:
-            self._callback_system_event.remove(callback_handler)
+        if system_event_callback in self._system_event_callbacks:
+            self._system_event_callbacks.remove(system_event_callback)
 
     def fire_system_event_callback(self, system_event: SystemEvent, **kwargs: Any) -> None:
         """
@@ -1181,7 +1181,7 @@ class CentralUnit:
 
         e.g. DEVICES_CREATED, HUB_REFRESHED
         """
-        for callback_handler in self._callback_system_event:
+        for callback_handler in self._system_event_callbacks:
             try:
                 callback_handler(system_event, **kwargs)
             except Exception as ex:
