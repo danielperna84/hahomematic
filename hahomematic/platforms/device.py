@@ -78,7 +78,7 @@ class HmDevice(PayloadMixin):
         self._generic_events: Final[dict[tuple[str, str], GenericEvent]] = {}
         self._last_updated: datetime = INIT_DATETIME
         self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
-        self._update_callbacks: Final[list[Callable]] = []
+        self._device_updated_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
         self._device_type: Final = str(
             self.central.device_descriptions.get_device_parameter(
@@ -367,7 +367,7 @@ class HmDevice(PayloadMixin):
             del self._custom_entities[entity.channel_no]
         if isinstance(entity, GenericEvent):
             del self._generic_events[(entity.channel_address, entity.parameter)]
-        entity.fire_entity_removed_callback()
+        entity.fire_device_removed_callback()
 
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
@@ -385,13 +385,13 @@ class HmDevice(PayloadMixin):
 
     def register_update_callback(self, update_callback: Callable) -> None:
         """Register update callback."""
-        if callable(update_callback) and update_callback not in self._update_callbacks:
-            self._update_callbacks.append(update_callback)
+        if callable(update_callback) and update_callback not in self._device_updated_callbacks:
+            self._device_updated_callbacks.append(update_callback)
 
     def unregister_update_callback(self, update_callback: Callable) -> None:
         """Remove update callback."""
-        if update_callback in self._update_callbacks:
-            self._update_callbacks.remove(update_callback)
+        if update_callback in self._device_updated_callbacks:
+            self._device_updated_callbacks.remove(update_callback)
 
     def register_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
         """Register firmware update callback."""
@@ -518,8 +518,8 @@ class HmDevice(PayloadMixin):
             or old_firmware_update_state != self._firmware_update_state
             or old_firmware_updatable != self._firmware_updatable
         ):
-            for _firmware_callback in self._firmware_update_callbacks:
-                _firmware_callback()
+            for _callback in self._firmware_update_callbacks:
+                _callback()
 
     async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Update the firmware of the homematic device."""
@@ -566,14 +566,14 @@ class HmDevice(PayloadMixin):
         await self.central.paramset_descriptions.save()
         for entity in self.generic_entities:
             entity.update_parameter_data()
-        self.fire_update_device_callback()
+        self.fire_device_updated_callback()
 
-    def fire_update_device_callback(self, *args: Any) -> None:
+    def fire_device_updated_callback(self, *args: Any) -> None:
         """Do what is needed when the state of the device has been updated."""
         self._set_last_updated()
-        for _callback in self._update_callbacks:
+        for callback_handler in self._device_updated_callbacks:
             try:
-                _callback(*args)
+                callback_handler(*args)
             except Exception as ex:
                 _LOGGER.warning("FIRE_UPDATE_DEVICE failed: %s", reduce_args(args=ex.args))
 

@@ -78,7 +78,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             Parameter.UN_REACH,
             Parameter.STICKY_UN_REACH,
         ):
-            self._device.fire_update_device_callback(self._unique_id)
+            self._device.fire_device_updated_callback(self._unique_id)
             self._central.fire_ha_event_callback(
                 event_type=EventType.DEVICE_AVAILABILITY,
                 event_data=self.get_event_data(new_value),
