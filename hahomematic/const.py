@@ -38,6 +38,7 @@ DATETIME_FORMAT_MILLIS: Final = "%d.%m.%Y %H:%M:%S.%f'"
 INIT_DATETIME: Final = datetime.strptime("01.01.1970 00:00:00", DATETIME_FORMAT)
 IP_ANY_V4: Final = "0.0.0.0"
 PORT_ANY: Final = 0
+BLOCK_LOG_TIMEOUT = 60
 
 PATH_JSON_RPC: Final = "/api/homematic.cgi"
 
