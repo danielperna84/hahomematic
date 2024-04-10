@@ -30,7 +30,7 @@ class RPCFunctions:
 
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """If a device emits some sort event, we will handle it here."""
-        if central := self._xml_rpc_server.get_central(interface_id):
+        if central := self.get_central(interface_id):
             central.create_task(
                 central.event(
                     interface_id=interface_id,
@@ -53,14 +53,14 @@ class RPCFunctions:
 
     def listDevices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
-        if central := self._xml_rpc_server.get_central(interface_id):
+        if central := self.get_central(interface_id):
             return central.list_devices(interface_id=interface_id)  # type: ignore[no-any-return]
         return []
 
     def newDevices(self, interface_id: str, device_descriptions: list[dict[str, Any]]) -> None:
         """Add new devices send from backend."""
         central: hmcu.CentralUnit | None
-        if central := self._xml_rpc_server.get_central(interface_id):
+        if central := self.get_central(interface_id):
             central.create_task(
                 central.add_new_devices(
                     interface_id=interface_id, device_descriptions=tuple(device_descriptions)
@@ -71,7 +71,7 @@ class RPCFunctions:
     def deleteDevices(self, interface_id: str, addresses: list[str]) -> None:
         """Delete devices send from backend."""
         central: hmcu.CentralUnit | None
-        if central := self._xml_rpc_server.get_central(interface_id):
+        if central := self.get_central(interface_id):
             central.create_task(
                 central.delete_devices(interface_id=interface_id, addresses=tuple(addresses)),
                 name=f"deleteDevices-{interface_id}",
@@ -118,6 +118,10 @@ class RPCFunctions:
             interface_id,
             str(addresses),
         )
+
+    def get_central(self, interface_id: str) -> hmcu.CentralUnit | None:
+        """Return the central by interface_id."""
+        return self._xml_rpc_server.get_central(interface_id)
 
 
 # Restrict to specific paths.

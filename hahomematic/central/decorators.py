@@ -10,6 +10,7 @@ import logging
 from typing import Any, Final, ParamSpec, TypeVar, cast
 
 from hahomematic import central as hmcu, client as hmcl
+import hahomematic.central.xml_rpc_server as xmlrpc
 from hahomematic.const import SystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
@@ -22,73 +23,84 @@ _INTERFACE_ID: Final = "interface_id"
 
 
 def callback_system_event(system_event: SystemEvent) -> Callable:
-    """Check if callback_system is set and call it AFTER original function."""
+    """Check if system_event_callback is set and call it AFTER original function."""
 
-    def decorator_callback_system_event(
+    def decorator_system_event_callback(
         func: Callable[_P, _R | Awaitable[_R]],
     ) -> Callable[_P, _R | Awaitable[_R]]:
         """Decorate callback system events."""
 
         @wraps(func)
-        async def async_wrapper_callback_system_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        async def async_wrapper_system_event_callback(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap async callback system events."""
             return_value = cast(_R, await func(*args, **kwargs))  # type: ignore[misc]
-            await _exec_callback_system_event(*args, **kwargs)
+            await _exec_system_event_callback(*args, **kwargs)
             return return_value
 
         @wraps(func)
-        def wrapper_callback_system_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        def wrapper_system_event_callback(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap callback system events."""
             return_value = cast(_R, func(*args, **kwargs))
-            central = args[0]
-            if isinstance(central, hmcu.CentralUnit):
-                central.create_task(
-                    _exec_callback_system_event(*args, **kwargs),
-                    name="wrapper_callback_system_event",
+            try:
+                unit = args[0]
+                central: hmcu.CentralUnit | None = None
+                if isinstance(unit, hmcu.CentralUnit):
+                    central = unit
+                if central is None and isinstance(unit, xmlrpc.RPCFunctions):
+                    central = unit.get_central(interface_id=str(args[1]))
+                if central:
+                    central.create_task(
+                        _exec_system_event_callback(*args, **kwargs),
+                        name="wrapper_system_event_callback",
+                    )
+            except Exception as ex:
+                _LOGGER.warning(
+                    "EXEC_SYSTEM_EVENT_CALLBACK failed: Problem with identifying central: %s",
+                    reduce_args(args=ex.args),
                 )
             return return_value
 
-        async def _exec_callback_system_event(*args: Any, **kwargs: Any) -> None:
+        async def _exec_system_event_callback(*args: Any, **kwargs: Any) -> None:
             """Execute the callback for a system event."""
 
-            if len(args) > 1:
+            if not ((len(args) > 1 and not kwargs) or (len(args) == 1 and kwargs)):
                 _LOGGER.warning(
-                    "EXEC_CALLBACK_SYSTEM_EVENT failed: *args not supported for callback_system_event"
+                    "EXEC_SYSTEM_EVENT_CALLBACK failed: *args not supported for callback_system_event"
                 )
             try:
                 args = args[1:]
-                interface_id: str = args[0] if len(args) > 1 else str(kwargs[_INTERFACE_ID])
+                interface_id: str = args[0] if len(args) > 0 else str(kwargs[_INTERFACE_ID])
                 if client := hmcl.get_client(interface_id=interface_id):
                     client.last_updated = datetime.now()
                     client.central.fire_system_event_callback(system_event=system_event, **kwargs)
             except Exception as err:  # pragma: no cover
                 _LOGGER.warning(
-                    "EXEC_CALLBACK_SYSTEM_EVENT failed: Unable to reduce kwargs for callback_system_event"
+                    "EXEC_SYSTEM_EVENT_CALLBACK failed: Unable to reduce kwargs for system_event_callback"
                 )
                 raise HaHomematicException(
-                    f"args-exception callback_system_event [{reduce_args(args=err.args)}]"
+                    f"args-exception system_event_callback [{reduce_args(args=err.args)}]"
                 ) from err
 
         if asyncio.iscoroutinefunction(func):
-            return async_wrapper_callback_system_event
-        return wrapper_callback_system_event
+            return async_wrapper_system_event_callback
+        return wrapper_system_event_callback
 
-    return decorator_callback_system_event
+    return decorator_system_event_callback
 
 
 def callback_event(
     func: Callable[_P, _R],
 ) -> Callable:
-    """Check if callback_event is set and call it AFTER original function."""
+    """Check if event_callback is set and call it AFTER original function."""
 
     @wraps(func)
-    async def async_wrapper_callback_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+    async def async_wrapper_event_callback(*args: _P.args, **kwargs: _P.kwargs) -> _R:
         """Wrap callback events."""
         return_value = cast(_R, await func(*args, **kwargs))  # type: ignore[misc]
-        _exec_callback_entity_event(*args, **kwargs)
+        _exec_event_callback(*args, **kwargs)
         return return_value
 
-    def _exec_callback_entity_event(*args: Any, **kwargs: Any) -> None:
+    def _exec_event_callback(*args: Any, **kwargs: Any) -> None:
         """Execute the callback for an entity event."""
         try:
             args = args[1:]
@@ -98,10 +110,10 @@ def callback_event(
                 client.central.fire_entity_event_callback(*args, **kwargs)
         except Exception as err:  # pragma: no cover
             _LOGGER.warning(
-                "EXEC_CALLBACK_ENTITY_EVENT failed: Unable to reduce kwargs for callback_event"
+                "EXEC_ENTITY_EVENT_CALLBACK failed: Unable to reduce kwargs for event_callback"
             )
             raise HaHomematicException(
-                f"args-exception callback_event [{reduce_args(args=err.args)}]"
+                f"args-exception event_callback [{reduce_args(args=err.args)}]"
             ) from err
 
-    return async_wrapper_callback_event
+    return async_wrapper_event_callback
