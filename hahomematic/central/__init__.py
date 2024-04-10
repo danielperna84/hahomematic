@@ -965,6 +965,7 @@ class CentralUnit:
             )
             return
 
+    @loop_safe
     def _async_create_task(self, target: Coroutine[Any, Any, _R], name: str) -> asyncio.Task[_R]:
         """Create a task from within the event_loop. This method must be run in the event_loop."""
         task = self._loop.create_task(target, name=name)
@@ -983,6 +984,7 @@ class CentralUnit:
             )
             return None
 
+    @loop_safe
     def async_add_executor_job(self, target: Callable[..., _T], *args: Any) -> asyncio.Future[_T]:
         """Add an executor job from within the event_loop."""
         try:
