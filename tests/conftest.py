@@ -64,9 +64,6 @@ async def central_unit_mini(pydev_ccu_mini: pydevccu.Server) -> CentralUnit:
 async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
     """Create and yield central."""
 
-    def entity_data_event_callback(*args, **kwargs):
-        """Do dummy entity_data_event_callback."""
-
     def ha_event_callback(*args, **kwargs):
         """Do dummy ha_event_callback."""
 
@@ -77,13 +74,11 @@ async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
         client_session=None,
     )
 
-    central.register_entity_data_event_callback(entity_data_event_callback)
     central.register_ha_event_callback(ha_event_callback)
     central.register_system_event_callback(system_event_callback)
 
     yield central
 
-    central.unregister_entity_data_event_callback(entity_data_event_callback)
     central.unregister_ha_event_callback(ha_event_callback)
     central.unregister_system_event_callback(system_event_callback)
     await central.stop()
