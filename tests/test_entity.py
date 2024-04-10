@@ -52,14 +52,8 @@ async def test_custom_entity_callback(factory: helper.Factory) -> None:
         "type: HmIP-BSM, name: HmIP-BSM_VCU2128127"
     )
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 1)
-    assert factory.entity_event_mock.call_args_list[-1] == call(
-        const.INTERFACE_ID, "VCU2128127:4", "STATE", 1
-    )
     assert switch.value is True
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 0)
-    assert factory.entity_event_mock.call_args_list[-1] == call(
-        const.INTERFACE_ID, "VCU2128127:4", "STATE", 0
-    )
     assert switch.value is False
     await central.delete_devices(
         interface_id=const.INTERFACE_ID, addresses=[switch.device.device_address]
@@ -96,14 +90,8 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
         "type: HmIP-BSM, name: HmIP-BSM_VCU2128127 State ch4"
     )
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 1)
-    assert factory.entity_event_mock.call_args_list[-1] == call(
-        const.INTERFACE_ID, "VCU2128127:4", "STATE", 1
-    )
     assert switch.value is True
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 0)
-    assert factory.entity_event_mock.call_args_list[-1] == call(
-        const.INTERFACE_ID, "VCU2128127:4", "STATE", 0
-    )
     assert switch.value is False
     await central.delete_devices(
         interface_id=const.INTERFACE_ID, addresses=[switch.device.device_address]

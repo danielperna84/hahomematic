@@ -35,7 +35,6 @@ class Factory:
         """Init the central factory."""
         self._client_session = client_session
         self.system_event_mock = MagicMock()
-        self.entity_event_mock = MagicMock()
         self.ha_event_mock = MagicMock()
 
     async def get_raw_central(
@@ -60,7 +59,6 @@ class Factory:
         ).create_central()
 
         central.register_system_event_callback(self.system_event_mock)
-        central.register_entity_event_callback(self.entity_event_mock)
         central.register_ha_event_callback(self.ha_event_mock)
 
         return central

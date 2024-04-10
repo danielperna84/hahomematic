@@ -53,12 +53,6 @@ class Example:
                 self.got_devices = True
             return
 
-    def _eventcallback(self, interface_id, channel_address, parameter, value):
-        pass
-
-    def _hacallback(self, eventtype, event_data):
-        pass
-
     async def example_run(self):
         """Process the example."""
         central_name = "ccu-dev"
@@ -99,8 +93,6 @@ class Example:
         config.CACHE_DIR = "cache"
         # Add callbacks to handle the events and see what happens on the system.
         self.central.register_system_event_callback(self._systemcallback)
-        self.central.register_entity_event_callback(self._eventcallback)
-        self.central.register_ha_event_callback(self._hacallback)
 
         await self.central.start()
         while not self.got_devices and self.SLEEPCOUNTER < 20:
