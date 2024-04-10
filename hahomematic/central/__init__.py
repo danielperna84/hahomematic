@@ -1159,6 +1159,7 @@ class CentralUnit:
         if entity_data_event_callback in self._entity_data_event_callbacks:
             self._entity_data_event_callbacks.remove(entity_data_event_callback)
 
+    @loop_safe
     def fire_entity_data_event_callback(self, interface_id: str, entity: BaseEntity) -> None:
         """
         Fire entity_data callback in central.
@@ -1184,6 +1185,7 @@ class CentralUnit:
         if system_event_callback in self._system_event_callbacks:
             self._system_event_callbacks.remove(system_event_callback)
 
+    @loop_safe
     def fire_system_event_callback(self, system_event: SystemEvent, **kwargs: Any) -> None:
         """
         Fire system_event callback in central.

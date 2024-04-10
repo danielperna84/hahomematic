@@ -229,6 +229,7 @@ class CallbackEntity(ABC):
         if device_removed_callback in self._device_removed_callbacks:
             self._device_removed_callbacks.remove(device_removed_callback)
 
+    @loop_safe
     def fire_entity_updated_callback(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated/refreshed."""
         for callback_handler in self._entity_updated_callbacks:
@@ -373,6 +374,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Set the entity usage."""
         self._usage = usage
 
+    @loop_safe
     def fire_entity_updated_callback(self, *args: Any, **kwargs: Any) -> None:
         """Do what is needed when the value of the entity has been updated."""
         super().fire_entity_updated_callback(*args, **kwargs)
@@ -654,6 +656,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             return multiplier
         return 1
 
+    @loop_safe
     @abstractmethod
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
@@ -677,6 +680,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             )
         )
 
+    @loop_safe
     def write_value(self, value: Any) -> tuple[ParameterT | None, ParameterT | None]:
         """Update value of the entity."""
         old_value = self._value

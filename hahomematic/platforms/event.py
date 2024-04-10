@@ -64,6 +64,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         """Return the event_type of the event."""
         return self._event_type
 
+    @loop_safe
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
         if self.event_type in ENTITY_EVENTS:
@@ -71,6 +72,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         self._set_last_updated()
         self.fire_event(value)
 
+    @loop_safe
     def fire_event(self, value: Any) -> None:
         """Do what is needed to fire an event."""
         self._central.fire_ha_event_callback(
@@ -102,6 +104,7 @@ class DeviceErrorEvent(GenericEvent):
 
     _event_type = EventType.DEVICE_ERROR
 
+    @loop_safe
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
 
