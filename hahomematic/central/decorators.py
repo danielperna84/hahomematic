@@ -9,7 +9,7 @@ from functools import wraps
 import logging
 from typing import Any, Final, ParamSpec, TypeVar, cast
 
-from hahomematic import client as hmcl
+from hahomematic import central as hmcu, client as hmcl
 from hahomematic.const import SystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
@@ -33,18 +33,24 @@ def callback_system_event(system_event: SystemEvent) -> Callable:
         async def async_wrapper_callback_system_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap async callback system events."""
             return_value = cast(_R, await func(*args, **kwargs))  # type: ignore[misc]
-            _exec_callback_system_event(*args, **kwargs)
+            await _exec_callback_system_event(*args, **kwargs)
             return return_value
 
         @wraps(func)
         def wrapper_callback_system_event(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap callback system events."""
             return_value = cast(_R, func(*args, **kwargs))
-            _exec_callback_system_event(*args, **kwargs)
+            central = args[0]
+            if isinstance(central, hmcu.CentralUnit):
+                central.create_task(
+                    _exec_callback_system_event(*args, **kwargs),
+                    name="wrapper_callback_system_event",
+                )
             return return_value
 
-        def _exec_callback_system_event(*args: Any, **kwargs: Any) -> None:
+        async def _exec_callback_system_event(*args: Any, **kwargs: Any) -> None:
             """Execute the callback for a system event."""
+
             if len(args) > 1:
                 _LOGGER.warning(
                     "EXEC_CALLBACK_SYSTEM_EVENT failed: *args not supported for callback_system_event"
