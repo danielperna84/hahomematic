@@ -1,3 +1,9 @@
+# Version 2024.4.6 (2024-04-10)
+
+- Remove unused callback from tests
+- Add loop_safe annotation
+- Remove entity_data_event_callback
+
 # Version 2024.4.5 (2024-04-09)
 
 - Align callback naming

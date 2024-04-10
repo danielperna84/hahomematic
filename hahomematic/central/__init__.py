@@ -154,9 +154,6 @@ class CentralUnit:
         # Signature: (interface_id, channel_address, parameter, value)
         # Re-Fired events from CCU for parameter updates
         self._entity_event_callbacks: Final[set[Callable]] = set()
-        # Signature: (interface_id, entity)
-        # Fires parameter data updates as events with entity.
-        self._entity_data_event_callbacks: Final[set[Callable]] = set()
         # Signature: (event_type, event_data)
         # Events like INTERFACE, KEYPRESS, ...
         self._ha_event_callbacks: Final[set[Callable]] = set()
@@ -1147,32 +1144,6 @@ class CentralUnit:
             except Exception as ex:
                 _LOGGER.error(
                     "FIRE_ENTITY_EVENT_CALLBACK: Unable to call handler: %s",
-                    reduce_args(args=ex.args),
-                )
-
-    def register_entity_data_event_callback(self, entity_data_event_callback: Callable) -> None:
-        """Register entity_event callback in central."""
-        self._entity_data_event_callbacks.add(entity_data_event_callback)
-
-    def unregister_entity_data_event_callback(self, entity_data_event_callback: Callable) -> None:
-        """Un register entity_event callback in central."""
-        if entity_data_event_callback in self._entity_data_event_callbacks:
-            self._entity_data_event_callbacks.remove(entity_data_event_callback)
-
-    @loop_safe
-    def fire_entity_data_event_callback(self, interface_id: str, entity: BaseEntity) -> None:
-        """
-        Fire entity_data callback in central.
-
-        Not used by HA.
-        Fires parameter data updates as events with entity.
-        """
-        for callback_handler in self._entity_data_event_callbacks:
-            try:
-                callback_handler(interface_id, entity)
-            except Exception as ex:
-                _LOGGER.error(
-                    "FIRE_ENTITY_DATA_EVENT_CALLBACK: Unable to call handler: %s",
                     reduce_args(args=ex.args),
                 )
 

@@ -374,14 +374,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Set the entity usage."""
         self._usage = usage
 
-    @loop_safe
-    def fire_entity_updated_callback(self, *args: Any, **kwargs: Any) -> None:
-        """Do what is needed when the value of the entity has been updated."""
-        super().fire_entity_updated_callback(*args, **kwargs)
-        self._central.fire_entity_data_event_callback(
-            interface_id=self._device.interface_id, entity=self
-        )
-
     @abstractmethod
     async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
         """Init the entity data."""
