@@ -67,7 +67,13 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
-from hahomematic.support import cancelling, check_config, get_device_address, reduce_args
+from hahomematic.support import (
+    cancelling,
+    check_config,
+    get_device_address,
+    loop_safe,
+    reduce_args,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -475,6 +481,7 @@ class CentralUnit:
         await self._hub.fetch_program_data()
         await self._hub.fetch_sysvar_data()
 
+    @loop_safe
     def fire_interface_event(
         self,
         interface_id: str,
@@ -1100,6 +1107,7 @@ class CentralUnit:
         if ha_event_callback in self._ha_event_callbacks:
             self._ha_event_callbacks.remove(ha_event_callback)
 
+    @loop_safe
     def fire_ha_event_callback(self, event_type: EventType, event_data: dict[str, str]) -> None:
         """
         Fire ha_event callback in central.
@@ -1123,6 +1131,7 @@ class CentralUnit:
         if entity_event_callback in self._entity_event_callbacks:
             self._entity_event_callbacks.remove(entity_event_callback)
 
+    @loop_safe
     def fire_entity_event_callback(
         self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
@@ -1150,6 +1159,7 @@ class CentralUnit:
         if entity_data_event_callback in self._entity_data_event_callbacks:
             self._entity_data_event_callbacks.remove(entity_data_event_callback)
 
+    @loop_safe
     def fire_entity_data_event_callback(self, interface_id: str, entity: BaseEntity) -> None:
         """
         Fire entity_data callback in central.
@@ -1175,6 +1185,7 @@ class CentralUnit:
         if system_event_callback in self._system_event_callbacks:
             self._system_event_callbacks.remove(system_event_callback)
 
+    @loop_safe
     def fire_system_event_callback(self, system_event: SystemEvent, **kwargs: Any) -> None:
         """
         Fire system_event callback in central.

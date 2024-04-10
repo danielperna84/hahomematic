@@ -12,7 +12,7 @@ from hahomematic.const import SYSVAR_ADDRESS, HubData, SystemVariableData
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import generate_unique_id
-from hahomematic.support import parse_sys_var
+from hahomematic.support import loop_safe, parse_sys_var
 
 
 class GenericHubEntity(CallbackEntity):
@@ -116,6 +116,7 @@ class GenericSystemVariable(GenericHubEntity):
             return data.name
         return f"Sv_{data.name}"
 
+    @loop_safe
     def write_value(self, value: Any) -> None:
         """Set variable value on CCU/Homegear."""
         old_value = self._value

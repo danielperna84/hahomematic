@@ -11,6 +11,7 @@ from typing import Final
 from hahomematic import central as hmcu
 from hahomematic.const import PROGRAM_ADDRESS, HmPlatform, HubData, ProgramData
 from hahomematic.platforms.hub.entity import GenericHubEntity
+from hahomematic.support import loop_safe
 
 
 class HmProgramButton(GenericHubEntity):
@@ -46,6 +47,7 @@ class HmProgramButton(GenericHubEntity):
             return data.name
         return f"P_{data.name}"
 
+    @loop_safe
     def update_data(self, data: ProgramData) -> None:
         """Set variable value on CCU/Homegear."""
         do_update: bool = False

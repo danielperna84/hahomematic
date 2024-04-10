@@ -24,7 +24,7 @@ from hahomematic.const import (
     InterfaceName,
 )
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import changed_within_seconds
+from hahomematic.support import changed_within_seconds, loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -254,6 +254,7 @@ class PingPongCache:
         self._pending_pong_logged = False
         self._unknown_pong_logged = False
 
+    @loop_safe
     def handle_send_ping(self, ping_ts: datetime) -> None:
         """Handle send ping timestamp."""
         self._pending_pongs.add(ping_ts)
@@ -268,6 +269,7 @@ class PingPongCache:
             ping_ts,
         )
 
+    @loop_safe
     def handle_received_pong(self, pong_ts: datetime) -> None:
         """Handle received pong timestamp."""
         if pong_ts in self._pending_pongs:
@@ -324,6 +326,7 @@ class PingPongCache:
                     pong_ts,
                 )
 
+    @loop_safe
     def _check_and_fire_pong_event(
         self, event_type: InterfaceEventType, pong_mismatch_count: int
     ) -> None:

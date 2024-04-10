@@ -23,6 +23,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.entity import BaseParameterEntity
 from hahomematic.platforms.support import EntityNameData, generate_unique_id, get_event_name
+from hahomematic.support import loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         """Return the event_type of the event."""
         return self._event_type
 
+    @loop_safe
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
         if self.event_type in ENTITY_EVENTS:
@@ -70,6 +72,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         self._set_last_updated()
         self.fire_event(value)
 
+    @loop_safe
     def fire_event(self, value: Any) -> None:
         """Do what is needed to fire an event."""
         self._central.fire_ha_event_callback(
@@ -101,6 +104,7 @@ class DeviceErrorEvent(GenericEvent):
 
     _event_type = EventType.DEVICE_ERROR
 
+    @loop_safe
     def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
 
@@ -128,6 +132,7 @@ class ImpulseEvent(GenericEvent):
     _event_type = EventType.IMPULSE
 
 
+@loop_safe
 def create_event_and_append_to_device(
     device: hmd.HmDevice, channel_address: str, parameter: str, parameter_data: Mapping[str, Any]
 ) -> None:

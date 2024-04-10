@@ -10,6 +10,7 @@ from hahomematic.const import CallSource, EntityUsage, EventType, Parameter, Par
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.support import EntityNameData, get_entity_name
+from hahomematic.support import loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             return self._usage
         return EntityUsage.ENTITY if force_enabled else EntityUsage.NO_CREATE
 
+    @loop_safe
     def event(self, value: Any) -> None:
         """Handle event for which this entity has subscribed."""
 

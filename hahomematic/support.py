@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 import contextlib
 from dataclasses import dataclass
 from datetime import datetime
@@ -14,7 +14,7 @@ import os
 import re
 import socket
 import ssl
-from typing import Any, Final
+from typing import Any, Final, TypeVar
 
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
@@ -28,6 +28,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _LOGGER: Final = logging.getLogger(__name__)
 
 
@@ -295,3 +296,9 @@ class CacheEntry:
 def cancelling(task: asyncio.Future[Any]) -> bool:
     """Return True if task is cancelling."""
     return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
+
+
+def loop_safe(func: _CallableT) -> _CallableT:
+    """Annotation to mark method as safe to call from within the event loop."""
+    setattr(func, "_loop_safe", True)
+    return func
