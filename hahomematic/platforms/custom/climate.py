@@ -26,6 +26,7 @@ from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
+from hahomematic.support import loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -235,6 +236,7 @@ class BaseClimateEntity(CustomEntity):
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
 
+    @loop_safe
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
@@ -398,6 +400,7 @@ class CeRfThermostat(BaseClimateEntity):
         )
 
 
+@loop_safe
 def _party_mode_code(start: datetime, end: datetime, away_temperature: float) -> str:
     """
     Create the party mode code.

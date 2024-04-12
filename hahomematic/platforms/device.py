@@ -364,6 +364,7 @@ class HmDevice(PayloadMixin):
         if isinstance(entity, GenericEvent):
             self._generic_events[(entity.channel_address, entity.parameter)] = entity
 
+    @loop_safe
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseEntity):
@@ -379,6 +380,7 @@ class HmDevice(PayloadMixin):
             del self._generic_events[(entity.channel_address, entity.parameter)]
         entity.fire_device_removed_callback()
 
+    @loop_safe
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
         for event in self.generic_events:

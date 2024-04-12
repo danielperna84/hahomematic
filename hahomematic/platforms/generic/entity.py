@@ -151,6 +151,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             else EntityUsage.ENTITY
         )
 
+    @loop_safe
     def is_state_change(self, value: hme.ParameterT) -> bool:
         """
         Check if the state/value changes.

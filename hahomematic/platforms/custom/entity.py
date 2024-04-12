@@ -21,7 +21,7 @@ from hahomematic.platforms.support import (
     check_channel_is_the_only_primary_channel,
     get_custom_entity_name,
 )
-from hahomematic.support import get_channel_address
+from hahomematic.support import get_channel_address, loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 _EntityT = TypeVar("_EntityT", bound=hmge.GenericEntity)
@@ -143,6 +143,7 @@ class CustomEntity(BaseEntity):
             await entity.load_entity_value(call_source=call_source, direct_call=direct_call)
         self.fire_entity_updated_callback()
 
+    @loop_safe
     def is_state_change(self, **kwargs: Any) -> bool:
         """
         Check if the state changes due to kwargs.

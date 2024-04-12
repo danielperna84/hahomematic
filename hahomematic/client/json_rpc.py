@@ -38,7 +38,7 @@ from hahomematic.exceptions import (
     NoConnection,
     UnsupportedException,
 )
-from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
+from hahomematic.support import get_tls_context, loop_safe, parse_sys_var, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -262,6 +262,7 @@ class JsonRpcAioHttpClient:
 
         return response
 
+    @loop_safe
     def _get_script(self, script_name: str) -> str | None:
         """Return a script from the script cache. Load if required."""
         if script_name in self._script_cache:
@@ -460,6 +461,7 @@ class JsonRpcAioHttpClient:
 
         return True
 
+    @loop_safe
     def clear_session(self) -> None:
         """Clear the current session."""
         self._session_id = None
@@ -860,6 +862,7 @@ class JsonRpcAioHttpClient:
             raise ClientException(jderr) from jderr
         return None
 
+    @loop_safe
     def _handle_exception_log(
         self,
         iid: str,
@@ -880,6 +883,7 @@ class JsonRpcAioHttpClient:
         )
 
 
+@loop_safe
 def _get_params(
     session_id: bool | str,
     extra_params: dict[str, Any] | None,

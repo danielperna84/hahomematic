@@ -123,6 +123,7 @@ def create_entity_and_append_to_device(
             entity.force_to_sensor()
 
 
+@loop_safe
 def _check_switch_to_sensor(entity: hmge.GenericEntity) -> bool:
     """Check if parameter of a device should be wrapped to a different platform."""
     if entity.device.central.parameter_visibility.parameter_is_un_ignored(

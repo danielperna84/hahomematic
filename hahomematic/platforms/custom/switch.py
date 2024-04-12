@@ -23,6 +23,7 @@ from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.support import OnTimeMixin
+from hahomematic.support import loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -80,6 +81,7 @@ class CeSwitch(CustomEntity, OnTimeMixin):
             return
         await self._e_state.turn_off(collector=collector)
 
+    @loop_safe
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if kwargs.get(StateChangeArg.ON_TIME) is not None:

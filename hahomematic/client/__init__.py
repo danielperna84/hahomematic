@@ -102,6 +102,7 @@ class Client(ABC):
         """Return the ping pong cache."""
         return self._ping_pong_cache
 
+    @loop_safe
     def get_product_group(self, device_type: str) -> ProductGroup:
         """Return the product group."""
         if self.interface == InterfaceName.HMIP_RF:
@@ -323,6 +324,7 @@ class Client(ABC):
     async def _get_system_information(self) -> SystemInformation:
         """Get system information of the backend."""
 
+    @loop_safe
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for device_type in VIRTUAL_REMOTE_TYPES:
@@ -1057,6 +1059,7 @@ class InterfaceConfig:
         self.remote_path: Final = remote_path
         self.validate()
 
+    @loop_safe
     def validate(self) -> None:
         """Validate the client_config."""
         if self.interface not in list(InterfaceName):
