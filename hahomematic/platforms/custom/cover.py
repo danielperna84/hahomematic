@@ -330,6 +330,7 @@ class CeBlind(CeCover):
             return True
         return super().is_state_change(**kwargs)
 
+    @loop_safe
     def _get_combined_value(
         self, level: float | None = None, tilt_level: float | None = None
     ) -> str | None:
@@ -388,6 +389,7 @@ class CeIpBlind(CeBlind):
             collector=collector,
         )
 
+    @loop_safe
     def _get_combined_value(
         self, level: float | None = None, tilt_level: float | None = None
     ) -> str | None:
