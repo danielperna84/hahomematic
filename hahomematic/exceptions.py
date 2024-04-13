@@ -129,9 +129,7 @@ def log_exception(
         @wraps(func)
         def wrapper_log_exception(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap sync methods."""
-            return_value = cast(_R, func(*args, **kwargs))
-
-            return return_value
+            return cast(_R, func(*args, **kwargs))
 
         if asyncio.iscoroutinefunction(func):
             return async_wrapper_log_exception

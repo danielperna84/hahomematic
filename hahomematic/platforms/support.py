@@ -334,9 +334,9 @@ def _check_channel_name_with_channel_no(name: str) -> bool:
         channel_part = name.split(":")[1]
         try:
             int(channel_part)
-            return True
         except ValueError:
             return False
+        return True
     return False
 
 

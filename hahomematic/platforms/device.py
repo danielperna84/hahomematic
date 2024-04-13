@@ -344,7 +344,7 @@ class HmDevice(PayloadMixin):
         if channel_no not in self._sub_device_channels:
             self._sub_device_channels[channel_no] = base_channel_no
         elif self._sub_device_channels[channel_no] != base_channel_no:
-            return None
+            return
 
     def get_sub_device_channel(self, channel_no: int) -> int | None:
         """Return the sub device channel."""

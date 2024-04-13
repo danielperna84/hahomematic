@@ -628,13 +628,14 @@ class Client(ABC):
                     device_address,
                     "success" if result else "failed",
                 )
-                return result
             except BaseHomematicException as ex:
                 _LOGGER.warning(
                     "UPDATE_DEVICE_FIRMWARE failed: %s [%s]",
                     ex.name,
                     reduce_args(args=ex.args),
                 )
+            else:
+                return result
         return False
 
     async def update_paramset_descriptions(self, device_address: str) -> None:
@@ -737,13 +738,14 @@ class ClientCCU(Client):
             )
             await self._proxy.ping(calllerId)
             self.last_updated = dt_now
-            return True
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "CHECK_CONNECTION_AVAILABILITY failed: %s [%s]",
                 ex.name,
                 reduce_args(args=ex.args),
             )
+        else:
+            return True
         self.last_updated = INIT_DATETIME
         return False
 
@@ -852,13 +854,14 @@ class ClientHomegear(Client):
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
             self.last_updated = datetime.now()
-            return True
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "CHECK_CONNECTION_AVAILABILITY failed: %s [%s]",
                 ex.name,
                 reduce_args(args=ex.args),
             )
+        else:
+            return True
         self.last_updated = INIT_DATETIME
         return False
 
