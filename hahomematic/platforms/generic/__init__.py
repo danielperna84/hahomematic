@@ -26,7 +26,6 @@ from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.generic.switch import HmSwitch
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.support import generate_unique_id, is_binary_sensor
-from hahomematic.support import loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 _BUTTON_ACTIONS: Final[tuple[str, ...]] = ("RESET_MOTION", "RESET_PRESENCE")
@@ -37,7 +36,6 @@ _SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
 }
 
 
-@loop_safe
 def create_entity_and_append_to_device(
     device: hmd.HmDevice,
     channel_address: str,

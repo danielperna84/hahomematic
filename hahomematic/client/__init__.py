@@ -35,13 +35,7 @@ from hahomematic.const import (
 from hahomematic.exceptions import BaseHomematicException, NoConnection
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import (
-    build_headers,
-    build_xml_rpc_uri,
-    get_channel_no,
-    loop_safe,
-    reduce_args,
-)
+from hahomematic.support import build_headers, build_xml_rpc_uri, get_channel_no, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -174,7 +168,6 @@ class Client(ABC):
             return await self.proxy_init()
         return ProxyInitState.DE_INIT_FAILED
 
-    @loop_safe
     def _mark_all_devices_forced_availability(
         self, forced_availability: ForcedDeviceAvailability
     ) -> None:
@@ -249,7 +242,6 @@ class Client(ABC):
             return True
         return False
 
-    @loop_safe
     def is_callback_alive(self) -> bool:
         """Return if XmlRPC-Server is alive based on received events for this client."""
         if last_events_time := self.central.last_events.get(self.interface_id):
@@ -1055,9 +1047,9 @@ class InterfaceConfig:
         self.interface_id: Final[str] = f"{central_name}-{self.interface}"
         self.port: Final = port
         self.remote_path: Final = remote_path
-        self.validate()
+        self._init_validate()
 
-    def validate(self) -> None:
+    def _init_validate(self) -> None:
         """Validate the client_config."""
         if self.interface not in list(InterfaceName):
             _LOGGER.warning(

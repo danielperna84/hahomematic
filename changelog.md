@@ -1,3 +1,8 @@
+# Version 2024.4.7 (2024-04-13)
+
+- Rename loop_safe to loop_check
+- Reduce loop_check to minimum
+
 # Version 2024.4.6 (2024-04-10)
 
 - Remove unused callback from tests

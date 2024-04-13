@@ -71,7 +71,7 @@ from hahomematic.support import (
     cancelling,
     check_config,
     get_device_address,
-    loop_safe,
+    loop_check,
     reduce_args,
 )
 
@@ -320,7 +320,7 @@ class CentralUnit:
 
         if self._xml_rpc_server:
             # un-register this instance from XmlRPC-Server
-            self._xml_rpc_server.un_register_central(central=self)
+            self._xml_rpc_server.unregister_central(central=self)
             # un-register and stop XmlRPC-Server, if possible
             if self._xml_rpc_server.no_central_registered:
                 self._xml_rpc_server.stop()
@@ -478,7 +478,7 @@ class CentralUnit:
         await self._hub.fetch_program_data()
         await self._hub.fetch_sysvar_data()
 
-    @loop_safe
+    @loop_check
     def fire_interface_event(
         self,
         interface_id: str,
@@ -965,7 +965,6 @@ class CentralUnit:
             )
             return
 
-    @loop_safe
     def _async_create_task(self, target: Coroutine[Any, Any, _R], name: str) -> asyncio.Task[_R]:
         """Create a task from within the event_loop. This method must be run in the event_loop."""
         task = self._loop.create_task(target, name=name)
@@ -984,7 +983,6 @@ class CentralUnit:
             )
             return None
 
-    @loop_safe
     def async_add_executor_job(self, target: Callable[..., _T], *args: Any) -> asyncio.Future[_T]:
         """Add an executor job from within the event_loop."""
         try:
@@ -1106,7 +1104,7 @@ class CentralUnit:
         if ha_event_callback in self._ha_event_callbacks:
             self._ha_event_callbacks.remove(ha_event_callback)
 
-    @loop_safe
+    @loop_check
     def fire_ha_event_callback(self, event_type: EventType, event_data: dict[str, str]) -> None:
         """
         Fire ha_event callback in central.
@@ -1130,7 +1128,7 @@ class CentralUnit:
         if entity_event_callback in self._entity_event_callbacks:
             self._entity_event_callbacks.remove(entity_event_callback)
 
-    @loop_safe
+    @loop_check
     def fire_entity_event_callback(
         self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
@@ -1158,7 +1156,7 @@ class CentralUnit:
         if system_event_callback in self._system_event_callbacks:
             self._system_event_callbacks.remove(system_event_callback)
 
-    @loop_safe
+    @loop_check
     def fire_system_event_callback(self, system_event: SystemEvent, **kwargs: Any) -> None:
         """
         Fire system_event callback in central.

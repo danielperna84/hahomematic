@@ -8,13 +8,14 @@ from collections.abc import Callable, Collection
 import contextlib
 from dataclasses import dataclass
 from datetime import datetime
-from functools import lru_cache
+from functools import lru_cache, wraps
 import logging
 import os
 import re
 import socket
 import ssl
-from typing import Any, Final, TypeVar
+import sys
+from typing import Any, Final, ParamSpec, TypeVar
 
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
@@ -28,8 +29,9 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 _LOGGER: Final = logging.getLogger(__name__)
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
 def reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:
@@ -298,7 +300,46 @@ def cancelling(task: asyncio.Future[Any]) -> bool:
     return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
-def loop_safe(func: _CallableT) -> _CallableT:
+def loop_check(func: Callable[_P, _R]) -> Callable[_P, _R]:
     """Annotation to mark method as safe to call from within the event loop."""
+
+    _with_loop: set = set()
+
+    @wraps(func)
+    def wrapper_loop_safe(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        """Wrap loop safe."""
+        return_value = func(*args, **kwargs)
+
+        try:
+            asyncio.get_running_loop()
+            loop_running = True
+        except Exception:
+            loop_running = False
+
+        if not loop_running and func not in _with_loop:
+            _with_loop.add(func)
+            _LOGGER.warning(
+                "Method %s must run in the event_loop. No loop detected.", func.__name__
+            )
+
+        return return_value
+
     setattr(func, "_loop_safe", True)
-    return func
+    return wrapper_loop_safe if debug_enabled() else func
+
+
+def debug_enabled() -> bool:
+    """Check if debug mode is enabled."""
+    try:
+        if sys.gettrace() is not None:
+            return True
+    except AttributeError:
+        pass
+
+    try:
+        if sys.monitoring.get_tool(sys.monitoring.DEBUGGER_ID) is not None:
+            return True
+    except AttributeError:
+        pass
+
+    return False

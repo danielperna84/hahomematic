@@ -49,7 +49,7 @@ from hahomematic.support import (
     CacheEntry,
     Channel,
     check_or_create_directory,
-    loop_safe,
+    loop_check,
     reduce_args,
 )
 
@@ -504,7 +504,6 @@ class HmDevice(PayloadMixin):
             if ge.is_readable and ge.paramset_key == paramset_key
         )
 
-    @loop_safe
     def set_forced_availability(self, forced_availability: ForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
         if self._forced_availability != forced_availability:
@@ -582,7 +581,7 @@ class HmDevice(PayloadMixin):
             entity.update_parameter_data()
         self.fire_device_updated_callback()
 
-    @loop_safe
+    @loop_check
     def fire_device_updated_callback(self, *args: Any) -> None:
         """Do what is needed when the state of the device has been updated."""
         self._set_last_updated()
