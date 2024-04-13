@@ -71,7 +71,7 @@ from hahomematic.support import (
     cancelling,
     check_config,
     get_device_address,
-    loop_safe,
+    loop_check,
     reduce_args,
 )
 
@@ -258,13 +258,11 @@ class CentralUnit:
         """Return the sysvar entities."""
         return tuple(self._sysvar_entities.values())
 
-    @loop_safe
     def add_sysvar_entity(self, sysvar_entity: GenericSystemVariable) -> None:
         """Add new program button."""
         if (ccu_var_name := sysvar_entity.ccu_var_name) is not None:
             self._sysvar_entities[ccu_var_name] = sysvar_entity
 
-    @loop_safe
     def remove_sysvar_entity(self, name: str) -> None:
         """Remove a sysvar entity."""
         if (sysvar_entity := self.get_sysvar_entity(name=name)) is not None:
@@ -276,12 +274,10 @@ class CentralUnit:
         """Return the program entities."""
         return tuple(self._program_buttons.values())
 
-    @loop_safe
     def add_program_button(self, program_button: HmProgramButton) -> None:
         """Add new program button."""
         self._program_buttons[program_button.pid] = program_button
 
-    @loop_safe
     def remove_program_button(self, pid: str) -> None:
         """Remove a program button."""
         if (program_button := self.get_program_button(pid=pid)) is not None:
@@ -482,7 +478,7 @@ class CentralUnit:
         await self._hub.fetch_program_data()
         await self._hub.fetch_sysvar_data()
 
-    @loop_safe
+    @loop_check
     def fire_interface_event(
         self,
         interface_id: str,
@@ -537,7 +533,6 @@ class CentralUnit:
 
         return callback_ip
 
-    @loop_safe
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
         _LOGGER.debug(
@@ -546,7 +541,6 @@ class CentralUnit:
         )
         self._connection_checker.start()
 
-    @loop_safe
     def _stop_connection_checker(self) -> None:
         """Start the connection checker."""
         self._connection_checker.stop()
@@ -578,7 +572,6 @@ class CentralUnit:
             _LOGGER.warning(ex)
             raise
 
-    @loop_safe
     def get_client(self, interface_id: str) -> hmcl.Client:
         """Return a client by interface_id."""
         if not self.has_client(interface_id=interface_id):
@@ -587,13 +580,11 @@ class CentralUnit:
             )
         return self._clients[interface_id]
 
-    @loop_safe
     def get_device(self, address: str) -> HmDevice | None:
         """Return homematic device."""
         d_address = get_device_address(address=address)
         return self._devices.get(d_address)
 
-    @loop_safe
     def get_entities(
         self,
         platform: HmPlatform | None = None,
@@ -611,7 +602,6 @@ class CentralUnit:
 
         return tuple(all_entities)
 
-    @loop_safe
     def get_readable_generic_entities(
         self, paramset_key: str | None = None
     ) -> tuple[GenericEntity, ...]:
@@ -626,7 +616,6 @@ class CentralUnit:
             )
         )
 
-    @loop_safe
     def _get_primary_client(self) -> hmcl.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hmcl.Client | None = None
@@ -638,7 +627,6 @@ class CentralUnit:
                 return client
         return client
 
-    @loop_safe
     def get_hub_entities(
         self, platform: HmPlatform | None = None, registered: bool | None = None
     ) -> tuple[GenericHubEntity, ...]:
@@ -650,7 +638,6 @@ class CentralUnit:
             and (registered is None or he.is_registered == registered)
         )
 
-    @loop_safe
     def get_channel_events(
         self, event_type: EventType, registered: bool | None = None
     ) -> tuple[list[GenericEvent], ...]:
@@ -664,7 +651,6 @@ class CentralUnit:
 
         return tuple(hm_channel_events)
 
-    @loop_safe
     def get_virtual_remotes(self) -> tuple[HmDevice, ...]:
         """Get the virtual remote for the Client."""
         return tuple(
@@ -673,7 +659,6 @@ class CentralUnit:
             if cl.get_virtual_remote() is not None
         )
 
-    @loop_safe
     def has_client(self, interface_id: str) -> bool:
         """Check if client exists in central."""
         return interface_id in self._clients
@@ -896,7 +881,6 @@ class CentralUnit:
         )
         return result
 
-    @loop_safe
     def add_event_subscription(self, entity: BaseEntity) -> None:
         """Add entity to central event subscription."""
         if isinstance(entity, (GenericEntity, GenericEvent)) and entity.supports_events:
@@ -924,7 +908,6 @@ class CentralUnit:
         self.device_details.remove_device(device=device)
         del self._devices[device.device_address]
 
-    @loop_safe
     def remove_event_subscription(self, entity: BaseEntity) -> None:
         """Remove event subscription from central collections."""
         if (
@@ -971,7 +954,6 @@ class CentralUnit:
             for task in pending:
                 _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
 
-    @loop_safe
     def create_task(self, target: Coroutine[Any, Any, Any], name: str) -> None:
         """Add task to the executor pool."""
         try:
@@ -983,7 +965,6 @@ class CentralUnit:
             )
             return
 
-    @loop_safe
     def _async_create_task(self, target: Coroutine[Any, Any, _R], name: str) -> asyncio.Task[_R]:
         """Create a task from within the event_loop. This method must be run in the event_loop."""
         task = self._loop.create_task(target, name=name)
@@ -1002,7 +983,6 @@ class CentralUnit:
             )
             return None
 
-    @loop_safe
     def async_add_executor_job(self, target: Callable[..., _T], *args: Any) -> asyncio.Future[_T]:
         """Add an executor job from within the event_loop."""
         try:
@@ -1069,7 +1049,6 @@ class CentralUnit:
             on=on, t=t, mode=mode, device_address=device_address
         )
 
-    @loop_safe
     def _get_virtual_remote(self, device_address: str) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for client in self._clients.values():
@@ -1078,28 +1057,24 @@ class CentralUnit:
                 return virtual_remote
         return None
 
-    @loop_safe
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Get entity by channel_address and parameter."""
         if device := self.get_device(address=channel_address):
             return device.get_generic_entity(channel_address=channel_address, parameter=parameter)
         return None
 
-    @loop_safe
     def get_event(self, channel_address: str, parameter: str) -> GenericEvent | None:
         """Return the hm event."""
         if device := self.get_device(address=channel_address):
             return device.get_generic_event(channel_address=channel_address, parameter=parameter)
         return None
 
-    @loop_safe
     def get_custom_entity(self, address: str, channel_no: int) -> CustomEntity | None:
         """Return the hm custom_entity."""
         if device := self.get_device(address=address):
             return device.get_custom_entity(channel_no=channel_no)
         return None
 
-    @loop_safe
     def get_sysvar_entity(self, name: str) -> GenericSystemVariable | None:
         """Return the sysvar entity."""
         if sysvar := self._sysvar_entities.get(name):
@@ -1109,7 +1084,6 @@ class CentralUnit:
                 return sysvar
         return None
 
-    @loop_safe
     def get_program_button(self, pid: str) -> HmProgramButton | None:
         """Return the program button."""
         return self._program_buttons.get(pid)
@@ -1121,18 +1095,16 @@ class CentralUnit:
         self.device_details.clear()
         self.data_cache.clear()
 
-    @loop_safe
     def register_ha_event_callback(self, ha_event_callback: Callable) -> None:
         """Register ha_event callback in central."""
         self._ha_event_callbacks.add(ha_event_callback)
 
-    @loop_safe
     def unregister_ha_event_callback(self, ha_event_callback: Callable) -> None:
         """RUn register ha_event callback in central."""
         if ha_event_callback in self._ha_event_callbacks:
             self._ha_event_callbacks.remove(ha_event_callback)
 
-    @loop_safe
+    @loop_check
     def fire_ha_event_callback(self, event_type: EventType, event_data: dict[str, str]) -> None:
         """
         Fire ha_event callback in central.
@@ -1147,18 +1119,16 @@ class CentralUnit:
                     "FIRE_HA_EVENT_CALLBACK: Unable to call handler: %s", reduce_args(args=ex.args)
                 )
 
-    @loop_safe
     def register_entity_event_callback(self, entity_event_callback: Callable) -> None:
         """Register entity_event callback in central."""
         self._entity_event_callbacks.add(entity_event_callback)
 
-    @loop_safe
     def unregister_entity_event_callback(self, entity_event_callback: Callable) -> None:
         """Un register entity_event callback in central."""
         if entity_event_callback in self._entity_event_callbacks:
             self._entity_event_callbacks.remove(entity_event_callback)
 
-    @loop_safe
+    @loop_check
     def fire_entity_event_callback(
         self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
@@ -1177,18 +1147,16 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
-    @loop_safe
     def register_system_event_callback(self, system_event_callback: Callable) -> None:
         """Register system_event callback in central."""
         self._system_event_callbacks.add(system_event_callback)
 
-    @loop_safe
     def unregister_system_event_callback(self, system_event_callback: Callable) -> None:
         """Un register system_event callback in central."""
         if system_event_callback in self._system_event_callbacks:
             self._system_event_callbacks.remove(system_event_callback)
 
-    @loop_safe
+    @loop_check
     def fire_system_event_callback(self, system_event: SystemEvent, **kwargs: Any) -> None:
         """
         Fire system_event callback in central.

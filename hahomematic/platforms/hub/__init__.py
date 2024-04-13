@@ -25,7 +25,6 @@ from hahomematic.platforms.hub.select import HmSysvarSelect
 from hahomematic.platforms.hub.sensor import HmSysvarSensor
 from hahomematic.platforms.hub.switch import HmSysvarSwitch
 from hahomematic.platforms.hub.text import HmSysvarText
-from hahomematic.support import loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -132,21 +131,18 @@ class Hub:
                 new_hub_entities=_get_new_hub_entities(entities=new_sysvars),
             )
 
-    @loop_safe
     def _create_program(self, data: ProgramData) -> HmProgramButton:
         """Create program as entity."""
         program_button = HmProgramButton(central=self._central, data=data)
         self._central.add_program_button(program_button=program_button)
         return program_button
 
-    @loop_safe
     def _create_system_variable(self, data: SystemVariableData) -> GenericSystemVariable:
         """Create system variable as entity."""
         sysvar_entity = self._create_sysvar_entity(data=data)
         self._central.add_sysvar_entity(sysvar_entity=sysvar_entity)
         return sysvar_entity
 
-    @loop_safe
     def _create_sysvar_entity(self, data: SystemVariableData) -> GenericSystemVariable:
         """Create sysvar entity."""
         data_type = data.data_type
@@ -165,19 +161,16 @@ class Hub:
 
         return HmSysvarSensor(central=self._central, data=data)
 
-    @loop_safe
     def _remove_program_entity(self, ids: tuple[str, ...]) -> None:
         """Remove sysvar entity from hub."""
         for pid in ids:
             self._central.remove_program_button(pid=pid)
 
-    @loop_safe
     def _remove_sysvar_entity(self, del_entities: tuple[str, ...]) -> None:
         """Remove sysvar entity from hub."""
         for name in del_entities:
             self._central.remove_sysvar_entity(name=name)
 
-    @loop_safe
     def _identify_missing_program_ids(self, programs: tuple[ProgramData, ...]) -> tuple[str, ...]:
         """Identify missing programs."""
         return tuple(
@@ -186,7 +179,6 @@ class Hub:
             if program_button.pid not in [x.pid for x in programs]
         )
 
-    @loop_safe
     def _identify_missing_variable_names(
         self, variables: tuple[SystemVariableData, ...]
     ) -> tuple[str, ...]:
@@ -204,19 +196,16 @@ class Hub:
         return tuple(missing_variables)
 
 
-@loop_safe
 def _is_excluded(variable: str, excludes: list[str]) -> bool:
     """Check if variable is excluded by exclude_list."""
     return any(marker in variable for marker in excludes)
 
 
-@loop_safe
 def _clean_variables(variables: tuple[SystemVariableData, ...]) -> tuple[SystemVariableData, ...]:
     """Clean variables by removing excluded."""
     return tuple(sv for sv in variables if not _is_excluded(sv.name, _EXCLUDED))
 
 
-@loop_safe
 def _get_new_hub_entities(
     entities: Collection[GenericHubEntity],
 ) -> Mapping[HmPlatform, AbstractSet[GenericHubEntity]]:

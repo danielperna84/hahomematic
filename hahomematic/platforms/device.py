@@ -49,7 +49,7 @@ from hahomematic.support import (
     CacheEntry,
     Channel,
     check_or_create_directory,
-    loop_safe,
+    loop_check,
     reduce_args,
 )
 
@@ -364,7 +364,6 @@ class HmDevice(PayloadMixin):
         if isinstance(entity, GenericEvent):
             self._generic_events[(entity.channel_address, entity.parameter)] = entity
 
-    @loop_safe
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseEntity):
@@ -380,7 +379,6 @@ class HmDevice(PayloadMixin):
             del self._generic_events[(entity.channel_address, entity.parameter)]
         entity.fire_device_removed_callback()
 
-    @loop_safe
     def clear_collections(self) -> None:
         """Remove entities from collections and central."""
         for event in self.generic_events:
@@ -395,7 +393,6 @@ class HmDevice(PayloadMixin):
             self.remove_entity(custom_entity)
         self._custom_entities.clear()
 
-    @loop_safe
     def register_device_updated_callback(self, device_updated_callback: Callable) -> None:
         """Register update callback."""
         if (
@@ -404,13 +401,11 @@ class HmDevice(PayloadMixin):
         ):
             self._device_updated_callbacks.append(device_updated_callback)
 
-    @loop_safe
     def unregister_device_updated_callback(self, device_updated_callback: Callable) -> None:
         """Remove update callback."""
         if device_updated_callback in self._device_updated_callbacks:
             self._device_updated_callbacks.remove(device_updated_callback)
 
-    @loop_safe
     def register_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
         """Register firmware update callback."""
         if (
@@ -419,7 +414,6 @@ class HmDevice(PayloadMixin):
         ):
             self._firmware_update_callbacks.append(firmware_update_callback)
 
-    @loop_safe
     def unregister_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
         """Remove firmware update callback."""
         if firmware_update_callback in self._firmware_update_callbacks:
@@ -510,7 +504,6 @@ class HmDevice(PayloadMixin):
             if ge.is_readable and ge.paramset_key == paramset_key
         )
 
-    @loop_safe
     def set_forced_availability(self, forced_availability: ForcedDeviceAvailability) -> None:
         """Set the availability of the device."""
         if self._forced_availability != forced_availability:
@@ -588,7 +581,7 @@ class HmDevice(PayloadMixin):
             entity.update_parameter_data()
         self.fire_device_updated_callback()
 
-    @loop_safe
+    @loop_check
     def fire_device_updated_callback(self, *args: Any) -> None:
         """Do what is needed when the state of the device has been updated."""
         self._set_last_updated()

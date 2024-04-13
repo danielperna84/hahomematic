@@ -25,7 +25,6 @@ from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.support import OnTimeMixin
-from hahomematic.support import loop_safe
 
 _DIMMER_OFF: Final = 0.0
 _EFFECT_OFF: Final = "Off"
@@ -277,7 +276,6 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         """Set the ramp time value in seconds."""
         await self._set_ramp_time_on_value(ramp_time=ramp_time, collector=collector)
 
-    @loop_safe
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (

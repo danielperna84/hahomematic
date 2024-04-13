@@ -24,7 +24,7 @@ from hahomematic.const import (
     InterfaceName,
 )
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import changed_within_seconds, loop_safe
+from hahomematic.support import changed_within_seconds
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -65,29 +65,24 @@ class DeviceDetailsCache:
         """Return device channel ids."""
         return self._device_channel_ids
 
-    @loop_safe
     def add_name(self, address: str, name: str) -> None:
         """Add name to cache."""
         if address not in self._names_cache:
             self._names_cache[address] = name
 
-    @loop_safe
     def get_name(self, address: str) -> str | None:
         """Get name from cache."""
         return self._names_cache.get(address)
 
-    @loop_safe
     def add_interface(self, address: str, interface: str) -> None:
         """Add interface to cache."""
         if address not in self._interface_cache:
             self._interface_cache[address] = interface
 
-    @loop_safe
     def get_interface(self, address: str) -> str:
         """Get interface from cache."""
         return self._interface_cache.get(address) or InterfaceName.BIDCOS_RF
 
-    @loop_safe
     def add_device_channel_id(self, address: str, channel_id: str) -> None:
         """Add channel id for a channel."""
         self._device_channel_ids[address] = channel_id
@@ -98,7 +93,6 @@ class DeviceDetailsCache:
             return await client.get_all_rooms()
         return {}
 
-    @loop_safe
     def get_device_rooms(self, device_address: str) -> set[str]:
         """Return all rooms by device_address."""
         rooms: set[str] = set()
@@ -107,7 +101,6 @@ class DeviceDetailsCache:
                 rooms.update(channel_rooms)
         return rooms
 
-    @loop_safe
     def get_channel_rooms(self, channel_address: str) -> set[str]:
         """Return rooms by channel_address."""
         return self._channel_rooms.get(channel_address) or set()
@@ -118,14 +111,12 @@ class DeviceDetailsCache:
             return await client.get_all_functions()
         return {}
 
-    @loop_safe
     def get_function_text(self, address: str) -> str | None:
         """Return function by address."""
         if functions := self._functions.get(address):
             return ",".join(functions)
         return None
 
-    @loop_safe
     def remove_device(self, device: HmDevice) -> None:
         """Remove name from cache."""
         if device.device_address in self._names_cache:
@@ -134,7 +125,6 @@ class DeviceDetailsCache:
             if channel_address in self._names_cache:
                 del self._names_cache[channel_address]
 
-    @loop_safe
     def clear(self) -> None:
         """Clear the cache."""
         self._names_cache.clear()
@@ -179,13 +169,11 @@ class CentralDataCache:
         for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
             await entity.load_entity_value(call_source=CallSource.HM_INIT)
 
-    @loop_safe
     def add_data(self, all_device_data: dict[str, Any]) -> None:
         """Add data to cache."""
         self._value_cache.update(all_device_data)
         self._last_refreshed = datetime.now()
 
-    @loop_safe
     def get_data(
         self,
         interface: str,
@@ -198,7 +186,6 @@ class CentralDataCache:
             return self._value_cache.get(key, NO_CACHE_ENTRY)
         return NO_CACHE_ENTRY
 
-    @loop_safe
     def clear(self) -> None:
         """Clear the cache."""
         self._value_cache.clear()
@@ -260,7 +247,6 @@ class PingPongCache:
         """Return the unknown pong count."""
         return len(self._unknown_pongs)
 
-    @loop_safe
     def clear(self) -> None:
         """Clear the cache."""
         self._pending_pongs.clear()
@@ -268,7 +254,6 @@ class PingPongCache:
         self._pending_pong_logged = False
         self._unknown_pong_logged = False
 
-    @loop_safe
     def handle_send_ping(self, ping_ts: datetime) -> None:
         """Handle send ping timestamp."""
         self._pending_pongs.add(ping_ts)
@@ -283,7 +268,6 @@ class PingPongCache:
             ping_ts,
         )
 
-    @loop_safe
     def handle_received_pong(self, pong_ts: datetime) -> None:
         """Handle received pong timestamp."""
         if pong_ts in self._pending_pongs:
@@ -312,7 +296,6 @@ class PingPongCache:
             pong_ts,
         )
 
-    @loop_safe
     def _cleanup_pending_pongs(self) -> None:
         """Cleanup too old pending pongs."""
         dt_now = datetime.now()
@@ -327,7 +310,6 @@ class PingPongCache:
                     pong_ts,
                 )
 
-    @loop_safe
     def _cleanup_unknown_pongs(self) -> None:
         """Cleanup too old unknown pongs."""
         dt_now = datetime.now()
@@ -342,7 +324,6 @@ class PingPongCache:
                     pong_ts,
                 )
 
-    @loop_safe
     def _check_and_fire_pong_event(
         self, event_type: InterfaceEventType, pong_mismatch_count: int
     ) -> None:

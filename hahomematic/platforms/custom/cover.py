@@ -23,7 +23,6 @@ from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.generic.sensor import HmSensor
-from hahomematic.support import loop_safe
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -176,7 +175,6 @@ class CeCover(CustomEntity):
         """Stop the device if in motion."""
         await self._e_stop.send_value(value=True, collector=collector)
 
-    @loop_safe
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if kwargs.get(StateChangeArg.OPEN) is not None and self._channel_level != self._open_level:
@@ -311,7 +309,6 @@ class CeBlind(CeCover):
         """Stop the device if in motion."""
         await self._e_stop.send_value(value=True, collector=collector)
 
-    @loop_safe
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
@@ -330,7 +327,6 @@ class CeBlind(CeCover):
             return True
         return super().is_state_change(**kwargs)
 
-    @loop_safe
     def _get_combined_value(
         self, level: float | None = None, tilt_level: float | None = None
     ) -> str | None:
@@ -389,7 +385,6 @@ class CeIpBlind(CeBlind):
             collector=collector,
         )
 
-    @loop_safe
     def _get_combined_value(
         self, level: float | None = None, tilt_level: float | None = None
     ) -> str | None:
@@ -500,7 +495,6 @@ class CeGarage(CustomEntity):
             value=GarageDoorCommand.PARTIAL_OPEN, collector=collector
         )
 
-    @loop_safe
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
         if (
