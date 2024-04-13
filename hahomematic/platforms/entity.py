@@ -182,12 +182,14 @@ class CallbackEntity(ABC):
         """Return if entity is registered externally."""
         return self._custom_id is not None
 
+    @loop_safe
     def register_internal_entity_updated_callback(self, entity_updated_callback: Callable) -> None:
         """Register internal entity updated callback."""
         self.register_entity_updated_callback(
             entity_updated_callback=entity_updated_callback, custom_id=DEFAULT_CUSTOM_ID
         )
 
+    @loop_safe
     def register_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
     ) -> None:
@@ -201,12 +203,14 @@ class CallbackEntity(ABC):
                 )
             self._custom_id = custom_id
 
+    @loop_safe
     def unregister_internal_entity_updated_callback(self, update_callback: Callable) -> None:
         """Unregister entity updated callback."""
         self.unregister_entity_updated_callback(
             entity_updated_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID
         )
 
+    @loop_safe
     def unregister_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
     ) -> None:
@@ -216,6 +220,7 @@ class CallbackEntity(ABC):
         if self.custom_id == custom_id:
             self._custom_id = None
 
+    @loop_safe
     def register_device_removed_callback(self, device_removed_callback: Callable) -> None:
         """Register the device removed callback."""
         if (
@@ -224,6 +229,7 @@ class CallbackEntity(ABC):
         ):
             self._device_removed_callbacks.append(device_removed_callback)
 
+    @loop_safe
     def unregister_device_removed_callback(self, device_removed_callback: Callable) -> None:
         """Unregister the device removed callback."""
         if device_removed_callback in self._device_removed_callbacks:

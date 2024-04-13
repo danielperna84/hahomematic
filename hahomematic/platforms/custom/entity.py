@@ -114,6 +114,7 @@ class CustomEntity(BaseEntity):
         """Returns the list of relevant entities. To be overridden by subclasses."""
         return self._readable_entities
 
+    @loop_safe
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
         is_only_primary_channel = check_channel_is_the_only_primary_channel(
@@ -129,6 +130,7 @@ class CustomEntity(BaseEntity):
             usage=self._usage,
         )
 
+    @loop_safe
     def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
         if (
@@ -203,6 +205,7 @@ class CustomEntity(BaseEntity):
         if hmed.get_include_default_entities(device_profile=self._device_profile):
             self._mark_entities(entity_def=hmed.get_default_entities())
 
+    @loop_safe
     def _add_entities(self, field_dict_name: hmed.ED, is_visible: bool = False) -> None:
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
@@ -218,6 +221,7 @@ class CustomEntity(BaseEntity):
                         entity.set_usage(EntityUsage.CE_VISIBLE)
                     self._add_entity(field=field, entity=entity)
 
+    @loop_safe
     def _add_entity(
         self, field: Field, entity: hmge.GenericEntity | None, is_visible: bool = False
     ) -> None:
@@ -235,6 +239,7 @@ class CustomEntity(BaseEntity):
         )
         self._data_entities[field] = entity
 
+    @loop_safe
     def unregister_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
     ) -> None:
@@ -248,6 +253,7 @@ class CustomEntity(BaseEntity):
             entity_updated_callback=entity_updated_callback, custom_id=custom_id
         )
 
+    @loop_safe
     def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""
         if not entity_def:
@@ -259,6 +265,7 @@ class CustomEntity(BaseEntity):
                 for channel_no in channel_nos:
                     self._mark_entity(channel_no=channel_no, parameters=parameters)
 
+    @loop_safe
     def _mark_entity(self, channel_no: int | None, parameters: tuple[str, ...]) -> None:
         """Mark entity to be created in HA."""
         channel_address = get_channel_address(
@@ -272,6 +279,7 @@ class CustomEntity(BaseEntity):
             if entity:
                 entity.set_usage(EntityUsage.ENTITY)
 
+    @loop_safe
     def _get_entity(self, field: Field, entity_type: type[_EntityT]) -> _EntityT:
         """Get entity."""
         if entity := self._data_entities.get(field):

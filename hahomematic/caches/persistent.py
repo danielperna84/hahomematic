@@ -28,6 +28,7 @@ from hahomematic.support import (
     check_or_create_directory,
     get_device_address,
     get_split_channel_address,
+    loop_safe,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -119,6 +120,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         # {interface_id, {address, device_descriptions}}
         self._device_descriptions: Final[dict[str, dict[str, dict[str, Any]]]] = {}
 
+    @loop_safe
     def add_device_description(
         self, interface_id: str, device_description: dict[str, Any]
     ) -> None:
@@ -136,6 +138,7 @@ class DeviceDescriptionCache(BasePersistentCache):
             interface_id=interface_id, device_description=device_description
         )
 
+    @loop_safe
     def get_raw_device_descriptions(self, interface_id: str) -> list[dict[str, Any]]:
         """Find raw device in cache."""
         return self._raw_device_descriptions.get(interface_id, [])
@@ -147,6 +150,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         self._remove_device(interface_id=device.interface_id, deleted_addresses=deleted_addresses)
         await self.save()
 
+    @loop_safe
     def _remove_device(self, interface_id: str, deleted_addresses: list[str]) -> None:
         """Remove device from cache."""
         self._raw_device_descriptions[interface_id] = [
@@ -164,10 +168,12 @@ class DeviceDescriptionCache(BasePersistentCache):
             except KeyError:
                 _LOGGER.warning("REMOVE_DEVICE failed: Unable to delete: %s", address)
 
+    @loop_safe
     def get_addresses(self, interface_id: str) -> tuple[str, ...]:
         """Return the addresses by interface."""
         return tuple(self._addresses.get(interface_id, {}).keys())
 
+    @loop_safe
     def get_channels(self, interface_id: str, device_address: str) -> Mapping[str, Channel]:
         """Return the device channels by interface and device_address."""
         channels: dict[str, Channel] = {}
@@ -183,14 +189,17 @@ class DeviceDescriptionCache(BasePersistentCache):
 
         return channels
 
+    @loop_safe
     def get_device_descriptions(self, interface_id: str) -> dict[str, dict[str, Any]]:
         """Return the devices by interface."""
         return self._device_descriptions.get(interface_id, {})
 
+    @loop_safe
     def get_device(self, interface_id: str, device_address: str) -> dict[str, Any]:
         """Return the device dict by interface and device_address."""
         return self._device_descriptions.get(interface_id, {}).get(device_address, {})
 
+    @loop_safe
     def get_device_with_channels(
         self, interface_id: str, device_address: str
     ) -> Mapping[str, Any]:
@@ -205,6 +214,7 @@ class DeviceDescriptionCache(BasePersistentCache):
             )
         return data
 
+    @loop_safe
     def get_device_parameter(
         self, interface_id: str, device_address: str, parameter: str
     ) -> Any | None:
@@ -213,6 +223,7 @@ class DeviceDescriptionCache(BasePersistentCache):
             self._device_descriptions.get(interface_id, {}).get(device_address, {}).get(parameter)
         )
 
+    @loop_safe
     def _convert_device_descriptions(
         self, interface_id: str, device_descriptions: list[dict[str, Any]]
     ) -> None:
@@ -222,6 +233,7 @@ class DeviceDescriptionCache(BasePersistentCache):
                 interface_id=interface_id, device_description=device_description
             )
 
+    @loop_safe
     def _convert_device_description(
         self, interface_id: str, device_description: dict[str, Any]
     ) -> None:
@@ -274,6 +286,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         # {(device_address, parameter), [channel_no]}
         self._address_parameter_cache: Final[dict[tuple[str, str], list[int]]] = {}
 
+    @loop_safe
     def add(
         self,
         interface_id: str,
@@ -301,16 +314,19 @@ class ParamsetDescriptionCache(BasePersistentCache):
                     del self._raw_paramset_descriptions[device.interface_id][channel_address]
         await self.save()
 
+    @loop_safe
     def has_interface_id(self, interface_id: str) -> bool:
         """Return if interface is in paramset_descriptions cache."""
         return interface_id in self._raw_paramset_descriptions
 
+    @loop_safe
     def get_paramset_keys(self, interface_id: str, channel_address: str) -> tuple[str, ...]:
         """Get paramset_keys from paramset descriptions cache."""
         return tuple(
             self._raw_paramset_descriptions.get(interface_id, {}).get(channel_address, [])
         )
 
+    @loop_safe
     def get_paramset_descriptions(
         self, interface_id: str, channel_address: str, paramset_key: str
     ) -> dict[str, Any]:
@@ -321,6 +337,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
             .get(paramset_key, {})
         )
 
+    @loop_safe
     def get_parameter_data(
         self, interface_id: str, channel_address: str, paramset_key: str, parameter: str
     ) -> Any:
@@ -332,6 +349,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
             .get(parameter)
         )
 
+    @loop_safe
     def is_in_multiple_channels(self, channel_address: str, parameter: str) -> bool:
         """Check if parameter is in multiple channels per device."""
         if ":" not in channel_address:
@@ -342,6 +360,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
             return len(set(channels)) > 1
         return False
 
+    @loop_safe
     def get_all_readable_parameters(self) -> tuple[str, ...]:
         """Return all readable, eventing parameters from VALUES paramset."""
         parameters: set[str] = set()
@@ -354,6 +373,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
         return tuple(sorted(parameters))
 
+    @loop_safe
     def get_channel_addresses_by_paramset_key(
         self, interface_id: str, device_address: str
     ) -> dict[str, list[str]]:
@@ -372,6 +392,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
         return channel_addresses
 
+    @loop_safe
     def _init_address_parameter_list(self) -> None:
         """
         Initialize a device_address/parameter list.

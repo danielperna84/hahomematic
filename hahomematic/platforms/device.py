@@ -395,6 +395,7 @@ class HmDevice(PayloadMixin):
             self.remove_entity(custom_entity)
         self._custom_entities.clear()
 
+    @loop_safe
     def register_device_updated_callback(self, device_updated_callback: Callable) -> None:
         """Register update callback."""
         if (
@@ -403,11 +404,13 @@ class HmDevice(PayloadMixin):
         ):
             self._device_updated_callbacks.append(device_updated_callback)
 
+    @loop_safe
     def unregister_device_updated_callback(self, device_updated_callback: Callable) -> None:
         """Remove update callback."""
         if device_updated_callback in self._device_updated_callbacks:
             self._device_updated_callbacks.remove(device_updated_callback)
 
+    @loop_safe
     def register_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
         """Register firmware update callback."""
         if (
@@ -416,6 +419,7 @@ class HmDevice(PayloadMixin):
         ):
             self._firmware_update_callbacks.append(firmware_update_callback)
 
+    @loop_safe
     def unregister_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
         """Remove firmware update callback."""
         if firmware_update_callback in self._firmware_update_callbacks:

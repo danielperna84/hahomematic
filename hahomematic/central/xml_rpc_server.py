@@ -218,7 +218,7 @@ class XmlRpcServer(threading.Thread):
         if not self._centrals.get(central.name):
             self._centrals[central.name] = central
 
-    def un_register_central(self, central: hmcu.CentralUnit) -> None:
+    def unregister_central(self, central: hmcu.CentralUnit) -> None:
         """Unregister a central from XmlRPC-Server."""
         if self._centrals.get(central.name):
             del self._centrals[central.name]

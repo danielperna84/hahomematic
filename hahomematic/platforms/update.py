@@ -15,6 +15,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import DEFAULT_CUSTOM_ID, CallbackEntity
 from hahomematic.platforms.support import generate_unique_id
+from hahomematic.support import loop_safe
 
 
 class HmUpdate(CallbackEntity):
@@ -72,6 +73,7 @@ class HmUpdate(CallbackEntity):
         """Latest version available for install."""
         return self._device.firmware_update_state
 
+    @loop_safe
     def register_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
     ) -> None:
@@ -84,6 +86,7 @@ class HmUpdate(CallbackEntity):
                 )
             self._custom_id = custom_id
 
+    @loop_safe
     def unregister_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
     ) -> None:

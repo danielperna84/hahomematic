@@ -324,7 +324,7 @@ class CentralUnit:
 
         if self._xml_rpc_server:
             # un-register this instance from XmlRPC-Server
-            self._xml_rpc_server.un_register_central(central=self)
+            self._xml_rpc_server.unregister_central(central=self)
             # un-register and stop XmlRPC-Server, if possible
             if self._xml_rpc_server.no_central_registered:
                 self._xml_rpc_server.stop()

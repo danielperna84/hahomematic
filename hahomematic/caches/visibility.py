@@ -11,7 +11,7 @@ from typing import Any, Final
 from hahomematic import central as hmcu, support as hms
 from hahomematic.const import CLICK_EVENTS, DEFAULT_ENCODING, Parameter, ParamsetKey
 from hahomematic.platforms.custom.definition import get_required_parameters
-from hahomematic.support import element_matches_key, reduce_args
+from hahomematic.support import element_matches_key, loop_safe, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -313,6 +313,7 @@ class ParameterVisibilityCache:
                         ParamsetKey.MASTER
                     ].add(parameter)
 
+    @loop_safe
     @lru_cache(maxsize=128)
     def device_type_is_ignored(self, device_type: str) -> bool:
         """Check if a device type should be ignored for custom entities."""
@@ -322,6 +323,7 @@ class ParameterVisibilityCache:
             do_wildcard_search=True,
         )
 
+    @loop_safe
     @lru_cache(maxsize=1024)
     def parameter_is_ignored(
         self,
@@ -387,6 +389,7 @@ class ParameterVisibilityCache:
 
         return False
 
+    @loop_safe
     def _parameter_is_un_ignored(
         self,
         device_type: str,
@@ -447,6 +450,7 @@ class ParameterVisibilityCache:
 
         return False
 
+    @loop_safe
     @lru_cache(maxsize=4096)
     def parameter_is_un_ignored(
         self,
@@ -484,6 +488,7 @@ class ParameterVisibilityCache:
             custom_only=custom_only,
         )
 
+    @loop_safe
     def _add_line_to_cache(self, line: str) -> None:
         """Add line to from un ignore file to cache."""
 
@@ -512,6 +517,7 @@ class ParameterVisibilityCache:
                 line,
             )
 
+    @loop_safe
     def _get_unignore_line_details(
         self, line: str
     ) -> tuple[str, int | str | None, str, str] | str | None:
@@ -597,6 +603,7 @@ class ParameterVisibilityCache:
             return device_type, channel_no, parameter, paramset_key
         return line
 
+    @loop_safe
     def _add_complex_unignore_entry(
         self, device_type: str, channel_no: int | str | None, paramset_key: str, parameter: str
     ) -> None:
@@ -628,6 +635,7 @@ class ParameterVisibilityCache:
             self._custom_un_ignore_complex[device_type][channel_no][paramset_key] = set()
         self._custom_un_ignore_complex[device_type][channel_no][paramset_key].add(parameter)
 
+    @loop_safe
     @lru_cache(maxsize=1024)
     def parameter_is_hidden(
         self,
@@ -649,6 +657,7 @@ class ParameterVisibilityCache:
             parameter=parameter,
         )
 
+    @loop_safe
     def is_relevant_paramset(
         self,
         device_type: str,
@@ -714,6 +723,7 @@ class ParameterVisibilityCache:
                 self._add_line_to_cache(line)
 
 
+@loop_safe
 def check_ignore_parameters_is_clean() -> bool:
     """Check if a required parameter is in ignored parameters."""
     un_ignore_parameters_by_device: list[str] = []
@@ -737,6 +747,7 @@ def check_ignore_parameters_is_clean() -> bool:
     )
 
 
+@loop_safe
 def _get_value_from_dict_by_wildcard_key(
     search_elements: Mapping[str, Any],
     compare_with: str | None,
