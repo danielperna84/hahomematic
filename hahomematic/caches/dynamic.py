@@ -45,7 +45,7 @@ class DeviceDetailsCache:
     async def load(self, direct_call: bool = False) -> None:
         """Fetch names from backend."""
         if direct_call is False and changed_within_seconds(
-            last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)
+            last_change=self._last_refreshed, max_age=int(MAX_CACHE_AGE / 2)
         ):
             return
         self.clear()
@@ -156,7 +156,7 @@ class CentralDataCache:
     async def load(self, direct_call: bool = False) -> None:
         """Fetch data from backend."""
         if direct_call is False and changed_within_seconds(
-            last_change=self._last_refreshed, max_age=(MAX_CACHE_AGE / 2)
+            last_change=self._last_refreshed, max_age=int(MAX_CACHE_AGE / 2)
         ):
             return
         self.clear()

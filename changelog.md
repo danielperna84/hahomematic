@@ -1,3 +1,7 @@
+# Version 2024.4.8 (2024-04-13)
+
+- Make entity event async
+
 # Version 2024.4.7 (2024-04-13)
 
 - Rename loop_safe to loop_check

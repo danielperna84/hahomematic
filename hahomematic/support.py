@@ -184,7 +184,7 @@ def get_split_channel_address(channel_address: str) -> tuple[str, int | None]:
     return channel_address, None
 
 
-def changed_within_seconds(last_change: datetime, max_age: int | float = MAX_CACHE_AGE) -> bool:
+def changed_within_seconds(last_change: datetime, max_age: int = MAX_CACHE_AGE) -> bool:
     """Entity has been updated within X minutes."""
     if last_change == INIT_DATETIME:
         return False
@@ -301,13 +301,13 @@ def cancelling(task: asyncio.Future[Any]) -> bool:
 
 
 def loop_check(func: Callable[_P, _R]) -> Callable[_P, _R]:
-    """Annotation to mark method as safe to call from within the event loop."""
+    """Annotation to mark method that must be run within the event loop."""
 
     _with_loop: set = set()
 
     @wraps(func)
-    def wrapper_loop_safe(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        """Wrap loop safe."""
+    def wrapper_loop_check(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        """Wrap loop check."""
         return_value = func(*args, **kwargs)
 
         try:
@@ -324,8 +324,8 @@ def loop_check(func: Callable[_P, _R]) -> Callable[_P, _R]:
 
         return return_value
 
-    setattr(func, "_loop_safe", True)
-    return wrapper_loop_safe if debug_enabled() else func
+    setattr(func, "_loop_check", True)
+    return wrapper_loop_check if debug_enabled() else func
 
 
 def debug_enabled() -> bool:
