@@ -489,7 +489,7 @@ class ParameterVisibilityCache:
 
         # ignore empty line
         if not line.strip():
-            return None
+            return
 
         if line.lower().startswith(_IGNORE_DEVICE_TYPE):
             self._ignore_custom_device_type.append(line.lower().replace(_IGNORE_DEVICE_TYPE, ""))

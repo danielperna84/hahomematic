@@ -88,7 +88,10 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         if self._tls:
             kwargs[_CONTEXT] = get_tls_context(self._verify_tls)
         xmlrpc.client.ServerProxy.__init__(  # type: ignore[misc]
-            self, encoding=_ENCODING_ISO_8859_1, *args, **kwargs
+            self,
+            encoding=_ENCODING_ISO_8859_1,
+            *args,  # noqa: B026
+            **kwargs,
         )
 
     async def do_init(self) -> None:

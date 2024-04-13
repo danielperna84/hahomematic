@@ -565,12 +565,12 @@ class CentralUnit:
                 )
                 if not system_information.serial:
                     system_information = client.system_information
-            return system_information
         except NoClients:
             raise
         except Exception as ex:
             _LOGGER.warning(ex)
             raise
+        return system_information
 
     def get_client(self, interface_id: str) -> hmcl.Client:
         """Return a client by interface_id."""
@@ -989,11 +989,11 @@ class CentralUnit:
             task = self._loop.run_in_executor(None, target, *args)
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
-            return task
         except (TimeoutError, CancelledError) as err:  # pragma: no cover
             message = f"async_add_executor_job: task cancelled for {self._name} [{reduce_args(args=err.args)}]"
             _LOGGER.debug(message)
             raise HaHomematicException(message) from err
+        return task
 
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
