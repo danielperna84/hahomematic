@@ -2,6 +2,7 @@
 
 - Rename loop_safe to loop_check
 - Reduce loop_check to minimum
+- Update ruff rules / requirements
 
 # Version 2024.4.6 (2024-04-10)
 
