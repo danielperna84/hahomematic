@@ -139,7 +139,9 @@ class CentralUnit:
         # {interface_id, client}
         self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
-        self._entity_event_subscriptions: Final[dict[tuple[str, str], Any]] = {}
+        self._entity_event_subscriptions: Final[
+            dict[tuple[str, str], list[Callable[[Any], Coroutine[Any, Any, None]]]]
+        ] = {}
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
         # {sysvar_name, sysvar_entity}
@@ -854,7 +856,7 @@ class CentralUnit:
         if (channel_address, parameter) in self._entity_event_subscriptions:
             try:
                 for callback in self._entity_event_subscriptions[(channel_address, parameter)]:
-                    callback(value)
+                    await callback(value)
             except RuntimeError as rte:  # pragma: no cover
                 _LOGGER.debug(
                     "EVENT: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",

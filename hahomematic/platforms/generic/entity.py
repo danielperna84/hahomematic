@@ -48,7 +48,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             return self._usage
         return EntityUsage.ENTITY if force_enabled else EntityUsage.NO_CREATE
 
-    def event(self, value: Any) -> None:
+    async def event(self, value: Any) -> None:
         """Handle event for which this entity has subscribed."""
 
         old_value, new_value = self.write_value(value=value)
@@ -61,16 +61,11 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             and new_value is False
             and old_value is True
         ):
-            self._central.create_task(
-                self._device.reload_paramset_descriptions(), name="reloadParamsetDescriptions"
-            )
+            await self._device.reload_paramset_descriptions()
 
             for entity in self._device.get_readable_entities(paramset_key=ParamsetKey.MASTER):
-                self._central.create_task(
-                    entity.load_entity_value(
-                        call_source=CallSource.MANUAL_OR_SCHEDULED, direct_call=True
-                    ),
-                    name="reloadMasterData",
+                await entity.load_entity_value(
+                    call_source=CallSource.MANUAL_OR_SCHEDULED, direct_call=True
                 )
 
         # send device availability events

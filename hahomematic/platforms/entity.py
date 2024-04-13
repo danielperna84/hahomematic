@@ -649,7 +649,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return 1
 
     @abstractmethod
-    def event(self, value: Any) -> None:
+    async def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
 
     async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
