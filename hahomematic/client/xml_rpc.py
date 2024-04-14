@@ -171,7 +171,6 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
 
     def stop(self) -> None:
         """Stop depending services."""
-        self._looper.block_till_done()
         if self._proxy_executor:
             self._proxy_executor.shutdown()
 
