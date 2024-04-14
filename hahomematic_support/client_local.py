@@ -289,7 +289,7 @@ class ClientLocal(Client):  # pragma: no cover
             ) as fptr:
                 return orjson.loads(fptr.read())
 
-        return await self.central.async_add_executor_job(_load)
+        return await self.central.looper.async_add_executor_job(_load, name="load-json-file")
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)

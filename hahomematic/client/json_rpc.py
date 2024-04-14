@@ -15,6 +15,7 @@ from aiohttp import ClientConnectorCertificateError, ClientError, ClientResponse
 import orjson
 
 from hahomematic import central as hmcu, config
+from hahomematic.async_support import Looper
 from hahomematic.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -41,6 +42,7 @@ from hahomematic.exceptions import (
 from hahomematic.support import get_tls_context, parse_sys_var, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
+
 
 _CHANNEL_IDS: Final = "channelIds"
 _HAS_EXT_MARKER: Final = "hasExtMarker"
@@ -104,6 +106,7 @@ class JsonRpcAioHttpClient:
         self._connection_state: Final = connection_state
         self._username: Final = username
         self._password: Final = password
+        self._looper = Looper()
         self._tls: Final = tls
         self._tls_context: Final = get_tls_context(verify_tls) if tls else None
         self._url: Final = f"{device_url}{PATH_JSON_RPC}"
@@ -238,7 +241,7 @@ class JsonRpcAioHttpClient:
         if self._supported_methods is None:
             await self._check_supported_methods()
 
-        if (script := self._get_script(script_name=script_name)) is None:
+        if (script := await self._get_script(script_name=script_name)) is None:
             raise ClientException(f"Script file for {script_name} does not exist")
 
         if extra_params:
@@ -262,16 +265,24 @@ class JsonRpcAioHttpClient:
 
         return response
 
-    def _get_script(self, script_name: str) -> str | None:
+    async def _get_script(self, script_name: str) -> str | None:
         """Return a script from the script cache. Load if required."""
         if script_name in self._script_cache:
             return self._script_cache[script_name]
 
-        script_file = os.path.join(Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name)
-        if script := Path(script_file).read_text(encoding=DEFAULT_ENCODING):
-            self._script_cache[script_name] = script
-            return script
-        return None
+        def _load_script(script_name: str) -> str | None:
+            """Load script from file system."""
+            script_file = os.path.join(
+                Path(__file__).resolve().parent, REGA_SCRIPT_PATH, script_name
+            )
+            if script := Path(script_file).read_text(encoding=DEFAULT_ENCODING):
+                self._script_cache[script_name] = script
+                return script
+            return None
+
+        return await self._looper.async_add_executor_job(
+            _load_script, script_name, name=f"load_script-{script_name}"
+        )
 
     async def _do_post(
         self,
@@ -368,6 +379,7 @@ class JsonRpcAioHttpClient:
         """Logout of CCU."""
         iid = "LOGOUT"
         try:
+            await self._looper.async_block_till_done()
             await self._do_logout(self._session_id)
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except BaseHomematicException as ex:

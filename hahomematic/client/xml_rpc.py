@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from enum import Enum, IntEnum, StrEnum
 import errno
 import logging
 from ssl import SSLError
-from typing import Any, Final, TypeVar
+from typing import Any, Final
 import xmlrpc.client
 
 from hahomematic import central as hmcu
+from hahomematic.async_support import Looper
 from hahomematic.exceptions import (
     AuthFailure,
     BaseHomematicException,
@@ -23,8 +23,6 @@ from hahomematic.exceptions import (
 from hahomematic.support import get_tls_context, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
-
-_T = TypeVar("_T")
 
 _CONTEXT: Final = "context"
 _ENCODING_ISO_8859_1: Final = "ISO-8859-1"
@@ -73,10 +71,9 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         **kwargs: Any,
     ) -> None:
         """Initialize new proxy for server and get local ip."""
-        self._tasks: Final[set[asyncio.Future[Any]]] = set()
         self.interface_id: Final = interface_id
         self._connection_state: Final = connection_state
-        self._loop: Final = asyncio.get_running_loop()
+        self._looper: Final = Looper()
         self._proxy_executor: Final = (
             ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix=interface_id)
             if max_workers > 0
@@ -106,15 +103,6 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """Return the supported methods."""
         return self._supported_methods
 
-    def _async_add_proxy_executor_job(
-        self, func: Callable[..., _T], *args: Any
-    ) -> asyncio.Future[_T]:
-        """Add an executor job from within the event_loop for all device related interaction."""
-        task = self._loop.run_in_executor(self._proxy_executor, func, *args)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-        return task
-
     async def __async_request(self, *args, **kwargs):  # type: ignore[no-untyped-def]
         """Call method on server side."""
         parent = xmlrpc.client.ServerProxy
@@ -133,11 +121,13 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
             ):
                 args = _cleanup_args(*args)
                 _LOGGER.debug("__ASYNC_REQUEST: %s", args)
-                result = await self._async_add_proxy_executor_job(
+                result = await self._looper.async_add_executor_job(
                     # pylint: disable=protected-access
                     parent._ServerProxy__request,  # type: ignore[attr-defined]
                     self,
                     *args,
+                    name="xmp_rpc_proxy",
+                    executor=self._proxy_executor,
                 )
                 self._connection_state.remove_issue(issuer=self, iid=self.interface_id)
                 return result

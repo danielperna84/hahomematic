@@ -13,6 +13,7 @@ from typing import Any, Final, Generic, TypeVar, cast
 import voluptuous as vol
 
 from hahomematic import central as hmcu, client as hmcl, support as hms
+from hahomematic.async_support import loop_check
 from hahomematic.const import (
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
@@ -42,7 +43,7 @@ from hahomematic.platforms.support import (
     convert_value,
     generate_channel_unique_id,
 )
-from hahomematic.support import loop_check, reduce_args
+from hahomematic.support import reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 

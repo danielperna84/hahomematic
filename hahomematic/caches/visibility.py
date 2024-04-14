@@ -707,7 +707,7 @@ class ParameterVisibilityCache:
                 )
 
         if self._central.config.load_un_ignore:
-            await self._central.async_add_executor_job(_load)
+            await self._central.looper.async_add_executor_job(_load, name="load-unignore-file")
 
         for line in self._raw_un_ignore_list:
             if "#" not in line:

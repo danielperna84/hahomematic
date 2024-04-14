@@ -70,7 +70,9 @@ class BasePersistentCache(ABC):
             _LOGGER.debug("save: not saving cache for %s", self._central.name)
             return DataOperationResult.NO_SAVE
 
-        return await self._central.async_add_executor_job(_save)
+        return await self._central.looper.async_add_executor_job(
+            _save, name=f"save-persistent-cache-{self._filename}"
+        )
 
     async def load(self) -> DataOperationResult:
         """Load file from disk into dict."""
@@ -88,7 +90,9 @@ class BasePersistentCache(ABC):
                 self._persistant_cache.update(orjson.loads(fptr.read()))
             return DataOperationResult.LOAD_SUCCESS
 
-        return await self._central.async_add_executor_job(_load)
+        return await self._central.looper.async_add_executor_job(
+            _load, name=f"load-persistent-cache-{self._filename}"
+        )
 
     async def clear(self) -> None:
         """Remove stored file from disk."""
@@ -99,7 +103,7 @@ class BasePersistentCache(ABC):
                 os.unlink(os.path.join(self._cache_dir, self._filename))
             self._persistant_cache.clear()
 
-        await self._central.async_add_executor_job(_clear)
+        await self._central.looper.async_add_executor_job(_clear, name="clear-persistent-cache")
 
 
 class DeviceDescriptionCache(BasePersistentCache):
