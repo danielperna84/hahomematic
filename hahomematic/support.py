@@ -4,18 +4,18 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from collections.abc import Callable, Collection
+from collections.abc import Collection
 import contextlib
 from dataclasses import dataclass
 from datetime import datetime
-from functools import lru_cache, wraps
+from functools import lru_cache
 import logging
 import os
 import re
 import socket
 import ssl
 import sys
-from typing import Any, Final, ParamSpec, TypeVar
+from typing import Any, Final
 
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
@@ -30,8 +30,6 @@ from hahomematic.const import (
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 
 _LOGGER: Final = logging.getLogger(__name__)
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
 
 
 def reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:
@@ -298,34 +296,6 @@ class CacheEntry:
 def cancelling(task: asyncio.Future[Any]) -> bool:
     """Return True if task is cancelling."""
     return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
-
-
-def loop_check(func: Callable[_P, _R]) -> Callable[_P, _R]:
-    """Annotation to mark method that must be run within the event loop."""
-
-    _with_loop: set = set()
-
-    @wraps(func)
-    def wrapper_loop_check(*args: _P.args, **kwargs: _P.kwargs) -> _R:
-        """Wrap loop check."""
-        return_value = func(*args, **kwargs)
-
-        try:
-            asyncio.get_running_loop()
-            loop_running = True
-        except Exception:
-            loop_running = False
-
-        if not loop_running and func not in _with_loop:
-            _with_loop.add(func)
-            _LOGGER.warning(
-                "Method %s must run in the event_loop. No loop detected.", func.__name__
-            )
-
-        return return_value
-
-    setattr(func, "_loop_check", True)
-    return wrapper_loop_check if debug_enabled() else func
 
 
 def debug_enabled() -> bool:

@@ -14,6 +14,7 @@ from typing import Any, Final
 import orjson
 
 from hahomematic import central as hmcu
+from hahomematic.async_support import loop_check
 from hahomematic.const import (
     DEFAULT_DEVICE_DESCRIPTIONS_DIR,
     DEFAULT_PARAMSET_DESCRIPTIONS_DIR,
@@ -45,13 +46,7 @@ from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
-from hahomematic.support import (
-    CacheEntry,
-    Channel,
-    check_or_create_directory,
-    loop_check,
-    reduce_args,
-)
+from hahomematic.support import CacheEntry, Channel, check_or_create_directory, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 

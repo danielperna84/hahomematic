@@ -20,7 +20,7 @@ import orjson
 import voluptuous as vol
 
 from hahomematic import client as hmcl, config
-from hahomematic.async_support import Looper
+from hahomematic.async_support import Looper, loop_check
 from hahomematic.caches.dynamic import CentralDataCache, DeviceDetailsCache
 from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescriptionCache
 from hahomematic.caches.visibility import ParameterVisibilityCache
@@ -66,7 +66,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
-from hahomematic.support import check_config, get_device_address, loop_check, reduce_args
+from hahomematic.support import check_config, get_device_address, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
