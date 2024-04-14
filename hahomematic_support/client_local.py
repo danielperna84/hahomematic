@@ -75,7 +75,7 @@ class ClientLocal(Client):  # pragma: no cover
         """De-init to stop CCU from sending events for this remote."""
         return ProxyInitState.DE_INIT_SUCCESS
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop depending services."""
 
     async def fetch_all_device_data(self) -> None:

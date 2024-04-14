@@ -169,8 +169,9 @@ class XmlRpcProxy(xmlrpc.client.ServerProxy):
         """Magic method dispatcher."""
         return xmlrpc.client._Method(self.__async_request, *args, **kwargs)
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop depending services."""
+        await self._looper.block_till_done()
         if self._proxy_executor:
             self._proxy_executor.shutdown()
 

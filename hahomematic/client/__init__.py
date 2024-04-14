@@ -207,10 +207,10 @@ class Client(ABC):
             return True
         return False
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Stop depending services."""
-        self._proxy.stop()
-        self._proxy_read.stop()
+        await self._proxy.stop()
+        await self._proxy_read.stop()
 
     @abstractmethod
     async def fetch_all_device_data(self) -> None:

@@ -379,7 +379,7 @@ class JsonRpcAioHttpClient:
         """Logout of CCU."""
         iid = "LOGOUT"
         try:
-            await self._looper.async_block_till_done()
+            await self._looper.block_till_done()
             await self._do_logout(self._session_id)
             self._connection_state.remove_issue(issuer=self, iid=iid)
         except BaseHomematicException as ex:

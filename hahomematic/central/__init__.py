@@ -333,7 +333,7 @@ class CentralUnit:
             del CENTRAL_INSTANCES[self._name]
 
         # wait until tasks are finished
-        await self.looper.async_block_till_done()
+        await self.looper.block_till_done()
 
         while self._has_active_threads:
             await asyncio.sleep(1)
@@ -397,7 +397,7 @@ class CentralUnit:
         await self._de_init_clients()
         for client in self._clients.values():
             _LOGGER.debug("STOP_CLIENTS: Stopping %s", client.interface_id)
-            client.stop()
+            await client.stop()
         _LOGGER.debug("STOP_CLIENTS: Clearing existing clients.")
         self._clients.clear()
 
