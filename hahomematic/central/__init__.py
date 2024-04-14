@@ -7,20 +7,20 @@ This is the python representation of a CCU.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Collection, Coroutine, Mapping, Set as AbstractSet
-from concurrent.futures._base import CancelledError
+from collections.abc import Callable, Coroutine, Mapping, Set as AbstractSet
 from datetime import datetime
 import logging
 import socket
 import threading
-from time import monotonic, sleep
-from typing import Any, Final, TypeVar, cast
+from time import sleep
+from typing import Any, Final, cast
 
 from aiohttp import ClientSession
 import orjson
 import voluptuous as vol
 
 from hahomematic import client as hmcl, config
+from hahomematic.async_support import Looper
 from hahomematic.caches.dynamic import CentralDataCache, DeviceDetailsCache
 from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescriptionCache
 from hahomematic.caches.visibility import ParameterVisibilityCache
@@ -29,7 +29,6 @@ from hahomematic.central.decorators import callback_event, callback_system_event
 from hahomematic.client.json_rpc import JsonRpcAioHttpClient
 from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.const import (
-    BLOCK_LOG_TIMEOUT,
     DATETIME_FORMAT_MILLIS,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
@@ -67,18 +66,9 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
-from hahomematic.support import (
-    cancelling,
-    check_config,
-    get_device_address,
-    loop_check,
-    reduce_args,
-)
+from hahomematic.support import check_config, get_device_address, loop_check, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
-
-_R = TypeVar("_R")
-_T = TypeVar("_T")
 
 # {instance_name, central}
 CENTRAL_INSTANCES: Final[dict[str, CentralUnit]] = {}
@@ -108,7 +98,7 @@ class CentralUnit:
         self._name: Final = central_config.name
         self._model: str | None = None
         self._connection_state: Final = central_config.connection_state
-        self._loop: Final = asyncio.get_running_loop()
+        self._looper = Looper()
         self._xml_rpc_server: Final = (
             xmlrpc.register_xml_rpc_server(
                 local_port=central_config.callback_port or central_config.default_callback_port
@@ -225,6 +215,11 @@ class CentralUnit:
         return self._primary_client
 
     @property
+    def looper(self) -> Looper:
+        """Return the loop support."""
+        return self._looper
+
+    @property
     def model(self) -> str | None:
         """Return the model of the backend."""
         if not self._model and (client := self.primary_client):
@@ -338,7 +333,7 @@ class CentralUnit:
             del CENTRAL_INSTANCES[self._name]
 
         # wait until tasks are finished
-        await self.block_till_done()
+        await self.looper.async_block_till_done()
 
         while self._has_active_threads:
             await asyncio.sleep(1)
@@ -524,7 +519,9 @@ class CentralUnit:
         callback_ip: str | None = None
         while callback_ip is None:
             try:
-                callback_ip = await self.async_add_executor_job(get_local_ip, self.config.host)
+                callback_ip = await self.looper.async_add_executor_job(
+                    get_local_ip, self.config.host, name="get_local_ip"
+                )
             except HaHomematicException:
                 callback_ip = "127.0.0.1"
             if callback_ip is None:
@@ -919,84 +916,6 @@ class CentralUnit:
         ):
             del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
 
-    async def block_till_done(self) -> None:
-        """Code from HA. Block until all pending work is done."""
-        # To flush out any call_soon_threadsafe
-        await asyncio.sleep(0)
-        start_time: float | None = None
-        current_task = asyncio.current_task()
-        while tasks := [
-            task for task in self._tasks if task is not current_task and not cancelling(task)
-        ]:
-            await self._await_and_log_pending(tasks)
-
-            if start_time is None:
-                # Avoid calling monotonic() until we know
-                # we may need to start logging blocked tasks.
-                start_time = 0
-            elif start_time == 0:
-                # If we have waited twice then we set the start
-                # time
-                start_time = monotonic()
-            elif monotonic() - start_time > BLOCK_LOG_TIMEOUT:
-                # We have waited at least three loops and new tasks
-                # continue to block. At this point we start
-                # logging all waiting tasks.
-                for task in tasks:
-                    _LOGGER.debug("Waiting for task: %s", task)
-
-    async def _await_and_log_pending(self, pending: Collection[asyncio.Future[Any]]) -> None:
-        """Code from HA. Await and log tasks that take a long time."""
-        wait_time = 0
-        while pending:
-            _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
-            if not pending:
-                return
-            wait_time += BLOCK_LOG_TIMEOUT
-            for task in pending:
-                _LOGGER.debug("Waited %s seconds for task: %s", wait_time, task)
-
-    def create_task(self, target: Coroutine[Any, Any, Any], name: str) -> None:
-        """Add task to the executor pool."""
-        try:
-            self._loop.call_soon_threadsafe(self._async_create_task, target, name)
-        except CancelledError:
-            _LOGGER.debug(
-                "create_task: task cancelled for %s",
-                self._name,
-            )
-            return
-
-    def _async_create_task(self, target: Coroutine[Any, Any, _R], name: str) -> asyncio.Task[_R]:
-        """Create a task from within the event_loop. This method must be run in the event_loop."""
-        task = self._loop.create_task(target, name=name)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-        return task
-
-    def run_coroutine(self, coro: Coroutine) -> Any:
-        """Call coroutine from sync."""
-        try:
-            return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
-        except CancelledError:  # pragma: no cover
-            _LOGGER.debug(
-                "run_coroutine: coroutine interrupted for %s",
-                self._name,
-            )
-            return None
-
-    def async_add_executor_job(self, target: Callable[..., _T], *args: Any) -> asyncio.Future[_T]:
-        """Add an executor job from within the event_loop."""
-        try:
-            task = self._loop.run_in_executor(None, target, *args)
-            self._tasks.add(task)
-            task.add_done_callback(self._tasks.remove)
-        except (TimeoutError, CancelledError) as err:  # pragma: no cover
-            message = f"async_add_executor_job: task cancelled for {self._name} [{reduce_args(args=err.args)}]"
-            _LOGGER.debug(message)
-            raise HaHomematicException(message) from err
-        return task
-
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""
         if client := self.primary_client:
@@ -1196,7 +1115,7 @@ class ConnectionChecker(threading.Thread):
             self._central.name,
         )
         while self._active:
-            self._central.run_coroutine(self._check_connection())
+            self._central.looper.run_coroutine(self._check_connection(), name="check_connection")
             if self._active:
                 sleep(config.CONNECTION_CHECKER_INTERVAL)
 

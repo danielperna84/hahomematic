@@ -31,7 +31,7 @@ class RPCFunctions:
     def event(self, interface_id: str, channel_address: str, parameter: str, value: Any) -> None:
         """If a device emits some sort event, we will handle it here."""
         if central := self.get_central(interface_id):
-            central.create_task(
+            central.looper.create_task(
                 central.event(
                     interface_id=interface_id,
                     channel_address=channel_address,
@@ -61,7 +61,7 @@ class RPCFunctions:
         """Add new devices send from backend."""
         central: hmcu.CentralUnit | None
         if central := self.get_central(interface_id):
-            central.create_task(
+            central.looper.create_task(
                 central.add_new_devices(
                     interface_id=interface_id, device_descriptions=tuple(device_descriptions)
                 ),
@@ -72,7 +72,7 @@ class RPCFunctions:
         """Delete devices send from backend."""
         central: hmcu.CentralUnit | None
         if central := self.get_central(interface_id):
-            central.create_task(
+            central.looper.create_task(
                 central.delete_devices(interface_id=interface_id, addresses=tuple(addresses)),
                 name=f"deleteDevices-{interface_id}",
             )

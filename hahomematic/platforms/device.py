@@ -546,7 +546,7 @@ class HmDevice(PayloadMixin):
                 await self.central.refresh_firmware_data(device_address=self._device_address)
 
         if refresh_after_update_intervals:
-            self.central.create_task(target=refresh_data(), name="refresh_firmware_data")
+            self.central.looper.create_task(target=refresh_data(), name="refresh_firmware_data")
 
         return update_result
 
@@ -854,4 +854,6 @@ class _DefinitionExporter:
                 )
             return DataOperationResult.SAVE_SUCCESS
 
-        return await self._central.async_add_executor_job(_save)
+        return await self._central.looper.async_add_executor_job(
+            _save, name="save-device-description"
+        )

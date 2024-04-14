@@ -49,7 +49,7 @@ def callback_system_event(system_event: SystemEvent) -> Callable:
                 if central is None and isinstance(unit, xmlrpc.RPCFunctions):
                     central = unit.get_central(interface_id=str(args[1]))
                 if central:
-                    central.create_task(
+                    central.looper.create_task(
                         _exec_system_event_callback(*args, **kwargs),
                         name="wrapper_system_event_callback",
                     )
