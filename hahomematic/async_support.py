@@ -29,11 +29,7 @@ class Looper:
         self._tasks: Final[set[asyncio.Future[Any]]] = set()
         self._loop = asyncio.get_event_loop()
 
-    def block_till_done(self) -> None:
-        """Code from HA. Block until all pending work is done."""
-        asyncio.run_coroutine_threadsafe(self.async_block_till_done(), self._loop).result()
-
-    async def async_block_till_done(self) -> None:
+    async def block_till_done(self) -> None:
         """Code from HA. Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
