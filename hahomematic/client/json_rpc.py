@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from enum import StrEnum
 from json import JSONDecodeError
@@ -107,8 +106,7 @@ class JsonRpcAioHttpClient:
         self._connection_state: Final = connection_state
         self._username: Final = username
         self._password: Final = password
-        self._loop = asyncio.get_running_loop()
-        self._tasks: Final[set[asyncio.Future[Any]]] = set()
+        self._looper = Looper()
         self._tls: Final = tls
         self._tls_context: Final = get_tls_context(verify_tls) if tls else None
         self._url: Final = f"{device_url}{PATH_JSON_RPC}"
@@ -116,7 +114,6 @@ class JsonRpcAioHttpClient:
         self._last_session_id_refresh: datetime | None = None
         self._session_id: str | None = None
         self._supported_methods: tuple[str, ...] | None = None
-        self._looper = Looper()
 
     @property
     def is_activated(self) -> bool:
