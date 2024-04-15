@@ -89,7 +89,23 @@ class CommandCache:
             value, last_send_dt = result
             if last_send_dt and changed_within_seconds(last_change=last_send_dt, max_age=max_age):
                 return value
+        self.remove_last_value_send(
+            paramset_key=paramset_key, channel_address=channel_address, parameter=parameter
+        )
         return None
+
+    def remove_last_value_send(
+        self, paramset_key: str, channel_address: str, parameter: str, max_age: int = 60
+    ) -> None:
+        """Remove the last send value."""
+        del self._last_send_command[
+            (
+                paramset_key,
+                get_device_address(channel_address),
+                get_channel_no(channel_address),
+                parameter,
+            )
+        ]
 
 
 class DeviceDetailsCache:
