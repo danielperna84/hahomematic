@@ -37,7 +37,9 @@ class CommandCache:
         """Init command cache."""
         self._interface_id: Final = interface_id
         # (paramset_key, device_address, channel_no, parameter)
-        self._last_send_command: Final[dict[tuple[str, str, int | None, str], Any]] = {}
+        self._last_send_command: Final[
+            dict[tuple[str, str, int | None, str], tuple[Any, datetime]]
+        ] = {}
 
     def add_set_value(
         self,
@@ -53,7 +55,7 @@ class CommandCache:
                 get_channel_no(channel_address),
                 parameter,
             )
-        ] = value
+        ] = (value, datetime.now())
 
     def add_put_paramset(
         self,
@@ -70,18 +72,24 @@ class CommandCache:
                     get_channel_no(channel_address),
                     parameter,
                 )
-            ] = value
+            ] = (value, datetime.now())
 
-    def get_last_value_send(self, paramset_key: str, channel_address: str, parameter: str) -> Any:
+    def get_last_value_send(
+        self, paramset_key: str, channel_address: str, parameter: str, max_age: int = 60
+    ) -> Any:
         """Return the last send values."""
-        return self._last_send_command.get(
+        if result := self._last_send_command.get(
             (
                 paramset_key,
                 get_device_address(channel_address),
                 get_channel_no(channel_address),
                 parameter,
             )
-        )
+        ):
+            value, last_send_dt = result
+            if last_send_dt and changed_within_seconds(last_change=last_send_dt, max_age=max_age):
+                return value
+        return None
 
 
 class DeviceDetailsCache:

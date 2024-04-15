@@ -544,6 +544,18 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._last_refreshed
 
     @value_property
+    def last_value_send(self) -> ParameterT | None:
+        """Return the value of the entity."""
+        return cast(
+            ParameterT | None,
+            self._client.last_value_send_cache.get_last_value_send(
+                paramset_key=self.paramset_key,
+                channel_address=self.channel_address,
+                parameter=self.parameter,
+            ),
+        )
+
+    @value_property
     def old_value(self) -> ParameterT | None:
         """Return the old value of the entity."""
         return self._old_value

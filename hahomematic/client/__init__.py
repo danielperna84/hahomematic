@@ -88,6 +88,11 @@ class Client(ABC):
         return self._available
 
     @property
+    def last_value_send_cache(self) -> CommandCache:
+        """Return the last value send cache."""
+        return self._last_value_send_cache
+
+    @property
     @abstractmethod
     def model(self) -> str:
         """Return the model of the backend."""
