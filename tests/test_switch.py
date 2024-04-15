@@ -43,7 +43,9 @@ async def test_ceswitch(factory: helper.Factory) -> None:
     assert switch.value is False
     await switch.turn_on(on_time=60)
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU2128127:4", paramset_key="VALUES", value={"ON_TIME": 60.0, "STATE": True}
+        channel_address="VCU2128127:4",
+        paramset_key="VALUES",
+        values={"ON_TIME": 60.0, "STATE": True},
     )
     assert switch.value is True
 
@@ -51,7 +53,9 @@ async def test_ceswitch(factory: helper.Factory) -> None:
     switch.set_on_time(35.4)
     await switch.turn_on()
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU2128127:4", paramset_key="VALUES", value={"ON_TIME": 35.4, "STATE": True}
+        channel_address="VCU2128127:4",
+        paramset_key="VALUES",
+        values={"ON_TIME": 35.4, "STATE": True},
     )
 
     await switch.turn_on()

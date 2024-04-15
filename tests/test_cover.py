@@ -458,7 +458,9 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
     assert cover.current_tilt_position == 0
     await cover.set_position(position=81)
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.81}
+        channel_address="VCU3560967:1",
+        paramset_key="VALUES",
+        values={"LEVEL_2": 0.0, "LEVEL": 0.81},
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -466,7 +468,9 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
 
     await cover.open()
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 1.0}
+        channel_address="VCU3560967:1",
+        paramset_key="VALUES",
+        values={"LEVEL_2": 1.0, "LEVEL": 1.0},
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 1.0)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 1.0)
@@ -475,7 +479,9 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
 
     await cover.close()
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
+        channel_address="VCU3560967:1",
+        paramset_key="VALUES",
+        values={"LEVEL_2": 0.0, "LEVEL": 0.0},
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.0)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.0)
@@ -484,7 +490,9 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
 
     await cover.open_tilt()
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 1.0, "LEVEL": 0.0}
+        channel_address="VCU3560967:1",
+        paramset_key="VALUES",
+        values={"LEVEL_2": 1.0, "LEVEL": 0.0},
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 1.0)
     assert cover.current_position == 0
@@ -492,7 +500,9 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
 
     await cover.set_position(tilt_position=45)
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.45, "LEVEL": 0.0}
+        channel_address="VCU3560967:1",
+        paramset_key="VALUES",
+        values={"LEVEL_2": 0.45, "LEVEL": 0.0},
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.45)
     assert cover.current_position == 0
@@ -500,7 +510,9 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
 
     await cover.close_tilt()
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.0, "LEVEL": 0.0}
+        channel_address="VCU3560967:1",
+        paramset_key="VALUES",
+        values={"LEVEL_2": 0.0, "LEVEL": 0.0},
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.0)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.0)
@@ -509,7 +521,9 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
 
     await cover.set_position(position=10, tilt_position=20)
     assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU3560967:1", paramset_key="VALUES", value={"LEVEL_2": 0.2, "LEVEL": 0.1}
+        channel_address="VCU3560967:1",
+        paramset_key="VALUES",
+        values={"LEVEL_2": 0.2, "LEVEL": 0.1},
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.1)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.2)

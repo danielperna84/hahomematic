@@ -22,11 +22,55 @@ from hahomematic.const import (
     EventType,
     InterfaceEventType,
     InterfaceName,
+    ParamsetKey,
 )
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import changed_within_seconds
+from hahomematic.support import changed_within_seconds, get_channel_no, get_device_address
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+
+class CommandCache:
+    """Cache for send commands."""
+
+    def __init__(self, interface_id: str) -> None:
+        """Init command cache."""
+        self._interface_id: Final = interface_id
+        # (paramset_key, device_address, channel_no, parameter)
+        self._last_send_command: Final[dict[tuple[str, str, int | None, str], Any]] = {}
+
+    def add_set_value(
+        self,
+        channel_address: str,
+        parameter: str,
+        value: Any,
+    ) -> None:
+        """Add data from set value command."""
+        self._last_send_command[
+            (
+                ParamsetKey.VALUES.value,
+                get_device_address(channel_address),
+                get_channel_no(channel_address),
+                parameter,
+            )
+        ] = value
+
+    def add_put_paramset(
+        self,
+        channel_address: str,
+        paramset_key: str,
+        values: dict[str, Any],
+    ) -> None:
+        """Add data from put paramset command."""
+        for parameter, value in values.items():
+            self._last_send_command[
+                (
+                    paramset_key,
+                    get_device_address(channel_address),
+                    get_channel_no(channel_address),
+                    parameter,
+                )
+            ] = value
 
 
 class DeviceDetailsCache:

@@ -546,9 +546,9 @@ class CeIpThermostat(BaseClimateEntity):
     ) -> None:
         """Enable the away mode by calendar on thermostat."""
         await self._client.put_paramset(
-            address=self._channel_address,
+            channel_address=self._channel_address,
             paramset_key=ParamsetKey.VALUES,
-            value={
+            values={
                 "SET_POINT_MODE": ModeHmIP.AWAY,
                 "SET_POINT_TEMPERATURE": away_temperature,
                 "PARTY_TIME_START": start.strftime(_PARTY_DATE_FORMAT),
@@ -567,9 +567,9 @@ class CeIpThermostat(BaseClimateEntity):
     async def disable_away_mode(self) -> None:
         """Disable the away mode on thermostat."""
         await self._client.put_paramset(
-            address=self._channel_address,
+            channel_address=self._channel_address,
             paramset_key=ParamsetKey.VALUES,
-            value={
+            values={
                 "SET_POINT_MODE": ModeHmIP.AWAY,
                 "PARTY_TIME_START": _PARTY_INIT_DATE,
                 "PARTY_TIME_END": _PARTY_INIT_DATE,

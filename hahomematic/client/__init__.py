@@ -9,7 +9,7 @@ import logging
 from typing import Any, Final, cast
 
 from hahomematic import central as hmcu
-from hahomematic.caches.dynamic import PingPongCache
+from hahomematic.caches.dynamic import CommandCache, PingPongCache
 from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
@@ -53,6 +53,7 @@ class Client(ABC):
         """Initialize the Client."""
         self._config: Final = client_config
         self.central: Final[hmcu.CentralUnit] = client_config.central
+        self._last_value_send_cache = CommandCache(interface_id=client_config.interface_id)
 
         self._json_rpc_client: Final = client_config.central.json_rpc_client
 
@@ -424,6 +425,9 @@ class Client(ABC):
                 await self._proxy.setValue(channel_address, parameter, value, rx_mode)
             else:
                 await self._proxy.setValue(channel_address, parameter, value)
+            self._last_value_send_cache.add_set_value(
+                channel_address=channel_address, parameter=parameter, value=value
+            )
         except BaseHomematicException as ex:
             _LOGGER.warning(
                 "SET_VALUE failed with %s [%s]: %s, %s, %s",
@@ -453,9 +457,9 @@ class Client(ABC):
                 rx_mode=rx_mode,
             )
         return await self.put_paramset(
-            address=channel_address,
+            channel_address=channel_address,
             paramset_key=paramset_key,
-            value={parameter: value},
+            values={parameter: value},
             rx_mode=rx_mode,
         )
 
@@ -486,9 +490,9 @@ class Client(ABC):
     @measure_execution_time
     async def put_paramset(
         self,
-        address: str,
+        channel_address: str,
         paramset_key: str,
-        value: Any,
+        values: dict[str, Any],
         rx_mode: str | None = None,
     ) -> bool:
         """
@@ -498,19 +502,22 @@ class Client(ABC):
         but for bidcos devices there is a master paramset at the device.
         """
         try:
-            _LOGGER.debug("PUT_PARAMSET: %s, %s, %s", address, paramset_key, value)
+            _LOGGER.debug("PUT_PARAMSET: %s, %s, %s", channel_address, paramset_key, values)
             if rx_mode:
-                await self._proxy.putParamset(address, paramset_key, value, rx_mode)
+                await self._proxy.putParamset(channel_address, paramset_key, values, rx_mode)
             else:
-                await self._proxy.putParamset(address, paramset_key, value)
+                await self._proxy.putParamset(channel_address, paramset_key, values)
+            self._last_value_send_cache.add_put_paramset(
+                channel_address=channel_address, paramset_key=paramset_key, values=values
+            )
         except BaseHomematicException as ex:
             _LOGGER.warning(
                 "PUT_PARAMSET failed: %s [%s] %s, %s, %s",
                 ex.name,
                 reduce_args(args=ex.args),
-                address,
+                channel_address,
                 paramset_key,
-                value,
+                values,
             )
             return False
         return True
