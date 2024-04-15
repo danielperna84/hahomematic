@@ -72,6 +72,17 @@ class CommandCache:
                 )
             ] = value
 
+    def get_last_value_send(self, paramset_key: str, channel_address: str, parameter: str) -> Any:
+        """Return the last send values."""
+        return self._last_send_command.get(
+            (
+                paramset_key,
+                get_device_address(channel_address),
+                get_channel_no(channel_address),
+                parameter,
+            )
+        )
+
 
 class DeviceDetailsCache:
     """Cache for device/channel details."""
