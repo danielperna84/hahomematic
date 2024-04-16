@@ -543,8 +543,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return the last refreshed datetime value."""
         return self._last_refreshed
 
-    @value_property
-    def last_value_send(self) -> ParameterT | None:
+    @property
+    def unconfirmed_last_value_send(self) -> ParameterT | None:
         """Return the value of the entity."""
         return cast(
             ParameterT | None,

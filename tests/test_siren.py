@@ -58,7 +58,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
         optical_alarm="BLINKING_ALTERNATELY_REPEATING",
         duration=30,
     )
-    assert mock_client.method_calls[-1] == call.put_paramset(
+    assert mock_client.method_calls[-2] == call.put_paramset(
         channel_address="VCU8249617:3",
         paramset_key="VALUES",
         values={

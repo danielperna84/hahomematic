@@ -35,7 +35,7 @@ async def test_hmselect(factory: helper.Factory) -> None:
     assert select.values == ("CLOSED", "OPEN")
     assert select.value == "CLOSED"
     await select.send_value("OPEN")
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU6354483:1",
         paramset_key="VALUES",
         parameter="WINDOW_STATE",
@@ -50,7 +50,7 @@ async def test_hmselect(factory: helper.Factory) -> None:
     assert select.value == "CLOSED"
 
     await select.send_value(1)
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU6354483:1",
         paramset_key="VALUES",
         parameter="WINDOW_STATE",

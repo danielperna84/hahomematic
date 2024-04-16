@@ -50,7 +50,12 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 
     async def event(self, value: Any) -> None:
         """Handle event for which this entity has subscribed."""
-
+        self.device.client.last_value_send_cache.remove_last_value_send(
+            paramset_key=self.paramset_key,
+            channel_address=self.channel_address,
+            parameter=self.parameter,
+            value=value,
+        )
         old_value, new_value = self.write_value(value=value)
         if old_value == new_value:
             return
