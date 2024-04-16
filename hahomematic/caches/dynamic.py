@@ -26,10 +26,16 @@ from hahomematic.const import (
     EventType,
     InterfaceEventType,
     InterfaceName,
+    Parameter,
     ParamsetKey,
 )
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import changed_within_seconds, get_channel_no, get_device_address
+from hahomematic.support import (
+    changed_within_seconds,
+    convert_combined_parameter_to_paramset,
+    get_channel_no,
+    get_device_address,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -52,6 +58,10 @@ class CommandCache:
         value: Any,
     ) -> None:
         """Add data from set value command."""
+        if parameter == Parameter.COMBINED_PARAMETER:
+            self.add_combined_parameter(channel_address=channel_address, combined_parameter=value)
+            return
+
         key = (
             ParamsetKey.VALUES.value,
             get_device_address(channel_address),
@@ -76,6 +86,15 @@ class CommandCache:
                 parameter,
             )
             self._last_send_command[key] = (value, datetime.now())
+
+    def add_combined_parameter(self, channel_address: str, combined_parameter: str) -> None:
+        """Add data from combined parameter."""
+        if values := convert_combined_parameter_to_paramset(combined_parameter=combined_parameter):
+            self.add_put_paramset(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey.VALUES.value,
+                values=values,
+            )
 
     def get_last_value_send(
         self,

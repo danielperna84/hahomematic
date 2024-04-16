@@ -411,6 +411,9 @@ class ParameterType(StrEnum):
     STRING = "STRING"
 
 
+COMBINED_PARAMETER_NAMES: Final = {"L": "LEVEL", "L2": "LEVEL2"}
+
+
 CLICK_EVENTS: Final[tuple[Parameter, ...]] = (
     Parameter.PRESS,
     Parameter.PRESS_CONT,

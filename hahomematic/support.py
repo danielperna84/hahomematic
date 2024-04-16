@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import base64
 from collections.abc import Collection
 import contextlib
@@ -19,6 +18,7 @@ from typing import Any, Final
 
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
+    COMBINED_PARAMETER_NAMES,
     FILE_DEVICES,
     FILE_PARAMSETS,
     IDENTIFIER_SEPARATOR,
@@ -293,9 +293,14 @@ class CacheEntry:
         return changed_within_seconds(last_change=self.last_refresh)
 
 
-def cancelling(task: asyncio.Future[Any]) -> bool:
-    """Return True if task is cancelling."""
-    return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
+def convert_combined_parameter_to_paramset(combined_parameter: str) -> dict[str, Any]:
+    """Convert combined parameter to paramset."""
+    paramset: dict[str, Any] = {}
+    for cp_param_value in combined_parameter.split(","):
+        cp_param, value = cp_param_value.split("=")
+        if parameter := COMBINED_PARAMETER_NAMES.get(cp_param):
+            paramset[parameter] = value
+    return paramset
 
 
 def debug_enabled() -> bool:
