@@ -11,7 +11,7 @@ from typing import Final
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = 15  # check if connection is available via rpc ping
 DEFAULT_ENCODING: Final = "UTF-8"
 DEFAULT_JSON_SESSION_AGE: Final = 90
-DEFAULT_LAST_COMMAND_SEND_STORE_TIMEOUT: Final = 30
+DEFAULT_LAST_COMMAND_SEND_STORE_TIMEOUT: Final = 60
 DEFAULT_PING_PONG_MISMATCH_COUNT: Final = 15
 DEFAULT_PING_PONG_MISMATCH_COUNT_TTL: Final = 300
 DEFAULT_RECONNECT_WAIT: Final = 120  # wait with reconnect after a first ping was successful
