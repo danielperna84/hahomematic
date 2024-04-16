@@ -199,6 +199,9 @@ class ClientLocal(Client):  # pragma: no cover
     ) -> bool:
         """Set single value on paramset VALUES."""
         await self.central.event(self.interface_id, channel_address, parameter, value)
+        self._last_value_send_cache.add_set_value(
+            channel_address=channel_address, parameter=parameter, value=value
+        )
         return True
 
     async def get_paramset(self, address: str, paramset_key: str) -> Any:
@@ -240,9 +243,9 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def put_paramset(
         self,
-        address: str,
+        channel_address: str,
         paramset_key: str,
-        value: Any,
+        values: Any,
         rx_mode: str | None = None,
     ) -> bool:
         """
@@ -251,8 +254,13 @@ class ClientLocal(Client):  # pragma: no cover
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
-        for parameter in value:
-            await self.central.event(self.interface_id, address, parameter, value[parameter])
+        for parameter in values:
+            await self.central.event(
+                self.interface_id, channel_address, parameter, values[parameter]
+            )
+        self._last_value_send_cache.add_put_paramset(
+            channel_address=channel_address, paramset_key=paramset_key, values=values
+        )
         return True
 
     async def _load_all_json_files(

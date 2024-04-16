@@ -63,7 +63,7 @@ async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
         parameter="SETPOINT",
         value=12.0,
     )
-    assert mock_client.method_calls[-1] == last_call
+    assert mock_client.method_calls[-2] == last_call
     assert climate.target_temperature == 12.0
 
     assert climate.current_temperature is None
@@ -79,17 +79,17 @@ async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
 
     # No new method call, because called methods has no implementation
     await climate.set_hvac_mode(HvacMode.HEAT)
-    assert mock_client.method_calls[-1] == last_call
+    assert mock_client.method_calls[-4] == last_call
     await climate.set_preset_mode(PresetMode.NONE)
-    assert mock_client.method_calls[-1] == last_call
+    assert mock_client.method_calls[-4] == last_call
     await climate.enable_away_mode_by_duration(hours=100, away_temperature=17.0)
-    assert mock_client.method_calls[-1] == last_call
+    assert mock_client.method_calls[-4] == last_call
     await climate.enable_away_mode_by_calendar(
         start=datetime.now(), end=datetime.now(), away_temperature=17.0
     )
-    assert mock_client.method_calls[-1] == last_call
+    assert mock_client.method_calls[-4] == last_call
     await climate.disable_away_mode()
-    assert mock_client.method_calls[-1] == last_call
+    assert mock_client.method_calls[-4] == last_call
 
 
 @pytest.mark.asyncio()
@@ -113,7 +113,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
     assert climate.current_humidity is None
     assert climate.target_temperature is None
     await climate.set_temperature(12.0)
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU0000050:4",
         paramset_key="VALUES",
         parameter="SET_TEMPERATURE",
@@ -135,10 +135,10 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
     assert climate.hvac_mode == HvacMode.HEAT
 
     await climate.set_hvac_mode(HvacMode.OFF)
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU0000050:4",
+    assert mock_client.method_calls[-2] == call.put_paramset(
+        channel_address="VCU0000050:4",
         paramset_key="VALUES",
-        value={"MANU_MODE": 12.0, "SET_TEMPERATURE": 4.5},
+        values={"MANU_MODE": 12.0, "SET_TEMPERATURE": 4.5},
     )
 
     assert climate.hvac_mode == HvacMode.OFF
@@ -249,7 +249,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
 
     assert climate.target_temperature is None
     await climate.set_temperature(12.0)
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU1769958:1",
         paramset_key="VALUES",
         parameter="SET_POINT_TEMPERATURE",
@@ -266,19 +266,19 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     assert climate.preset_mode == PresetMode.NONE
 
     await climate.set_hvac_mode(HvacMode.OFF)
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1769958:1",
+    assert mock_client.method_calls[-2] == call.put_paramset(
+        channel_address="VCU1769958:1",
         paramset_key="VALUES",
-        value={"CONTROL_MODE": 1, "SET_POINT_TEMPERATURE": 4.5},
+        values={"CONTROL_MODE": 1, "SET_POINT_TEMPERATURE": 4.5},
     )
     assert climate.hvac_mode == HvacMode.OFF
     assert climate.hvac_action == HvacAction.OFF
 
     await climate.set_hvac_mode(HvacMode.HEAT)
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1769958:1",
+    assert mock_client.method_calls[-2] == call.put_paramset(
+        channel_address="VCU1769958:1",
         paramset_key="VALUES",
-        value={"CONTROL_MODE": 1, "SET_POINT_TEMPERATURE": 5.0},
+        values={"CONTROL_MODE": 1, "SET_POINT_TEMPERATURE": 5.0},
     )
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ModeHmIP.MANU.value)
     assert climate.hvac_mode == HvacMode.HEAT
@@ -289,17 +289,17 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         PresetMode.NONE,
     )
     await climate.set_preset_mode(PresetMode.BOOST)
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU1769958:1", paramset_key="VALUES", parameter="BOOST_MODE", value=True
     )
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)
     assert climate.preset_mode == PresetMode.BOOST
 
     await climate.set_hvac_mode(HvacMode.AUTO)
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1769958:1",
+    assert mock_client.method_calls[-2] == call.put_paramset(
+        channel_address="VCU1769958:1",
         paramset_key="VALUES",
-        value={"BOOST_MODE": False, "CONTROL_MODE": 0},
+        values={"BOOST_MODE": False, "CONTROL_MODE": 0},
     )
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ModeHmIP.AUTO.value)
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)
@@ -315,7 +315,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         "week_program_6",
     )
     await climate.set_preset_mode(PresetMode.NONE)
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU1769958:1", paramset_key="VALUES", parameter="BOOST_MODE", value=False
     )
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ModeHmIP.AWAY.value)
@@ -323,17 +323,17 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
 
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ModeHmIP.AUTO.value)
     await climate.set_preset_mode(PresetMode.WEEK_PROGRAM_1)
-    assert mock_client.method_calls[-1] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU1769958:1", paramset_key="VALUES", parameter="ACTIVE_PROFILE", value=1
     )
     assert climate.preset_mode == PresetMode.WEEK_PROGRAM_1
 
     with freeze_time("2023-03-03 08:00:00"):
         await climate.enable_away_mode_by_duration(hours=100, away_temperature=17.0)
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1769958:1",
+    assert mock_client.method_calls[-3] == call.put_paramset(
+        channel_address="VCU1769958:1",
         paramset_key="VALUES",
-        value={
+        values={
             "SET_POINT_MODE": 2,
             "SET_POINT_TEMPERATURE": 17.0,
             "PARTY_TIME_START": "2023_03_03 07:50",
@@ -344,10 +344,10 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     await climate.enable_away_mode_by_calendar(
         start=datetime(2000, 12, 1), end=datetime(2024, 12, 1), away_temperature=17.0
     )
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1769958:1",
+    assert mock_client.method_calls[-3] == call.put_paramset(
+        channel_address="VCU1769958:1",
         paramset_key="VALUES",
-        value={
+        values={
             "SET_POINT_MODE": 2,
             "SET_POINT_TEMPERATURE": 17.0,
             "PARTY_TIME_START": "2000_12_01 00:00",
@@ -356,10 +356,10 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     )
 
     await climate.disable_away_mode()
-    assert mock_client.method_calls[-1] == call.put_paramset(
-        address="VCU1769958:1",
+    assert mock_client.method_calls[-2] == call.put_paramset(
+        channel_address="VCU1769958:1",
         paramset_key="VALUES",
-        value={
+        values={
             "SET_POINT_MODE": 2,
             "PARTY_TIME_START": "2000_01_01 00:00",
             "PARTY_TIME_END": "2000_01_01 00:00",

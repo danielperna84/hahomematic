@@ -543,6 +543,18 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return the last refreshed datetime value."""
         return self._last_refreshed
 
+    @property
+    def unconfirmed_last_value_send(self) -> ParameterT | None:
+        """Return the unconfirmed value send for the entity."""
+        return cast(
+            ParameterT | None,
+            self._client.last_value_send_cache.get_last_value_send(
+                paramset_key=self.paramset_key,
+                channel_address=self.channel_address,
+                parameter=self.parameter,
+            ),
+        )
+
     @value_property
     def old_value(self) -> ParameterT | None:
         """Return the old value of the entity."""
@@ -785,7 +797,9 @@ class CallParameterCollector:
                         ):
                             return False  # pragma: no cover
                 elif not await self._client.put_paramset(
-                    address=channel_address, paramset_key=ParamsetKey.VALUES, value=paramset
+                    channel_address=channel_address,
+                    paramset_key=ParamsetKey.VALUES,
+                    values=paramset,
                 ):
                     return False  # pragma: no cover
         return True

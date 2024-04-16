@@ -90,6 +90,15 @@ class CustomEntity(BaseEntity):
         return latest_refreshed
 
     @property
+    def unconfirmed_last_values_send(self) -> dict[Field, Any]:
+        """Return the unconfirmed values send for the entity."""
+        unconfirmed_values: dict[Field, Any] = {}
+        for field, entity in self._data_entities.items():
+            if (unconfirmed_value := entity.unconfirmed_last_value_send) is not None:
+                unconfirmed_values[field] = unconfirmed_value
+        return unconfirmed_values
+
+    @property
     def has_data_entities(self) -> bool:
         """Return if there are data entities."""
         return len(self._data_entities) > 0

@@ -3,6 +3,7 @@
 - Make entity event async
 - Extract looper from central and reuse for json/xml_rpc
 - Move loop_check to async_support
+- Record last value send
 
 # Version 2024.4.7 (2024-04-13)
 
