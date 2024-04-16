@@ -545,7 +545,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 
     @property
     def unconfirmed_last_value_send(self) -> ParameterT | None:
-        """Return the value of the entity."""
+        """Return the unconfirmed value send for the entity."""
         return cast(
             ParameterT | None,
             self._client.last_value_send_cache.get_last_value_send(
