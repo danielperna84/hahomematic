@@ -253,6 +253,20 @@ class CeBlind(CeCover):
         """Return current tilt position of cover."""
         return int(self._channel_tilt_level * 100)
 
+    @property
+    def _target_level(self) -> float | None:
+        """Return the level of last service call."""
+        if (last_value_send := self._e_level.unconfirmed_last_value_send) is not None:
+            return float(last_value_send)
+        return None
+
+    @property
+    def _target_tilt_level(self) -> float | None:
+        """Return the tilt level of last service call."""
+        if (last_value_send := self._e_level_2.unconfirmed_last_value_send) is not None:
+            return float(last_value_send)
+        return None
+
     @bind_collector
     async def set_position(
         self,
@@ -280,8 +294,22 @@ class CeBlind(CeCover):
 
         1.01 means no change.
         """
-        _level = level if level is not None else self.current_position / 100.0
-        _tilt_level = tilt_level if tilt_level is not None else self.current_tilt_position / 100.0
+        if level is not None:
+            _level = level
+        elif (self.is_opening or self.is_closing) and self._target_level is not None:
+            # The blind moves and the target blind height is known
+            _level = self._target_level
+        else:  # The blind is at a standstill and no level is explicitly requested => we remain at the current level
+            _level = self._channel_level
+
+        if tilt_level is not None:
+            _tilt_level = tilt_level
+        elif (self.is_opening or self.is_closing) and self._target_tilt_level is not None:
+            # The blind moves and the target slat position is known
+            _tilt_level = self._target_tilt_level
+        else:  # The blind is at a standstill and no tilt is explicitly desired => we remain at the current angle
+            _tilt_level = self._channel_tilt_level
+
         if self._e_combined.is_hmtype and (
             combined_parameter := self._get_combined_value(level=_level, tilt_level=_tilt_level)
         ):
