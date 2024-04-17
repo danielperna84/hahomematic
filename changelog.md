@@ -1,3 +1,7 @@
+# Version 2024.4.9 (2024-04-16)
+
+- Decompose combined parameter
+
 # Version 2024.4.8 (2024-04-13)
 
 - Make entity event async

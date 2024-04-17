@@ -12,6 +12,7 @@ import logging
 from typing import Any, Final
 
 from hahomematic.const import EntityUsage, HmPlatform, Parameter
+from hahomematic.converter import convert_hm_level_to_cpv
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
@@ -336,9 +337,9 @@ class CeBlind(CeCover):
         levels: list[str] = []
         # the resulting hex value is based on the doubled position
         if level is not None:
-            levels.append(format(int(level * 100 * 2), "#04x"))
+            levels.append(convert_hm_level_to_cpv(hm_level=level))
         if tilt_level is not None:
-            levels.append(format(int(tilt_level * 100 * 2), "#04x"))
+            levels.append(convert_hm_level_to_cpv(hm_level=tilt_level))
 
         if levels:
             return ",".join(levels)
