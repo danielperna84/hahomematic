@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
 from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
 from hahomematic.const import INIT_DATETIME, EntityUsage, ParameterType, SysvarType
+from hahomematic.converter import _COMBINED_PARAMETER_TO_HM_CONVERTER, convert_hm_level_to_cpv
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms.support import (
     _check_channel_name_with_channel_no,
@@ -421,3 +424,46 @@ def test_password() -> None:
     assert check_password("test123TEST") is True
     assert check_password("test.!$():;#-") is True
     assert check_password("test%") is False
+
+
+@pytest.mark.parametrize(
+    ("parameter", "input_value", "converter", "result_value"),
+    [
+        (
+            "LEVEL_COMBINED",
+            0,
+            convert_hm_level_to_cpv,
+            "0x00",
+        ),
+        (
+            "LEVEL_COMBINED",
+            0.17,
+            convert_hm_level_to_cpv,
+            "0x22",
+        ),
+        (
+            "LEVEL_COMBINED",
+            0.81,
+            convert_hm_level_to_cpv,
+            "0xa2",
+        ),
+        (
+            "LEVEL_COMBINED",
+            1,
+            convert_hm_level_to_cpv,
+            "0xc8",
+        ),
+    ],
+)
+def test_converter(
+    parameter: str,
+    input_value: Any,
+    converter: Callable,
+    result_value: Any,
+) -> None:
+    """Test device un ignore."""
+
+    assert input_value is not None
+    assert converter(input_value) == result_value
+    if re_converter := _COMBINED_PARAMETER_TO_HM_CONVERTER.get(parameter):
+        assert re_converter(result_value) == input_value

@@ -28,6 +28,7 @@ from hahomematic.const import (
     InterfaceName,
     ParamsetKey,
 )
+from hahomematic.converter import CONVERTABLE_PARAMETERS, convert_combined_parameter_to_paramset
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import changed_within_seconds, get_channel_no, get_device_address
 
@@ -52,6 +53,12 @@ class CommandCache:
         value: Any,
     ) -> None:
         """Add data from set value command."""
+        if parameter in CONVERTABLE_PARAMETERS:
+            self.add_combined_parameter(
+                parameter=parameter, channel_address=channel_address, combined_parameter=value
+            )
+            return
+
         key = (
             ParamsetKey.VALUES.value,
             get_device_address(channel_address),
@@ -76,6 +83,19 @@ class CommandCache:
                 parameter,
             )
             self._last_send_command[key] = (value, datetime.now())
+
+    def add_combined_parameter(
+        self, parameter: str, channel_address: str, combined_parameter: str
+    ) -> None:
+        """Add data from combined parameter."""
+        if values := convert_combined_parameter_to_paramset(
+            parameter=parameter, cpv=combined_parameter
+        ):
+            self.add_put_paramset(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey.VALUES.value,
+                values=values,
+            )
 
     def get_last_value_send(
         self,
