@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import ast
+import logging
 from typing import Any, Final, cast
 
 from hahomematic.const import Parameter
+from hahomematic.support import reduce_args
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _convert_cpv_to_hm_level(cpv: Any) -> Any:
@@ -13,6 +17,11 @@ def _convert_cpv_to_hm_level(cpv: Any) -> Any:
     if isinstance(cpv, str) and cpv.startswith("0x"):
         return ast.literal_eval(cpv) / 100 / 2
     return cpv
+
+
+def _convert_cpv_to_hmip_level(cpv: Any) -> Any:
+    """Convert combined parameter value for hmip level."""
+    return int(cpv) / 100
 
 
 def convert_hm_level_to_cpv(hm_level: Any) -> Any:
@@ -24,6 +33,8 @@ CONVERTABLE_PARAMETERS: Final = (Parameter.COMBINED_PARAMETER, Parameter.LEVEL_C
 
 _COMBINED_PARAMETER_TO_HM_CONVERTER: Final = {
     Parameter.LEVEL_COMBINED: _convert_cpv_to_hm_level,
+    Parameter.LEVEL: _convert_cpv_to_hmip_level,
+    Parameter.LEVEL_2: _convert_cpv_to_hmip_level,
 }
 
 _COMBINED_PARAMETER_NAMES: Final = {"L": Parameter.LEVEL, "L2": Parameter.LEVEL_2}
@@ -62,6 +73,14 @@ _COMBINED_PARAMETER_TO_PARAMSET_CONVERTER: Final = {
 
 def convert_combined_parameter_to_paramset(parameter: str, cpv: str) -> dict[str, Any]:
     """Convert combined parameter to paramset."""
-    if converter := _COMBINED_PARAMETER_TO_PARAMSET_CONVERTER.get(parameter):  # type: ignore[call-overload]
-        return cast(dict[str, Any], converter(cpv))
+    try:
+        if converter := _COMBINED_PARAMETER_TO_PARAMSET_CONVERTER.get(parameter):  # type: ignore[call-overload]
+            return cast(dict[str, Any], converter(cpv))
+        _LOGGER.debug(
+            "CONVERT_COMBINED_PARAMETER_TO_PARAMSET: No converter found for %s: %s", parameter, cpv
+        )
+    except Exception as ex:
+        _LOGGER.debug(
+            "CONVERT_COMBINED_PARAMETER_TO_PARAMSET: Convert failed %s", reduce_args(args=ex.args)
+        )
     return {}
