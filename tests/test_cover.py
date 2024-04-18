@@ -119,7 +119,17 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=81",
     )
+
+    # test unconfirmed values
+    assert cover._e_level.unconfirmed_last_value_send == 0.81
+    assert cover._e_level_2.unconfirmed_last_value_send == 0.0
+    await central.event(const.INTERFACE_ID, "VCU7807849:2", "LEVEL", 0.81)
+    await central.event(const.INTERFACE_ID, "VCU7807849:2", "LEVEL_2", 0.0)
+    assert cover._e_level.unconfirmed_last_value_send is None
+    assert cover._e_level_2.unconfirmed_last_value_send is None
+
     await central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", 0.81)
+    await central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL_2", 0.0)
     assert cover.current_position == 81
     assert cover.is_closed is False
     await cover.open()
@@ -129,8 +139,16 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
         parameter="COMBINED_PARAMETER",
         value="L2=100,L=100",
     )
+    assert cover._e_level.unconfirmed_last_value_send == 1.0
+    assert cover._e_level_2.unconfirmed_last_value_send == 1.0
     await central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", _OPEN_LEVEL)
+    await central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL_2", _OPEN_LEVEL)
+    await central.event(const.INTERFACE_ID, "VCU7807849:2", "LEVEL", _OPEN_LEVEL)
+    await central.event(const.INTERFACE_ID, "VCU7807849:2", "LEVEL_2", _OPEN_LEVEL)
+    assert cover._e_level.unconfirmed_last_value_send is None
+    assert cover._e_level_2.unconfirmed_last_value_send is None
     assert cover.current_position == 100
+    assert cover.current_tilt_position == 100
     await cover.close()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU7807849:2",

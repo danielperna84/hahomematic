@@ -141,12 +141,10 @@ class CommandCache:
 
         if result := self._last_send_command.get(key):
             stored_value, last_send_dt = result
-            if changed_within_seconds(last_change=last_send_dt, max_age=max_age) or (
-                value and stored_value != value
+            if not changed_within_seconds(last_change=last_send_dt, max_age=max_age) or (
+                value is not None and stored_value == value
             ):
-                return
-
-            del self._last_send_command[key]
+                del self._last_send_command[key]
 
 
 class DeviceDetailsCache:
