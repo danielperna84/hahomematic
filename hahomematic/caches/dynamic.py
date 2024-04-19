@@ -96,7 +96,7 @@ class CommandCache:
         ):
             return self.add_put_paramset(
                 channel_address=channel_address,
-                paramset_key=ParamsetKey.VALUES,
+                paramset_key=ParamsetKey.VALUES.value,
                 values=values,
             )
         return set()
