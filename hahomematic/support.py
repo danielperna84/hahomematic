@@ -18,6 +18,7 @@ from typing import Any, Final
 
 from hahomematic.const import (
     CCU_PASSWORD_PATTERN,
+    ENTITY_KEY,
     FILE_DEVICES,
     FILE_PARAMSETS,
     IDENTIFIER_SEPARATOR,
@@ -168,6 +169,18 @@ def get_device_address(address: str) -> str:
 def get_channel_no(address: str) -> int | None:
     """Return the channel part of an address."""
     return get_split_channel_address(channel_address=address)[1]
+
+
+def get_entity_key(
+    interface_id: str, paramset_key: str, channel_address: str, parameter: str
+) -> ENTITY_KEY:
+    """Return an entity key."""
+    return (
+        str(interface_id),
+        str(paramset_key),
+        str(channel_address),
+        str(parameter),
+    )
 
 
 @lru_cache(maxsize=2048)

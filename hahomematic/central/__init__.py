@@ -33,6 +33,7 @@ from hahomematic.const import (
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
     ENTITY_EVENTS,
+    ENTITY_KEY,
     EVENT_AVAILABLE,
     EVENT_DATA,
     EVENT_INTERFACE_ID,
@@ -60,13 +61,13 @@ from hahomematic.performance import measure_execution_time
 from hahomematic.platforms import create_entities_and_append_to_device
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.device import HmDevice
-from hahomematic.platforms.entity import BaseEntity, CallbackEntity
+from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
-from hahomematic.support import check_config, get_device_address, reduce_args
+from hahomematic.support import check_config, get_device_address, get_entity_key, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -130,7 +131,7 @@ class CentralUnit:
         self._clients: Final[dict[str, hmcl.Client]] = {}
         # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[
-            dict[tuple[str, str], list[Callable[[Any], Coroutine[Any, Any, None]]]]
+            dict[ENTITY_KEY, list[Callable[[Any], Coroutine[Any, Any, None]]]]
         ] = {}
         # {device_address, device}
         self._devices: Final[dict[str, HmDevice]] = {}
@@ -850,9 +851,17 @@ class CentralUnit:
                         pong_ts=datetime.strptime(v_timestamp, DATETIME_FORMAT_MILLIS)
                     )
             return
-        if (channel_address, parameter) in self._entity_event_subscriptions:
+
+        entity_key = get_entity_key(
+            interface_id=interface_id,
+            paramset_key=ParamsetKey.VALUES,
+            channel_address=channel_address,
+            parameter=parameter,
+        )
+
+        if entity_key in self._entity_event_subscriptions:
             try:
-                for callback in self._entity_event_subscriptions[(channel_address, parameter)]:
+                for callback in self._entity_event_subscriptions[entity_key]:
                     await callback(value)
             except RuntimeError as rte:  # pragma: no cover
                 _LOGGER.debug(
@@ -880,17 +889,12 @@ class CentralUnit:
         )
         return result
 
-    def add_event_subscription(self, entity: BaseEntity) -> None:
+    def add_event_subscription(self, entity: BaseParameterEntity) -> None:
         """Add entity to central event subscription."""
         if isinstance(entity, (GenericEntity, GenericEvent)) and entity.supports_events:
-            if (
-                entity.channel_address,
-                entity.parameter,
-            ) not in self._entity_event_subscriptions:
-                self._entity_event_subscriptions[(entity.channel_address, entity.parameter)] = []
-            self._entity_event_subscriptions[(entity.channel_address, entity.parameter)].append(
-                entity.event
-            )
+            if entity.entity_key not in self._entity_event_subscriptions:
+                self._entity_event_subscriptions[entity.entity_key] = []
+            self._entity_event_subscriptions[entity.entity_key].append(entity.event)
 
     async def remove_device(self, device: HmDevice) -> None:
         """Remove device to central collections."""
@@ -907,14 +911,14 @@ class CentralUnit:
         self.device_details.remove_device(device=device)
         del self._devices[device.device_address]
 
-    def remove_event_subscription(self, entity: BaseEntity) -> None:
+    def remove_event_subscription(self, entity: BaseParameterEntity) -> None:
         """Remove event subscription from central collections."""
         if (
             isinstance(entity, (GenericEntity, GenericEvent))
             and entity.supports_events
-            and (entity.channel_address, entity.parameter) in self._entity_event_subscriptions
+            and entity.entity_key in self._entity_event_subscriptions
         ):
-            del self._entity_event_subscriptions[(entity.channel_address, entity.parameter)]
+            del self._entity_event_subscriptions[entity.entity_key]
 
     async def execute_program(self, pid: str) -> bool:
         """Execute a program on CCU / Homegear."""

@@ -44,7 +44,7 @@ from hahomematic.platforms.support import (
     convert_value,
     generate_channel_unique_id,
 )
-from hahomematic.support import reduce_args
+from hahomematic.support import get_entity_key, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -487,12 +487,11 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     @config_property
     def entity_key(self) -> ENTITY_KEY:
         """Return entity key value."""
-        return (
-            self.device.interface_id,
-            self._paramset_key,
-            self.device.device_address,
-            self._channel_no,
-            self._parameter,
+        return get_entity_key(
+            interface_id=self.device.interface_id,
+            paramset_key=self._paramset_key,
+            channel_address=self._channel_address,
+            parameter=self._parameter,
         )
 
     @config_property
@@ -560,11 +559,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return the unconfirmed value send for the entity."""
         return cast(
             ParameterT | None,
-            self._client.last_value_send_cache.get_last_value_send(
-                paramset_key=self.paramset_key,
-                channel_address=self.channel_address,
-                parameter=self.parameter,
-            ),
+            self._client.last_value_send_cache.get_last_value_send(entity_key=self.entity_key),
         )
 
     @value_property

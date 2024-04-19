@@ -41,7 +41,7 @@ from hahomematic.const import (
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.platforms.custom import definition as hmed, entity as hmce
 from hahomematic.platforms.decorators import config_property, value_property
-from hahomematic.platforms.entity import BaseEntity, CallbackEntity
+from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import PayloadMixin, get_device_name
@@ -347,7 +347,7 @@ class HmDevice(PayloadMixin):
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
-        if isinstance(entity, BaseEntity):
+        if isinstance(entity, BaseParameterEntity):
             self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[(entity.channel_address, entity.parameter)] = entity
@@ -361,7 +361,7 @@ class HmDevice(PayloadMixin):
 
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
-        if isinstance(entity, BaseEntity):
+        if isinstance(entity, BaseParameterEntity):
             self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[(entity.channel_address, entity.parameter)]

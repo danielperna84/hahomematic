@@ -71,8 +71,8 @@ MAX_CACHE_AGE: Final = 60
 
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
-# interface_id, paramset_key, channel_address, channel_no, parameter
-ENTITY_KEY = tuple[str, str, str, int | None, str]
+# interface_id, paramset_key, channel_address, parameter
+ENTITY_KEY = tuple[str, str, str, str]
 
 
 class Backend(StrEnum):
