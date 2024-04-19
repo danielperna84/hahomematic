@@ -616,23 +616,6 @@ class CentralUnit:
             )
         )
 
-    def get_custom_ids_by_entity_keys(self, entity_keys: set[ENTITY_KEY]) -> set[str]:
-        """Return the custom ids by entity keys."""
-        return {
-            entity.custom_id
-            for entity in self.get_entities(exclude_no_create=False, registered=True)
-            if (
-                (
-                    (isinstance(entity, BaseParameterEntity) and entity.entity_key in entity_keys)
-                    or (
-                        isinstance(entity, CustomEntity)
-                        and entity.has_entity_key(entity_keys=entity_keys)
-                    )
-                )
-                and entity.custom_id is not None
-            )
-        }
-
     def _get_primary_client(self) -> hmcl.Client | None:
         """Return the client by interface_id or the first with a virtual remote."""
         client: hmcl.Client | None = None
