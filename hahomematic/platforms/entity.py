@@ -122,7 +122,7 @@ class CallbackEntity(ABC):
 
     @property
     def custom_id(self) -> str | None:
-        """Return the central unit."""
+        """Return the custom id."""
         return self._custom_id
 
     @classmethod
@@ -488,8 +488,6 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def entity_key(self) -> ENTITY_KEY:
         """Return entity key value."""
         return get_entity_key(
-            interface_id=self.device.interface_id,
-            paramset_key=self._paramset_key,
             channel_address=self._channel_address,
             parameter=self._parameter,
         )
@@ -613,7 +611,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
         cop: BaseParameterEntity | None = self._device.get_generic_entity(
-            channel_address=self._channel_address, parameter=Parameter.CHANNEL_OPERATION_MODE
+            channel_address=self._channel_address,
+            parameter=Parameter.CHANNEL_OPERATION_MODE,
         )
         if cop and cop.value:
             return str(cop.value)

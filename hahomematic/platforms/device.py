@@ -19,6 +19,7 @@ from hahomematic.const import (
     DEFAULT_DEVICE_DESCRIPTIONS_DIR,
     DEFAULT_PARAMSET_DESCRIPTIONS_DIR,
     ENTITY_EVENTS,
+    ENTITY_KEY,
     IDENTIFIER_SEPARATOR,
     INIT_DATETIME,
     NO_CACHE_ENTRY,
@@ -46,7 +47,13 @@ from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
-from hahomematic.support import CacheEntry, Channel, check_or_create_directory, reduce_args
+from hahomematic.support import (
+    CacheEntry,
+    Channel,
+    check_or_create_directory,
+    get_entity_key,
+    reduce_args,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -75,8 +82,8 @@ class HmDevice(PayloadMixin):
         )
         # {channel_no, entity}
         self._custom_entities: Final[dict[int, hmce.CustomEntity]] = {}
-        self._generic_entities: Final[dict[tuple[str, str], GenericEntity]] = {}
-        self._generic_events: Final[dict[tuple[str, str], GenericEvent]] = {}
+        self._generic_entities: Final[dict[ENTITY_KEY, GenericEntity]] = {}
+        self._generic_events: Final[dict[ENTITY_KEY, GenericEvent]] = {}
         self._last_updated: datetime = INIT_DATETIME
         self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
         self._device_updated_callbacks: Final[list[Callable]] = []
@@ -350,28 +357,28 @@ class HmDevice(PayloadMixin):
         if isinstance(entity, BaseParameterEntity):
             self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
-            self._generic_entities[(entity.channel_address, entity.parameter)] = entity
+            self._generic_entities[entity.entity_key] = entity
             self.register_device_updated_callback(
                 device_updated_callback=entity.fire_entity_updated_callback
             )
         if isinstance(entity, hmce.CustomEntity):
             self._custom_entities[entity.channel_no] = entity
         if isinstance(entity, GenericEvent):
-            self._generic_events[(entity.channel_address, entity.parameter)] = entity
+            self._generic_events[entity.entity_key] = entity
 
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseParameterEntity):
             self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
-            del self._generic_entities[(entity.channel_address, entity.parameter)]
+            del self._generic_entities[entity.entity_key]
             self.unregister_device_updated_callback(
                 device_updated_callback=entity.fire_entity_updated_callback
             )
         if isinstance(entity, hmce.CustomEntity):
             del self._custom_entities[entity.channel_no]
         if isinstance(entity, GenericEvent):
-            del self._generic_events[(entity.channel_address, entity.parameter)]
+            del self._generic_events[entity.entity_key]
         entity.fire_device_removed_callback()
 
     def clear_collections(self) -> None:
@@ -485,11 +492,15 @@ class HmDevice(PayloadMixin):
 
     def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
         """Return an entity from device."""
-        return self._generic_entities.get((channel_address, parameter))
+        return self._generic_entities.get(
+            get_entity_key(channel_address=channel_address, parameter=parameter)
+        )
 
     def get_generic_event(self, channel_address: str, parameter: str) -> GenericEvent | None:
         """Return a generic event from device."""
-        return self._generic_events.get((channel_address, parameter))
+        return self._generic_events.get(
+            get_entity_key(channel_address=channel_address, parameter=parameter)
+        )
 
     def get_readable_entities(self, paramset_key: ParamsetKey) -> tuple[GenericEntity, ...]:
         """Return the list of readable master entities."""

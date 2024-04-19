@@ -853,8 +853,6 @@ class CentralUnit:
             return
 
         entity_key = get_entity_key(
-            interface_id=interface_id,
-            paramset_key=ParamsetKey.VALUES,
             channel_address=channel_address,
             parameter=parameter,
         )
@@ -982,7 +980,9 @@ class CentralUnit:
                 return virtual_remote
         return None
 
-    def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
+    def get_generic_entity(
+        self, channel_address: str, parameter: str, paramset_key: ParamsetKey = ParamsetKey.VALUES
+    ) -> GenericEntity | None:
         """Get entity by channel_address and parameter."""
         if device := self.get_device(address=channel_address):
             return device.get_generic_entity(channel_address=channel_address, parameter=parameter)

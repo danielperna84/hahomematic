@@ -58,8 +58,6 @@ class CommandCache:
             )
 
         entity_key = get_entity_key(
-            interface_id=self._interface_id,
-            paramset_key=ParamsetKey.VALUES,
             channel_address=channel_address,
             parameter=parameter,
         )
@@ -73,8 +71,6 @@ class CommandCache:
         entity_keys: set[ENTITY_KEY] = set()
         for parameter, value in values.items():
             entity_key = get_entity_key(
-                interface_id=self._interface_id,
-                paramset_key=paramset_key,
                 channel_address=channel_address,
                 parameter=parameter,
             )
