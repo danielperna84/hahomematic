@@ -485,8 +485,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._is_un_ignored
 
     @config_property
-    def key(self) -> ENTITY_KEY:
-        """Return key value."""
+    def entity_key(self) -> ENTITY_KEY:
+        """Return entity key value."""
         return (
             self.device.interface_id,
             self._paramset_key,
