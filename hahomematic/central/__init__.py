@@ -620,10 +620,15 @@ class CentralUnit:
         """Return the custom ids by entity keys."""
         return {
             entity.custom_id
-            for entity in self.get_entities(registered=True)
+            for entity in self.get_entities(exclude_no_create=False, registered=True)
             if (
-                isinstance(entity, BaseParameterEntity)
-                and entity.entity_key in entity_keys
+                (
+                    (isinstance(entity, BaseParameterEntity) and entity.entity_key in entity_keys)
+                    or (
+                        isinstance(entity, CustomEntity)
+                        and entity.has_entity_key(entity_keys=entity_keys)
+                    )
+                )
                 and entity.custom_id is not None
             )
         }
