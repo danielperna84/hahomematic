@@ -490,7 +490,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return (
             self.device.interface_id,
             self._paramset_key,
-            self._channel_address,
+            self.device.device_address,
             self._channel_no,
             self._parameter,
         )
