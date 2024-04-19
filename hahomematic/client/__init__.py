@@ -430,6 +430,7 @@ class Client(ABC):
                 await self._proxy.setValue(channel_address, parameter, value, rx_mode)
             else:
                 await self._proxy.setValue(channel_address, parameter, value)
+            # store the send value in the last_value_send_cache
             self._last_value_send_cache.add_set_value(
                 channel_address=channel_address, parameter=parameter, value=value
             )
@@ -512,6 +513,7 @@ class Client(ABC):
                 await self._proxy.putParamset(channel_address, paramset_key, values, rx_mode)
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, values)
+            # store the send value in the last_value_send_cache
             self._last_value_send_cache.add_put_paramset(
                 channel_address=channel_address, paramset_key=paramset_key, values=values
             )

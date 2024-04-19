@@ -15,6 +15,7 @@ import voluptuous as vol
 from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.async_support import loop_check
 from hahomematic.const import (
+    ENTITY_KEY,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
     EVENT_DEVICE_TYPE,
@@ -482,6 +483,17 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def is_un_ignored(self) -> bool:
         """Return if the parameter is un ignored."""
         return self._is_un_ignored
+
+    @config_property
+    def key(self) -> ENTITY_KEY:
+        """Return key value."""
+        return (
+            self.device.interface_id,
+            self._paramset_key,
+            self._channel_address,
+            self._channel_no,
+            self._parameter,
+        )
 
     @config_property
     def max(self) -> ParameterT:

@@ -14,6 +14,7 @@ from hahomematic.config import (
     PING_PONG_MISMATCH_COUNT_TTL,
 )
 from hahomematic.const import (
+    ENTITY_KEY,
     EVENT_DATA,
     EVENT_INSTANCE_NAME,
     EVENT_INTERFACE_ID,
@@ -42,9 +43,7 @@ class CommandCache:
         """Init command cache."""
         self._interface_id: Final = interface_id
         # (paramset_key, device_address, channel_no, parameter)
-        self._last_send_command: Final[
-            dict[tuple[str, str, int | None, str], tuple[Any, datetime]]
-        ] = {}
+        self._last_send_command: Final[dict[ENTITY_KEY, tuple[Any, datetime]]] = {}
 
     def add_set_value(
         self,
@@ -59,7 +58,8 @@ class CommandCache:
             )
             return
 
-        key = (
+        key: ENTITY_KEY = (
+            self._interface_id,
             ParamsetKey.VALUES.value,
             get_device_address(channel_address),
             get_channel_no(channel_address),
@@ -76,7 +76,8 @@ class CommandCache:
         """Add data from put paramset command."""
 
         for parameter, value in values.items():
-            key = (
+            key: ENTITY_KEY = (
+                self._interface_id,
                 paramset_key,
                 get_device_address(channel_address),
                 get_channel_no(channel_address),
@@ -93,7 +94,7 @@ class CommandCache:
         ):
             self.add_put_paramset(
                 channel_address=channel_address,
-                paramset_key=ParamsetKey.VALUES.value,
+                paramset_key=ParamsetKey.VALUES,
                 values=values,
             )
 
@@ -105,7 +106,8 @@ class CommandCache:
         max_age: int = LAST_COMMAND_SEND_STORE_TIMEOUT,
     ) -> Any:
         """Return the last send values."""
-        key = (
+        key: ENTITY_KEY = (
+            self._interface_id,
             paramset_key,
             get_device_address(channel_address),
             get_channel_no(channel_address),
@@ -132,7 +134,8 @@ class CommandCache:
         max_age: int = LAST_COMMAND_SEND_STORE_TIMEOUT,
     ) -> None:
         """Remove the last send value."""
-        key = (
+        key: ENTITY_KEY = (
+            self._interface_id,
             paramset_key,
             get_device_address(channel_address),
             get_channel_no(channel_address),

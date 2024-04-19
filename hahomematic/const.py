@@ -72,6 +72,9 @@ MAX_CACHE_AGE: Final = 60
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
 
+ENTITY_KEY = tuple[str, str, str, int | None, str]
+
+
 class Backend(StrEnum):
     """Enum with supported hahomematic backends."""
 
