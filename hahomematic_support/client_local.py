@@ -13,6 +13,7 @@ import orjson
 from hahomematic.client import _LOGGER, Client, _ClientConfig
 from hahomematic.const import (
     DEFAULT_ENCODING,
+    ENTITY_KEY,
     CallSource,
     InterfaceName,
     ProductGroup,
@@ -196,13 +197,15 @@ class ClientLocal(Client):  # pragma: no cover
         parameter: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> bool:
+    ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
-        await self.central.event(self.interface_id, channel_address, parameter, value)
-        self._last_value_send_cache.add_set_value(
+        # store the send value in the last_value_send_cache
+        result = self._last_value_send_cache.add_set_value(
             channel_address=channel_address, parameter=parameter, value=value
         )
-        return True
+        # fire an event to fake the state change for a simple parameter
+        await self.central.event(self.interface_id, channel_address, parameter, value)
+        return result
 
     async def get_paramset(self, address: str, paramset_key: str) -> Any:
         """
@@ -247,21 +250,23 @@ class ClientLocal(Client):  # pragma: no cover
         paramset_key: str,
         values: Any,
         rx_mode: str | None = None,
-    ) -> bool:
+    ) -> set[ENTITY_KEY]:
         """
         Set paramsets manually.
 
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
+        # store the send value in the last_value_send_cache
+        result = self._last_value_send_cache.add_put_paramset(
+            channel_address=channel_address, paramset_key=paramset_key, values=values
+        )
+        # fire an event to fake the state change for the content of a paramset
         for parameter in values:
             await self.central.event(
                 self.interface_id, channel_address, parameter, values[parameter]
             )
-        self._last_value_send_cache.add_put_paramset(
-            channel_address=channel_address, paramset_key=paramset_key, values=values
-        )
-        return True
+        return result
 
     async def _load_all_json_files(
         self,

@@ -1,6 +1,7 @@
 # Version 2024.4.9 (2024-04-16)
 
 - Decompose combined parameter
+- Return affected entity keys for service calls
 
 # Version 2024.4.8 (2024-04-13)
 

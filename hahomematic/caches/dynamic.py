@@ -14,6 +14,7 @@ from hahomematic.config import (
     PING_PONG_MISMATCH_COUNT_TTL,
 )
 from hahomematic.const import (
+    ENTITY_KEY,
     EVENT_DATA,
     EVENT_INSTANCE_NAME,
     EVENT_INTERFACE_ID,
@@ -30,7 +31,7 @@ from hahomematic.const import (
 )
 from hahomematic.converter import CONVERTABLE_PARAMETERS, convert_combined_parameter_to_paramset
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import changed_within_seconds, get_channel_no, get_device_address
+from hahomematic.support import changed_within_seconds, get_entity_key
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -42,109 +43,82 @@ class CommandCache:
         """Init command cache."""
         self._interface_id: Final = interface_id
         # (paramset_key, device_address, channel_no, parameter)
-        self._last_send_command: Final[
-            dict[tuple[str, str, int | None, str], tuple[Any, datetime]]
-        ] = {}
+        self._last_send_command: Final[dict[ENTITY_KEY, tuple[Any, datetime]]] = {}
 
     def add_set_value(
         self,
         channel_address: str,
         parameter: str,
         value: Any,
-    ) -> None:
+    ) -> set[ENTITY_KEY]:
         """Add data from set value command."""
         if parameter in CONVERTABLE_PARAMETERS:
-            self.add_combined_parameter(
+            return self.add_combined_parameter(
                 parameter=parameter, channel_address=channel_address, combined_parameter=value
             )
-            return
 
-        key = (
-            ParamsetKey.VALUES.value,
-            get_device_address(channel_address),
-            get_channel_no(channel_address),
-            parameter,
+        entity_key = get_entity_key(
+            channel_address=channel_address,
+            parameter=parameter,
         )
-        self._last_send_command[key] = (value, datetime.now())
+        self._last_send_command[entity_key] = (value, datetime.now())
+        return {entity_key}
 
     def add_put_paramset(
-        self,
-        channel_address: str,
-        paramset_key: str,
-        values: dict[str, Any],
-    ) -> None:
+        self, channel_address: str, paramset_key: str, values: dict[str, Any]
+    ) -> set[ENTITY_KEY]:
         """Add data from put paramset command."""
-
+        entity_keys: set[ENTITY_KEY] = set()
         for parameter, value in values.items():
-            key = (
-                paramset_key,
-                get_device_address(channel_address),
-                get_channel_no(channel_address),
-                parameter,
+            entity_key = get_entity_key(
+                channel_address=channel_address,
+                parameter=parameter,
             )
-            self._last_send_command[key] = (value, datetime.now())
+            self._last_send_command[entity_key] = (value, datetime.now())
+            entity_keys.add(entity_key)
+        return entity_keys
 
     def add_combined_parameter(
         self, parameter: str, channel_address: str, combined_parameter: str
-    ) -> None:
+    ) -> set[ENTITY_KEY]:
         """Add data from combined parameter."""
         if values := convert_combined_parameter_to_paramset(
             parameter=parameter, cpv=combined_parameter
         ):
-            self.add_put_paramset(
+            return self.add_put_paramset(
                 channel_address=channel_address,
-                paramset_key=ParamsetKey.VALUES.value,
+                paramset_key=ParamsetKey.VALUES,
                 values=values,
             )
+        return set()
 
     def get_last_value_send(
-        self,
-        paramset_key: str,
-        channel_address: str,
-        parameter: str,
-        max_age: int = LAST_COMMAND_SEND_STORE_TIMEOUT,
+        self, entity_key: ENTITY_KEY, max_age: int = LAST_COMMAND_SEND_STORE_TIMEOUT
     ) -> Any:
         """Return the last send values."""
-        key = (
-            paramset_key,
-            get_device_address(channel_address),
-            get_channel_no(channel_address),
-            parameter,
-        )
-        if result := self._last_send_command.get(key):
+        if result := self._last_send_command.get(entity_key):
             value, last_send_dt = result
             if last_send_dt and changed_within_seconds(last_change=last_send_dt, max_age=max_age):
                 return value
             self.remove_last_value_send(
-                paramset_key=paramset_key,
-                channel_address=channel_address,
-                parameter=parameter,
+                entity_key=entity_key,
                 max_age=max_age,
             )
         return None
 
     def remove_last_value_send(
         self,
-        paramset_key: str,
-        channel_address: str,
-        parameter: str,
+        entity_key: ENTITY_KEY,
         value: Any = None,
         max_age: int = LAST_COMMAND_SEND_STORE_TIMEOUT,
     ) -> None:
         """Remove the last send value."""
-        key = (
-            paramset_key,
-            get_device_address(channel_address),
-            get_channel_no(channel_address),
-            parameter,
-        )
-
-        if result := self._last_send_command.get(key):
+        if result := self._last_send_command.get(entity_key):
             stored_value, last_send_dt = result
             if not changed_within_seconds(last_change=last_send_dt, max_age=max_age) or (
                 value is not None and stored_value == value
             ):
-                del self._last_send_command[key]
+                del self._last_send_command[entity_key]
 
 
 class DeviceDetailsCache:

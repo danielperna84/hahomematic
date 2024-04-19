@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
 
-from hahomematic.const import INIT_DATETIME, CallSource, EntityUsage
+from hahomematic.const import ENTITY_KEY, INIT_DATETIME, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
@@ -297,6 +297,13 @@ class CustomEntity(BaseEntity):
             entity_type,  # type:ignore[valid-type]
             NoneTypeEntity(),
         )
+
+    def has_entity_key(self, entity_keys: set[ENTITY_KEY]) -> bool:
+        """Return if an entity with one of the entities is part of this entity."""
+        result = [
+            entity for entity in self._data_entities.values() if entity.entity_key in entity_keys
+        ]
+        return len(result) > 0
 
 
 class NoneTypeEntity:

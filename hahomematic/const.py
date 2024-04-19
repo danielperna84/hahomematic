@@ -71,6 +71,9 @@ MAX_CACHE_AGE: Final = 60
 
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
+# channel_address, parameter
+ENTITY_KEY = tuple[str, str]
+
 
 class Backend(StrEnum):
     """Enum with supported hahomematic backends."""

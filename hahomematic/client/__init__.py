@@ -14,6 +14,7 @@ from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
+    ENTITY_KEY,
     EVENT_AVAILABLE,
     EVENT_SECONDS_SINCE_LAST_EVENT,
     HOMEGEAR_SERIAL,
@@ -422,7 +423,7 @@ class Client(ABC):
         parameter: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> bool:
+    ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
         try:
             _LOGGER.debug("SET_VALUE: %s, %s, %s", channel_address, parameter, value)
@@ -430,7 +431,8 @@ class Client(ABC):
                 await self._proxy.setValue(channel_address, parameter, value, rx_mode)
             else:
                 await self._proxy.setValue(channel_address, parameter, value)
-            self._last_value_send_cache.add_set_value(
+            # store the send value in the last_value_send_cache
+            return self._last_value_send_cache.add_set_value(
                 channel_address=channel_address, parameter=parameter, value=value
             )
         except BaseHomematicException as ex:
@@ -442,8 +444,7 @@ class Client(ABC):
                 parameter,
                 value,
             )
-            return False
-        return True
+            return set()
 
     async def set_value(
         self,
@@ -452,7 +453,7 @@ class Client(ABC):
         parameter: str,
         value: Any,
         rx_mode: str | None = None,
-    ) -> bool:
+    ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
         if paramset_key == ParamsetKey.VALUES:
             return await self._set_value(
@@ -499,7 +500,7 @@ class Client(ABC):
         paramset_key: str,
         values: dict[str, Any],
         rx_mode: str | None = None,
-    ) -> bool:
+    ) -> set[ENTITY_KEY]:
         """
         Set paramsets manually.
 
@@ -512,7 +513,8 @@ class Client(ABC):
                 await self._proxy.putParamset(channel_address, paramset_key, values, rx_mode)
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, values)
-            self._last_value_send_cache.add_put_paramset(
+            # store the send value in the last_value_send_cache
+            return self._last_value_send_cache.add_put_paramset(
                 channel_address=channel_address, paramset_key=paramset_key, values=values
             )
         except BaseHomematicException as ex:
@@ -524,8 +526,7 @@ class Client(ABC):
                 paramset_key,
                 values,
             )
-            return False
-        return True
+            return set()
 
     async def fetch_paramset_description(
         self, channel_address: str, paramset_key: str, save_to_file: bool = True

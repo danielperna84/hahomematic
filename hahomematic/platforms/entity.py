@@ -15,6 +15,7 @@ import voluptuous as vol
 from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.async_support import loop_check
 from hahomematic.const import (
+    ENTITY_KEY,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
     EVENT_DEVICE_TYPE,
@@ -43,7 +44,7 @@ from hahomematic.platforms.support import (
     convert_value,
     generate_channel_unique_id,
 )
-from hahomematic.support import reduce_args
+from hahomematic.support import get_entity_key, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -121,7 +122,7 @@ class CallbackEntity(ABC):
 
     @property
     def custom_id(self) -> str | None:
-        """Return the central unit."""
+        """Return the custom id."""
         return self._custom_id
 
     @classmethod
@@ -484,6 +485,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._is_un_ignored
 
     @config_property
+    def entity_key(self) -> ENTITY_KEY:
+        """Return entity key value."""
+        return get_entity_key(
+            channel_address=self._channel_address,
+            parameter=self._parameter,
+        )
+
+    @config_property
     def max(self) -> ParameterT:
         """Return max value."""
         return self._max
@@ -548,11 +557,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return the unconfirmed value send for the entity."""
         return cast(
             ParameterT | None,
-            self._client.last_value_send_cache.get_last_value_send(
-                paramset_key=self.paramset_key,
-                channel_address=self.channel_address,
-                parameter=self.parameter,
-            ),
+            self._client.last_value_send_cache.get_last_value_send(entity_key=self.entity_key),
         )
 
     @value_property
@@ -606,7 +611,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
     def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
         cop: BaseParameterEntity | None = self._device.get_generic_entity(
-            channel_address=self._channel_address, parameter=Parameter.CHANNEL_OPERATION_MODE
+            channel_address=self._channel_address,
+            parameter=Parameter.CHANNEL_OPERATION_MODE,
         )
         if cop and cop.value:
             return str(cop.value)
