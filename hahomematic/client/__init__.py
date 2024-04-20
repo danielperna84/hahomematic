@@ -429,7 +429,7 @@ class Client(ABC):
         channel_address: str,
         parameter: str,
         value: Any,
-        wait_for_callback: bool = False,
+        wait_for_callback: bool,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -1141,7 +1141,7 @@ async def _track_single_entity_state_change_or_timeout(
 
     def _async_event_changed(*args: Any, **kwargs: Any) -> None:
         ev.set()
-        _LOGGER.info("Changed event %s", entity_key)
+        _LOGGER.debug("Changed event %s", entity_key)
 
     channel_address, parameter = entity_key
     if entity := device.get_generic_entity(channel_address=channel_address, parameter=parameter):
