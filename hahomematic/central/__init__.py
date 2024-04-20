@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine, Mapping, Set as AbstractSet
 from datetime import datetime
+from functools import partial
 import logging
 import socket
 import threading
@@ -29,6 +30,7 @@ from hahomematic.central.decorators import callback_event, callback_system_event
 from hahomematic.client.json_rpc import JsonRpcAioHttpClient
 from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.const import (
+    CALLBACK_TYPE,
     DATETIME_FORMAT_MILLIS,
     DEFAULT_TLS,
     DEFAULT_VERIFY_TLS,
@@ -1020,11 +1022,12 @@ class CentralUnit:
         self.device_details.clear()
         self.data_cache.clear()
 
-    def register_ha_event_callback(self, ha_event_callback: Callable) -> None:
+    def register_ha_event_callback(self, ha_event_callback: Callable) -> CALLBACK_TYPE:
         """Register ha_event callback in central."""
         self._ha_event_callbacks.add(ha_event_callback)
+        return partial(self._unregister_ha_event_callback, ha_event_callback)
 
-    def unregister_ha_event_callback(self, ha_event_callback: Callable) -> None:
+    def _unregister_ha_event_callback(self, ha_event_callback: Callable) -> None:
         """RUn register ha_event callback in central."""
         if ha_event_callback in self._ha_event_callbacks:
             self._ha_event_callbacks.remove(ha_event_callback)
@@ -1044,11 +1047,12 @@ class CentralUnit:
                     "FIRE_HA_EVENT_CALLBACK: Unable to call handler: %s", reduce_args(args=ex.args)
                 )
 
-    def register_entity_event_callback(self, entity_event_callback: Callable) -> None:
+    def register_entity_event_callback(self, entity_event_callback: Callable) -> CALLBACK_TYPE:
         """Register entity_event callback in central."""
         self._entity_event_callbacks.add(entity_event_callback)
+        return partial(self._unregister_entity_event_callback, entity_event_callback)
 
-    def unregister_entity_event_callback(self, entity_event_callback: Callable) -> None:
+    def _unregister_entity_event_callback(self, entity_event_callback: Callable) -> None:
         """Un register entity_event callback in central."""
         if entity_event_callback in self._entity_event_callbacks:
             self._entity_event_callbacks.remove(entity_event_callback)
@@ -1072,11 +1076,12 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
-    def register_system_event_callback(self, system_event_callback: Callable) -> None:
+    def register_system_event_callback(self, system_event_callback: Callable) -> CALLBACK_TYPE:
         """Register system_event callback in central."""
         self._system_event_callbacks.add(system_event_callback)
+        return partial(self._unregister_system_event_callback, system_event_callback)
 
-    def unregister_system_event_callback(self, system_event_callback: Callable) -> None:
+    def _unregister_system_event_callback(self, system_event_callback: Callable) -> None:
         """Un register system_event callback in central."""
         if system_event_callback in self._system_event_callbacks:
             self._system_event_callbacks.remove(system_event_callback)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
@@ -73,6 +73,7 @@ NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
 # channel_address, parameter
 ENTITY_KEY = tuple[str, str]
+CALLBACK_TYPE = Callable[[], None]
 
 
 class Backend(StrEnum):

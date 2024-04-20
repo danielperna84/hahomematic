@@ -74,13 +74,15 @@ async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
         client_session=None,
     )
 
-    central.register_ha_event_callback(ha_event_callback)
-    central.register_system_event_callback(system_event_callback)
+    unregister_ha_event_callback = central.register_ha_event_callback(ha_event_callback)
+    unregister_system_event_callback = central.register_system_event_callback(
+        system_event_callback
+    )
 
     yield central
 
-    central.unregister_ha_event_callback(ha_event_callback)
-    central.unregister_system_event_callback(system_event_callback)
+    unregister_ha_event_callback()
+    unregister_system_event_callback()
     await central.stop()
     await central.clear_caches()
 

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import asyncio
 from collections.abc import Callable, Mapping
 from datetime import datetime
-from functools import wraps
+from functools import partial, wraps
 from inspect import getfullargspec
 import logging
 from typing import Any, Final, Generic, TypeVar, cast
@@ -15,6 +16,7 @@ import voluptuous as vol
 from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.async_support import loop_check
 from hahomematic.const import (
+    CALLBACK_TYPE,
     ENTITY_KEY,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
@@ -184,15 +186,18 @@ class CallbackEntity(ABC):
         """Return if entity is registered externally."""
         return self._custom_id is not None
 
-    def register_internal_entity_updated_callback(self, entity_updated_callback: Callable) -> None:
+    def register_internal_entity_updated_callback(
+        self, entity_updated_callback: Callable
+    ) -> CALLBACK_TYPE:
         """Register internal entity updated callback."""
         self.register_entity_updated_callback(
             entity_updated_callback=entity_updated_callback, custom_id=DEFAULT_CUSTOM_ID
         )
+        return partial(self.unregister_internal_entity_updated_callback, entity_updated_callback)
 
     def register_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
-    ) -> None:
+    ) -> CALLBACK_TYPE:
         """Register entity updated callback."""
         if callable(entity_updated_callback):
             self._entity_updated_callbacks[entity_updated_callback] = custom_id
@@ -202,14 +207,17 @@ class CallbackEntity(ABC):
                     f"REGISTER_entity_updated_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
+        return partial(
+            self._unregister_entity_updated_callback, entity_updated_callback, custom_id
+        )
 
     def unregister_internal_entity_updated_callback(self, update_callback: Callable) -> None:
         """Unregister entity updated callback."""
-        self.unregister_entity_updated_callback(
+        self._unregister_entity_updated_callback(
             entity_updated_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID
         )
 
-    def unregister_entity_updated_callback(
+    def _unregister_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
     ) -> None:
         """Unregister entity updated callback."""
@@ -218,15 +226,16 @@ class CallbackEntity(ABC):
         if self.custom_id == custom_id:
             self._custom_id = None
 
-    def register_device_removed_callback(self, device_removed_callback: Callable) -> None:
+    def register_device_removed_callback(self, device_removed_callback: Callable) -> CALLBACK_TYPE:
         """Register the device removed callback."""
         if (
             callable(device_removed_callback)
             and device_removed_callback not in self._device_removed_callbacks
         ):
             self._device_removed_callbacks.append(device_removed_callback)
+        return partial(self._unregister_device_removed_callback, device_removed_callback)
 
-    def unregister_device_removed_callback(self, device_removed_callback: Callable) -> None:
+    def _unregister_device_removed_callback(self, device_removed_callback: Callable) -> None:
         """Unregister the device removed callback."""
         if device_removed_callback in self._device_removed_callbacks:
             self._device_removed_callbacks.remove(device_removed_callback)
@@ -833,3 +842,42 @@ def bind_collector(func: _CallableT) -> _CallableT:
         return return_value
 
     return wrapper_collector  # type: ignore[return-value]
+
+
+async def wait_for_state_change_or_timeout(
+    device: hmd.HmDevice, entity_keys: set[ENTITY_KEY], timeout: float = 30.0
+) -> None:
+    """Wait for an entity to change state."""
+    waits = [
+        _track_single_entity_state_change_or_timeout(
+            device=device, entity_key=entity_key, timeout=timeout
+        )
+        for entity_key in entity_keys
+    ]
+    await asyncio.gather(*waits)
+
+
+async def _track_single_entity_state_change_or_timeout(
+    device: hmd.HmDevice, entity_key: ENTITY_KEY, timeout: float
+) -> None:
+    """Wait for an entity to change state."""
+    ev = asyncio.Event()
+
+    def _async_event_changed(*args: Any, **kwargs: Any) -> None:
+        ev.set()
+        _LOGGER.info("Changed event")
+
+    channel_address, parameter = entity_key
+
+    if entity := device.get_generic_entity(channel_address=channel_address, parameter=parameter):
+        unsub = entity.register_entity_updated_callback(
+            entity_updated_callback=_async_event_changed, custom_id=DEFAULT_CUSTOM_ID
+        )
+
+        try:
+            async with asyncio.timeout(timeout):
+                await ev.wait()
+        except TimeoutError:
+            pass
+        finally:
+            unsub()

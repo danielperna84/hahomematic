@@ -2,6 +2,7 @@
 
 - Decompose combined parameter
 - Return affected entity keys for service calls
+- Add callback to unregister on register return
 
 # Version 2024.4.8 (2024-04-13)
 
