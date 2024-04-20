@@ -354,23 +354,6 @@ class HmDevice(PayloadMixin):
         """Return the sub device channel."""
         return self._sub_device_channels.get(channel_no)
 
-    def get_custom_ids_by_entity_keys(self, entity_keys: set[ENTITY_KEY]) -> set[str]:
-        """Return the custom ids by entity keys."""
-        return {
-            entity.custom_id
-            for entity in self.get_entities(exclude_no_create=False, registered=True)
-            if (
-                (
-                    (isinstance(entity, BaseParameterEntity) and entity.entity_key in entity_keys)
-                    or (
-                        isinstance(entity, hmce.CustomEntity)
-                        and entity.has_entity_key(entity_keys=entity_keys)
-                    )
-                )
-                and entity.custom_id is not None
-            )
-        }
-
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseParameterEntity):
