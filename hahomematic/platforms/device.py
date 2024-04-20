@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable, Mapping, Set as AbstractSet
 from copy import copy
 from datetime import datetime
+from functools import partial
 import logging
 import os
 import random
@@ -16,6 +17,7 @@ import orjson
 from hahomematic import central as hmcu
 from hahomematic.async_support import loop_check
 from hahomematic.const import (
+    CALLBACK_TYPE,
     DEFAULT_DEVICE_DESCRIPTIONS_DIR,
     DEFAULT_PARAMSET_DESCRIPTIONS_DIR,
     ENTITY_EVENTS,
@@ -375,7 +377,7 @@ class HmDevice(PayloadMixin):
             self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[entity.entity_key] = entity
-            self.register_device_updated_callback(
+            self._register_device_updated_callback(
                 device_updated_callback=entity.fire_entity_updated_callback
             )
         if isinstance(entity, hmce.CustomEntity):
@@ -389,7 +391,7 @@ class HmDevice(PayloadMixin):
             self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[entity.entity_key]
-            self.unregister_device_updated_callback(
+            self._unregister_device_updated_callback(
                 device_updated_callback=entity.fire_entity_updated_callback
             )
         if isinstance(entity, hmce.CustomEntity):
@@ -412,26 +414,32 @@ class HmDevice(PayloadMixin):
             self.remove_entity(custom_entity)
         self._custom_entities.clear()
 
-    def register_device_updated_callback(self, device_updated_callback: Callable) -> None:
+    def _register_device_updated_callback(
+        self, device_updated_callback: Callable
+    ) -> CALLBACK_TYPE:
         """Register update callback."""
         if (
             callable(device_updated_callback)
             and device_updated_callback not in self._device_updated_callbacks
         ):
             self._device_updated_callbacks.append(device_updated_callback)
+        return partial(self._unregister_device_updated_callback, device_updated_callback)
 
-    def unregister_device_updated_callback(self, device_updated_callback: Callable) -> None:
+    def _unregister_device_updated_callback(self, device_updated_callback: Callable) -> None:
         """Remove update callback."""
         if device_updated_callback in self._device_updated_callbacks:
             self._device_updated_callbacks.remove(device_updated_callback)
 
-    def register_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
+    def register_firmware_update_callback(
+        self, firmware_update_callback: Callable
+    ) -> CALLBACK_TYPE:
         """Register firmware update callback."""
         if (
             callable(firmware_update_callback)
             and firmware_update_callback not in self._firmware_update_callbacks
         ):
             self._firmware_update_callbacks.append(firmware_update_callback)
+        return partial(self.unregister_firmware_update_callback, firmware_update_callback)
 
     def unregister_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
         """Remove firmware update callback."""

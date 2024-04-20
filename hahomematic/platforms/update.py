@@ -7,9 +7,10 @@ See https://www.home-assistant.io/integrations/update/.
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 from typing import Final
 
-from hahomematic.const import HmPlatform
+from hahomematic.const import CALLBACK_TYPE, HmPlatform
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
@@ -74,7 +75,7 @@ class HmUpdate(CallbackEntity):
 
     def register_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
-    ) -> None:
+    ) -> CALLBACK_TYPE:
         """Register update callback."""
         self._device.register_firmware_update_callback(entity_updated_callback)
         if custom_id != DEFAULT_CUSTOM_ID:
@@ -83,8 +84,9 @@ class HmUpdate(CallbackEntity):
                     f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
+        return partial(self._unregister_entity_updated_callback, entity_updated_callback)
 
-    def unregister_entity_updated_callback(
+    def _unregister_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
     ) -> None:
         """Unregister update callback."""

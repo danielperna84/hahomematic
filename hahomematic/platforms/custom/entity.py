@@ -243,7 +243,7 @@ class CustomEntity(BaseEntity):
         )
         self._data_entities[field] = entity
 
-    def unregister_entity_updated_callback(
+    def _unregister_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
     ) -> None:
         """Unregister update callback."""
@@ -252,7 +252,7 @@ class CustomEntity(BaseEntity):
                 update_callback=entity_updated_callback
             )
 
-        super().unregister_entity_updated_callback(
+        super()._unregister_entity_updated_callback(
             entity_updated_callback=entity_updated_callback, custom_id=custom_id
         )
 

@@ -42,10 +42,12 @@ async def test_custom_entity_callback(factory: helper.Factory) -> None:
     device_updated_mock = MagicMock()
     device_removed_mock = MagicMock()
 
-    switch.register_entity_updated_callback(
+    unregister_entity_updated_callback = switch.register_entity_updated_callback(
         entity_updated_callback=device_updated_mock, custom_id="some_id"
     )
-    switch.register_device_removed_callback(device_removed_callback=device_removed_mock)
+    unregister_device_removed_callback = switch.register_device_removed_callback(
+        device_removed_callback=device_removed_mock
+    )
     assert switch.value is None
     assert (
         str(switch) == "address_path: switch/CentralTest-BidCos-RF/vcu2128127_4/, "
@@ -61,10 +63,8 @@ async def test_custom_entity_callback(factory: helper.Factory) -> None:
     assert factory.system_event_mock.call_args_list[-1] == call(
         "deleteDevices", interface_id="CentralTest-BidCos-RF", addresses=["VCU2128127"]
     )
-    switch.unregister_entity_updated_callback(
-        entity_updated_callback=device_updated_mock, custom_id="some_id"
-    )
-    switch.unregister_device_removed_callback(device_removed_callback=device_removed_mock)
+    unregister_entity_updated_callback()
+    unregister_device_removed_callback()
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()
@@ -99,10 +99,10 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
     assert factory.system_event_mock.call_args_list[-1] == call(
         "deleteDevices", interface_id="CentralTest-BidCos-RF", addresses=["VCU2128127"]
     )
-    switch.unregister_entity_updated_callback(
+    switch._unregister_entity_updated_callback(
         entity_updated_callback=device_updated_mock, custom_id="some_id"
     )
-    switch.unregister_device_removed_callback(device_removed_callback=device_removed_mock)
+    switch._unregister_device_removed_callback(device_removed_callback=device_removed_mock)
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()
