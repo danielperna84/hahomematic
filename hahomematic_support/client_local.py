@@ -196,6 +196,7 @@ class ClientLocal(Client):  # pragma: no cover
         paramset_key: str,
         parameter: str,
         value: Any,
+        wait_for_callback: bool = False,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -249,6 +250,7 @@ class ClientLocal(Client):  # pragma: no cover
         channel_address: str,
         paramset_key: str,
         values: Any,
+        wait_for_callback: bool = False,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """

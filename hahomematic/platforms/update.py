@@ -10,11 +10,11 @@ from collections.abc import Callable
 from functools import partial
 from typing import Final
 
-from hahomematic.const import CALLBACK_TYPE, HmPlatform
+from hahomematic.const import CALLBACK_TYPE, DEFAULT_CUSTOM_ID, HmPlatform
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
-from hahomematic.platforms.entity import DEFAULT_CUSTOM_ID, CallbackEntity
+from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import generate_unique_id
 
 

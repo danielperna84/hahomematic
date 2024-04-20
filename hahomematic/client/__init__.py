@@ -14,6 +14,7 @@ from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
+    DEFAULT_CUSTOM_ID,
     ENTITY_KEY,
     EVENT_AVAILABLE,
     EVENT_SECONDS_SINCE_LAST_EVENT,
@@ -36,7 +37,13 @@ from hahomematic.const import (
 from hahomematic.exceptions import BaseHomematicException, NoConnection
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms.device import HmDevice
-from hahomematic.support import build_headers, build_xml_rpc_uri, get_channel_no, reduce_args
+from hahomematic.support import (
+    build_headers,
+    build_xml_rpc_uri,
+    get_channel_no,
+    get_device_address,
+    reduce_args,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -422,6 +429,7 @@ class Client(ABC):
         channel_address: str,
         parameter: str,
         value: Any,
+        wait_for_callback: bool = False,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -432,9 +440,16 @@ class Client(ABC):
             else:
                 await self._proxy.setValue(channel_address, parameter, value)
             # store the send value in the last_value_send_cache
-            return self._last_value_send_cache.add_set_value(
+            entity_keys = self._last_value_send_cache.add_set_value(
                 channel_address=channel_address, parameter=parameter, value=value
             )
+            if wait_for_callback and (
+                device := self.central.get_device(
+                    address=get_device_address(address=channel_address)
+                )
+            ):
+                await wait_for_state_change_or_timeout(device=device, entity_keys=entity_keys)
+            return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
             _LOGGER.warning(
                 "SET_VALUE failed with %s [%s]: %s, %s, %s",
@@ -452,6 +467,7 @@ class Client(ABC):
         paramset_key: str,
         parameter: str,
         value: Any,
+        wait_for_callback: bool = False,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -460,12 +476,14 @@ class Client(ABC):
                 channel_address=channel_address,
                 parameter=parameter,
                 value=value,
+                wait_for_callback=wait_for_callback,
                 rx_mode=rx_mode,
             )
         return await self.put_paramset(
             channel_address=channel_address,
             paramset_key=paramset_key,
             values={parameter: value},
+            wait_for_callback=wait_for_callback,
             rx_mode=rx_mode,
         )
 
@@ -499,6 +517,7 @@ class Client(ABC):
         channel_address: str,
         paramset_key: str,
         values: dict[str, Any],
+        wait_for_callback: bool = False,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """
@@ -514,9 +533,16 @@ class Client(ABC):
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, values)
             # store the send value in the last_value_send_cache
-            return self._last_value_send_cache.add_put_paramset(
+            entity_keys = self._last_value_send_cache.add_put_paramset(
                 channel_address=channel_address, paramset_key=paramset_key, values=values
             )
+            if wait_for_callback and (
+                device := self.central.get_device(
+                    address=get_device_address(address=channel_address)
+                )
+            ):
+                await wait_for_state_change_or_timeout(device=device, entity_keys=entity_keys)
+            return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
             _LOGGER.warning(
                 "PUT_PARAMSET failed: %s [%s] %s, %s, %s",
@@ -1092,3 +1118,43 @@ def get_client(interface_id: str) -> Client | None:
         if central.has_client(interface_id=interface_id):
             return central.get_client(interface_id=interface_id)
     return None
+
+
+async def wait_for_state_change_or_timeout(
+    device: HmDevice, entity_keys: set[ENTITY_KEY], timeout: float = 30.0
+) -> None:
+    """Wait for an entity to change state."""
+    waits = [
+        _track_single_entity_state_change_or_timeout(
+            device=device, entity_key=entity_key, timeout=timeout
+        )
+        for entity_key in entity_keys
+    ]
+    await asyncio.gather(*waits)
+
+
+async def _track_single_entity_state_change_or_timeout(
+    device: HmDevice, entity_key: ENTITY_KEY, timeout: float
+) -> None:
+    """Wait for an entity to change state."""
+    ev = asyncio.Event()
+
+    def _async_event_changed(*args: Any, **kwargs: Any) -> None:
+        ev.set()
+        _LOGGER.info("Changed event %s", entity_key)
+
+    channel_address, parameter = entity_key
+    if entity := device.get_generic_entity(channel_address=channel_address, parameter=parameter):
+        if not entity.supports_events:
+            return
+        unsub = entity.register_entity_updated_callback(
+            entity_updated_callback=_async_event_changed, custom_id=DEFAULT_CUSTOM_ID
+        )
+
+        try:
+            async with asyncio.timeout(timeout):
+                await ev.wait()
+        except TimeoutError:
+            pass
+        finally:
+            unsub()

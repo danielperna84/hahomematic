@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from functools import partial, wraps
@@ -17,6 +16,7 @@ from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.async_support import loop_check
 from hahomematic.const import (
     CALLBACK_TYPE,
+    DEFAULT_CUSTOM_ID,
     ENTITY_KEY,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
@@ -57,8 +57,6 @@ _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
 _COLLECTOR_ARGUMENT_NAME = "collector"
-
-DEFAULT_CUSTOM_ID: Final = "custom_id"
 
 _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
     '"': "",
@@ -776,9 +774,10 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
 class CallParameterCollector:
     """Create a Paramset based on given generic entities."""
 
-    def __init__(self, client: hmcl.Client) -> None:
+    def __init__(self, device: hmd.HmDevice) -> None:
         """Init the generator."""
-        self._client: Final = client
+        self._device: Final = device
+        self._client: Final = device.client
         self._use_put_paramset: bool = True
         self._paramsets: Final[dict[int, dict[str, dict[str, Any]]]] = {}
 
@@ -835,49 +834,10 @@ def bind_collector(func: _CallableT) -> _CallableT:
         if collector_exists:
             return_value = await func(*args, **kwargs)
         else:
-            collector = CallParameterCollector(client=args[0].device.client)
+            collector = CallParameterCollector(device=args[0].device)
             kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
             return_value = await func(*args, **kwargs)
             await collector.send_data()
         return return_value
 
     return wrapper_collector  # type: ignore[return-value]
-
-
-async def wait_for_state_change_or_timeout(
-    device: hmd.HmDevice, entity_keys: set[ENTITY_KEY], timeout: float = 30.0
-) -> None:
-    """Wait for an entity to change state."""
-    waits = [
-        _track_single_entity_state_change_or_timeout(
-            device=device, entity_key=entity_key, timeout=timeout
-        )
-        for entity_key in entity_keys
-    ]
-    await asyncio.gather(*waits)
-
-
-async def _track_single_entity_state_change_or_timeout(
-    device: hmd.HmDevice, entity_key: ENTITY_KEY, timeout: float
-) -> None:
-    """Wait for an entity to change state."""
-    ev = asyncio.Event()
-
-    def _async_event_changed(*args: Any, **kwargs: Any) -> None:
-        ev.set()
-        _LOGGER.info("Changed event")
-
-    channel_address, parameter = entity_key
-
-    if entity := device.get_generic_entity(channel_address=channel_address, parameter=parameter):
-        unsub = entity.register_entity_updated_callback(
-            entity_updated_callback=_async_event_changed, custom_id=DEFAULT_CUSTOM_ID
-        )
-
-        try:
-            async with asyncio.timeout(timeout):
-                await ev.wait()
-        except TimeoutError:
-            pass
-        finally:
-            unsub()

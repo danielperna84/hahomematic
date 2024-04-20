@@ -9,6 +9,7 @@ from enum import Enum, IntEnum, StrEnum
 from typing import Final
 
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = 15  # check if connection is available via rpc ping
+DEFAULT_CUSTOM_ID: Final = "custom_id"
 DEFAULT_ENCODING: Final = "UTF-8"
 DEFAULT_JSON_SESSION_AGE: Final = 90
 DEFAULT_LAST_COMMAND_SEND_STORE_TIMEOUT: Final = 60
