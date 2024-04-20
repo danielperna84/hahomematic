@@ -3,7 +3,7 @@
 - Decompose combined parameter
 - Return affected entity keys for service calls
 - Add callback to unregister on register return
-- Add wait_for_state_change_or_timeout to client
+- Add option to wait for set_value/put_paramset callback
 
 # Version 2024.4.8 (2024-04-13)
 
