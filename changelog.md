@@ -1,3 +1,7 @@
+# Version 2024.4.10 (2024-04-21)
+
+- Add wait_for_callback to collector
+
 # Version 2024.4.9 (2024-04-20)
 
 - Decompose combined parameter

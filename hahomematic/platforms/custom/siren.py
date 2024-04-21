@@ -135,7 +135,7 @@ class CeIpSiren(BaseSiren):
         """Flag if siren supports duration."""
         return True
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
@@ -167,7 +167,7 @@ class CeIpSiren(BaseSiren):
         duration = kwargs.get("duration", self._e_duration.default)
         await self._e_duration.send_value(value=duration, collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
         await self._e_acoustic_alarm_selection.send_value(

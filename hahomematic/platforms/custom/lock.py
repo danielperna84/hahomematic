@@ -116,17 +116,17 @@ class CeIpLock(BaseLock):
         """Return true if lock is jammed."""
         return False
 
-    @bind_collector
+    @bind_collector()
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
         await self._e_lock_target_level.send_value(value=LockState.LOCKED, collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
         await self._e_lock_target_level.send_value(value=LockState.UNLOCKED, collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
         await self._e_lock_target_level.send_value(value=LockState.OPEN, collector=collector)
@@ -167,17 +167,17 @@ class CeRfLock(BaseLock):
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value != LockState.NO_ERROR
 
-    @bind_collector
+    @bind_collector()
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
         await self._e_state.send_value(value=False, collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
         await self._e_state.send_value(value=True, collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
         await self._e_open.send_value(value=True, collector=collector)

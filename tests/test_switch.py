@@ -33,12 +33,20 @@ async def test_ceswitch(factory: helper.Factory) -> None:
     assert switch.channel_value is False
     await switch.turn_on()
     assert mock_client.method_calls[-2] == call.set_value(
-        channel_address="VCU2128127:4", paramset_key="VALUES", parameter="STATE", value=True
+        channel_address="VCU2128127:4",
+        paramset_key="VALUES",
+        parameter="STATE",
+        value=True,
+        wait_for_callback=False,
     )
     assert switch.value is True
     await switch.turn_off()
     assert mock_client.method_calls[-2] == call.set_value(
-        channel_address="VCU2128127:4", paramset_key="VALUES", parameter="STATE", value=False
+        channel_address="VCU2128127:4",
+        paramset_key="VALUES",
+        parameter="STATE",
+        value=False,
+        wait_for_callback=False,
     )
     assert switch.value is False
     await switch.turn_on(on_time=60)
@@ -46,6 +54,7 @@ async def test_ceswitch(factory: helper.Factory) -> None:
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         values={"ON_TIME": 60.0, "STATE": True},
+        wait_for_callback=False,
     )
     assert switch.value is True
 
@@ -56,6 +65,7 @@ async def test_ceswitch(factory: helper.Factory) -> None:
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         values={"ON_TIME": 35.4, "STATE": True},
+        wait_for_callback=False,
     )
 
     await switch.turn_on()
@@ -83,6 +93,7 @@ async def test_hmswitch(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="STATE",
         value=True,
+        wait_for_callback=False,
     )
     assert switch.value is True
     await switch.turn_off()
@@ -91,6 +102,7 @@ async def test_hmswitch(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="STATE",
         value=False,
+        wait_for_callback=False,
     )
     assert switch.value is False
     await switch.turn_on(on_time=60)
@@ -99,12 +111,14 @@ async def test_hmswitch(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="ON_TIME",
         value=60.0,
+        wait_for_callback=False,
     )
     assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         parameter="STATE",
         value=True,
+        wait_for_callback=False,
     )
     assert switch.value is True
     await switch.set_on_time(35.4)
@@ -113,6 +127,7 @@ async def test_hmswitch(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="ON_TIME",
         value=35.4,
+        wait_for_callback=False,
     )
 
     await switch.turn_on()

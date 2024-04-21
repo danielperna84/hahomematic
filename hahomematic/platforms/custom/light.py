@@ -228,7 +228,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         """Return the supported effects."""
         return None
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
@@ -245,7 +245,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         level = brightness / _MAX_BRIGHTNESS
         await self._e_level.send_value(value=level, collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def turn_off(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOffArgs]
     ) -> None:
@@ -257,7 +257,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
 
         await self._e_level.send_value(value=_DIMMER_OFF, collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def _set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
@@ -333,7 +333,7 @@ class CeColorDimmer(CeDimmer):
             return color / 200 * 360, 100
         return 0.0, 0.0
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
@@ -379,7 +379,7 @@ class CeColorDimmerEffect(CeColorDimmer):
         """Return the supported effects."""
         return self._effects
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
@@ -417,7 +417,7 @@ class CeColorTempDimmer(CeDimmer):
         """Return the color temperature in mireds of this light between min/max mireds."""
         return int(_MAX_MIREDS - (_MAX_MIREDS - _MIN_MIREDS) * (self._e_color_level.value or 0.0))
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
@@ -532,7 +532,7 @@ class CeIpRGBWLight(CeDimmer):
         """Return the supported effects."""
         return self._e_effect.values or ()
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
@@ -557,7 +557,7 @@ class CeIpRGBWLight(CeDimmer):
 
         await super().turn_on(collector=collector, **kwargs)
 
-    @bind_collector
+    @bind_collector()
     async def _set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
@@ -639,7 +639,7 @@ class CeIpDrgDaliLight(CeDimmer):
         """Return the supported effects."""
         return self._e_effect.values or ()
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
@@ -664,7 +664,7 @@ class CeIpDrgDaliLight(CeDimmer):
 
         await super().turn_on(collector=collector, **kwargs)
 
-    @bind_collector
+    @bind_collector()
     async def _set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
@@ -741,7 +741,7 @@ class CeIpFixedColorLight(CeDimmer):
             return _FIXED_COLOR_SWITCHER.get(self._e_channel_color.value, (0.0, 0.0))
         return None
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
@@ -756,7 +756,7 @@ class CeIpFixedColorLight(CeDimmer):
 
         await super().turn_on(collector=collector, **kwargs)
 
-    @bind_collector
+    @bind_collector()
     async def _set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
@@ -807,7 +807,7 @@ class CeIpFixedColorLightWired(CeIpFixedColorLight):
         """Return the supported effects."""
         return self._effect_list
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
     ) -> None:
