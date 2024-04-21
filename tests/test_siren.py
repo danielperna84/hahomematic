@@ -7,7 +7,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.config import WAIT_FOR_CALLBACK_TIMEOUT
+from hahomematic.config import WAIT_FOR_CALLBACK, WAIT_FOR_CALLBACK_TIMEOUT
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.siren import CeIpSiren, CeIpSirenSmoke
 
@@ -52,7 +52,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
             "DURATION_UNIT": 0,
             "DURATION_VALUE": 30,
         },
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
         wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
 
@@ -70,7 +70,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
             "DURATION_UNIT": 0,
             "DURATION_VALUE": 30,
         },
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
         wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
 
@@ -98,7 +98,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
             "DURATION_UNIT": 0,
             "DURATION_VALUE": 0,
         },
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
         wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
 

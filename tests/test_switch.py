@@ -7,7 +7,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.config import WAIT_FOR_CALLBACK_TIMEOUT
+from hahomematic.config import WAIT_FOR_CALLBACK, WAIT_FOR_CALLBACK_TIMEOUT
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.switch import CeSwitch
 from hahomematic.platforms.generic.switch import HmSwitch
@@ -38,7 +38,7 @@ async def test_ceswitch(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="STATE",
         value=True,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
         wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert switch.value is True
@@ -48,7 +48,7 @@ async def test_ceswitch(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="STATE",
         value=False,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
         wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert switch.value is False
@@ -57,7 +57,7 @@ async def test_ceswitch(factory: helper.Factory) -> None:
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         values={"ON_TIME": 60.0, "STATE": True},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
         wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert switch.value is True
@@ -69,7 +69,7 @@ async def test_ceswitch(factory: helper.Factory) -> None:
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         values={"ON_TIME": 35.4, "STATE": True},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
         wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
 

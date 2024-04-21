@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.async_support import loop_check
-from hahomematic.config import WAIT_FOR_CALLBACK_TIMEOUT
+from hahomematic.config import WAIT_FOR_CALLBACK, WAIT_FOR_CALLBACK_TIMEOUT
 from hahomematic.const import (
     CALLBACK_TYPE,
     DEFAULT_CUSTOM_ID,
@@ -825,7 +825,8 @@ class CallParameterCollector:
 
 
 def bind_collector(
-    wait_for_callback: bool = False, wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT
+    wait_for_callback: bool = WAIT_FOR_CALLBACK,
+    wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
 ) -> Callable:
     """Decorate function to automatically add collector if not set."""
 

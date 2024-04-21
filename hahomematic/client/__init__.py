@@ -11,7 +11,12 @@ from typing import Any, Final, cast
 from hahomematic import central as hmcu
 from hahomematic.caches.dynamic import CommandCache, PingPongCache
 from hahomematic.client.xml_rpc import XmlRpcProxy
-from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT, WAIT_FOR_CALLBACK_TIMEOUT
+from hahomematic.config import (
+    CALLBACK_WARN_INTERVAL,
+    RECONNECT_WAIT,
+    WAIT_FOR_CALLBACK,
+    WAIT_FOR_CALLBACK_TIMEOUT,
+)
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
     DEFAULT_CUSTOM_ID,
@@ -473,7 +478,7 @@ class Client(ABC):
         paramset_key: str,
         parameter: str,
         value: Any,
-        wait_for_callback: bool = False,
+        wait_for_callback: bool = WAIT_FOR_CALLBACK,
         wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
@@ -526,7 +531,7 @@ class Client(ABC):
         channel_address: str,
         paramset_key: str,
         values: dict[str, Any],
-        wait_for_callback: bool = False,
+        wait_for_callback: bool = WAIT_FOR_CALLBACK,
         wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
