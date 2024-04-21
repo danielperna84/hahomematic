@@ -7,6 +7,7 @@ from unittest.mock import call
 
 import pytest
 
+from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.cover import (
     _CLOSED_LEVEL,
@@ -53,7 +54,7 @@ async def test_cecover(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL",
         value=0.81,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert cover.current_position == 81
     assert cover.is_closed is False
@@ -63,7 +64,7 @@ async def test_cecover(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL",
         value=1.0,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert cover.current_position == 100
     await cover.close()
@@ -72,7 +73,7 @@ async def test_cecover(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL",
         value=_CLOSED_LEVEL,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert cover.current_position == 0
 
@@ -121,7 +122,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=81",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
 
     # test unconfirmed values
@@ -142,7 +143,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=100,L=100",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert cover._e_level.unconfirmed_last_value_send == 1.0
     assert cover._e_level_2.unconfirmed_last_value_send == 1.0
@@ -160,7 +161,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=0",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", _CLOSED_LEVEL)
     assert cover.is_opening is None
@@ -193,7 +194,7 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL",
         value=0.81,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert cover.current_position == 81
     assert cover.is_closed is False
@@ -204,7 +205,7 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL",
         value=_OPEN_LEVEL,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert cover.current_position == 100
     await cover.close()
@@ -213,7 +214,7 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL",
         value=_WD_CLOSED_LEVEL,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert cover.current_position == 0
     assert cover._channel_level == _WD_CLOSED_LEVEL
@@ -245,7 +246,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0xa2,0x00",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -257,7 +258,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0xc8,0x00",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _OPEN_LEVEL)
     assert cover.current_position == 100
@@ -269,7 +270,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x00,0x00",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _CLOSED_LEVEL)
     assert cover.current_position == 0
@@ -281,7 +282,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x00,0xc8",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_LEVEL)
     assert cover.current_position == 0
@@ -293,7 +294,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x00,0x5a",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.45)
     assert cover.current_position == 0
@@ -305,7 +306,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x00,0x00",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
     assert cover.current_position == 0
@@ -317,7 +318,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x14,0x28",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.1)
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.2)
@@ -330,7 +331,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="STOP",
         value=True,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await cover.stop_tilt()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -338,7 +339,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="STOP",
         value=True,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
 
     await cover.open_tilt()
@@ -376,7 +377,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=81",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -388,7 +389,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=100,L=100",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 1.0)
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 1.0)
@@ -401,7 +402,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=0",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.0)
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.0)
@@ -414,7 +415,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=100,L=0",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 1.0)
     assert cover.current_position == 0
@@ -426,7 +427,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=45,L=0",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.45)
     assert cover.current_position == 0
@@ -438,7 +439,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=0",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.0)
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.0)
@@ -451,7 +452,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=20,L=10",
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.1)
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.2)
@@ -490,7 +491,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="STOP",
         value=True,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
 
 
@@ -508,7 +509,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 0.0, "LEVEL": 0.81},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -519,7 +520,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 1.0, "LEVEL": 1.0},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 1.0)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 1.0)
@@ -531,7 +532,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 0.0, "LEVEL": 0.0},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.0)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.0)
@@ -543,7 +544,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 1.0, "LEVEL": 0.0},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 1.0)
     assert cover.current_position == 0
@@ -554,7 +555,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 0.45, "LEVEL": 0.0},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.45)
     assert cover.current_position == 0
@@ -565,7 +566,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 0.0, "LEVEL": 0.0},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.0)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.0)
@@ -577,7 +578,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 0.2, "LEVEL": 0.1},
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.1)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.2)
@@ -600,7 +601,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="STOP",
         value=True,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
 
 
@@ -618,7 +619,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=1,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
     assert cover.current_position == 100
@@ -628,7 +629,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=3,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 0)
     assert cover.current_position == 0
@@ -639,7 +640,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=4,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 2)
     assert cover.current_position == 10
@@ -650,7 +651,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=3,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 0)
     assert cover.current_position == 0
@@ -661,7 +662,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=1,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await cover.stop()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -669,7 +670,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=2,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
 
     await central.event(const.INTERFACE_ID, "VCU3574044:1", "DOOR_STATE", 1)
@@ -721,7 +722,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=1,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 1)
     assert cover.current_position == 100
@@ -731,7 +732,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=3,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 0)
     assert cover.current_position == 0
@@ -742,7 +743,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=4,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 2)
     assert cover.current_position == 10
@@ -753,7 +754,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=3,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 0)
     assert cover.current_position == 0
@@ -764,7 +765,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=1,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await cover.stop()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -772,7 +773,7 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         parameter="DOOR_COMMAND",
         value=2,
-        wait_for_callback=False,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
 
     await central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", 1)

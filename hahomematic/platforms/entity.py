@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from hahomematic import central as hmcu, client as hmcl, support as hms
 from hahomematic.async_support import loop_check
+from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import (
     CALLBACK_TYPE,
     DEFAULT_CUSTOM_ID,
@@ -797,7 +798,7 @@ class CallParameterCollector:
             self._paramsets[collector_order][entity.channel_address] = {}
         self._paramsets[collector_order][entity.channel_address][entity.parameter] = value
 
-    async def send_data(self, wait_for_callback: bool) -> bool:
+    async def send_data(self, wait_for_callback: int | None) -> bool:
         """Send data to backend."""
         for paramset_no in dict(sorted(self._paramsets.items())).values():
             for channel_address, paramset in paramset_no.items():
@@ -821,7 +822,9 @@ class CallParameterCollector:
         return True
 
 
-def bind_collector(wait_for_callback: bool = False) -> Callable:
+def bind_collector(
+    wait_for_callback: int | None = WAIT_FOR_CALLBACK,
+) -> Callable:
     """Decorate function to automatically add collector if not set."""
 
     def decorator_bind_collector(func: _CallableT) -> _CallableT:
@@ -843,7 +846,9 @@ def bind_collector(wait_for_callback: bool = False) -> Callable:
                 collector = CallParameterCollector(device=args[0].device)
                 kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
                 return_value = await func(*args, **kwargs)
-                await collector.send_data(wait_for_callback=wait_for_callback)
+                await collector.send_data(
+                    wait_for_callback=wait_for_callback,
+                )
             return return_value
 
         return wrapper_collector  # type: ignore[return-value]

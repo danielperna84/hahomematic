@@ -11,7 +11,7 @@ from typing import Any, Final, cast
 from hahomematic import central as hmcu
 from hahomematic.caches.dynamic import CommandCache, PingPongCache
 from hahomematic.client.xml_rpc import XmlRpcProxy
-from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
+from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT, WAIT_FOR_CALLBACK
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
     DEFAULT_CUSTOM_ID,
@@ -429,7 +429,7 @@ class Client(ABC):
         channel_address: str,
         parameter: str,
         value: Any,
-        wait_for_callback: bool,
+        wait_for_callback: int | None,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -443,12 +443,17 @@ class Client(ABC):
             entity_keys = self._last_value_send_cache.add_set_value(
                 channel_address=channel_address, parameter=parameter, value=value
             )
-            if wait_for_callback and (
+            if wait_for_callback is not None and (
                 device := self.central.get_device(
                     address=get_device_address(address=channel_address)
                 )
             ):
-                await wait_for_state_change_or_timeout(device=device, entity_keys=entity_keys)
+                await wait_for_state_change_or_timeout(
+                    device=device,
+                    entity_keys=entity_keys,
+                    values={parameter: value},
+                    wait_for_callback=wait_for_callback,
+                )
             return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
             _LOGGER.warning(
@@ -467,7 +472,7 @@ class Client(ABC):
         paramset_key: str,
         parameter: str,
         value: Any,
-        wait_for_callback: bool = False,
+        wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -517,7 +522,7 @@ class Client(ABC):
         channel_address: str,
         paramset_key: str,
         values: dict[str, Any],
-        wait_for_callback: bool = False,
+        wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """
@@ -534,14 +539,21 @@ class Client(ABC):
                 await self._proxy.putParamset(channel_address, paramset_key, values)
             # store the send value in the last_value_send_cache
             entity_keys = self._last_value_send_cache.add_put_paramset(
-                channel_address=channel_address, paramset_key=paramset_key, values=values
+                channel_address=channel_address,
+                paramset_key=paramset_key,
+                values=values,
             )
-            if wait_for_callback and (
+            if wait_for_callback is not None and (
                 device := self.central.get_device(
                     address=get_device_address(address=channel_address)
                 )
             ):
-                await wait_for_state_change_or_timeout(device=device, entity_keys=entity_keys)
+                await wait_for_state_change_or_timeout(
+                    device=device,
+                    entity_keys=entity_keys,
+                    values=values,
+                    wait_for_callback=wait_for_callback,
+                )
             return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
             _LOGGER.warning(
@@ -1120,41 +1132,72 @@ def get_client(interface_id: str) -> Client | None:
     return None
 
 
+@measure_execution_time
 async def wait_for_state_change_or_timeout(
-    device: HmDevice, entity_keys: set[ENTITY_KEY], timeout: float = 30.0
+    device: HmDevice, entity_keys: set[ENTITY_KEY], values: dict[str, Any], wait_for_callback: int
 ) -> None:
     """Wait for an entity to change state."""
     waits = [
         _track_single_entity_state_change_or_timeout(
-            device=device, entity_key=entity_key, timeout=timeout
+            device=device,
+            entity_key=entity_key,
+            value=values.get(entity_key[1]),
+            wait_for_callback=wait_for_callback,
         )
         for entity_key in entity_keys
     ]
     await asyncio.gather(*waits)
 
 
+@measure_execution_time
 async def _track_single_entity_state_change_or_timeout(
-    device: HmDevice, entity_key: ENTITY_KEY, timeout: float
+    device: HmDevice, entity_key: ENTITY_KEY, value: Any, wait_for_callback: int
 ) -> None:
     """Wait for an entity to change state."""
     ev = asyncio.Event()
 
     def _async_event_changed(*args: Any, **kwargs: Any) -> None:
-        ev.set()
-        _LOGGER.debug("Changed event %s", entity_key)
+        if entity:
+            _LOGGER.debug(
+                "TRACK_SINGLE_ENTITY_STATE_CHANGE_OR_TIMEOUT: Received event %s with value %s",
+                entity_key,
+                entity.value,
+            )
+            if _isclose(value, entity.value):
+                _LOGGER.debug(
+                    "TRACK_SINGLE_ENTITY_STATE_CHANGE_OR_TIMEOUT: Finished event %s with value %s",
+                    entity_key,
+                    entity.value,
+                )
+                ev.set()
 
     channel_address, parameter = entity_key
     if entity := device.get_generic_entity(channel_address=channel_address, parameter=parameter):
         if not entity.supports_events:
+            _LOGGER.debug(
+                "TRACK_SINGLE_ENTITY_STATE_CHANGE_OR_TIMEOUT: Entity supports no events %s",
+                entity_key,
+            )
             return
         unsub = entity.register_entity_updated_callback(
             entity_updated_callback=_async_event_changed, custom_id=DEFAULT_CUSTOM_ID
         )
 
         try:
-            async with asyncio.timeout(timeout):
+            async with asyncio.timeout(wait_for_callback):
                 await ev.wait()
         except TimeoutError:
-            pass
+            _LOGGER.debug(
+                "TRACK_SINGLE_ENTITY_STATE_CHANGE_OR_TIMEOUT: Timeout waiting for event %s with value %s",
+                entity_key,
+                entity.value,
+            )
         finally:
             unsub()
+
+
+def _isclose(value1: Any, value2: Any) -> bool:
+    """Check if the both values are close to each other."""
+    if isinstance(value1, float):
+        return bool(round(value1, 2) == round(value2, 2))
+    return bool(value1 == value2)

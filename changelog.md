@@ -1,6 +1,7 @@
 # Version 2024.4.10 (2024-04-21)
 
 - Add wait_for_callback to collector
+- Wait for target value in wait_for_state_change_or_timeout
 
 # Version 2024.4.9 (2024-04-20)
 
