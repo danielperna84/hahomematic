@@ -11,7 +11,7 @@ from typing import Any, Final, cast
 from hahomematic import central as hmcu
 from hahomematic.caches.dynamic import CommandCache, PingPongCache
 from hahomematic.client.xml_rpc import XmlRpcProxy
-from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT
+from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT, WAIT_FOR_CALLBACK_TIMEOUT
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
     DEFAULT_CUSTOM_ID,
@@ -430,6 +430,7 @@ class Client(ABC):
         parameter: str,
         value: Any,
         wait_for_callback: bool,
+        wait_for_callback_timeout: int,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -448,7 +449,12 @@ class Client(ABC):
                     address=get_device_address(address=channel_address)
                 )
             ):
-                await wait_for_state_change_or_timeout(device=device, entity_keys=entity_keys)
+                await wait_for_state_change_or_timeout(
+                    device=device,
+                    entity_keys=entity_keys,
+                    values={parameter: value},
+                    wait_for_callback_timeout=wait_for_callback_timeout,
+                )
             return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
             _LOGGER.warning(
@@ -468,6 +474,7 @@ class Client(ABC):
         parameter: str,
         value: Any,
         wait_for_callback: bool = False,
+        wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -477,6 +484,7 @@ class Client(ABC):
                 parameter=parameter,
                 value=value,
                 wait_for_callback=wait_for_callback,
+                wait_for_callback_timeout=wait_for_callback_timeout,
                 rx_mode=rx_mode,
             )
         return await self.put_paramset(
@@ -484,6 +492,7 @@ class Client(ABC):
             paramset_key=paramset_key,
             values={parameter: value},
             wait_for_callback=wait_for_callback,
+            wait_for_callback_timeout=wait_for_callback_timeout,
             rx_mode=rx_mode,
         )
 
@@ -518,6 +527,7 @@ class Client(ABC):
         paramset_key: str,
         values: dict[str, Any],
         wait_for_callback: bool = False,
+        wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """
@@ -534,14 +544,21 @@ class Client(ABC):
                 await self._proxy.putParamset(channel_address, paramset_key, values)
             # store the send value in the last_value_send_cache
             entity_keys = self._last_value_send_cache.add_put_paramset(
-                channel_address=channel_address, paramset_key=paramset_key, values=values
+                channel_address=channel_address,
+                paramset_key=paramset_key,
+                values=values,
             )
             if wait_for_callback and (
                 device := self.central.get_device(
                     address=get_device_address(address=channel_address)
                 )
             ):
-                await wait_for_state_change_or_timeout(device=device, entity_keys=entity_keys)
+                await wait_for_state_change_or_timeout(
+                    device=device,
+                    entity_keys=entity_keys,
+                    values=values,
+                    wait_for_callback_timeout=wait_for_callback_timeout,
+                )
             return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
             _LOGGER.warning(
@@ -1120,28 +1137,47 @@ def get_client(interface_id: str) -> Client | None:
     return None
 
 
+@measure_execution_time
 async def wait_for_state_change_or_timeout(
-    device: HmDevice, entity_keys: set[ENTITY_KEY], timeout: float = 30.0
+    device: HmDevice,
+    entity_keys: set[ENTITY_KEY],
+    values: dict[str, Any],
+    wait_for_callback_timeout: int,
 ) -> None:
     """Wait for an entity to change state."""
     waits = [
         _track_single_entity_state_change_or_timeout(
-            device=device, entity_key=entity_key, timeout=timeout
+            device=device,
+            entity_key=entity_key,
+            value=values.get(entity_key[1]),
+            wait_for_callback_timeout=wait_for_callback_timeout,
         )
         for entity_key in entity_keys
     ]
     await asyncio.gather(*waits)
 
 
+@measure_execution_time
 async def _track_single_entity_state_change_or_timeout(
-    device: HmDevice, entity_key: ENTITY_KEY, timeout: float
+    device: HmDevice, entity_key: ENTITY_KEY, value: Any, wait_for_callback_timeout: int
 ) -> None:
     """Wait for an entity to change state."""
     ev = asyncio.Event()
 
     def _async_event_changed(*args: Any, **kwargs: Any) -> None:
-        ev.set()
-        _LOGGER.debug("Changed event %s", entity_key)
+        if entity:
+            _LOGGER.debug(
+                "TRACK_SINGLE_ENTITY_STATE_CHANGE_OR_TIMEOUT: Received event %s with value %s",
+                entity_key,
+                entity.value,
+            )
+            if _isclose(value, entity.value):
+                _LOGGER.debug(
+                    "TRACK_SINGLE_ENTITY_STATE_CHANGE_OR_TIMEOUT: Finished event %s with value %s",
+                    entity_key,
+                    entity.value,
+                )
+                ev.set()
 
     channel_address, parameter = entity_key
     if entity := device.get_generic_entity(channel_address=channel_address, parameter=parameter):
@@ -1152,9 +1188,16 @@ async def _track_single_entity_state_change_or_timeout(
         )
 
         try:
-            async with asyncio.timeout(timeout):
+            async with asyncio.timeout(wait_for_callback_timeout):
                 await ev.wait()
         except TimeoutError:
             pass
         finally:
             unsub()
+
+
+def _isclose(value1: Any, value2: Any) -> bool:
+    """Check if the both values are close to each other."""
+    if isinstance(value1, float):
+        return bool(round(value1, 2) == round(value2, 2))
+    return bool(value1 == value2)

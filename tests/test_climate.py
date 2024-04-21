@@ -9,6 +9,7 @@ from unittest.mock import call
 from freezegun import freeze_time
 import pytest
 
+from hahomematic.config import WAIT_FOR_CALLBACK_TIMEOUT
 from hahomematic.const import EntityUsage, ParamsetKey
 from hahomematic.platforms.custom.climate import (
     CeIpThermostat,
@@ -63,6 +64,7 @@ async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
         parameter="SETPOINT",
         value=12.0,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert mock_client.method_calls[-2] == last_call
     assert climate.target_temperature == 12.0
@@ -120,6 +122,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         parameter="SET_TEMPERATURE",
         value=12.0,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert climate.target_temperature == 12.0
 
@@ -136,6 +139,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         parameter="MANU_MODE",
         value=12.0,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", ModeHmIP.MANU.value)
     assert climate.hvac_mode == HvacMode.HEAT
@@ -146,6 +150,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         values={"MANU_MODE": 12.0, "SET_TEMPERATURE": 4.5},
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
 
     assert climate.hvac_mode == HvacMode.OFF
@@ -158,6 +163,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         parameter="AUTO_MODE",
         value=True,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 0)
     await central.event(const.INTERFACE_ID, "VCU0000050:4", "SET_TEMPERATURE", 24.0)
@@ -177,6 +183,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         parameter="BOOST_MODE",
         value=True,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 3)
     assert climate.preset_mode == PresetMode.BOOST
@@ -189,6 +196,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         parameter="COMFORT_MODE",
         value=True,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await climate.set_preset_mode(PresetMode.ECO)
     assert mock_client.method_calls[-1] == call.set_value(
@@ -197,6 +205,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         parameter="LOWERING_MODE",
         value=True,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
 
     await central.event(const.INTERFACE_ID, "VCU0000050:4", "CONTROL_MODE", 3)
@@ -269,6 +278,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         parameter="SET_POINT_TEMPERATURE",
         value=12.0,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert climate.target_temperature == 12.0
 
@@ -286,6 +296,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         values={"CONTROL_MODE": 1, "SET_POINT_TEMPERATURE": 4.5},
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert climate.hvac_mode == HvacMode.OFF
     assert climate.hvac_action == HvacAction.OFF
@@ -296,6 +307,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         values={"CONTROL_MODE": 1, "SET_POINT_TEMPERATURE": 5.0},
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ModeHmIP.MANU.value)
     assert climate.hvac_mode == HvacMode.HEAT
@@ -312,6 +324,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         parameter="BOOST_MODE",
         value=True,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)
     assert climate.preset_mode == PresetMode.BOOST
@@ -322,6 +335,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         paramset_key="VALUES",
         values={"BOOST_MODE": False, "CONTROL_MODE": 0},
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ModeHmIP.AUTO.value)
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "BOOST_MODE", 1)
@@ -343,6 +357,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         parameter="BOOST_MODE",
         value=False,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU1769958:1", "SET_POINT_MODE", ModeHmIP.AWAY.value)
     assert climate.preset_mode == PresetMode.AWAY
@@ -355,6 +370,7 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
         parameter="ACTIVE_PROFILE",
         value=1,
         wait_for_callback=False,
+        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert climate.preset_mode == PresetMode.WEEK_PROGRAM_1
 
