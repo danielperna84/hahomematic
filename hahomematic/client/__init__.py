@@ -1183,7 +1183,11 @@ async def _track_single_entity_state_change_or_timeout(
             async with asyncio.timeout(wait_for_callback):
                 await ev.wait()
         except TimeoutError:
-            pass
+            _LOGGER.debug(
+                "TRACK_SINGLE_ENTITY_STATE_CHANGE_OR_TIMEOUT: Timeout waiting for event %s with value %s",
+                entity_key,
+                entity.value,
+            )
         finally:
             unsub()
 
