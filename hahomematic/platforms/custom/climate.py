@@ -200,7 +200,7 @@ class BaseClimateEntity(CustomEntity):
             return self.min_temp
         return temperature
 
-    @bind_collector
+    @bind_collector()
     async def set_temperature(
         self,
         temperature: float,
@@ -331,7 +331,7 @@ class CeRfThermostat(BaseClimateEntity):
         """Flag if climate supports preset."""
         return True
 
-    @bind_collector
+    @bind_collector()
     async def set_hvac_mode(
         self, hvac_mode: HvacMode, collector: CallParameterCollector | None = None
     ) -> None:
@@ -352,7 +352,7 @@ class CeRfThermostat(BaseClimateEntity):
                 temperature=_OFF_TEMPERATURE, collector=collector, do_validate=False
             )
 
-    @bind_collector
+    @bind_collector()
     async def set_preset_mode(
         self, preset_mode: PresetMode, collector: CallParameterCollector | None = None
     ) -> None:
@@ -501,7 +501,7 @@ class CeIpThermostat(BaseClimateEntity):
         """Flag if climate supports preset."""
         return True
 
-    @bind_collector
+    @bind_collector()
     async def set_hvac_mode(
         self, hvac_mode: HvacMode, collector: CallParameterCollector | None = None
     ) -> None:
@@ -523,7 +523,7 @@ class CeIpThermostat(BaseClimateEntity):
             await self._e_control_mode.send_value(value=ModeHmIP.MANU, collector=collector)
             await self.set_temperature(temperature=_OFF_TEMPERATURE, collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def set_preset_mode(
         self, preset_mode: PresetMode, collector: CallParameterCollector | None = None
     ) -> None:

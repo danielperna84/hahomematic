@@ -62,7 +62,7 @@ class CeSwitch(CustomEntity, OnTimeMixin):
         """Return the current value of the switch."""
         return self._e_state.value
 
-    @bind_collector
+    @bind_collector()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, on_time: float | None = None
     ) -> None:
@@ -73,7 +73,7 @@ class CeSwitch(CustomEntity, OnTimeMixin):
             await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
         await self._e_state.turn_on(collector=collector)
 
-    @bind_collector
+    @bind_collector()
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the switch off."""
         if not self.is_state_change(off=True):

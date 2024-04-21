@@ -797,7 +797,7 @@ class CallParameterCollector:
             self._paramsets[collector_order][entity.channel_address] = {}
         self._paramsets[collector_order][entity.channel_address][entity.parameter] = value
 
-    async def send_data(self) -> bool:
+    async def send_data(self, wait_for_callback: bool) -> bool:
         """Send data to backend."""
         for paramset_no in dict(sorted(self._paramsets.items())).values():
             for channel_address, paramset in paramset_no.items():
@@ -808,36 +808,44 @@ class CallParameterCollector:
                             paramset_key=ParamsetKey.VALUES,
                             parameter=parameter,
                             value=value,
+                            wait_for_callback=wait_for_callback,
                         ):
                             return False  # pragma: no cover
                 elif not await self._client.put_paramset(
                     channel_address=channel_address,
                     paramset_key=ParamsetKey.VALUES,
                     values=paramset,
+                    wait_for_callback=wait_for_callback,
                 ):
                     return False  # pragma: no cover
         return True
 
 
-def bind_collector(func: _CallableT) -> _CallableT:
+def bind_collector(wait_for_callback: bool = False) -> Callable:
     """Decorate function to automatically add collector if not set."""
-    argument_index = getfullargspec(func).args.index(_COLLECTOR_ARGUMENT_NAME)
 
-    @wraps(func)
-    async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
-        """Wrap method to add collector."""
-        try:
-            collector_exists = args[argument_index] is not None
-        except IndexError:
-            collector_exists = kwargs.get(_COLLECTOR_ARGUMENT_NAME) is not None
+    def decorator_bind_collector(func: _CallableT) -> _CallableT:
+        """Decorate function to automatically add collector if not set."""
+        argument_index = getfullargspec(func).args.index(_COLLECTOR_ARGUMENT_NAME)
 
-        if collector_exists:
-            return_value = await func(*args, **kwargs)
-        else:
-            collector = CallParameterCollector(device=args[0].device)
-            kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
-            return_value = await func(*args, **kwargs)
-            await collector.send_data()
-        return return_value
+        @wraps(func)
+        async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
+            """Wrap method to add collector."""
 
-    return wrapper_collector  # type: ignore[return-value]
+            try:
+                collector_exists = args[argument_index] is not None
+            except IndexError:
+                collector_exists = kwargs.get(_COLLECTOR_ARGUMENT_NAME) is not None
+
+            if collector_exists:
+                return_value = await func(*args, **kwargs)
+            else:
+                collector = CallParameterCollector(device=args[0].device)
+                kwargs[_COLLECTOR_ARGUMENT_NAME] = collector
+                return_value = await func(*args, **kwargs)
+                await collector.send_data(wait_for_callback=wait_for_callback)
+            return return_value
+
+        return wrapper_collector  # type: ignore[return-value]
+
+    return decorator_bind_collector

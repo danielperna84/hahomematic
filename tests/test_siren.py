@@ -51,6 +51,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
             "DURATION_UNIT": 0,
             "DURATION_VALUE": 30,
         },
+        wait_for_callback=False,
     )
 
     await siren.turn_on(
@@ -67,6 +68,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
             "DURATION_UNIT": 0,
             "DURATION_VALUE": 30,
         },
+        wait_for_callback=False,
     )
 
     with pytest.raises(ValueError):
@@ -93,6 +95,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
             "DURATION_UNIT": 0,
             "DURATION_VALUE": 0,
         },
+        wait_for_callback=False,
     )
 
     await siren.turn_off()
