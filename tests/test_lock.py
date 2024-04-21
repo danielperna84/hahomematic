@@ -7,7 +7,7 @@ from unittest.mock import call
 
 import pytest
 
-from hahomematic.config import WAIT_FOR_CALLBACK, WAIT_FOR_CALLBACK_TIMEOUT
+from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.lock import CeIpLock, CeRfLock
 
@@ -36,7 +36,6 @@ async def test_cerflock(factory: helper.Factory) -> None:
         parameter="STATE",
         value=True,
         wait_for_callback=WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert lock.is_locked is False
     await lock.lock()
@@ -46,7 +45,6 @@ async def test_cerflock(factory: helper.Factory) -> None:
         parameter="STATE",
         value=False,
         wait_for_callback=WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     assert lock.is_locked is True
     await lock.open()
@@ -56,7 +54,6 @@ async def test_cerflock(factory: helper.Factory) -> None:
         parameter="OPEN",
         value=True,
         wait_for_callback=WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
 
     assert lock.is_locking is None
@@ -98,7 +95,6 @@ async def test_ceiplock(factory: helper.Factory) -> None:
         parameter="LOCK_TARGET_LEVEL",
         value=0,
         wait_for_callback=WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU9724704:1", "LOCK_STATE", 1)
     assert lock.is_locked is True
@@ -109,7 +105,6 @@ async def test_ceiplock(factory: helper.Factory) -> None:
         parameter="LOCK_TARGET_LEVEL",
         value=1,
         wait_for_callback=WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
     await central.event(const.INTERFACE_ID, "VCU9724704:1", "LOCK_STATE", 2)
     assert lock.is_locked is False
@@ -120,7 +115,6 @@ async def test_ceiplock(factory: helper.Factory) -> None:
         parameter="LOCK_TARGET_LEVEL",
         value=2,
         wait_for_callback=WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout=WAIT_FOR_CALLBACK_TIMEOUT,
     )
 
     assert lock.is_locking is None

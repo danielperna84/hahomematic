@@ -11,12 +11,7 @@ from typing import Any, Final, cast
 from hahomematic import central as hmcu
 from hahomematic.caches.dynamic import CommandCache, PingPongCache
 from hahomematic.client.xml_rpc import XmlRpcProxy
-from hahomematic.config import (
-    CALLBACK_WARN_INTERVAL,
-    RECONNECT_WAIT,
-    WAIT_FOR_CALLBACK,
-    WAIT_FOR_CALLBACK_TIMEOUT,
-)
+from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT, WAIT_FOR_CALLBACK
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
     DEFAULT_CUSTOM_ID,
@@ -434,8 +429,7 @@ class Client(ABC):
         channel_address: str,
         parameter: str,
         value: Any,
-        wait_for_callback: bool,
-        wait_for_callback_timeout: int,
+        wait_for_callback: int | None,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -449,7 +443,7 @@ class Client(ABC):
             entity_keys = self._last_value_send_cache.add_set_value(
                 channel_address=channel_address, parameter=parameter, value=value
             )
-            if wait_for_callback and (
+            if wait_for_callback is not None and (
                 device := self.central.get_device(
                     address=get_device_address(address=channel_address)
                 )
@@ -458,7 +452,7 @@ class Client(ABC):
                     device=device,
                     entity_keys=entity_keys,
                     values={parameter: value},
-                    wait_for_callback_timeout=wait_for_callback_timeout,
+                    wait_for_callback=wait_for_callback,
                 )
             return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
@@ -478,8 +472,7 @@ class Client(ABC):
         paramset_key: str,
         parameter: str,
         value: Any,
-        wait_for_callback: bool = WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
+        wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -489,7 +482,6 @@ class Client(ABC):
                 parameter=parameter,
                 value=value,
                 wait_for_callback=wait_for_callback,
-                wait_for_callback_timeout=wait_for_callback_timeout,
                 rx_mode=rx_mode,
             )
         return await self.put_paramset(
@@ -497,7 +489,6 @@ class Client(ABC):
             paramset_key=paramset_key,
             values={parameter: value},
             wait_for_callback=wait_for_callback,
-            wait_for_callback_timeout=wait_for_callback_timeout,
             rx_mode=rx_mode,
         )
 
@@ -531,8 +522,7 @@ class Client(ABC):
         channel_address: str,
         paramset_key: str,
         values: dict[str, Any],
-        wait_for_callback: bool = WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
+        wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """
@@ -553,7 +543,7 @@ class Client(ABC):
                 paramset_key=paramset_key,
                 values=values,
             )
-            if wait_for_callback and (
+            if wait_for_callback is not None and (
                 device := self.central.get_device(
                     address=get_device_address(address=channel_address)
                 )
@@ -562,7 +552,7 @@ class Client(ABC):
                     device=device,
                     entity_keys=entity_keys,
                     values=values,
-                    wait_for_callback_timeout=wait_for_callback_timeout,
+                    wait_for_callback=wait_for_callback,
                 )
             return entity_keys  # noqa: TRY300
         except BaseHomematicException as ex:
@@ -1144,10 +1134,7 @@ def get_client(interface_id: str) -> Client | None:
 
 @measure_execution_time
 async def wait_for_state_change_or_timeout(
-    device: HmDevice,
-    entity_keys: set[ENTITY_KEY],
-    values: dict[str, Any],
-    wait_for_callback_timeout: int,
+    device: HmDevice, entity_keys: set[ENTITY_KEY], values: dict[str, Any], wait_for_callback: int
 ) -> None:
     """Wait for an entity to change state."""
     waits = [
@@ -1155,7 +1142,7 @@ async def wait_for_state_change_or_timeout(
             device=device,
             entity_key=entity_key,
             value=values.get(entity_key[1]),
-            wait_for_callback_timeout=wait_for_callback_timeout,
+            wait_for_callback=wait_for_callback,
         )
         for entity_key in entity_keys
     ]
@@ -1164,7 +1151,7 @@ async def wait_for_state_change_or_timeout(
 
 @measure_execution_time
 async def _track_single_entity_state_change_or_timeout(
-    device: HmDevice, entity_key: ENTITY_KEY, value: Any, wait_for_callback_timeout: int
+    device: HmDevice, entity_key: ENTITY_KEY, value: Any, wait_for_callback: int
 ) -> None:
     """Wait for an entity to change state."""
     ev = asyncio.Event()
@@ -1193,7 +1180,7 @@ async def _track_single_entity_state_change_or_timeout(
         )
 
         try:
-            async with asyncio.timeout(wait_for_callback_timeout):
+            async with asyncio.timeout(wait_for_callback):
                 await ev.wait()
         except TimeoutError:
             pass

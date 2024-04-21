@@ -11,7 +11,7 @@ from typing import Any, Final, cast
 import orjson
 
 from hahomematic.client import _LOGGER, Client, _ClientConfig
-from hahomematic.config import WAIT_FOR_CALLBACK, WAIT_FOR_CALLBACK_TIMEOUT
+from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import (
     DEFAULT_ENCODING,
     ENTITY_KEY,
@@ -197,8 +197,7 @@ class ClientLocal(Client):  # pragma: no cover
         paramset_key: str,
         parameter: str,
         value: Any,
-        wait_for_callback: bool = WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
+        wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -252,8 +251,7 @@ class ClientLocal(Client):  # pragma: no cover
         channel_address: str,
         paramset_key: str,
         values: Any,
-        wait_for_callback: bool = WAIT_FOR_CALLBACK,
-        wait_for_callback_timeout: int = WAIT_FOR_CALLBACK_TIMEOUT,
+        wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
     ) -> set[ENTITY_KEY]:
         """
