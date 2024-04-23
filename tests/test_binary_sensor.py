@@ -72,7 +72,7 @@ async def test_hmbinarysensor(central_client) -> None:
 )
 async def test_hmsysvarbinarysensor(central_client) -> None:
     """Test HmSysvarBinarySensor."""
-    central, _ = central_client  # await factory.get_default_central({}, add_sysvars=True)
+    central, _ = central_client
     binary_sensor: HmSysvarBinarySensor = cast(
         HmSysvarBinarySensor,
         central.get_sysvar_entity("sv_logic"),

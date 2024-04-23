@@ -56,7 +56,6 @@ async def test_hmbutton(central_client) -> None:
     call_count = len(mock_client.method_calls)
     await button.press()
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()

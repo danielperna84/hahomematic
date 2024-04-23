@@ -58,7 +58,6 @@ async def test_central_basics(central_client) -> None:
     assert device
     entities = central.get_readable_generic_entities()
     assert entities
-    await central.stop()
 
 
 @pytest.mark.asyncio()

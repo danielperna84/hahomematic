@@ -36,8 +36,6 @@ from hahomematic.support import (
     to_bool,
 )
 
-from tests import helper
-
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
     "VCU3609622": "HmIP-eTRV-2.json",
@@ -47,9 +45,22 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_generate_unique_id(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        ({}, True, False, False, None, None),
+    ],
+)
+async def test_generate_unique_id(central_client) -> None:
     """Test generate_unique_id."""
-    central, _ = await factory.get_default_central({})
+    central, _ = central_client
     assert (
         generate_unique_id(central=central, address="VCU2128127", parameter="LEVEL")
         == "vcu2128127_level"
@@ -64,7 +75,6 @@ async def test_generate_unique_id(factory: helper.Factory) -> None:
         generate_unique_id(central=central, address="INT0001", parameter="LEVEL")
         == "test1234_int0001_level"
     )
-    await central.stop()
 
 
 def test_build_xml_rpc_uri() -> None:
@@ -156,9 +166,22 @@ async def test_to_bool() -> None:
 
 
 @pytest.mark.asyncio()
-async def test_get_entity_name(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_get_entity_name(central_client) -> None:
     """Test get_entity_name."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _ = central_client
     device = central.get_device(address="VCU2128127")
     name_data = get_entity_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
@@ -182,9 +205,22 @@ async def test_get_entity_name(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_get_event_name(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_get_event_name(central_client) -> None:
     """Test get_event_name."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _ = central_client
     device = central.get_device(address="VCU2128127")
     name_data = get_event_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.channel_name == "ch4"
@@ -208,9 +244,22 @@ async def test_get_event_name(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_custom_entity_name(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_custom_entity_name(central_client) -> None:
     """Test get_custom_entity_name."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _ = central_client
     device = central.get_device(address="VCU2128127")
     name_data = get_custom_entity_name(
         central=central,
@@ -270,9 +319,22 @@ async def test_custom_entity_name(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_get_device_name(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_get_device_name(central_client) -> None:
     """Test get_device_name."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _ = central_client
     assert (
         get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "HmIP-BSM_VCU2128127"

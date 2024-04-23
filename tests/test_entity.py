@@ -111,9 +111,22 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_load_custom_entity(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_load_custom_entity(central_client) -> None:
     """Test load custom_entity."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client = central_client
     switch: HmSwitch = cast(HmSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
     await switch.load_entity_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
     assert mock_client.method_calls[-2] == call.get_value(
@@ -128,13 +141,25 @@ async def test_load_custom_entity(factory: helper.Factory) -> None:
         parameter="STATE",
         call_source="manual_or_scheduled",
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_load_generic_entity(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_load_generic_entity(central_client) -> None:
     """Test load generic_entity."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client = central_client
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
     await switch.load_entity_value(call_source=CallSource.MANUAL_OR_SCHEDULED)
     assert mock_client.method_calls[-1] == call.get_value(
@@ -143,19 +168,30 @@ async def test_load_generic_entity(factory: helper.Factory) -> None:
         parameter="STATE",
         call_source="manual_or_scheduled",
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_generic_wrapped_entity(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_generic_wrapped_entity(central_client) -> None:
     """Test wrapped entity."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _ = central_client
     wrapped_entity: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3609622:1", "LEVEL"))
     assert wrapped_entity._platform == "number"
     assert wrapped_entity._is_forced_sensor is True
     assert wrapped_entity.platform == "sensor"
     assert wrapped_entity.usage == EntityUsage.ENTITY
-    await central.stop()
 
 
 def test_custom_required_entities() -> None:

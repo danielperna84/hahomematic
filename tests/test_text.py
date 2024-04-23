@@ -11,26 +11,49 @@ from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.hub.text import HmSysvarText
 
-from tests import helper
-
 TEST_DEVICES: dict[str, str] = {}
 
 # pylint: disable=protected-access
 
 
 @pytest.mark.asyncio()
-async def no_test_hmtext(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def no_test_hmtext(central_client) -> None:
     """Test HmText. There are currently no text entities."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _ = central_client
     text: HmText = cast(HmText, central.get_generic_entity("VCU7981740:1", "STATE"))
     assert text.usage == EntityUsage.ENTITY
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hmsysvartext(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        ({}, True, True, False, None, None),
+    ],
+)
+async def test_hmsysvartext(central_client) -> None:
     """Test HmSysvarText. There are currently no text entities."""
-    central, mock_client = await factory.get_default_central({}, add_sysvars=True)
+    central, mock_client = central_client
     text: HmSysvarText = cast(HmSysvarText, central.get_sysvar_entity("sv_string_ext"))
     assert text.usage == EntityUsage.ENTITY
 
@@ -42,4 +65,3 @@ async def test_hmsysvartext(factory: helper.Factory) -> None:
         name="sv_string_ext", value="test23"
     )
     assert text.value == "test23"
-    await central.stop()

@@ -9,8 +9,9 @@ import pytest
 
 from hahomematic.const import EntityUsage, EventType
 from hahomematic.platforms.event import ClickEvent, DeviceErrorEvent, ImpulseEvent
+import helper
 
-from tests import const, helper
+from tests import const
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",

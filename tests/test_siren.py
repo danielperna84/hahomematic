@@ -22,9 +22,22 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_ceipsiren(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceipsiren(central_client) -> None:
     """Test CeIpSiren."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client = central_client
     siren: CeIpSiren = cast(CeIpSiren, helper.get_prepared_custom_entity(central, "VCU8249617", 3))
     assert siren.usage == EntityUsage.CE_PRIMARY
 
@@ -103,13 +116,25 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await siren.turn_off()
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_ceipsirensmoke(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceipsirensmoke(central_client) -> None:
     """Test CeIpSirenSmoke."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client = central_client
     siren: CeIpSirenSmoke = cast(
         CeIpSirenSmoke, helper.get_prepared_custom_entity(central, "VCU2822385", 1)
     )
@@ -144,4 +169,3 @@ async def test_ceipsirensmoke(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await siren.turn_off()
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()

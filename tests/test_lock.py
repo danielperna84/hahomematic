@@ -22,9 +22,22 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_cerflock(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_cerflock(central_client) -> None:
     """Test CeRfLock."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client = central_client
     lock: CeRfLock = cast(CeRfLock, helper.get_prepared_custom_entity(central, "VCU0000146", 1))
     assert lock.usage == EntityUsage.CE_PRIMARY
 
@@ -78,13 +91,25 @@ async def test_cerflock(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await lock.open()
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_ceiplock(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceiplock(central_client) -> None:
     """Test CeIpLock."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client = central_client
     lock: CeIpLock = cast(CeIpLock, helper.get_prepared_custom_entity(central, "VCU9724704", 1))
     assert lock.usage == EntityUsage.CE_PRIMARY
 
@@ -136,4 +161,3 @@ async def test_ceiplock(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await lock.open()
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()
