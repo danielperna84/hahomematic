@@ -56,7 +56,6 @@ async def test_clickevent(
             "value": True,
         },
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -93,7 +92,6 @@ async def test_impulseevent(
             "value": True,
         },
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -133,4 +131,3 @@ async def test_deviceerrorevent(
             "value": True,
         },
     )
-    await central.stop()
