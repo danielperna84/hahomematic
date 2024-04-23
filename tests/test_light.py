@@ -134,6 +134,7 @@ async def test_cedimmer(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -275,6 +276,7 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
         value=1,
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -350,6 +352,7 @@ async def test_cecolortempdimmer(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -535,6 +538,7 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -808,8 +812,10 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         values={"COLOR_BEHAVIOUR": 6, "LEVEL": 0.10980392156862745},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
+    await central.stop()
 
 
+@pytest.mark.asyncio()
 async def test_ceiprgbwlight(factory: helper.Factory) -> None:
     """Test CeIpRGBWLight."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -939,8 +945,10 @@ async def test_ceiprgbwlight(factory: helper.Factory) -> None:
         },
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
+    await central.stop()
 
 
+@pytest.mark.asyncio()
 async def test_cecolordimmer(factory: helper.Factory) -> None:
     """Test CeColorDimmer."""
     central, mock_client = await factory.get_default_central(TEST_DEVICES)
@@ -1051,3 +1059,4 @@ async def test_cecolordimmer(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
+    await central.stop()

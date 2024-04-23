@@ -24,6 +24,7 @@ async def no_test_hmtext(factory: helper.Factory) -> None:
     central, _ = await factory.get_default_central(TEST_DEVICES)
     text: HmText = cast(HmText, central.get_generic_entity("VCU7981740:1", "STATE"))
     assert text.usage == EntityUsage.ENTITY
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -41,3 +42,4 @@ async def test_hmsysvartext(factory: helper.Factory) -> None:
         name="sv_string_ext", value="test23"
     )
     assert text.value == "test23"
+    await central.stop()

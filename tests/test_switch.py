@@ -78,6 +78,7 @@ async def test_ceswitch(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await switch.turn_off()
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -135,6 +136,7 @@ async def test_hmswitch(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await switch.turn_off()
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -149,3 +151,4 @@ async def test_hmsysvarswitch(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-1] == call.set_system_variable(
         name="sv_alarm_ext", value=True
     )
+    await central.stop()

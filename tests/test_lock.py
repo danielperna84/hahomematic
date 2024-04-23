@@ -78,6 +78,7 @@ async def test_cerflock(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await lock.open()
     assert (call_count + 1) == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -135,3 +136,4 @@ async def test_ceiplock(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await lock.open()
     assert (call_count + 1) == len(mock_client.method_calls)
+    await central.stop()

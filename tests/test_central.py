@@ -45,6 +45,7 @@ async def test_central_basics(factory: helper.Factory) -> None:
     assert device
     entities = central.get_readable_generic_entities()
     assert entities
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -66,6 +67,7 @@ async def test_device_export(factory: helper.Factory) -> None:
     central, _ = await factory.get_default_central(TEST_DEVICES)
     device = central.get_device(address="VCU6354483")
     await device.export_device_definition()
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -75,6 +77,7 @@ async def test_identify_callback_ip(factory: helper.Factory) -> None:
     assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
     central.config.host = "no_host"
     assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
+    await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -123,6 +126,7 @@ async def test_device_unignore_etrv(
     generic_entity = central.get_generic_entity(f"VCU3609622:{channel_no}", parameter)
     if generic_entity:
         assert generic_entity.usage == EntityUsage.ENTITY
+    await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -162,6 +166,7 @@ async def test_device_unignore_broll(
     if expected_result:
         assert generic_entity
         assert generic_entity.usage == EntityUsage.ENTITY
+    await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -225,6 +230,7 @@ async def test_device_unignore_hm(
     if expected_result:
         assert generic_entity
         assert generic_entity.usage == EntityUsage.ENTITY
+    await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -310,6 +316,7 @@ async def test_device_unignore_hm2(
     if expected_result:
         assert generic_entity
         assert generic_entity.usage == EntityUsage.ENTITY
+    await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -357,6 +364,7 @@ async def test_ignore_deviec_type(
             assert len(device.custom_entities) == 0
         else:
             assert len(device.custom_entities) > 0
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -366,6 +374,7 @@ async def test_all_parameters(factory: helper.Factory) -> None:
     parameters = central.paramset_descriptions.get_all_readable_parameters()
     assert parameters
     assert len(parameters) == 43
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -385,6 +394,7 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor2 = central.get_entities(platform=HmPlatform.SENSOR, registered=False)
     assert ebp_sensor2
     assert len(ebp_sensor2) == 11
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -417,6 +427,7 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor4 = central.get_hub_entities(platform=HmPlatform.HUB_BUTTON, registered=False)
     assert ebp_sensor4
     assert len(ebp_sensor4) == 1
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -441,6 +452,7 @@ async def test_add_device(factory: helper.Factory) -> None:
     )
     await central.add_new_devices(interface_id="NOT_ANINTERFACE_ID", device_descriptions=dev_desc)
     assert len(central._devices) == 2
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -461,6 +473,7 @@ async def test_delete_device(factory: helper.Factory) -> None:
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 2
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -492,6 +505,7 @@ async def test_virtual_remote_delete(factory: helper.Factory) -> None:
     assert central.get_virtual_remotes() == ()
 
     await central.delete_device(interface_id=const.INTERFACE_ID, device_address="NOT_A_DEVICE_ID")
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -510,6 +524,7 @@ async def test_central_not_alive(factory: helper.Factory) -> None:
     assert central.available is False
     assert central.system_information.serial == "0815_4711"
     assert central.is_alive is False
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -529,6 +544,7 @@ async def test_central_callbacks(factory: helper.Factory) -> None:
             "data": {EVENT_AVAILABLE: False},
         },
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -614,6 +630,7 @@ async def test_central_services(factory: helper.Factory) -> None:
         == "DUTY_CYCLE"
     )
     assert central.get_generic_entity(channel_address="VCU6354483", parameter="DUTY_CYCLE") is None
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -682,6 +699,7 @@ async def test_ping_pong(factory: helper.Factory) -> None:
             f"{interface_id}#{ts_stored.strftime(DATETIME_FORMAT_MILLIS)}",
         )
     assert client.ping_pong_cache.pending_pong_count == 0
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -706,6 +724,7 @@ async def test_pending_pong_failure(factory: helper.Factory) -> None:
         },
     )
     assert len(factory.ha_event_mock.mock_calls) == 9
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -725,6 +744,7 @@ async def test_unknown_pong_failure(factory: helper.Factory) -> None:
         count += 1
 
     assert client.ping_pong_cache.unknown_pong_count == 16
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -738,6 +758,7 @@ async def test_central_caches(factory: helper.Factory) -> None:
     assert (
         central.paramset_descriptions._raw_paramset_descriptions.get(client.interface_id) is None
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -750,3 +771,4 @@ async def test_central_getter(factory: helper.Factory) -> None:
     assert central.get_event("123", 1) is None
     assert central.get_program_button("123") is None
     assert central.get_sysvar_entity("123") is None
+    await central.stop()

@@ -62,6 +62,7 @@ async def test_hmselect(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await select.send_value(1)
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -81,3 +82,4 @@ async def test_hmsysvarselect(factory: helper.Factory) -> None:
     await select.send_variable(3)
     # do not write. value above max
     assert select.value == "v2"
+    await central.stop()

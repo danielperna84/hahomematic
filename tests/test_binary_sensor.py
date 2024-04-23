@@ -41,6 +41,7 @@ async def test_hmbinarysensor(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await binary_sensor.send_value(True)
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -59,3 +60,4 @@ async def test_hmsysvarbinarysensor(factory: helper.Factory) -> None:
     with pytest.raises(TypeError):
         binary_sensor.write_value(None)
     assert binary_sensor.value is False
+    await central.stop()

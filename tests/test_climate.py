@@ -92,6 +92,7 @@ async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-4] == last_call
     await climate.disable_away_mode()
     assert mock_client.method_calls[-4] == last_call
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -238,6 +239,7 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         parameter="PARTY_MODE_SUBMIT",
         value="12.0,1260,02,03,23,1320,02,03,23",
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -411,3 +413,4 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await climate.set_hvac_mode(HvacMode.AUTO)
     assert call_count == len(mock_client.method_calls)
+    await central.stop()

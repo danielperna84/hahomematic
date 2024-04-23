@@ -50,3 +50,4 @@ async def test_hmaction(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await action.send_value(1)
     assert (call_count + 1) == len(mock_client.method_calls)
+    await central.stop()
