@@ -45,7 +45,6 @@ async def _device_consumer(queue: Queue) -> None:
     # consume work
     while True:
         try:
-            # if (command := queue.get_nowait()) is None:
             if (command := await queue.get()) is None:
                 break
             await command()

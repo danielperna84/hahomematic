@@ -10,8 +10,6 @@ import pytest
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.action import HmAction
 
-from tests import helper
-
 TEST_DEVICES: dict[str, str] = {
     "VCU9724704": "HmIP-DLD.json",
 }
@@ -20,9 +18,22 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_hmaction(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_hmaction(central_client) -> None:
     """Test HmAction."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client = central_client
     action: HmAction = cast(
         HmAction,
         central.get_generic_entity("VCU9724704:1", "LOCK_TARGET_LEVEL"),
@@ -50,4 +61,3 @@ async def test_hmaction(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await action.send_value(1)
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp import ClientSession, TCPConnector
 import pydevccu
 import pytest
 
 from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 
 from tests import const, helper
 
@@ -91,3 +92,27 @@ async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
 async def factory() -> helper.Factory:
     """Return central factory."""
     return helper.Factory(client_session=None)
+
+
+@pytest.fixture
+async def central_client(
+    address_device_translation: dict[str, str],
+    do_mock_client: bool,
+    add_sysvars: bool,
+    add_programs: bool,
+    ignore_devices_on_create: list[str] | None,
+    un_ignore_list: list[str] | None,
+) -> tuple[CentralUnit, Client | Mock]:
+    """Return central factory."""
+    factory = helper.Factory(client_session=None)
+    central_client = await factory.get_default_central(
+        address_device_translation=address_device_translation,
+        do_mock_client=do_mock_client,
+        add_sysvars=add_sysvars,
+        add_programs=add_programs,
+        ignore_devices_on_create=ignore_devices_on_create,
+        un_ignore_list=un_ignore_list,
+    )
+    yield central_client
+    central, _ = central_client
+    await central.stop()
