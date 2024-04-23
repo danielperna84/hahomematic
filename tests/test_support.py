@@ -5,11 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import INIT_DATETIME, EntityUsage, ParameterType, SysvarType
 from hahomematic.converter import _COMBINED_PARAMETER_TO_HM_CONVERTER, convert_hm_level_to_cpv
 from hahomematic.exceptions import HaHomematicException
@@ -58,7 +60,7 @@ TEST_DEVICES: dict[str, str] = {
         ({}, True, False, False, None, None),
     ],
 )
-async def test_generate_unique_id(central_client) -> None:
+async def test_generate_unique_id(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test generate_unique_id."""
     central, _ = central_client
     assert (
@@ -179,7 +181,7 @@ async def test_to_bool() -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_get_entity_name(central_client) -> None:
+async def test_get_entity_name(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test get_entity_name."""
     central, _ = central_client
     device = central.get_device(address="VCU2128127")
@@ -218,7 +220,7 @@ async def test_get_entity_name(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_get_event_name(central_client) -> None:
+async def test_get_event_name(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test get_event_name."""
     central, _ = central_client
     device = central.get_device(address="VCU2128127")
@@ -257,7 +259,7 @@ async def test_get_event_name(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_custom_entity_name(central_client) -> None:
+async def test_custom_entity_name(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test get_custom_entity_name."""
     central, _ = central_client
     device = central.get_device(address="VCU2128127")
@@ -332,7 +334,7 @@ async def test_custom_entity_name(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_get_device_name(central_client) -> None:
+async def test_get_device_name(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test get_device_name."""
     central, _ = central_client
     assert (

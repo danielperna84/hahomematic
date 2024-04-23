@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage, ParamsetKey
 from hahomematic.platforms.custom.light import (
@@ -51,7 +53,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cedimmer(central_client) -> None:
+async def test_cedimmer(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeDimmer."""
     central, mock_client = central_client
     light: CeDimmer = cast(CeDimmer, helper.get_prepared_custom_entity(central, "VCU1399816", 4))
@@ -163,7 +165,7 @@ async def test_cedimmer(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cecolordimmereffect(central_client) -> None:
+async def test_cecolordimmereffect(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeColorDimmerEffect."""
     central, mock_client = central_client
     light: CeColorDimmerEffect = cast(
@@ -317,7 +319,7 @@ async def test_cecolordimmereffect(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cecolortempdimmer(central_client) -> None:
+async def test_cecolortempdimmer(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeColorTempDimmer."""
     central, mock_client = central_client
     light: CeColorTempDimmer = cast(
@@ -405,7 +407,7 @@ async def test_cecolortempdimmer(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipfixedcolorlight(central_client) -> None:
+async def test_ceipfixedcolorlight(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeIpFixedColorLight."""
     central, mock_client = central_client
     light: CeIpFixedColorLight = cast(
@@ -603,7 +605,7 @@ async def test_ceipfixedcolorlight(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipfixedcolorlightwired(central_client) -> None:
+async def test_ceipfixedcolorlightwired(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeIpFixedColorLight."""
     central, mock_client = central_client
     light: CeIpFixedColorLight = cast(
@@ -889,7 +891,7 @@ async def test_ceipfixedcolorlightwired(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceiprgbwlight(central_client) -> None:
+async def test_ceiprgbwlight(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeIpRGBWLight."""
     central, mock_client = central_client
     light: CeIpRGBWLight = cast(
@@ -1034,7 +1036,7 @@ async def test_ceiprgbwlight(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cecolordimmer(central_client) -> None:
+async def test_cecolordimmer(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeColorDimmer."""
     central, mock_client = central_client
     light: CeColorDimmer = cast(

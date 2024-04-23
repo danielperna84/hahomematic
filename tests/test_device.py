@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from unittest.mock import Mock
 
 import pytest
+
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 
 from tests import const
 
@@ -30,7 +34,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_device_general(central_client) -> None:
+async def test_device_general(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test device availability."""
     central, _ = central_client
     device = central.get_device(address="VCU2128127")
@@ -66,7 +70,7 @@ async def test_device_general(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_device_availability(central_client) -> None:
+async def test_device_availability(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test device availability."""
     central, _ = central_client
     device = central.get_device(address="VCU6354483")
@@ -105,7 +109,7 @@ async def test_device_availability(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_device_config_pending(central_client) -> None:
+async def test_device_config_pending(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test device availability."""
     central, _ = central_client
     device = central.get_device(address="VCU2128127")

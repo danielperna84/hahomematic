@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.hub.select import HmSysvarSelect
@@ -34,7 +36,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmselect(central_client) -> None:
+async def test_hmselect(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSelect."""
     central, mock_client = central_client
     select: HmSelect = cast(
@@ -91,7 +93,7 @@ async def test_hmselect(central_client) -> None:
         (TEST_DEVICES, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarselect(central_client) -> None:
+async def test_hmsysvarselect(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSysvarSelect."""
     central, mock_client = central_client
     select: HmSysvarSelect = cast(HmSysvarSelect, central.get_sysvar_entity("sv_list_ext"))

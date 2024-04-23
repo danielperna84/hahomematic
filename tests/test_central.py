@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
@@ -45,7 +47,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_central_basics(central_client) -> None:
+async def test_central_basics(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test central basics."""
     central, client = central_client
     assert central.central_url == "http://127.0.0.1"
@@ -74,7 +76,7 @@ async def test_central_basics(central_client) -> None:
         (TEST_DEVICES, True, True, True, None, None),
     ],
 )
-async def test_device_get_entities(central_client) -> None:
+async def test_device_get_entities(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test central/device get_entities."""
     central, _ = central_client
     entities = central.get_entities()
@@ -98,7 +100,7 @@ async def test_device_get_entities(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_device_export(central_client) -> None:
+async def test_device_export(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test device export."""
     central, _ = central_client
     device = central.get_device(address="VCU6354483")
@@ -119,7 +121,7 @@ async def test_device_export(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_identify_callback_ip(central_client) -> None:
+async def test_identify_callback_ip(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test identify_callback_ip."""
     central, _ = central_client
     assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
@@ -428,7 +430,7 @@ async def test_ignore_deviec_type(
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_all_parameters(central_client) -> None:
+async def test_all_parameters(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test all_parameters."""
     central, _ = central_client
     parameters = central.paramset_descriptions.get_all_readable_parameters()
@@ -450,7 +452,7 @@ async def test_all_parameters(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_entities_by_platform(central_client) -> None:
+async def test_entities_by_platform(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test entities_by_platform."""
     central, _ = central_client
     ebp_sensor = central.get_entities(platform=HmPlatform.SENSOR)
@@ -482,7 +484,7 @@ async def test_entities_by_platform(central_client) -> None:
         ({}, True, True, True, None, None),
     ],
 )
-async def test_hub_entities_by_platform(central_client) -> None:
+async def test_hub_entities_by_platform(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test hub_entities_by_platform."""
     central, _ = central_client
     ebp_sensor = central.get_hub_entities(platform=HmPlatform.HUB_SENSOR)
@@ -527,7 +529,7 @@ async def test_hub_entities_by_platform(central_client) -> None:
         (TEST_DEVICES, True, False, False, ["HmIP-BSM.json"], None),
     ],
 )
-async def test_add_device(central_client) -> None:
+async def test_add_device(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test add_device."""
     central, _ = central_client
     assert len(central._devices) == 1
@@ -562,7 +564,7 @@ async def test_add_device(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_delete_device(central_client) -> None:
+async def test_delete_device(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test device delete_device."""
     central, _ = central_client
     assert len(central._devices) == 2
@@ -606,7 +608,7 @@ async def test_delete_device(central_client) -> None:
         ),
     ],
 )
-async def test_virtual_remote_delete(central_client) -> None:
+async def test_virtual_remote_delete(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test device delete."""
     central, _ = central_client
     assert len(central.get_virtual_remotes()) == 1
@@ -683,7 +685,7 @@ async def test_central_callbacks(factory: helper.Factory) -> None:
         (TEST_DEVICES, True, True, True, None, None),
     ],
 )
-async def test_central_services(central_client) -> None:
+async def test_central_services(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test central fetch sysvar and programs."""
     central, mock_client = central_client
     await central.fetch_program_data()
@@ -830,7 +832,7 @@ async def test_central_without_interface_config(factory: helper.Factory) -> None
         (TEST_DEVICES, False, False, False, None, None),
     ],
 )
-async def test_ping_pong(central_client) -> None:
+async def test_ping_pong(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test central other methods."""
     central, client = central_client
     interface_id = client.interface_id
@@ -885,7 +887,7 @@ async def test_pending_pong_failure(factory: helper.Factory) -> None:
         (TEST_DEVICES, False, False, False, None, None),
     ],
 )
-async def test_unknown_pong_failure(central_client) -> None:
+async def test_unknown_pong_failure(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test central other methods."""
     central, client = central_client
     interface_id = client.interface_id
@@ -917,7 +919,7 @@ async def test_unknown_pong_failure(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_central_caches(central_client) -> None:
+async def test_central_caches(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test central cache."""
     central, client = central_client
     assert len(central.device_descriptions._raw_device_descriptions[client.interface_id]) == 20
@@ -943,7 +945,7 @@ async def test_central_caches(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_central_getter(central_client) -> None:
+async def test_central_getter(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test central getter."""
     central, _ = central_client
     assert central.get_device("123") is None

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage, ProgramData
 from hahomematic.platforms.generic.button import HmButton
 from hahomematic.platforms.hub.button import HmProgramButton
@@ -32,7 +34,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmbutton(central_client) -> None:
+async def test_hmbutton(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmButton."""
     central, mock_client = central_client
     button: HmButton = cast(
@@ -72,7 +74,7 @@ async def test_hmbutton(central_client) -> None:
         ({}, True, False, True, None, None),
     ],
 )
-async def test_hmprogrambutton(central_client) -> None:
+async def test_hmprogrambutton(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmProgramButton."""
     central, mock_client = central_client
     button: HmProgramButton = cast(HmProgramButton, central.get_program_button("pid1"))

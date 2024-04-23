@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 from freezegun import freeze_time
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage, ParamsetKey
 from hahomematic.platforms.custom.climate import (
@@ -49,7 +51,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cesimplerfthermostat(central_client) -> None:
+async def test_cesimplerfthermostat(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeSimpleRfThermostat."""
     central, mock_client = central_client
     climate: CeSimpleRfThermostat = cast(
@@ -121,7 +123,7 @@ async def test_cesimplerfthermostat(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cerfthermostat(central_client) -> None:
+async def test_cerfthermostat(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeRfThermostat."""
     central, mock_client = central_client
     climate: CeRfThermostat = cast(
@@ -280,7 +282,7 @@ async def test_cerfthermostat(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipthermostat(central_client) -> None:
+async def test_ceipthermostat(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeIpThermostat."""
     central, mock_client = central_client
     climate: CeIpThermostat = cast(

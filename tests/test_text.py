@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.hub.text import HmSysvarText
@@ -30,7 +32,7 @@ TEST_DEVICES: dict[str, str] = {}
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def no_test_hmtext(central_client) -> None:
+async def no_test_hmtext(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmText. There are currently no text entities."""
     central, _ = central_client
     text: HmText = cast(HmText, central.get_generic_entity("VCU7981740:1", "STATE"))
@@ -51,7 +53,7 @@ async def no_test_hmtext(central_client) -> None:
         ({}, True, True, False, None, None),
     ],
 )
-async def test_hmsysvartext(central_client) -> None:
+async def test_hmsysvartext(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSysvarText. There are currently no text entities."""
     central, mock_client = central_client
     text: HmSysvarText = cast(HmSysvarText, central.get_sysvar_entity("sv_string_ext"))

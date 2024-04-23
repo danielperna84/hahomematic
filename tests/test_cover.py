@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.cover import (
@@ -52,7 +54,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cecover(central_client) -> None:
+async def test_cecover(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeCover."""
     central, mock_client = central_client
     cover: CeCover = cast(CeCover, helper.get_prepared_custom_entity(central, "VCU8537918", 4))
@@ -132,7 +134,7 @@ async def test_cecover(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipblind_dr(central_client) -> None:
+async def test_ceipblind_dr(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeIpBlind DIN Rail."""
     central, mock_client = central_client
     cover: CeIpBlind = cast(CeIpBlind, helper.get_prepared_custom_entity(central, "VCU7807849", 2))
@@ -216,7 +218,7 @@ async def test_ceipblind_dr(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cewindowdrive(central_client) -> None:
+async def test_cewindowdrive(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeWindowDrive."""
     central, mock_client = central_client
     cover: CeWindowDrive = cast(
@@ -284,7 +286,7 @@ async def test_cewindowdrive(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceblind(central_client) -> None:
+async def test_ceblind(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeBlind."""
     central, mock_client = central_client
     cover: CeBlind = cast(CeBlind, helper.get_prepared_custom_entity(central, "VCU0000145", 1))
@@ -430,7 +432,7 @@ async def test_ceblind(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipblind(central_client) -> None:
+async def test_ceipblind(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeIpBlind."""
     central, mock_client = central_client
     cover: CeIpBlind = cast(CeIpBlind, helper.get_prepared_custom_entity(central, "VCU1223813", 4))
@@ -576,7 +578,7 @@ async def test_ceipblind(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipblind_hdm(central_client) -> None:
+async def test_ceipblind_hdm(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeIpBlind HDM."""
     central, mock_client = central_client
     cover: CeIpBlind = cast(CeIpBlind, helper.get_prepared_custom_entity(central, "VCU3560967", 1))
@@ -699,7 +701,7 @@ async def test_ceipblind_hdm(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cegarageho(central_client) -> None:
+async def test_cegarageho(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeGarageHO."""
     central, mock_client = central_client
     cover: CeGarage = cast(CeGarage, helper.get_prepared_custom_entity(central, "VCU3574044", 1))
@@ -815,7 +817,7 @@ async def test_cegarageho(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cegaragetm(central_client) -> None:
+async def test_cegaragetm(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeGarageTM."""
     central, mock_client = central_client
     cover: CeGarage = cast(CeGarage, helper.get_prepared_custom_entity(central, "VCU6166407", 1))

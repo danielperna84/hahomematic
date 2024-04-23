@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, Mock, call
 
 import pytest
 
 from hahomematic.caches.visibility import check_ignore_parameters_is_clean
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import CallSource, EntityUsage
 from hahomematic.platforms.custom.definition import (
     get_required_parameters,
@@ -124,7 +126,7 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_load_custom_entity(central_client) -> None:
+async def test_load_custom_entity(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test load custom_entity."""
     central, mock_client = central_client
     switch: HmSwitch = cast(HmSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
@@ -157,7 +159,7 @@ async def test_load_custom_entity(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_load_generic_entity(central_client) -> None:
+async def test_load_generic_entity(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test load generic_entity."""
     central, mock_client = central_client
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
@@ -184,7 +186,7 @@ async def test_load_generic_entity(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_generic_wrapped_entity(central_client) -> None:
+async def test_generic_wrapped_entity(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test wrapped entity."""
     central, _ = central_client
     wrapped_entity: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3609622:1", "LEVEL"))

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.hub.number import HmSysvarNumber
@@ -36,7 +38,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmfloat(central_client) -> None:
+async def test_hmfloat(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmFloat."""
     central, mock_client = central_client
     efloat: HmFloat = cast(
@@ -80,7 +82,7 @@ async def test_hmfloat(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmfloat_special(central_client) -> None:
+async def test_hmfloat_special(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmFloat."""
     central, mock_client = central_client
     efloat: HmFloat = cast(
@@ -124,7 +126,7 @@ async def test_hmfloat_special(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hminteger(central_client) -> None:
+async def test_hminteger(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmInteger."""
     central, mock_client = central_client
     einteger: HmInteger = cast(
@@ -186,7 +188,7 @@ async def test_hminteger(central_client) -> None:
         (TEST_DEVICES, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarnumber(central_client) -> None:
+async def test_hmsysvarnumber(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSysvarNumber."""
     central, mock_client = central_client
     enumber: HmSysvarNumber = cast(

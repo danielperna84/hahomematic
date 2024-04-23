@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
+from unittest.mock import Mock
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
@@ -33,7 +36,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmbinarysensor(central_client) -> None:
+async def test_hmbinarysensor(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmBinarySensor."""
     central, mock_client = central_client
     binary_sensor: HmBinarySensor = cast(
@@ -70,7 +73,7 @@ async def test_hmbinarysensor(central_client) -> None:
         ({}, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarbinarysensor(central_client) -> None:
+async def test_hmsysvarbinarysensor(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSysvarBinarySensor."""
     central, _ = central_client
     binary_sensor: HmSysvarBinarySensor = cast(

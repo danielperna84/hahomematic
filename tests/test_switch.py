@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.switch import CeSwitch
@@ -36,7 +38,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceswitch(central_client) -> None:
+async def test_ceswitch(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test CeSwitch."""
     central, mock_client = central_client
     switch: CeSwitch = cast(CeSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
@@ -107,7 +109,7 @@ async def test_ceswitch(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmswitch(central_client) -> None:
+async def test_hmswitch(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSwitch."""
     central, mock_client = central_client
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
@@ -177,7 +179,7 @@ async def test_hmswitch(central_client) -> None:
         ({}, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarswitch(central_client) -> None:
+async def test_hmsysvarswitch(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSysvarSwitch."""
     central, mock_client = central_client
     switch: HmSysvarSwitch = cast(HmSysvarSwitch, central.get_sysvar_entity("sv_alarm_ext"))

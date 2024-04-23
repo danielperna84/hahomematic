@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
+from unittest.mock import Mock
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.hub.sensor import HmSysvarSensor
@@ -35,7 +38,7 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmsensor_psm(central_client) -> None:
+async def test_hmsensor_psm(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSensor."""
     central, _ = central_client
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3941846:6", "VOLTAGE"))
@@ -91,7 +94,7 @@ async def test_hmsensor_psm(central_client) -> None:
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmsensor_srh(central_client) -> None:
+async def test_hmsensor_srh(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSensor."""
     central, _ = central_client
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU7981740:1", "STATE"))
@@ -119,7 +122,7 @@ async def test_hmsensor_srh(central_client) -> None:
         ({}, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarsensor(central_client) -> None:
+async def test_hmsysvarsensor(central_client: tuple[CentralUnit, Client | Mock]) -> None:
     """Test HmSysvarSensor."""
     central, _ = central_client
     sensor: HmSysvarSensor = cast(HmSysvarSensor, central.get_sysvar_entity("sv_list"))
