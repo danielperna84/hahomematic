@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage, ProgramData
 from hahomematic.platforms.generic.button import HmButton
 from hahomematic.platforms.hub.button import HmProgramButton
@@ -21,9 +23,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_hmbutton(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_hmbutton(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmButton."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     button: HmButton = cast(
         HmButton,
         central.get_generic_entity("VCU1437294:1", "RESET_MOTION"),
@@ -45,13 +62,27 @@ async def test_hmbutton(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await button.press()
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hmprogrambutton(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        ({}, True, False, True, None, None),
+    ],
+)
+async def test_hmprogrambutton(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmProgramButton."""
-    central, mock_client = await factory.get_default_central({}, add_programs=True)
+    central, mock_client, _ = central_client_factory
     button: HmProgramButton = cast(HmProgramButton, central.get_program_button("pid1"))
     assert button.usage == EntityUsage.ENTITY
     assert button.available is True
@@ -78,4 +109,3 @@ async def test_hmprogrambutton(factory: helper.Factory) -> None:
     assert button2.is_internal is False
     assert button2.ccu_program_name == "p_2"
     assert button2.name == "p_2"
-    await central.stop()

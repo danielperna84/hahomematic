@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage, ParamsetKey
 from hahomematic.platforms.custom.light import (
@@ -38,9 +40,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_cedimmer(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_cedimmer(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeDimmer."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     light: CeDimmer = cast(CeDimmer, helper.get_prepared_custom_entity(central, "VCU1399816", 4))
     assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -134,13 +151,27 @@ async def test_cedimmer(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_cecolordimmereffect(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_cecolordimmereffect(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeColorDimmerEffect."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     light: CeColorDimmerEffect = cast(
         CeColorDimmerEffect, helper.get_prepared_custom_entity(central, "VCU3747418", 1)
     )
@@ -276,13 +307,27 @@ async def test_cecolordimmereffect(factory: helper.Factory) -> None:
         value=1,
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_cecolortempdimmer(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_cecolortempdimmer(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeColorTempDimmer."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     light: CeColorTempDimmer = cast(
         CeColorTempDimmer, helper.get_prepared_custom_entity(central, "VCU0000115", 1)
     )
@@ -352,13 +397,27 @@ async def test_cecolortempdimmer(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceipfixedcolorlight(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpFixedColorLight."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     light: CeIpFixedColorLight = cast(
         CeIpFixedColorLight, helper.get_prepared_custom_entity(central, "VCU3716619", 8)
     )
@@ -538,13 +597,27 @@ async def test_ceipfixedcolorlight(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceipfixedcolorlightwired(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpFixedColorLight."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     light: CeIpFixedColorLight = cast(
         CeIpFixedColorLight, helper.get_prepared_custom_entity(central, "VCU4704397", 8)
     )
@@ -812,13 +885,27 @@ async def test_ceipfixedcolorlightwired(factory: helper.Factory) -> None:
         values={"COLOR_BEHAVIOUR": 6, "LEVEL": 0.10980392156862745},
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_ceiprgbwlight(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceiprgbwlight(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpRGBWLight."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     light: CeIpRGBWLight = cast(
         CeIpRGBWLight, helper.get_prepared_custom_entity(central, "VCU5629873", 1)
     )
@@ -945,13 +1032,27 @@ async def test_ceiprgbwlight(factory: helper.Factory) -> None:
         },
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_cecolordimmer(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_cecolordimmer(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeColorDimmer."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     light: CeColorDimmer = cast(
         CeColorDimmer, helper.get_prepared_custom_entity(central, "VCU9973336", 13)
     )
@@ -1059,4 +1160,3 @@ async def test_cecolordimmer(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await light.turn_off()
     assert call_count == len(mock_client.method_calls)
-    await central.stop()

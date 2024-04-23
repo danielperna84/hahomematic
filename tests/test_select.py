@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.hub.select import HmSysvarSelect
@@ -21,9 +23,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_hmselect(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_hmselect(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSelect."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     select: HmSelect = cast(
         HmSelect,
         central.get_generic_entity("VCU6354483:1", "WINDOW_STATE"),
@@ -62,13 +79,27 @@ async def test_hmselect(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await select.send_value(1)
     assert call_count == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hmsysvarselect(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, True, False, None, None),
+    ],
+)
+async def test_hmsysvarselect(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarSelect."""
-    central, mock_client = await factory.get_default_central({}, add_sysvars=True)
+    central, mock_client, _ = central_client_factory
     select: HmSysvarSelect = cast(HmSysvarSelect, central.get_sysvar_entity("sv_list_ext"))
     assert select.usage == EntityUsage.ENTITY
     assert select.unit is None
@@ -82,4 +113,3 @@ async def test_hmsysvarselect(factory: helper.Factory) -> None:
     await select.send_variable(3)
     # do not write. value above max
     assert select.value == "v2"
-    await central.stop()

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import PING_PONG_MISMATCH_COUNT
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
@@ -32,9 +34,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_central_basics(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_central_basics(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central basics."""
-    central, client = await factory.get_default_central(TEST_DEVICES)
+    central, client, _ = central_client_factory
     assert central.central_url == "http://127.0.0.1"
     assert central.is_alive is True
     assert central.system_information.serial == "0815_4711"
@@ -45,15 +62,27 @@ async def test_central_basics(factory: helper.Factory) -> None:
     assert device
     entities = central.get_readable_generic_entities()
     assert entities
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_device_get_entities(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, True, True, None, None),
+    ],
+)
+async def test_device_get_entities(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central/device get_entities."""
-    central, _ = await factory.get_default_central(
-        TEST_DEVICES, add_sysvars=True, add_programs=True
-    )
+    central, _, _ = central_client_factory
     entities = central.get_entities()
     assert entities
 
@@ -62,22 +91,50 @@ async def test_device_get_entities(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_device_export(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_device_export(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test device export."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     device = central.get_device(address="VCU6354483")
     await device.export_device_definition()
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_identify_callback_ip(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_identify_callback_ip(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test identify_callback_ip."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
     central.config.host = "no_host"
     assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
-    await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -368,19 +425,48 @@ async def test_ignore_deviec_type(
 
 
 @pytest.mark.asyncio()
-async def test_all_parameters(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_all_parameters(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test all_parameters."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     parameters = central.paramset_descriptions.get_all_readable_parameters()
     assert parameters
     assert len(parameters) == 43
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_entities_by_platform(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_entities_by_platform(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test entities_by_platform."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     ebp_sensor = central.get_entities(platform=HmPlatform.SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 12
@@ -394,13 +480,27 @@ async def test_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor2 = central.get_entities(platform=HmPlatform.SENSOR, registered=False)
     assert ebp_sensor2
     assert len(ebp_sensor2) == 11
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        ({}, True, True, True, None, None),
+    ],
+)
+async def test_hub_entities_by_platform(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test hub_entities_by_platform."""
-    central, _ = await factory.get_default_central({}, add_programs=True, add_sysvars=True)
+    central, _, _ = central_client_factory
     ebp_sensor = central.get_hub_entities(platform=HmPlatform.HUB_SENSOR)
     assert ebp_sensor
     assert len(ebp_sensor) == 4
@@ -427,15 +527,27 @@ async def test_hub_entities_by_platform(factory: helper.Factory) -> None:
     ebp_sensor4 = central.get_hub_entities(platform=HmPlatform.HUB_BUTTON, registered=False)
     assert ebp_sensor4
     assert len(ebp_sensor4) == 1
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_add_device(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, ["HmIP-BSM.json"], None),
+    ],
+)
+async def test_add_device(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test add_device."""
-    central, _ = await factory.get_default_central(
-        TEST_DEVICES, ignore_devices_on_create=["HmIP-BSM.json"]
-    )
+    central, _, _ = central_client_factory
     assert len(central._devices) == 1
     assert len(central.get_entities(exclude_no_create=False)) == 24
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 9
@@ -452,13 +564,27 @@ async def test_add_device(factory: helper.Factory) -> None:
     )
     await central.add_new_devices(interface_id="NOT_ANINTERFACE_ID", device_descriptions=dev_desc)
     assert len(central._devices) == 2
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_delete_device(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_delete_device(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test device delete_device."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     assert len(central._devices) == 2
     assert len(central.get_entities(exclude_no_create=False)) == 55
     assert len(central.device_descriptions._raw_device_descriptions.get(const.INTERFACE_ID)) == 20
@@ -473,19 +599,38 @@ async def test_delete_device(factory: helper.Factory) -> None:
     assert (
         len(central.paramset_descriptions._raw_paramset_descriptions.get(const.INTERFACE_ID)) == 2
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_virtual_remote_delete(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (
+            {
+                "VCU4264293": "HmIP-RCV-50.json",
+                "VCU0000057": "HM-RCV-50.json",
+                "VCU0000001": "HMW-RCV-50.json",
+            },
+            True,
+            False,
+            False,
+            None,
+            None,
+        ),
+    ],
+)
+async def test_virtual_remote_delete(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test device delete."""
-    central, _ = await factory.get_default_central(
-        {
-            "VCU4264293": "HmIP-RCV-50.json",
-            "VCU0000057": "HM-RCV-50.json",
-            "VCU0000001": "HMW-RCV-50.json",
-        },
-    )
+    central, _, _ = central_client_factory
     assert len(central.get_virtual_remotes()) == 1
 
     assert central._get_virtual_remote("VCU0000057")
@@ -505,7 +650,6 @@ async def test_virtual_remote_delete(factory: helper.Factory) -> None:
     assert central.get_virtual_remotes() == ()
 
     await central.delete_device(interface_id=const.INTERFACE_ID, device_address="NOT_A_DEVICE_ID")
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -528,9 +672,24 @@ async def test_central_not_alive(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_central_callbacks(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_central_callbacks(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central other methods."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, factory = central_client_factory
     central.fire_interface_event(
         interface_id="SOME_ID",
         interface_event_type=InterfaceEventType.CALLBACK,
@@ -544,15 +703,27 @@ async def test_central_callbacks(factory: helper.Factory) -> None:
             "data": {EVENT_AVAILABLE: False},
         },
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_central_services(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, True, True, None, None),
+    ],
+)
+async def test_central_services(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central fetch sysvar and programs."""
-    central, mock_client = await factory.get_default_central(
-        TEST_DEVICES, add_programs=True, add_sysvars=True
-    )
+    central, mock_client, _ = central_client_factory
     await central.fetch_program_data()
     assert mock_client.method_calls[-1] == call.get_all_programs(include_internal=False)
 
@@ -630,7 +801,6 @@ async def test_central_services(factory: helper.Factory) -> None:
         == "DUTY_CYCLE"
     )
     assert central.get_generic_entity(channel_address="VCU6354483", parameter="DUTY_CYCLE") is None
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -685,9 +855,24 @@ async def test_central_without_interface_config(factory: helper.Factory) -> None
 
 
 @pytest.mark.asyncio()
-async def test_ping_pong(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, False, False, False, None, None),
+    ],
+)
+async def test_ping_pong(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central other methods."""
-    central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
+    central, client, _ = central_client_factory
     interface_id = client.interface_id
     await client.check_connection_availability(handle_ping_pong=True)
     assert client.ping_pong_cache.pending_pong_count == 1
@@ -699,13 +884,27 @@ async def test_ping_pong(factory: helper.Factory) -> None:
             f"{interface_id}#{ts_stored.strftime(DATETIME_FORMAT_MILLIS)}",
         )
     assert client.ping_pong_cache.pending_pong_count == 0
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_pending_pong_failure(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, False, False, False, None, None),
+    ],
+)
+async def test_pending_pong_failure(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central other methods."""
-    central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
+    central, client, factory = central_client_factory
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 1
     while count < max_count:
@@ -724,13 +923,27 @@ async def test_pending_pong_failure(factory: helper.Factory) -> None:
         },
     )
     assert len(factory.ha_event_mock.mock_calls) == 9
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_unknown_pong_failure(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, False, False, False, None, None),
+    ],
+)
+async def test_unknown_pong_failure(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central other methods."""
-    central, client = await factory.get_default_central(TEST_DEVICES, do_mock_client=False)
+    central, client, _ = central_client_factory
     interface_id = client.interface_id
     count = 0
     max_count = PING_PONG_MISMATCH_COUNT + 1
@@ -744,13 +957,27 @@ async def test_unknown_pong_failure(factory: helper.Factory) -> None:
         count += 1
 
     assert client.ping_pong_cache.unknown_pong_count == 16
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_central_caches(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_central_caches(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central cache."""
-    central, client = await factory.get_default_central(TEST_DEVICES)
+    central, client, _ = central_client_factory
     assert len(central.device_descriptions._raw_device_descriptions[client.interface_id]) == 20
     assert len(central.paramset_descriptions._raw_paramset_descriptions[client.interface_id]) == 11
     await central.clear_caches()
@@ -758,17 +985,30 @@ async def test_central_caches(factory: helper.Factory) -> None:
     assert (
         central.paramset_descriptions._raw_paramset_descriptions.get(client.interface_id) is None
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_central_getter(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_central_getter(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test central getter."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     assert central.get_device("123") is None
     assert central.get_custom_entity("123", 1) is None
     assert central.get_generic_entity("123", 1) is None
     assert central.get_event("123", 1) is None
     assert central.get_program_button("123") is None
     assert central.get_sysvar_entity("123") is None
-    await central.stop()

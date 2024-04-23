@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
+from unittest.mock import Mock
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.hub.sensor import HmSysvarSensor
@@ -22,9 +25,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_hmsensor_psm(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_hmsensor_psm(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSensor."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3941846:6", "VOLTAGE"))
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.unit == "V"
@@ -62,13 +80,27 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     assert sensor3.unit == "ppm"
     assert sensor3.values is None
     assert sensor3.value is None
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hmsensor_srh(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_hmsensor_srh(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSensor."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU7981740:1", "STATE"))
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.unit is None
@@ -78,13 +110,27 @@ async def test_hmsensor_srh(factory: helper.Factory) -> None:
     assert sensor.value == "CLOSED"
     await central.event(const.INTERFACE_ID, "VCU7981740:1", "STATE", 2)
     assert sensor.value == "OPEN"
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hmsysvarsensor(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        ({}, True, True, False, None, None),
+    ],
+)
+async def test_hmsysvarsensor(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarSensor."""
-    central, _ = await factory.get_default_central({}, add_sysvars=True)
+    central, _, _ = central_client_factory
     sensor: HmSysvarSensor = cast(HmSysvarSensor, central.get_sysvar_entity("sv_list"))
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.available is True
@@ -97,4 +143,3 @@ async def test_hmsysvarsensor(factory: helper.Factory) -> None:
     assert sensor2.unit is None
     assert sensor2.values is None
     assert sensor2.value == 23.2
-    await central.stop()

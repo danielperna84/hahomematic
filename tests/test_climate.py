@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 from freezegun import freeze_time
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage, ParamsetKey
 from hahomematic.platforms.custom.climate import (
@@ -36,9 +38,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_cesimplerfthermostat(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeSimpleRfThermostat."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     climate: CeSimpleRfThermostat = cast(
         CeSimpleRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000054", 1)
     )
@@ -92,13 +109,27 @@ async def test_cesimplerfthermostat(factory: helper.Factory) -> None:
     assert mock_client.method_calls[-4] == last_call
     await climate.disable_away_mode()
     assert mock_client.method_calls[-4] == last_call
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_cerfthermostat(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_cerfthermostat(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeRfThermostat."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     climate: CeRfThermostat = cast(
         CeRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000050", 4)
     )
@@ -239,13 +270,27 @@ async def test_cerfthermostat(factory: helper.Factory) -> None:
         parameter="PARTY_MODE_SUBMIT",
         value="12.0,1260,02,03,23,1320,02,03,23",
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_ceipthermostat(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceipthermostat(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpThermostat."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     climate: CeIpThermostat = cast(
         CeIpThermostat, helper.get_prepared_custom_entity(central, "VCU1769958", 1)
     )
@@ -413,4 +458,3 @@ async def test_ceipthermostat(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await climate.set_hvac_mode(HvacMode.AUTO)
     assert call_count == len(mock_client.method_calls)
-    await central.stop()

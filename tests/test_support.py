@@ -5,11 +5,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import INIT_DATETIME, EntityUsage, ParameterType, SysvarType
 from hahomematic.converter import _COMBINED_PARAMETER_TO_HM_CONVERTER, convert_hm_level_to_cpv
 from hahomematic.exceptions import HaHomematicException
@@ -47,9 +49,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_generate_unique_id(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        ({}, True, False, False, None, None),
+    ],
+)
+async def test_generate_unique_id(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test generate_unique_id."""
-    central, _ = await factory.get_default_central({})
+    central, _, _ = central_client_factory
     assert (
         generate_unique_id(central=central, address="VCU2128127", parameter="LEVEL")
         == "vcu2128127_level"
@@ -64,7 +81,6 @@ async def test_generate_unique_id(factory: helper.Factory) -> None:
         generate_unique_id(central=central, address="INT0001", parameter="LEVEL")
         == "test1234_int0001_level"
     )
-    await central.stop()
 
 
 def test_build_xml_rpc_uri() -> None:
@@ -156,9 +172,24 @@ async def test_to_bool() -> None:
 
 
 @pytest.mark.asyncio()
-async def test_get_entity_name(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_get_entity_name(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test get_entity_name."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
     name_data = get_entity_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
@@ -178,13 +209,27 @@ async def test_get_entity_name(factory: helper.Factory) -> None:
         )
         assert name_data.full_name == ""
         assert name_data.entity_name is None
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_get_event_name(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_get_event_name(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test get_event_name."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
     name_data = get_event_name(central=central, device=device, channel_no=4, parameter="LEVEL")
     assert name_data.channel_name == "ch4"
@@ -204,13 +249,27 @@ async def test_get_event_name(factory: helper.Factory) -> None:
         name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
         assert name_data.full_name == ""
         assert name_data.entity_name is None
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_custom_entity_name(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_custom_entity_name(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test get_custom_entity_name."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
     name_data = get_custom_entity_name(
         central=central,
@@ -266,13 +325,27 @@ async def test_custom_entity_name(factory: helper.Factory) -> None:
         )
         assert name_data.full_name == ""
         assert name_data.entity_name is None
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_get_device_name(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_get_device_name(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test get_device_name."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, _ = central_client_factory
     assert (
         get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "HmIP-BSM_VCU2128127"
@@ -282,7 +355,6 @@ async def test_get_device_name(factory: helper.Factory) -> None:
         get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "Roof"
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()

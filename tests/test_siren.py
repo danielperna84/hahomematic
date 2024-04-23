@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.config import WAIT_FOR_CALLBACK
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.custom.siren import CeIpSiren, CeIpSirenSmoke
@@ -22,9 +24,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_ceipsiren(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceipsiren(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpSiren."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     siren: CeIpSiren = cast(CeIpSiren, helper.get_prepared_custom_entity(central, "VCU8249617", 3))
     assert siren.usage == EntityUsage.CE_PRIMARY
 
@@ -103,13 +120,27 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await siren.turn_off()
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_ceipsirensmoke(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceipsirensmoke(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpSirenSmoke."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     siren: CeIpSirenSmoke = cast(
         CeIpSirenSmoke, helper.get_prepared_custom_entity(central, "VCU2822385", 1)
     )
@@ -144,4 +175,3 @@ async def test_ceipsirensmoke(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await siren.turn_off()
     assert (call_count + 1) == len(mock_client.method_calls)
-    await central.stop()

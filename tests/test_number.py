@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.hub.number import HmSysvarNumber
@@ -23,9 +25,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_hmfloat(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_hmfloat(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmFloat."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     efloat: HmFloat = cast(
         HmFloat,
         central.get_generic_entity("VCU0000011:3", "LEVEL"),
@@ -51,13 +68,27 @@ async def test_hmfloat(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await efloat.send_value(45.0)
     assert call_count == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hmfloat_special(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_hmfloat_special(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmFloat."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     efloat: HmFloat = cast(
         HmFloat,
         central.get_generic_entity("VCU0000054:2", "SETPOINT"),
@@ -83,13 +114,27 @@ async def test_hmfloat_special(factory: helper.Factory) -> None:
         value=100.0,
     )
     assert efloat.value == 100.0
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hminteger(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_hminteger(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmInteger."""
-    central, mock_client = await factory.get_default_central(TEST_DEVICES)
+    central, mock_client, _ = central_client_factory
     einteger: HmInteger = cast(
         HmInteger,
         central.get_generic_entity("VCU4984404:1", "SET_POINT_MODE"),
@@ -133,13 +178,27 @@ async def test_hminteger(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await einteger.send_value(6)
     assert call_count == len(mock_client.method_calls)
-    await central.stop()
 
 
 @pytest.mark.asyncio()
-async def test_hmsysvarnumber(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, True, False, None, None),
+    ],
+)
+async def test_hmsysvarnumber(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarNumber."""
-    central, mock_client = await factory.get_default_central({}, add_sysvars=True)
+    central, mock_client, _ = central_client_factory
     enumber: HmSysvarNumber = cast(
         HmSysvarNumber,
         central.get_sysvar_entity("sv_float_ext"),
@@ -160,4 +219,3 @@ async def test_hmsysvarnumber(factory: helper.Factory) -> None:
     await enumber.send_variable(35.0)
     # value over max won't change value
     assert enumber.value == 23.0
-    await central.stop()
