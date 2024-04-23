@@ -37,9 +37,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipsiren(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_ceipsiren(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpSiren."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     siren: CeIpSiren = cast(CeIpSiren, helper.get_prepared_custom_entity(central, "VCU8249617", 3))
     assert siren.usage == EntityUsage.CE_PRIMARY
 
@@ -134,9 +136,11 @@ async def test_ceipsiren(central_client: tuple[CentralUnit, Client | Mock]) -> N
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipsirensmoke(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_ceipsirensmoke(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpSirenSmoke."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     siren: CeIpSirenSmoke = cast(
         CeIpSirenSmoke, helper.get_prepared_custom_entity(central, "VCU2822385", 1)
     )

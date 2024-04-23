@@ -95,15 +95,22 @@ async def factory() -> helper.Factory:
 
 
 @pytest.fixture
-async def central_client(
+async def central_client_factory(
     address_device_translation: dict[str, str],
     do_mock_client: bool,
     add_sysvars: bool,
     add_programs: bool,
     ignore_devices_on_create: list[str] | None,
     un_ignore_list: list[str] | None,
-) -> tuple[CentralUnit, Client | Mock]:
+) -> tuple[CentralUnit, Client | Mock, helper.Factory]:
     """Return central factory."""
+
+    def ha_event_callback(*args, **kwargs):
+        """Do dummy ha_event_callback."""
+
+    def system_event_callback(*args, **kwargs):
+        """Do dummy system_event_callback."""
+
     factory = helper.Factory(client_session=None)
     central_client = await factory.get_default_central(
         address_device_translation=address_device_translation,
@@ -113,6 +120,13 @@ async def central_client(
         ignore_devices_on_create=ignore_devices_on_create,
         un_ignore_list=un_ignore_list,
     )
-    yield central_client
-    central, _ = central_client
+    central, client = central_client
+    unregister_ha_event_callback = central.register_ha_event_callback(ha_event_callback)
+    unregister_system_event_callback = central.register_system_event_callback(
+        system_event_callback
+    )
+    yield central, client, factory
+    unregister_ha_event_callback()
+    unregister_system_event_callback()
     await central.stop()
+    await central.clear_caches()

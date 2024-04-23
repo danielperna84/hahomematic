@@ -13,6 +13,8 @@ from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.text import HmText
 from hahomematic.platforms.hub.text import HmSysvarText
 
+from tests import helper
+
 TEST_DEVICES: dict[str, str] = {}
 
 # pylint: disable=protected-access
@@ -53,9 +55,11 @@ async def no_test_hmtext(central_client: tuple[CentralUnit, Client | Mock]) -> N
         ({}, True, True, False, None, None),
     ],
 )
-async def test_hmsysvartext(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmsysvartext(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarText. There are currently no text entities."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     text: HmSysvarText = cast(HmSysvarText, central.get_sysvar_entity("sv_string_ext"))
     assert text.usage == EntityUsage.ENTITY
 

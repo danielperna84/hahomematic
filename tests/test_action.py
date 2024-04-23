@@ -12,6 +12,8 @@ from hahomematic.client import Client
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.action import HmAction
 
+from tests import helper
+
 TEST_DEVICES: dict[str, str] = {
     "VCU9724704": "HmIP-DLD.json",
 }
@@ -33,9 +35,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmaction(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmaction(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmAction."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     action: HmAction = cast(
         HmAction,
         central.get_generic_entity("VCU9724704:1", "LOCK_TARGET_LEVEL"),

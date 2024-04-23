@@ -53,9 +53,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cedimmer(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_cedimmer(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeDimmer."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     light: CeDimmer = cast(CeDimmer, helper.get_prepared_custom_entity(central, "VCU1399816", 4))
     assert light.usage == EntityUsage.CE_PRIMARY
     assert light.color_temp is None
@@ -165,9 +167,11 @@ async def test_cedimmer(central_client: tuple[CentralUnit, Client | Mock]) -> No
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cecolordimmereffect(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_cecolordimmereffect(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeColorDimmerEffect."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     light: CeColorDimmerEffect = cast(
         CeColorDimmerEffect, helper.get_prepared_custom_entity(central, "VCU3747418", 1)
     )
@@ -319,9 +323,11 @@ async def test_cecolordimmereffect(central_client: tuple[CentralUnit, Client | M
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cecolortempdimmer(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_cecolortempdimmer(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeColorTempDimmer."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     light: CeColorTempDimmer = cast(
         CeColorTempDimmer, helper.get_prepared_custom_entity(central, "VCU0000115", 1)
     )
@@ -407,9 +413,11 @@ async def test_cecolortempdimmer(central_client: tuple[CentralUnit, Client | Moc
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipfixedcolorlight(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_ceipfixedcolorlight(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpFixedColorLight."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     light: CeIpFixedColorLight = cast(
         CeIpFixedColorLight, helper.get_prepared_custom_entity(central, "VCU3716619", 8)
     )
@@ -605,9 +613,11 @@ async def test_ceipfixedcolorlight(central_client: tuple[CentralUnit, Client | M
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipfixedcolorlightwired(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_ceipfixedcolorlightwired(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpFixedColorLight."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     light: CeIpFixedColorLight = cast(
         CeIpFixedColorLight, helper.get_prepared_custom_entity(central, "VCU4704397", 8)
     )
@@ -891,9 +901,11 @@ async def test_ceipfixedcolorlightwired(central_client: tuple[CentralUnit, Clien
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceiprgbwlight(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_ceiprgbwlight(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpRGBWLight."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     light: CeIpRGBWLight = cast(
         CeIpRGBWLight, helper.get_prepared_custom_entity(central, "VCU5629873", 1)
     )
@@ -1036,9 +1048,11 @@ async def test_ceiprgbwlight(central_client: tuple[CentralUnit, Client | Mock]) 
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cecolordimmer(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_cecolordimmer(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeColorDimmer."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     light: CeColorDimmer = cast(
         CeColorDimmer, helper.get_prepared_custom_entity(central, "VCU9973336", 13)
     )

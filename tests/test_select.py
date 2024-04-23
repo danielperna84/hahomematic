@@ -13,7 +13,7 @@ from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.select import HmSelect
 from hahomematic.platforms.hub.select import HmSysvarSelect
 
-from tests import const
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU6354483": "HmIP-STHD.json",
@@ -36,9 +36,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmselect(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmselect(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSelect."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     select: HmSelect = cast(
         HmSelect,
         central.get_generic_entity("VCU6354483:1", "WINDOW_STATE"),
@@ -93,9 +95,11 @@ async def test_hmselect(central_client: tuple[CentralUnit, Client | Mock]) -> No
         (TEST_DEVICES, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarselect(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmsysvarselect(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarSelect."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     select: HmSysvarSelect = cast(HmSysvarSelect, central.get_sysvar_entity("sv_list_ext"))
     assert select.usage == EntityUsage.ENTITY
     assert select.unit is None

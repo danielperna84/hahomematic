@@ -51,9 +51,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cesimplerfthermostat(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_cesimplerfthermostat(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeSimpleRfThermostat."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     climate: CeSimpleRfThermostat = cast(
         CeSimpleRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000054", 1)
     )
@@ -123,9 +125,11 @@ async def test_cesimplerfthermostat(central_client: tuple[CentralUnit, Client | 
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cerfthermostat(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_cerfthermostat(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeRfThermostat."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     climate: CeRfThermostat = cast(
         CeRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000050", 4)
     )
@@ -282,9 +286,11 @@ async def test_cerfthermostat(central_client: tuple[CentralUnit, Client | Mock])
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceipthermostat(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_ceipthermostat(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpThermostat."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     climate: CeIpThermostat = cast(
         CeIpThermostat, helper.get_prepared_custom_entity(central, "VCU1769958", 1)
     )

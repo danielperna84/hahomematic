@@ -37,9 +37,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_cerflock(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_cerflock(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeRfLock."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     lock: CeRfLock = cast(CeRfLock, helper.get_prepared_custom_entity(central, "VCU0000146", 1))
     assert lock.usage == EntityUsage.CE_PRIMARY
 
@@ -109,9 +111,11 @@ async def test_cerflock(central_client: tuple[CentralUnit, Client | Mock]) -> No
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceiplock(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_ceiplock(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeIpLock."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     lock: CeIpLock = cast(CeIpLock, helper.get_prepared_custom_entity(central, "VCU9724704", 1))
     assert lock.usage == EntityUsage.CE_PRIMARY
 

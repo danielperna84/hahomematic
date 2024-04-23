@@ -10,7 +10,7 @@ import pytest
 from hahomematic.central import CentralUnit
 from hahomematic.client import Client
 
-from tests import const
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
@@ -34,9 +34,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_device_general(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_device_general(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test device availability."""
-    central, _ = central_client
+    central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
     assert device.device_address == "VCU2128127"
     assert device.name == "HmIP-BSM_VCU2128127"
@@ -70,9 +72,11 @@ async def test_device_general(central_client: tuple[CentralUnit, Client | Mock])
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_device_availability(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_device_availability(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test device availability."""
-    central, _ = central_client
+    central, _, _ = central_client_factory
     device = central.get_device(address="VCU6354483")
     assert device.available is True
     for generic_entity in device.generic_entities:
@@ -109,9 +113,11 @@ async def test_device_availability(central_client: tuple[CentralUnit, Client | M
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_device_config_pending(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_device_config_pending(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test device availability."""
-    central, _ = central_client
+    central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
     assert device._e_config_pending.value is False
     last_save = central.paramset_descriptions.last_save

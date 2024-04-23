@@ -13,7 +13,7 @@ from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
 from hahomematic.platforms.hub.binary_sensor import HmSysvarBinarySensor
 
-from tests import const
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU5864966": "HmIP-SWDO-I.json",
@@ -36,9 +36,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmbinarysensor(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmbinarysensor(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmBinarySensor."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     binary_sensor: HmBinarySensor = cast(
         HmBinarySensor,
         central.get_generic_entity("VCU5864966:1", "STATE"),
@@ -73,9 +75,11 @@ async def test_hmbinarysensor(central_client: tuple[CentralUnit, Client | Mock])
         ({}, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarbinarysensor(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmsysvarbinarysensor(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarBinarySensor."""
-    central, _ = central_client
+    central, _, _ = central_client_factory
     binary_sensor: HmSysvarBinarySensor = cast(
         HmSysvarBinarySensor,
         central.get_sysvar_entity("sv_logic"),

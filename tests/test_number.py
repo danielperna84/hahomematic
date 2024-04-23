@@ -13,7 +13,7 @@ from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.number import HmFloat, HmInteger
 from hahomematic.platforms.hub.number import HmSysvarNumber
 
-from tests import const
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU4984404": "HmIPW-STHD.json",
@@ -38,9 +38,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmfloat(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmfloat(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmFloat."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     efloat: HmFloat = cast(
         HmFloat,
         central.get_generic_entity("VCU0000011:3", "LEVEL"),
@@ -82,9 +84,11 @@ async def test_hmfloat(central_client: tuple[CentralUnit, Client | Mock]) -> Non
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmfloat_special(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmfloat_special(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmFloat."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     efloat: HmFloat = cast(
         HmFloat,
         central.get_generic_entity("VCU0000054:2", "SETPOINT"),
@@ -126,9 +130,11 @@ async def test_hmfloat_special(central_client: tuple[CentralUnit, Client | Mock]
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hminteger(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hminteger(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmInteger."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     einteger: HmInteger = cast(
         HmInteger,
         central.get_generic_entity("VCU4984404:1", "SET_POINT_MODE"),
@@ -188,9 +194,11 @@ async def test_hminteger(central_client: tuple[CentralUnit, Client | Mock]) -> N
         (TEST_DEVICES, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarnumber(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmsysvarnumber(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarNumber."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     enumber: HmSysvarNumber = cast(
         HmSysvarNumber,
         central.get_sysvar_entity("sv_float_ext"),

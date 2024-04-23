@@ -38,9 +38,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_ceswitch(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_ceswitch(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test CeSwitch."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     switch: CeSwitch = cast(CeSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
     assert switch.usage == EntityUsage.CE_PRIMARY
 
@@ -109,9 +111,11 @@ async def test_ceswitch(central_client: tuple[CentralUnit, Client | Mock]) -> No
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmswitch(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmswitch(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSwitch."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
     assert switch.usage == EntityUsage.NO_CREATE
 
@@ -179,9 +183,11 @@ async def test_hmswitch(central_client: tuple[CentralUnit, Client | Mock]) -> No
         ({}, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarswitch(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmsysvarswitch(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarSwitch."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     switch: HmSysvarSwitch = cast(HmSysvarSwitch, central.get_sysvar_entity("sv_alarm_ext"))
     assert switch.usage == EntityUsage.ENTITY
 

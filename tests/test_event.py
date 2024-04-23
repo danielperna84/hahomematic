@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 from typing import cast
-from unittest.mock import call
+from unittest.mock import Mock, call
 
 import pytest
 
+from hahomematic.central import CentralUnit
+from hahomematic.client import Client
 from hahomematic.const import EntityUsage, EventType
 from hahomematic.platforms.event import ClickEvent, DeviceErrorEvent, ImpulseEvent
-import helper
 
-from tests import const
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU2128127": "HmIP-BSM.json",
@@ -22,9 +23,24 @@ TEST_DEVICES: dict[str, str] = {
 
 
 @pytest.mark.asyncio()
-async def test_clickevent(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_clickevent(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test ClickEvent."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, factory = central_client_factory
     event: ClickEvent = cast(ClickEvent, central.get_event("VCU2128127:1", "PRESS_SHORT"))
     assert event.usage == EntityUsage.EVENT
     assert event.event_type == EventType.KEYPRESS
@@ -44,9 +60,24 @@ async def test_clickevent(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_impulseevent(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_impulseevent(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test ImpulseEvent."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, factory = central_client_factory
     event: ImpulseEvent = cast(ImpulseEvent, central.get_event("VCU0000263:1", "SEQUENCE_OK"))
     assert event.usage == EntityUsage.EVENT
     assert event.event_type == EventType.IMPULSE
@@ -66,9 +97,24 @@ async def test_impulseevent(factory: helper.Factory) -> None:
 
 
 @pytest.mark.asyncio()
-async def test_deviceerrorevent(factory: helper.Factory) -> None:
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_deviceerrorevent(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test DeviceErrorEvent."""
-    central, _ = await factory.get_default_central(TEST_DEVICES)
+    central, _, factory = central_client_factory
     event: DeviceErrorEvent = cast(
         DeviceErrorEvent,
         central.get_event("VCU2128127:0", "ERROR_OVERHEAT"),

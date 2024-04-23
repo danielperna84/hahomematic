@@ -13,6 +13,8 @@ from hahomematic.const import EntityUsage, ProgramData
 from hahomematic.platforms.generic.button import HmButton
 from hahomematic.platforms.hub.button import HmProgramButton
 
+from tests import helper
+
 TEST_DEVICES: dict[str, str] = {
     "VCU1437294": "HmIP-SMI.json",
 }
@@ -34,9 +36,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmbutton(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmbutton(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmButton."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     button: HmButton = cast(
         HmButton,
         central.get_generic_entity("VCU1437294:1", "RESET_MOTION"),
@@ -74,9 +78,11 @@ async def test_hmbutton(central_client: tuple[CentralUnit, Client | Mock]) -> No
         ({}, True, False, True, None, None),
     ],
 )
-async def test_hmprogrambutton(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmprogrambutton(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmProgramButton."""
-    central, mock_client = central_client
+    central, mock_client, _ = central_client_factory
     button: HmProgramButton = cast(HmProgramButton, central.get_program_button("pid1"))
     assert button.usage == EntityUsage.ENTITY
     assert button.available is True

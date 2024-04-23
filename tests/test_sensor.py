@@ -13,7 +13,7 @@ from hahomematic.const import EntityUsage
 from hahomematic.platforms.generic.sensor import HmSensor
 from hahomematic.platforms.hub.sensor import HmSysvarSensor
 
-from tests import const
+from tests import const, helper
 
 TEST_DEVICES: dict[str, str] = {
     "VCU7981740": "HmIP-SRH.json",
@@ -38,9 +38,11 @@ TEST_DEVICES: dict[str, str] = {
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmsensor_psm(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmsensor_psm(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSensor."""
-    central, _ = central_client
+    central, _, _ = central_client_factory
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU3941846:6", "VOLTAGE"))
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.unit == "V"
@@ -94,9 +96,11 @@ async def test_hmsensor_psm(central_client: tuple[CentralUnit, Client | Mock]) -
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_hmsensor_srh(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmsensor_srh(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSensor."""
-    central, _ = central_client
+    central, _, _ = central_client_factory
     sensor: HmSensor = cast(HmSensor, central.get_generic_entity("VCU7981740:1", "STATE"))
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.unit is None
@@ -122,9 +126,11 @@ async def test_hmsensor_srh(central_client: tuple[CentralUnit, Client | Mock]) -
         ({}, True, True, False, None, None),
     ],
 )
-async def test_hmsysvarsensor(central_client: tuple[CentralUnit, Client | Mock]) -> None:
+async def test_hmsysvarsensor(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
     """Test HmSysvarSensor."""
-    central, _ = central_client
+    central, _, _ = central_client_factory
     sensor: HmSysvarSensor = cast(HmSysvarSensor, central.get_sysvar_entity("sv_list"))
     assert sensor.usage == EntityUsage.ENTITY
     assert sensor.available is True
