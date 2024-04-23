@@ -62,6 +62,7 @@ async def test_hmsensor_psm(factory: helper.Factory) -> None:
     assert sensor3.unit == "ppm"
     assert sensor3.values is None
     assert sensor3.value is None
+    await central.stop()
 
 
 @pytest.mark.asyncio()

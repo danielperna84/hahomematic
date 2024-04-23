@@ -497,6 +497,7 @@ async def test_ceipblind(factory: helper.Factory) -> None:
         value=True,
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
