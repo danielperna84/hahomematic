@@ -1,6 +1,7 @@
-# Version 2024.4.11 (2024-04-22)
+# Version 2024.4.11 (2024-04-23)
 
 - Add command queue
+- Move open/close from IpBlind to Blind
 
 # Version 2024.4.10 (2024-04-21)
 

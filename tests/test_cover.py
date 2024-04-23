@@ -260,12 +260,13 @@ async def test_ceblind(factory: helper.Factory) -> None:
         channel_address="VCU0000145:1",
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
-        value="0xc8,0x00",
+        value="0xc8,0xc8",
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _OPEN_LEVEL)
+    await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_LEVEL)
     assert cover.current_position == 100
-    assert cover.current_tilt_position == 0
+    assert cover.current_tilt_position == 100
 
     await cover.close()
     assert mock_client.method_calls[-1] == call.set_value(
@@ -276,6 +277,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _CLOSED_LEVEL)
+    await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
     assert cover.current_position == 0
     assert cover.current_tilt_position == 0
 

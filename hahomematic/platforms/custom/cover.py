@@ -253,7 +253,7 @@ class CeBlind(CeCover):
         """Return current tilt position of cover."""
         return int(self._channel_tilt_level * 100)
 
-    @bind_collector()
+    @bind_collector(use_command_queue=False)
     async def set_position(
         self,
         position: int | None = None,
@@ -291,14 +291,36 @@ class CeBlind(CeCover):
         await self._e_level_2.send_value(value=_tilt_level, collector=collector)
         await super()._set_level(level=_level, collector=collector)
 
-    @bind_collector()
+    @bind_collector(use_command_queue=False)
+    async def open(self, collector: CallParameterCollector | None = None) -> None:
+        """Open the cover and open the tilt."""
+        if not self.is_state_change(open=True, tilt_open=True):
+            return
+        await self._set_level(
+            level=self._open_level,
+            tilt_level=self._open_level,
+            collector=collector,
+        )
+
+    @bind_collector(use_command_queue=False)
+    async def close(self, collector: CallParameterCollector | None = None) -> None:
+        """Close the cover and close the tilt."""
+        if not self.is_state_change(close=True, tilt_close=True):
+            return
+        await self._set_level(
+            level=self._closed_level,
+            tilt_level=self._closed_level,
+            collector=collector,
+        )
+
+    @bind_collector(use_command_queue=False)
     async def open_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
         await self._set_level(tilt_level=self._open_level, collector=collector)
 
-    @bind_collector()
+    @bind_collector(use_command_queue=False)
     async def close_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
         if not self.is_state_change(tilt_close=True):
@@ -363,28 +385,6 @@ class CeIpBlind(CeBlind):
     def channel_operation_mode(self) -> str | None:
         """Return channel_operation_mode of cover."""
         return self._e_channel_operation_mode.value
-
-    @bind_collector()
-    async def open(self, collector: CallParameterCollector | None = None) -> None:
-        """Open the cover and open the tilt."""
-        if not self.is_state_change(open=True, tilt_open=True):
-            return
-        await self._set_level(
-            level=self._open_level,
-            tilt_level=self._open_level,
-            collector=collector,
-        )
-
-    @bind_collector()
-    async def close(self, collector: CallParameterCollector | None = None) -> None:
-        """Close the cover and close the tilt."""
-        if not self.is_state_change(close=True, tilt_close=True):
-            return
-        await self._set_level(
-            level=self._closed_level,
-            tilt_level=self._closed_level,
-            collector=collector,
-        )
 
     def _get_combined_value(
         self, level: float | None = None, tilt_level: float | None = None
