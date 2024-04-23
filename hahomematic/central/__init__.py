@@ -26,6 +26,7 @@ from hahomematic.caches.dynamic import CentralDataCache, DeviceDetailsCache
 from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescriptionCache
 from hahomematic.caches.visibility import ParameterVisibilityCache
 from hahomematic.central import xml_rpc_server as xmlrpc
+from hahomematic.central.command_queue import CommandQueueHandler
 from hahomematic.central.decorators import callback_event, callback_system_event
 from hahomematic.client.json_rpc import JsonRpcAioHttpClient
 from hahomematic.client.xml_rpc import XmlRpcProxy
@@ -156,7 +157,8 @@ class CentralUnit:
         self.json_rpc_client: Final[JsonRpcAioHttpClient] = central_config.create_json_rpc_client()
 
         CENTRAL_INSTANCES[self._name] = self
-        self._connection_checker: Final = ConnectionChecker(self)
+        self._connection_checker: Final = ConnectionChecker(central=self)
+        self._command_queue_handler: Final = CommandQueueHandler()
         self._hub: Hub = Hub(central=self)
         self._version: str | None = None
 
@@ -235,6 +237,11 @@ class CentralUnit:
         return self._name
 
     @property
+    def command_queue_handler(self) -> CommandQueueHandler:
+        """Return the que handler for send commands."""
+        return self._command_queue_handler
+
+    @property
     def started(self) -> bool:
         """Return if the central is started."""
         return self._started
@@ -306,6 +313,7 @@ class CentralUnit:
             await self._start_clients()
             if self.config.enable_server:
                 self._start_connection_checker()
+
         self._started = True
 
     async def stop(self) -> None:
@@ -334,6 +342,8 @@ class CentralUnit:
         _LOGGER.debug("STOP: Removing instance")
         if self._name in CENTRAL_INSTANCES:
             del CENTRAL_INSTANCES[self._name]
+
+        await self._command_queue_handler.stop()
 
         # wait until tasks are finished
         await self.looper.block_till_done()

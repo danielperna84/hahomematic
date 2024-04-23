@@ -68,6 +68,7 @@ async def test_custom_entity_callback(factory: helper.Factory) -> None:
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()
+    await central.stop()
 
 
 @pytest.mark.asyncio()

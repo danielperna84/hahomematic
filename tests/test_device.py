@@ -81,3 +81,4 @@ async def test_device_config_pending(factory: helper.Factory) -> None:
     assert device._e_config_pending.value is False
     await asyncio.sleep(2)
     assert last_save != central.paramset_descriptions.last_save
+    await central.stop()

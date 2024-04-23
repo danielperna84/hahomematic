@@ -780,6 +780,7 @@ class CallParameterCollector:
         self._device: Final = device
         self._client: Final = device.client
         self._use_put_paramset: bool = True
+        self._use_queue: bool = False
         self._paramsets: Final[dict[int, dict[str, dict[str, Any]]]] = {}
 
     def add_entity(
@@ -804,21 +805,36 @@ class CallParameterCollector:
             for channel_address, paramset in paramset_no.items():
                 if len(paramset.values()) == 1 or self._use_put_paramset is False:
                     for parameter, value in paramset.items():
-                        if not await self._client.set_value(
+                        set_value_command = partial(
+                            self._client.set_value,
                             channel_address=channel_address,
                             paramset_key=ParamsetKey.VALUES,
                             parameter=parameter,
                             value=value,
                             wait_for_callback=wait_for_callback,
-                        ):
+                        )
+                        if self._use_queue:
+                            await self._device.central.command_queue_handler.put(
+                                device_address=self._device.device_address,
+                                command=set_value_command,
+                            )
+                        elif not await set_value_command():
                             return False  # pragma: no cover
-                elif not await self._client.put_paramset(
-                    channel_address=channel_address,
-                    paramset_key=ParamsetKey.VALUES,
-                    values=paramset,
-                    wait_for_callback=wait_for_callback,
-                ):
-                    return False  # pragma: no cover
+                else:
+                    put_paramset_command = partial(
+                        self._client.put_paramset,
+                        channel_address=channel_address,
+                        paramset_key=ParamsetKey.VALUES,
+                        values=paramset,
+                        wait_for_callback=wait_for_callback,
+                    )
+                    if self._use_queue:
+                        await self._device.central.command_queue_handler.put(
+                            device_address=self._device.device_address,
+                            command=put_paramset_command,
+                        )
+                    elif not await put_paramset_command():
+                        return False  # pragma: no cover
         return True
 
 

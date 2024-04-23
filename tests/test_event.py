@@ -39,6 +39,7 @@ async def test_clickevent(factory: helper.Factory) -> None:
             "value": True,
         },
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()

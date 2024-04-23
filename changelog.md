@@ -1,3 +1,7 @@
+# Version 2024.4.11 (2024-04-22)
+
+- Add command queue
+
 # Version 2024.4.10 (2024-04-21)
 
 - Add wait_for_callback to collector
