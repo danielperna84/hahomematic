@@ -45,6 +45,7 @@ async def test_hmbutton(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await button.press()
     assert (call_count + 1) == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -77,3 +78,4 @@ async def test_hmprogrambutton(factory: helper.Factory) -> None:
     assert button2.is_internal is False
     assert button2.ccu_program_name == "p_2"
     assert button2.name == "p_2"
+    await central.stop()

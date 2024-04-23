@@ -103,6 +103,7 @@ async def test_cecover(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await cover.set_position(position=40)
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -174,6 +175,7 @@ async def test_ceipblind_dr(factory: helper.Factory) -> None:
     await central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", 0.5)
     assert cover._channel_level == 0.5
     assert cover.current_position == 50
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -229,6 +231,7 @@ async def test_cewindowdrive(factory: helper.Factory) -> None:
     assert cover.current_position == 0
     assert cover._channel_level == _WD_CLOSED_LEVEL
     assert cover.is_closed is True
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -360,6 +363,7 @@ async def test_ceblind(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await cover.set_position(tilt_position=40)
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -603,6 +607,7 @@ async def test_ceipblind_hdm(factory: helper.Factory) -> None:
         value=True,
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -706,6 +711,7 @@ async def test_cegarageho(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await cover.vent()
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -790,3 +796,4 @@ async def test_cegaragetm(factory: helper.Factory) -> None:
     assert cover.is_closing is None
     await central.event(const.INTERFACE_ID, "VCU6166407:1", "DOOR_STATE", None)
     assert cover.is_closed is None
+    await central.stop()

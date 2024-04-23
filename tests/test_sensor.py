@@ -77,6 +77,7 @@ async def test_hmsensor_srh(factory: helper.Factory) -> None:
     assert sensor.value == "CLOSED"
     await central.event(const.INTERFACE_ID, "VCU7981740:1", "STATE", 2)
     assert sensor.value == "OPEN"
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -95,3 +96,4 @@ async def test_hmsysvarsensor(factory: helper.Factory) -> None:
     assert sensor2.unit is None
     assert sensor2.values is None
     assert sensor2.value == 23.2
+    await central.stop()

@@ -51,6 +51,7 @@ async def test_hmfloat(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await efloat.send_value(45.0)
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -82,6 +83,7 @@ async def test_hmfloat_special(factory: helper.Factory) -> None:
         value=100.0,
     )
     assert efloat.value == 100.0
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -131,6 +133,7 @@ async def test_hminteger(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await einteger.send_value(6)
     assert call_count == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -157,3 +160,4 @@ async def test_hmsysvarnumber(factory: helper.Factory) -> None:
     await enumber.send_variable(35.0)
     # value over max won't change value
     assert enumber.value == 23.0
+    await central.stop()

@@ -64,6 +64,7 @@ async def test_generate_unique_id(factory: helper.Factory) -> None:
         generate_unique_id(central=central, address="INT0001", parameter="LEVEL")
         == "test1234_int0001_level"
     )
+    await central.stop()
 
 
 def test_build_xml_rpc_uri() -> None:
@@ -177,6 +178,7 @@ async def test_get_entity_name(factory: helper.Factory) -> None:
         )
         assert name_data.full_name == ""
         assert name_data.entity_name is None
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -202,6 +204,7 @@ async def test_get_event_name(factory: helper.Factory) -> None:
         name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
         assert name_data.full_name == ""
         assert name_data.entity_name is None
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -263,6 +266,7 @@ async def test_custom_entity_name(factory: helper.Factory) -> None:
         )
         assert name_data.full_name == ""
         assert name_data.entity_name is None
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -278,6 +282,7 @@ async def test_get_device_name(factory: helper.Factory) -> None:
         get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "Roof"
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()

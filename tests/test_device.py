@@ -37,6 +37,7 @@ async def test_device_general(factory: helper.Factory) -> None:
     assert device.has_custom_entity_definition is True
     assert len(device.custom_entities) == 3
     assert len(device.channels) == 11
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -63,6 +64,7 @@ async def test_device_availability(factory: helper.Factory) -> None:
         assert generic_entity.available is True
     for custom_entity in device.custom_entities:
         assert custom_entity.available is True
+    await central.stop()
 
 
 @pytest.mark.asyncio()

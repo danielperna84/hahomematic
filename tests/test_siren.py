@@ -103,6 +103,7 @@ async def test_ceipsiren(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await siren.turn_off()
     assert (call_count + 1) == len(mock_client.method_calls)
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -143,3 +144,4 @@ async def test_ceipsirensmoke(factory: helper.Factory) -> None:
     call_count = len(mock_client.method_calls)
     await siren.turn_off()
     assert (call_count + 1) == len(mock_client.method_calls)
+    await central.stop()

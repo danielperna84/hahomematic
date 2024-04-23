@@ -106,6 +106,7 @@ async def test_generic_entity_callback(factory: helper.Factory) -> None:
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -126,6 +127,7 @@ async def test_load_custom_entity(factory: helper.Factory) -> None:
         parameter="STATE",
         call_source="manual_or_scheduled",
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -140,6 +142,7 @@ async def test_load_generic_entity(factory: helper.Factory) -> None:
         parameter="STATE",
         call_source="manual_or_scheduled",
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -151,6 +154,7 @@ async def test_generic_wrapped_entity(factory: helper.Factory) -> None:
     assert wrapped_entity._is_forced_sensor is True
     assert wrapped_entity.platform == "sensor"
     assert wrapped_entity.usage == EntityUsage.ENTITY
+    await central.stop()
 
 
 def test_custom_required_entities() -> None:

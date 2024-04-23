@@ -60,6 +60,7 @@ async def test_impulseevent(factory: helper.Factory) -> None:
             "value": True,
         },
     )
+    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -84,3 +85,4 @@ async def test_deviceerrorevent(factory: helper.Factory) -> None:
             "value": True,
         },
     )
+    await central.stop()
