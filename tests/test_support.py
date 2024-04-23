@@ -209,7 +209,6 @@ async def test_get_entity_name(
         )
         assert name_data.full_name == ""
         assert name_data.entity_name is None
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -250,7 +249,6 @@ async def test_get_event_name(
         name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
         assert name_data.full_name == ""
         assert name_data.entity_name is None
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -327,7 +325,6 @@ async def test_custom_entity_name(
         )
         assert name_data.full_name == ""
         assert name_data.entity_name is None
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -358,7 +355,6 @@ async def test_get_device_name(
         get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
         == "Roof"
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()

@@ -85,7 +85,6 @@ async def test_custom_entity_callback(
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -139,7 +138,6 @@ async def test_generic_entity_callback(
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()
-    await central.stop()
 
 
 @pytest.mark.asyncio()

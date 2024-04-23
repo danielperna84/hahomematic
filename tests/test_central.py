@@ -703,7 +703,6 @@ async def test_central_callbacks(
             "data": {EVENT_AVAILABLE: False},
         },
     )
-    await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -924,7 +923,6 @@ async def test_pending_pong_failure(
         },
     )
     assert len(factory.ha_event_mock.mock_calls) == 9
-    await central.stop()
 
 
 @pytest.mark.asyncio()
