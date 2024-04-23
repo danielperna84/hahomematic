@@ -104,13 +104,6 @@ async def central_client_factory(
     un_ignore_list: list[str] | None,
 ) -> tuple[CentralUnit, Client | Mock, helper.Factory]:
     """Return central factory."""
-
-    def ha_event_callback(*args, **kwargs):
-        """Do dummy ha_event_callback."""
-
-    def system_event_callback(*args, **kwargs):
-        """Do dummy system_event_callback."""
-
     factory = helper.Factory(client_session=None)
     central_client = await factory.get_default_central(
         address_device_translation=address_device_translation,
@@ -121,12 +114,6 @@ async def central_client_factory(
         un_ignore_list=un_ignore_list,
     )
     central, client = central_client
-    unregister_ha_event_callback = central.register_ha_event_callback(ha_event_callback)
-    unregister_system_event_callback = central.register_system_event_callback(
-        system_event_callback
-    )
     yield central, client, factory
-    unregister_ha_event_callback()
-    unregister_system_event_callback()
     await central.stop()
     await central.clear_caches()
