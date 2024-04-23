@@ -779,8 +779,6 @@ class CallParameterCollector:
         """Init the generator."""
         self._device: Final = device
         self._client: Final = device.client
-        self._use_put_paramset: bool = True
-        self._use_queue: bool = False
         self._paramsets: Final[dict[int, dict[str, dict[str, Any]]]] = {}
 
     def add_entity(
@@ -788,22 +786,21 @@ class CallParameterCollector:
         entity: BaseParameterEntity,
         value: Any,
         collector_order: int,
-        use_put_paramset: bool = True,
     ) -> None:
         """Add a generic entity."""
-        if use_put_paramset is False:
-            self._use_put_paramset = False
         if collector_order not in self._paramsets:
             self._paramsets[collector_order] = {}
         if entity.channel_address not in self._paramsets[collector_order]:
             self._paramsets[collector_order][entity.channel_address] = {}
         self._paramsets[collector_order][entity.channel_address][entity.parameter] = value
 
-    async def send_data(self, wait_for_callback: int | None) -> bool:
+    async def send_data(
+        self, wait_for_callback: int | None, use_command_queue: bool, use_put_paramset: bool
+    ) -> bool:
         """Send data to backend."""
         for paramset_no in dict(sorted(self._paramsets.items())).values():
             for channel_address, paramset in paramset_no.items():
-                if len(paramset.values()) == 1 or self._use_put_paramset is False:
+                if len(paramset.values()) == 1 or use_put_paramset is False:
                     for parameter, value in paramset.items():
                         set_value_command = partial(
                             self._client.set_value,
@@ -813,7 +810,7 @@ class CallParameterCollector:
                             value=value,
                             wait_for_callback=wait_for_callback,
                         )
-                        if self._use_queue:
+                        if use_command_queue:
                             await self._device.central.command_queue_handler.put(
                                 device_address=self._device.device_address,
                                 command=set_value_command,
@@ -828,7 +825,7 @@ class CallParameterCollector:
                         values=paramset,
                         wait_for_callback=wait_for_callback,
                     )
-                    if self._use_queue:
+                    if use_command_queue:
                         await self._device.central.command_queue_handler.put(
                             device_address=self._device.device_address,
                             command=put_paramset_command,
@@ -840,6 +837,8 @@ class CallParameterCollector:
 
 def bind_collector(
     wait_for_callback: int | None = WAIT_FOR_CALLBACK,
+    use_command_queue: bool = False,
+    use_put_paramset: bool = True,
 ) -> Callable:
     """Decorate function to automatically add collector if not set."""
 
@@ -864,6 +863,8 @@ def bind_collector(
                 return_value = await func(*args, **kwargs)
                 await collector.send_data(
                     wait_for_callback=wait_for_callback,
+                    use_command_queue=use_command_queue,
+                    use_put_paramset=use_put_paramset,
                 )
             return return_value
 
