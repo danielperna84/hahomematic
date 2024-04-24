@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from asyncio import Queue, sleep
+from asyncio import Queue, QueueEmpty, sleep
 from collections.abc import Callable
 import logging
 from typing import Final
@@ -21,6 +21,16 @@ class CommandQueueHandler:
         self._queues: Final[dict[str, Queue[Callable | None]]] = {}
         self._exit = False
         self._looper = Looper()
+
+    def empty_queue(self, device_address: str) -> None:
+        """Empty a queue for a device."""
+        if queue := self._queues.get(device_address):
+            try:
+                while not queue.empty():
+                    queue.get_nowait()
+                    queue.task_done()
+            except QueueEmpty:
+                pass
 
     async def put(self, device_address: str, command: Callable) -> None:
         """Put send_command to device queue."""
