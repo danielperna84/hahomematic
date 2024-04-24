@@ -29,6 +29,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 _CLOSED_LEVEL: Final[float] = 0.0  # must be float!
 _OPEN_LEVEL: Final[float] = 1.0  # must be float!
+_OPEN_TILT_LEVEL: Final[float] = 0.5  # must be float!
 _WD_CLOSED_LEVEL: Final[float] = -0.005  # must be float! HM-Sec-Win
 
 
@@ -230,6 +231,8 @@ class CeWindowDrive(CeCover):
 class CeBlind(CeCover):
     """Class for HomeMatic blind entities."""
 
+    _open_tilt_level: float = _OPEN_TILT_LEVEL
+
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
@@ -298,7 +301,7 @@ class CeBlind(CeCover):
             return
         await self._set_level(
             level=self._open_level,
-            tilt_level=self._open_level,
+            tilt_level=self._open_tilt_level,
             collector=collector,
         )
 
@@ -318,7 +321,7 @@ class CeBlind(CeCover):
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
-        await self._set_level(tilt_level=self._open_level, collector=collector)
+        await self._set_level(tilt_level=self._open_tilt_level, collector=collector)
 
     @bind_collector(use_command_queue=False)
     async def close_tilt(self, collector: CallParameterCollector | None = None) -> None:

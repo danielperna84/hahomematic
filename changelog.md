@@ -1,6 +1,7 @@
 # Version 2024.4.12 (2024-04-24)
 
 - Fix missing param in unregister_entity_updated_callback
+- Set open tilt level to 50%
 
 # Version 2024.4.11 (2024-04-24)
 
