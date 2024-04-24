@@ -256,7 +256,21 @@ class CeBlind(CeCover):
         """Return current tilt position of cover."""
         return int(self._channel_tilt_level * 100)
 
-    @bind_collector(use_command_queue=False)
+    @property
+    def _target_level(self) -> float | None:
+        """Return the level of last service call."""
+        if (last_value_send := self._e_level.unconfirmed_last_value_send) is not None:
+            return float(last_value_send)
+        return None
+
+    @property
+    def _target_tilt_level(self) -> float | None:
+        """Return the tilt level of last service call."""
+        if (last_value_send := self._e_level_2.unconfirmed_last_value_send) is not None:
+            return float(last_value_send)
+        return None
+
+    @bind_collector(wait_for_callback=90, use_command_queue=True)
     async def set_position(
         self,
         position: int | None = None,
@@ -283,8 +297,21 @@ class CeBlind(CeCover):
 
         1.01 means no change.
         """
-        _level = level if level is not None else self.current_position / 100.0
-        _tilt_level = tilt_level if tilt_level is not None else self.current_tilt_position / 100.0
+        _level = (
+            level
+            if level is not None
+            else (self._target_level if self._target_level is not None else self._channel_level)
+        )
+        _tilt_level = (
+            tilt_level
+            if tilt_level is not None
+            else (
+                self._target_tilt_level
+                if self._target_tilt_level is not None
+                else self._channel_tilt_level
+            )
+        )
+
         if self._e_combined.is_hmtype and (
             combined_parameter := self._get_combined_value(level=_level, tilt_level=_tilt_level)
         ):
@@ -294,7 +321,7 @@ class CeBlind(CeCover):
         await self._e_level_2.send_value(value=_tilt_level, collector=collector)
         await super()._set_level(level=_level, collector=collector)
 
-    @bind_collector(use_command_queue=False)
+    @bind_collector(wait_for_callback=90, use_command_queue=True)
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the cover and open the tilt."""
         if not self.is_state_change(open=True, tilt_open=True):
@@ -305,7 +332,7 @@ class CeBlind(CeCover):
             collector=collector,
         )
 
-    @bind_collector(use_command_queue=False)
+    @bind_collector(wait_for_callback=90, use_command_queue=True)
     async def close(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover and close the tilt."""
         if not self.is_state_change(close=True, tilt_close=True):
@@ -316,14 +343,20 @@ class CeBlind(CeCover):
             collector=collector,
         )
 
-    @bind_collector(use_command_queue=False)
+    @bind_collector()
+    async def stop(self, collector: CallParameterCollector | None = None) -> None:
+        """Stop the device if in motion."""
+        self.central.command_queue_handler.empty_queue(device_address=self.device.device_address)
+        await super().stop(collector=collector)
+
+    @bind_collector(wait_for_callback=90, use_command_queue=True)
     async def open_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
         await self._set_level(tilt_level=self._open_tilt_level, collector=collector)
 
-    @bind_collector(use_command_queue=False)
+    @bind_collector(wait_for_callback=90, use_command_queue=True)
     async def close_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
         if not self.is_state_change(tilt_close=True):
@@ -333,6 +366,7 @@ class CeBlind(CeCover):
     @bind_collector()
     async def stop_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
+        self.central.command_queue_handler.empty_queue(device_address=self.device.device_address)
         await self._e_stop.send_value(value=True, collector=collector)
 
     def is_state_change(self, **kwargs: Any) -> bool:

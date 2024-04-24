@@ -155,7 +155,7 @@ async def test_ceipblind_dr(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=81",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
 
     # test unconfirmed values
@@ -176,7 +176,7 @@ async def test_ceipblind_dr(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=50,L=100",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     assert cover._e_level.unconfirmed_last_value_send == _OPEN_LEVEL
     assert cover._e_level_2.unconfirmed_last_value_send == _OPEN_TILT_LEVEL
@@ -194,7 +194,7 @@ async def test_ceipblind_dr(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=0",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU7807849:1", "LEVEL", _CLOSED_LEVEL)
     assert cover.is_opening is None
@@ -309,7 +309,7 @@ async def test_ceblind(
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0xa2,0x00",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -321,7 +321,7 @@ async def test_ceblind(
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0xc8,0x64",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _OPEN_LEVEL)
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_TILT_LEVEL)
@@ -334,7 +334,7 @@ async def test_ceblind(
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x00,0x00",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", _CLOSED_LEVEL)
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
@@ -347,7 +347,7 @@ async def test_ceblind(
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x00,0x64",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_TILT_LEVEL)
     assert cover.current_position == 0
@@ -359,7 +359,7 @@ async def test_ceblind(
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x00,0x5a",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.45)
     assert cover.current_position == 0
@@ -371,7 +371,7 @@ async def test_ceblind(
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x00,0x00",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
     assert cover.current_position == 0
@@ -383,7 +383,7 @@ async def test_ceblind(
         paramset_key="VALUES",
         parameter="LEVEL_COMBINED",
         value="0x14,0x28",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.1)
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.2)
@@ -412,7 +412,7 @@ async def test_ceblind(
     call_count = len(mock_client.method_calls)
     await cover.open_tilt()
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_TILT_LEVEL)
-    assert call_count == len(mock_client.method_calls) - 2
+    assert call_count == len(mock_client.method_calls) - 4
 
     await cover.close_tilt()
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
@@ -457,7 +457,7 @@ async def test_ceipblind(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=81",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -469,7 +469,7 @@ async def test_ceipblind(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=50,L=100",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", _OPEN_TILT_LEVEL)
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", _OPEN_LEVEL)
@@ -482,7 +482,7 @@ async def test_ceipblind(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=0",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", _CLOSED_LEVEL)
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", _CLOSED_LEVEL)
@@ -495,7 +495,7 @@ async def test_ceipblind(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=50,L=0",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 1.0)
     assert cover.current_position == 0
@@ -507,7 +507,7 @@ async def test_ceipblind(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=45,L=0",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.45)
     assert cover.current_position == 0
@@ -519,7 +519,7 @@ async def test_ceipblind(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=0,L=0",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", _CLOSED_LEVEL)
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", _CLOSED_LEVEL)
@@ -532,7 +532,7 @@ async def test_ceipblind(
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
         value="L2=20,L=10",
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL", 0.1)
     await central.event(const.INTERFACE_ID, "VCU1223813:4", "LEVEL_2", 0.2)
@@ -604,7 +604,7 @@ async def test_ceipblind_hdm(
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": _CLOSED_LEVEL, "LEVEL": 0.81},
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.81)
     assert cover.current_position == 81
@@ -615,7 +615,7 @@ async def test_ceipblind_hdm(
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 0.5, "LEVEL": _OPEN_LEVEL},
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", _OPEN_TILT_LEVEL)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", _OPEN_LEVEL)
@@ -627,7 +627,7 @@ async def test_ceipblind_hdm(
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": _CLOSED_LEVEL, "LEVEL": _CLOSED_LEVEL},
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", _CLOSED_LEVEL)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", _CLOSED_LEVEL)
@@ -639,7 +639,7 @@ async def test_ceipblind_hdm(
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": _OPEN_TILT_LEVEL, "LEVEL": _CLOSED_LEVEL},
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 1.0)
     assert cover.current_position == 0
@@ -650,7 +650,7 @@ async def test_ceipblind_hdm(
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 0.45, "LEVEL": _CLOSED_LEVEL},
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.45)
     assert cover.current_position == 0
@@ -661,7 +661,7 @@ async def test_ceipblind_hdm(
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": _CLOSED_LEVEL, "LEVEL": _CLOSED_LEVEL},
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", _CLOSED_LEVEL)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", _CLOSED_LEVEL)
@@ -673,7 +673,7 @@ async def test_ceipblind_hdm(
         channel_address="VCU3560967:1",
         paramset_key="VALUES",
         values={"LEVEL_2": 0.2, "LEVEL": 0.1},
-        wait_for_callback=WAIT_FOR_CALLBACK,
+        wait_for_callback=90,
     )
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL", 0.1)
     await central.event(const.INTERFACE_ID, "VCU3560967:1", "LEVEL_2", 0.2)

@@ -15,6 +15,9 @@
 
 - Fix missing param in unregister_entity_updated_callback
 - Set open tilt level to 50%
+- Use value from service call for target (tilt) level while cover is moving
+- Enable command_queue for blind
+- Empty command queue on stop
 
 # Version 2024.4.11 (2024-04-24)
 
