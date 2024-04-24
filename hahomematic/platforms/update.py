@@ -84,7 +84,9 @@ class HmUpdate(CallbackEntity):
                     f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
-        return partial(self._unregister_entity_updated_callback, entity_updated_callback)
+        return partial(
+            self._unregister_entity_updated_callback, entity_updated_callback, custom_id
+        )
 
     def _unregister_entity_updated_callback(
         self, entity_updated_callback: Callable, custom_id: str
