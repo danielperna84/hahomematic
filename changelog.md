@@ -1,7 +1,9 @@
-# Version 2024.4.11 (2024-04-23)
+# Version 2024.4.11 (2024-04-24)
 
 - Add command queue
 - Move open/close from IpBlind to Blind
+- Use central_client_factory fixture
+- Ensure central.stop() is called in tests
 
 # Version 2024.4.10 (2024-04-21)
 

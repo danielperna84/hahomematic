@@ -171,19 +171,21 @@ async def test_device_unignore_etrv(
     central, _ = await factory.get_default_central(
         {"VCU3609622": "HmIP-eTRV-2.json"}, un_ignore_list=[line]
     )
-    assert (
-        central.parameter_visibility.parameter_is_un_ignored(
-            device_type="HmIP-eTRV-2",
-            channel_no=channel_no,
-            paramset_key=paramset_key,
-            parameter=parameter,
+    try:
+        assert (
+            central.parameter_visibility.parameter_is_un_ignored(
+                device_type="HmIP-eTRV-2",
+                channel_no=channel_no,
+                paramset_key=paramset_key,
+                parameter=parameter,
+            )
+            is expected_result
         )
-        is expected_result
-    )
-    generic_entity = central.get_generic_entity(f"VCU3609622:{channel_no}", parameter)
-    if generic_entity:
-        assert generic_entity.usage == EntityUsage.ENTITY
-    await central.stop()
+        generic_entity = central.get_generic_entity(f"VCU3609622:{channel_no}", parameter)
+        if generic_entity:
+            assert generic_entity.usage == EntityUsage.ENTITY
+    finally:
+        await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -210,20 +212,22 @@ async def test_device_unignore_broll(
     central, _ = await factory.get_default_central(
         {"VCU8537918": "HmIP-BROLL.json"}, un_ignore_list=[line]
     )
-    assert (
-        central.parameter_visibility.parameter_is_un_ignored(
-            device_type="HmIP-BROLL",
-            channel_no=channel_no,
-            paramset_key=paramset_key,
-            parameter=parameter,
+    try:
+        assert (
+            central.parameter_visibility.parameter_is_un_ignored(
+                device_type="HmIP-BROLL",
+                channel_no=channel_no,
+                paramset_key=paramset_key,
+                parameter=parameter,
+            )
+            is expected_result
         )
-        is expected_result
-    )
-    generic_entity = central.get_generic_entity(f"VCU8537918:{channel_no}", parameter)
-    if expected_result:
-        assert generic_entity
-        assert generic_entity.usage == EntityUsage.ENTITY
-    await central.stop()
+        generic_entity = central.get_generic_entity(f"VCU8537918:{channel_no}", parameter)
+        if expected_result:
+            assert generic_entity
+            assert generic_entity.usage == EntityUsage.ENTITY
+    finally:
+        await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -272,22 +276,24 @@ async def test_device_unignore_hm(
     central, _ = await factory.get_default_central(
         {"VCU0000341": "HM-TC-IT-WM-W-EU.json"}, un_ignore_list=[line]
     )
-    assert (
-        central.parameter_visibility.parameter_is_un_ignored(
-            device_type="HM-TC-IT-WM-W-EU",
-            channel_no=channel_no,
-            paramset_key=paramset_key,
-            parameter=parameter,
+    try:
+        assert (
+            central.parameter_visibility.parameter_is_un_ignored(
+                device_type="HM-TC-IT-WM-W-EU",
+                channel_no=channel_no,
+                paramset_key=paramset_key,
+                parameter=parameter,
+            )
+            is expected_result
         )
-        is expected_result
-    )
-    generic_entity = central.get_generic_entity(
-        f"VCU0000341:{channel_no}" if channel_no else "VCU0000341", parameter
-    )
-    if expected_result:
-        assert generic_entity
-        assert generic_entity.usage == EntityUsage.ENTITY
-    await central.stop()
+        generic_entity = central.get_generic_entity(
+            f"VCU0000341:{channel_no}" if channel_no else "VCU0000341", parameter
+        )
+        if expected_result:
+            assert generic_entity
+            assert generic_entity.usage == EntityUsage.ENTITY
+    finally:
+        await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -357,23 +363,24 @@ async def test_device_unignore_hm2(
     central, _ = await factory.get_default_central(
         {"VCU0000137": "HM-ES-PMSw1-Pl.json"}, un_ignore_list=lines
     )
-
-    assert (
-        central.parameter_visibility.parameter_is_un_ignored(
-            device_type="HM-ES-PMSw1-Pl",
-            channel_no=channel_no,
-            paramset_key=paramset_key,
-            parameter=parameter,
+    try:
+        assert (
+            central.parameter_visibility.parameter_is_un_ignored(
+                device_type="HM-ES-PMSw1-Pl",
+                channel_no=channel_no,
+                paramset_key=paramset_key,
+                parameter=parameter,
+            )
+            is expected_result
         )
-        is expected_result
-    )
-    generic_entity = central.get_generic_entity(
-        f"VCU0000137:{channel_no}" if channel_no else "VCU0000137", parameter
-    )
-    if expected_result:
-        assert generic_entity
-        assert generic_entity.usage == EntityUsage.ENTITY
-    await central.stop()
+        generic_entity = central.get_generic_entity(
+            f"VCU0000137:{channel_no}" if channel_no else "VCU0000137", parameter
+        )
+        if expected_result:
+            assert generic_entity
+            assert generic_entity.usage == EntityUsage.ENTITY
+    finally:
+        await central.stop()
 
 
 @pytest.mark.parametrize(
@@ -411,17 +418,18 @@ async def test_ignore_deviec_type(
     central, _ = await factory.get_default_central(
         {"VCU1769958": "HmIP-BWTH.json", "VCU3609622": "HmIP-eTRV-2.json"}, un_ignore_list=lines
     )
-
-    assert (
-        central.parameter_visibility.device_type_is_ignored(device_type=device_type)
-        is expected_result
-    )
-    if device := central.get_device(address=address):
-        if expected_result:
-            assert len(device.custom_entities) == 0
-        else:
-            assert len(device.custom_entities) > 0
-    await central.stop()
+    try:
+        assert (
+            central.parameter_visibility.device_type_is_ignored(device_type=device_type)
+            is expected_result
+        )
+        if device := central.get_device(address=address):
+            if expected_result:
+                assert len(device.custom_entities) == 0
+            else:
+                assert len(device.custom_entities) > 0
+    finally:
+        await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -656,19 +664,20 @@ async def test_virtual_remote_delete(
 async def test_central_not_alive(factory: helper.Factory) -> None:
     """Test central other methods."""
     central, client = await factory.get_unpatched_default_central({}, do_mock_client=False)
-    mock_client = helper.get_mock(instance=client, available=False)
+    try:
+        mock_client = helper.get_mock(instance=client, available=False)
+        assert central.system_information.serial is None
+        assert central.is_alive is True
 
-    assert central.system_information.serial is None
-    assert central.is_alive is True
+        mock_client.is_callback_alive.return_value = False
+        with patch("hahomematic.client.create_client", return_value=mock_client):
+            await central.start()
 
-    mock_client.is_callback_alive.return_value = False
-    with patch("hahomematic.client.create_client", return_value=mock_client):
-        await central.start()
-
-    assert central.available is False
-    assert central.system_information.serial == "0815_4711"
-    assert central.is_alive is False
-    await central.stop()
+        assert central.available is False
+        assert central.system_information.serial == "0815_4711"
+        assert central.is_alive is False
+    finally:
+        await central.stop()
 
 
 @pytest.mark.asyncio()
@@ -809,49 +818,51 @@ async def test_central_direct(factory: helper.Factory) -> None:
     central, client = await factory.get_unpatched_default_central(
         TEST_DEVICES, do_mock_client=False
     )
-    mock_client = helper.get_mock(instance=client, available=False)
+    try:
+        mock_client = helper.get_mock(instance=client, available=False)
+        assert central.system_information.serial is None
+        assert central.is_alive is True
 
-    assert central.system_information.serial is None
-    assert central.is_alive is True
+        with patch("hahomematic.client.create_client", return_value=mock_client):
+            await central.start()
+        assert await central._create_clients() is False
 
-    with patch("hahomematic.client.create_client", return_value=mock_client):
-        await central.start()
-    assert await central._create_clients() is False
-
-    assert central.available is False
-    assert central.system_information.serial == "0815_4711"
-    assert len(central._devices) == 2
-    assert len(central.get_entities(exclude_no_create=False)) == 55
-    await central.stop()
+        assert central.available is False
+        assert central.system_information.serial == "0815_4711"
+        assert len(central._devices) == 2
+        assert len(central.get_entities(exclude_no_create=False)) == 55
+    finally:
+        await central.stop()
 
 
 @pytest.mark.asyncio()
 async def test_central_without_interface_config(factory: helper.Factory) -> None:
     """Test central other methods."""
     central = await factory.get_raw_central(interface_config=None)
-    assert central.has_clients is False
+    try:
+        assert central.has_clients is False
 
-    with pytest.raises(NoClients):
-        await central.validate_config_and_get_system_information()
+        with pytest.raises(NoClients):
+            await central.validate_config_and_get_system_information()
 
-    with pytest.raises(HaHomematicException):
-        central.get_client("NOT_A_VALID_INTERFACE_ID")
+        with pytest.raises(HaHomematicException):
+            central.get_client("NOT_A_VALID_INTERFACE_ID")
 
-    with pytest.raises(Exception):
-        await central._create_devices()
+        with pytest.raises(Exception):
+            await central._create_devices()
 
-    await central.start()
-    assert central.has_clients is False
+        await central.start()
+        assert central.has_clients is False
 
-    assert central.available is True
-    assert central.system_information.serial is None
-    assert len(central._devices) == 0
-    assert len(central.get_entities()) == 0
+        assert central.available is True
+        assert central.system_information.serial is None
+        assert len(central._devices) == 0
+        assert len(central.get_entities()) == 0
 
-    assert await central.get_system_variable(name="SysVar_Name") is None
-    assert central._get_virtual_remote("VCU4264293") is None
-
-    await central.stop()
+        assert await central.get_system_variable(name="SysVar_Name") is None
+        assert central._get_virtual_remote("VCU4264293") is None
+    finally:
+        await central.stop()
 
 
 @pytest.mark.asyncio()
