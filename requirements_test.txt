@@ -1,9 +1,9 @@
 -r requirements.txt
 -r requirements_test_pre_commit.txt
 
-coverage==7.4.4
-freezegun==1.4.0
-mypy==1.9.0
+coverage==7.5.0
+freezegun==1.5.0
+mypy==1.10.0
 pip==24.0
 pre-commit==3.7.0
 pydevccu==0.1.8
