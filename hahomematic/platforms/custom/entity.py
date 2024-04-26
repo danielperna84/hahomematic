@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
@@ -63,9 +62,11 @@ class CustomEntity(BaseEntity):
         """Return the base channel no of the entity."""
         return self._base_channel_no
 
-    @abstractmethod
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
+        _LOGGER.debug(
+            "INIT_ENTITY_FIELDS: Initialising the custom entity fields for %s", self.full_name
+        )
 
     @value_property
     def last_updated(self) -> datetime:
