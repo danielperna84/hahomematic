@@ -9,7 +9,7 @@ from concurrent.futures._base import CancelledError
 from functools import wraps
 import logging
 from time import monotonic
-from typing import Any, Final, ParamSpec, TypeVar
+from typing import Any, Final, ParamSpec, TypeVar, cast
 
 from hahomematic.const import BLOCK_LOG_TIMEOUT
 from hahomematic.exceptions import HaHomematicException
@@ -146,4 +146,4 @@ def loop_check(func: Callable[_P, _R]) -> Callable[_P, _R]:
         return return_value
 
     setattr(func, "_loop_check", True)
-    return wrapper_loop_check if debug_enabled() else func
+    return cast(Callable[_P, _R], wrapper_loop_check) if debug_enabled() else func
