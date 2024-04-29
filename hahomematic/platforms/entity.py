@@ -141,12 +141,12 @@ class CallbackEntity(ABC):
     def full_name(self) -> str:
         """Return the full name of the entity."""
 
-    @value_property
+    @property
     def last_updated(self) -> datetime:
         """Return the last updated datetime value."""
         return self._last_updated
 
-    @value_property
+    @property
     def last_refreshed(self) -> datetime:
         """Return the last refreshed datetime value."""
         return self._last_refreshed
@@ -540,7 +540,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return, if entity is readable."""
         return bool(self._operations & Operations.READ)
 
-    @value_property
+    @property
     def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
         return self._last_refreshed > INIT_DATETIME
@@ -550,12 +550,12 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return, if entity is writeable."""
         return False if self._is_forced_sensor else bool(self._operations & Operations.WRITE)
 
-    @value_property
+    @property
     def last_updated(self) -> datetime:
         """Return the last updated datetime value."""
         return self._last_updated
 
-    @value_property
+    @property
     def last_refreshed(self) -> datetime:
         """Return the last refreshed datetime value."""
         return self._last_refreshed
@@ -568,7 +568,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             self._client.last_value_send_cache.get_last_value_send(entity_key=self.entity_key),
         )
 
-    @value_property
+    @property
     def old_value(self) -> ParameterT | None:
         """Return the old value of the entity."""
         return self._old_value
@@ -578,7 +578,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return, the platform of the entity."""
         return HmPlatform.SENSOR if self._is_forced_sensor else self._platform
 
-    @value_property
+    @property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
         return self._state_uncertain

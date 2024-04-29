@@ -1,3 +1,7 @@
+# Version 2024.4.13 (2024-04-29)
+
+- Make some items from value_property to property
+
 # Version 2024.4.12 (2024-04-24)
 
 - Fix missing param in unregister_entity_updated_callback

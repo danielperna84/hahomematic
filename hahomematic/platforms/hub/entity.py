@@ -75,7 +75,7 @@ class GenericSystemVariable(GenericHubEntity):
         """Return the availability of the device."""
         return self.central.available
 
-    @value_property
+    @property
     def old_value(self) -> Any | None:
         """Return the old value."""
         return self._old_value

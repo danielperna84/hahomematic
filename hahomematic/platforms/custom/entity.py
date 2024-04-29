@@ -12,7 +12,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.support import ExtendedConfig
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.support import (
@@ -68,7 +68,7 @@ class CustomEntity(BaseEntity):
             "INIT_ENTITY_FIELDS: Initialising the custom entity fields for %s", self.full_name
         )
 
-    @value_property
+    @property
     def last_updated(self) -> datetime:
         """Return the latest last_updated timestamp."""
         latest_update: datetime = INIT_DATETIME
@@ -79,7 +79,7 @@ class CustomEntity(BaseEntity):
                 latest_update = entity_last_updated
         return latest_update
 
-    @value_property
+    @property
     def last_refreshed(self) -> datetime:
         """Return the latest last_refreshed timestamp."""
         latest_refreshed: datetime = INIT_DATETIME
@@ -104,12 +104,12 @@ class CustomEntity(BaseEntity):
         """Return if there are data entities."""
         return len(self._data_entities) > 0
 
-    @value_property
+    @property
     def is_valid(self) -> bool:
         """Return if the state is valid."""
         return all(entity.is_valid for entity in self._relevant_entities)
 
-    @value_property
+    @property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
         return any(entity.state_uncertain for entity in self._relevant_entities)
