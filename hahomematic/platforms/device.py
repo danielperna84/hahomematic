@@ -33,9 +33,9 @@ from hahomematic.const import (
     Description,
     DeviceFirmwareState,
     EntityUsage,
-    EventType,
     ForcedDeviceAvailability,
     HmPlatform,
+    HomematicEventType,
     Manufacturer,
     Parameter,
     ParamsetKey,
@@ -360,9 +360,7 @@ class HmDevice(PayloadMixin):
             self.central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[entity.entity_key] = entity
-            self._register_device_updated_callback(
-                device_updated_callback=entity.fire_entity_updated_callback
-            )
+            self._register_device_updated_callback(cb=entity.fire_entity_updated_callback)
         if isinstance(entity, hmce.CustomEntity):
             self._custom_entities[entity.channel_no] = entity
         if isinstance(entity, GenericEvent):
@@ -374,9 +372,7 @@ class HmDevice(PayloadMixin):
             self.central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[entity.entity_key]
-            self._unregister_device_updated_callback(
-                device_updated_callback=entity.fire_entity_updated_callback
-            )
+            self._unregister_device_updated_callback(cb=entity.fire_entity_updated_callback)
         if isinstance(entity, hmce.CustomEntity):
             del self._custom_entities[entity.channel_no]
         if isinstance(entity, GenericEvent):
@@ -397,37 +393,27 @@ class HmDevice(PayloadMixin):
             self.remove_entity(custom_entity)
         self._custom_entities.clear()
 
-    def _register_device_updated_callback(
-        self, device_updated_callback: Callable
-    ) -> CALLBACK_TYPE:
+    def _register_device_updated_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register update callback."""
-        if (
-            callable(device_updated_callback)
-            and device_updated_callback not in self._device_updated_callbacks
-        ):
-            self._device_updated_callbacks.append(device_updated_callback)
-        return partial(self._unregister_device_updated_callback, device_updated_callback)
+        if callable(cb) and cb not in self._device_updated_callbacks:
+            self._device_updated_callbacks.append(cb)
+        return partial(self._unregister_device_updated_callback, cb)
 
-    def _unregister_device_updated_callback(self, device_updated_callback: Callable) -> None:
+    def _unregister_device_updated_callback(self, cb: Callable) -> None:
         """Remove update callback."""
-        if device_updated_callback in self._device_updated_callbacks:
-            self._device_updated_callbacks.remove(device_updated_callback)
+        if cb in self._device_updated_callbacks:
+            self._device_updated_callbacks.remove(cb)
 
-    def register_firmware_update_callback(
-        self, firmware_update_callback: Callable
-    ) -> CALLBACK_TYPE:
+    def register_firmware_update_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register firmware update callback."""
-        if (
-            callable(firmware_update_callback)
-            and firmware_update_callback not in self._firmware_update_callbacks
-        ):
-            self._firmware_update_callbacks.append(firmware_update_callback)
-        return partial(self.unregister_firmware_update_callback, firmware_update_callback)
+        if callable(cb) and cb not in self._firmware_update_callbacks:
+            self._firmware_update_callbacks.append(cb)
+        return partial(self.unregister_firmware_update_callback, cb)
 
-    def unregister_firmware_update_callback(self, firmware_update_callback: Callable) -> None:
+    def unregister_firmware_update_callback(self, cb: Callable) -> None:
         """Remove firmware update callback."""
-        if firmware_update_callback in self._firmware_update_callbacks:
-            self._firmware_update_callbacks.remove(firmware_update_callback)
+        if cb in self._firmware_update_callbacks:
+            self._firmware_update_callbacks.remove(cb)
 
     def _set_last_updated(self) -> None:
         self._last_updated = datetime.now()
@@ -476,7 +462,7 @@ class HmDevice(PayloadMixin):
         return entities_by_platform
 
     def get_channel_events(
-        self, event_type: EventType, registered: bool | None = None
+        self, event_type: HomematicEventType, registered: bool | None = None
     ) -> Mapping[int, list[GenericEvent]]:
         """Return a list of specific events of a channel."""
         event_dict: dict[int, list[GenericEvent]] = {}

@@ -239,23 +239,15 @@ class CustomEntity(BaseEntity):
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
-        entity.register_internal_entity_updated_callback(
-            entity_updated_callback=self.fire_entity_updated_callback
-        )
+        entity.register_internal_entity_updated_callback(cb=self.fire_entity_updated_callback)
         self._data_entities[field] = entity
 
-    def _unregister_entity_updated_callback(
-        self, entity_updated_callback: Callable, custom_id: str
-    ) -> None:
+    def _unregister_entity_updated_callback(self, cb: Callable, custom_id: str) -> None:
         """Unregister update callback."""
         for entity in self._data_entities.values():
-            entity.unregister_internal_entity_updated_callback(
-                update_callback=entity_updated_callback
-            )
+            entity.unregister_internal_entity_updated_callback(cb=cb)
 
-        super()._unregister_entity_updated_callback(
-            entity_updated_callback=entity_updated_callback, custom_id=custom_id
-        )
+        super()._unregister_entity_updated_callback(cb=cb, custom_id=custom_id)
 
     def _mark_entities(self, entity_def: Mapping[int | tuple[int, ...], tuple[str, ...]]) -> None:
         """Mark entities to be created in HA."""

@@ -36,7 +36,7 @@ class Example:
     def _systemcallback(self, name, *args, **kwargs):
         self.got_devices = True
         if (
-            name == const.SystemEvent.NEW_DEVICES
+            name == const.BackendSystemEvent.NEW_DEVICES
             and kwargs
             and kwargs.get("device_descriptions")
             and len(kwargs["device_descriptions"]) > 0
@@ -44,7 +44,7 @@ class Example:
             self.got_devices = True
             return
         if (
-            name == const.SystemEvent.DEVICES_CREATED
+            name == const.BackendSystemEvent.DEVICES_CREATED
             and kwargs
             and kwargs.get("new_entities")
             and len(kwargs["new_entities"]) > 0
@@ -92,7 +92,7 @@ class Example:
         # it while initializing.
         config.CACHE_DIR = "cache"
         # Add callbacks to handle the events and see what happens on the system.
-        self.central.register_system_event_callback(self._systemcallback)
+        self.central.register_backend_system_callback(self._systemcallback)
 
         await self.central.start()
         while not self.got_devices and self.SLEEPCOUNTER < 20:

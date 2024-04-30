@@ -11,9 +11,9 @@ from hahomematic import central as hmcu
 from hahomematic.const import (
     HUB_PLATFORMS,
     Backend,
+    BackendSystemEvent,
     HmPlatform,
     ProgramData,
-    SystemEvent,
     SystemVariableData,
     SysvarType,
 )
@@ -84,8 +84,8 @@ class Hub:
                 new_programs.append(self._create_program(data=program_data))
 
         if new_programs:
-            self._central.fire_system_event_callback(
-                system_event=SystemEvent.HUB_REFRESHED,
+            self._central.fire_backend_system_callback(
+                system_event=BackendSystemEvent.HUB_REFRESHED,
                 new_hub_entities=_get_new_hub_entities(entities=new_programs),
             )
 
@@ -126,8 +126,8 @@ class Hub:
                 new_sysvars.append(self._create_system_variable(data=sysvar))
 
         if new_sysvars:
-            self._central.fire_system_event_callback(
-                system_event=SystemEvent.HUB_REFRESHED,
+            self._central.fire_backend_system_callback(
+                system_event=BackendSystemEvent.HUB_REFRESHED,
                 new_hub_entities=_get_new_hub_entities(entities=new_sysvars),
             )
 

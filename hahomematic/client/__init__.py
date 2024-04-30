@@ -1180,7 +1180,7 @@ async def _track_single_entity_state_change_or_timeout(
             )
             return
         unsub = entity.register_entity_updated_callback(
-            entity_updated_callback=_async_event_changed, custom_id=DEFAULT_CUSTOM_ID
+            cb=_async_event_changed, custom_id=DEFAULT_CUSTOM_ID
         )
 
         try:

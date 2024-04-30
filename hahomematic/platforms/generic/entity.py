@@ -6,7 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from hahomematic.const import CallSource, EntityUsage, EventType, Parameter, ParamsetKey
+from hahomematic.const import CallSource, EntityUsage, HomematicEventType, Parameter, ParamsetKey
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.support import EntityNameData, get_entity_name
@@ -77,8 +77,8 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             Parameter.STICKY_UN_REACH,
         ):
             self._device.fire_device_updated_callback(self._unique_id)
-            self._central.fire_ha_event_callback(
-                event_type=EventType.DEVICE_AVAILABILITY,
+            self._central.fire_homematic_callback(
+                event_type=HomematicEventType.DEVICE_AVAILABILITY,
                 event_data=self.get_event_data(new_value),
             )
 

@@ -60,10 +60,10 @@ async def test_custom_entity_callback(
     device_removed_mock = MagicMock()
 
     unregister_entity_updated_callback = switch.register_entity_updated_callback(
-        entity_updated_callback=device_updated_mock, custom_id="some_id"
+        cb=device_updated_mock, custom_id="some_id"
     )
     unregister_device_removed_callback = switch.register_device_removed_callback(
-        device_removed_callback=device_removed_mock
+        cb=device_removed_mock
     )
     assert switch.value is None
     assert (
@@ -112,10 +112,8 @@ async def test_generic_entity_callback(
     device_updated_mock = MagicMock()
     device_removed_mock = MagicMock()
 
-    switch.register_entity_updated_callback(
-        entity_updated_callback=device_updated_mock, custom_id="some_id"
-    )
-    switch.register_device_removed_callback(device_removed_callback=device_removed_mock)
+    switch.register_entity_updated_callback(cb=device_updated_mock, custom_id="some_id")
+    switch.register_device_removed_callback(cb=device_removed_mock)
     assert switch.value is None
     assert (
         str(switch) == "address_path: switch/CentralTest-BidCos-RF/vcu2128127_4_state/, "
@@ -131,10 +129,8 @@ async def test_generic_entity_callback(
     assert factory.system_event_mock.call_args_list[-1] == call(
         "deleteDevices", interface_id="CentralTest-BidCos-RF", addresses=["VCU2128127"]
     )
-    switch._unregister_entity_updated_callback(
-        entity_updated_callback=device_updated_mock, custom_id="some_id"
-    )
-    switch._unregister_device_removed_callback(device_removed_callback=device_removed_mock)
+    switch._unregister_entity_updated_callback(cb=device_updated_mock, custom_id="some_id")
+    switch._unregister_device_removed_callback(cb=device_removed_mock)
 
     device_updated_mock.assert_called_with()
     device_removed_mock.assert_called_with()

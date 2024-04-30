@@ -65,25 +65,25 @@ async def central_unit_mini(pydev_ccu_mini: pydevccu.Server) -> CentralUnit:
 async def central_unit_full(pydev_ccu_full: pydevccu.Server) -> CentralUnit:
     """Create and yield central."""
 
-    def ha_event_callback(*args, **kwargs):
-        """Do dummy ha_event_callback."""
+    def homematic_callback(*args, **kwargs):
+        """Do dummy homematic_callback."""
 
-    def system_event_callback(*args, **kwargs):
-        """Do dummy system_event_callback."""
+    def backend_system_callback(*args, **kwargs):
+        """Do dummy backend_system_callback."""
 
     central = await helper.get_pydev_ccu_central_unit_full(
         client_session=None,
     )
 
-    unregister_ha_event_callback = central.register_ha_event_callback(ha_event_callback)
-    unregister_system_event_callback = central.register_system_event_callback(
-        system_event_callback
+    unregister_homematic_callback = central.register_homematic_callback(homematic_callback)
+    unregister_backend_system_callback = central.register_backend_system_callback(
+        backend_system_callback
     )
 
     yield central
 
-    unregister_ha_event_callback()
-    unregister_system_event_callback()
+    unregister_homematic_callback()
+    unregister_backend_system_callback()
     await central.stop()
     await central.clear_caches()
 

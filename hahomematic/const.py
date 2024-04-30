@@ -86,6 +86,20 @@ class Backend(StrEnum):
     PYDEVCCU = "PyDevCCU"
 
 
+class BackendSystemEvent(StrEnum):
+    """Enum with hahomematic system events."""
+
+    DELETE_DEVICES = "deleteDevices"
+    DEVICES_CREATED = "devicesCreated"
+    ERROR = "error"
+    HUB_REFRESHED = "hubEntityRefreshed"
+    LIST_DEVICES = "listDevices"
+    NEW_DEVICES = "newDevices"
+    REPLACE_DEVICE = "replaceDevice"
+    RE_ADDED_DEVICE = "readdedDevice"
+    UPDATE_DEVICE = "updateDevice"
+
+
 class CallSource(StrEnum):
     """Enum with sources for calls."""
 
@@ -155,16 +169,6 @@ class EntityUsage(StrEnum):
     NO_CREATE = "entity_no_create"
 
 
-class EventType(StrEnum):
-    """Enum with hahomematic event types."""
-
-    DEVICE_AVAILABILITY = "homematic.device_availability"
-    DEVICE_ERROR = "homematic.device_error"
-    IMPULSE = "homematic.impulse"
-    INTERFACE = "homematic.interface"
-    KEYPRESS = "homematic.keypress"
-
-
 class Flag(IntEnum):
     """Enum with homematic flags."""
 
@@ -181,6 +185,16 @@ class ForcedDeviceAvailability(StrEnum):
     FORCE_FALSE = "forced_not_available"
     FORCE_TRUE = "forced_available"
     NOT_SET = "not_set"
+
+
+class HomematicEventType(StrEnum):
+    """Enum with hahomematic event types."""
+
+    DEVICE_AVAILABILITY = "homematic.device_availability"
+    DEVICE_ERROR = "homematic.device_error"
+    IMPULSE = "homematic.impulse"
+    INTERFACE = "homematic.interface"
+    KEYPRESS = "homematic.keypress"
 
 
 class Manufacturer(StrEnum):
@@ -380,20 +394,6 @@ class ProxyInitState(Enum):
     DE_INIT_SKIPPED = 16
 
 
-class SystemEvent(StrEnum):
-    """Enum with hahomematic system events."""
-
-    DELETE_DEVICES = "deleteDevices"
-    DEVICES_CREATED = "devicesCreated"
-    ERROR = "error"
-    HUB_REFRESHED = "hubEntityRefreshed"
-    LIST_DEVICES = "listDevices"
-    NEW_DEVICES = "newDevices"
-    REPLACE_DEVICE = "replaceDevice"
-    RE_ADDED_DEVICE = "readdedDevice"
-    UPDATE_DEVICE = "updateDevice"
-
-
 class SysvarType(StrEnum):
     """Enum for homematic sysvar types."""
 
@@ -430,9 +430,9 @@ CLICK_EVENTS: Final[tuple[Parameter, ...]] = (
 
 DEVICE_ERROR_EVENTS: Final[tuple[Parameter, ...]] = (Parameter.ERROR, Parameter.SENSOR_ERROR)
 
-ENTITY_EVENTS: Final[tuple[EventType, ...]] = (
-    EventType.IMPULSE,
-    EventType.KEYPRESS,
+ENTITY_EVENTS: Final[tuple[HomematicEventType, ...]] = (
+    HomematicEventType.IMPULSE,
+    HomematicEventType.KEYPRESS,
 )
 
 IMPULSE_EVENTS: Final[tuple[Parameter, ...]] = (Parameter.SEQUENCE_OK,)

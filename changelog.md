@@ -1,6 +1,7 @@
-# Version 2024.4.13 (2024-04-29)
+# Version 2024.5.0 (2024-05-01)
 
 - Make some items from value_property to property
+- Rename event callbacks
 
 # Version 2024.4.12 (2024-04-24)
 
@@ -44,7 +45,7 @@
 - Remove unused callback from tests
 - Add loop_safe annotation
 - Remove entity_data_event_callback
-- Make system_event_callback loop aware
+- Make backend_system_callback loop aware
 
 # Version 2024.4.5 (2024-04-09)
 

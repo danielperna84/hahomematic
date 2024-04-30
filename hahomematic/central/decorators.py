@@ -11,7 +11,7 @@ from typing import Any, Final, ParamSpec, TypeVar, cast
 
 from hahomematic import central as hmcu, client as hmcl
 import hahomematic.central.xml_rpc_server as xmlrpc
-from hahomematic.const import SystemEvent
+from hahomematic.const import BackendSystemEvent
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
 
@@ -22,23 +22,23 @@ _R = TypeVar("_R")
 _INTERFACE_ID: Final = "interface_id"
 
 
-def callback_system_event(system_event: SystemEvent) -> Callable:
-    """Check if system_event_callback is set and call it AFTER original function."""
+def callback_backend_system(system_event: BackendSystemEvent) -> Callable:
+    """Check if backend_system_callback is set and call it AFTER original function."""
 
-    def decorator_system_event_callback(
+    def decorator_backend_system_callback(
         func: Callable[_P, _R | Awaitable[_R]],
     ) -> Callable[_P, _R | Awaitable[_R]]:
         """Decorate callback system events."""
 
         @wraps(func)
-        async def async_wrapper_system_event_callback(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        async def async_wrapper_backend_system_callback(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap async callback system events."""
             return_value = cast(_R, await func(*args, **kwargs))  # type: ignore[misc]
-            await _exec_system_event_callback(*args, **kwargs)
+            await _exec_backend_system_callback(*args, **kwargs)
             return return_value
 
         @wraps(func)
-        def wrapper_system_event_callback(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        def wrapper_backend_system_callback(*args: _P.args, **kwargs: _P.kwargs) -> _R:
             """Wrap callback system events."""
             return_value = cast(_R, func(*args, **kwargs))
             try:
@@ -50,42 +50,44 @@ def callback_system_event(system_event: SystemEvent) -> Callable:
                     central = unit.get_central(interface_id=str(args[1]))
                 if central:
                     central.looper.create_task(
-                        _exec_system_event_callback(*args, **kwargs),
-                        name="wrapper_system_event_callback",
+                        _exec_backend_system_callback(*args, **kwargs),
+                        name="wrapper_backend_system_callback",
                     )
             except Exception as ex:
                 _LOGGER.warning(
-                    "EXEC_SYSTEM_EVENT_CALLBACK failed: Problem with identifying central: %s",
+                    "EXEC_BACKEND_SYSTEM_CALLBACK failed: Problem with identifying central: %s",
                     reduce_args(args=ex.args),
                 )
             return return_value
 
-        async def _exec_system_event_callback(*args: Any, **kwargs: Any) -> None:
+        async def _exec_backend_system_callback(*args: Any, **kwargs: Any) -> None:
             """Execute the callback for a system event."""
 
             if not ((len(args) > 1 and not kwargs) or (len(args) == 1 and kwargs)):
                 _LOGGER.warning(
-                    "EXEC_SYSTEM_EVENT_CALLBACK failed: *args not supported for callback_system_event"
+                    "EXEC_BACKEND_SYSTEM_CALLBACK failed: *args not supported for callback_system_event"
                 )
             try:
                 args = args[1:]
                 interface_id: str = args[0] if len(args) > 0 else str(kwargs[_INTERFACE_ID])
                 if client := hmcl.get_client(interface_id=interface_id):
                     client.last_updated = datetime.now()
-                    client.central.fire_system_event_callback(system_event=system_event, **kwargs)
+                    client.central.fire_backend_system_callback(
+                        system_event=system_event, **kwargs
+                    )
             except Exception as err:  # pragma: no cover
                 _LOGGER.warning(
-                    "EXEC_SYSTEM_EVENT_CALLBACK failed: Unable to reduce kwargs for system_event_callback"
+                    "EXEC_BACKEND_SYSTEM_CALLBACK failed: Unable to reduce kwargs for backend_system_callback"
                 )
                 raise HaHomematicException(
-                    f"args-exception system_event_callback [{reduce_args(args=err.args)}]"
+                    f"args-exception backend_system_callback [{reduce_args(args=err.args)}]"
                 ) from err
 
         if asyncio.iscoroutinefunction(func):
-            return async_wrapper_system_event_callback
-        return wrapper_system_event_callback
+            return async_wrapper_backend_system_callback
+        return wrapper_backend_system_callback
 
-    return decorator_system_event_callback
+    return decorator_backend_system_callback
 
 
 def callback_event(
@@ -107,7 +109,7 @@ def callback_event(
             interface_id: str = args[0] if len(args) > 1 else str(kwargs[_INTERFACE_ID])
             if client := hmcl.get_client(interface_id=interface_id):
                 client.last_updated = datetime.now()
-                client.central.fire_entity_event_callback(*args, **kwargs)
+                client.central.fire_backend_parameter_callback(*args, **kwargs)
         except Exception as err:  # pragma: no cover
             _LOGGER.warning(
                 "EXEC_ENTITY_EVENT_CALLBACK failed: Unable to reduce kwargs for event_callback"

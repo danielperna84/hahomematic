@@ -73,26 +73,20 @@ class HmUpdate(CallbackEntity):
         """Latest version available for install."""
         return self._device.firmware_update_state
 
-    def register_entity_updated_callback(
-        self, entity_updated_callback: Callable, custom_id: str
-    ) -> CALLBACK_TYPE:
+    def register_entity_updated_callback(self, cb: Callable, custom_id: str) -> CALLBACK_TYPE:
         """Register update callback."""
-        self._device.register_firmware_update_callback(entity_updated_callback)
+        self._device.register_firmware_update_callback(cb)
         if custom_id != DEFAULT_CUSTOM_ID:
             if self._custom_id is not None:
                 raise HaHomematicException(
                     f"REGISTER_UPDATE_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
-        return partial(
-            self._unregister_entity_updated_callback, entity_updated_callback, custom_id
-        )
+        return partial(self._unregister_entity_updated_callback, cb, custom_id)
 
-    def _unregister_entity_updated_callback(
-        self, entity_updated_callback: Callable, custom_id: str
-    ) -> None:
+    def _unregister_entity_updated_callback(self, cb: Callable, custom_id: str) -> None:
         """Unregister update callback."""
-        self._device.unregister_firmware_update_callback(entity_updated_callback)
+        self._device.unregister_firmware_update_callback(cb)
         if custom_id is not None:
             self._custom_id = None
 
