@@ -1,7 +1,7 @@
 # Version 2024.5.0 (2024-05-01)
 
 - Make some items from value_property to property
-- Rename event callbacks
+- Rename callbacks
 
 # Version 2024.4.12 (2024-04-24)
 
