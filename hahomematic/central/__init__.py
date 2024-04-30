@@ -1113,7 +1113,7 @@ class CentralUnit:
                 callback_handler(system_event, **kwargs)
             except Exception as ex:
                 _LOGGER.error(
-                    "FIRE_SYSTEM_EVENT_CALLBACK: Unable to call handler: %s",
+                    "FIRE_BACKEND_SYSTEM_CALLBACK: Unable to call handler: %s",
                     reduce_args(args=ex.args),
                 )
 
