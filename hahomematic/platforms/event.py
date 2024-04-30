@@ -15,8 +15,8 @@ from hahomematic.const import (
     IMPULSE_EVENTS,
     Description,
     EntityUsage,
-    EventType,
     HmPlatform,
+    HomematicEventType,
     Operations,
     ParamsetKey,
 )
@@ -32,7 +32,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
     """Base class for events."""
 
     _platform = HmPlatform.EVENT
-    _event_type: EventType
+    _event_type: HomematicEventType
 
     def __init__(
         self,
@@ -60,7 +60,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         return EntityUsage.EVENT if force_enabled else EntityUsage.NO_CREATE
 
     @config_property
-    def event_type(self) -> EventType:
+    def event_type(self) -> HomematicEventType:
         """Return the event_type of the event."""
         return self._event_type
 
@@ -74,7 +74,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
     @loop_check
     def fire_event(self, value: Any) -> None:
         """Do what is needed to fire an event."""
-        self._central.fire_ha_event_callback(
+        self._central.fire_homematic_callback(
             event_type=self.event_type, event_data=self.get_event_data(value=value)
         )
 
@@ -95,13 +95,13 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
 class ClickEvent(GenericEvent):
     """class for handling click events."""
 
-    _event_type = EventType.KEYPRESS
+    _event_type = HomematicEventType.KEYPRESS
 
 
 class DeviceErrorEvent(GenericEvent):
     """class for handling device error events."""
 
-    _event_type = EventType.DEVICE_ERROR
+    _event_type = HomematicEventType.DEVICE_ERROR
 
     async def event(self, value: Any) -> None:
         """Handle event for which this handler has subscribed."""
@@ -127,7 +127,7 @@ class DeviceErrorEvent(GenericEvent):
 class ImpulseEvent(GenericEvent):
     """class for handling impulse events."""
 
-    _event_type = EventType.IMPULSE
+    _event_type = HomematicEventType.IMPULSE
 
 
 def create_event_and_append_to_device(

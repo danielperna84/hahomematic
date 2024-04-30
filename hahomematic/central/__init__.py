@@ -27,7 +27,7 @@ from hahomematic.caches.persistent import DeviceDescriptionCache, ParamsetDescri
 from hahomematic.caches.visibility import ParameterVisibilityCache
 from hahomematic.central import xml_rpc_server as xmlrpc
 from hahomematic.central.command_queue import CommandQueueHandler
-from hahomematic.central.decorators import callback_event, callback_system_event
+from hahomematic.central.decorators import callback_backend_system, callback_event
 from hahomematic.client.json_rpc import JsonRpcAioHttpClient
 from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.const import (
@@ -41,16 +41,16 @@ from hahomematic.const import (
     EVENT_DATA,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
+    BackendSystemEvent,
     Description,
     DeviceFirmwareState,
-    EventType,
     HmPlatform,
+    HomematicEventType,
     InterfaceEventType,
     InterfaceName,
     Parameter,
     ParamsetKey,
     ProxyInitState,
-    SystemEvent,
     SystemInformation,
 )
 from hahomematic.exceptions import (
@@ -146,13 +146,13 @@ class CentralUnit:
         self.last_events: Final[dict[str, datetime]] = {}
         # Signature: (name, *args)
         # e.g. DEVICES_CREATED, HUB_REFRESHED
-        self._system_event_callbacks: Final[set[Callable]] = set()
+        self._backend_system_callbacks: Final[set[Callable]] = set()
         # Signature: (interface_id, channel_address, parameter, value)
         # Re-Fired events from CCU for parameter updates
-        self._entity_event_callbacks: Final[set[Callable]] = set()
+        self._backend_parameter_callbacks: Final[set[Callable]] = set()
         # Signature: (event_type, event_data)
         # Events like INTERFACE, KEYPRESS, ...
-        self._ha_event_callbacks: Final[set[Callable]] = set()
+        self._homematic_callbacks: Final[set[Callable]] = set()
 
         self.json_rpc_client: Final[JsonRpcAioHttpClient] = central_config.create_json_rpc_client()
 
@@ -503,8 +503,8 @@ class CentralUnit:
             EVENT_DATA: data,
         }
 
-        self.fire_ha_event_callback(
-            event_type=EventType.INTERFACE,
+        self.fire_homematic_callback(
+            event_type=HomematicEventType.INTERFACE,
             event_data=cast(dict[str, Any], INTERFACE_EVENT_SCHEMA(event_data)),
         )
 
@@ -651,7 +651,7 @@ class CentralUnit:
         )
 
     def get_channel_events(
-        self, event_type: EventType, registered: bool | None = None
+        self, event_type: HomematicEventType, registered: bool | None = None
     ) -> tuple[list[GenericEvent], ...]:
         """Return all channel event entities."""
         hm_channel_events: list[list[GenericEvent]] = []
@@ -750,8 +750,8 @@ class CentralUnit:
         if new_devices:
             new_entities = _get_new_entities(new_devices=new_devices)
             new_channel_events = _get_new_channel_events(new_devices=new_devices)
-            self.fire_system_event_callback(
-                system_event=SystemEvent.DEVICES_CREATED,
+            self.fire_backend_system_callback(
+                system_event=BackendSystemEvent.DEVICES_CREATED,
                 new_entities=new_entities,
                 new_channel_events=new_channel_events,
             )
@@ -771,7 +771,7 @@ class CentralUnit:
 
         await self.delete_devices(interface_id=interface_id, addresses=addresses)
 
-    @callback_system_event(system_event=SystemEvent.DELETE_DEVICES)
+    @callback_backend_system(system_event=BackendSystemEvent.DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: tuple[str, ...]) -> None:
         """Delete devices from central."""
         _LOGGER.debug(
@@ -783,7 +783,7 @@ class CentralUnit:
             if device := self._devices.get(address):
                 await self.remove_device(device=device)
 
-    @callback_system_event(system_event=SystemEvent.NEW_DEVICES)
+    @callback_backend_system(system_event=BackendSystemEvent.NEW_DEVICES)
     async def add_new_devices(
         self, interface_id: str, device_descriptions: tuple[dict[str, Any], ...]
     ) -> None:
@@ -890,7 +890,7 @@ class CentralUnit:
                     reduce_args(args=ex.args),
                 )
 
-    @callback_system_event(system_event=SystemEvent.LIST_DEVICES)
+    @callback_backend_system(system_event=BackendSystemEvent.LIST_DEVICES)
     def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
         """Return already existing devices to CCU / Homegear."""
         result = self.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
@@ -1032,83 +1032,88 @@ class CentralUnit:
         self.device_details.clear()
         self.data_cache.clear()
 
-    def register_ha_event_callback(self, ha_event_callback: Callable) -> CALLBACK_TYPE:
+    def register_homematic_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register ha_event callback in central."""
-        self._ha_event_callbacks.add(ha_event_callback)
-        return partial(self._unregister_ha_event_callback, ha_event_callback)
+        self._homematic_callbacks.add(cb)
+        return partial(self._unregister_homematic_callback, cb)
 
-    def _unregister_ha_event_callback(self, ha_event_callback: Callable) -> None:
+    def _unregister_homematic_callback(self, cb: Callable) -> None:
         """RUn register ha_event callback in central."""
-        if ha_event_callback in self._ha_event_callbacks:
-            self._ha_event_callbacks.remove(ha_event_callback)
+        if cb in self._homematic_callbacks:
+            self._homematic_callbacks.remove(cb)
 
     @loop_check
-    def fire_ha_event_callback(self, event_type: EventType, event_data: dict[str, str]) -> None:
+    def fire_homematic_callback(
+        self, event_type: HomematicEventType, event_data: dict[str, str]
+    ) -> None:
         """
-        Fire ha_event callback in central.
+        Fire homematic_callback in central.
 
         # Events like INTERFACE, KEYPRESS, ...
         """
-        for callback_handler in self._ha_event_callbacks:
+        for callback_handler in self._homematic_callbacks:
             try:
                 callback_handler(event_type, event_data)
             except Exception as ex:
                 _LOGGER.error(
-                    "FIRE_HA_EVENT_CALLBACK: Unable to call handler: %s", reduce_args(args=ex.args)
+                    "FIRE_HOMEMATIC_CALLBACK: Unable to call handler: %s",
+                    reduce_args(args=ex.args),
                 )
 
-    def register_entity_event_callback(self, entity_event_callback: Callable) -> CALLBACK_TYPE:
-        """Register entity_event callback in central."""
-        self._entity_event_callbacks.add(entity_event_callback)
-        return partial(self._unregister_entity_event_callback, entity_event_callback)
+    def register_backend_parameter_callback(self, cb: Callable) -> CALLBACK_TYPE:
+        """Register backend_parameter callback in central."""
+        self._backend_parameter_callbacks.add(cb)
+        return partial(self._unregister_backend_parameter_callback, cb)
 
-    def _unregister_entity_event_callback(self, entity_event_callback: Callable) -> None:
-        """Un register entity_event callback in central."""
-        if entity_event_callback in self._entity_event_callbacks:
-            self._entity_event_callbacks.remove(entity_event_callback)
+    def _unregister_backend_parameter_callback(self, cb: Callable) -> None:
+        """Un register backend_parameter callback in central."""
+        if cb in self._backend_parameter_callbacks:
+            self._backend_parameter_callbacks.remove(cb)
 
     @loop_check
-    def fire_entity_event_callback(
+    def fire_backend_parameter_callback(
         self, interface_id: str, channel_address: str, parameter: str, value: Any
     ) -> None:
         """
-        Fire entity callback in central.
+        Fire backend_parameter callback in central.
 
         Not used by HA.
         Re-Fired events from CCU for parameter updates.
         """
-        for callback_handler in self._entity_event_callbacks:
+        for callback_handler in self._backend_parameter_callbacks:
             try:
                 callback_handler(interface_id, channel_address, parameter, value)
             except Exception as ex:
                 _LOGGER.error(
-                    "FIRE_ENTITY_EVENT_CALLBACK: Unable to call handler: %s",
+                    "FIRE_BACKEND_PARAMETER_CALLBACK: Unable to call handler: %s",
                     reduce_args(args=ex.args),
                 )
 
-    def register_system_event_callback(self, system_event_callback: Callable) -> CALLBACK_TYPE:
+    def register_backend_system_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register system_event callback in central."""
-        self._system_event_callbacks.add(system_event_callback)
-        return partial(self._unregister_system_event_callback, system_event_callback)
+        self._backend_system_callbacks.add(cb)
+        return partial(self._unregister_backend_system_callback, cb)
 
-    def _unregister_system_event_callback(self, system_event_callback: Callable) -> None:
+    def _unregister_backend_system_callback(self, cb: Callable) -> None:
         """Un register system_event callback in central."""
-        if system_event_callback in self._system_event_callbacks:
-            self._system_event_callbacks.remove(system_event_callback)
+        if cb in self._backend_system_callbacks:
+            self._backend_system_callbacks.remove(cb)
 
     @loop_check
-    def fire_system_event_callback(self, system_event: SystemEvent, **kwargs: Any) -> None:
+    def fire_backend_system_callback(
+        self, system_event: BackendSystemEvent, **kwargs: Any
+    ) -> None:
         """
         Fire system_event callback in central.
 
         e.g. DEVICES_CREATED, HUB_REFRESHED
         """
-        for callback_handler in self._system_event_callbacks:
+        for callback_handler in self._backend_system_callbacks:
             try:
                 callback_handler(system_event, **kwargs)
             except Exception as ex:
                 _LOGGER.error(
-                    "FIRE_SYSTEM_EVENT_CALLBACK: Unable to call handler: %s",
+                    "FIRE_BACKEND_SYSTEM_CALLBACK: Unable to call handler: %s",
                     reduce_args(args=ex.args),
                 )
 

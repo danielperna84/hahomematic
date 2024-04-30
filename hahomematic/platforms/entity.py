@@ -141,12 +141,12 @@ class CallbackEntity(ABC):
     def full_name(self) -> str:
         """Return the full name of the entity."""
 
-    @value_property
+    @property
     def last_updated(self) -> datetime:
         """Return the last updated datetime value."""
         return self._last_updated
 
-    @value_property
+    @property
     def last_refreshed(self) -> datetime:
         """Return the last refreshed datetime value."""
         return self._last_refreshed
@@ -185,59 +185,44 @@ class CallbackEntity(ABC):
         """Return if entity is registered externally."""
         return self._custom_id is not None
 
-    def register_internal_entity_updated_callback(
-        self, entity_updated_callback: Callable
-    ) -> CALLBACK_TYPE:
+    def register_internal_entity_updated_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register internal entity updated callback."""
-        self.register_entity_updated_callback(
-            entity_updated_callback=entity_updated_callback, custom_id=DEFAULT_CUSTOM_ID
-        )
-        return partial(self.unregister_internal_entity_updated_callback, entity_updated_callback)
+        self.register_entity_updated_callback(cb=cb, custom_id=DEFAULT_CUSTOM_ID)
+        return partial(self.unregister_internal_entity_updated_callback, cb)
 
-    def register_entity_updated_callback(
-        self, entity_updated_callback: Callable, custom_id: str
-    ) -> CALLBACK_TYPE:
+    def register_entity_updated_callback(self, cb: Callable, custom_id: str) -> CALLBACK_TYPE:
         """Register entity updated callback."""
-        if callable(entity_updated_callback):
-            self._entity_updated_callbacks[entity_updated_callback] = custom_id
+        if callable(cb):
+            self._entity_updated_callbacks[cb] = custom_id
         if custom_id != DEFAULT_CUSTOM_ID:
             if self._custom_id is not None and self._custom_id != custom_id:
                 raise HaHomematicException(
                     f"REGISTER_entity_updated_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
-        return partial(
-            self._unregister_entity_updated_callback, entity_updated_callback, custom_id
-        )
+        return partial(self._unregister_entity_updated_callback, cb, custom_id)
 
-    def unregister_internal_entity_updated_callback(self, update_callback: Callable) -> None:
+    def unregister_internal_entity_updated_callback(self, cb: Callable) -> None:
         """Unregister entity updated callback."""
-        self._unregister_entity_updated_callback(
-            entity_updated_callback=update_callback, custom_id=DEFAULT_CUSTOM_ID
-        )
+        self._unregister_entity_updated_callback(cb=cb, custom_id=DEFAULT_CUSTOM_ID)
 
-    def _unregister_entity_updated_callback(
-        self, entity_updated_callback: Callable, custom_id: str
-    ) -> None:
+    def _unregister_entity_updated_callback(self, cb: Callable, custom_id: str) -> None:
         """Unregister entity updated callback."""
-        if entity_updated_callback in self._entity_updated_callbacks:
-            del self._entity_updated_callbacks[entity_updated_callback]
+        if cb in self._entity_updated_callbacks:
+            del self._entity_updated_callbacks[cb]
         if self.custom_id == custom_id:
             self._custom_id = None
 
-    def register_device_removed_callback(self, device_removed_callback: Callable) -> CALLBACK_TYPE:
+    def register_device_removed_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register the device removed callback."""
-        if (
-            callable(device_removed_callback)
-            and device_removed_callback not in self._device_removed_callbacks
-        ):
-            self._device_removed_callbacks.append(device_removed_callback)
-        return partial(self._unregister_device_removed_callback, device_removed_callback)
+        if callable(cb) and cb not in self._device_removed_callbacks:
+            self._device_removed_callbacks.append(cb)
+        return partial(self._unregister_device_removed_callback, cb)
 
-    def _unregister_device_removed_callback(self, device_removed_callback: Callable) -> None:
+    def _unregister_device_removed_callback(self, cb: Callable) -> None:
         """Unregister the device removed callback."""
-        if device_removed_callback in self._device_removed_callbacks:
-            self._device_removed_callbacks.remove(device_removed_callback)
+        if cb in self._device_removed_callbacks:
+            self._device_removed_callbacks.remove(cb)
 
     @loop_check
     def fire_entity_updated_callback(self, *args: Any, **kwargs: Any) -> None:
@@ -540,7 +525,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return, if entity is readable."""
         return bool(self._operations & Operations.READ)
 
-    @value_property
+    @property
     def is_valid(self) -> bool:
         """Return, if the value of the entity is valid based on the last updated datetime."""
         return self._last_refreshed > INIT_DATETIME
@@ -550,12 +535,12 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return, if entity is writeable."""
         return False if self._is_forced_sensor else bool(self._operations & Operations.WRITE)
 
-    @value_property
+    @property
     def last_updated(self) -> datetime:
         """Return the last updated datetime value."""
         return self._last_updated
 
-    @value_property
+    @property
     def last_refreshed(self) -> datetime:
         """Return the last refreshed datetime value."""
         return self._last_refreshed
@@ -568,7 +553,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             self._client.last_value_send_cache.get_last_value_send(entity_key=self.entity_key),
         )
 
-    @value_property
+    @property
     def old_value(self) -> ParameterT | None:
         """Return the old value of the entity."""
         return self._old_value
@@ -578,7 +563,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         """Return, the platform of the entity."""
         return HmPlatform.SENSOR if self._is_forced_sensor else self._platform
 
-    @value_property
+    @property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
         return self._state_uncertain

@@ -24,7 +24,7 @@ from hahomematic.const import (
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
     CallSource,
-    EventType,
+    HomematicEventType,
     InterfaceEventType,
     InterfaceName,
     ParamsetKey,
@@ -422,8 +422,8 @@ class PingPongCache:
         """Fire an event about the pong status."""
 
         def _fire_event(mismatch_count: int) -> None:
-            self._central.fire_ha_event_callback(
-                event_type=EventType.INTERFACE,
+            self._central.fire_homematic_callback(
+                event_type=HomematicEventType.INTERFACE,
                 event_data=cast(
                     dict[str, Any],
                     hmcu.INTERFACE_EVENT_SCHEMA(

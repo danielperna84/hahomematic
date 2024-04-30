@@ -384,7 +384,7 @@ class CeIpBlind(CeBlind):
             field=Field.COMBINED_PARAMETER, entity_type=HmAction
         )
 
-    @value_property
+    @property
     def channel_operation_mode(self) -> str | None:
         """Return channel_operation_mode of cover."""
         return self._e_channel_operation_mode.value

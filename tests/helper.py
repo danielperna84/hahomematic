@@ -15,7 +15,7 @@ import orjson
 from hahomematic import const as hahomematic_const
 from hahomematic.central import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, _ClientConfig
-from hahomematic.const import InterfaceName, SystemEvent
+from hahomematic.const import BackendSystemEvent, InterfaceName
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic_support.client_local import ClientLocal, LocalRessources
 
@@ -58,8 +58,8 @@ class Factory:
             start_direct=True,
         ).create_central()
 
-        central.register_system_event_callback(self.system_event_mock)
-        central.register_ha_event_callback(self.ha_event_mock)
+        central.register_backend_system_callback(self.system_event_mock)
+        central.register_homematic_callback(self.ha_event_mock)
 
         return central
 
@@ -191,7 +191,7 @@ async def get_pydev_ccu_central_unit_full(client_session: ClientSession | None) 
 
     def systemcallback(system_event, *args, **kwargs):
         if (
-            system_event == SystemEvent.DEVICES_CREATED
+            system_event == BackendSystemEvent.DEVICES_CREATED
             and kwargs
             and kwargs.get("new_entities")
             and len(kwargs["new_entities"]) > 0
@@ -218,7 +218,7 @@ async def get_pydev_ccu_central_unit_full(client_session: ClientSession | None) 
         default_callback_port=54321,
         client_session=client_session,
     ).create_central()
-    central.register_system_event_callback(systemcallback)
+    central.register_backend_system_callback(systemcallback)
     await central.start()
     while not GOT_DEVICES and sleep_counter < 300:
         sleep_counter += 1
