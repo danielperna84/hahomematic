@@ -34,6 +34,7 @@ class XmlRpcMethod(StrEnum):
     """Enum for homematic json rpc methods types."""
 
     GET_VERSION = "getVersion"
+    HOMEGEAR_INIT = "clientServerInitialized"
     INIT = "init"
     PING = "ping"
     SYSTEM_LIST_METHODS = "system.listMethods"
@@ -41,6 +42,7 @@ class XmlRpcMethod(StrEnum):
 
 _VALID_XMLRPC_COMMANDS_ON_NO_CONNECTION: Final[tuple[str, ...]] = (
     XmlRpcMethod.GET_VERSION,
+    XmlRpcMethod.HOMEGEAR_INIT,
     XmlRpcMethod.INIT,
     XmlRpcMethod.PING,
     XmlRpcMethod.SYSTEM_LIST_METHODS,

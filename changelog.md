@@ -2,6 +2,7 @@
 
 - Make some items from value_property to property
 - Rename callbacks
+- Fix Homegear reconnect
 
 # Version 2024.4.12 (2024-04-24)
 
