@@ -723,6 +723,30 @@ class CeIpFixedColorLight(CeDimmer):
         self._e_ramp_time_unit: HmAction = self._get_entity(
             field=Field.RAMP_TIME_UNIT, entity_type=HmAction
         )
+        self._e_effect: HmSelect = self._get_entity(
+            field=Field.COLOR_BEHAVIOUR, entity_type=HmSelect
+        )
+        self._effect_list = (
+            tuple(
+                str(item)
+                for item in self._e_effect.values
+                if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR
+            )
+            if (self._e_effect and self._e_effect.values)
+            else ()
+        )
+
+    @value_property
+    def effect(self) -> str | None:
+        """Return the current effect."""
+        if (effect := self._e_effect.value) is not None and effect in self._effect_list:
+            return effect
+        return None
+
+    @value_property
+    def effects(self) -> tuple[str, ...] | None:
+        """Return the supported effects."""
+        return self._effect_list
 
     @value_property
     def hs_color(self) -> tuple[float, float] | None:
@@ -753,6 +777,12 @@ class CeIpFixedColorLight(CeDimmer):
             await self._e_color.send_value(value=simple_rgb_color, collector=collector)
         elif self.color_name in _NO_COLOR:
             await self._e_color.send_value(value=FixedColor.WHITE, collector=collector)
+        if (effect := kwargs.get("effect")) is not None and effect in self._effect_list:
+            await self._e_effect.send_value(value=effect, collector=collector)
+        elif self._e_effect.value not in self._effect_list:
+            await self._e_effect.send_value(value=ColorBehaviour.ON, collector=collector)
+        elif (color_behaviour := self._e_effect.value) is not None:
+            await self._e_effect.send_value(value=color_behaviour, collector=collector)
 
         await super().turn_on(collector=collector, **kwargs)
 
@@ -774,55 +804,6 @@ class CeIpFixedColorLight(CeDimmer):
         if ramp_time_unit:
             await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
         await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
-
-
-class CeIpFixedColorLightWired(CeIpFixedColorLight):
-    """Class for HomematicIP HmIPW-WRC6 light entities."""
-
-    def _init_entity_fields(self) -> None:
-        """Init the entity fields."""
-        super()._init_entity_fields()
-        self._e_effect: HmSelect = self._get_entity(
-            field=Field.COLOR_BEHAVIOUR, entity_type=HmSelect
-        )
-        self._effect_list = (
-            tuple(
-                str(item)
-                for item in self._e_effect.values
-                if item not in _EXCLUDE_FROM_COLOR_BEHAVIOUR
-            )
-            if (self._e_effect and self._e_effect.values)
-            else ()
-        )
-
-    @value_property
-    def effect(self) -> str | None:
-        """Return the current effect."""
-        if (effect := self._e_effect.value) is not None and effect in self._effect_list:
-            return effect
-        return None
-
-    @value_property
-    def effects(self) -> tuple[str, ...] | None:
-        """Return the supported effects."""
-        return self._effect_list
-
-    @bind_collector()
-    async def turn_on(
-        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOnArgs]
-    ) -> None:
-        """Turn the light on."""
-        if not self.is_state_change(on=True, **kwargs):
-            return
-
-        if (effect := kwargs.get("effect")) is not None and effect in self._effect_list:
-            await self._e_effect.send_value(value=effect, collector=collector)
-        elif self._e_effect.value not in self._effect_list:
-            await self._e_effect.send_value(value=ColorBehaviour.ON, collector=collector)
-        elif (color_behaviour := self._e_effect.value) is not None:
-            await self._e_effect.send_value(value=color_behaviour, collector=collector)
-
-        await super().turn_on(collector=collector, **kwargs)
 
 
 def _recalc_unit_timer(time: float) -> tuple[float, int | None]:
@@ -990,7 +971,7 @@ def make_ip_simple_fixed_color_light_wired(
     """Create simple fixed color light entities like HmIPW-WRC6."""
     return hmed.make_custom_entity(
         device=device,
-        entity_class=CeIpFixedColorLightWired,
+        entity_class=CeIpFixedColorLight,
         device_profile=DeviceProfile.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED,
         group_base_channels=group_base_channels,
         extended=extended,
