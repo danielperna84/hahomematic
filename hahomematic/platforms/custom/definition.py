@@ -150,6 +150,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 ED.SECONDARY_CHANNELS: (2, 3),
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR: Parameter.COLOR,
+                    Field.COLOR_BEHAVIOUR: Parameter.COLOR_BEHAVIOUR,
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_UNIT: Parameter.DURATION_UNIT,
                     Field.ON_TIME_VALUE: Parameter.DURATION_VALUE,
@@ -169,12 +170,12 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 ED.PRIMARY_CHANNEL: 0,
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR: Parameter.COLOR,
+                    Field.COLOR_BEHAVIOUR: Parameter.COLOR_BEHAVIOUR,
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_UNIT: Parameter.DURATION_UNIT,
                     Field.ON_TIME_VALUE: Parameter.DURATION_VALUE,
                     Field.RAMP_TIME_UNIT: Parameter.RAMP_TIME_UNIT,
                     Field.RAMP_TIME_VALUE: Parameter.RAMP_TIME_VALUE,
-                    Field.COLOR_BEHAVIOUR: Parameter.COLOR_BEHAVIOUR,
                 },
             },
         },

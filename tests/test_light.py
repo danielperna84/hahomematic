@@ -430,7 +430,7 @@ async def test_ceipfixedcolorlight(
     assert light.supports_hs_color is True
     assert light.supports_transition is True
     assert light.effect is None
-    assert light.effects is None
+    assert light.effects == ()
     assert light.brightness == 0
     assert light.is_on is False
     assert light.color_name == FixedColor.BLACK
