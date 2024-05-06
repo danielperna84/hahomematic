@@ -187,24 +187,21 @@ class CallbackEntity(ABC):
 
     def register_internal_entity_updated_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register internal entity updated callback."""
-        self.register_entity_updated_callback(cb=cb, custom_id=DEFAULT_CUSTOM_ID)
-        return partial(self.unregister_internal_entity_updated_callback, cb)
+        return self.register_entity_updated_callback(cb=cb, custom_id=DEFAULT_CUSTOM_ID)
 
     def register_entity_updated_callback(self, cb: Callable, custom_id: str) -> CALLBACK_TYPE:
         """Register entity updated callback."""
-        if callable(cb):
-            self._entity_updated_callbacks[cb] = custom_id
         if custom_id != DEFAULT_CUSTOM_ID:
             if self._custom_id is not None and self._custom_id != custom_id:
                 raise HaHomematicException(
                     f"REGISTER_entity_updated_CALLBACK failed: hm_entity: {self.full_name} is already registered by {self._custom_id}"
                 )
             self._custom_id = custom_id
-        return partial(self._unregister_entity_updated_callback, cb, custom_id)
 
-    def unregister_internal_entity_updated_callback(self, cb: Callable) -> None:
-        """Unregister entity updated callback."""
-        self._unregister_entity_updated_callback(cb=cb, custom_id=DEFAULT_CUSTOM_ID)
+        if callable(cb) and cb not in self._entity_updated_callbacks:
+            self._entity_updated_callbacks[cb] = custom_id
+            return partial(self._unregister_entity_updated_callback, cb, custom_id)
+        return None
 
     def _unregister_entity_updated_callback(self, cb: Callable, custom_id: str) -> None:
         """Unregister entity updated callback."""
@@ -217,7 +214,8 @@ class CallbackEntity(ABC):
         """Register the device removed callback."""
         if callable(cb) and cb not in self._device_removed_callbacks:
             self._device_removed_callbacks.append(cb)
-        return partial(self._unregister_device_removed_callback, cb)
+            return partial(self._unregister_device_removed_callback, cb)
+        return None
 
     def _unregister_device_removed_callback(self, cb: Callable) -> None:
         """Unregister the device removed callback."""

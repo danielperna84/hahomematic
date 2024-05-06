@@ -927,7 +927,7 @@ async def test_pending_pong_failure(
             "type": InterfaceEventType.PENDING_PONG,
         },
     )
-    assert len(factory.ha_event_mock.mock_calls) == 9
+    assert len(factory.ha_event_mock.mock_calls) == 10
 
 
 @pytest.mark.asyncio()
