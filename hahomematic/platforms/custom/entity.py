@@ -7,7 +7,7 @@ from datetime import datetime
 import logging
 from typing import Any, Final, TypeVar, cast
 
-from hahomematic.const import ENTITY_KEY, INIT_DATETIME, CallSource, EntityUsage
+from hahomematic.const import CALLBACK_TYPE, ENTITY_KEY, INIT_DATETIME, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
@@ -41,6 +41,7 @@ class CustomEntity(BaseEntity):
         extended: ExtendedConfig | None = None,
     ) -> None:
         """Initialize the entity."""
+        self._unregister_callbacks: list[CALLBACK_TYPE] = []
         self._device_profile: Final = device_profile
         # required for name in BaseEntity
         self._device_desc: Final = device_def
@@ -239,13 +240,16 @@ class CustomEntity(BaseEntity):
         if is_visible:
             entity.set_usage(EntityUsage.CE_VISIBLE)
 
-        entity.register_internal_entity_updated_callback(cb=self.fire_entity_updated_callback)
+        self._unregister_callbacks.append(
+            entity.register_internal_entity_updated_callback(cb=self.fire_entity_updated_callback)
+        )
         self._data_entities[field] = entity
 
     def _unregister_entity_updated_callback(self, cb: Callable, custom_id: str) -> None:
         """Unregister update callback."""
-        for entity in self._data_entities.values():
-            entity.unregister_internal_entity_updated_callback(cb=cb)
+        for unregister in self._unregister_callbacks:
+            if unregister is not None:
+                unregister()
 
         super()._unregister_entity_updated_callback(cb=cb, custom_id=custom_id)
 

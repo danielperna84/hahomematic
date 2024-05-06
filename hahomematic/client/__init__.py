@@ -1179,9 +1179,12 @@ async def _track_single_entity_state_change_or_timeout(
                 entity_key,
             )
             return
-        unsub = entity.register_entity_updated_callback(
-            cb=_async_event_changed, custom_id=DEFAULT_CUSTOM_ID
-        )
+        if (
+            unsub := entity.register_entity_updated_callback(
+                cb=_async_event_changed, custom_id=DEFAULT_CUSTOM_ID
+            )
+        ) is None:
+            return
 
         try:
             async with asyncio.timeout(wait_for_callback):

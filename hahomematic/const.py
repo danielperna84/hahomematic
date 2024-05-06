@@ -75,7 +75,7 @@ NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
 # channel_address, parameter
 ENTITY_KEY = tuple[str, str]
-CALLBACK_TYPE = Callable[[], None]
+CALLBACK_TYPE = Callable[[], None] | None
 
 
 class Backend(StrEnum):

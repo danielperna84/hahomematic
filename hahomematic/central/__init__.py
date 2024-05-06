@@ -871,8 +871,9 @@ class CentralUnit:
 
         if entity_key in self._entity_event_subscriptions:
             try:
-                for callback in self._entity_event_subscriptions[entity_key]:
-                    await callback(value)
+                for callback_handler in self._entity_event_subscriptions[entity_key]:
+                    if callable(callback_handler):
+                        await callback_handler(value)
             except RuntimeError as rte:  # pragma: no cover
                 _LOGGER.debug(
                     "EVENT: RuntimeError [%s]. Failed to call callback for: %s, %s, %s",
@@ -1034,8 +1035,10 @@ class CentralUnit:
 
     def register_homematic_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register ha_event callback in central."""
-        self._homematic_callbacks.add(cb)
-        return partial(self._unregister_homematic_callback, cb)
+        if callable(cb) and cb not in self._homematic_callbacks:
+            self._homematic_callbacks.add(cb)
+            return partial(self._unregister_homematic_callback, cb)
+        return None
 
     def _unregister_homematic_callback(self, cb: Callable) -> None:
         """RUn register ha_event callback in central."""
@@ -1062,8 +1065,10 @@ class CentralUnit:
 
     def register_backend_parameter_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register backend_parameter callback in central."""
-        self._backend_parameter_callbacks.add(cb)
-        return partial(self._unregister_backend_parameter_callback, cb)
+        if callable(cb) and cb not in self._backend_parameter_callbacks:
+            self._backend_parameter_callbacks.add(cb)
+            return partial(self._unregister_backend_parameter_callback, cb)
+        return None
 
     def _unregister_backend_parameter_callback(self, cb: Callable) -> None:
         """Un register backend_parameter callback in central."""
@@ -1091,8 +1096,10 @@ class CentralUnit:
 
     def register_backend_system_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register system_event callback in central."""
-        self._backend_system_callbacks.add(cb)
-        return partial(self._unregister_backend_system_callback, cb)
+        if callable(cb) and cb not in self._backend_parameter_callbacks:
+            self._backend_system_callbacks.add(cb)
+            return partial(self._unregister_backend_system_callback, cb)
+        return None
 
     def _unregister_backend_system_callback(self, cb: Callable) -> None:
         """Un register system_event callback in central."""

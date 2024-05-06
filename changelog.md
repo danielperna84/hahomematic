@@ -1,3 +1,7 @@
+# Version 2024.5.1 (2024-05-06)
+
+- Improve callback register/unregister
+
 # Version 2024.5.0 (2024-05-01)
 
 - Make some items from value_property to property
