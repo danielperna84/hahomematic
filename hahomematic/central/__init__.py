@@ -104,14 +104,14 @@ class CentralUnit:
         self._connection_state: Final = central_config.connection_state
         self._looper = Looper()
         self._xml_rpc_server: Final = (
-            xmlrpc.register_xml_rpc_server(
+            xmlrpc.create_xml_rpc_server(
                 local_port=central_config.callback_port or central_config.default_callback_port
             )
             if central_config.enable_server
             else None
         )
         if self._xml_rpc_server:
-            self._xml_rpc_server.register_central(self)
+            self._xml_rpc_server.add_central(self)
         self.local_port: Final[int] = (
             self._xml_rpc_server.local_port if self._xml_rpc_server else 0
         )
@@ -189,7 +189,7 @@ class CentralUnit:
             return True
         if (
             self._xml_rpc_server
-            and self._xml_rpc_server.no_central_registered
+            and self._xml_rpc_server.no_central_assigned
             and self._xml_rpc_server.is_alive()
         ):
             return True
@@ -328,9 +328,9 @@ class CentralUnit:
 
         if self._xml_rpc_server:
             # un-register this instance from XmlRPC-Server
-            self._xml_rpc_server.unregister_central(central=self)
+            self._xml_rpc_server.remove_central(central=self)
             # un-register and stop XmlRPC-Server, if possible
-            if self._xml_rpc_server.no_central_registered:
+            if self._xml_rpc_server.no_central_assigned:
                 self._xml_rpc_server.stop()
             _LOGGER.debug("STOP: XmlRPC-Server stopped")
         else:
