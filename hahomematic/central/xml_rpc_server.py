@@ -213,12 +213,12 @@ class XmlRpcServer(threading.Thread):
         """Return if thread is active."""
         return self._started.is_set() is True  # type: ignore[attr-defined]
 
-    def register_central(self, central: hmcu.CentralUnit) -> None:
+    def add_central(self, central: hmcu.CentralUnit) -> None:
         """Register a central in the XmlRPC-Server."""
         if not self._centrals.get(central.name):
             self._centrals[central.name] = central
 
-    def unregister_central(self, central: hmcu.CentralUnit) -> None:
+    def remove_central(self, central: hmcu.CentralUnit) -> None:
         """Unregister a central from XmlRPC-Server."""
         if self._centrals.get(central.name):
             del self._centrals[central.name]
@@ -231,15 +231,15 @@ class XmlRpcServer(threading.Thread):
         return None
 
     @property
-    def no_central_registered(self) -> bool:
-        """Return if no central is registered."""
+    def no_central_assigned(self) -> bool:
+        """Return if no central is assigned."""
         return len(self._centrals) == 0
 
 
-def register_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
+def create_xml_rpc_server(local_port: int = PORT_ANY) -> XmlRpcServer:
     """Register the xml rpc server."""
     xml_rpc = XmlRpcServer(local_port=local_port)
     if not xml_rpc.started:
         xml_rpc.start()
-        _LOGGER.debug("REGISTER_XML_RPC_SERVER: Starting XmlRPC-Server")
+        _LOGGER.debug("CREATE_XML_RPC_SERVER: Starting XmlRPC-Server")
     return xml_rpc
