@@ -1037,7 +1037,7 @@ class CentralUnit:
         """Register ha_event callback in central."""
         if callable(cb) and cb not in self._homematic_callbacks:
             self._homematic_callbacks.add(cb)
-            return partial(self._unregister_homematic_callback, cb)
+            return partial(self._unregister_homematic_callback, cb=cb)
         return None
 
     def _unregister_homematic_callback(self, cb: Callable) -> None:
@@ -1067,7 +1067,7 @@ class CentralUnit:
         """Register backend_parameter callback in central."""
         if callable(cb) and cb not in self._backend_parameter_callbacks:
             self._backend_parameter_callbacks.add(cb)
-            return partial(self._unregister_backend_parameter_callback, cb)
+            return partial(self._unregister_backend_parameter_callback, cb=cb)
         return None
 
     def _unregister_backend_parameter_callback(self, cb: Callable) -> None:
@@ -1098,7 +1098,7 @@ class CentralUnit:
         """Register system_event callback in central."""
         if callable(cb) and cb not in self._backend_parameter_callbacks:
             self._backend_system_callbacks.add(cb)
-            return partial(self._unregister_backend_system_callback, cb)
+            return partial(self._unregister_backend_system_callback, cb=cb)
         return None
 
     def _unregister_backend_system_callback(self, cb: Callable) -> None:

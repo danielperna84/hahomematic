@@ -83,7 +83,7 @@ class HmUpdate(CallbackEntity):
             self._custom_id = custom_id
 
         if self._device.register_firmware_update_callback(cb) is not None:
-            return partial(self._unregister_entity_updated_callback, cb, custom_id)
+            return partial(self._unregister_entity_updated_callback, cb=cb, custom_id=custom_id)
         return None
 
     def _unregister_entity_updated_callback(self, cb: Callable, custom_id: str) -> None:
