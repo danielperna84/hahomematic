@@ -346,7 +346,7 @@ class CeBlind(CeCover):
     @bind_collector()
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
-        self.central.command_queue_handler.empty_queue(device_address=self.device.device_address)
+        self.central.command_queue_handler.empty_queue(address=self._channel_address)
         await super().stop(collector=collector)
 
     @bind_collector(wait_for_callback=90, use_command_queue=True)
@@ -366,7 +366,7 @@ class CeBlind(CeCover):
     @bind_collector()
     async def stop_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
-        self.central.command_queue_handler.empty_queue(device_address=self.device.device_address)
+        self.central.command_queue_handler.empty_queue(address=self._channel_address)
         await self._e_stop.send_value(value=True, collector=collector)
 
     def is_state_change(self, **kwargs: Any) -> bool:
