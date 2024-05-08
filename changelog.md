@@ -1,3 +1,5 @@
+- Move command_queue handling from device to channel
+
 # Version 2024.5.1 (2024-05-06)
 
 - Improve callback register/unregister

@@ -200,7 +200,7 @@ class CallbackEntity(ABC):
 
         if callable(cb) and cb not in self._entity_updated_callbacks:
             self._entity_updated_callbacks[cb] = custom_id
-            return partial(self._unregister_entity_updated_callback, cb, custom_id)
+            return partial(self._unregister_entity_updated_callback, cb=cb, custom_id=custom_id)
         return None
 
     def _unregister_entity_updated_callback(self, cb: Callable, custom_id: str) -> None:
@@ -214,7 +214,7 @@ class CallbackEntity(ABC):
         """Register the device removed callback."""
         if callable(cb) and cb not in self._device_removed_callbacks:
             self._device_removed_callbacks.append(cb)
-            return partial(self._unregister_device_removed_callback, cb)
+            return partial(self._unregister_device_removed_callback, cb=cb)
         return None
 
     def _unregister_device_removed_callback(self, cb: Callable) -> None:
@@ -795,7 +795,7 @@ class CallParameterCollector:
                         )
                         if use_command_queue:
                             await self._device.central.command_queue_handler.put(
-                                device_address=self._device.device_address,
+                                address=channel_address,
                                 command=set_value_command,
                             )
                         elif not await set_value_command():
@@ -810,7 +810,7 @@ class CallParameterCollector:
                     )
                     if use_command_queue:
                         await self._device.central.command_queue_handler.put(
-                            device_address=self._device.device_address,
+                            address=channel_address,
                             command=put_paramset_command,
                         )
                     elif not await put_paramset_command():

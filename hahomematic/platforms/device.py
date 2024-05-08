@@ -397,7 +397,7 @@ class HmDevice(PayloadMixin):
         """Register update callback."""
         if callable(cb) and cb not in self._device_updated_callbacks:
             self._device_updated_callbacks.append(cb)
-            return partial(self._unregister_device_updated_callback, cb)
+            return partial(self._unregister_device_updated_callback, cb=cb)
         return None
 
     def _unregister_device_updated_callback(self, cb: Callable) -> None:
@@ -409,7 +409,7 @@ class HmDevice(PayloadMixin):
         """Register firmware update callback."""
         if callable(cb) and cb not in self._firmware_update_callbacks:
             self._firmware_update_callbacks.append(cb)
-            return partial(self.unregister_firmware_update_callback, cb)
+            return partial(self.unregister_firmware_update_callback, cb=cb)
         return None
 
     def unregister_firmware_update_callback(self, cb: Callable) -> None:

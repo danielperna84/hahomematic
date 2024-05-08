@@ -22,9 +22,9 @@ class CommandQueueHandler:
         self._exit = False
         self._looper = Looper()
 
-    def empty_queue(self, device_address: str) -> None:
+    def empty_queue(self, address: str) -> None:
         """Empty a queue for a device."""
-        if queue := self._queues.get(device_address):
+        if queue := self._queues.get(address):
             try:
                 while not queue.empty():
                     queue.get_nowait()
@@ -32,15 +32,13 @@ class CommandQueueHandler:
             except QueueEmpty:
                 pass
 
-    async def put(self, device_address: str, command: Callable) -> None:
-        """Put send_command to device queue."""
-        if device_address not in self._queues:
-            device_queue: Queue[Callable | None] = Queue()
-            self._looper.create_task(
-                _device_consumer(device_queue), name=f"device_consumer-{device_address}"
-            )
-            self._queues[device_address] = device_queue
-        await self._queues[device_address].put(command)
+    async def put(self, address: str, command: Callable) -> None:
+        """Put command to queue."""
+        if address not in self._queues:
+            queue: Queue[Callable | None] = Queue()
+            self._looper.create_task(_command_consumer(queue), name=f"command consumer-{address}")
+            self._queues[address] = queue
+        await self._queues[address].put(command)
         await sleep(0.1)
 
     async def stop(self) -> None:
@@ -50,8 +48,8 @@ class CommandQueueHandler:
         await self._looper.block_till_done()
 
 
-async def _device_consumer(queue: Queue) -> None:
-    """Consume the device commands."""
+async def _command_consumer(queue: Queue) -> None:
+    """Consume the commands."""
     # consume work
     while True:
         try:
@@ -61,5 +59,5 @@ async def _device_consumer(queue: Queue) -> None:
             queue.task_done()
         except Exception as ex:
             _LOGGER.debug(
-                "DEVICE_CONSUMER: Unable do deque command: %s", reduce_args(args=ex.args)
+                "COMMAND_CONSUMER: Unable do deque command: %s", reduce_args(args=ex.args)
             )
