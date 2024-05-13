@@ -323,18 +323,16 @@ class CeBlind(CeCover):
                 # Blind actors are buggy when sending new coordinates while they are moving. So we stop them first.
                 await self._stop()
 
-            await self._transmit_position(
-                level=_level, tilt_level=_tilt_level, collector=collector
-            )
+            await self._send_level(level=_level, tilt_level=_tilt_level, collector=collector)
 
     @bind_collector(use_command_queue=False)
-    async def _transmit_position(
+    async def _send_level(
         self,
         level: float,
         tilt_level: float,
         collector: CallParameterCollector | None = None,
     ) -> None:
-        """Transmit a new target position to the device."""
+        """Transmit a new target level to the device."""
         if self._e_combined.is_hmtype and (
             combined_parameter := self._get_combined_value(level=level, tilt_level=tilt_level)
         ):
