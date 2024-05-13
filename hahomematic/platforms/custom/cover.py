@@ -325,7 +325,7 @@ class CeBlind(CeCover):
 
             await self._send_level(level=_level, tilt_level=_tilt_level, collector=collector)
 
-    @bind_collector(use_command_queue=False)
+    @bind_collector()
     async def _send_level(
         self,
         level: float,
@@ -367,7 +367,7 @@ class CeBlind(CeCover):
         async with self._command_processing_lock:
             await self._stop(collector=collector)
 
-    @bind_collector(use_command_queue=False)
+    @bind_collector()
     async def _stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion. Do only call with _command_processing_lock held."""
         self.central.command_queue_handler.empty_queue(device_address=self.device.device_address)
