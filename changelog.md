@@ -1,4 +1,8 @@
+# Version 2024.5.2 (2024-05-13)
+
+-
 - Move command_queue handling from device to channel
+- Add level sensors to cover/blind
 
 # Version 2024.5.1 (2024-05-06)
 
