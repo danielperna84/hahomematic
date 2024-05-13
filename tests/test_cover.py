@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import cast
-from unittest.mock import Mock, call
+from unittest.mock import DEFAULT, Mock, call
 
 import pytest
 
@@ -449,9 +449,17 @@ async def test_ceblind_separate_level_and_tilt_change(
     central, mock_client, _ = central_client_factory
     cover: CeBlind = cast(CeBlind, helper.get_prepared_custom_entity(central, "VCU0000145", 1))
 
+    # In order for this test to make sense, communication with CCU must take some amount of time.
+    # This is not the case with the default local client used during testing, so we add a slight delay.
+    async def delay_communication(*args, **kwargs):
+        await asyncio.sleep(0.1)
+        return DEFAULT
+
+    mock_client.set_value.side_effect = delay_communication
+
     # We test for the absence of race conditions.
     # We repeat the test a few times so that it becomes unlikely for the race condition to remain undetected.
-    for _ in range(100):
+    for _ in range(10):
         await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", 0)
         await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0)
         assert cover.current_position == 0
