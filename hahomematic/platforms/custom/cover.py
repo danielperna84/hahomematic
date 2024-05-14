@@ -371,7 +371,7 @@ class CeBlind(CeCover):
     async def _stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion. Do only call with _command_processing_lock held."""
         self.central.command_queue_handler.empty_queue(address=self._channel_address)
-        await super().stop()
+        await super().stop(collector=collector)
 
     async def open_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Open the tilt."""
