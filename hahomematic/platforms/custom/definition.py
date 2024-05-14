@@ -93,9 +93,13 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 ED.FIELDS: {
                     0: {
                         Field.DIRECTION: Parameter.ACTIVITY_STATE,
+                        Field.CHANNEL_OPERATION_MODE: Parameter.CHANNEL_OPERATION_MODE,
+                    },
+                },
+                ED.VISIBLE_FIELDS: {
+                    0: {
                         Field.CHANNEL_LEVEL: Parameter.LEVEL,
                         Field.CHANNEL_LEVEL_2: Parameter.LEVEL_2,
-                        Field.CHANNEL_OPERATION_MODE: Parameter.CHANNEL_OPERATION_MODE,
                     },
                 },
             },
