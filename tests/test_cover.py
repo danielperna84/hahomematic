@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import cast
-from unittest.mock import Mock, call
+from unittest.mock import DEFAULT, Mock, call
 
 import pytest
 
@@ -412,7 +413,7 @@ async def test_ceblind(
     call_count = len(mock_client.method_calls)
     await cover.open_tilt()
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _OPEN_TILT_LEVEL)
-    assert call_count == len(mock_client.method_calls) - 2
+    assert call_count == len(mock_client.method_calls) - 5
 
     await cover.close_tilt()
     await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", _CLOSED_LEVEL)
@@ -425,6 +426,61 @@ async def test_ceblind(
     call_count = len(mock_client.method_calls)
     await cover.set_position(tilt_position=40)
     assert call_count == len(mock_client.method_calls)
+
+
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(
+    (
+        "address_device_translation",
+        "do_mock_client",
+        "add_sysvars",
+        "add_programs",
+        "ignore_devices_on_create",
+        "un_ignore_list",
+    ),
+    [
+        (TEST_DEVICES, True, False, False, None, None),
+    ],
+)
+async def test_ceblind_separate_level_and_tilt_change(
+    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+) -> None:
+    """Test if CeBlind sends correct commands even when rapidly changing level and tilt via separate service calls."""
+    central, mock_client, _ = central_client_factory
+    cover: CeBlind = cast(CeBlind, helper.get_prepared_custom_entity(central, "VCU0000145", 1))
+
+    # In order for this test to make sense, communication with CCU must take some amount of time.
+    # This is not the case with the default local client used during testing, so we add a slight delay.
+    async def delay_communication(*args, **kwargs):
+        await asyncio.sleep(0.1)
+        return DEFAULT
+
+    mock_client.set_value.side_effect = delay_communication
+
+    # We test for the absence of race conditions.
+    # We repeat the test a few times so that it becomes unlikely for the race condition to remain undetected.
+    for _ in range(10):
+        await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", 0)
+        await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0)
+        assert cover.current_position == 0
+        assert cover.current_tilt_position == 0
+
+        await asyncio.gather(
+            cover.set_position(position=81),
+            cover.set_position(tilt_position=19),
+        )
+
+        assert mock_client.method_calls[-1] == call.set_value(
+            channel_address="VCU0000145:1",
+            paramset_key="VALUES",
+            parameter="LEVEL_COMBINED",
+            value="0xa2,0x26",
+            wait_for_callback=WAIT_FOR_CALLBACK,
+        )
+        await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL", 0.81)
+        await central.event(const.INTERFACE_ID, "VCU0000145:1", "LEVEL_SLATS", 0.19)
+        assert cover.current_position == 81
+        assert cover.current_tilt_position == 19
 
 
 @pytest.mark.asyncio()

@@ -6,6 +6,7 @@ See https://www.home-assistant.io/integrations/cover/.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
 from enum import IntEnum, StrEnum
 import logging
@@ -96,6 +97,7 @@ class CeCover(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
+        self._command_processing_lock = asyncio.Lock()
         self._e_direction: HmSensor = self._get_entity(field=Field.DIRECTION, entity_type=HmSensor)
         self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
         self._e_stop: HmAction = self._get_entity(field=Field.STOP, entity_type=HmAction)
@@ -256,7 +258,20 @@ class CeBlind(CeCover):
         """Return current tilt position of cover."""
         return int(self._channel_tilt_level * 100)
 
-    @bind_collector(use_command_queue=False)
+    @property
+    def _target_level(self) -> float | None:
+        """Return the level of last service call."""
+        if (last_value_send := self._e_level.unconfirmed_last_value_send) is not None:
+            return float(last_value_send)
+        return None
+
+    @property
+    def _target_tilt_level(self) -> float | None:
+        """Return the tilt level of last service call."""
+        if (last_value_send := self._e_level_2.unconfirmed_last_value_send) is not None:
+            return float(last_value_send)
+        return None
+
     async def set_position(
         self,
         position: int | None = None,
@@ -279,22 +294,54 @@ class CeBlind(CeCover):
         collector: CallParameterCollector | None = None,
     ) -> None:
         """
-        Move the cover to a specific tilt level. Value range is 0.0 to 1.01.
+        Move the cover to a specific tilt level. Value range is 0.0 to 1.00.
 
-        1.01 means no change.
+        level or tilt_level may be set to None for no change.
         """
-        _level = level if level is not None else self.current_position / 100.0
-        _tilt_level = tilt_level if tilt_level is not None else self.current_tilt_position / 100.0
+        currently_moving = False
+
+        async with self._command_processing_lock:
+            if level is not None:
+                _level = level
+            elif self._target_level is not None:
+                # The blind moves and the target blind height is known
+                currently_moving = True
+                _level = self._target_level
+            else:  # The blind is at a standstill and no level is explicitly requested => we remain at the current level
+                _level = self._channel_level
+
+            if tilt_level is not None:
+                _tilt_level = tilt_level
+            elif self._target_tilt_level is not None:
+                # The blind moves and the target slat position is known
+                currently_moving = True
+                _tilt_level = self._target_tilt_level
+            else:  # The blind is at a standstill and no tilt is explicitly desired => we remain at the current angle
+                _tilt_level = self._channel_tilt_level
+
+            if currently_moving:
+                # Blind actors are buggy when sending new coordinates while they are moving. So we stop them first.
+                await self._stop()
+
+            await self._send_level(level=_level, tilt_level=_tilt_level, collector=collector)
+
+    @bind_collector()
+    async def _send_level(
+        self,
+        level: float,
+        tilt_level: float,
+        collector: CallParameterCollector | None = None,
+    ) -> None:
+        """Transmit a new target level to the device."""
         if self._e_combined.is_hmtype and (
-            combined_parameter := self._get_combined_value(level=_level, tilt_level=_tilt_level)
+            combined_parameter := self._get_combined_value(level=level, tilt_level=tilt_level)
         ):
             await self._e_combined.send_value(value=combined_parameter, collector=collector)
             return
 
-        await self._e_level_2.send_value(value=_tilt_level, collector=collector)
-        await super()._set_level(level=_level, collector=collector)
+        await self._e_level_2.send_value(value=tilt_level, collector=collector)
+        await super()._set_level(level=level, collector=collector)
 
-    @bind_collector(use_command_queue=False)
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the cover and open the tilt."""
         if not self.is_state_change(open=True, tilt_open=True):
@@ -305,7 +352,6 @@ class CeBlind(CeCover):
             collector=collector,
         )
 
-    @bind_collector(use_command_queue=False)
     async def close(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover and close the tilt."""
         if not self.is_state_change(close=True, tilt_close=True):
@@ -316,24 +362,32 @@ class CeBlind(CeCover):
             collector=collector,
         )
 
-    @bind_collector(use_command_queue=False)
+    async def stop(self, collector: CallParameterCollector | None = None) -> None:
+        """Stop the device if in motion."""
+        async with self._command_processing_lock:
+            await self._stop(collector=collector)
+
+    @bind_collector()
+    async def _stop(self, collector: CallParameterCollector | None = None) -> None:
+        """Stop the device if in motion. Do only call with _command_processing_lock held."""
+        self.central.command_queue_handler.empty_queue(address=self._channel_address)
+        await super().stop(collector=collector)
+
     async def open_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
         await self._set_level(tilt_level=self._open_tilt_level, collector=collector)
 
-    @bind_collector(use_command_queue=False)
     async def close_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
         if not self.is_state_change(tilt_close=True):
             return
         await self._set_level(tilt_level=self._closed_level, collector=collector)
 
-    @bind_collector()
     async def stop_tilt(self, collector: CallParameterCollector | None = None) -> None:
-        """Stop the device if in motion."""
-        await self._e_stop.send_value(value=True, collector=collector)
+        """Stop the device if in motion. Use only when command_processing_lock is held."""
+        await self.stop(collector=collector)
 
     def is_state_change(self, **kwargs: Any) -> bool:
         """Check if the state changes due to kwargs."""
