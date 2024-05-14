@@ -2,6 +2,7 @@
 
 - Move command_queue handling from device to channel
 - Add level sensors to cover/blind
+- Allow changing level or tilt while blind is moving by @sleiner
 
 # Version 2024.5.1 (2024-05-06)
 
