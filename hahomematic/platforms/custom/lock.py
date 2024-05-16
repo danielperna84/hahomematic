@@ -30,13 +30,27 @@ class LockActivity(StrEnum):
     UNLOCKING = "UP"
 
 
+class LockError(StrEnum):
+    """Enum with lock errors."""
+
+    NO_ERROR = "NO_ERROR"
+    CLUTCH_FAILURE = "CLUTCH_FAILURE"
+    MOTOR_ABORTED = "MOTOR_ABORTED"
+
+
 class LockState(StrEnum):
     """Enum with lock states."""
 
     LOCKED = "LOCKED"
-    NO_ERROR = "NO_ERROR"
-    OPEN = "OPEN"
     UNKNOWN = "UNKNOWN"
+    UNLOCKED = "UNLOCKED"
+
+
+class LockTargetLevel(StrEnum):
+    """Enum with lock target levels."""
+
+    LOCKED = "LOCKED"
+    OPEN = "OPEN"
     UNLOCKED = "UNLOCKED"
 
 
@@ -119,17 +133,21 @@ class CeIpLock(BaseLock):
     @bind_collector()
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
-        await self._e_lock_target_level.send_value(value=LockState.LOCKED, collector=collector)
+        await self._e_lock_target_level.send_value(
+            value=LockTargetLevel.LOCKED, collector=collector
+        )
 
     @bind_collector()
     async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
-        await self._e_lock_target_level.send_value(value=LockState.UNLOCKED, collector=collector)
+        await self._e_lock_target_level.send_value(
+            value=LockTargetLevel.UNLOCKED, collector=collector
+        )
 
     @bind_collector()
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
-        await self._e_lock_target_level.send_value(value=LockState.OPEN, collector=collector)
+        await self._e_lock_target_level.send_value(value=LockTargetLevel.OPEN, collector=collector)
 
 
 class CeRfLock(BaseLock):
@@ -165,7 +183,7 @@ class CeRfLock(BaseLock):
     @value_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
-        return self._e_error.value is not None and self._e_error.value != LockState.NO_ERROR
+        return self._e_error.value is not None and self._e_error.value != LockError.NO_ERROR
 
     @bind_collector()
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
