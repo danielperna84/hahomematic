@@ -176,7 +176,7 @@ async def test_ceipblind_dr(
         channel_address="VCU7807849:2",
         paramset_key="VALUES",
         parameter="COMBINED_PARAMETER",
-        value="L2=50,L=100",
+        value="L2=100,L=100",
         wait_for_callback=WAIT_FOR_CALLBACK,
     )
     assert cover._e_level.unconfirmed_last_value_send == _OPEN_LEVEL
@@ -188,7 +188,7 @@ async def test_ceipblind_dr(
     assert cover._e_level.unconfirmed_last_value_send is None
     assert cover._e_level_2.unconfirmed_last_value_send is None
     assert cover.current_position == 100
-    assert cover.current_tilt_position == 50
+    assert cover.current_tilt_position == 100
     await cover.close()
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU7807849:2",
