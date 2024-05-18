@@ -30,7 +30,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 _CLOSED_LEVEL: Final[float] = 0.0  # must be float!
 _OPEN_LEVEL: Final[float] = 1.0  # must be float!
-_OPEN_TILT_LEVEL: Final[float] = 0.5  # must be float!
+_OPEN_TILT_LEVEL: Final[float] = 1.0  # must be float!
 _WD_CLOSED_LEVEL: Final[float] = -0.005  # must be float! HM-Sec-Win
 
 
