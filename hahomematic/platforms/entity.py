@@ -823,7 +823,7 @@ def bind_collector(
 ) -> Callable:
     """Decorate function to automatically add collector if not set."""
 
-    def decorator_bind_collector[CallableT: Callable[..., Any]](func: CallableT) -> CallableT:
+    def decorator_bind_collector[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
         """Decorate function to automatically add collector if not set."""
         argument_index = getfullargspec(func).args.index(_COLLECTOR_ARGUMENT_NAME)
 

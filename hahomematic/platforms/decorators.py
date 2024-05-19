@@ -5,22 +5,22 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Any, Generic, TypeVar
 
-GETTER = TypeVar("GETTER")
-SETTER = TypeVar("SETTER")
+_GETTER = TypeVar("_GETTER")
+_SETTER = TypeVar("_SETTER")
 
 
 # pylint: disable=invalid-name
-class generic_property(Generic[GETTER, SETTER], property):
+class generic_property(Generic[_GETTER, _SETTER], property):
     """Generic property implementation."""
 
-    fget: Callable[[Any], GETTER] | None
-    fset: Callable[[Any, SETTER], None] | None
+    fget: Callable[[Any], _GETTER] | None
+    fset: Callable[[Any, _SETTER], None] | None
     fdel: Callable[[Any], None] | None
 
     def __init__(
         self,
-        fget: Callable[[Any], GETTER] | None = None,
-        fset: Callable[[Any, SETTER], None] | None = None,
+        fget: Callable[[Any], _GETTER] | None = None,
+        fset: Callable[[Any, _SETTER], None] | None = None,
         fdel: Callable[[Any], None] | None = None,
         doc: str | None = None,
     ) -> None:
@@ -30,11 +30,11 @@ class generic_property(Generic[GETTER, SETTER], property):
             doc = fget.__doc__
         self.__doc__ = doc
 
-    def getter(self, __fget: Callable[[Any], GETTER]) -> generic_property:
+    def getter(self, __fget: Callable[[Any], _GETTER]) -> generic_property:
         """Return generic getter."""
         return type(self)(__fget, self.fset, self.fdel, self.__doc__)  # pragma: no cover
 
-    def setter(self, __fset: Callable[[Any, SETTER], None]) -> generic_property:
+    def setter(self, __fset: Callable[[Any, _SETTER], None]) -> generic_property:
         """Return generic setter."""
         return type(self)(self.fget, __fset, self.fdel, self.__doc__)
 
@@ -42,7 +42,7 @@ class generic_property(Generic[GETTER, SETTER], property):
         """Return generic deleter."""
         return type(self)(self.fget, self.fset, __fdel, self.__doc__)
 
-    def __get__(self, __obj: Any, __type: type | None = None) -> GETTER:
+    def __get__(self, __obj: Any, __type: type | None = None) -> _GETTER:
         """Return the attribute."""
         if __obj is None:
             return self  # type: ignore[return-value]
@@ -64,12 +64,12 @@ class generic_property(Generic[GETTER, SETTER], property):
 
 
 # pylint: disable=invalid-name
-class config_property(generic_property[GETTER, SETTER], property):
+class config_property(generic_property[_GETTER, _SETTER], property):
     """Decorate to mark own config properties."""
 
 
 # pylint: disable=invalid-name
-class value_property(generic_property[GETTER, SETTER], property):
+class value_property(generic_property[_GETTER, _SETTER], property):
     """Decorate to mark own value properties."""
 
 

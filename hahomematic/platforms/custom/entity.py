@@ -276,9 +276,9 @@ class CustomEntity(BaseEntity):
             if entity:
                 entity.set_usage(EntityUsage.ENTITY)
 
-    def _get_entity[EntityT: hmge.GenericEntity](
-        self, field: Field, entity_type: type[EntityT]
-    ) -> EntityT:
+    def _get_entity[_EntityT: hmge.GenericEntity](
+        self, field: Field, entity_type: type[_EntityT]
+    ) -> _EntityT:
         """Get entity."""
         if entity := self._data_entities.get(field):
             if not isinstance(entity, entity_type):

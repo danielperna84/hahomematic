@@ -12,7 +12,7 @@ from typing import Any, Final
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-def measure_execution_time[CallableT: Callable[..., Any]](func: CallableT) -> CallableT:
+def measure_execution_time[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Decorate function to measure the function execution time."""
 
     is_enabled = _LOGGER.isEnabledFor(level=logging.DEBUG)
