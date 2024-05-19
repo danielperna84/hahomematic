@@ -2,6 +2,7 @@
 
 - Fix value assignment to lock enums
 - Set open tilt level back to 100%
+- Use PEP 695 typing
 
 # Version 2024.5.2 (2024-05-14)
 
