@@ -9,12 +9,14 @@ from typing import Any, Final
 from hahomematic.const import CallSource, EntityUsage, HomematicEventType, Parameter, ParamsetKey
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
-from hahomematic.platforms.support import EntityNameData, get_entity_name
+from hahomematic.platforms.support import EntityNameData, GenericParameterType, get_entity_name
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]):
+class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericParameterType](
+    hme.BaseParameterEntity
+):
     """Base class for generic entities."""
 
     _validate_state_change: bool = True
@@ -84,7 +86,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
 
     async def send_value(
         self,
-        value: hme.InputParameterT,
+        value: InputParameterT,
         collector: hme.CallParameterCollector | None = None,
         collector_order: int = 50,
         do_validate: bool = True,
@@ -117,8 +119,8 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
         )
 
     def _prepare_value_for_sending(
-        self, value: hme.InputParameterT, do_validate: bool = True
-    ) -> hme.ParameterT:
+        self, value: InputParameterT, do_validate: bool = True
+    ) -> ParameterT:
         """Prepare value, if required, before send."""
         return value  # type: ignore[return-value]
 
@@ -147,7 +149,7 @@ class GenericEntity(hme.BaseParameterEntity[hme.ParameterT, hme.InputParameterT]
             else EntityUsage.ENTITY
         )
 
-    def is_state_change(self, value: hme.ParameterT) -> bool:
+    def is_state_change(self, value: ParameterT) -> bool:
         """
         Check if the state/value changes.
 

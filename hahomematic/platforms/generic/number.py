@@ -7,11 +7,13 @@ See https://www.home-assistant.io/integrations/number/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms.entity import ParameterT
+from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
-class BaseNumber(GenericEntity[ParameterT, int | float | str]):
+class BaseNumber[NumberParameterT: int | float | None](
+    GenericEntity[NumberParameterT, int | float | str]
+):
     """
     Implementation of a number.
 
@@ -21,7 +23,7 @@ class BaseNumber(GenericEntity[ParameterT, int | float | str]):
     _platform = HmPlatform.NUMBER
 
 
-class HmFloat(BaseNumber[float]):
+class HmFloat(BaseNumber[float | None]):
     """
     Implementation of a Float.
 
@@ -45,8 +47,15 @@ class HmFloat(BaseNumber[float]):
             f"max: {self._max}, special:{self._special})"
         )
 
+    @value_property
+    def value(self) -> float | None:  # type: ignore[override]
+        """Return the value of the entity."""
+        if self._value is not None:
+            return self._value  # type: ignore[no-any-return]
+        return self._default  # type: ignore[no-any-return]
 
-class HmInteger(BaseNumber[int]):
+
+class HmInteger(BaseNumber[int | None]):
     """
     Implementation of an Integer.
 
@@ -70,3 +79,10 @@ class HmInteger(BaseNumber[int]):
             f"NUMBER.INT failed: Invalid value: {value} (min: {self._min}, "
             f"max: {self._max}, special:{self._special})"
         )
+
+    @value_property
+    def value(self) -> int | None:  # type: ignore[override]
+        """Return the value of the entity."""
+        if self._value is not None:
+            return self._value  # type: ignore[no-any-return]
+        return self._default  # type: ignore[no-any-return]

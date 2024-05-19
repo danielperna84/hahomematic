@@ -144,8 +144,8 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         OnTimeMixin.__init__(self)
         super()._init_entity_fields()
         self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
-        self._e_channel_level: HmSensor = self._get_entity(
-            field=Field.CHANNEL_LEVEL, entity_type=HmSensor
+        self._e_channel_level: HmSensor[float | None] = self._get_entity(
+            field=Field.CHANNEL_LEVEL, entity_type=HmSensor[float | None]
         )
         self._e_on_time_value: HmAction = self._get_entity(
             field=Field.ON_TIME_VALUE, entity_type=HmAction
@@ -437,8 +437,8 @@ class CeIpRGBWLight(CeDimmer):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_activity_state: HmSensor = self._get_entity(
-            field=Field.DIRECTION, entity_type=HmSensor
+        self._e_activity_state: HmSensor[str | None] = self._get_entity(
+            field=Field.DIRECTION, entity_type=HmSensor[str | None]
         )
         self._e_color_temperature_kelvin: HmInteger = self._get_entity(
             field=Field.COLOR_TEMPERATURE, entity_type=HmInteger
@@ -708,14 +708,14 @@ class CeIpFixedColorLight(CeDimmer):
     @value_property
     def channel_color_name(self) -> str | None:
         """Return the name of the channel color."""
-        return self._e_channel_color.value  # type: ignore[no-any-return]
+        return self._e_channel_color.value
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
         self._e_color: HmSelect = self._get_entity(field=Field.COLOR, entity_type=HmSelect)
-        self._e_channel_color: HmSensor = self._get_entity(
-            field=Field.CHANNEL_COLOR, entity_type=HmSensor
+        self._e_channel_color: HmSensor[str | None] = self._get_entity(
+            field=Field.CHANNEL_COLOR, entity_type=HmSensor[str | None]
         )
         self._e_on_time_unit: HmAction = self._get_entity(
             field=Field.ON_TIME_UNIT, entity_type=HmAction

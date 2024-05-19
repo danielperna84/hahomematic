@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import partial, wraps
 from inspect import getfullargspec
 import logging
-from typing import Any, Final, Generic, TypeVar, cast
+from typing import Any, Final, cast
 
 import voluptuous as vol
 
@@ -43,6 +43,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.support import (
     EntityNameData,
+    GenericParameterType,
     PayloadMixin,
     convert_value,
     generate_channel_unique_id,
@@ -385,11 +386,10 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         )
 
 
-InputParameterT = TypeVar("InputParameterT", bool, int, float, str, int | float | str, None)
-ParameterT = TypeVar("ParameterT", bool, int, float, str, int | str, None)
-
-
-class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
+class BaseParameterEntity[
+    ParameterT: GenericParameterType,
+    InputParameterT: GenericParameterType,
+](BaseEntity):
     """Base class for stateless entities."""
 
     def __init__(
@@ -423,8 +423,8 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
                 custom_only=True,
             )
         )
-        self._value: ParameterT | None = None
-        self._old_value: ParameterT | None = None
+        self._value: ParameterT = None  # type: ignore[assignment]
+        self._old_value: ParameterT = None  # type: ignore[assignment]
         self._last_updated: datetime = INIT_DATETIME
         self._last_refreshed: datetime = INIT_DATETIME
         self._state_uncertain: bool = True
@@ -542,15 +542,15 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._last_refreshed
 
     @property
-    def unconfirmed_last_value_send(self) -> ParameterT | None:
+    def unconfirmed_last_value_send(self) -> ParameterT:
         """Return the unconfirmed value send for the entity."""
         return cast(
-            ParameterT | None,
+            ParameterT,
             self._client.last_value_send_cache.get_last_value_send(entity_key=self.entity_key),
         )
 
     @property
-    def old_value(self) -> ParameterT | None:
+    def old_value(self) -> ParameterT:
         """Return the old value of the entity."""
         return self._old_value
 
@@ -565,7 +565,7 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
         return self._state_uncertain
 
     @value_property
-    def value(self) -> ParameterT | None:
+    def value(self) -> ParameterT:
         """Return the value of the entity."""
         return self._value
 
@@ -679,14 +679,14 @@ class BaseParameterEntity(Generic[ParameterT, InputParameterT], BaseEntity):
             )
         )
 
-    def write_value(self, value: Any) -> tuple[ParameterT | None, ParameterT | None]:
+    def write_value(self, value: Any) -> tuple[ParameterT, ParameterT]:
         """Update value of the entity."""
         old_value = self._value
         if value == NO_CACHE_ENTRY:
             if self.last_refreshed != INIT_DATETIME:
                 self._state_uncertain = True
                 self.fire_entity_updated_callback()
-            return (old_value, None)
+            return (old_value, None)  # type: ignore[return-value]
 
         new_value = self._convert_value(value)
         if old_value == new_value:
