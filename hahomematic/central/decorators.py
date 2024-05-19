@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
 import logging
-from typing import Any, Final, ParamSpec, TypeVar, cast
+from typing import Any, Final, cast
 
 from hahomematic import central as hmcu, client as hmcl
 import hahomematic.central.xml_rpc_server as xmlrpc
@@ -16,16 +16,13 @@ from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
-
 _INTERFACE_ID: Final = "interface_id"
 
 
 def callback_backend_system(system_event: BackendSystemEvent) -> Callable:
     """Check if backend_system_callback is set and call it AFTER original function."""
 
-    def decorator_backend_system_callback(
+    def decorator_backend_system_callback[**_P, _R](
         func: Callable[_P, _R | Awaitable[_R]],
     ) -> Callable[_P, _R | Awaitable[_R]]:
         """Decorate callback system events."""
@@ -90,7 +87,7 @@ def callback_backend_system(system_event: BackendSystemEvent) -> Callable:
     return decorator_backend_system_callback
 
 
-def callback_event(
+def callback_event[**_P, _R](
     func: Callable[_P, _R],
 ) -> Callable:
     """Check if event_callback is set and call it AFTER original function."""

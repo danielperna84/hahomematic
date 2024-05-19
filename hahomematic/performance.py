@@ -7,13 +7,12 @@ from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
 import logging
-from typing import Any, Final, TypeVar
+from typing import Any, Final
 
 _LOGGER: Final = logging.getLogger(__name__)
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 
-def measure_execution_time(func: _CallableT) -> _CallableT:
+def measure_execution_time[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Decorate function to measure the function execution time."""
 
     is_enabled = _LOGGER.isEnabledFor(level=logging.DEBUG)

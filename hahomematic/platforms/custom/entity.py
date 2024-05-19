@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from datetime import datetime
 import logging
-from typing import Any, Final, TypeVar, cast
+from typing import Any, Final, cast
 
 from hahomematic.const import CALLBACK_TYPE, ENTITY_KEY, INIT_DATETIME, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
@@ -23,7 +23,6 @@ from hahomematic.platforms.support import (
 from hahomematic.support import get_channel_address
 
 _LOGGER: Final = logging.getLogger(__name__)
-_EntityT = TypeVar("_EntityT", bound=hmge.GenericEntity)
 
 
 class CustomEntity(BaseEntity):
@@ -277,7 +276,9 @@ class CustomEntity(BaseEntity):
             if entity:
                 entity.set_usage(EntityUsage.ENTITY)
 
-    def _get_entity(self, field: Field, entity_type: type[_EntityT]) -> _EntityT:
+    def _get_entity[_EntityT: hmge.GenericEntity](
+        self, field: Field, entity_type: type[_EntityT]
+    ) -> _EntityT:
         """Get entity."""
         if entity := self._data_entities.get(field):
             if not isinstance(entity, entity_type):

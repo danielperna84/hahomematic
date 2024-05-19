@@ -51,8 +51,6 @@ from hahomematic.support import get_entity_key, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
-
 _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
@@ -825,7 +823,7 @@ def bind_collector(
 ) -> Callable:
     """Decorate function to automatically add collector if not set."""
 
-    def decorator_bind_collector(func: _CallableT) -> _CallableT:
+    def decorator_bind_collector[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
         """Decorate function to automatically add collector if not set."""
         argument_index = getfullargspec(func).args.index(_COLLECTOR_ARGUMENT_NAME)
 

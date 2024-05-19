@@ -9,16 +9,13 @@ from concurrent.futures._base import CancelledError
 from functools import wraps
 import logging
 from time import monotonic
-from typing import Any, Final, ParamSpec, TypeVar, cast
+from typing import Any, Final, cast
 
 from hahomematic.const import BLOCK_LOG_TIMEOUT
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import debug_enabled, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
-_T = TypeVar("_T")
 
 
 class Looper:
@@ -77,7 +74,9 @@ class Looper:
             )
             return
 
-    def _async_create_task(self, target: Coroutine[Any, Any, _R], name: str) -> asyncio.Task[_R]:
+    def _async_create_task[_R](
+        self, target: Coroutine[Any, Any, _R], name: str
+    ) -> asyncio.Task[_R]:
         """Create a task from within the event_loop. This method must be run in the event_loop."""
         task = self._loop.create_task(target, name=name)
         self._tasks.add(task)
@@ -95,7 +94,7 @@ class Looper:
             )
             return None
 
-    def async_add_executor_job(
+    def async_add_executor_job[_T](
         self,
         target: Callable[..., _T],
         *args: Any,
@@ -121,7 +120,7 @@ def cancelling(task: asyncio.Future[Any]) -> bool:
     return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
-def loop_check(func: Callable[_P, _R]) -> Callable[_P, _R]:
+def loop_check[**_P, _R](func: Callable[_P, _R]) -> Callable[_P, _R]:
     """Annotation to mark method that must be run within the event loop."""
 
     _with_loop: set = set()
