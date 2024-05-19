@@ -6,11 +6,9 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from functools import wraps
 import logging
-from typing import Any, Final, ParamSpec, cast
+from typing import Any, Final, cast
 
 _LOGGER: Final = logging.getLogger(__name__)
-
-_P = ParamSpec("_P")
 
 
 class BaseHomematicException(Exception):
@@ -95,7 +93,7 @@ def _reduce_args(args: tuple[Any, ...]) -> tuple[Any, ...] | Any:
     return args[0] if len(args) == 1 else args
 
 
-def log_exception[_R](
+def log_exception[**_P, _R](
     ex_type: type[BaseException],
     logger: logging.Logger = _LOGGER,
     level: int = logging.ERROR,

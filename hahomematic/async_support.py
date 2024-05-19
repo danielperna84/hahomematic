@@ -9,15 +9,13 @@ from concurrent.futures._base import CancelledError
 from functools import wraps
 import logging
 from time import monotonic
-from typing import Any, Final, ParamSpec, cast
+from typing import Any, Final, cast
 
 from hahomematic.const import BLOCK_LOG_TIMEOUT
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.support import debug_enabled, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
-
-_P = ParamSpec("_P")
 
 
 class Looper:
@@ -122,7 +120,7 @@ def cancelling(task: asyncio.Future[Any]) -> bool:
     return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
-def loop_check[_R](func: Callable[_P, _R]) -> Callable[_P, _R]:
+def loop_check[**_P, _R](func: Callable[_P, _R]) -> Callable[_P, _R]:
     """Annotation to mark method that must be run within the event loop."""
 
     _with_loop: set = set()
