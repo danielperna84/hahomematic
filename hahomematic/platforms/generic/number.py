@@ -50,9 +50,7 @@ class HmFloat(BaseNumber[float | None]):
     @value_property
     def value(self) -> float | None:  # type: ignore[override]
         """Return the value of the entity."""
-        if self._value is not None:
-            return self._value  # type: ignore[no-any-return]
-        return self._default  # type: ignore[no-any-return]
+        return self._value  # type: ignore[no-any-return]
 
 
 class HmInteger(BaseNumber[int | None]):
@@ -83,6 +81,4 @@ class HmInteger(BaseNumber[int | None]):
     @value_property
     def value(self) -> int | None:  # type: ignore[override]
         """Return the value of the entity."""
-        if self._value is not None:
-            return self._value  # type: ignore[no-any-return]
-        return self._default  # type: ignore[no-any-return]
+        return self._value  # type: ignore[no-any-return]
