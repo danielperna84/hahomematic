@@ -188,8 +188,8 @@ class CeIpSirenSmoke(BaseSiren):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_smoke_detector_alarm_status: HmSensor = self._get_entity(
-            field=Field.SMOKE_DETECTOR_ALARM_STATUS, entity_type=HmSensor
+        self._e_smoke_detector_alarm_status: HmSensor[str | None] = self._get_entity(
+            field=Field.SMOKE_DETECTOR_ALARM_STATUS, entity_type=HmSensor[str | None]
         )
         self._e_smoke_detector_command: HmAction = self._get_entity(
             field=Field.SMOKE_DETECTOR_COMMAND, entity_type=HmAction

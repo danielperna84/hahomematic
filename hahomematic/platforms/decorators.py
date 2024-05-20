@@ -3,14 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Any, Generic, TypeVar
-
-_GETTER = TypeVar("_GETTER")
-_SETTER = TypeVar("_SETTER")
+from typing import Any
 
 
 # pylint: disable=invalid-name
-class generic_property(Generic[_GETTER, _SETTER], property):
+class generic_property[_GETTER, _SETTER](property):
     """Generic property implementation."""
 
     fget: Callable[[Any], _GETTER] | None
@@ -64,12 +61,12 @@ class generic_property(Generic[_GETTER, _SETTER], property):
 
 
 # pylint: disable=invalid-name
-class config_property(generic_property[_GETTER, _SETTER], property):
+class config_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
     """Decorate to mark own config properties."""
 
 
 # pylint: disable=invalid-name
-class value_property(generic_property[_GETTER, _SETTER], property):
+class value_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
     """Decorate to mark own value properties."""
 
 

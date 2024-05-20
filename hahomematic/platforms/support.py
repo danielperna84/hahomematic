@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from enum import StrEnum
 import logging
-from typing import Any, Final
+from typing import Any, Final, TypeAlias
 
 from hahomematic import central as hmcu, support as hms
 from hahomematic.const import (
@@ -27,6 +27,8 @@ from hahomematic.platforms.decorators import (
 from hahomematic.support import to_bool
 
 _LOGGER: Final = logging.getLogger(__name__)
+
+GenericParameterType: TypeAlias = bool | int | float | str | None
 
 # dict with binary_sensor relevant value lists and the corresponding TRUE value
 _BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST: Final[Mapping[tuple[str, ...], str]] = {

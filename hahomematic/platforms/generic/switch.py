@@ -16,7 +16,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 _PARAM_ON_TIME: Final = "ON_TIME"
 
 
-class HmSwitch(GenericEntity[bool, bool]):
+class HmSwitch(GenericEntity[bool | None, bool]):
     """
     Implementation of a switch.
 
@@ -30,7 +30,7 @@ class HmSwitch(GenericEntity[bool, bool]):
         """Get the value of the entity."""
         if self._type == ParameterType.ACTION:
             return False
-        return self._value
+        return self._value  # type: ignore[no-any-return]
 
     async def turn_on(
         self, collector: CallParameterCollector | None = None, on_time: float | None = None

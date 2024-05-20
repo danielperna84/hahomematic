@@ -98,11 +98,13 @@ class CeCover(CustomEntity):
         """Init the entity fields."""
         super()._init_entity_fields()
         self._command_processing_lock = asyncio.Lock()
-        self._e_direction: HmSensor = self._get_entity(field=Field.DIRECTION, entity_type=HmSensor)
+        self._e_direction: HmSensor[str | None] = self._get_entity(
+            field=Field.DIRECTION, entity_type=HmSensor[str | None]
+        )
         self._e_level: HmFloat = self._get_entity(field=Field.LEVEL, entity_type=HmFloat)
         self._e_stop: HmAction = self._get_entity(field=Field.STOP, entity_type=HmAction)
-        self._e_channel_level: HmSensor = self._get_entity(
-            field=Field.CHANNEL_LEVEL, entity_type=HmSensor
+        self._e_channel_level: HmSensor[float | None] = self._get_entity(
+            field=Field.CHANNEL_LEVEL, entity_type=HmSensor[float | None]
         )
 
     @property
@@ -238,8 +240,8 @@ class CeBlind(CeCover):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_channel_level_2: HmSensor = self._get_entity(
-            field=Field.CHANNEL_LEVEL_2, entity_type=HmSensor
+        self._e_channel_level_2: HmSensor[float | None] = self._get_entity(
+            field=Field.CHANNEL_LEVEL_2, entity_type=HmSensor[float | None]
         )
         self._e_level_2: HmFloat = self._get_entity(field=Field.LEVEL_2, entity_type=HmFloat)
         self._e_combined: HmAction = self._get_entity(
@@ -468,13 +470,15 @@ class CeGarage(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_door_state: HmSensor = self._get_entity(
-            field=Field.DOOR_STATE, entity_type=HmSensor
+        self._e_door_state: HmSensor[str | None] = self._get_entity(
+            field=Field.DOOR_STATE, entity_type=HmSensor[str | None]
         )
         self._e_door_command: HmAction = self._get_entity(
             field=Field.DOOR_COMMAND, entity_type=HmAction
         )
-        self._e_section: HmSensor = self._get_entity(field=Field.SECTION, entity_type=HmSensor)
+        self._e_section: HmSensor[str | None] = self._get_entity(
+            field=Field.SECTION, entity_type=HmSensor[str | None]
+        )
 
     @value_property
     def current_position(self) -> int | None:

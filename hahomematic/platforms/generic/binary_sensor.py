@@ -11,7 +11,7 @@ from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
-class HmBinarySensor(GenericEntity[bool, bool]):
+class HmBinarySensor(GenericEntity[bool | None, bool]):
     """
     Implementation of a binary_sensor.
 
@@ -24,5 +24,5 @@ class HmBinarySensor(GenericEntity[bool, bool]):
     def value(self) -> bool | None:  # type: ignore[override]
         """Return the value of the entity."""
         if self._value is not None:
-            return self._value
-        return self._default
+            return self._value  # type: ignore[no-any-return]
+        return self._default  # type: ignore[no-any-return]

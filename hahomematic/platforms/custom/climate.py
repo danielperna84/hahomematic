@@ -107,10 +107,12 @@ class BaseClimateEntity(CustomEntity):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_humidity: HmSensor = self._get_entity(field=Field.HUMIDITY, entity_type=HmSensor)
+        self._e_humidity: HmSensor[int | None] = self._get_entity(
+            field=Field.HUMIDITY, entity_type=HmSensor[int | None]
+        )
         self._e_setpoint: HmFloat = self._get_entity(field=Field.SETPOINT, entity_type=HmFloat)
-        self._e_temperature: HmSensor = self._get_entity(
-            field=Field.TEMPERATURE, entity_type=HmSensor
+        self._e_temperature: HmSensor[float | None] = self._get_entity(
+            field=Field.TEMPERATURE, entity_type=HmSensor[float | None]
         )
         self._e_temperature_maximum: HmFloat = self._get_entity(
             field=Field.TEMPERATURE_MAXIMUM, entity_type=HmFloat
@@ -141,17 +143,17 @@ class BaseClimateEntity(CustomEntity):
         """Return the maximum temperature."""
         if self._e_temperature_maximum.value is not None:
             return float(self._e_temperature_maximum.value)
-        return self._e_setpoint.max
+        return self._e_setpoint.max  # type: ignore[no-any-return]
 
     @value_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        return self._e_humidity.value  # type: ignore[no-any-return]
+        return self._e_humidity.value
 
     @value_property
     def current_temperature(self) -> float | None:
         """Return current temperature."""
-        return self._e_temperature.value  # type: ignore[no-any-return]
+        return self._e_temperature.value
 
     @value_property
     def target_temperature(self) -> float | None:
@@ -273,11 +275,11 @@ class CeRfThermostat(BaseClimateEntity):
         self._e_lowering_mode: HmAction = self._get_entity(
             field=Field.LOWERING_MODE, entity_type=HmAction
         )
-        self._e_control_mode: HmSensor = self._get_entity(
-            field=Field.CONTROL_MODE, entity_type=HmSensor
+        self._e_control_mode: HmSensor[str | None] = self._get_entity(
+            field=Field.CONTROL_MODE, entity_type=HmSensor[str | None]
         )
-        self._e_valve_state: HmSensor = self._get_entity(
-            field=Field.VALVE_STATE, entity_type=HmSensor
+        self._e_valve_state: HmSensor[int | None] = self._get_entity(
+            field=Field.VALVE_STATE, entity_type=HmSensor[int | None]
         )
 
     @value_property

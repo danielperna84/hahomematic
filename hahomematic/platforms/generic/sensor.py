@@ -18,7 +18,7 @@ from hahomematic.platforms.support import get_value_from_value_list
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-class HmSensor(GenericEntity[Any, None]):
+class HmSensor[SensorT: float | int | str | None](GenericEntity[SensorT, None]):
     """
     Implementation of a sensor.
 
@@ -28,15 +28,15 @@ class HmSensor(GenericEntity[Any, None]):
     _platform = HmPlatform.SENSOR
 
     @value_property
-    def value(self) -> Any:
+    def value(self) -> SensorT:  # type: ignore[override]
         """Return the value."""
         if (
             value := get_value_from_value_list(value=self._value, value_list=self.values)
         ) is not None:
-            return value
+            return value  # type: ignore[return-value]
         if convert_func := self._get_converter_func():
-            return convert_func(self._value)
-        return self._value
+            return convert_func(self._value)  # type: ignore[no-any-return]
+        return self._value  # type: ignore[no-any-return]
 
     def _get_converter_func(self) -> Any:
         """Return a converter based on sensor."""

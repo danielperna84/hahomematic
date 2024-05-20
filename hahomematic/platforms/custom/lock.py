@@ -98,18 +98,20 @@ class CeIpLock(BaseLock):
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
         super()._init_entity_fields()
-        self._e_lock_state: HmSensor = self._get_entity(
-            field=Field.LOCK_STATE, entity_type=HmSensor
+        self._e_lock_state: HmSensor[str | None] = self._get_entity(
+            field=Field.LOCK_STATE, entity_type=HmSensor[str | None]
         )
         self._e_lock_target_level: HmAction = self._get_entity(
             field=Field.LOCK_TARGET_LEVEL, entity_type=HmAction
         )
-        self._e_direction: HmSensor = self._get_entity(field=Field.DIRECTION, entity_type=HmSensor)
+        self._e_direction: HmSensor[str | None] = self._get_entity(
+            field=Field.DIRECTION, entity_type=HmSensor[str | None]
+        )
 
     @value_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
-        return self._e_lock_state.value == LockState.LOCKED  # type: ignore[no-any-return]
+        return self._e_lock_state.value == LockState.LOCKED
 
     @value_property
     def is_locking(self) -> bool | None:
@@ -158,8 +160,12 @@ class CeRfLock(BaseLock):
         super()._init_entity_fields()
         self._e_state: HmSwitch = self._get_entity(field=Field.STATE, entity_type=HmSwitch)
         self._e_open: HmAction = self._get_entity(field=Field.OPEN, entity_type=HmAction)
-        self._e_direction: HmSensor = self._get_entity(field=Field.DIRECTION, entity_type=HmSensor)
-        self._e_error: HmSensor = self._get_entity(field=Field.ERROR, entity_type=HmSensor)
+        self._e_direction: HmSensor[str | None] = self._get_entity(
+            field=Field.DIRECTION, entity_type=HmSensor[str | None]
+        )
+        self._e_error: HmSensor[str | None] = self._get_entity(
+            field=Field.ERROR, entity_type=HmSensor[str | None]
+        )
 
     @value_property
     def is_locked(self) -> bool:
