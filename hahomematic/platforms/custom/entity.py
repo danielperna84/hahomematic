@@ -281,7 +281,8 @@ class CustomEntity(BaseEntity):
     ) -> _EntityT:
         """Get entity."""
         if entity := self._data_entities.get(field):
-            if not isinstance(entity, entity_type):
+            if type(entity).__name__ != entity_type.__name__:
+                # not isinstance(entity, entity_type): # does not work with generic type
                 _LOGGER.debug(  # pragma: no cover
                     "GET_ENTITY: type mismatch for requested sub entity: "
                     "expected: %s, but is %s for field name %s of entity %s",

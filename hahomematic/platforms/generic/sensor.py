@@ -13,12 +13,12 @@ from typing import Any, Final
 from hahomematic.const import HmPlatform, Parameter
 from hahomematic.platforms.decorators import value_property
 from hahomematic.platforms.generic.entity import GenericEntity
-from hahomematic.platforms.support import GenericParameterType, get_value_from_value_list
+from hahomematic.platforms.support import get_value_from_value_list
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-class HmSensor[ParameterT: GenericParameterType](GenericEntity[ParameterT, None]):
+class HmSensor[SensorT: float | int | str | None](GenericEntity[SensorT, None]):
     """
     Implementation of a sensor.
 
@@ -28,7 +28,7 @@ class HmSensor[ParameterT: GenericParameterType](GenericEntity[ParameterT, None]
     _platform = HmPlatform.SENSOR
 
     @value_property
-    def value(self) -> ParameterT:  # type: ignore[override]
+    def value(self) -> SensorT:  # type: ignore[override]
         """Return the value."""
         if (
             value := get_value_from_value_list(value=self._value, value_list=self.values)
