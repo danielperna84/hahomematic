@@ -22,6 +22,23 @@ class BaseNumber[NumberParameterT: int | float | None](
 
     _platform = HmPlatform.NUMBER
 
+    def _prepare_number_for_sending(
+        self, value: int | float | str, type_converter: type, do_validate: bool = True
+    ) -> NumberParameterT:
+        """Prepare value before sending."""
+        if not do_validate or (
+            value is not None
+            and isinstance(value, int | float)
+            and self._min <= type_converter(value) <= self._max
+        ):
+            return type_converter(value)  # type: ignore[no-any-return]
+        if self._special and isinstance(value, str) and value in self._special:
+            return type_converter(self._special[value])  # type: ignore[no-any-return]
+        raise ValueError(
+            f"NUMBER failed: Invalid value: {value} (min: {self._min}, "
+            f"max: {self._max}, special:{self._special})"
+        )
+
 
 class HmFloat(BaseNumber[float | None]):
     """
@@ -32,19 +49,10 @@ class HmFloat(BaseNumber[float | None]):
 
     def _prepare_value_for_sending(
         self, value: int | float | str, do_validate: bool = True
-    ) -> float:
+    ) -> float | None:
         """Prepare value before sending."""
-        if not do_validate or (
-            value is not None
-            and isinstance(value, int | float)
-            and self._min <= float(value) <= self._max
-        ):
-            return float(value)
-        if self._special and isinstance(value, str) and value in self._special:
-            return float(self._special[value])
-        raise ValueError(
-            f"NUMBER.FLOAT failed: Invalid value: {value} (min: {self._min}, "
-            f"max: {self._max}, special:{self._special})"
+        return self._prepare_number_for_sending(
+            value=value, type_converter=float, do_validate=do_validate
         )
 
     @value_property
@@ -62,20 +70,10 @@ class HmInteger(BaseNumber[int | None]):
 
     def _prepare_value_for_sending(
         self, value: int | float | str, do_validate: bool = True
-    ) -> int:
+    ) -> int | None:
         """Prepare value before sending."""
-        if not do_validate or (
-            value is not None
-            and isinstance(value, int | float)
-            and self._min <= int(value) <= self._max
-        ):
-            return int(value)
-        if self._special and isinstance(value, str) and value in self._special:
-            return int(self._special[value])
-
-        raise ValueError(
-            f"NUMBER.INT failed: Invalid value: {value} (min: {self._min}, "
-            f"max: {self._max}, special:{self._special})"
+        return self._prepare_number_for_sending(
+            value=value, type_converter=int, do_validate=do_validate
         )
 
     @value_property
