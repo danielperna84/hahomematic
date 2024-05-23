@@ -175,6 +175,7 @@ class CallbackEntity(ABC):
         """Return, if entity should be enabled based on usage attribute."""
         return self.usage in (
             EntityUsage.CE_PRIMARY,
+            EntityUsage.CE_VISIBLE,
             EntityUsage.ENTITY,
             EntityUsage.EVENT,
         )
