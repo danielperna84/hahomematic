@@ -1,3 +1,7 @@
+# Version 2024.5.4 (2024-05-23)
+
+- Enable CE visible entities by default
+
 # Version 2024.5.3 (2024-05-16)
 
 - Fix value assignment to lock enums
