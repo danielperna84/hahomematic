@@ -488,7 +488,7 @@ VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
 
 VIRTUAL_REMOTE_ADDRESSES: Final[tuple[str, ...]] = (
     "BidCoS-RF",
-    "HMW-RCV-50",
+    "BidCoS-Wir",
     "HmIP-RCV-1",
 )
 

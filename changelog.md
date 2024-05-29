@@ -1,3 +1,7 @@
+# Version 2024.5.5 (2024-05-29)
+
+- Fix address for bidcos wired virtual device
+
 # Version 2024.5.4 (2024-05-23)
 
 - Enable CE visible entities by default
@@ -869,7 +873,7 @@
 
 # Version 2022.10.2 (2022-10-08)
 
-- Make connection checker more resilent:
+- Make connection checker more resilient:
 - Reduce connection checker interval to 15s
 - Connection is not connected, if three consecutive checks fail.
 
