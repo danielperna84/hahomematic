@@ -574,11 +574,12 @@ class JsonRpcAioHttpClient:
                                 extended_sysvar=extended_sysvar,
                             )
                         )
-                    except ValueError as verr:
+                    except (ValueError, TypeError) as vterr:
                         _LOGGER.warning(
                             "GET_ALL_SYSTEM_VARIABLES failed: "
-                            "ValueError [%s] Failed to parse SysVar %s ",
-                            reduce_args(args=verr.args),
+                            "%s [%s] Failed to parse SysVar %s ",
+                            vterr.__class__.__name__,
+                            reduce_args(args=vterr.args),
                             name,
                         )
             self._connection_state.remove_issue(issuer=self, iid=iid)
