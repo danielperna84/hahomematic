@@ -1,3 +1,7 @@
+# Version 2024.6.0 (2024-06-01)
+
+- Catch TypeError on SysVar import
+
 # Version 2024.5.5 (2024-05-29)
 
 - Fix address for bidcos wired virtual device
