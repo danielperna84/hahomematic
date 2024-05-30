@@ -125,8 +125,7 @@ def to_bool(value: Any) -> bool:
     if not isinstance(value, str):
         raise TypeError("invalid literal for boolean. Not a string.")
 
-    lower_value = value.lower()
-    return lower_value in ["y", "yes", "t", "true", "on", "1"]
+    return value.lower() in ["y", "yes", "t", "true", "on", "1"]
 
 
 def check_password(password: str | None) -> bool:
