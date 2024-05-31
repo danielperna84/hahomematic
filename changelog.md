@@ -1,4 +1,4 @@
-# Version 2024.6.0 (2024-06-01)
+# Version 2024.5.6 (2024-05-31)
 
 - Catch TypeError on SysVar import
 
