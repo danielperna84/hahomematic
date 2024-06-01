@@ -20,6 +20,7 @@ from hahomematic.platforms.custom.light import (
     CeIpRGBWLight,
     ColorBehaviour,
     FixedColor,
+    TimeUnit,
 )
 
 from tests import const, helper
@@ -1027,7 +1028,36 @@ async def test_ceiprgbwlight(
             "HUE": 44,
             "SATURATION": 0.66,
             "DURATION_VALUE": 111600,
+            "RAMP_TIME_UNIT": TimeUnit.SECONDS,
             "RAMP_TIME_VALUE": 5,
+            "LEVEL": 1.0,
+        },
+        wait_for_callback=WAIT_FOR_CALLBACK,
+    )
+
+    await light.turn_off(ramp_time=5)
+    assert mock_client.method_calls[-2] == call.put_paramset(
+        channel_address="VCU5629873:1",
+        paramset_key=ParamsetKey.VALUES,
+        values={
+            "RAMP_TIME_TO_OFF_UNIT": TimeUnit.SECONDS,
+            "RAMP_TIME_TO_OFF_VALUE": 5,
+            "LEVEL": 0.0,
+        },
+        wait_for_callback=WAIT_FOR_CALLBACK,
+    )
+
+    await light.turn_on(hs_color=(44, 66), ramp_time=5, on_time=8760)
+    assert mock_client.method_calls[-4] == call.put_paramset(
+        channel_address="VCU5629873:1",
+        paramset_key=ParamsetKey.VALUES,
+        values={
+            "HUE": 44,
+            "SATURATION": 0.66,
+            "RAMP_TIME_UNIT": TimeUnit.SECONDS,
+            "RAMP_TIME_VALUE": 5,
+            "DURATION_UNIT": TimeUnit.SECONDS,
+            "DURATION_VALUE": 8760,
             "LEVEL": 1.0,
         },
         wait_for_callback=WAIT_FOR_CALLBACK,

@@ -563,7 +563,7 @@ class CeIpRGBWLight(CeDimmer):
     ) -> None:
         """Set the on time value in seconds."""
         on_time, on_time_unit = _recalc_unit_timer(time=on_time)
-        if on_time_unit:
+        if on_time_unit is not None:
             await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
         await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
@@ -572,7 +572,7 @@ class CeIpRGBWLight(CeDimmer):
     ) -> None:
         """Set the ramp time value in seconds."""
         ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
-        if ramp_time_unit:
+        if ramp_time_unit is not None:
             await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
         await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
 
@@ -581,7 +581,7 @@ class CeIpRGBWLight(CeDimmer):
     ) -> None:
         """Set the ramp time value in seconds."""
         ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
-        if ramp_time_unit:
+        if ramp_time_unit is not None:
             await self._e_ramp_time_to_off_unit.send_value(
                 value=ramp_time_unit, collector=collector
             )
