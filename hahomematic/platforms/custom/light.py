@@ -558,12 +558,22 @@ class CeIpRGBWLight(CeDimmer):
         await super().turn_on(collector=collector, **kwargs)
 
     @bind_collector()
+    async def turn_off(
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOffArgs]
+    ) -> None:
+        """Turn the light off."""
+        if kwargs.get("on_time") is None and kwargs.get("ramp_time"):
+            # 111600 is a special value for NOT_USED
+            await self._set_on_time_value(on_time=111600, collector=collector)
+        await super().turn_off(collector=collector, **kwargs)
+
+    @bind_collector()
     async def _set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
         """Set the on time value in seconds."""
         on_time, on_time_unit = _recalc_unit_timer(time=on_time)
-        if on_time_unit:
+        if on_time_unit is not None:
             await self._e_on_time_unit.send_value(value=on_time_unit, collector=collector)
         await self._e_on_time_value.send_value(value=float(on_time), collector=collector)
 
@@ -572,7 +582,7 @@ class CeIpRGBWLight(CeDimmer):
     ) -> None:
         """Set the ramp time value in seconds."""
         ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
-        if ramp_time_unit:
+        if ramp_time_unit is not None:
             await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
         await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
 
@@ -581,13 +591,9 @@ class CeIpRGBWLight(CeDimmer):
     ) -> None:
         """Set the ramp time value in seconds."""
         ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
-        if ramp_time_unit:
-            await self._e_ramp_time_to_off_unit.send_value(
-                value=ramp_time_unit, collector=collector
-            )
-        await self._e_ramp_time_to_off_value.send_value(
-            value=float(ramp_time), collector=collector
-        )
+        if ramp_time_unit is not None:
+            await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
+        await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
 
 
 class CeIpDrgDaliLight(CeDimmer):
@@ -689,12 +695,8 @@ class CeIpDrgDaliLight(CeDimmer):
         """Set the ramp time value in seconds."""
         ramp_time, ramp_time_unit = _recalc_unit_timer(time=ramp_time)
         if ramp_time_unit:
-            await self._e_ramp_time_to_off_unit.send_value(
-                value=ramp_time_unit, collector=collector
-            )
-        await self._e_ramp_time_to_off_value.send_value(
-            value=float(ramp_time), collector=collector
-        )
+            await self._e_ramp_time_unit.send_value(value=ramp_time_unit, collector=collector)
+        await self._e_ramp_time_value.send_value(value=float(ramp_time), collector=collector)
 
 
 class CeIpFixedColorLight(CeDimmer):
