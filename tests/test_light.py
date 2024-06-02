@@ -1040,6 +1040,7 @@ async def test_ceiprgbwlight(
         channel_address="VCU5629873:1",
         paramset_key=ParamsetKey.VALUES,
         values={
+            "DURATION_VALUE": 111600,
             "RAMP_TIME_TO_OFF_UNIT": TimeUnit.SECONDS,
             "RAMP_TIME_TO_OFF_VALUE": 5,
             "LEVEL": 0.0,

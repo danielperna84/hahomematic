@@ -558,6 +558,16 @@ class CeIpRGBWLight(CeDimmer):
         await super().turn_on(collector=collector, **kwargs)
 
     @bind_collector()
+    async def turn_off(
+        self, collector: CallParameterCollector | None = None, **kwargs: Unpack[LightOffArgs]
+    ) -> None:
+        """Turn the light off."""
+        if kwargs.get("on_time") is None and kwargs.get("ramp_time"):
+            # 111600 is a special value for NOT_USED
+            await self._set_on_time_value(on_time=111600, collector=collector)
+        await super().turn_off(collector=collector, **kwargs)
+
+    @bind_collector()
     async def _set_on_time_value(
         self, on_time: float, collector: CallParameterCollector | None = None
     ) -> None:
