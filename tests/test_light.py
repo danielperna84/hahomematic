@@ -1041,8 +1041,8 @@ async def test_ceiprgbwlight(
         paramset_key=ParamsetKey.VALUES,
         values={
             "DURATION_VALUE": 111600,
-            "RAMP_TIME_TO_OFF_UNIT": TimeUnit.SECONDS,
-            "RAMP_TIME_TO_OFF_VALUE": 5,
+            "RAMP_TIME_UNIT": TimeUnit.SECONDS,
+            "RAMP_TIME_VALUE": 5,
             "LEVEL": 0.0,
         },
         wait_for_callback=WAIT_FOR_CALLBACK,
