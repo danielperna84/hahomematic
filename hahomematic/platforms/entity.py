@@ -154,6 +154,11 @@ class CallbackEntity(ABC):
     def name(self) -> str | None:
         """Return the name of the entity."""
 
+    @property
+    @abstractmethod
+    def path(self) -> str:
+        """Return the path of the entity."""
+
     @config_property
     def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
@@ -248,6 +253,10 @@ class CallbackEntity(ABC):
         """Set last_update to current datetime."""
         self._refreshed_at = now
 
+    def __str__(self) -> str:
+        """Provide some useful information."""
+        return f"path: {self.path}, name: {self.full_name}"
+
 
 class BaseEntity(CallbackEntity, PayloadMixin):
     """Base class for regular entities."""
@@ -286,11 +295,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._entity_name_data: Final = self._get_entity_name()
 
     @property
-    def address_path(self) -> str:
-        """Return the address pass of the entity."""
-        return f"{self._platform}/{self._device.interface_id}/{self._unique_id}/"
-
-    @property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self._device.available
@@ -299,6 +303,11 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def base_channel_no(self) -> int | None:
         """Return the base channel no of the entity."""
         return self._device.get_sub_device_channel(channel_no=self._channel_no)
+
+    @property
+    def _base_path(self) -> str:
+        """Return the base path of the entity."""
+        return f"{self._device.device_address}/{self._channel_no}/{self._platform}"
 
     @config_property
     def channel_address(self) -> str:
@@ -377,13 +386,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @abstractmethod
     def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
-
-    def __str__(self) -> str:
-        """Provide some useful information."""
-        return (
-            f"address_path: {self.address_path}, type: {self._device.device_type}, "
-            f"name: {self.full_name}"
-        )
 
 
 class BaseParameterEntity[
@@ -505,6 +507,11 @@ class BaseParameterEntity[
     def paramset_key(self) -> str:
         """Return paramset_key name."""
         return self._paramset_key
+
+    @property
+    def path(self) -> str:
+        """Return the path of the entity."""
+        return f"{self._base_path}/{self._parameter}".lower()
 
     @config_property
     def raw_unit(self) -> str | None:
