@@ -42,13 +42,13 @@ class PayloadMixin:
     """Mixin to add payload methods to class."""
 
     @property
-    def config_payload(self) -> Mapping[str, Any]:
-        """Return the config payload."""
+    def payload_config(self) -> Mapping[str, Any]:
+        """Return the payload config."""
         return get_public_attributes_for_config_property(data_object=self)
 
     @property
-    def value_payload(self) -> Mapping[str, Any]:
-        """Return the value payload."""
+    def payload_value(self) -> Mapping[str, Any]:
+        """Return the payload value."""
         return get_public_attributes_for_value_property(data_object=self)
 
 
