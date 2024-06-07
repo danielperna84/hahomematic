@@ -593,7 +593,7 @@ class BaseParameterEntity[
         """Return unit value."""
         return self._unit
 
-    @value_property
+    @config_property
     def values(self) -> tuple[str, ...] | None:
         """Return the values."""
         return self._values
