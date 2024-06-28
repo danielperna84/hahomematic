@@ -252,9 +252,7 @@ class Client(ABC):
             )
             return False
 
-        if (datetime.now() - self.last_updated).total_seconds() < CALLBACK_WARN_INTERVAL:
-            return True
-        return False
+        return (datetime.now() - self.last_updated).total_seconds() < CALLBACK_WARN_INTERVAL
 
     def is_callback_alive(self) -> bool:
         """Return if XmlRPC-Server is alive based on received events for this client."""

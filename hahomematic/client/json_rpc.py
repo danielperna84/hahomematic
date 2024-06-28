@@ -154,9 +154,7 @@ class JsonRpcAioHttpClient:
         if self._last_session_id_refresh is None:
             return False
         delta = datetime.now() - self._last_session_id_refresh
-        if delta.seconds < config.JSON_SESSION_AGE:
-            return True
-        return False
+        return delta.seconds < config.JSON_SESSION_AGE
 
     async def _do_login(self) -> str | None:
         """Login to CCU and return session."""
