@@ -187,13 +187,11 @@ class CentralUnit:
         """Return if active sub threads are alive."""
         if self._connection_checker.is_alive():
             return True
-        if (
+        return bool(
             self._xml_rpc_server
             and self._xml_rpc_server.no_central_assigned
             and self._xml_rpc_server.is_alive()
-        ):
-            return True
-        return False
+        )
 
     @property
     def interface_ids(self) -> tuple[str, ...]:

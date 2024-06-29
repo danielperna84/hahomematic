@@ -433,7 +433,7 @@ class ParameterVisibilityCache:
                 return True  # pragma: no cover
 
         # check if parameter is in _UN_IGNORE_PARAMETERS_BY_DEVICE
-        if (
+        return bool(
             not custom_only
             and (
                 un_ignore_parameters := _get_value_from_dict_by_wildcard_key(
@@ -442,10 +442,7 @@ class ParameterVisibilityCache:
                 )
             )
             and parameter in un_ignore_parameters
-        ):
-            return True
-
-        return False
+        )
 
     @lru_cache(maxsize=4096)
     def parameter_is_un_ignored(

@@ -191,9 +191,7 @@ def changed_within_seconds(last_change: datetime, max_age: int = MAX_CACHE_AGE) 
     if last_change == INIT_DATETIME:
         return False
     delta = datetime.now() - last_change
-    if delta.seconds < max_age:
-        return True
-    return False
+    return delta.seconds < max_age
 
 
 def find_free_port() -> int:
