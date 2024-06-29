@@ -13,6 +13,7 @@ lint.extend-select = [
 ]
 
 lint.extend-ignore = [
+    "ASYNC", 
     "PLC", # pylint
     "PLE", # pylint
     "PLR", # pylint

@@ -408,6 +408,8 @@ target-version = "py311"
 line-length = 99
 
 lint.select = [
+    "A", # Variable {name} is shadowing a Python builtin
+    "ASYNC", # Async checks
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
