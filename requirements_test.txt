@@ -4,7 +4,7 @@
 coverage==7.5.4
 freezegun==1.5.1
 mypy-dev==1.11.0a9
-pip==24.1.1
+pip==24.1.2
 pre-commit==3.7.1
 pydantic==2.8.2
 pydevccu==0.1.8
