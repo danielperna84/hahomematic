@@ -86,7 +86,7 @@ class HmDevice(PayloadMixin):
         self._custom_entities: Final[dict[int, hmce.CustomEntity]] = {}
         self._generic_entities: Final[dict[ENTITY_KEY, GenericEntity]] = {}
         self._generic_events: Final[dict[ENTITY_KEY, GenericEvent]] = {}
-        self._last_updated: datetime = INIT_DATETIME
+        self._modified_at: datetime = INIT_DATETIME
         self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
         self._device_updated_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
@@ -417,8 +417,8 @@ class HmDevice(PayloadMixin):
         if cb in self._firmware_update_callbacks:
             self._firmware_update_callbacks.remove(cb)
 
-    def _set_last_updated(self) -> None:
-        self._last_updated = datetime.now()
+    def _set_modified_at(self) -> None:
+        self._modified_at = datetime.now()
 
     def get_entities(
         self,
@@ -586,7 +586,7 @@ class HmDevice(PayloadMixin):
     @loop_check
     def fire_device_updated_callback(self, *args: Any) -> None:
         """Do what is needed when the state of the device has been updated."""
-        self._set_last_updated()
+        self._set_modified_at()
         for callback_handler in self._device_updated_callbacks:
             try:
                 callback_handler(*args)
@@ -736,7 +736,7 @@ class ValueCache:
         )
         # write value to cache even if an exception has occurred
         # to avoid repetitive calls to CCU within max_age
-        self._device_cache[key] = CacheEntry(value=value, last_refresh=datetime.now())
+        self._device_cache[key] = CacheEntry(value=value, refresh_at=datetime.now())
 
     def _get_value_from_cache(
         self,

@@ -112,8 +112,8 @@ class CallbackEntity(ABC):
         self._entity_updated_callbacks: dict[Callable, str] = {}
         self._device_removed_callbacks: list[Callable] = []
         self._custom_id: str | None = None
-        self._last_updated: datetime = INIT_DATETIME
-        self._last_refreshed: datetime = INIT_DATETIME
+        self._modified_at: datetime = INIT_DATETIME
+        self._refreshed_at: datetime = INIT_DATETIME
 
     @property
     @abstractmethod
@@ -141,14 +141,14 @@ class CallbackEntity(ABC):
         """Return the full name of the entity."""
 
     @property
-    def last_updated(self) -> datetime:
-        """Return the last updated datetime value."""
-        return self._last_updated
+    def modified_at(self) -> datetime:
+        """Return the last update datetime value."""
+        return self._modified_at
 
     @property
-    def last_refreshed(self) -> datetime:
-        """Return the last refreshed datetime value."""
-        return self._last_refreshed
+    def refreshed_at(self) -> datetime:
+        """Return the last refresh datetime value."""
+        return self._refreshed_at
 
     @config_property
     @abstractmethod
@@ -240,14 +240,14 @@ class CallbackEntity(ABC):
             except Exception as ex:
                 _LOGGER.warning("FIRE_DEVICE_REMOVED_EVENT failed: %s", reduce_args(args=ex.args))
 
-    def _set_last_updated(self, now: datetime = datetime.now()) -> None:
+    def _set_modified_at(self, now: datetime = datetime.now()) -> None:
         """Set last_update to current datetime."""
-        self._last_updated = now
-        self._set_last_refreshed(now=now)
+        self._modified_at = now
+        self._set_refreshed_at(now=now)
 
-    def _set_last_refreshed(self, now: datetime = datetime.now()) -> None:
+    def _set_refreshed_at(self, now: datetime = datetime.now()) -> None:
         """Set last_update to current datetime."""
-        self._last_refreshed = now
+        self._refreshed_at = now
 
 
 class BaseEntity(CallbackEntity, PayloadMixin):
@@ -426,8 +426,8 @@ class BaseParameterEntity[
         )
         self._value: ParameterT = None  # type: ignore[assignment]
         self._old_value: ParameterT = None  # type: ignore[assignment]
-        self._last_updated: datetime = INIT_DATETIME
-        self._last_refreshed: datetime = INIT_DATETIME
+        self._modified_at: datetime = INIT_DATETIME
+        self._refreshed_at: datetime = INIT_DATETIME
         self._state_uncertain: bool = True
         self._is_forced_sensor: bool = False
         self._assign_parameter_data(parameter_data=parameter_data)
@@ -524,8 +524,8 @@ class BaseParameterEntity[
 
     @property
     def is_valid(self) -> bool:
-        """Return, if the value of the entity is valid based on the last updated datetime."""
-        return self._last_refreshed > INIT_DATETIME
+        """Return, if the value of the entity is valid based on the refreshed at datetime."""
+        return self._refreshed_at > INIT_DATETIME
 
     @property
     def is_writeable(self) -> bool:
@@ -533,14 +533,14 @@ class BaseParameterEntity[
         return False if self._is_forced_sensor else bool(self._operations & Operations.WRITE)
 
     @property
-    def last_updated(self) -> datetime:
-        """Return the last updated datetime value."""
-        return self._last_updated
+    def modified_at(self) -> datetime:
+        """Return the last modified datetime value."""
+        return self._modified_at
 
     @property
-    def last_refreshed(self) -> datetime:
+    def refreshed_at(self) -> datetime:
         """Return the last refreshed datetime value."""
-        return self._last_refreshed
+        return self._refreshed_at
 
     @property
     def unconfirmed_last_value_send(self) -> ParameterT:
@@ -663,7 +663,7 @@ class BaseParameterEntity[
 
     async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
         """Init the entity data."""
-        if direct_call is False and hms.changed_within_seconds(last_change=self._last_refreshed):
+        if direct_call is False and hms.changed_within_seconds(last_change=self._refreshed_at):
             return
 
         # Check, if entity is readable
@@ -684,16 +684,16 @@ class BaseParameterEntity[
         """Update value of the entity."""
         old_value = self._value
         if value == NO_CACHE_ENTRY:
-            if self.last_refreshed != INIT_DATETIME:
+            if self.refreshed_at != INIT_DATETIME:
                 self._state_uncertain = True
                 self.fire_entity_updated_callback()
             return (old_value, None)  # type: ignore[return-value]
 
         new_value = self._convert_value(value)
         if old_value == new_value:
-            self._set_last_refreshed()
+            self._set_refreshed_at()
         else:
-            self._set_last_updated()
+            self._set_modified_at()
             self._old_value = old_value
             self._value = new_value
             self._state_uncertain = False

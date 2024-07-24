@@ -68,7 +68,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         """Handle event for which this handler has subscribed."""
         if self.event_type in ENTITY_EVENTS:
             self.fire_entity_updated_callback(parameter=self.parameter.lower())
-        self._set_last_updated()
+        self._set_modified_at()
         self.fire_event(value)
 
     @loop_check
