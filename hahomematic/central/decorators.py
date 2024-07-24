@@ -68,7 +68,7 @@ def callback_backend_system(system_event: BackendSystemEvent) -> Callable:
                 args = args[1:]
                 interface_id: str = args[0] if len(args) > 0 else str(kwargs[_INTERFACE_ID])
                 if client := hmcl.get_client(interface_id=interface_id):
-                    client.last_updated = datetime.now()
+                    client.modified_at = datetime.now()
                     client.central.fire_backend_system_callback(
                         system_event=system_event, **kwargs
                     )
@@ -105,7 +105,7 @@ def callback_event[**_P, _R](
             args = args[1:]
             interface_id: str = args[0] if len(args) > 1 else str(kwargs[_INTERFACE_ID])
             if client := hmcl.get_client(interface_id=interface_id):
-                client.last_updated = datetime.now()
+                client.modified_at = datetime.now()
                 client.central.fire_backend_parameter_callback(*args, **kwargs)
         except Exception as err:  # pragma: no cover
             _LOGGER.warning(

@@ -131,9 +131,9 @@ class GenericSystemVariable(GenericHubEntity):
             value = float(value)
 
         if old_value == value:
-            self._set_last_refreshed()
+            self._set_refreshed_at()
         else:
-            self._set_last_updated()
+            self._set_modified_at()
             self._old_value = old_value
             self._value = value
 

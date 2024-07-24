@@ -65,13 +65,13 @@ class Client(ABC):
 
         self._json_rpc_client: Final = client_config.central.json_rpc_client
 
-        self.interface: Final = client_config.interface
-        self.interface_id: Final = client_config.interface_id
-        self.version: Final = client_config.version
+        self.interface: Final[str] = client_config.interface
+        self.interface_id: Final[str] = client_config.interface_id
+        self.version: Final[str] = client_config.version
         self._available: bool = True
         self._connection_error_count: int = 0
         self._is_callback_alive: bool = True
-        self.last_updated: datetime = INIT_DATETIME
+        self.modified_at: datetime = INIT_DATETIME
         self._ping_pong_cache: Final = PingPongCache(
             central=client_config.central, interface_id=client_config.interface_id
         )
@@ -148,14 +148,14 @@ class Client(ABC):
                 reduce_args(args=ex.args),
                 self.interface_id,
             )
-            self.last_updated = INIT_DATETIME
+            self.modified_at = INIT_DATETIME
             return ProxyInitState.INIT_FAILED
-        self.last_updated = datetime.now()
+        self.modified_at = datetime.now()
         return ProxyInitState.INIT_SUCCESS
 
     async def proxy_de_init(self) -> ProxyInitState:
         """De-init to stop CCU from sending events for this remote."""
-        if self.last_updated == INIT_DATETIME:
+        if self.modified_at == INIT_DATETIME:
             _LOGGER.debug(
                 "PROXY_DE_INIT: Skipping de-init for %s (not initialized)",
                 self.interface_id,
@@ -173,7 +173,7 @@ class Client(ABC):
             )
             return ProxyInitState.DE_INIT_FAILED
 
-        self.last_updated = INIT_DATETIME
+        self.modified_at = INIT_DATETIME
         return ProxyInitState.DE_INIT_SUCCESS
 
     async def proxy_re_init(self) -> ProxyInitState:
@@ -252,7 +252,7 @@ class Client(ABC):
             )
             return False
 
-        return (datetime.now() - self.last_updated).total_seconds() < CALLBACK_WARN_INTERVAL
+        return (datetime.now() - self.modified_at).total_seconds() < CALLBACK_WARN_INTERVAL
 
     def is_callback_alive(self) -> bool:
         """Return if XmlRPC-Server is alive based on received events for this client."""
@@ -786,7 +786,7 @@ class ClientCCU(Client):
                 else self.interface_id
             )
             await self._proxy.ping(calllerId)
-            self.last_updated = dt_now
+            self.modified_at = dt_now
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "CHECK_CONNECTION_AVAILABILITY failed: %s [%s]",
@@ -795,7 +795,7 @@ class ClientCCU(Client):
             )
         else:
             return True
-        self.last_updated = INIT_DATETIME
+        self.modified_at = INIT_DATETIME
         return False
 
     async def execute_program(self, pid: str) -> bool:
@@ -902,7 +902,7 @@ class ClientHomegear(Client):
         """Check if proxy is still initialized."""
         try:
             await self._proxy.clientServerInitialized(self.interface_id)
-            self.last_updated = datetime.now()
+            self.modified_at = datetime.now()
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "CHECK_CONNECTION_AVAILABILITY failed: %s [%s]",
@@ -911,7 +911,7 @@ class ClientHomegear(Client):
             )
         else:
             return True
-        self.last_updated = INIT_DATETIME
+        self.modified_at = INIT_DATETIME
         return False
 
     async def execute_program(self, pid: str) -> bool:

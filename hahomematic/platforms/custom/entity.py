@@ -69,26 +69,22 @@ class CustomEntity(BaseEntity):
         )
 
     @property
-    def last_updated(self) -> datetime:
-        """Return the latest last_updated timestamp."""
-        latest_update: datetime = INIT_DATETIME
+    def modified_at(self) -> datetime:
+        """Return the latest last update timestamp."""
+        modified_at: datetime = INIT_DATETIME
         for entity in self._readable_entities:
-            if (
-                entity_last_updated := entity.last_updated
-            ) and entity_last_updated > latest_update:
-                latest_update = entity_last_updated
-        return latest_update
+            if (entity_modified_at := entity.modified_at) and entity_modified_at > modified_at:
+                modified_at = entity_modified_at
+        return modified_at
 
     @property
-    def last_refreshed(self) -> datetime:
-        """Return the latest last_refreshed timestamp."""
-        latest_refreshed: datetime = INIT_DATETIME
+    def refreshed_at(self) -> datetime:
+        """Return the latest last refresh timestamp."""
+        refreshed_at: datetime = INIT_DATETIME
         for entity in self._readable_entities:
-            if (
-                entity_last_refreshed := entity.last_refreshed
-            ) and entity_last_refreshed > latest_refreshed:
-                latest_refreshed = entity_last_refreshed
-        return latest_refreshed
+            if (entity_refreshed_at := entity.refreshed_at) and entity_refreshed_at > refreshed_at:
+                refreshed_at = entity_refreshed_at
+        return refreshed_at
 
     @property
     def unconfirmed_last_values_send(self) -> dict[Field, Any]:

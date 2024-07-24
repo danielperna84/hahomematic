@@ -132,12 +132,12 @@ class DeviceDetailsCache:
         self._functions: Final[dict[str, set[str]]] = {}
         self._interface_cache: Final[dict[str, str]] = {}
         self._names_cache: Final[dict[str, str]] = {}
-        self._last_refreshed = INIT_DATETIME
+        self._refreshed_at = INIT_DATETIME
 
     async def load(self, direct_call: bool = False) -> None:
         """Fetch names from backend."""
         if direct_call is False and changed_within_seconds(
-            last_change=self._last_refreshed, max_age=int(MAX_CACHE_AGE / 2)
+            last_change=self._refreshed_at, max_age=int(MAX_CACHE_AGE / 2)
         ):
             return
         self.clear()
@@ -150,7 +150,7 @@ class DeviceDetailsCache:
         _LOGGER.debug("load: Loading functions for %s", self._central.name)
         self._functions.clear()
         self._functions.update(await self._get_all_functions())
-        self._last_refreshed = datetime.now()
+        self._refreshed_at = datetime.now()
 
     @property
     def device_channel_ids(self) -> Mapping[str, str]:
@@ -222,7 +222,7 @@ class DeviceDetailsCache:
         self._names_cache.clear()
         self._channel_rooms.clear()
         self._functions.clear()
-        self._last_refreshed = INIT_DATETIME
+        self._refreshed_at = INIT_DATETIME
 
 
 class CentralDataCache:
@@ -233,14 +233,14 @@ class CentralDataCache:
         self._central: Final = central
         # { key, value}
         self._value_cache: Final[dict[str, Any]] = {}
-        self._last_refreshed = INIT_DATETIME
+        self._refreshed_at = INIT_DATETIME
 
     @property
     def is_empty(self) -> bool:
         """Return if cache is empty."""
         if len(self._value_cache) == 0:
             return True
-        if not changed_within_seconds(last_change=self._last_refreshed):
+        if not changed_within_seconds(last_change=self._refreshed_at):
             self.clear()
             return True
         return False
@@ -248,7 +248,7 @@ class CentralDataCache:
     async def load(self, direct_call: bool = False) -> None:
         """Fetch data from backend."""
         if direct_call is False and changed_within_seconds(
-            last_change=self._last_refreshed, max_age=int(MAX_CACHE_AGE / 2)
+            last_change=self._refreshed_at, max_age=int(MAX_CACHE_AGE / 2)
         ):
             return
         self.clear()
@@ -264,7 +264,7 @@ class CentralDataCache:
     def add_data(self, all_device_data: dict[str, Any]) -> None:
         """Add data to cache."""
         self._value_cache.update(all_device_data)
-        self._last_refreshed = datetime.now()
+        self._refreshed_at = datetime.now()
 
     def get_data(
         self,
@@ -281,7 +281,7 @@ class CentralDataCache:
     def clear(self) -> None:
         """Clear the cache."""
         self._value_cache.clear()
-        self._last_refreshed = INIT_DATETIME
+        self._refreshed_at = INIT_DATETIME
 
 
 class PingPongCache:

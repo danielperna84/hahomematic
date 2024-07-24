@@ -1,6 +1,9 @@
-# Version 2024.6.0 (2024-06-01)
+# Version 2024.8.0 (2024-08-01)
 
-- Add time units to HmIP-RGBW calls
+- Rename last_updated -> modified_at
+- Rename last_refreshed -> refreshed_at
+
+Add time units to HmIP-RGBW calls
 
 # Version 2024.5.6 (2024-05-31)
 
