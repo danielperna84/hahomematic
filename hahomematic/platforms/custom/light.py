@@ -1160,4 +1160,4 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     ),
     "OLIGO.smart.iq.HM": CustomConfig(make_ce_func=make_rf_dimmer, channels=(1, 2, 3, 4, 5, 6)),
 }
-hmed.ALL_DEVICES.append(DEVICES)
+hmed.ALL_DEVICES[HmPlatform.LIGHT] = DEVICES

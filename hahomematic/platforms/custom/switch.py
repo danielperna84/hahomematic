@@ -155,4 +155,4 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     ),
     "HmIPW-FIO6": CustomConfig(make_ce_func=make_ip_switch, channels=(7, 11, 15, 19, 23, 27)),
 }
-hmed.ALL_DEVICES.append(DEVICES)
+hmed.ALL_DEVICES[HmPlatform.SWITCH] = DEVICES

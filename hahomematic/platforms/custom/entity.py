@@ -50,7 +50,9 @@ class CustomEntity(BaseEntity):
             device=device,
             unique_id=unique_id,
             channel_no=channel_no,
-            is_in_multiple_channels=hmed.is_multi_channel_device(device_type=device.device_type),
+            is_in_multiple_channels=hmed.is_multi_channel_device(
+                device_type=device.device_type, platform=self.platform
+            ),
         )
         self._extended: Final = extended
         self._data_entities: Final[dict[Field, hmge.GenericEntity]] = {}
