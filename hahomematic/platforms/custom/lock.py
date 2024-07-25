@@ -322,7 +322,31 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
             }
         ),
     ),
+    "ALPHA-IP-RBG": CustomConfig(
+        make_ce_func=make_button_lock,
+        channels=(0,),
+    ),
+    "HmIP-BWTH": CustomConfig(
+        make_ce_func=make_button_lock,
+        channels=(0,),
+    ),
+    "HmIP-FAL": CustomConfig(
+        make_ce_func=make_button_lock,
+        channels=(0,),
+    ),
+    "HmIP-WTH": CustomConfig(
+        make_ce_func=make_button_lock,
+        channels=(0,),
+    ),
     "HmIP-eTRV": CustomConfig(
+        make_ce_func=make_button_lock,
+        channels=(0,),
+    ),
+    "HmIPW-FAL": CustomConfig(
+        make_ce_func=make_button_lock,
+        channels=(0,),
+    ),
+    "HmIPW-WTH": CustomConfig(
         make_ce_func=make_button_lock,
         channels=(0,),
     ),
