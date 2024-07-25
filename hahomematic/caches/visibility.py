@@ -52,7 +52,17 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
     "HmIP-HEATING": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
     "HmIP-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
     "HmIP-WTH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HmIP-eTRV": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-eTRV": (
+        (
+            0,
+            1,
+        ),
+        (
+            Parameter.TEMPERATURE_MAXIMUM,
+            Parameter.TEMPERATURE_MINIMUM,
+            Parameter.GLOBAL_BUTTON_LOCK,
+        ),
+    ),
     "HmIPW-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
     "HmIPW-WTH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
 }

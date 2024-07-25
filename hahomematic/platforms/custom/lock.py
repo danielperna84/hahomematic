@@ -16,7 +16,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import config_property, value_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.sensor import HmSensor
@@ -65,19 +65,24 @@ class BaseLock(CustomEntity):
         """Return true if lock is on."""
 
     @value_property
-    @abstractmethod
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
+        return False
 
     @value_property
-    @abstractmethod
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
+        return None
 
     @value_property
-    @abstractmethod
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
+        return None
+
+    @config_property
+    @abstractmethod
+    def supports_open(self) -> bool:
+        """Flag if lock supports open."""
 
     @abstractmethod
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
@@ -127,10 +132,10 @@ class CeIpLock(BaseLock):
             return str(self._e_direction.value) == LockActivity.UNLOCKING
         return None
 
-    @value_property
-    def is_jammed(self) -> bool:
-        """Return true if lock is jammed."""
-        return False
+    @config_property
+    def supports_open(self) -> bool:
+        """Flag if lock supports open."""
+        return True
 
     @bind_collector()
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
@@ -150,6 +155,42 @@ class CeIpLock(BaseLock):
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
         await self._e_lock_target_level.send_value(value=LockTargetLevel.OPEN, collector=collector)
+
+
+class CeButtonLock(BaseLock):
+    """Class for HomematicIP button lock entities."""
+
+    def _init_entity_fields(self) -> None:
+        """Init the entity fields."""
+        super()._init_entity_fields()
+        self._e_button_lock: HmSwitch = self._get_entity(
+            field=Field.BUTTON_LOCK, entity_type=HmSwitch
+        )
+
+    @value_property
+    def is_locked(self) -> bool:
+        """Return true if lock is on."""
+        return self._e_button_lock.value is True
+
+    @config_property
+    def supports_open(self) -> bool:
+        """Flag if lock supports open."""
+        return False
+
+    @bind_collector()
+    async def lock(self, collector: CallParameterCollector | None = None) -> None:
+        """Lock the lock."""
+        await self._e_button_lock.turn_on(collector=collector)
+
+    @bind_collector()
+    async def unlock(self, collector: CallParameterCollector | None = None) -> None:
+        """Unlock the lock."""
+        await self._e_button_lock.turn_off(collector=collector)
+
+    @bind_collector()
+    async def open(self, collector: CallParameterCollector | None = None) -> None:
+        """Open the lock."""
+        return
 
 
 class CeRfLock(BaseLock):
@@ -191,6 +232,11 @@ class CeRfLock(BaseLock):
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value != LockError.NO_ERROR
 
+    @config_property
+    def supports_open(self) -> bool:
+        """Flag if lock supports open."""
+        return True
+
     @bind_collector()
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
@@ -217,6 +263,21 @@ def make_ip_lock(
         device=device,
         entity_class=CeIpLock,
         device_profile=DeviceProfile.IP_LOCK,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
+def make_button_lock(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[CustomEntity, ...]:
+    """Create HomematicIP lock entities."""
+    return hmed.make_custom_entity(
+        device=device,
+        entity_class=CeButtonLock,
+        device_profile=DeviceProfile.BUTTON_LOCK,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -260,6 +321,10 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
                 0: (Parameter.ERROR_JAMMED,),
             }
         ),
+    ),
+    "HmIP-eTRV": CustomConfig(
+        make_ce_func=make_button_lock,
+        channels=(0,),
     ),
 }
 

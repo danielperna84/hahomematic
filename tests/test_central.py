@@ -148,8 +148,6 @@ async def test_identify_callback_ip(
         ("LEVEL@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("LEVEL@@HmIP-eTRV-2", "LEVEL", 1, "VALUES", False),
         ("HmIP-eTRV-2:1:MASTER", "LEVEL", 1, "VALUES", False),
-        ("GLOBAL_BUTTON_LOCK@HmIP-eTRV-2:0:MASTER", "GLOBAL_BUTTON_LOCK", 0, "MASTER", False),
-        ("GLOBAL_BUTTON_LOCK:MASTER@HmIP-eTRV-2:0", "GLOBAL_BUTTON_LOCK", 0, "MASTER", True),
         ("LEVEL:VALUES@all:all", "LEVEL", 1, "VALUES", True),
         ("LEVEL:VALUES@HmIP-eTRV-2:all", "LEVEL", 1, "VALUES", True),
         ("LEVEL:VALUES@all:1", "LEVEL", 1, "VALUES", True),

@@ -279,6 +279,14 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 },
             },
         },
+        DeviceProfile.BUTTON_LOCK: {
+            ED.DEVICE_GROUP: {
+                ED.PRIMARY_CHANNEL: 0,
+                ED.REPEATABLE_FIELDS: {
+                    Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
+                },
+            },
+        },
         DeviceProfile.IP_SIREN: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 3,

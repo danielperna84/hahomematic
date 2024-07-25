@@ -18,6 +18,7 @@ from tests import const, helper
 TEST_DEVICES: dict[str, str] = {
     "VCU9724704": "HmIP-DLD.json",
     "VCU0000146": "HM-Sec-Key.json",
+    "VCU3609622": "HmIP-eTRV-2.json",
 }
 
 # pylint: disable=protected-access

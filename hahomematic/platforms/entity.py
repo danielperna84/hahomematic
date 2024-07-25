@@ -36,7 +36,6 @@ from hahomematic.const import (
     Operations,
     Parameter,
     ParameterType,
-    ParamsetKey,
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
@@ -761,7 +760,7 @@ class CallParameterCollector:
         """Init the generator."""
         self._device: Final = device
         self._client: Final = device.client
-        self._paramsets: Final[dict[int, dict[str, dict[str, Any]]]] = {}
+        self._paramsets: Final[dict[str, dict[int, dict[str, dict[str, Any]]]]] = {}
 
     def add_entity(
         self,
@@ -770,50 +769,55 @@ class CallParameterCollector:
         collector_order: int,
     ) -> None:
         """Add a generic entity."""
-        if collector_order not in self._paramsets:
-            self._paramsets[collector_order] = {}
-        if entity.channel_address not in self._paramsets[collector_order]:
-            self._paramsets[collector_order][entity.channel_address] = {}
-        self._paramsets[collector_order][entity.channel_address][entity.parameter] = value
+        if entity.paramset_key not in self._paramsets:
+            self._paramsets[entity.paramset_key] = {}
+        if collector_order not in self._paramsets[entity.paramset_key]:
+            self._paramsets[entity.paramset_key][collector_order] = {}
+        if entity.channel_address not in self._paramsets[entity.paramset_key][collector_order]:
+            self._paramsets[entity.paramset_key][collector_order][entity.channel_address] = {}
+        self._paramsets[entity.paramset_key][collector_order][entity.channel_address][
+            entity.parameter
+        ] = value
 
     async def send_data(
         self, wait_for_callback: int | None, use_command_queue: bool, use_put_paramset: bool
     ) -> bool:
         """Send data to backend."""
-        for paramset_no in dict(sorted(self._paramsets.items())).values():
-            for channel_address, paramset in paramset_no.items():
-                if len(paramset.values()) == 1 or use_put_paramset is False:
-                    for parameter, value in paramset.items():
-                        set_value_command = partial(
-                            self._client.set_value,
+        for paramset_key, paramsets in self._paramsets.items():  # pylint: disable=too-many-nested-blocks
+            for paramset_no in dict(sorted(paramsets.items())).values():
+                for channel_address, paramset in paramset_no.items():
+                    if use_put_paramset is False or len(paramset.values()) == 1:
+                        for parameter, value in paramset.items():
+                            set_value_command = partial(
+                                self._client.set_value,
+                                channel_address=channel_address,
+                                paramset_key=paramset_key,
+                                parameter=parameter,
+                                value=value,
+                                wait_for_callback=wait_for_callback,
+                            )
+                            if use_command_queue:
+                                await self._device.central.command_queue_handler.put(
+                                    address=channel_address,
+                                    command=set_value_command,
+                                )
+                            elif not await set_value_command():
+                                return False  # pragma: no cover
+                    else:
+                        put_paramset_command = partial(
+                            self._client.put_paramset,
                             channel_address=channel_address,
-                            paramset_key=ParamsetKey.VALUES,
-                            parameter=parameter,
-                            value=value,
+                            paramset_key=paramset_key,
+                            values=paramset,
                             wait_for_callback=wait_for_callback,
                         )
                         if use_command_queue:
                             await self._device.central.command_queue_handler.put(
                                 address=channel_address,
-                                command=set_value_command,
+                                command=put_paramset_command,
                             )
-                        elif not await set_value_command():
+                        elif not await put_paramset_command():
                             return False  # pragma: no cover
-                else:
-                    put_paramset_command = partial(
-                        self._client.put_paramset,
-                        channel_address=channel_address,
-                        paramset_key=ParamsetKey.VALUES,
-                        values=paramset,
-                        wait_for_callback=wait_for_callback,
-                    )
-                    if use_command_queue:
-                        await self._device.central.command_queue_handler.put(
-                            address=channel_address,
-                            command=put_paramset_command,
-                        )
-                    elif not await put_paramset_command():
-                        return False  # pragma: no cover
         return True
 
 

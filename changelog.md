@@ -2,6 +2,7 @@
 
 - Rename last_updated -> modified_at
 - Rename last_refreshed -> refreshed_at
+- Add button lock CE
 
 Add time units to HmIP-RGBW calls
 
