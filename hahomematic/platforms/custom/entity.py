@@ -50,7 +50,9 @@ class CustomEntity(BaseEntity):
             device=device,
             unique_id=unique_id,
             channel_no=channel_no,
-            is_in_multiple_channels=hmed.is_multi_channel_device(device_type=device.device_type),
+            is_in_multiple_channels=hmed.is_multi_channel_device(
+                device_type=device.device_type, platform=self.platform
+            ),
         )
         self._extended: Final = extended
         self._data_entities: Final[dict[Field, hmge.GenericEntity]] = {}
@@ -120,6 +122,11 @@ class CustomEntity(BaseEntity):
         """Returns the list of relevant entities. To be overridden by subclasses."""
         return self._readable_entities
 
+    @property
+    def entity_name_postfix(self) -> str:
+        """Return the entity name postfix."""
+        return ""
+
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
         is_only_primary_channel = check_channel_is_the_only_primary_channel(
@@ -133,6 +140,7 @@ class CustomEntity(BaseEntity):
             channel_no=self.channel_no,
             is_only_primary_channel=is_only_primary_channel,
             usage=self._usage,
+            postfix=self.entity_name_postfix.replace("_", " ").title(),
         )
 
     def _get_entity_usage(self) -> EntityUsage:

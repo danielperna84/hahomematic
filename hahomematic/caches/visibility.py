@@ -27,6 +27,24 @@ _IGNORE_DEVICE_TYPE: Final = "ignore_"
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
     Mapping[str, tuple[tuple[int, ...], tuple[Parameter, ...]]]
 ] = {
+    "ALPHA-IP-RBG": (
+        (0, 1),
+        (
+            Parameter.TEMPERATURE_MAXIMUM,
+            Parameter.TEMPERATURE_MINIMUM,
+            Parameter.GLOBAL_BUTTON_LOCK,
+        ),
+    ),
+    "HM-CC-RT-DN": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HM-CC-VG-1": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-BWTH": (
+        (0, 1),
+        (
+            Parameter.TEMPERATURE_MAXIMUM,
+            Parameter.TEMPERATURE_MINIMUM,
+            Parameter.GLOBAL_BUTTON_LOCK,
+        ),
+    ),
     "HmIP-DRBLI4": (
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 17, 21),
         (Parameter.CHANNEL_OPERATION_MODE,),
@@ -35,26 +53,37 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
     "HmIP-DRSI1": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-DRSI4": ((1, 2, 3, 4), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-DSD-PCB": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-FAL": ((0,), (Parameter.GLOBAL_BUTTON_LOCK,)),
     "HmIP-FCI1": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-FCI6": (tuple(range(1, 7)), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-FSI16": ((1,), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIP-HEATING": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
     "HmIP-MIO16-PCB": ((13, 14, 15, 16), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-MOD-RC8": (tuple(range(1, 9)), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIP-RGBW": ((0,), (Parameter.DEVICE_OPERATION_MODE,)),
+    "HmIP-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HmIP-WTH": (
+        (0, 1),
+        (
+            Parameter.TEMPERATURE_MAXIMUM,
+            Parameter.TEMPERATURE_MINIMUM,
+            Parameter.GLOBAL_BUTTON_LOCK,
+        ),
+    ),
+    "HmIP-eTRV": (
+        (0, 1),
+        (
+            Parameter.TEMPERATURE_MAXIMUM,
+            Parameter.TEMPERATURE_MINIMUM,
+            Parameter.GLOBAL_BUTTON_LOCK,
+        ),
+    ),
     "HmIPW-DRBL4": ((1, 5, 9, 13), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIPW-DRI16": (tuple(range(1, 17)), (Parameter.CHANNEL_OPERATION_MODE,)),
     "HmIPW-DRI32": (tuple(range(1, 33)), (Parameter.CHANNEL_OPERATION_MODE,)),
+    "HmIPW-FAL": ((0,), (Parameter.GLOBAL_BUTTON_LOCK,)),
     "HmIPW-FIO6": (tuple(range(1, 7)), (Parameter.CHANNEL_OPERATION_MODE,)),
-    "ALPHA-IP-RBG": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HM-CC-RT-DN": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HM-CC-VG-1": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HmIP-BWTH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HmIP-HEATING": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HmIP-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HmIP-WTH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HmIP-eTRV": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
     "HmIPW-STH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
-    "HmIPW-WTH": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
 }
 
 # Some parameters are marked as INTERNAL in the paramset and not considered by default,

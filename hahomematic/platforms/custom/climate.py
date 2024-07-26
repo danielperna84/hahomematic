@@ -699,6 +699,6 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "Thermostat AA": CustomConfig(make_ce_func=make_ip_thermostat, channels=(1,)),
     "ZEL STG RM FWT": CustomConfig(make_ce_func=make_simple_thermostat, channels=(1,)),
 }
-hmed.ALL_DEVICES.append(DEVICES)
+hmed.ALL_DEVICES[HmPlatform.CLIMATE] = DEVICES
 BLACKLISTED_DEVICES: tuple[str, ...] = ("HmIP-STHO",)
 hmed.ALL_BLACKLISTED_DEVICES.append(BLACKLISTED_DEVICES)

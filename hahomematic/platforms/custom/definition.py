@@ -10,7 +10,7 @@ from typing import Any, Final, cast
 import voluptuous as vol
 
 from hahomematic import support as hms
-from hahomematic.const import Parameter
+from hahomematic.const import HmPlatform, Parameter
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
@@ -21,7 +21,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 DEFAULT_INCLUDE_DEFAULT_ENTITIES: Final = True
 
-ALL_DEVICES: list[Mapping[str, CustomConfig | tuple[CustomConfig, ...]]] = []
+ALL_DEVICES: dict[HmPlatform, Mapping[str, CustomConfig | tuple[CustomConfig, ...]]] = {}
 ALL_BLACKLISTED_DEVICES: list[tuple[str, ...]] = []
 
 SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
@@ -276,6 +276,14 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     0: {
                         Field.ERROR: Parameter.ERROR_JAMMED,
                     },
+                },
+            },
+        },
+        DeviceProfile.BUTTON_LOCK: {
+            ED.DEVICE_GROUP: {
+                ED.PRIMARY_CHANNEL: 0,
+                ED.REPEATABLE_FIELDS: {
+                    Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
                 },
             },
         },
@@ -688,6 +696,7 @@ def _get_device_entities(
 
 def get_entity_configs(
     device_type: str,
+    platform: HmPlatform | None = None,
 ) -> tuple[CustomConfig | tuple[CustomConfig, ...], ...]:
     """Return the entity configs to create custom entities."""
     device_type = device_type.lower().replace("hb-", "hm-")
@@ -699,7 +708,9 @@ def get_entity_configs(
         ):
             return ()
 
-    for platform_devices in ALL_DEVICES:
+    for pf, platform_devices in ALL_DEVICES.items():
+        if platform is not None and pf != platform:
+            continue
         if func := _get_entity_config_by_platform(
             platform_devices=platform_devices,
             device_type=device_type,
@@ -724,10 +735,10 @@ def _get_entity_config_by_platform(
     return None
 
 
-def is_multi_channel_device(device_type: str) -> bool:
+def is_multi_channel_device(device_type: str, platform: HmPlatform) -> bool:
     """Return true, if device has multiple channels."""
     channels: list[int] = []
-    for entity_configs in get_entity_configs(device_type=device_type):
+    for entity_configs in get_entity_configs(device_type=device_type, platform=platform):
         if isinstance(entity_configs, CustomConfig):
             channels.extend(entity_configs.channels)
         else:
@@ -759,7 +770,7 @@ def get_required_parameters() -> tuple[Parameter, ...]:
         ):
             required_parameters.extend(additional_entities)
 
-    for platform_spec in ALL_DEVICES:
+    for platform_spec in ALL_DEVICES.values():
         for custom_configs in platform_spec.values():
             if isinstance(custom_configs, CustomConfig):
                 if extended := custom_configs.extended:

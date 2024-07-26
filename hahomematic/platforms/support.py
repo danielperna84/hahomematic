@@ -248,6 +248,7 @@ def get_custom_entity_name(
     channel_no: int | None,
     is_only_primary_channel: bool,
     usage: EntityUsage,
+    postfix: str = "",
 ) -> EntityNameData:
     """Get name for custom entity."""
     if channel_name := _get_base_name_from_channel_or_device(
@@ -256,7 +257,11 @@ def get_custom_entity_name(
         channel_no=channel_no,
     ):
         if is_only_primary_channel and _check_channel_name_with_channel_no(name=channel_name):
-            return EntityNameData(device_name=device.name, channel_name=channel_name.split(":")[0])
+            return EntityNameData(
+                device_name=device.name,
+                channel_name=channel_name.split(":")[0],
+                parameter_name=postfix,
+            )
         if _check_channel_name_with_channel_no(name=channel_name):
             c_name = channel_name.split(":")[0]
             p_name = channel_name.split(":")[1]

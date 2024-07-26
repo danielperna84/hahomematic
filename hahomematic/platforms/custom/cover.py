@@ -742,4 +742,4 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     ),
     "ZEL STG RM FEP 230V": CustomConfig(make_ce_func=make_rf_cover, channels=(1,)),
 }
-hmed.ALL_DEVICES.append(DEVICES)
+hmed.ALL_DEVICES[HmPlatform.COVER] = DEVICES

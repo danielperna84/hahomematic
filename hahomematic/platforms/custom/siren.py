@@ -270,4 +270,4 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "HmIP-ASIR": CustomConfig(make_ce_func=make_ip_siren, channels=(0,)),
     "HmIP-SWSD": CustomConfig(make_ce_func=make_ip_siren_smoke, channels=(0,)),
 }
-hmed.ALL_DEVICES.append(DEVICES)
+hmed.ALL_DEVICES[HmPlatform.SIREN] = DEVICES
