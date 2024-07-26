@@ -28,7 +28,7 @@ async def test_central_mini(central_unit_mini) -> None:
     assert central_unit_mini.get_client(const.INTERFACE_ID).model == "PyDevCCU"
     assert central_unit_mini.primary_client.model == "PyDevCCU"
     assert len(central_unit_mini._devices) == 1
-    assert len(central_unit_mini.get_entities(exclude_no_create=False)) == 29
+    assert len(central_unit_mini.get_entities(exclude_no_create=False)) == 31
 
 
 @pytest.mark.asyncio()
