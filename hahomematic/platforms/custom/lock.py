@@ -167,6 +167,11 @@ class CeButtonLock(BaseLock):
             field=Field.BUTTON_LOCK, entity_type=HmSwitch
         )
 
+    @property
+    def entity_name_postfix(self) -> str:
+        """Return the entity name postfix."""
+        return "BUTTON_LOCK"
+
     @value_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
