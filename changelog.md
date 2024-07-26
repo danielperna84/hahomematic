@@ -1,4 +1,4 @@
-# Version 2024.8.0 (2024-08-01)
+# Version 2024.7.0 (2024-07-26)
 
 - Rename last_updated -> modified_at
 - Rename last_refreshed -> refreshed_at
