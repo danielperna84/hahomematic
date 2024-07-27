@@ -34,7 +34,7 @@ SCHEMA_ED_FIELD = vol.Schema({vol.Required(int): SCHEMA_ED_FIELD_DETAILS})
 
 SCHEMA_ED_DEVICE_GROUP = vol.Schema(
     {
-        vol.Required(ED.PRIMARY_CHANNEL.value): int,
+        vol.Required(ED.PRIMARY_CHANNEL.value): vol.Any(int, None),
         vol.Optional(ED.SECONDARY_CHANNELS.value): (int,),
         vol.Optional(ED.REPEATABLE_FIELDS.value): SCHEMA_ED_FIELD_DETAILS,
         vol.Optional(ED.VISIBLE_REPEATABLE_FIELDS.value): SCHEMA_ED_FIELD_DETAILS,
@@ -279,9 +279,17 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 },
             },
         },
-        DeviceProfile.BUTTON_LOCK: {
+        DeviceProfile.IP_BUTTON_LOCK: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.REPEATABLE_FIELDS: {
+                    Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
+                },
+            },
+        },
+        DeviceProfile.RF_BUTTON_LOCK: {
+            ED.DEVICE_GROUP: {
+                ED.PRIMARY_CHANNEL: None,
                 ED.REPEATABLE_FIELDS: {
                     Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
                 },
@@ -640,11 +648,13 @@ def _get_device_definition(device_profile: DeviceProfile) -> Mapping[ED, Any]:
     return cast(Mapping[ED, Any], ENTITY_DEFINITION[ED.DEVICE_DEFINITIONS][device_profile])
 
 
-def _get_device_group(device_profile: DeviceProfile, base_channel_no: int) -> Mapping[ED, Any]:
+def _get_device_group(
+    device_profile: DeviceProfile, base_channel_no: int | None
+) -> Mapping[ED, Any]:
     """Return the device group."""
     device = _get_device_definition(device_profile)
     group = cast(dict[ED, Any], device[ED.DEVICE_GROUP])
-    if group and base_channel_no == 0:
+    if not base_channel_no:
         return group
 
     # Create a deep copy of the group due to channel rebase
@@ -737,7 +747,7 @@ def _get_entity_config_by_platform(
 
 def is_multi_channel_device(device_type: str, platform: HmPlatform) -> bool:
     """Return true, if device has multiple channels."""
-    channels: list[int] = []
+    channels: list[int | None] = []
     for entity_configs in get_entity_configs(device_type=device_type, platform=platform):
         if isinstance(entity_configs, CustomConfig):
             channels.extend(entity_configs.channels)

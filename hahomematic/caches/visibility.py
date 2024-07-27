@@ -25,7 +25,7 @@ _IGNORE_DEVICE_TYPE: Final = "ignore_"
 # and not for general display.
 # {device_type: (channel_no, parameter)}
 _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
-    Mapping[str, tuple[tuple[int, ...], tuple[Parameter, ...]]]
+    Mapping[str, tuple[tuple[int | None, ...], tuple[Parameter, ...]]]
 ] = {
     "ALPHA-IP-RBG": (
         (0, 1),
@@ -35,8 +35,16 @@ _RELEVANT_MASTER_PARAMSETS_BY_DEVICE: Final[
             Parameter.GLOBAL_BUTTON_LOCK,
         ),
     ),
-    "HM-CC-RT-DN": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HM-CC-RT-DN": (
+        (None, 1),
+        (
+            Parameter.TEMPERATURE_MAXIMUM,
+            Parameter.TEMPERATURE_MINIMUM,
+            Parameter.GLOBAL_BUTTON_LOCK,
+        ),
+    ),
     "HM-CC-VG-1": ((1,), (Parameter.TEMPERATURE_MAXIMUM, Parameter.TEMPERATURE_MINIMUM)),
+    "HM-TC-IT-WM-W-EU": ((None,), (Parameter.GLOBAL_BUTTON_LOCK,)),
     "HmIP-BWTH": (
         (0, 1),
         (
@@ -328,19 +336,23 @@ class ParameterVisibilityCache:
                 self._relevant_master_paramsets_by_device[device_type_l] = set()
             if device_type_l not in self._un_ignore_parameters_by_device_paramset_key:
                 self._un_ignore_parameters_by_device_paramset_key[device_type_l] = {}
-            for channel_no in channel_nos:
-                self._relevant_master_paramsets_by_device[device_type_l].add(channel_no)
-                if (
-                    channel_no
-                    not in self._un_ignore_parameters_by_device_paramset_key[device_type_l]
-                ):
-                    self._un_ignore_parameters_by_device_paramset_key[device_type_l][
-                        channel_no
-                    ] = {ParamsetKey.MASTER: set()}
-                for parameter in parameters:
-                    self._un_ignore_parameters_by_device_paramset_key[device_type_l][channel_no][
+
+            def _add_channel(dt_l: str, params: tuple[Parameter, ...], ch_no: int | None) -> None:
+                self._relevant_master_paramsets_by_device[dt_l].add(ch_no)
+                if ch_no not in self._un_ignore_parameters_by_device_paramset_key[dt_l]:
+                    self._un_ignore_parameters_by_device_paramset_key[dt_l][ch_no] = {
+                        ParamsetKey.MASTER: set()
+                    }
+                for parameter in params:
+                    self._un_ignore_parameters_by_device_paramset_key[dt_l][ch_no][
                         ParamsetKey.MASTER
                     ].add(parameter)
+
+            if channel_nos:
+                for channel_no in channel_nos:
+                    _add_channel(dt_l=device_type_l, params=parameters, ch_no=channel_no)
+            else:
+                _add_channel(dt_l=device_type_l, params=parameters, ch_no=None)
 
     @lru_cache(maxsize=128)
     def device_type_is_ignored(self, device_type: str) -> bool:

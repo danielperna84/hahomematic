@@ -232,32 +232,11 @@ async def test_device_unignore_broll(
     ("line", "parameter", "channel_no", "paramset_key", "expected_result"),
     [
         (
-            "GLOBAL_BUTTON_LOCK@HM-TC-IT-WM-W-EU:MASTER",
-            "GLOBAL_BUTTON_LOCK",
-            None,
-            "MASTER",
-            False,
-        ),
-        (
             "GLOBAL_BUTTON_LOCK:MASTER@HM-TC-IT-WM-W-EU:",
             "GLOBAL_BUTTON_LOCK",
             None,
             "MASTER",
             True,
-        ),
-        (
-            "GLOBAL_BUTTON_LOCK:MASTER@all:",
-            "GLOBAL_BUTTON_LOCK",
-            None,
-            "MASTER",
-            False,
-        ),
-        (
-            "GLOBAL_BUTTON_LOCK:MASTER@HM-TC-IT-WM-W-EU:all",
-            "GLOBAL_BUTTON_LOCK",
-            None,
-            "MASTER",
-            False,
         ),
     ],
 )
