@@ -273,16 +273,31 @@ def make_ip_lock(
     )
 
 
-def make_button_lock(
+def make_ip_button_lock(
     device: hmd.HmDevice,
     group_base_channels: tuple[int, ...],
     extended: ExtendedConfig | None = None,
 ) -> tuple[CustomEntity, ...]:
-    """Create HomematicIP lock entities."""
+    """Create HomematicIP ip button lock entities."""
     return hmed.make_custom_entity(
         device=device,
         entity_class=CeButtonLock,
-        device_profile=DeviceProfile.BUTTON_LOCK,
+        device_profile=DeviceProfile.IP_BUTTON_LOCK,
+        group_base_channels=group_base_channels,
+        extended=extended,
+    )
+
+
+def make_rf_button_lock(
+    device: hmd.HmDevice,
+    group_base_channels: tuple[int, ...],
+    extended: ExtendedConfig | None = None,
+) -> tuple[CustomEntity, ...]:
+    """Create HomematicIP rf button lock entities."""
+    return hmed.make_custom_entity(
+        device=device,
+        entity_class=CeButtonLock,
+        device_profile=DeviceProfile.RF_BUTTON_LOCK,
         group_base_channels=group_base_channels,
         extended=extended,
     )
@@ -327,32 +342,36 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
             }
         ),
     ),
+    "HM-TC-IT-WM-W-EU": CustomConfig(
+        make_ce_func=make_rf_button_lock,
+        channels=(None,),
+    ),
     "ALPHA-IP-RBG": CustomConfig(
-        make_ce_func=make_button_lock,
+        make_ce_func=make_ip_button_lock,
         channels=(0,),
     ),
     "HmIP-BWTH": CustomConfig(
-        make_ce_func=make_button_lock,
+        make_ce_func=make_ip_button_lock,
         channels=(0,),
     ),
     "HmIP-FAL": CustomConfig(
-        make_ce_func=make_button_lock,
+        make_ce_func=make_ip_button_lock,
         channels=(0,),
     ),
     "HmIP-WTH": CustomConfig(
-        make_ce_func=make_button_lock,
+        make_ce_func=make_ip_button_lock,
         channels=(0,),
     ),
     "HmIP-eTRV": CustomConfig(
-        make_ce_func=make_button_lock,
+        make_ce_func=make_ip_button_lock,
         channels=(0,),
     ),
     "HmIPW-FAL": CustomConfig(
-        make_ce_func=make_button_lock,
+        make_ce_func=make_ip_button_lock,
         channels=(0,),
     ),
     "HmIPW-WTH": CustomConfig(
-        make_ce_func=make_button_lock,
+        make_ce_func=make_ip_button_lock,
         channels=(0,),
     ),
 }

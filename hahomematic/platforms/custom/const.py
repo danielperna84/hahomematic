@@ -8,7 +8,7 @@ from enum import Enum, StrEnum
 class DeviceProfile(StrEnum):
     """Enum for device profiles."""
 
-    BUTTON_LOCK = "ButtonLock"
+    IP_BUTTON_LOCK = "IPButtonLock"
     IP_COVER = "IPCover"
     IP_DIMMER = "IPDimmer"
     IP_DRG_DALI = "IPDRGDALI"
@@ -24,6 +24,7 @@ class DeviceProfile(StrEnum):
     IP_SWITCH = "IPSwitch"
     IP_THERMOSTAT = "IPThermostat"
     IP_THERMOSTAT_GROUP = "IPThermostatGroup"
+    RF_BUTTON_LOCK = "RFButtonLock"
     RF_COVER = "RfCover"
     RF_DIMMER = "RfDimmer"
     RF_DIMMER_COLOR = "RfDimmer_Color"

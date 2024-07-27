@@ -19,6 +19,7 @@ TEST_DEVICES: dict[str, str] = {
     "VCU9724704": "HmIP-DLD.json",
     "VCU0000146": "HM-Sec-Key.json",
     "VCU3609622": "HmIP-eTRV-2.json",
+    "VCU0000341": "HM-TC-IT-WM-W-EU.json",
 }
 
 # pylint: disable=protected-access

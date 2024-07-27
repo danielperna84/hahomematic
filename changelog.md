@@ -1,3 +1,7 @@
+# Version 2024.7.1 (2024-07-27)
+
+- Enable button lock for hm devices
+
 # Version 2024.7.0 (2024-07-26)
 
 - Rename last_updated -> modified_at
