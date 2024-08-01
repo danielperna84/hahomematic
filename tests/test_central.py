@@ -819,9 +819,6 @@ async def test_central_without_interface_config(factory: helper.Factory) -> None
         with pytest.raises(HaHomematicException):
             central.get_client("NOT_A_VALID_INTERFACE_ID")
 
-        with pytest.raises(Exception):
-            await central._create_devices()
-
         await central.start()
         assert central.has_clients is False
 

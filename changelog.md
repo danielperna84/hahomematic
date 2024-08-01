@@ -1,3 +1,7 @@
+# Version 2024.8.0(2024-08-01)
+
+- Reduce data load, if only device description is updated
+
 # Version 2024.7.1 (2024-07-27)
 
 - Enable button lock for hm devices

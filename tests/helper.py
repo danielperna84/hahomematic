@@ -134,7 +134,8 @@ class Factory:
         ).start()
 
         await central.start()
-        await central._create_devices()
+        if new_device_addresses := central._check_for_new_device_addresses():
+            await central._create_devices(new_device_addresses=new_device_addresses)
         await central._init_hub()
 
         assert central
