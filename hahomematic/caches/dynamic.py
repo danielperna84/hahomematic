@@ -141,13 +141,13 @@ class DeviceDetailsCache:
         ):
             return
         self.clear()
-        _LOGGER.debug("load: Loading names for %s", self._central.name)
+        _LOGGER.debug("LOAD: Loading names for %s", self._central.name)
         if client := self._central.primary_client:
             await client.fetch_device_details()
-        _LOGGER.debug("load: Loading rooms for %s", self._central.name)
+        _LOGGER.debug("LOAD: Loading rooms for %s", self._central.name)
         self._channel_rooms.clear()
         self._channel_rooms.update(await self._get_all_rooms())
-        _LOGGER.debug("load: Loading functions for %s", self._central.name)
+        _LOGGER.debug("LOAD: Loading functions for %s", self._central.name)
         self._functions.clear()
         self._functions.update(await self._get_all_functions())
         self._refreshed_at = datetime.now()
@@ -159,8 +159,7 @@ class DeviceDetailsCache:
 
     def add_name(self, address: str, name: str) -> None:
         """Add name to cache."""
-        if address not in self._names_cache:
-            self._names_cache[address] = name
+        self._names_cache[address] = name
 
     def get_name(self, address: str) -> str | None:
         """Get name from cache."""
@@ -168,8 +167,7 @@ class DeviceDetailsCache:
 
     def add_interface(self, address: str, interface: str) -> None:
         """Add interface to cache."""
-        if address not in self._interface_cache:
-            self._interface_cache[address] = interface
+        self._interface_cache[address] = interface
 
     def get_interface(self, address: str) -> str:
         """Get interface from cache."""
@@ -263,6 +261,7 @@ class CentralDataCache:
 
     def add_data(self, all_device_data: dict[str, Any]) -> None:
         """Add data to cache."""
+        self.clear()
         self._value_cache.update(all_device_data)
         self._refreshed_at = datetime.now()
 

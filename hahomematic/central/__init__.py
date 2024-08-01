@@ -11,6 +11,7 @@ from collections.abc import Callable, Coroutine, Mapping, Set as AbstractSet
 from datetime import datetime
 from functools import partial
 import logging
+from logging import DEBUG
 import socket
 import threading
 from time import sleep
@@ -846,6 +847,18 @@ class CentralUnit:
             ):
                 if device_address not in self._devices:
                     new_device_addresses[interface_id].add(device_address)
+        if _LOGGER.isEnabledFor(level=DEBUG):
+            count: int = 0
+            for item in new_device_addresses.values():
+                count += len(item)
+
+            _LOGGER.debug(
+                "CHECK_FOR_NEW_DEVICE_ADDRESSES: %s: %i.",
+                "Found new device addresses"
+                if new_device_addresses
+                else "Did not find any new device addresses",
+                count,
+            )
 
         return new_device_addresses
 
