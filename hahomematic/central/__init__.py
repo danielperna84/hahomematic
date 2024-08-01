@@ -847,6 +847,10 @@ class CentralUnit:
             ):
                 if device_address not in self._devices:
                     new_device_addresses[interface_id].add(device_address)
+
+            if not new_device_addresses[interface_id]:
+                del new_device_addresses[interface_id]
+
         if _LOGGER.isEnabledFor(level=DEBUG):
             count: int = 0
             for item in new_device_addresses.values():
