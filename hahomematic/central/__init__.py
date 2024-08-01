@@ -11,6 +11,7 @@ from collections.abc import Callable, Coroutine, Mapping, Set as AbstractSet
 from datetime import datetime
 from functools import partial
 import logging
+from logging import DEBUG
 import socket
 import threading
 from time import sleep
@@ -399,7 +400,8 @@ class CentralUnit:
         """Start clients ."""
         if await self._create_clients():
             await self._load_caches()
-            await self._create_devices()
+            if new_device_addresses := self._check_for_new_device_addresses():
+                await self._create_devices(new_device_addresses=new_device_addresses)
             await self._init_hub()
             await self._init_clients()
 
@@ -691,7 +693,7 @@ class CentralUnit:
             _LOGGER.warning("LOAD_CACHES failed: Unable to load caches for %s", self._name)
             await self.clear_caches()
 
-    async def _create_devices(self) -> None:
+    async def _create_devices(self, new_device_addresses: dict[str, set[str]]) -> None:
         """Trigger creation of the objects that expose the functionality."""
         if not self._clients:
             raise HaHomematicException(
@@ -700,20 +702,13 @@ class CentralUnit:
         _LOGGER.debug("CREATE_DEVICES: Starting to create devices for %s", self._name)
 
         new_devices = set[HmDevice]()
-        for interface_id in self.interface_ids:
-            if not self.paramset_descriptions.has_interface_id(interface_id=interface_id):
-                _LOGGER.debug(
-                    "CREATE_DEVICES: Skipping interface %s, missing paramsets",
-                    interface_id,
-                )
-                continue
-            for device_address in self.device_descriptions.get_addresses(
-                interface_id=interface_id
-            ):
+
+        for interface_id, device_addresses in new_device_addresses.items():
+            for device_address in device_addresses:
                 # Do we check for duplicates here? For now, we do.
-                device: HmDevice | None = None
                 if device_address in self._devices:
                     continue
+                device: HmDevice | None = None
                 try:
                     device = HmDevice(
                         central=self,
@@ -828,9 +823,48 @@ class CentralUnit:
 
             await self.device_descriptions.save()
             await self.paramset_descriptions.save()
-            await self.device_details.load()
-            await self.data_cache.load()
-            await self._create_devices()
+            if new_device_addresses := self._check_for_new_device_addresses():
+                await self.device_details.load()
+                await self.data_cache.load()
+                await self._create_devices(new_device_addresses=new_device_addresses)
+
+    def _check_for_new_device_addresses(self) -> dict[str, set[str]]:
+        """Check if there are new devices, that needs to be created."""
+        new_device_addresses: dict[str, set[str]] = {}
+        for interface_id in self.interface_ids:
+            if not self.paramset_descriptions.has_interface_id(interface_id=interface_id):
+                _LOGGER.debug(
+                    "CHECK_FOR_NEW_DEVICE_ADDRESSES: Skipping interface %s, missing paramsets",
+                    interface_id,
+                )
+                continue
+
+            if interface_id not in new_device_addresses:
+                new_device_addresses[interface_id] = set()
+
+            for device_address in self.device_descriptions.get_addresses(
+                interface_id=interface_id
+            ):
+                if device_address not in self._devices:
+                    new_device_addresses[interface_id].add(device_address)
+
+            if not new_device_addresses[interface_id]:
+                del new_device_addresses[interface_id]
+
+        if _LOGGER.isEnabledFor(level=DEBUG):
+            count: int = 0
+            for item in new_device_addresses.values():
+                count += len(item)
+
+            _LOGGER.debug(
+                "CHECK_FOR_NEW_DEVICE_ADDRESSES: %s: %i.",
+                "Found new device addresses"
+                if new_device_addresses
+                else "Did not find any new device addresses",
+                count,
+            )
+
+        return new_device_addresses
 
     @callback_event
     async def event(
