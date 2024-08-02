@@ -73,6 +73,11 @@ class HmUpdate(CallbackEntity):
         """Latest version available for install."""
         return self._device.firmware_update_state
 
+    @property
+    def path(self) -> str:
+        """Return the path of the entity."""
+        return f"{self._device.device_address}/{HmPlatform.UPDATE}".lower()
+
     def register_entity_updated_callback(self, cb: Callable, custom_id: str) -> CALLBACK_TYPE:
         """Register update callback."""
         if custom_id != DEFAULT_CUSTOM_ID:

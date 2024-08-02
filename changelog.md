@@ -1,3 +1,7 @@
+# Version 2024.8.1(2024-08-02)
+
+- Refactor entity path
+
 # Version 2024.8.0(2024-08-01)
 
 - Reduce data load, if only device description is updated

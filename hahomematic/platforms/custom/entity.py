@@ -108,6 +108,11 @@ class CustomEntity(BaseEntity):
         return all(entity.is_valid for entity in self._relevant_entities)
 
     @property
+    def path(self) -> str:
+        """Return the path of the entity."""
+        return f"{self._base_path}".lower()
+
+    @property
     def state_uncertain(self) -> bool:
         """Return, if the state is uncertain."""
         return any(entity.state_uncertain for entity in self._relevant_entities)

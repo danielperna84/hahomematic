@@ -48,6 +48,11 @@ class GenericHubEntity(CallbackEntity):
         """Return the name of the entity."""
         return self._name
 
+    @property
+    def path(self) -> str:
+        """Return the path of the entity."""
+        return f"{self.central.name}/{self.platform}".lower()
+
 
 class GenericSystemVariable(GenericHubEntity):
     """Class for a HomeMatic system variable."""

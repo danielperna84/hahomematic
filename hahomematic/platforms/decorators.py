@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from enum import Enum
 from typing import Any
 
 
@@ -80,7 +81,16 @@ def _get_public_attributes_by_decorator(
         if not y.startswith("_")
         and isinstance(getattr(data_object.__class__, y), property_decorator)
     ]
-    return {x: getattr(data_object, x) for x in pub_attributes}
+    return {x: _get_text_value(getattr(data_object, x)) for x in pub_attributes}
+
+
+def _get_text_value(value: Any) -> Any:
+    """Convert value to text."""
+    if isinstance(value, (list, tuple, set)):
+        return tuple(_get_text_value(v) for v in value)
+    if isinstance(value, Enum):
+        return str(value)
+    return value
 
 
 def get_public_attributes_for_config_property(data_object: Any) -> Mapping[str, Any]:

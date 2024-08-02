@@ -66,10 +66,7 @@ async def test_custom_entity_callback(
         cb=device_removed_mock
     )
     assert switch.value is None
-    assert (
-        str(switch) == "address_path: switch/CentralTest-BidCos-RF/vcu2128127_4/, "
-        "type: HmIP-BSM, name: HmIP-BSM_VCU2128127"
-    )
+    assert str(switch) == "path: vcu2128127/4/switch, name: HmIP-BSM_VCU2128127"
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 1)
     assert switch.value is True
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 0)
@@ -115,10 +112,7 @@ async def test_generic_entity_callback(
     switch.register_entity_updated_callback(cb=device_updated_mock, custom_id="some_id")
     switch.register_device_removed_callback(cb=device_removed_mock)
     assert switch.value is None
-    assert (
-        str(switch) == "address_path: switch/CentralTest-BidCos-RF/vcu2128127_4_state/, "
-        "type: HmIP-BSM, name: HmIP-BSM_VCU2128127 State ch4"
-    )
+    assert str(switch) == "path: vcu2128127/4/switch/state, name: HmIP-BSM_VCU2128127 State ch4"
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 1)
     assert switch.value is True
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 0)
