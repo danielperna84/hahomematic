@@ -55,9 +55,9 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
     @config_property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
-        if (force_enabled := self._enabled_by_channel_operation_mode) is None:
-            return self._usage
-        return EntityUsage.EVENT if force_enabled else EntityUsage.NO_CREATE
+        if (forced_by_com := self._enabled_by_channel_operation_mode) is None:
+            return self._get_entity_usage()
+        return EntityUsage.EVENT if forced_by_com else EntityUsage.NO_CREATE
 
     @config_property
     def event_type(self) -> HomematicEventType:

@@ -35,6 +35,7 @@ SCHEMA_ED_FIELD = vol.Schema({vol.Required(int): SCHEMA_ED_FIELD_DETAILS})
 SCHEMA_ED_DEVICE_GROUP = vol.Schema(
     {
         vol.Required(ED.PRIMARY_CHANNEL.value): vol.Any(int, None),
+        vol.Required(ED.ALLOW_UNDEFINED_GENERIC_ENTITIES.value): bool,
         vol.Optional(ED.SECONDARY_CHANNELS.value): (int,),
         vol.Optional(ED.REPEATABLE_FIELDS.value): SCHEMA_ED_FIELD_DETAILS,
         vol.Optional(ED.VISIBLE_REPEATABLE_FIELDS.value): SCHEMA_ED_FIELD_DETAILS,
@@ -80,9 +81,19 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         4: (Parameter.BATTERY_STATE,),
     },
     ED.DEVICE_DEFINITIONS: {
+        DeviceProfile.IP_BUTTON_LOCK: {
+            ED.DEVICE_GROUP: {
+                ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: True,
+                ED.REPEATABLE_FIELDS: {
+                    Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
+                },
+            },
+        },
         DeviceProfile.IP_COVER: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.SECONDARY_CHANNELS: (2, 3),
                 ED.REPEATABLE_FIELDS: {
                     Field.COMBINED_PARAMETER: Parameter.COMBINED_PARAMETER,
@@ -107,6 +118,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_DIMMER: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.SECONDARY_CHANNELS: (2, 3),
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
@@ -123,6 +135,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_GARAGE: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.DOOR_COMMAND: Parameter.DOOR_COMMAND,
                     Field.SECTION: Parameter.SECTION,
@@ -138,6 +151,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_HDM: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.FIELDS: {
                     1: {
                         Field.DIRECTION: Parameter.ACTIVITY_STATE,
@@ -151,6 +165,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_FIXED_COLOR_LIGHT: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.SECONDARY_CHANNELS: (2, 3),
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR: Parameter.COLOR,
@@ -172,6 +187,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_SIMPLE_FIXED_COLOR_LIGHT_WIRED: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR: Parameter.COLOR,
                     Field.COLOR_BEHAVIOUR: Parameter.COLOR_BEHAVIOUR,
@@ -186,6 +202,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_SIMPLE_FIXED_COLOR_LIGHT: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR: Parameter.COLOR,
                     Field.LEVEL: Parameter.LEVEL,
@@ -199,6 +216,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_RGBW_LIGHT: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.SECONDARY_CHANNELS: (2, 3, 4),
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR_TEMPERATURE: Parameter.COLOR_TEMPERATURE,
@@ -224,6 +242,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_DRG_DALI: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR_TEMPERATURE: Parameter.COLOR_TEMPERATURE,
                     Field.ON_TIME_VALUE: Parameter.DURATION_VALUE,
@@ -242,6 +261,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_SWITCH: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.SECONDARY_CHANNELS: (2, 3),
                 ED.REPEATABLE_FIELDS: {
                     Field.STATE: Parameter.STATE,
@@ -267,6 +287,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_LOCK: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.DIRECTION: Parameter.ACTIVITY_STATE,
                     Field.LOCK_STATE: Parameter.LOCK_STATE,
@@ -279,25 +300,10 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                 },
             },
         },
-        DeviceProfile.IP_BUTTON_LOCK: {
-            ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 0,
-                ED.REPEATABLE_FIELDS: {
-                    Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
-                },
-            },
-        },
-        DeviceProfile.RF_BUTTON_LOCK: {
-            ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: None,
-                ED.REPEATABLE_FIELDS: {
-                    Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
-                },
-            },
-        },
         DeviceProfile.IP_SIREN: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 3,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.ACOUSTIC_ALARM_ACTIVE: Parameter.ACOUSTIC_ALARM_ACTIVE,
                     Field.OPTICAL_ALARM_ACTIVE: Parameter.OPTICAL_ALARM_ACTIVE,
@@ -311,6 +317,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_SIREN_SMOKE: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 1,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.SMOKE_DETECTOR_COMMAND: Parameter.SMOKE_DETECTOR_COMMAND,
                 },
@@ -322,6 +329,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_THERMOSTAT: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.ACTIVE_PROFILE: Parameter.ACTIVE_PROFILE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
@@ -351,6 +359,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.IP_THERMOSTAT_GROUP: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.ACTIVE_PROFILE: Parameter.ACTIVE_PROFILE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
@@ -377,9 +386,19 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
             },
             ED.INCLUDE_DEFAULT_ENTITIES: False,
         },
+        DeviceProfile.RF_BUTTON_LOCK: {
+            ED.DEVICE_GROUP: {
+                ED.PRIMARY_CHANNEL: None,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: True,
+                ED.REPEATABLE_FIELDS: {
+                    Field.BUTTON_LOCK: Parameter.GLOBAL_BUTTON_LOCK,
+                },
+            },
+        },
         DeviceProfile.RF_COVER: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.DIRECTION: Parameter.DIRECTION,
                     Field.LEVEL: Parameter.LEVEL,
@@ -392,6 +411,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_DIMMER: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -402,6 +422,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_DIMMER_COLOR: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -420,6 +441,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_DIMMER_COLOR_FIXED: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -430,6 +452,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_DIMMER_COLOR_TEMP: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -445,6 +468,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_DIMMER_WITH_VIRT_CHANNEL: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.SECONDARY_CHANNELS: (1, 2),
                 ED.REPEATABLE_FIELDS: {
                     Field.LEVEL: Parameter.LEVEL,
@@ -456,6 +480,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_LOCK: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.DIRECTION: Parameter.DIRECTION,
                     Field.OPEN: Parameter.OPEN,
@@ -467,6 +492,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_SWITCH: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.STATE: Parameter.STATE,
                     Field.ON_TIME_VALUE: Parameter.ON_TIME,
@@ -485,6 +511,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_THERMOSTAT: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.AUTO_MODE: Parameter.AUTO_MODE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
@@ -510,6 +537,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.RF_THERMOSTAT_GROUP: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.AUTO_MODE: Parameter.AUTO_MODE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
@@ -536,6 +564,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         DeviceProfile.SIMPLE_RF_THERMOSTAT: {
             ED.DEVICE_GROUP: {
                 ED.PRIMARY_CHANNEL: 0,
+                ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.VISIBLE_REPEATABLE_FIELDS: {
                     Field.HUMIDITY: Parameter.HUMIDITY,
                     Field.TEMPERATURE: Parameter.TEMPERATURE,

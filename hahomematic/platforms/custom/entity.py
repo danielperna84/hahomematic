@@ -10,7 +10,7 @@ from typing import Any, Final, cast
 from hahomematic.const import CALLBACK_TYPE, ENTITY_KEY, INIT_DATETIME, CallSource, EntityUsage
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
-from hahomematic.platforms.custom.const import DeviceProfile, Field
+from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
 from hahomematic.platforms.custom.support import ExtendedConfig
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
@@ -54,10 +54,18 @@ class CustomEntity(BaseEntity):
                 device_type=device.device_type, platform=self.platform
             ),
         )
+        self._allow_undefined_generic_entities: Final[bool] = self._device_desc[
+            ED.ALLOW_UNDEFINED_GENERIC_ENTITIES
+        ]
         self._extended: Final = extended
         self._data_entities: Final[dict[Field, hmge.GenericEntity]] = {}
         self._init_entities()
         self._init_entity_fields()
+
+    @property
+    def allow_undefined_generic_entities(self) -> bool:
+        """Return if undefined generic entities of this device are allowed."""
+        return self._allow_undefined_generic_entities
 
     @config_property
     def base_channel_no(self) -> int | None:
@@ -144,12 +152,14 @@ class CustomEntity(BaseEntity):
             device=self._device,
             channel_no=self.channel_no,
             is_only_primary_channel=is_only_primary_channel,
-            usage=self._usage,
+            usage=self._get_entity_usage(),
             postfix=self.entity_name_postfix.replace("_", " ").title(),
         )
 
     def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
+        if self._forced_usage:
+            return self._forced_usage
         if (
             secondary_channels := self._device_desc.get(hmed.ED.SECONDARY_CHANNELS)
         ) and self.channel_no in secondary_channels:
@@ -233,7 +243,7 @@ class CustomEntity(BaseEntity):
                     channel_address=channel_address, parameter=parameter
                 ):
                     if is_visible and entity.is_forced_sensor is False:
-                        entity.set_usage(EntityUsage.CE_VISIBLE)
+                        entity.force_usage(forced_usage=EntityUsage.CE_VISIBLE)
                     self._add_entity(field=field, entity=entity)
 
     def _add_entity(
@@ -246,7 +256,7 @@ class CustomEntity(BaseEntity):
             channel_no=self._channel_no, base_channel_no=self._base_channel_no
         )
         if is_visible:
-            entity.set_usage(EntityUsage.CE_VISIBLE)
+            entity.force_usage(forced_usage=EntityUsage.CE_VISIBLE)
 
         self._unregister_callbacks.append(
             entity.register_internal_entity_updated_callback(cb=self.fire_entity_updated_callback)
@@ -279,11 +289,10 @@ class CustomEntity(BaseEntity):
         )
 
         for parameter in parameters:
-            entity = self._device.get_generic_entity(
+            if entity := self._device.get_generic_entity(
                 channel_address=channel_address, parameter=parameter
-            )
-            if entity:
-                entity.set_usage(EntityUsage.ENTITY)
+            ):
+                entity.force_usage(forced_usage=EntityUsage.ENTITY)
 
     def _get_entity[_EntityT: hmge.GenericEntity](
         self, field: Field, entity_type: type[_EntityT]
