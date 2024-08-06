@@ -42,6 +42,7 @@ class DeviceProfile(StrEnum):
 class ED(StrEnum):
     """Enum for entity definitions."""
 
+    ALLOW_UNDEFINED_GENERIC_ENTITIES = "allow_undefined_generic_entities"
     DEFAULT_ENTITIES = "default_entities"
     INCLUDE_DEFAULT_ENTITIES = "include_default_entities"
     DEVICE_GROUP = "device_group"

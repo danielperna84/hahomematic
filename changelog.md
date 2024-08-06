@@ -1,6 +1,7 @@
 # Version 2024.8.1(2024-08-02)
 
 - Refactor entity path
+- Allow undefined generic entities besides CE
 
 # Version 2024.8.0(2024-08-01)
 

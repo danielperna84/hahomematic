@@ -47,7 +47,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
         if self._is_forced_sensor or self._is_un_ignored:
             return EntityUsage.ENTITY
         if (force_enabled := self._enabled_by_channel_operation_mode) is None:
-            return self._usage
+            return self._get_entity_usage()
         return EntityUsage.ENTITY if force_enabled else EntityUsage.NO_CREATE
 
     async def event(self, value: Any) -> None:
@@ -135,6 +135,8 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
 
     def _get_entity_usage(self) -> EntityUsage:
         """Generate the usage for the entity."""
+        if self._forced_usage:
+            return self._forced_usage
         if self._central.parameter_visibility.parameter_is_hidden(
             device_type=self._device.device_type,
             channel_no=self.channel_no,
@@ -145,7 +147,10 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
 
         return (
             EntityUsage.NO_CREATE
-            if self._device.has_custom_entity_definition
+            if (
+                self._device.has_custom_entity_definition
+                and not self._device.allow_undefined_generic_entities
+            )
             else EntityUsage.ENTITY
         )
 

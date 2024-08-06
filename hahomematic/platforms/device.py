@@ -180,6 +180,16 @@ class HmDevice(PayloadMixin):
             return Manufacturer.MOEHLENHOFF
         return Manufacturer.EQ3
 
+    @property
+    def allow_undefined_generic_entities(self) -> bool:
+        """Return if undefined generic entities of this device are allowed."""
+        return bool(
+            all(
+                entity.allow_undefined_generic_entities
+                for entity in self._custom_entities.values()
+            )
+        )
+
     @value_property
     def available(self) -> bool:
         """Return the availability of the device."""

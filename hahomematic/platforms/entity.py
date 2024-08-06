@@ -291,7 +291,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
             interface_id=device.interface_id
         )
 
-        self._usage: EntityUsage = self._get_entity_usage()
+        self._forced_usage: EntityUsage | None = None
         self._entity_name_data: Final = self._get_entity_name()
 
     @property
@@ -369,11 +369,11 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @config_property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
-        return self._usage
+        return self._get_entity_usage()
 
-    def set_usage(self, usage: EntityUsage) -> None:
+    def force_usage(self, forced_usage: EntityUsage) -> None:
         """Set the entity usage."""
-        self._usage = usage
+        self._forced_usage = forced_usage
 
     @abstractmethod
     async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
