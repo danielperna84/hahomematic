@@ -190,7 +190,7 @@ class CustomEntity(BaseEntity):
             entity = self._device.get_generic_entity(
                 channel_address=self._channel_address, parameter=parameter
             )
-            self._add_entity(field=field_name, entity=entity)
+            self._add_entity(field=field_name, entity=entity, is_visible=False)
 
         # Add visible repeating fields
         for field_name, parameter in self._device_desc.get(
@@ -231,7 +231,7 @@ class CustomEntity(BaseEntity):
         if hmed.get_include_default_entities(device_profile=self._device_profile):
             self._mark_entities(entity_def=hmed.get_default_entities())
 
-    def _add_entities(self, field_dict_name: hmed.ED, is_visible: bool = False) -> None:
+    def _add_entities(self, field_dict_name: hmed.ED, is_visible: bool | None = None) -> None:
         """Add entities to custom entity."""
         fields = self._device_desc.get(field_dict_name, {})
         for channel_no, channel in fields.items():
@@ -242,12 +242,10 @@ class CustomEntity(BaseEntity):
                 if entity := self._device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
                 ):
-                    if is_visible and entity.is_forced_sensor is False:
-                        entity.force_usage(forced_usage=EntityUsage.CE_VISIBLE)
-                    self._add_entity(field=field, entity=entity)
+                    self._add_entity(field=field, entity=entity, is_visible=is_visible)
 
     def _add_entity(
-        self, field: Field, entity: hmge.GenericEntity | None, is_visible: bool = False
+        self, field: Field, entity: hmge.GenericEntity | None, is_visible: bool | None = None
     ) -> None:
         """Add entity to collection and register callback."""
         if not entity:
@@ -255,8 +253,11 @@ class CustomEntity(BaseEntity):
         self.device.add_sub_device_channel(
             channel_no=self._channel_no, base_channel_no=self._base_channel_no
         )
-        if is_visible:
+
+        if is_visible is True and entity.is_forced_sensor is False:
             entity.force_usage(forced_usage=EntityUsage.CE_VISIBLE)
+        elif is_visible is False and entity.is_forced_sensor is False:
+            entity.force_usage(forced_usage=EntityUsage.NO_CREATE)
 
         self._unregister_callbacks.append(
             entity.register_internal_entity_updated_callback(cb=self.fire_entity_updated_callback)
