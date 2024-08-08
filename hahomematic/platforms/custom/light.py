@@ -1016,6 +1016,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     "263 132": CustomConfig(make_ce_func=make_rf_dimmer, channels=(1,)),
     "263 133": CustomConfig(make_ce_func=make_rf_dimmer_with_virt_channel, channels=(1,)),
     "263 134": CustomConfig(make_ce_func=make_rf_dimmer, channels=(1,)),
+    "ELV-SH-WUA": CustomConfig(make_ce_func=make_ip_dimmer, channels=(1,)),
     "HBW-LC4-IN4-DR": CustomConfig(
         make_ce_func=make_rf_dimmer,
         channels=(
@@ -1146,6 +1147,7 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
             }
         ),
     ),
+    "HmIP-WUA": CustomConfig(make_ce_func=make_ip_dimmer, channels=(1,)),
     "HmIPW-DRD3": CustomConfig(
         make_ce_func=make_ip_dimmer,
         channels=(1, 5, 9),
