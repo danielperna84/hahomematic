@@ -1,13 +1,13 @@
-# Version 2024.8.2(2024-08-08)
+# Version 2024.8.2 (2024-08-08)
 
-- Add ELV-SH-WUA / HmIP-WUA
+- Add CED for ELV-SH-WUA / HmIP-WUA
 
 # Version 2024.8.1(2024-08-02)
 
 - Refactor entity path
 - Allow undefined generic entities besides CE
 
-# Version 2024.8.0(2024-08-01)
+# Version 2024.8.0 (2024-08-01)
 
 - Reduce data load, if only device description is updated
 
