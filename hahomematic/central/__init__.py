@@ -49,6 +49,7 @@ from hahomematic.const import (
     HomematicEventType,
     InterfaceEventType,
     InterfaceName,
+    Operations,
     Parameter,
     ParamsetKey,
     ProxyInitState,
@@ -71,7 +72,13 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
-from hahomematic.support import check_config, get_device_address, get_entity_key, reduce_args
+from hahomematic.support import (
+    check_config,
+    get_channel_no,
+    get_device_address,
+    get_entity_key,
+    reduce_args,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -1017,6 +1024,50 @@ class CentralUnit:
             on=on, t=t, mode=mode, device_address=device_address
         )
 
+    def get_parameters(
+        self,
+        paramset_key: ParamsetKey,
+        operations: tuple[Operations, ...],
+        full_format: bool = False,
+        unignore_candidates_only: bool = False,
+    ) -> tuple[str, ...]:
+        """Return all parameters from VALUES paramset."""
+        parameters: set[str] = set()
+        for channels in self.paramset_descriptions.raw_paramset_descriptions.values():  # pylint: disable=too-many-nested-blocks
+            device_type: str | None = None
+            if full_format:
+                device_address = get_device_address(list(channels)[0]) if channels else ""
+                device_type = self.device_descriptions.get_device_type(
+                    device_address=device_address
+                )
+            if device_type or full_format is False:
+                for channel_address in channels:
+                    for parameter, paramset in channels[channel_address][
+                        paramset_key.value
+                    ].items():
+                        p_operations = paramset[Description.OPERATIONS]
+                        for operation in operations:
+                            if all(p_operations & operation for operation in operations):
+                                if (
+                                    unignore_candidates_only
+                                    and (
+                                        generic_entity := self.get_generic_entity(
+                                            channel_address=channel_address,
+                                            parameter=parameter,
+                                            paramset_key=paramset_key,
+                                        )
+                                    )
+                                    and generic_entity.enabled_default
+                                ):
+                                    continue
+                                parameters.add(
+                                    f"{parameter}@{device_type}:{get_channel_no(channel_address)}:{paramset_key}"
+                                    if full_format
+                                    else parameter
+                                )
+
+        return tuple(sorted(parameters))
+
     def _get_virtual_remote(self, device_address: str) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for client in self._clients.values():
@@ -1057,6 +1108,10 @@ class CentralUnit:
     def get_program_button(self, pid: str) -> HmProgramButton | None:
         """Return the program button."""
         return self._program_buttons.get(pid)
+
+    def get_unignore_candidates(self) -> list[str]:
+        """Return the candidates for unignore."""
+        return []
 
     async def clear_caches(self) -> None:
         """Clear all stored data."""

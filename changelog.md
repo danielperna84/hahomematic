@@ -1,6 +1,7 @@
 # Version 2024.8.2 (2024-08-08)
 
 - Add CED for ELV-SH-WUA / HmIP-WUA
+- Refactor get_parameters for unignore_candidates
 
 # Version 2024.8.1(2024-08-02)
 
