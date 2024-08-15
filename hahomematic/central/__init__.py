@@ -1068,8 +1068,6 @@ class CentralUnit:
 
         return tuple(sorted(parameters))
 
-    # LEVEL@HmIP-eTRV-2:1:VALUES
-
     def _get_virtual_remote(self, device_address: str) -> HmDevice | None:
         """Get the virtual remote for the Client."""
         for client in self._clients.values():
