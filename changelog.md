@@ -1,4 +1,8 @@
-# Version 2024.8.2 (2024-08-08)
+# Version 2024.8.3 (2024-08-15)
+
+- Ignore parameters on un ignore parameter list
+
+# Version 2024.8.2 (2024-08-15)
 
 - Add CED for ELV-SH-WUA / HmIP-WUA
 - Refactor get_parameters for unignore_candidates

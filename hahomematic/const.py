@@ -480,6 +480,12 @@ RELEVANT_INIT_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.UN_REACH,
 )
 
+IGNORE_FOR_UN_IGNORE_PARAMETERS: Final[tuple[Parameter, ...]] = (
+    Parameter.CONFIG_PENDING,
+    Parameter.STICKY_UN_REACH,
+    Parameter.UN_REACH,
+)
+
 # virtual remotes device_types
 VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
     "HM-RCV-50",

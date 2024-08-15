@@ -42,6 +42,7 @@ from hahomematic.const import (
     EVENT_DATA,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
+    IGNORE_FOR_UN_IGNORE_PARAMETERS,
     BackendSystemEvent,
     Description,
     DeviceFirmwareState,
@@ -354,7 +355,7 @@ class CentralUnit:
         # wait until tasks are finished
         await self.looper.block_till_done()
 
-        while self._has_active_threads:
+        while self._has_active_threads:  # noqa: ASYNC110
             await asyncio.sleep(1)
         self._started = False
 
@@ -1059,6 +1060,7 @@ class CentralUnit:
                                     )
                                     and generic_entity.enabled_default
                                     and not generic_entity.is_un_ignored
+                                    and parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS
                                 ):
                                     continue
                                 parameters.add(
