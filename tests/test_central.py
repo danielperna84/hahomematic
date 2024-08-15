@@ -18,6 +18,7 @@ from hahomematic.const import (
     HmPlatform,
     HomematicEventType,
     InterfaceEventType,
+    Operations,
     Parameter,
     ParamsetKey,
 )
@@ -384,7 +385,7 @@ async def test_device_unignore_hm2(
     ],
 )
 @pytest.mark.asyncio()
-async def test_ignore_deviec_type(
+async def test_ignore_device_type(
     factory: helper.Factory,
     lines: list[str],
     device_type: str,
@@ -412,25 +413,35 @@ async def test_ignore_deviec_type(
 @pytest.mark.asyncio()
 @pytest.mark.parametrize(
     (
-        "address_device_translation",
-        "do_mock_client",
-        "add_sysvars",
-        "add_programs",
-        "ignore_devices_on_create",
-        "un_ignore_list",
+        "operations",
+        "full_format",
+        "unignore_candidates_only",
+        "expected_result",
     ),
     [
-        (TEST_DEVICES, True, False, False, None, None),
+        ((Operations.READ, Operations.EVENT), True, True, 45),
+        ((Operations.READ, Operations.EVENT), True, False, 57),
+        ((Operations.READ, Operations.EVENT), False, True, 33),
+        ((Operations.READ, Operations.EVENT), False, False, 43),
     ],
 )
 async def test_all_parameters(
-    central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
+    factory: helper.Factory,
+    operations: tuple[Operations, ...],
+    full_format: bool,
+    unignore_candidates_only: bool,
+    expected_result: int,
 ) -> None:
     """Test all_parameters."""
-    central, _, _ = central_client_factory
-    parameters = central.paramset_descriptions.get_all_readable_parameters()
+    central, _ = await factory.get_default_central(TEST_DEVICES)
+    parameters = central.get_parameters(
+        paramset_key=ParamsetKey.VALUES,
+        operations=operations,
+        full_format=full_format,
+        unignore_candidates_only=unignore_candidates_only,
+    )
     assert parameters
-    assert len(parameters) == 43
+    assert len(parameters) == expected_result
 
 
 @pytest.mark.asyncio()

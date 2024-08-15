@@ -19,8 +19,6 @@ from hahomematic.const import (
     INIT_DATETIME,
     DataOperationResult,
     Description,
-    Operations,
-    ParamsetKey,
 )
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
@@ -209,6 +207,13 @@ class DeviceDescriptionCache(BasePersistentCache):
             )
         return data
 
+    def get_device_type(self, device_address: str) -> str | None:
+        """Return the device type."""
+        for data in self._device_descriptions.values():
+            if items := data.get(device_address):
+                return items[Description.TYPE]  # type: ignore[no-any-return]
+        return None
+
     def get_device_parameter(
         self, interface_id: str, device_address: str, parameter: str
     ) -> Any | None:
@@ -278,6 +283,11 @@ class ParamsetDescriptionCache(BasePersistentCache):
         # {(device_address, parameter), [channel_no]}
         self._address_parameter_cache: Final[dict[tuple[str, str], list[int]]] = {}
 
+    @property
+    def raw_paramset_descriptions(self) -> dict[str, dict[str, dict[str, dict[str, Any]]]]:
+        """Return the paramset descriptions."""
+        return self._raw_paramset_descriptions
+
     def add(
         self,
         interface_id: str,
@@ -345,18 +355,6 @@ class ParamsetDescriptionCache(BasePersistentCache):
         ):
             return len(set(channels)) > 1
         return False
-
-    def get_all_readable_parameters(self) -> tuple[str, ...]:
-        """Return all readable, eventing parameters from VALUES paramset."""
-        parameters: set[str] = set()
-        for channels in self._raw_paramset_descriptions.values():
-            for channel_address in channels:
-                for parameter, paramset in channels[channel_address][ParamsetKey.VALUES].items():
-                    operations = paramset[Description.OPERATIONS]
-                    if operations & Operations.READ and operations & Operations.EVENT:
-                        parameters.add(parameter)
-
-        return tuple(sorted(parameters))
 
     def get_channel_addresses_by_paramset_key(
         self, interface_id: str, device_address: str
