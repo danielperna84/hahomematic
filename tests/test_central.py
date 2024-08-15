@@ -447,6 +447,42 @@ async def test_all_parameters(
 @pytest.mark.asyncio()
 @pytest.mark.parametrize(
     (
+        "operations",
+        "full_format",
+        "unignore_candidates_only",
+        "expected_result",
+    ),
+    [
+        ((Operations.READ, Operations.EVENT), True, True, 46),
+        ((Operations.READ, Operations.EVENT), True, False, 57),
+        ((Operations.READ, Operations.EVENT), False, True, 33),
+        ((Operations.READ, Operations.EVENT), False, False, 43),
+    ],
+)
+async def test_all_parameters_with_unignore(
+    factory: helper.Factory,
+    operations: tuple[Operations, ...],
+    full_format: bool,
+    unignore_candidates_only: bool,
+    expected_result: int,
+) -> None:
+    """Test all_parameters."""
+    central, _ = await factory.get_default_central(
+        TEST_DEVICES, un_ignore_list=["ACTUAL_TEMPERATURE", "ACTIVE_PROFILE"]
+    )
+    parameters = central.get_parameters(
+        paramset_key=ParamsetKey.VALUES,
+        operations=operations,
+        full_format=full_format,
+        unignore_candidates_only=unignore_candidates_only,
+    )
+    assert parameters
+    assert len(parameters) == expected_result
+
+
+@pytest.mark.asyncio()
+@pytest.mark.parametrize(
+    (
         "address_device_translation",
         "do_mock_client",
         "add_sysvars",

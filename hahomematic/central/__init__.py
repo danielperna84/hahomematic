@@ -1058,6 +1058,7 @@ class CentralUnit:
                                         )
                                     )
                                     and generic_entity.enabled_default
+                                    and not generic_entity.is_un_ignored
                                 ):
                                     continue
                                 parameters.add(
