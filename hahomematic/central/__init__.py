@@ -1030,7 +1030,7 @@ class CentralUnit:
         paramset_key: ParamsetKey,
         operations: tuple[Operations, ...],
         full_format: bool = False,
-        unignore_candidates_only: bool = False,
+        un_ignore_candidates_only: bool = False,
     ) -> tuple[str, ...]:
         """Return all parameters from VALUES paramset."""
         parameters: set[str] = set()
@@ -1050,7 +1050,7 @@ class CentralUnit:
                         for operation in operations:
                             if all(p_operations & operation for operation in operations):
                                 if (
-                                    unignore_candidates_only
+                                    un_ignore_candidates_only
                                     and (
                                         generic_entity := self.get_generic_entity(
                                             channel_address=channel_address,
