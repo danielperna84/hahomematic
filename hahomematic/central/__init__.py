@@ -1060,8 +1060,7 @@ class CentralUnit:
                                     )
                                     and generic_entity.enabled_default
                                     and not generic_entity.is_un_ignored
-                                    and parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS
-                                ):
+                                ) or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS:
                                     continue
                                 parameters.add(
                                     f"{parameter}@{device_type}:{get_channel_no(channel_address)}:{paramset_key}"
@@ -1112,8 +1111,8 @@ class CentralUnit:
         """Return the program button."""
         return self._program_buttons.get(pid)
 
-    def get_unignore_candidates(self) -> list[str]:
-        """Return the candidates for unignore."""
+    def get_un_ignore_candidates(self) -> list[str]:
+        """Return the candidates for un_ignore."""
         return []
 
     async def clear_caches(self) -> None:
@@ -1345,7 +1344,7 @@ class CentralConfig:
 
     @property
     def load_un_ignore(self) -> bool:
-        """Return if unignore should be loaded."""
+        """Return if un_ignore should be loaded."""
         return self.start_direct is False
 
     @property
