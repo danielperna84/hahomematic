@@ -1043,9 +1043,9 @@ class CentralUnit:
                 )
             if device_type or full_format is False:
                 for channel_address in channels:
-                    for parameter, paramset in channels[channel_address][
-                        paramset_key.value
-                    ].items():
+                    for parameter, paramset in (
+                        channels[channel_address].get(paramset_key.value, {}).items()
+                    ):
                         p_operations = paramset[Description.OPERATIONS]
                         for operation in operations:
                             if all(p_operations & operation for operation in operations):
