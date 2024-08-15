@@ -158,7 +158,7 @@ async def test_identify_callback_ip(
     ],
 )
 @pytest.mark.asyncio()
-async def test_device_unignore_etrv(
+async def test_device_un_ignore_etrv(
     factory: helper.Factory,
     line: str,
     parameter: str,
@@ -199,7 +199,7 @@ async def test_device_unignore_etrv(
     ],
 )
 @pytest.mark.asyncio()
-async def test_device_unignore_broll(
+async def test_device_un_ignore_broll(
     factory: helper.Factory,
     line: str,
     parameter: str,
@@ -242,7 +242,7 @@ async def test_device_unignore_broll(
     ],
 )
 @pytest.mark.asyncio()
-async def test_device_unignore_hm(
+async def test_device_un_ignore_hm(
     factory: helper.Factory,
     line: str,
     parameter: str,
@@ -329,7 +329,7 @@ async def test_device_unignore_hm(
     ],
 )
 @pytest.mark.asyncio()
-async def test_device_unignore_hm2(
+async def test_device_un_ignore_hm2(
     factory: helper.Factory,
     lines: list[str],
     parameter: str,
@@ -415,21 +415,21 @@ async def test_ignore_device_type(
     (
         "operations",
         "full_format",
-        "unignore_candidates_only",
+        "un_ignore_candidates_only",
         "expected_result",
     ),
     [
-        ((Operations.READ, Operations.EVENT), True, True, 45),
-        ((Operations.READ, Operations.EVENT), True, False, 57),
-        ((Operations.READ, Operations.EVENT), False, True, 33),
-        ((Operations.READ, Operations.EVENT), False, False, 43),
+        ((Operations.READ, Operations.EVENT), True, True, 43),
+        ((Operations.READ, Operations.EVENT), True, False, 55),
+        ((Operations.READ, Operations.EVENT), False, True, 31),
+        ((Operations.READ, Operations.EVENT), False, False, 41),
     ],
 )
 async def test_all_parameters(
     factory: helper.Factory,
     operations: tuple[Operations, ...],
     full_format: bool,
-    unignore_candidates_only: bool,
+    un_ignore_candidates_only: bool,
     expected_result: int,
 ) -> None:
     """Test all_parameters."""
@@ -438,7 +438,7 @@ async def test_all_parameters(
         paramset_key=ParamsetKey.VALUES,
         operations=operations,
         full_format=full_format,
-        unignore_candidates_only=unignore_candidates_only,
+        un_ignore_candidates_only=un_ignore_candidates_only,
     )
     assert parameters
     assert len(parameters) == expected_result
@@ -449,21 +449,21 @@ async def test_all_parameters(
     (
         "operations",
         "full_format",
-        "unignore_candidates_only",
+        "un_ignore_candidates_only",
         "expected_result",
     ),
     [
-        ((Operations.READ, Operations.EVENT), True, True, 46),
-        ((Operations.READ, Operations.EVENT), True, False, 57),
-        ((Operations.READ, Operations.EVENT), False, True, 33),
-        ((Operations.READ, Operations.EVENT), False, False, 43),
+        ((Operations.READ, Operations.EVENT), True, True, 44),
+        ((Operations.READ, Operations.EVENT), True, False, 55),
+        ((Operations.READ, Operations.EVENT), False, True, 31),
+        ((Operations.READ, Operations.EVENT), False, False, 41),
     ],
 )
-async def test_all_parameters_with_unignore(
+async def test_all_parameters_with_un_ignore(
     factory: helper.Factory,
     operations: tuple[Operations, ...],
     full_format: bool,
-    unignore_candidates_only: bool,
+    un_ignore_candidates_only: bool,
     expected_result: int,
 ) -> None:
     """Test all_parameters."""
@@ -474,7 +474,7 @@ async def test_all_parameters_with_unignore(
         paramset_key=ParamsetKey.VALUES,
         operations=operations,
         full_format=full_format,
-        unignore_candidates_only=unignore_candidates_only,
+        un_ignore_candidates_only=un_ignore_candidates_only,
     )
     assert parameters
     assert len(parameters) == expected_result

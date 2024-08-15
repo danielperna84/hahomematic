@@ -291,7 +291,7 @@ class ParameterVisibilityCache:
         self._required_parameters: Final = get_required_parameters()
         self._raw_un_ignore_list: Final[set[str]] = set(central.config.un_ignore_list or set())
 
-        # unignore from custom unignore files
+        # un_ignore from custom un_ignore files
         # parameter
         self._custom_un_ignore_values_parameters: Final[set[str]] = set()
 
@@ -439,7 +439,7 @@ class ParameterVisibilityCache:
         """
         Return if parameter is on an un_ignore list.
 
-        This can be either be the users unignore file, or in the
+        This can be either be the users un_ignore file, or in the
         predefined _UN_IGNORE_PARAMETERS_BY_DEVICE.
         """
         device_type_l = device_type.lower()
@@ -533,12 +533,12 @@ class ParameterVisibilityCache:
             self._ignore_custom_device_type.append(line.lower().replace(_IGNORE_DEVICE_TYPE, ""))
             return
 
-        if line_details := self._get_unignore_line_details(line=line):
+        if line_details := self._get_un_ignore_line_details(line=line):
             if isinstance(line_details, str):
                 self._custom_un_ignore_values_parameters.add(line_details)
                 return
 
-            self._add_complex_unignore_entry(
+            self._add_complex_un_ignore_entry(
                 device_type=line_details[0],
                 channel_no=line_details[1],
                 parameter=line_details[2],
@@ -550,7 +550,7 @@ class ParameterVisibilityCache:
                 line,
             )
 
-    def _get_unignore_line_details(
+    def _get_un_ignore_line_details(
         self, line: str
     ) -> tuple[str, int | str | None, str, str] | str | None:
         """
@@ -574,14 +574,14 @@ class ParameterVisibilityCache:
                         paramset_key = param_data[1]
                     else:
                         _LOGGER.warning(
-                            "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                            "GET_UN_IGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
                             "Only one ':' expected in param_data",
                             line,
                         )
                         return None
                 else:
                     _LOGGER.warning(
-                        "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                        "GET_UN_IGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
                         "No ':' before '@'",
                         line,
                     )
@@ -600,28 +600,28 @@ class ParameterVisibilityCache:
                         )
                     else:
                         _LOGGER.warning(
-                            "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                            "GET_UN_IGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
                             "Only one ':' expected in channel_data",
                             line,
                         )
                         return None
                 else:
                     _LOGGER.warning(
-                        "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                        "GET_UN_IGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
                         "No ':' after '@'",
                         line,
                     )
                     return None
             else:
                 _LOGGER.warning(
-                    "GET_UNIGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
+                    "GET_UN_IGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
                     "Only one @ expected",
                     line,
                 )
                 return None
         elif ":" in line:
             _LOGGER.warning(
-                "GET_UNIGNORE_LINE_DETAILS failed: No supported format detected for un ignore line '%s'. ",
+                "GET_UN_IGNORE_LINE_DETAILS failed: No supported format detected for un ignore line '%s'. ",
                 line,
             )
             return None
@@ -635,7 +635,7 @@ class ParameterVisibilityCache:
             return device_type, channel_no, parameter, paramset_key
         return line
 
-    def _add_complex_unignore_entry(
+    def _add_complex_un_ignore_entry(
         self, device_type: str, channel_no: int | str | None, paramset_key: str, parameter: str
     ) -> None:
         """Add line to un ignore cache."""
@@ -647,13 +647,13 @@ class ParameterVisibilityCache:
                 self._relevant_master_paramsets_by_device[device_type].add(channel_no)
             else:
                 _LOGGER.warning(
-                    "ADD_UNIGNORE_ENTRY: channel_no '%s' must be an integer or None for paramset_key MASTER.",
+                    "ADD_UN_IGNORE_ENTRY: channel_no '%s' must be an integer or None for paramset_key MASTER.",
                     channel_no,
                 )
                 return
             if device_type == _UN_IGNORE_WILDCARD:
                 _LOGGER.warning(
-                    "ADD_UNIGNORE_ENTRY: device_type must be set for paramset_key MASTER."
+                    "ADD_UN_IGNORE_ENTRY: device_type must be set for paramset_key MASTER."
                 )
                 return
 
@@ -678,7 +678,7 @@ class ParameterVisibilityCache:
         Return if parameter should be hidden.
 
         This is required to determine the entity usage.
-        Return only hidden parameters, that are no defined in the unignore file.
+        Return only hidden parameters, that are no defined in the un_ignore file.
         """
         return parameter in _HIDDEN_PARAMETERS and not self._parameter_is_un_ignored(
             device_type=device_type,
@@ -740,12 +740,12 @@ class ParameterVisibilityCache:
                             self._raw_un_ignore_list.add(file_line.strip())
             except Exception as ex:
                 _LOGGER.warning(
-                    "LOAD failed: Could not read unignore file %s",
+                    "LOAD failed: Could not read un_ignore file %s",
                     reduce_args(args=ex.args),
                 )
 
         if self._central.config.load_un_ignore:
-            await self._central.looper.async_add_executor_job(_load, name="load-unignore-file")
+            await self._central.looper.async_add_executor_job(_load, name="load-un_ignore-file")
 
         for line in self._raw_un_ignore_list:
             if "#" not in line:

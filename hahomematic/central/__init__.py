@@ -42,6 +42,7 @@ from hahomematic.const import (
     EVENT_DATA,
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
+    IGNORE_FOR_UN_IGNORE_PARAMETERS,
     BackendSystemEvent,
     Description,
     DeviceFirmwareState,
@@ -354,7 +355,7 @@ class CentralUnit:
         # wait until tasks are finished
         await self.looper.block_till_done()
 
-        while self._has_active_threads:
+        while self._has_active_threads:  # noqa: ASYNC110
             await asyncio.sleep(1)
         self._started = False
 
@@ -1029,7 +1030,7 @@ class CentralUnit:
         paramset_key: ParamsetKey,
         operations: tuple[Operations, ...],
         full_format: bool = False,
-        unignore_candidates_only: bool = False,
+        un_ignore_candidates_only: bool = False,
     ) -> tuple[str, ...]:
         """Return all parameters from VALUES paramset."""
         parameters: set[str] = set()
@@ -1042,14 +1043,14 @@ class CentralUnit:
                 )
             if device_type or full_format is False:
                 for channel_address in channels:
-                    for parameter, paramset in channels[channel_address][
-                        paramset_key.value
-                    ].items():
+                    for parameter, paramset in (
+                        channels[channel_address].get(paramset_key.value, {}).items()
+                    ):
                         p_operations = paramset[Description.OPERATIONS]
                         for operation in operations:
                             if all(p_operations & operation for operation in operations):
                                 if (
-                                    unignore_candidates_only
+                                    un_ignore_candidates_only
                                     and (
                                         generic_entity := self.get_generic_entity(
                                             channel_address=channel_address,
@@ -1059,7 +1060,7 @@ class CentralUnit:
                                     )
                                     and generic_entity.enabled_default
                                     and not generic_entity.is_un_ignored
-                                ):
+                                ) or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS:
                                     continue
                                 parameters.add(
                                     f"{parameter}@{device_type}:{get_channel_no(channel_address)}:{paramset_key}"
@@ -1110,8 +1111,8 @@ class CentralUnit:
         """Return the program button."""
         return self._program_buttons.get(pid)
 
-    def get_unignore_candidates(self) -> list[str]:
-        """Return the candidates for unignore."""
+    def get_un_ignore_candidates(self) -> list[str]:
+        """Return the candidates for un_ignore."""
         return []
 
     async def clear_caches(self) -> None:
@@ -1343,7 +1344,7 @@ class CentralConfig:
 
     @property
     def load_un_ignore(self) -> bool:
-        """Return if unignore should be loaded."""
+        """Return if un_ignore should be loaded."""
         return self.start_direct is False
 
     @property
