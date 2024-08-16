@@ -43,6 +43,7 @@ from hahomematic.const import (
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
     IGNORE_FOR_UN_IGNORE_PARAMETERS,
+    UN_IGNORE_WILDCARD,
     BackendSystemEvent,
     Description,
     DeviceFirmwareState,
@@ -1031,6 +1032,7 @@ class CentralUnit:
         operations: tuple[Operations, ...],
         full_format: bool = False,
         un_ignore_candidates_only: bool = False,
+        use_channel_wildcard: bool = False,
     ) -> tuple[str, ...]:
         """Return all parameters from VALUES paramset."""
         parameters: set[str] = set()
@@ -1064,8 +1066,14 @@ class CentralUnit:
                                     or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS
                                 ):
                                     continue
+
+                                channel = (
+                                    UN_IGNORE_WILDCARD
+                                    if use_channel_wildcard
+                                    else get_channel_no(channel_address)
+                                )
                                 parameters.add(
-                                    f"{parameter}@{device_type}:{get_channel_no(channel_address)}:{paramset_key}"
+                                    f"{parameter}:{paramset_key}@{device_type}:{channel}"
                                     if full_format
                                     else parameter
                                 )
@@ -1308,6 +1316,7 @@ class CentralConfig:
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
         start_direct: bool = False,
+        load_only_relevant_paramset_descriptions: bool = True,
     ) -> None:
         """Init the client config."""
         self.connection_state: Final = CentralConnectionState()
@@ -1326,7 +1335,10 @@ class CentralConfig:
         self.callback_port: Final = callback_port
         self.json_port: Final = json_port
         self.un_ignore_list: Final = un_ignore_list
-        self.start_direct = start_direct
+        self.start_direct: Final = start_direct
+        self.load_only_relevant_paramset_descriptions: Final = (
+            load_only_relevant_paramset_descriptions
+        )
 
     @property
     def central_url(self) -> str:

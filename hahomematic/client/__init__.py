@@ -613,7 +613,9 @@ class Client(ABC):
                 if channel_no is None
                 else device_description[Description.PARENT_TYPE]
             )
-            if only_relevant and not self.central.parameter_visibility.is_relevant_paramset(
+            if (
+                self.central.config.load_only_relevant_paramset_descriptions or only_relevant
+            ) and not self.central.parameter_visibility.is_relevant_paramset(
                 device_type=device_type,
                 channel_no=channel_no,
                 paramset_key=paramset_key,
