@@ -420,9 +420,9 @@ async def test_ignore_device_type(
     ),
     [
         ((Operations.READ, Operations.EVENT), True, True, 43),
-        ((Operations.READ, Operations.EVENT), True, False, 55),
+        ((Operations.READ, Operations.EVENT), True, False, 57),
         ((Operations.READ, Operations.EVENT), False, True, 31),
-        ((Operations.READ, Operations.EVENT), False, False, 41),
+        ((Operations.READ, Operations.EVENT), False, False, 43),
     ],
 )
 async def test_all_parameters(
@@ -454,9 +454,9 @@ async def test_all_parameters(
     ),
     [
         ((Operations.READ, Operations.EVENT), True, True, 44),
-        ((Operations.READ, Operations.EVENT), True, False, 55),
+        ((Operations.READ, Operations.EVENT), True, False, 57),
         ((Operations.READ, Operations.EVENT), False, True, 31),
-        ((Operations.READ, Operations.EVENT), False, False, 41),
+        ((Operations.READ, Operations.EVENT), False, False, 43),
     ],
 )
 async def test_all_parameters_with_un_ignore(
