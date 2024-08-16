@@ -1049,18 +1049,20 @@ class CentralUnit:
                         p_operations = paramset[Description.OPERATIONS]
                         for operation in operations:
                             if all(p_operations & operation for operation in operations):
-                                if (
-                                    un_ignore_candidates_only
-                                    and (
-                                        generic_entity := self.get_generic_entity(
-                                            channel_address=channel_address,
-                                            parameter=parameter,
-                                            paramset_key=paramset_key,
+                                if un_ignore_candidates_only and (
+                                    (
+                                        (
+                                            generic_entity := self.get_generic_entity(
+                                                channel_address=channel_address,
+                                                parameter=parameter,
+                                                paramset_key=paramset_key,
+                                            )
                                         )
+                                        and generic_entity.enabled_default
+                                        and not generic_entity.is_un_ignored
                                     )
-                                    and generic_entity.enabled_default
-                                    and not generic_entity.is_un_ignored
-                                ) or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS:
+                                    or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS
+                                ):
                                     continue
                                 parameters.add(
                                     f"{parameter}@{device_type}:{get_channel_no(channel_address)}:{paramset_key}"
