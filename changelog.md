@@ -1,6 +1,6 @@
 # Version 2024.8.4 (2024-08-16)
 
-- Make load only relevant paramset descriptions
+- Make load only relevant paramset descriptions configurable
 - Add UN_IGNORE_WILDCARD to get_parameters
 
 # Version 2024.8.3 (2024-08-15)
