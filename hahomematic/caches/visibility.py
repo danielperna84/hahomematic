@@ -9,14 +9,19 @@ import os
 from typing import Any, Final
 
 from hahomematic import central as hmcu, support as hms
-from hahomematic.const import CLICK_EVENTS, DEFAULT_ENCODING, Parameter, ParamsetKey
+from hahomematic.const import (
+    CLICK_EVENTS,
+    DEFAULT_ENCODING,
+    UN_IGNORE_WILDCARD,
+    Parameter,
+    ParamsetKey,
+)
 from hahomematic.platforms.custom.definition import get_required_parameters
 from hahomematic.support import element_matches_key, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 _FILE_CUSTOM_UN_IGNORE_PARAMETERS: Final = "unignore"
-_UN_IGNORE_WILDCARD: Final = "all"
 _IGNORE_DEVICE_TYPE: Final = "ignore_"
 
 # Define which additional parameters from MASTER paramset should be created as entity.
@@ -456,9 +461,9 @@ class ParameterVisibilityCache:
         search_matrix = (
             (
                 (device_type_l, channel_no),
-                (device_type_l, _UN_IGNORE_WILDCARD),
-                (_UN_IGNORE_WILDCARD, channel_no),
-                (_UN_IGNORE_WILDCARD, _UN_IGNORE_WILDCARD),
+                (device_type_l, UN_IGNORE_WILDCARD),
+                (UN_IGNORE_WILDCARD, channel_no),
+                (UN_IGNORE_WILDCARD, UN_IGNORE_WILDCARD),
             )
             if paramset_key == ParamsetKey.VALUES
             else ((device_type_l, channel_no),)
@@ -626,8 +631,8 @@ class ParameterVisibilityCache:
             )
             return None
         if (
-            device_type == _UN_IGNORE_WILDCARD
-            and channel_no == _UN_IGNORE_WILDCARD
+            device_type == UN_IGNORE_WILDCARD
+            and channel_no == UN_IGNORE_WILDCARD
             and paramset_key == ParamsetKey.VALUES
         ):
             return parameter
@@ -651,7 +656,7 @@ class ParameterVisibilityCache:
                     channel_no,
                 )
                 return
-            if device_type == _UN_IGNORE_WILDCARD:
+            if device_type == UN_IGNORE_WILDCARD:
                 _LOGGER.warning(
                     "ADD_UN_IGNORE_ENTRY: device_type must be set for paramset_key MASTER."
                 )

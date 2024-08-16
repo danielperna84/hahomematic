@@ -77,6 +77,8 @@ NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 ENTITY_KEY = tuple[str, str]
 CALLBACK_TYPE = Callable[[], None] | None
 
+UN_IGNORE_WILDCARD: Final = "all"
+
 
 class Backend(StrEnum):
     """Enum with supported hahomematic backends."""
