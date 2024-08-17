@@ -1033,7 +1033,7 @@ class CentralUnit:
         full_format: bool = False,
         un_ignore_candidates_only: bool = False,
         use_channel_wildcard: bool = False,
-    ) -> tuple[str, ...]:
+    ) -> list[str]:
         """Return all parameters from VALUES paramset."""
         parameters: set[str] = set()
         for channels in self.paramset_descriptions.raw_paramset_descriptions.values():  # pylint: disable=too-many-nested-blocks
@@ -1078,7 +1078,7 @@ class CentralUnit:
                                     else parameter
                                 )
 
-        return tuple(sorted(parameters))
+        return list(parameters)
 
     def _get_virtual_remote(self, device_address: str) -> HmDevice | None:
         """Get the virtual remote for the Client."""
@@ -1121,9 +1121,42 @@ class CentralUnit:
         """Return the program button."""
         return self._program_buttons.get(pid)
 
-    def get_un_ignore_candidates(self) -> list[str]:
+    def get_un_ignore_candidates(self, include_master: bool = False) -> list[str]:
         """Return the candidates for un_ignore."""
-        return []
+        candidates = sorted(
+            # 1. request simple parameter list for values parameters
+            self.get_parameters(
+                paramset_key=ParamsetKey.VALUES,
+                operations=(Operations.READ, Operations.EVENT),
+                un_ignore_candidates_only=True,
+            )
+            # 2. request full_format parameter list with channel wildcard for values parameters
+            + self.get_parameters(
+                paramset_key=ParamsetKey.VALUES,
+                operations=(Operations.READ, Operations.EVENT),
+                full_format=True,
+                un_ignore_candidates_only=True,
+                use_channel_wildcard=True,
+            )
+            # 3. request full_format parameter list for values parameters
+            + self.get_parameters(
+                paramset_key=ParamsetKey.VALUES,
+                operations=(Operations.READ, Operations.EVENT),
+                full_format=True,
+                un_ignore_candidates_only=True,
+            )
+        )
+        if include_master:
+            # 4. request full_format parameter list for master parameters
+            candidates += sorted(
+                self.get_parameters(
+                    paramset_key=ParamsetKey.MASTER,
+                    operations=(Operations.READ,),
+                    full_format=True,
+                    un_ignore_candidates_only=True,
+                )
+            )
+        return candidates
 
     async def clear_caches(self) -> None:
         """Clear all stored data."""
@@ -1316,7 +1349,7 @@ class CentralConfig:
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
         start_direct: bool = False,
-        load_only_relevant_paramset_descriptions: bool = True,
+        load_all_paramset_descriptions: bool = True,
     ) -> None:
         """Init the client config."""
         self.connection_state: Final = CentralConnectionState()
@@ -1336,9 +1369,7 @@ class CentralConfig:
         self.json_port: Final = json_port
         self.un_ignore_list: Final = un_ignore_list
         self.start_direct: Final = start_direct
-        self.load_only_relevant_paramset_descriptions: Final = (
-            load_only_relevant_paramset_descriptions
-        )
+        self.load_all_paramset_descriptions: Final = load_all_paramset_descriptions
 
     @property
     def central_url(self) -> str:

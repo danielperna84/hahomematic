@@ -1,3 +1,7 @@
+# Version 2024.8.5 (2024-08-17)
+
+- Add un_ignore_candidates to central
+
 # Version 2024.8.4 (2024-08-16)
 
 - Make load only relevant paramset descriptions configurable
@@ -30,8 +34,7 @@
 - Rename last_updated -> modified_at
 - Rename last_refreshed -> refreshed_at
 - Add button lock CE
-
-Add time units to HmIP-RGBW calls
+- Add time units to HmIP-RGBW calls
 
 # Version 2024.5.6 (2024-05-31)
 
