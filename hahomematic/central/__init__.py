@@ -1349,7 +1349,7 @@ class CentralConfig:
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
         start_direct: bool = False,
-        load_all_paramset_descriptions: bool = True,
+        load_all_paramset_descriptions: bool = False,
     ) -> None:
         """Init the client config."""
         self.connection_state: Final = CentralConnectionState()
