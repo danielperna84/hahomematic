@@ -89,6 +89,24 @@ def check_config(
     return config_failures
 
 
+def delete_file(folder: str, filename: str) -> None:
+    """Delete the file."""
+    file_path = os.path.join(folder, filename)
+    if (
+        os.path.exists(folder)
+        and os.path.exists(file_path)
+        and (os.path.isfile(file_path) or os.path.islink(file_path))
+    ):
+        os.unlink(file_path)
+
+
+def delete_folder_content(folder: str) -> None:
+    """Delete the cache file."""
+    if not os.path.exists(folder):
+        for filename in os.listdir(folder):
+            delete_file(folder=folder, filename=filename)
+
+
 def check_or_create_directory(directory: str) -> bool:
     """Check / create directory."""
     if not directory:

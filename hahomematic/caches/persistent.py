@@ -14,6 +14,7 @@ import orjson
 
 from hahomematic import central as hmcu
 from hahomematic.const import (
+    CACHE_PATH,
     DEFAULT_ENCODING,
     FILE_DEVICES,
     FILE_PARAMSETS,
@@ -25,6 +26,7 @@ from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
     Channel,
     check_or_create_directory,
+    delete_file,
     get_device_address,
     get_split_channel_address,
 )
@@ -35,16 +37,17 @@ _LOGGER: Final = logging.getLogger(__name__)
 class BasePersistentCache(ABC):
     """Cache for files."""
 
+    _file_postfix: str
+
     def __init__(
         self,
         central: hmcu.CentralUnit,
-        filename: str,
         persistant_cache: dict[str, Any],
     ) -> None:
         """Init the base class of the persistent cache."""
         self._central: Final = central
-        self._cache_dir: Final = f"{central.config.storage_folder}/cache"
-        self._filename: Final = f"{central.name}_{filename}"
+        self._cache_dir: Final = f"{central.config.storage_folder}/{CACHE_PATH}"
+        self._filename: Final = f"{central.name}_{self._file_postfix}"
         self._persistant_cache: Final = persistant_cache
         self.last_save: datetime = INIT_DATETIME
 
@@ -97,9 +100,7 @@ class BasePersistentCache(ABC):
         """Remove stored file from disk."""
 
         def _clear() -> None:
-            check_or_create_directory(self._cache_dir)
-            if os.path.exists(os.path.join(self._cache_dir, self._filename)):
-                os.unlink(os.path.join(self._cache_dir, self._filename))
+            delete_file(folder=self._cache_dir, filename=self._filename)
             self._persistant_cache.clear()
 
         await self._central.looper.async_add_executor_job(_clear, name="clear-persistent-cache")
@@ -108,13 +109,14 @@ class BasePersistentCache(ABC):
 class DeviceDescriptionCache(BasePersistentCache):
     """Cache for device/channel names."""
 
+    _file_postfix = FILE_DEVICES
+
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the device description cache."""
         # {interface_id, [device_descriptions]}
         self._raw_device_descriptions: Final[dict[str, list[dict[str, Any]]]] = {}
         super().__init__(
             central=central,
-            filename=FILE_DEVICES,
             persistant_cache=self._raw_device_descriptions,
         )
         # {interface_id, {device_address, [channel_address]}}
@@ -270,6 +272,8 @@ class DeviceDescriptionCache(BasePersistentCache):
 class ParamsetDescriptionCache(BasePersistentCache):
     """Cache for paramset descriptions."""
 
+    _file_postfix = FILE_PARAMSETS
+
     def __init__(self, central: hmcu.CentralUnit) -> None:
         """Init the paramset description cache."""
         # {interface_id, {channel_address, paramsets}}
@@ -278,7 +282,6 @@ class ParamsetDescriptionCache(BasePersistentCache):
         ] = {}
         super().__init__(
             central=central,
-            filename=FILE_PARAMSETS,
             persistant_cache=self._raw_paramset_descriptions,
         )
 
