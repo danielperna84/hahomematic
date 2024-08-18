@@ -1,3 +1,7 @@
+# Version 2024.8.7 (2024-08-18)
+
+- Fix empty channel on get_parameters
+
 # Version 2024.8.6 (2024-08-18)
 
 - Fix get_parameters

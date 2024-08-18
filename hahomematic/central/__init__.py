@@ -1065,16 +1065,20 @@ class CentralUnit:
                             ):
                                 continue
 
+                            if not full_format:
+                                parameters.add(parameter)
+                                continue
+
                             channel = (
                                 UN_IGNORE_WILDCARD
                                 if use_channel_wildcard
                                 else get_channel_no(channel_address)
                             )
-                            parameters.add(
-                                f"{parameter}:{paramset_key}@{device_type}:{channel}"
-                                if full_format
-                                else parameter
-                            )
+
+                            full_parameter = f"{parameter}:{paramset_key}@{device_type}:"
+                            if channel is not None:
+                                full_parameter += str(channel)
+                            parameters.add(full_parameter)
 
         return list(parameters)
 
