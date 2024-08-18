@@ -419,8 +419,8 @@ async def test_ignore_device_type(
         "expected_result",
     ),
     [
-        ((Operations.READ, Operations.EVENT), True, True, 43),
-        ((Operations.READ, Operations.EVENT), True, False, 57),
+        ((Operations.READ, Operations.EVENT), True, True, 45),
+        ((Operations.READ, Operations.EVENT), True, False, 65),
         ((Operations.READ, Operations.EVENT), False, True, 31),
         ((Operations.READ, Operations.EVENT), False, False, 43),
     ],
@@ -453,8 +453,8 @@ async def test_all_parameters(
         "expected_result",
     ),
     [
-        ((Operations.READ, Operations.EVENT), True, True, 44),
-        ((Operations.READ, Operations.EVENT), True, False, 57),
+        ((Operations.READ, Operations.EVENT), True, True, 46),
+        ((Operations.READ, Operations.EVENT), True, False, 65),
         ((Operations.READ, Operations.EVENT), False, True, 31),
         ((Operations.READ, Operations.EVENT), False, False, 43),
     ],
