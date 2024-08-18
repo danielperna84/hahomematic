@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC
 from collections.abc import Mapping
 from datetime import datetime
+from functools import lru_cache
 import logging
 import os
 from typing import Any, Final
@@ -207,6 +208,7 @@ class DeviceDescriptionCache(BasePersistentCache):
             )
         return data
 
+    @lru_cache
     def get_device_type(self, device_address: str) -> str | None:
         """Return the device type."""
         for data in self._device_descriptions.values():

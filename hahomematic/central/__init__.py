@@ -1037,46 +1037,44 @@ class CentralUnit:
         """Return all parameters from VALUES paramset."""
         parameters: set[str] = set()
         for channels in self.paramset_descriptions.raw_paramset_descriptions.values():  # pylint: disable=too-many-nested-blocks
-            device_type: str | None = None
-            if full_format:
-                device_address = get_device_address(list(channels)[0]) if channels else ""
-                device_type = self.device_descriptions.get_device_type(
-                    device_address=device_address
-                )
-            if device_type or full_format is False:
-                for channel_address in channels:
-                    for parameter, paramset in (
-                        channels[channel_address].get(paramset_key.value, {}).items()
-                    ):
-                        p_operations = paramset[Description.OPERATIONS]
-                        for operation in operations:
-                            if all(p_operations & operation for operation in operations):
-                                if un_ignore_candidates_only and (
+            for channel_address in channels:
+                device_type: str | None = None
+                if full_format:
+                    device_type = self.device_descriptions.get_device_type(
+                        device_address=get_device_address(channel_address)
+                    )
+                for parameter, paramset in (
+                    channels[channel_address].get(paramset_key.value, {}).items()
+                ):
+                    p_operations = paramset[Description.OPERATIONS]
+                    for operation in operations:
+                        if all(p_operations & operation for operation in operations):
+                            if un_ignore_candidates_only and (
+                                (
                                     (
-                                        (
-                                            generic_entity := self.get_generic_entity(
-                                                channel_address=channel_address,
-                                                parameter=parameter,
-                                                paramset_key=paramset_key,
-                                            )
+                                        generic_entity := self.get_generic_entity(
+                                            channel_address=channel_address,
+                                            parameter=parameter,
+                                            paramset_key=paramset_key,
                                         )
-                                        and generic_entity.enabled_default
-                                        and not generic_entity.is_un_ignored
                                     )
-                                    or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS
-                                ):
-                                    continue
+                                    and generic_entity.enabled_default
+                                    and not generic_entity.is_un_ignored
+                                )
+                                or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS
+                            ):
+                                continue
 
-                                channel = (
-                                    UN_IGNORE_WILDCARD
-                                    if use_channel_wildcard
-                                    else get_channel_no(channel_address)
-                                )
-                                parameters.add(
-                                    f"{parameter}:{paramset_key}@{device_type}:{channel}"
-                                    if full_format
-                                    else parameter
-                                )
+                            channel = (
+                                UN_IGNORE_WILDCARD
+                                if use_channel_wildcard
+                                else get_channel_no(channel_address)
+                            )
+                            parameters.add(
+                                f"{parameter}:{paramset_key}@{device_type}:{channel}"
+                                if full_format
+                                else parameter
+                            )
 
         return list(parameters)
 
