@@ -1,3 +1,7 @@
+# Version 2024.8.6 (2024-08-18)
+
+- Fix get_parameters
+
 # Version 2024.8.5 (2024-08-17)
 
 - Add un_ignore_candidates to central
