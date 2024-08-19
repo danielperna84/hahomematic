@@ -88,9 +88,6 @@ class Example:
 
         # For testing we set a short INIT_TIMEOUT
         config.INIT_TIMEOUT = 10
-        # We have to set the cache location of stored data so the central_1 can load
-        # it while initializing.
-        config.CACHE_DIR = "cache"
         # Add callbacks to handle the events and see what happens on the system.
         self.central.register_backend_system_callback(self._systemcallback)
 
