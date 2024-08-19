@@ -801,7 +801,9 @@ class _DefinitionExporter:
         )
         paramset_descriptions: Mapping[
             str, Any
-        ] = await self._client.get_all_paramset_descriptions(tuple(device_descriptions.values()))
+        ] = await self._client.get_all_paramset_descriptions(
+            device_descriptions=tuple(device_descriptions.values())
+        )
         device_type = device_descriptions[self._device_address][Description.TYPE]
         filename = f"{device_type}.json"
 

@@ -607,20 +607,19 @@ class Client(ABC):
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
         for paramset_key in device_description.get(Description.PARAMSETS, []):
-            channel_no = get_channel_no(address)
-            device_type = (
-                device_description[Description.TYPE]
-                if channel_no is None
-                else device_description[Description.PARENT_TYPE]
-            )
-            if not (
-                self.central.config.load_all_paramset_descriptions or load_all
-            ) and not self.central.parameter_visibility.is_relevant_paramset(
-                device_type=device_type,
-                channel_no=channel_no,
-                paramset_key=paramset_key,
-            ):
-                continue
+            if not (self.central.config.load_all_paramset_descriptions or load_all):
+                channel_no = get_channel_no(address)
+                device_type = (
+                    device_description[Description.TYPE]
+                    if channel_no is None
+                    else device_description[Description.PARENT_TYPE]
+                )
+                if not self.central.parameter_visibility.is_relevant_paramset(
+                    device_type=device_type,
+                    channel_no=channel_no,
+                    paramset_key=paramset_key,
+                ):
+                    continue
             if paramset_description := await self._get_paramset_description(
                 address=address, paramset_key=paramset_key
             ):
@@ -712,7 +711,7 @@ class Client(ABC):
             )
             return
         await self.fetch_paramset_descriptions(
-            self.central.device_descriptions.get_device(
+            device_description=self.central.device_descriptions.get_device(
                 interface_id=self.interface_id, device_address=device_address
             )
         )
@@ -783,7 +782,7 @@ class ClientCCU(Client):
             if handle_ping_pong and self.supports_ping_pong:
                 self._ping_pong_cache.handle_send_ping(ping_ts=dt_now)
             calllerId = (
-                f"{self.interface_id}#{dt_now.strftime(DATETIME_FORMAT_MILLIS)}"
+                f"{self.interface_id}#{dt_now.strftime(format=DATETIME_FORMAT_MILLIS)}"
                 if handle_ping_pong
                 else self.interface_id
             )
