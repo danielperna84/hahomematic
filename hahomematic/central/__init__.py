@@ -794,6 +794,7 @@ class CentralUnit:
             interface_id=interface_id, device_descriptions=device_descriptions
         )
 
+    @measure_execution_time
     async def _add_new_devices(
         self, interface_id: str, device_descriptions: tuple[dict[str, Any], ...]
     ) -> None:
@@ -815,14 +816,18 @@ class CentralUnit:
             # We need this to avoid adding duplicates.
             known_addresses = tuple(
                 dev_desc[Description.ADDRESS]
-                for dev_desc in self.device_descriptions.get_raw_device_descriptions(interface_id)
+                for dev_desc in self.device_descriptions.get_raw_device_descriptions(
+                    interface_id=interface_id
+                )
             )
             client = self._clients[interface_id]
             for dev_desc in device_descriptions:
                 try:
-                    self.device_descriptions.add_device_description(interface_id, dev_desc)
+                    self.device_descriptions.add_device_description(
+                        interface_id=interface_id, device_description=dev_desc
+                    )
                     if dev_desc[Description.ADDRESS] not in known_addresses:
-                        await client.fetch_paramset_descriptions(dev_desc)
+                        await client.fetch_paramset_descriptions(device_description=dev_desc)
                 except Exception as err:  # pragma: no cover
                     _LOGGER.error(
                         "ADD_NEW_DEVICES failed: %s [%s]",
