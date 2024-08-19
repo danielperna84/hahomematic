@@ -100,7 +100,7 @@ class BasePersistentCache(ABC):
         """Remove stored file from disk."""
 
         def _clear() -> None:
-            delete_file(folder=self._cache_dir, filename=self._filename)
+            delete_file(folder=self._cache_dir, file_name=self._filename)
             self._persistant_cache.clear()
 
         await self._central.looper.async_add_executor_job(_clear, name="clear-persistent-cache")

@@ -17,6 +17,7 @@ import sys
 from typing import Any, Final
 
 from hahomematic.const import (
+    CACHE_PATH,
     CCU_PASSWORD_PATTERN,
     ENTITY_KEY,
     FILE_DEVICES,
@@ -89,22 +90,15 @@ def check_config(
     return config_failures
 
 
-def delete_file(folder: str, filename: str) -> None:
+def delete_file(folder: str, file_name: str) -> None:
     """Delete the file."""
-    file_path = os.path.join(folder, filename)
+    file_path = os.path.join(folder, file_name)
     if (
         os.path.exists(folder)
         and os.path.exists(file_path)
         and (os.path.isfile(file_path) or os.path.islink(file_path))
     ):
         os.unlink(file_path)
-
-
-def delete_folder_content(folder: str) -> None:
-    """Delete the cache file."""
-    if not os.path.exists(folder):
-        for filename in os.listdir(folder):
-            delete_file(folder=folder, filename=filename)
 
 
 def check_or_create_directory(directory: str) -> bool:
@@ -269,15 +263,11 @@ def _get_search_key(search_elements: Collection[str], search_key: str) -> str | 
 
 def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
     """Clean up the used cached directories."""
-    cache_dir = f"{storage_folder}/cache"
+    cache_dir = f"{storage_folder}/{CACHE_PATH}"
     files_to_delete = [FILE_DEVICES, FILE_PARAMSETS]
 
-    def _delete_file(file_name: str) -> None:
-        if os.path.exists(os.path.join(cache_dir, file_name)):
-            os.unlink(os.path.join(cache_dir, file_name))
-
     for file_to_delete in files_to_delete:
-        _delete_file(file_name=f"{instance_name}_{file_to_delete}")
+        delete_file(folder=cache_dir, file_name=f"{instance_name}_{file_to_delete}")
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
