@@ -120,7 +120,7 @@ class DeviceDescriptionCache(BasePersistentCache):
             persistant_cache=self._raw_device_descriptions,
         )
         # {interface_id, {device_address, [channel_address]}}
-        self._addresses: Final[dict[str, dict[str, list[str]]]] = {}
+        self._addresses: Final[dict[str, dict[str, set[str]]]] = {}
         # {interface_id, {address, device_descriptions}}
         self._device_descriptions: Final[dict[str, dict[str, dict[str, Any]]]] = {}
 
@@ -162,9 +162,9 @@ class DeviceDescriptionCache(BasePersistentCache):
 
         for address in deleted_addresses:
             try:
-                if ":" not in address and self._addresses.get(interface_id, {}).get(address, []):
+                if ":" not in address and self._addresses.get(interface_id, {}).get(address):
                     del self._addresses[interface_id][address]
-                if self._device_descriptions.get(interface_id, {}).get(address, {}):
+                if self._device_descriptions.get(interface_id, {}).get(address):
                     del self._device_descriptions[interface_id][address]
             except KeyError:
                 _LOGGER.warning("REMOVE_DEVICE failed: Unable to delete: %s", address)
@@ -176,7 +176,7 @@ class DeviceDescriptionCache(BasePersistentCache):
     def get_channels(self, interface_id: str, device_address: str) -> Mapping[str, Channel]:
         """Return the device channels by interface and device_address."""
         channels: dict[str, Channel] = {}
-        for channel_address in self._addresses.get(interface_id, {}).get(device_address, []):
+        for channel_address in self._addresses.get(interface_id, {}).get(device_address, set()):
             channel_name = str(
                 self.get_device_parameter(
                     interface_id=interface_id,
@@ -248,12 +248,12 @@ class DeviceDescriptionCache(BasePersistentCache):
         self._device_descriptions[interface_id][address] = device_description
 
         if ":" not in address and address not in self._addresses[interface_id]:
-            self._addresses[interface_id][address] = [address]
+            self._addresses[interface_id][address] = {address}
         if ":" in address:
             device_address = get_device_address(address)
             if device_address not in self._addresses[interface_id]:
-                self._addresses[interface_id][device_address] = []
-            self._addresses[interface_id][device_address].append(address)
+                self._addresses[interface_id][device_address] = set()
+            self._addresses[interface_id][device_address].add(address)
 
     async def load(self) -> DataOperationResult:
         """Load device data from disk into _device_description_cache."""

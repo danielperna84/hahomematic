@@ -1,6 +1,7 @@
 # Version 2024.8.10 (2024-08-20)
 
 - Cleanup ParamsetDescriptionCache
+- Cleanup DeviceDescriptionCache
 
 # Version 2024.8.9 (2024-08-20)
 
