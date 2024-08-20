@@ -286,7 +286,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         )
 
         # {(device_address, parameter), [channel_no]}
-        self._address_parameter_cache: Final[dict[tuple[str, str], set[int]]] = {}
+        self._address_parameter_cache: Final[dict[tuple[str, str], set[int | None]]] = {}
 
     @property
     def raw_paramset_descriptions(self) -> dict[str, dict[str, dict[str, dict[str, Any]]]]:
@@ -312,12 +312,17 @@ class ParamsetDescriptionCache(BasePersistentCache):
             paramset_description
         )
 
+        self._add_address_parameter(
+            channel_address=channel_address, paramsets=[paramset_description]
+        )
+
     async def remove_device(self, device: HmDevice) -> None:
         """Remove device paramset descriptions from cache."""
         if interface := self._raw_paramset_descriptions.get(device.interface_id):
             for channel_address in device.channels:
                 if channel_address in interface:
                     del self._raw_paramset_descriptions[device.interface_id][channel_address]
+
         await self.save()
 
     def has_interface_id(self, interface_id: str) -> bool:
@@ -358,7 +363,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         if channels := self._address_parameter_cache.get(
             (get_device_address(channel_address), parameter)
         ):
-            return len(set(channels)) > 1
+            return len(channels) > 1
         return False
 
     def get_channel_addresses_by_paramset_key(
@@ -387,20 +392,22 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """
         for channel_paramsets in self._raw_paramset_descriptions.values():
             for channel_address, paramsets in channel_paramsets.items():
-                device_address, channel_no = get_split_channel_address(channel_address)
-                if not channel_no:
-                    continue
+                self._add_address_parameter(
+                    channel_address=channel_address, paramsets=list(paramsets.values())
+                )
 
-                for paramset in paramsets.values():
-                    if not paramset:
-                        continue
-                    for parameter in paramset:
-                        if (
-                            device_address,
-                            parameter,
-                        ) not in self._address_parameter_cache:
-                            self._address_parameter_cache[(device_address, parameter)] = set()
-                        self._address_parameter_cache[(device_address, parameter)].add(channel_no)
+    def _add_address_parameter(
+        self, channel_address: str, paramsets: list[dict[str, Any]]
+    ) -> None:
+        """Add address parameter to cache."""
+        device_address, channel_no = get_split_channel_address(channel_address)
+        for paramset in paramsets:
+            if not paramset:
+                continue
+            for parameter in paramset:
+                if (device_address, parameter) not in self._address_parameter_cache:
+                    self._address_parameter_cache[(device_address, parameter)] = set()
+                self._address_parameter_cache[(device_address, parameter)].add(channel_no)
 
     async def load(self) -> DataOperationResult:
         """Load paramset descriptions from disk into paramset cache."""
@@ -413,6 +420,4 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     async def save(self) -> DataOperationResult:
         """Save current paramset descriptions to disk."""
-        result = await super().save()
-        self._init_address_parameter_list()
-        return result
+        return await super().save()
