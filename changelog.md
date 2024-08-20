@@ -1,3 +1,7 @@
+# Version 2024.8.9 (2024-08-20)
+
+- Avoid excessive memory usage in cache
+
 # Version 2024.8.8 (2024-08-18)
 
 - Refactor folder handling
