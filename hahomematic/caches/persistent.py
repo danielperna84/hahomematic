@@ -162,11 +162,9 @@ class DeviceDescriptionCache(BasePersistentCache):
 
         for address in deleted_addresses:
             try:
-                if ":" not in address and self._addresses.get(interface_id, {}).get(
-                    address, set()
-                ):
+                if ":" not in address and self._addresses.get(interface_id, {}).get(address):
                     del self._addresses[interface_id][address]
-                if self._device_descriptions.get(interface_id, {}).get(address, {}):
+                if self._device_descriptions.get(interface_id, {}).get(address):
                     del self._device_descriptions[interface_id][address]
             except KeyError:
                 _LOGGER.warning("REMOVE_DEVICE failed: Unable to delete: %s", address)
@@ -178,7 +176,7 @@ class DeviceDescriptionCache(BasePersistentCache):
     def get_channels(self, interface_id: str, device_address: str) -> Mapping[str, Channel]:
         """Return the device channels by interface and device_address."""
         channels: dict[str, Channel] = {}
-        for channel_address in self._addresses.get(interface_id, {}).get(device_address, []):
+        for channel_address in self._addresses.get(interface_id, {}).get(device_address, set()):
             channel_name = str(
                 self.get_device_parameter(
                     interface_id=interface_id,
