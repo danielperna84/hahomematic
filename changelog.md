@@ -1,3 +1,7 @@
+# Version 2024.8.10 (2024-08-20)
+
+- Cleanup ParamsetDescriptionCache
+
 # Version 2024.8.9 (2024-08-20)
 
 - Avoid excessive memory usage in cache
