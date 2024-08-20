@@ -286,7 +286,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         )
 
         # {(device_address, parameter), [channel_no]}
-        self._address_parameter_cache: Final[dict[tuple[str, str], list[int]]] = {}
+        self._address_parameter_cache: Final[dict[tuple[str, str], set[int]]] = {}
 
     @property
     def raw_paramset_descriptions(self) -> dict[str, dict[str, dict[str, dict[str, Any]]]]:
@@ -399,10 +399,8 @@ class ParamsetDescriptionCache(BasePersistentCache):
                             device_address,
                             parameter,
                         ) not in self._address_parameter_cache:
-                            self._address_parameter_cache[(device_address, parameter)] = []
-                        self._address_parameter_cache[(device_address, parameter)].append(
-                            channel_no
-                        )
+                            self._address_parameter_cache[(device_address, parameter)] = set()
+                        self._address_parameter_cache[(device_address, parameter)].add(channel_no)
 
     async def load(self) -> DataOperationResult:
         """Load paramset descriptions from disk into paramset cache."""
