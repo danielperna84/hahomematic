@@ -1,3 +1,7 @@
+# Version 2024.8.11 (2024-08-21)
+
+- Make HEATING_COOLING visible for thermostats
+
 # Version 2024.8.10 (2024-08-20)
 
 - Cleanup ParamsetDescriptionCache

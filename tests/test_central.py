@@ -419,9 +419,9 @@ async def test_ignore_device_type(
         "expected_result",
     ),
     [
-        ((Operations.READ, Operations.EVENT), True, True, 45),
+        ((Operations.READ, Operations.EVENT), True, True, 44),
         ((Operations.READ, Operations.EVENT), True, False, 65),
-        ((Operations.READ, Operations.EVENT), False, True, 31),
+        ((Operations.READ, Operations.EVENT), False, True, 30),
         ((Operations.READ, Operations.EVENT), False, False, 43),
     ],
 )
@@ -453,9 +453,9 @@ async def test_all_parameters(
         "expected_result",
     ),
     [
-        ((Operations.READ, Operations.EVENT), True, True, 46),
+        ((Operations.READ, Operations.EVENT), True, True, 45),
         ((Operations.READ, Operations.EVENT), True, False, 65),
-        ((Operations.READ, Operations.EVENT), False, True, 31),
+        ((Operations.READ, Operations.EVENT), False, True, 30),
         ((Operations.READ, Operations.EVENT), False, False, 43),
     ],
 )
@@ -761,25 +761,25 @@ async def test_central_services(
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.MASTER)
     assert len(mock_client.method_calls) == 39
     await central.load_and_refresh_entity_data(paramset_key=ParamsetKey.VALUES)
-    assert len(mock_client.method_calls) == 56
+    assert len(mock_client.method_calls) == 57
 
     await central.get_system_variable(name="SysVar_Name")
     assert mock_client.method_calls[-1] == call.get_system_variable("SysVar_Name")
 
-    assert len(mock_client.method_calls) == 57
+    assert len(mock_client.method_calls) == 58
     await central.set_system_variable(name="sv_alarm", value=True)
     assert mock_client.method_calls[-1] == call.set_system_variable(name="sv_alarm", value=True)
-    assert len(mock_client.method_calls) == 58
+    assert len(mock_client.method_calls) == 59
     await central.set_system_variable(name="SysVar_Name", value=True)
-    assert len(mock_client.method_calls) == 58
+    assert len(mock_client.method_calls) == 59
 
     await central.set_install_mode(interface_id=const.INTERFACE_ID)
     assert mock_client.method_calls[-1] == call.set_install_mode(
         on=True, t=60, mode=1, device_address=None
     )
-    assert len(mock_client.method_calls) == 59
+    assert len(mock_client.method_calls) == 60
     await central.set_install_mode(interface_id="NOT_A_VALID_INTERFACE_ID")
-    assert len(mock_client.method_calls) == 59
+    assert len(mock_client.method_calls) == 60
 
     await central.get_client(interface_id=const.INTERFACE_ID).set_value(
         channel_address="123",
@@ -793,7 +793,7 @@ async def test_central_services(
         parameter="LEVEL",
         value=1.0,
     )
-    assert len(mock_client.method_calls) == 60
+    assert len(mock_client.method_calls) == 61
 
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").set_value(
@@ -802,7 +802,7 @@ async def test_central_services(
             parameter="LEVEL",
             value=1.0,
         )
-    assert len(mock_client.method_calls) == 60
+    assert len(mock_client.method_calls) == 61
 
     await central.get_client(interface_id=const.INTERFACE_ID).put_paramset(
         channel_address="123",
@@ -812,14 +812,14 @@ async def test_central_services(
     assert mock_client.method_calls[-1] == call.put_paramset(
         channel_address="123", paramset_key="VALUES", values={"LEVEL": 1.0}
     )
-    assert len(mock_client.method_calls) == 61
+    assert len(mock_client.method_calls) == 62
     with pytest.raises(HaHomematicException):
         await central.get_client(interface_id="NOT_A_VALID_INTERFACE_ID").put_paramset(
             channel_address="123",
             paramset_key=ParamsetKey.VALUES,
             values={"LEVEL": 1.0},
         )
-    assert len(mock_client.method_calls) == 61
+    assert len(mock_client.method_calls) == 62
 
     assert (
         central.get_generic_entity(

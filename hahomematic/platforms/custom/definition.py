@@ -334,7 +334,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.ACTIVE_PROFILE: Parameter.ACTIVE_PROFILE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
                     Field.CONTROL_MODE: Parameter.CONTROL_MODE,
-                    Field.HEATING_COOLING: Parameter.HEATING_COOLING,
                     Field.PARTY_MODE: Parameter.PARTY_MODE,
                     Field.SETPOINT: Parameter.SET_POINT_TEMPERATURE,
                     Field.SET_POINT_MODE: Parameter.SET_POINT_MODE,
@@ -342,6 +341,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.TEMPERATURE_MINIMUM: Parameter.TEMPERATURE_MINIMUM,
                 },
                 ED.VISIBLE_REPEATABLE_FIELDS: {
+                    Field.HEATING_COOLING: Parameter.HEATING_COOLING,
                     Field.HUMIDITY: Parameter.HUMIDITY,
                     Field.TEMPERATURE: Parameter.ACTUAL_TEMPERATURE,
                 },
@@ -364,7 +364,6 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.ACTIVE_PROFILE: Parameter.ACTIVE_PROFILE,
                     Field.BOOST_MODE: Parameter.BOOST_MODE,
                     Field.CONTROL_MODE: Parameter.CONTROL_MODE,
-                    Field.HEATING_COOLING: Parameter.HEATING_COOLING,
                     Field.PARTY_MODE: Parameter.PARTY_MODE,
                     Field.SETPOINT: Parameter.SET_POINT_TEMPERATURE,
                     Field.SET_POINT_MODE: Parameter.SET_POINT_MODE,
@@ -372,6 +371,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
                     Field.TEMPERATURE_MINIMUM: Parameter.TEMPERATURE_MINIMUM,
                 },
                 ED.VISIBLE_REPEATABLE_FIELDS: {
+                    Field.HEATING_COOLING: Parameter.HEATING_COOLING,
                     Field.HUMIDITY: Parameter.HUMIDITY,
                     Field.TEMPERATURE: Parameter.ACTUAL_TEMPERATURE,
                 },
