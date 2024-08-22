@@ -12,7 +12,6 @@ from datetime import datetime
 from functools import partial
 import logging
 from logging import DEBUG
-import socket
 import threading
 from time import sleep
 from typing import Any, Final, cast
@@ -80,6 +79,7 @@ from hahomematic.support import (
     get_channel_no,
     get_device_address,
     get_entity_key,
+    get_local_ip,
     reduce_args,
 )
 
@@ -522,29 +522,11 @@ class CentralUnit:
     async def _identify_callback_ip(self, port: int) -> str:
         """Identify local IP used for callbacks."""
 
-        # Do not add: pylint disable=no-member
-        # This is only an issue on macOS
-        def get_local_ip(host: str) -> str | None:
-            """Get local_ip from socket."""
-            try:
-                socket.gethostbyname(host)
-            except Exception as exc:
-                message = f"GET_LOCAL_IP: Can't resolve host for {host}"
-                _LOGGER.warning(message)
-                raise HaHomematicException(message) from exc
-            tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            tmp_socket.settimeout(config.TIMEOUT)
-            tmp_socket.connect((host, port))
-            local_ip = str(tmp_socket.getsockname()[0])
-            tmp_socket.close()
-            _LOGGER.debug("GET_LOCAL_IP: Got local ip: %s", local_ip)
-            return local_ip
-
         callback_ip: str | None = None
         while callback_ip is None:
             try:
                 callback_ip = await self.looper.async_add_executor_job(
-                    get_local_ip, self.config.host, name="get_local_ip"
+                    get_local_ip, self.config.host, port, name="get_local_ip"
                 )
             except HaHomematicException:
                 callback_ip = "127.0.0.1"

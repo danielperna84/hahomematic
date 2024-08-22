@@ -16,6 +16,7 @@ import ssl
 import sys
 from typing import Any, Final
 
+from hahomematic.config import TIMEOUT
 from hahomematic.const import (
     CACHE_PATH,
     CCU_PASSWORD_PATTERN,
@@ -212,6 +213,23 @@ def find_free_port() -> int:
         sock.bind(("", 0))
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         return int(sock.getsockname()[1])
+
+
+def get_local_ip(host: str, port: int) -> str | None:
+    """Get local_ip from socket."""
+    try:
+        socket.gethostbyname(host)
+    except Exception as exc:
+        message = f"GET_LOCAL_IP: Can't resolve host for {host}:{port}"
+        _LOGGER.warning(message)
+        raise HaHomematicException(message) from exc
+    tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    tmp_socket.settimeout(TIMEOUT)
+    tmp_socket.connect((host, port))
+    local_ip = str(tmp_socket.getsockname()[0])
+    tmp_socket.close()
+    _LOGGER.debug("GET_LOCAL_IP: Got local ip: %s", local_ip)
+    return local_ip
 
 
 def element_matches_key(
