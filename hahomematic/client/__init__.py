@@ -992,7 +992,6 @@ class _ClientConfig:
         self,
         central: hmcu.CentralUnit,
         interface_config: InterfaceConfig,
-        ip_addr: str,
     ) -> None:
         self.central: Final = central
         self.version: str = "0"
@@ -1001,7 +1000,9 @@ class _ClientConfig:
         self.interface: Final = interface_config.interface
         self.interface_id: Final = interface_config.interface_id
         self._callback_host: Final[str] = (
-            central.config.callback_host if central.config.callback_host else ip_addr
+            central.config.callback_host
+            if central.config.callback_host
+            else central.xml_rpc_server_ip_addr
         )
         self._callback_port: Final[int] = (
             central.config.callback_port
@@ -1117,12 +1118,9 @@ class InterfaceConfig:
 async def create_client(
     central: hmcu.CentralUnit,
     interface_config: InterfaceConfig,
-    ip_addr: str,
 ) -> Client:
     """Return a new client for with a given interface_config."""
-    return await _ClientConfig(
-        central=central, interface_config=interface_config, ip_addr=ip_addr
-    ).get_client()
+    return await _ClientConfig(central=central, interface_config=interface_config).get_client()
 
 
 def get_client(interface_id: str) -> Client | None:

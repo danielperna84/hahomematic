@@ -116,8 +116,8 @@ class CentralUnit:
         self._connection_state: Final = central_config.connection_state
         self._looper = Looper()
         self._xml_rpc_server: xmlrpc.XmlRpcServer | None = None
-        self.xml_rpc_server_ip_addr: str = IP_ANY_V4
-        self.xml_rpc_server_port: int = PORT_ANY
+        self._xml_rpc_server_ip_addr: str = IP_ANY_V4
+        self._xml_rpc_server_port: int = PORT_ANY
 
         # Caches for CCU data
         self.data_cache: Final[CentralDataCache] = CentralDataCache(central=self)
@@ -266,6 +266,16 @@ class CentralUnit:
         """Return the sysvar entities."""
         return tuple(self._sysvar_entities.values())
 
+    @property
+    def xml_rpc_server_ip_addr(self) -> str:
+        """Return the xml rpc server ip address."""
+        return self._xml_rpc_server_ip_addr
+
+    @property
+    def xml_rpc_server_port(self) -> int:
+        """Return the xml rpc server port."""
+        return self._xml_rpc_server_port
+
     def add_sysvar_entity(self, sysvar_entity: GenericSystemVariable) -> None:
         """Add new program button."""
         if (ccu_var_name := sysvar_entity.ccu_var_name) is not None:
@@ -305,10 +315,12 @@ class CentralUnit:
         if self._started:
             _LOGGER.debug("START: Central %s already started", self._name)
             return
-        if ip_addr := await self._identify_ip_addr(
-            port=tuple(self.config.interface_configs)[0].port
+        if self.config.interface_configs and (
+            ip_addr := await self._identify_ip_addr(
+                port=tuple(self.config.interface_configs)[0].port
+            )
         ):
-            self.xml_rpc_server_ip_addr = ip_addr
+            self._xml_rpc_server_ip_addr = ip_addr
         self._xml_rpc_server = (
             xmlrpc.create_xml_rpc_server(
                 ip_addr=ip_addr,
@@ -319,7 +331,7 @@ class CentralUnit:
         )
         if self._xml_rpc_server:
             self._xml_rpc_server.add_central(self)
-        self.xml_rpc_server_port = self._xml_rpc_server.port if self._xml_rpc_server else 0
+        self._xml_rpc_server_port = self._xml_rpc_server.port if self._xml_rpc_server else 0
 
         await self.parameter_visibility.load()
         if self.config.start_direct:
@@ -452,7 +464,6 @@ class CentralUnit:
                 if client := await hmcl.create_client(
                     central=self,
                     interface_config=interface_config,
-                    ip_addr=self.xml_rpc_server_ip_addr,
                 ):
                     if (
                         available_interfaces := client.system_information.available_interfaces
@@ -567,16 +578,9 @@ class CentralUnit:
             if len(self.config.interface_configs) == 0:
                 raise NoClients("validate_config: No clients defined.")
 
-            ip_addr = (
-                self.xml_rpc_server_ip_addr
-                if self.started
-                else await self._identify_ip_addr(tuple(self.config.interface_configs)[0].port)
-            )
             system_information = SystemInformation()
             for interface_config in self.config.interface_configs:
-                client = await hmcl.create_client(
-                    central=self, interface_config=interface_config, ip_addr=ip_addr
-                )
+                client = await hmcl.create_client(central=self, interface_config=interface_config)
                 if not system_information.serial:
                     system_information = client.system_information
         except NoClients:

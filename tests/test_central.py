@@ -128,14 +128,14 @@ async def test_device_export(
         (TEST_DEVICES, True, False, False, None, None),
     ],
 )
-async def test_identify_callback_ip(
+async def test_identify_ip_addr(
     central_client_factory: tuple[CentralUnit, Client | Mock, helper.Factory],
 ) -> None:
-    """Test identify_callback_ip."""
+    """Test identify_ip_addr."""
     central, _, _ = central_client_factory
-    assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
+    assert await central._identify_ip_addr(port=54321) == "127.0.0.1"
     central.config.host = "no_host"
-    assert await central._identify_callback_ip(port=54321) == "127.0.0.1"
+    assert await central._identify_ip_addr(port=54321) == "127.0.0.1"
 
 
 @pytest.mark.parametrize(

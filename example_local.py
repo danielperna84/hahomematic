@@ -452,7 +452,6 @@ class Example:
             interface_configs={interface_config},
             client_session=None,
             default_callback_port=48888,
-            enable_server=False,
         ).create_central()
 
         # Add callbacks to handle the events and see what happens on the system.
@@ -462,7 +461,6 @@ class Example:
             client_config=_ClientConfig(
                 central=self.central,
                 interface_config=interface_config,
-                ip_addr="127.0.0.1",
             ),
             local_resources=local_resources,
         )
