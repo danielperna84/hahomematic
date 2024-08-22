@@ -173,12 +173,12 @@ class XmlRpcServer(threading.Thread):
         if self._initialized:
             return
         self._initialized = True
-        self.listening_ip_address: Final[str] = listening_ip_address
-        self.local_port: Final[int] = find_free_port() if local_port == PORT_ANY else local_port
-        self._instances[(listening_ip_address, local_port)] = self
-        threading.Thread.__init__(self, name=f"XmlRpcServer on port {self.local_port}")
+        _local_port: Final[int] = find_free_port() if local_port == PORT_ANY else local_port
+        self._address: Final[tuple[str, int]] = (listening_ip_address, _local_port)
+        self._instances[self._address] = self
+        threading.Thread.__init__(self, name=f"XmlRpcServer {listening_ip_address}:{_local_port}")
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
-            (self.listening_ip_address, self.local_port),
+            addr=self._address,
             requestHandler=RequestHandler,
             logRequests=False,
             allow_none=True,
@@ -211,8 +211,18 @@ class XmlRpcServer(threading.Thread):
         _LOGGER.debug("STOP: Stopping XmlRPC-Server")
         self._simple_xml_rpc_server.server_close()
         _LOGGER.debug("STOP: XmlRPC-Server stopped")
-        if (self.listening_ip_address, self.local_port) in self._instances:
-            del self._instances[(self.listening_ip_address, self.local_port)]
+        if self._address in self._instances:
+            del self._instances[self._address]
+
+    @property
+    def listening_ip_address(self) -> str:
+        """Return the listening ip address."""
+        return self._address[0]
+
+    @property
+    def local_port(self) -> int:
+        """Return the local port."""
+        return self._address[1]
 
     @property
     def started(self) -> bool:
@@ -249,5 +259,9 @@ def create_xml_rpc_server(
     xml_rpc = XmlRpcServer(listening_ip_address=listening_ip_address, local_port=local_port)
     if not xml_rpc.started:
         xml_rpc.start()
-        _LOGGER.debug("CREATE_XML_RPC_SERVER: Starting XmlRPC-Server")
+        _LOGGER.debug(
+            "CREATE_XML_RPC_SERVER: Starting XmlRPC-Server on %s:%i",
+            xml_rpc.listening_ip_address,
+            xml_rpc.local_port,
+        )
     return xml_rpc
