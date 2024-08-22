@@ -43,6 +43,7 @@ from hahomematic.const import (
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
     IGNORE_FOR_UN_IGNORE_PARAMETERS,
+    IP_ANY_V4,
     UN_IGNORE_WILDCARD,
     BackendSystemEvent,
     Description,
@@ -115,7 +116,8 @@ class CentralUnit:
         self._looper = Looper()
         self._xml_rpc_server: Final = (
             xmlrpc.create_xml_rpc_server(
-                local_port=central_config.callback_port or central_config.default_callback_port
+                listening_ip_address=central_config.listening_ip_address,
+                local_port=central_config.callback_port or central_config.default_callback_port,
             )
             if central_config.enable_server
             else None
@@ -1351,6 +1353,7 @@ class CentralConfig:
         client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
+        listening_ip_address: str = IP_ANY_V4,
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
@@ -1371,6 +1374,7 @@ class CentralConfig:
         self.client_session: Final = client_session
         self.tls: Final = tls
         self.verify_tls: Final = verify_tls
+        self.listening_ip_address: Final = listening_ip_address
         self.callback_host: Final = callback_host
         self.callback_port: Final = callback_port
         self.json_port: Final = json_port
