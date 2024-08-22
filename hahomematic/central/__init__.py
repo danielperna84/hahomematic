@@ -43,6 +43,7 @@ from hahomematic.const import (
     EVENT_TYPE,
     IGNORE_FOR_UN_IGNORE_PARAMETERS,
     IP_ANY_V4,
+    PORT_ANY,
     UN_IGNORE_WILDCARD,
     BackendSystemEvent,
     Description,
@@ -114,19 +115,9 @@ class CentralUnit:
         self._model: str | None = None
         self._connection_state: Final = central_config.connection_state
         self._looper = Looper()
-        self._xml_rpc_server: Final = (
-            xmlrpc.create_xml_rpc_server(
-                listening_ip_address=central_config.listening_ip_address,
-                local_port=central_config.callback_port or central_config.default_callback_port,
-            )
-            if central_config.enable_server
-            else None
-        )
-        if self._xml_rpc_server:
-            self._xml_rpc_server.add_central(self)
-        self.local_port: Final[int] = (
-            self._xml_rpc_server.local_port if self._xml_rpc_server else 0
-        )
+        self._xml_rpc_server: xmlrpc.XmlRpcServer | None = None
+        self.listening_ip_address: str = IP_ANY_V4
+        self.local_port: int = PORT_ANY
 
         # Caches for CCU data
         self.data_cache: Final[CentralDataCache] = CentralDataCache(central=self)
@@ -314,6 +305,18 @@ class CentralUnit:
         if self._started:
             _LOGGER.debug("START: Central %s already started", self._name)
             return
+        self._xml_rpc_server = (
+            xmlrpc.create_xml_rpc_server(
+                listening_ip_address=self.config.listening_ip_address,
+                local_port=self.config.callback_port or self.config.default_callback_port,
+            )
+            if self.config.enable_server
+            else None
+        )
+        if self._xml_rpc_server:
+            self._xml_rpc_server.add_central(self)
+        self.local_port = self._xml_rpc_server.local_port if self._xml_rpc_server else 0
+
         await self.parameter_visibility.load()
         if self.config.start_direct:
             if await self._create_clients():
