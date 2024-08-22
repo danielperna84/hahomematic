@@ -992,7 +992,6 @@ class _ClientConfig:
         self,
         central: hmcu.CentralUnit,
         interface_config: InterfaceConfig,
-        local_ip: str,
     ) -> None:
         self.central: Final = central
         self.version: str = "0"
@@ -1001,10 +1000,14 @@ class _ClientConfig:
         self.interface: Final = interface_config.interface
         self.interface_id: Final = interface_config.interface_id
         self._callback_host: Final[str] = (
-            central.config.callback_host if central.config.callback_host else local_ip
+            central.config.callback_host
+            if central.config.callback_host
+            else central.xml_rpc_server_ip_addr
         )
         self._callback_port: Final[int] = (
-            central.config.callback_port if central.config.callback_port else central.local_port
+            central.config.callback_port
+            if central.config.callback_port
+            else central.xml_rpc_server_port
         )
         self.has_credentials: Final[bool] = (
             central.config.username is not None and central.config.password is not None
@@ -1115,12 +1118,9 @@ class InterfaceConfig:
 async def create_client(
     central: hmcu.CentralUnit,
     interface_config: InterfaceConfig,
-    local_ip: str,
 ) -> Client:
     """Return a new client for with a given interface_config."""
-    return await _ClientConfig(
-        central=central, interface_config=interface_config, local_ip=local_ip
-    ).get_client()
+    return await _ClientConfig(central=central, interface_config=interface_config).get_client()
 
 
 def get_client(interface_id: str) -> Client | None:

@@ -86,7 +86,6 @@ class Factory:
             client_config=_ClientConfig(
                 central=central,
                 interface_config=interface_config,
-                local_ip="127.0.0.1",
             ),
             local_resources=LocalRessources(
                 address_device_translation=address_device_translation,
@@ -130,7 +129,7 @@ class Factory:
             return_value=const.PROGRAM_DATA if add_programs else [],
         ).start()
         patch(
-            "hahomematic.central.CentralUnit._identify_callback_ip", return_value="127.0.0.1"
+            "hahomematic.central.CentralUnit._identify_ip_addr", return_value="127.0.0.1"
         ).start()
 
         await central.start()

@@ -12,7 +12,6 @@ from datetime import datetime
 from functools import partial
 import logging
 from logging import DEBUG
-import socket
 import threading
 from time import sleep
 from typing import Any, Final, cast
@@ -43,6 +42,8 @@ from hahomematic.const import (
     EVENT_INTERFACE_ID,
     EVENT_TYPE,
     IGNORE_FOR_UN_IGNORE_PARAMETERS,
+    IP_ANY_V4,
+    PORT_ANY,
     UN_IGNORE_WILDCARD,
     BackendSystemEvent,
     Description,
@@ -79,6 +80,7 @@ from hahomematic.support import (
     get_channel_no,
     get_device_address,
     get_entity_key,
+    get_ip_addr,
     reduce_args,
 )
 
@@ -113,18 +115,9 @@ class CentralUnit:
         self._model: str | None = None
         self._connection_state: Final = central_config.connection_state
         self._looper = Looper()
-        self._xml_rpc_server: Final = (
-            xmlrpc.create_xml_rpc_server(
-                local_port=central_config.callback_port or central_config.default_callback_port
-            )
-            if central_config.enable_server
-            else None
-        )
-        if self._xml_rpc_server:
-            self._xml_rpc_server.add_central(self)
-        self.local_port: Final[int] = (
-            self._xml_rpc_server.local_port if self._xml_rpc_server else 0
-        )
+        self._xml_rpc_server: xmlrpc.XmlRpcServer | None = None
+        self._xml_rpc_server_ip_addr: str = IP_ANY_V4
+        self._xml_rpc_server_port: int = PORT_ANY
 
         # Caches for CCU data
         self.data_cache: Final[CentralDataCache] = CentralDataCache(central=self)
@@ -273,6 +266,16 @@ class CentralUnit:
         """Return the sysvar entities."""
         return tuple(self._sysvar_entities.values())
 
+    @property
+    def xml_rpc_server_ip_addr(self) -> str:
+        """Return the xml rpc server ip address."""
+        return self._xml_rpc_server_ip_addr
+
+    @property
+    def xml_rpc_server_port(self) -> int:
+        """Return the xml rpc server port."""
+        return self._xml_rpc_server_port
+
     def add_sysvar_entity(self, sysvar_entity: GenericSystemVariable) -> None:
         """Add new program button."""
         if (ccu_var_name := sysvar_entity.ccu_var_name) is not None:
@@ -312,6 +315,24 @@ class CentralUnit:
         if self._started:
             _LOGGER.debug("START: Central %s already started", self._name)
             return
+        if self.config.interface_configs and (
+            ip_addr := await self._identify_ip_addr(
+                port=tuple(self.config.interface_configs)[0].port
+            )
+        ):
+            self._xml_rpc_server_ip_addr = ip_addr
+        self._xml_rpc_server = (
+            xmlrpc.create_xml_rpc_server(
+                ip_addr=ip_addr,
+                port=self.config.callback_port or self.config.default_callback_port,
+            )
+            if self.config.enable_server
+            else None
+        )
+        if self._xml_rpc_server:
+            self._xml_rpc_server.add_central(self)
+        self._xml_rpc_server_port = self._xml_rpc_server.port if self._xml_rpc_server else 0
+
         await self.parameter_visibility.load()
         if self.config.start_direct:
             if await self._create_clients():
@@ -438,11 +459,11 @@ class CentralUnit:
             )
             return False
 
-        local_ip = await self._identify_callback_ip(tuple(self.config.interface_configs)[0].port)
         for interface_config in self.config.interface_configs:
             try:
                 if client := await hmcl.create_client(
-                    central=self, interface_config=interface_config, local_ip=local_ip
+                    central=self,
+                    interface_config=interface_config,
                 ):
                     if (
                         available_interfaces := client.system_information.available_interfaces
@@ -517,42 +538,23 @@ class CentralUnit:
             event_data=cast(dict[str, Any], INTERFACE_EVENT_SCHEMA(event_data)),
         )
 
-    async def _identify_callback_ip(self, port: int) -> str:
-        """Identify local IP used for callbacks."""
+    async def _identify_ip_addr(self, port: int) -> str:
+        """Identify IP used for callbacks, xmlrpc_server."""
 
-        # Do not add: pylint disable=no-member
-        # This is only an issue on macOS
-        def get_local_ip(host: str) -> str | None:
-            """Get local_ip from socket."""
+        ip_addr: str | None = None
+        while ip_addr is None:
             try:
-                socket.gethostbyname(host)
-            except Exception as exc:
-                message = f"GET_LOCAL_IP: Can't resolve host for {host}"
-                _LOGGER.warning(message)
-                raise HaHomematicException(message) from exc
-            tmp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            tmp_socket.settimeout(config.TIMEOUT)
-            tmp_socket.connect((host, port))
-            local_ip = str(tmp_socket.getsockname()[0])
-            tmp_socket.close()
-            _LOGGER.debug("GET_LOCAL_IP: Got local ip: %s", local_ip)
-            return local_ip
-
-        callback_ip: str | None = None
-        while callback_ip is None:
-            try:
-                callback_ip = await self.looper.async_add_executor_job(
-                    get_local_ip, self.config.host, name="get_local_ip"
+                ip_addr = await self.looper.async_add_executor_job(
+                    get_ip_addr, self.config.host, port, name="get_ip_addr"
                 )
             except HaHomematicException:
-                callback_ip = "127.0.0.1"
-            if callback_ip is None:
+                ip_addr = "127.0.0.1"
+            if ip_addr is None:
                 _LOGGER.warning(
-                    "GET_LOCAL_IP: Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL
+                    "GET_IP_ADDR: Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL
                 )
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
-
-        return callback_ip
+        return ip_addr
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
@@ -576,14 +578,9 @@ class CentralUnit:
             if len(self.config.interface_configs) == 0:
                 raise NoClients("validate_config: No clients defined.")
 
-            local_ip = await self._identify_callback_ip(
-                tuple(self.config.interface_configs)[0].port
-            )
             system_information = SystemInformation()
             for interface_config in self.config.interface_configs:
-                client = await hmcl.create_client(
-                    central=self, interface_config=interface_config, local_ip=local_ip
-                )
+                client = await hmcl.create_client(central=self, interface_config=interface_config)
                 if not system_information.serial:
                     system_information = client.system_information
         except NoClients:
