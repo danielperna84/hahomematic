@@ -86,7 +86,7 @@ class Factory:
             client_config=_ClientConfig(
                 central=central,
                 interface_config=interface_config,
-                listening_ip="127.0.0.1",
+                ip_addr="127.0.0.1",
             ),
             local_resources=LocalRessources(
                 address_device_translation=address_device_translation,

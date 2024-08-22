@@ -166,17 +166,17 @@ class XmlRpcServer(threading.Thread):
 
     def __init__(
         self,
-        listening_ip_address: str,
-        local_port: int,
+        ip_addr: str,
+        port: int,
     ) -> None:
         """Init XmlRPC server."""
         if self._initialized:
             return
         self._initialized = True
-        _local_port: Final[int] = find_free_port() if local_port == PORT_ANY else local_port
-        self._address: Final[tuple[str, int]] = (listening_ip_address, _local_port)
+        _port: Final[int] = find_free_port() if port == PORT_ANY else port
+        self._address: Final[tuple[str, int]] = (ip_addr, _port)
         self._instances[self._address] = self
-        threading.Thread.__init__(self, name=f"XmlRpcServer {listening_ip_address}:{_local_port}")
+        threading.Thread.__init__(self, name=f"XmlRpcServer {ip_addr}:{_port}")
         self._simple_xml_rpc_server = HaHomematicXMLRPCServer(
             addr=self._address,
             requestHandler=RequestHandler,
@@ -188,9 +188,9 @@ class XmlRpcServer(threading.Thread):
         self._simple_xml_rpc_server.register_instance(RPCFunctions(self), allow_dotted_names=True)
         self._centrals: Final[dict[str, hmcu.CentralUnit]] = {}
 
-    def __new__(cls, listening_ip_address: str, local_port: int) -> XmlRpcServer:  # noqa: PYI034
+    def __new__(cls, ip_addr: str, port: int) -> XmlRpcServer:  # noqa: PYI034
         """Create new XmlRPC server."""
-        if (xml_rpc := cls._instances.get((listening_ip_address, local_port))) is None:
+        if (xml_rpc := cls._instances.get((ip_addr, port))) is None:
             _LOGGER.debug("Creating XmlRpc server")
             return super().__new__(cls)
         return xml_rpc
@@ -199,8 +199,8 @@ class XmlRpcServer(threading.Thread):
         """Run the XmlRPC-Server thread."""
         _LOGGER.debug(
             "RUN: Starting XmlRPC-Server at http://%s:%i",
-            self.listening_ip_address,
-            self.local_port,
+            self.ip_addr,
+            self.port,
         )
         self._simple_xml_rpc_server.serve_forever()
 
@@ -215,12 +215,12 @@ class XmlRpcServer(threading.Thread):
             del self._instances[self._address]
 
     @property
-    def listening_ip_address(self) -> str:
-        """Return the listening ip address."""
+    def ip_addr(self) -> str:
+        """Return the ip address."""
         return self._address[0]
 
     @property
-    def local_port(self) -> int:
+    def port(self) -> int:
         """Return the local port."""
         return self._address[1]
 
@@ -252,16 +252,14 @@ class XmlRpcServer(threading.Thread):
         return len(self._centrals) == 0
 
 
-def create_xml_rpc_server(
-    listening_ip_address: str = IP_ANY_V4, local_port: int = PORT_ANY
-) -> XmlRpcServer:
+def create_xml_rpc_server(ip_addr: str = IP_ANY_V4, port: int = PORT_ANY) -> XmlRpcServer:
     """Register the xml rpc server."""
-    xml_rpc = XmlRpcServer(listening_ip_address=listening_ip_address, local_port=local_port)
+    xml_rpc = XmlRpcServer(ip_addr=ip_addr, port=port)
     if not xml_rpc.started:
         xml_rpc.start()
         _LOGGER.debug(
             "CREATE_XML_RPC_SERVER: Starting XmlRPC-Server on %s:%i",
-            xml_rpc.listening_ip_address,
-            xml_rpc.local_port,
+            xml_rpc.ip_addr,
+            xml_rpc.port,
         )
     return xml_rpc

@@ -462,7 +462,7 @@ class Example:
             client_config=_ClientConfig(
                 central=self.central,
                 interface_config=interface_config,
-                listening_ip="127.0.0.1",
+                ip_addr="127.0.0.1",
             ),
             local_resources=local_resources,
         )

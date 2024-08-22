@@ -215,7 +215,7 @@ def find_free_port() -> int:
         return int(sock.getsockname()[1])
 
 
-def get_local_ip(host: str, port: int) -> str | None:
+def get_ip_addr(host: str, port: int) -> str | None:
     """Get local_ip from socket."""
     try:
         socket.gethostbyname(host)

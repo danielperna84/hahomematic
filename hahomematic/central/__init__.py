@@ -80,7 +80,7 @@ from hahomematic.support import (
     get_channel_no,
     get_device_address,
     get_entity_key,
-    get_local_ip,
+    get_ip_addr,
     reduce_args,
 )
 
@@ -116,8 +116,8 @@ class CentralUnit:
         self._connection_state: Final = central_config.connection_state
         self._looper = Looper()
         self._xml_rpc_server: xmlrpc.XmlRpcServer | None = None
-        self.listening_ip_address: str = IP_ANY_V4
-        self.local_port: int = PORT_ANY
+        self.xml_rpc_server_ip_addr: str = IP_ANY_V4
+        self.xml_rpc_server_port: int = PORT_ANY
 
         # Caches for CCU data
         self.data_cache: Final[CentralDataCache] = CentralDataCache(central=self)
@@ -305,21 +305,21 @@ class CentralUnit:
         if self._started:
             _LOGGER.debug("START: Central %s already started", self._name)
             return
-        if listening_ip_address := await self._identify_listening_ip(
+        if ip_addr := await self._identify_ip_addr(
             port=tuple(self.config.interface_configs)[0].port
         ):
-            self.listening_ip_address = listening_ip_address
+            self.xml_rpc_server_ip_addr = ip_addr
         self._xml_rpc_server = (
             xmlrpc.create_xml_rpc_server(
-                listening_ip_address=listening_ip_address,
-                local_port=self.config.callback_port or self.config.default_callback_port,
+                ip_addr=ip_addr,
+                port=self.config.callback_port or self.config.default_callback_port,
             )
             if self.config.enable_server
             else None
         )
         if self._xml_rpc_server:
             self._xml_rpc_server.add_central(self)
-        self.local_port = self._xml_rpc_server.local_port if self._xml_rpc_server else 0
+        self.xml_rpc_server_port = self._xml_rpc_server.port if self._xml_rpc_server else 0
 
         await self.parameter_visibility.load()
         if self.config.start_direct:
@@ -452,7 +452,7 @@ class CentralUnit:
                 if client := await hmcl.create_client(
                     central=self,
                     interface_config=interface_config,
-                    listening_ip=self.listening_ip_address,
+                    ip_addr=self.xml_rpc_server_ip_addr,
                 ):
                     if (
                         available_interfaces := client.system_information.available_interfaces
@@ -527,23 +527,23 @@ class CentralUnit:
             event_data=cast(dict[str, Any], INTERFACE_EVENT_SCHEMA(event_data)),
         )
 
-    async def _identify_listening_ip(self, port: int) -> str:
-        """Identify listening IP used for callbacks, xmlrpc_server."""
+    async def _identify_ip_addr(self, port: int) -> str:
+        """Identify IP used for callbacks, xmlrpc_server."""
 
-        listening_ip: str | None = None
-        while listening_ip is None:
+        ip_addr: str | None = None
+        while ip_addr is None:
             try:
-                listening_ip = await self.looper.async_add_executor_job(
-                    get_local_ip, self.config.host, port, name="get_local_ip"
+                ip_addr = await self.looper.async_add_executor_job(
+                    get_ip_addr, self.config.host, port, name="get_ip_addr"
                 )
             except HaHomematicException:
-                listening_ip = "127.0.0.1"
-            if listening_ip is None:
+                ip_addr = "127.0.0.1"
+            if ip_addr is None:
                 _LOGGER.warning(
-                    "GET_LOCAL_IP: Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL
+                    "GET_IP_ADDR: Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL
                 )
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
-        return listening_ip
+        return ip_addr
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
@@ -567,17 +567,15 @@ class CentralUnit:
             if len(self.config.interface_configs) == 0:
                 raise NoClients("validate_config: No clients defined.")
 
-            listening_ip = (
-                self.listening_ip_address
+            ip_addr = (
+                self.xml_rpc_server_ip_addr
                 if self.started
-                else await self._identify_listening_ip(
-                    tuple(self.config.interface_configs)[0].port
-                )
+                else await self._identify_ip_addr(tuple(self.config.interface_configs)[0].port)
             )
             system_information = SystemInformation()
             for interface_config in self.config.interface_configs:
                 client = await hmcl.create_client(
-                    central=self, interface_config=interface_config, listening_ip=listening_ip
+                    central=self, interface_config=interface_config, ip_addr=ip_addr
                 )
                 if not system_information.serial:
                     system_information = client.system_information
