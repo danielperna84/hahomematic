@@ -305,9 +305,13 @@ class CentralUnit:
         if self._started:
             _LOGGER.debug("START: Central %s already started", self._name)
             return
+        if listening_ip_address := await self._identify_listening_ip(
+            port=tuple(self.config.interface_configs)[0].port
+        ):
+            self.listening_ip_address = listening_ip_address
         self._xml_rpc_server = (
             xmlrpc.create_xml_rpc_server(
-                listening_ip_address=self.config.listening_ip_address,
+                listening_ip_address=listening_ip_address,
                 local_port=self.config.callback_port or self.config.default_callback_port,
             )
             if self.config.enable_server
@@ -443,11 +447,12 @@ class CentralUnit:
             )
             return False
 
-        local_ip = await self._identify_callback_ip(tuple(self.config.interface_configs)[0].port)
         for interface_config in self.config.interface_configs:
             try:
                 if client := await hmcl.create_client(
-                    central=self, interface_config=interface_config, local_ip=local_ip
+                    central=self,
+                    interface_config=interface_config,
+                    listening_ip=self.listening_ip_address,
                 ):
                     if (
                         available_interfaces := client.system_information.available_interfaces
@@ -522,24 +527,23 @@ class CentralUnit:
             event_data=cast(dict[str, Any], INTERFACE_EVENT_SCHEMA(event_data)),
         )
 
-    async def _identify_callback_ip(self, port: int) -> str:
-        """Identify local IP used for callbacks."""
+    async def _identify_listening_ip(self, port: int) -> str:
+        """Identify listening IP used for callbacks, xmlrpc_server."""
 
-        callback_ip: str | None = None
-        while callback_ip is None:
+        listening_ip: str | None = None
+        while listening_ip is None:
             try:
-                callback_ip = await self.looper.async_add_executor_job(
+                listening_ip = await self.looper.async_add_executor_job(
                     get_local_ip, self.config.host, port, name="get_local_ip"
                 )
             except HaHomematicException:
-                callback_ip = "127.0.0.1"
-            if callback_ip is None:
+                listening_ip = "127.0.0.1"
+            if listening_ip is None:
                 _LOGGER.warning(
                     "GET_LOCAL_IP: Waiting for %i s,", config.CONNECTION_CHECKER_INTERVAL
                 )
                 await asyncio.sleep(config.CONNECTION_CHECKER_INTERVAL)
-
-        return callback_ip
+        return listening_ip
 
     def _start_connection_checker(self) -> None:
         """Start the connection checker."""
@@ -563,13 +567,17 @@ class CentralUnit:
             if len(self.config.interface_configs) == 0:
                 raise NoClients("validate_config: No clients defined.")
 
-            local_ip = await self._identify_callback_ip(
-                tuple(self.config.interface_configs)[0].port
+            listening_ip = (
+                self.listening_ip_address
+                if self.started
+                else await self._identify_listening_ip(
+                    tuple(self.config.interface_configs)[0].port
+                )
             )
             system_information = SystemInformation()
             for interface_config in self.config.interface_configs:
                 client = await hmcl.create_client(
-                    central=self, interface_config=interface_config, local_ip=local_ip
+                    central=self, interface_config=interface_config, listening_ip=listening_ip
                 )
                 if not system_information.serial:
                     system_information = client.system_information
@@ -1338,7 +1346,6 @@ class CentralConfig:
         client_session: ClientSession | None,
         tls: bool = DEFAULT_TLS,
         verify_tls: bool = DEFAULT_VERIFY_TLS,
-        listening_ip_address: str = IP_ANY_V4,
         callback_host: str | None = None,
         callback_port: int | None = None,
         json_port: int | None = None,
@@ -1359,7 +1366,6 @@ class CentralConfig:
         self.client_session: Final = client_session
         self.tls: Final = tls
         self.verify_tls: Final = verify_tls
-        self.listening_ip_address: Final = listening_ip_address
         self.callback_host: Final = callback_host
         self.callback_port: Final = callback_port
         self.json_port: Final = json_port
