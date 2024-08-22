@@ -1,7 +1,7 @@
 # Version 2024.8.11 (2024-08-21)
 
 - Make HEATING_COOLING visible for thermostats
-- Make listening IP of XmlRPC Server configurable
+- Use only relevant IP for XmlRPC Server listening on
 
 # Version 2024.8.10 (2024-08-20)
 
