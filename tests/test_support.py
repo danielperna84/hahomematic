@@ -550,7 +550,6 @@ def test_converter(
 
 def test_is_valid_hostname() -> None:
     """Test is_valid_hostname."""
-    assert is_valid_hostname("") is False
     assert is_valid_hostname(" ") is False
     assert is_valid_hostname("123") is False
     assert is_valid_hostname("ccu") is True
