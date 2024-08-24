@@ -8,6 +8,7 @@ import contextlib
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
+from ipaddress import IPv4Address
 import logging
 import os
 import re
@@ -67,19 +68,25 @@ def build_headers(
 
 
 def check_config(
-    central_name: str | None,
-    username: str | None,
-    password: str | None,
+    central_name: str,
+    host: str,
+    username: str,
+    password: str,
     storage_folder: str,
-    extended_validation: bool = True,
+    callback_host: str | None,
+    callback_port: int | None,
+    json_port: int | None,
 ) -> list[str]:
     """Check config. Throws BaseHomematicException on failure."""
     config_failures: list[str] = []
-    if extended_validation and central_name and IDENTIFIER_SEPARATOR in central_name:
+    if central_name and IDENTIFIER_SEPARATOR in central_name:
         config_failures.append(f"Instance name must not contain {IDENTIFIER_SEPARATOR}")
+
+    if not (is_valid_hostname(hostname=host) or is_valid_ipv4_address(address=host)):
+        config_failures.append("Invalid hostname or ipv4 address")
     if not username:
         config_failures.append("Username must not be empty")
-    if password is None:
+    if not password:
         config_failures.append("Password is required")
     if not check_password(password):
         config_failures.append("Password is not valid")
@@ -87,6 +94,14 @@ def check_config(
         check_or_create_directory(storage_folder)
     except BaseHomematicException as haex:
         config_failures.append(reduce_args(haex.args)[0])
+    if callback_host and not (
+        is_valid_hostname(hostname=callback_host) or is_valid_ipv4_address(address=callback_host)
+    ):
+        config_failures.append("Invalid callback hostname or ipv4 address")
+    if callback_port and not is_valid_port(port=callback_port):
+        config_failures.append("Invalid callback port")
+    if json_port and not is_valid_port(port=json_port):
+        config_failures.append("Invalid json port")
 
     return config_failures
 
@@ -230,6 +245,38 @@ def get_ip_addr(host: str, port: int) -> str | None:
     tmp_socket.close()
     _LOGGER.debug("GET_LOCAL_IP: Got local ip: %s", local_ip)
     return local_ip
+
+
+def is_valid_hostname(hostname: str) -> bool:
+    """Return True if hostname is valid."""
+    if hostname[-1] == ".":
+        # strip exactly one dot from the right, if present
+        hostname = hostname[:-1]
+    if len(hostname) > 253 or len(hostname) < 1:
+        return False
+
+    labels = hostname.split(".")
+
+    # the TLD must be not all-numeric
+    if re.match(r"[0-9]+$", labels[-1]):
+        return False
+
+    allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
+    return all(allowed.match(label) for label in labels)
+
+
+def is_valid_ipv4_address(address: str) -> bool:
+    """Return True if ipv4_address is valid."""
+    try:
+        IPv4Address(address=address)
+    except ValueError:
+        return False
+    return True
+
+
+def is_valid_port(port: int) -> bool:
+    """Return True if port is valid."""
+    return 0 <= port <= 65535
 
 
 def element_matches_key(

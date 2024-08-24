@@ -1401,22 +1401,25 @@ class CentralConfig:
         """Return if caches should be used."""
         return self.start_direct is False
 
-    def check_config(self, extended_validation: bool = True) -> None:
+    def check_config(self) -> None:
         """Check config. Throws BaseHomematicException on failure."""
         if config_failures := check_config(
             central_name=self.name,
+            host=self.host,
             username=self.username,
             password=self.password,
             storage_folder=self.storage_folder,
-            extended_validation=extended_validation,
+            callback_host=self.callback_host,
+            callback_port=self.callback_port,
+            json_port=self.json_port,
         ):
             failures = ", ".join(config_failures)
             raise HaHomematicConfigException(failures)
 
-    def create_central(self, extended_validation: bool = True) -> CentralUnit:
+    def create_central(self) -> CentralUnit:
         """Create the central. Throws BaseHomematicException on validation failure."""
         try:
-            self.check_config(extended_validation=extended_validation)
+            self.check_config()
             return CentralUnit(self)
         except BaseHomematicException as bhex:
             _LOGGER.warning("CREATE_CENTRAL: Not able to create a central: %s", bhex)
