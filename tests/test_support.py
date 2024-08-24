@@ -34,6 +34,8 @@ from hahomematic.support import (
     find_free_port,
     get_channel_no,
     get_tls_context,
+    is_valid_hostname,
+    is_valid_ipv4_address,
     parse_sys_var,
     to_bool,
 )
@@ -544,3 +546,25 @@ def test_converter(
     assert converter(input_value) == result_value
     if re_converter := _COMBINED_PARAMETER_TO_HM_CONVERTER.get(parameter):
         assert re_converter(result_value) == input_value
+
+
+def test_is_valid_hostname() -> None:
+    """Test is_valid_hostname."""
+    assert is_valid_hostname("") is False
+    assert is_valid_hostname(" ") is False
+    assert is_valid_hostname("123") is False
+    assert is_valid_hostname("ccu") is True
+    assert is_valid_hostname("ccu.test.de") is True
+    assert is_valid_hostname("ccu.de") is True
+    assert is_valid_hostname("ccu.123") is False
+    assert is_valid_hostname("192.168.178.2") is False
+    assert is_valid_hostname("5422eb72-raspberrymatic") is True
+
+
+def test_is_valid_ipv4_address() -> None:
+    """Test is_valid_ipv4_address."""
+    assert is_valid_ipv4_address("") is False
+    assert is_valid_ipv4_address(" ") is False
+    assert is_valid_ipv4_address("192.168.1782") is False
+    assert is_valid_ipv4_address("192.168.178.2") is True
+    assert is_valid_ipv4_address("ccu") is False

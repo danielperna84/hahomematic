@@ -1,3 +1,7 @@
+# Version 2024.8.12 (2024-08-24)
+
+- Add additional validation on config parameters
+
 # Version 2024.8.11 (2024-08-21)
 
 - Make HEATING_COOLING visible for thermostats
