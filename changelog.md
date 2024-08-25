@@ -1,6 +1,6 @@
-# Version 2024.8.13 (2024-08-24)
+# Version 2024.8.13 (2024-08-25)
 
-- Check/convert values of manual executed put_paramset
+- Check/convert values of manual executed put_paramset/set_value
 
 # Version 2024.8.12 (2024-08-24)
 

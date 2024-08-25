@@ -432,17 +432,28 @@ class Client(ABC):
         value: Any,
         wait_for_callback: int | None,
         rx_mode: str | None = None,
+        check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
         try:
-            _LOGGER.debug("SET_VALUE: %s, %s, %s", channel_address, parameter, value)
+            checked_value = (
+                self._check_set_value(
+                    channel_address=channel_address,
+                    paramset_key=ParamsetKey.VALUES,
+                    parameter=parameter,
+                    value=value,
+                )
+                if check_against_pd
+                else value
+            )
+            _LOGGER.debug("SET_VALUE: %s, %s, %s", channel_address, parameter, checked_value)
             if rx_mode:
-                await self._proxy.setValue(channel_address, parameter, value, rx_mode)
+                await self._proxy.setValue(channel_address, parameter, checked_value, rx_mode)
             else:
-                await self._proxy.setValue(channel_address, parameter, value)
+                await self._proxy.setValue(channel_address, parameter, checked_value)
             # store the send value in the last_value_send_cache
             entity_keys = self._last_value_send_cache.add_set_value(
-                channel_address=channel_address, parameter=parameter, value=value
+                channel_address=channel_address, parameter=parameter, value=checked_value
             )
             if wait_for_callback is not None and (
                 device := self.central.get_device(
@@ -452,7 +463,7 @@ class Client(ABC):
                 await wait_for_state_change_or_timeout(
                     device=device,
                     entity_keys=entity_keys,
-                    values={parameter: value},
+                    values={parameter: checked_value},
                     wait_for_callback=wait_for_callback,
                 )
             return entity_keys  # noqa: TRY300
@@ -463,9 +474,21 @@ class Client(ABC):
                 reduce_args(args=ex.args),
                 channel_address,
                 parameter,
-                value,
+                checked_value,
             )
             return set()
+
+    def _check_set_value(
+        self, channel_address: str, paramset_key: str, parameter: str, value: Any
+    ) -> Any:
+        """Check set_value."""
+        return self._convert_value(
+            channel_address=channel_address,
+            paramset_key=paramset_key,
+            parameter=parameter,
+            value=value,
+            operation=Operations.WRITE,
+        )
 
     async def set_value(
         self,
@@ -475,6 +498,7 @@ class Client(ABC):
         value: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
+        check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
         if paramset_key == ParamsetKey.VALUES:
@@ -484,6 +508,7 @@ class Client(ABC):
                 value=value,
                 wait_for_callback=wait_for_callback,
                 rx_mode=rx_mode,
+                check_against_pd=check_against_pd,
             )
         return await self.put_paramset(
             channel_address=channel_address,
@@ -491,6 +516,7 @@ class Client(ABC):
             values={parameter: value},
             wait_for_callback=wait_for_callback,
             rx_mode=rx_mode,
+            check_against_pd=check_against_pd,
         )
 
     async def get_paramset(self, address: str, paramset_key: str) -> dict[str, Any]:
