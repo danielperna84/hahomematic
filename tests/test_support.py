@@ -550,6 +550,8 @@ def test_converter(
 
 def test_is_valid_hostname() -> None:
     """Test is_valid_hostname."""
+    assert is_valid_hostname(None) is False
+    assert is_valid_hostname("") is False
     assert is_valid_hostname(" ") is False
     assert is_valid_hostname("123") is False
     assert is_valid_hostname("ccu") is True
@@ -562,6 +564,7 @@ def test_is_valid_hostname() -> None:
 
 def test_is_valid_ipv4_address() -> None:
     """Test is_valid_ipv4_address."""
+    assert is_valid_ipv4_address(None) is False
     assert is_valid_ipv4_address("") is False
     assert is_valid_ipv4_address(" ") is False
     assert is_valid_ipv4_address("192.168.1782") is False

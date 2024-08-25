@@ -247,8 +247,10 @@ def get_ip_addr(host: str, port: int) -> str | None:
     return local_ip
 
 
-def is_valid_hostname(hostname: str) -> bool:
+def is_valid_hostname(hostname: str | None) -> bool:
     """Return True if hostname is valid."""
+    if not hostname:
+        return False
     if hostname[-1] == ".":
         # strip exactly one dot from the right, if present
         hostname = hostname[:-1]
@@ -265,8 +267,10 @@ def is_valid_hostname(hostname: str) -> bool:
     return all(allowed.match(label) for label in labels)
 
 
-def is_valid_ipv4_address(address: str) -> bool:
+def is_valid_ipv4_address(address: str | None) -> bool:
     """Return True if ipv4_address is valid."""
+    if not address:
+        return False
     try:
         IPv4Address(address=address)
     except ValueError:
