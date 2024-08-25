@@ -474,7 +474,7 @@ class Client(ABC):
                 reduce_args(args=ex.args),
                 channel_address,
                 parameter,
-                checked_value,
+                value,
             )
             return set()
 
@@ -601,7 +601,7 @@ class Client(ABC):
                 reduce_args(args=ex.args),
                 channel_address,
                 paramset_key,
-                checked_values,
+                values,
             )
             return set()
 
