@@ -199,6 +199,7 @@ class ClientLocal(Client):  # pragma: no cover
         value: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
+        check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
         # store the send value in the last_value_send_cache
@@ -253,6 +254,7 @@ class ClientLocal(Client):  # pragma: no cover
         values: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
+        check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """
         Set paramsets manually.
