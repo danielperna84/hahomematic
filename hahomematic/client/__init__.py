@@ -27,6 +27,8 @@ from hahomematic.const import (
     ForcedDeviceAvailability,
     InterfaceEventType,
     InterfaceName,
+    Operations,
+    ParameterType,
     ParamsetKey,
     ProductGroup,
     ProgramData,
@@ -34,9 +36,10 @@ from hahomematic.const import (
     SystemInformation,
     SystemVariableData,
 )
-from hahomematic.exceptions import BaseHomematicException, NoConnection
+from hahomematic.exceptions import BaseHomematicException, HaHomematicException, NoConnection
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms.device import HmDevice
+from hahomematic.platforms.support import convert_value
 from hahomematic.support import (
     build_headers,
     build_xml_rpc_uri,
@@ -522,6 +525,7 @@ class Client(ABC):
         values: dict[str, Any],
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
+        check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """
         Set paramsets manually.
@@ -530,16 +534,27 @@ class Client(ABC):
         but for bidcos devices there is a master paramset at the device.
         """
         try:
-            _LOGGER.debug("PUT_PARAMSET: %s, %s, %s", channel_address, paramset_key, values)
+            checked_values = (
+                self._check_put_paramset(
+                    channel_address=channel_address, paramset_key=paramset_key, values=values
+                )
+                if check_against_pd
+                else values
+            )
+            _LOGGER.debug(
+                "PUT_PARAMSET: %s, %s, %s", channel_address, paramset_key, checked_values
+            )
             if rx_mode:
-                await self._proxy.putParamset(channel_address, paramset_key, values, rx_mode)
+                await self._proxy.putParamset(
+                    channel_address, paramset_key, checked_values, rx_mode
+                )
             else:
-                await self._proxy.putParamset(channel_address, paramset_key, values)
+                await self._proxy.putParamset(channel_address, paramset_key, checked_values)
             # store the send value in the last_value_send_cache
             entity_keys = self._last_value_send_cache.add_put_paramset(
                 channel_address=channel_address,
                 paramset_key=paramset_key,
-                values=values,
+                values=checked_values,
             )
             if wait_for_callback is not None and (
                 device := self.central.get_device(
@@ -549,7 +564,7 @@ class Client(ABC):
                 await wait_for_state_change_or_timeout(
                     device=device,
                     entity_keys=entity_keys,
-                    values=values,
+                    values=checked_values,
                     wait_for_callback=wait_for_callback,
                 )
             return entity_keys  # noqa: TRY300
@@ -560,9 +575,55 @@ class Client(ABC):
                 reduce_args(args=ex.args),
                 channel_address,
                 paramset_key,
-                values,
+                checked_values,
             )
             return set()
+
+    def _check_put_paramset(
+        self, channel_address: str, paramset_key: str, values: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Check put_paramset."""
+        checked_values: dict[str, Any] = {}
+        for param, value in values.items():
+            checked_values[param] = self._convert_value(
+                channel_address=channel_address,
+                paramset_key=paramset_key,
+                parameter=param,
+                value=value,
+                operation=Operations.WRITE,
+            )
+        return checked_values
+
+    def _convert_value(
+        self,
+        channel_address: str,
+        paramset_key: str,
+        parameter: str,
+        value: Any,
+        operation: Operations,
+    ) -> Any:
+        """Check a single parameter against paramset descriptions."""
+        if parameter_data := self.central.paramset_descriptions.get_parameter_data(
+            interface_id=self.interface_id,
+            channel_address=channel_address,
+            paramset_key=paramset_key,
+            parameter=parameter,
+        ):
+            pd_type = ParameterType(parameter_data[Description.TYPE])
+            pd_value_list = (
+                tuple(parameter_data[Description.VALUE_LIST])
+                if Description.VALUE_LIST in parameter_data
+                else None
+            )
+            if not bool(int(parameter_data[Description.OPERATIONS]) & operation):
+                raise HaHomematicException(
+                    f"Parameter {parameter} does not support the requested operation {operation.value}"
+                )
+
+            return convert_value(value=value, target_type=pd_type, value_list=pd_value_list)
+        raise HaHomematicException(
+            f"Parameter {parameter} could not be found: {self.interface_id}/{channel_address}/{paramset_key}"
+        )
 
     async def fetch_paramset_description(
         self, channel_address: str, paramset_key: str, save_to_file: bool = True

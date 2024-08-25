@@ -253,6 +253,7 @@ class ClientLocal(Client):  # pragma: no cover
         values: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
+        check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """
         Set paramsets manually.

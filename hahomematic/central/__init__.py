@@ -1049,38 +1049,38 @@ class CentralUnit:
                     channels[channel_address].get(paramset_key.value, {}).items()
                 ):
                     p_operations = paramset[Description.OPERATIONS]
-                    for operation in operations:
-                        if all(p_operations & operation for operation in operations):
-                            if un_ignore_candidates_only and (
+
+                    if all(p_operations & operation for operation in operations):
+                        if un_ignore_candidates_only and (
+                            (
                                 (
-                                    (
-                                        generic_entity := self.get_generic_entity(
-                                            channel_address=channel_address,
-                                            parameter=parameter,
-                                            paramset_key=paramset_key,
-                                        )
+                                    generic_entity := self.get_generic_entity(
+                                        channel_address=channel_address,
+                                        parameter=parameter,
+                                        paramset_key=paramset_key,
                                     )
-                                    and generic_entity.enabled_default
-                                    and not generic_entity.is_un_ignored
                                 )
-                                or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS
-                            ):
-                                continue
-
-                            if not full_format:
-                                parameters.add(parameter)
-                                continue
-
-                            channel = (
-                                UN_IGNORE_WILDCARD
-                                if use_channel_wildcard
-                                else get_channel_no(channel_address)
+                                and generic_entity.enabled_default
+                                and not generic_entity.is_un_ignored
                             )
+                            or parameter in IGNORE_FOR_UN_IGNORE_PARAMETERS
+                        ):
+                            continue
 
-                            full_parameter = f"{parameter}:{paramset_key}@{device_type}:"
-                            if channel is not None:
-                                full_parameter += str(channel)
-                            parameters.add(full_parameter)
+                        if not full_format:
+                            parameters.add(parameter)
+                            continue
+
+                        channel = (
+                            UN_IGNORE_WILDCARD
+                            if use_channel_wildcard
+                            else get_channel_no(channel_address)
+                        )
+
+                        full_parameter = f"{parameter}:{paramset_key}@{device_type}:"
+                        if channel is not None:
+                            full_parameter += str(channel)
+                        parameters.add(full_parameter)
 
         return list(parameters)
 
