@@ -621,7 +621,7 @@ class CentralUnit:
         return tuple(all_entities)
 
     def get_readable_generic_entities(
-        self, paramset_key: str | None = None
+        self, paramset_key: ParamsetKey | None = None
     ) -> tuple[GenericEntity, ...]:
         """Return the readable generic entities."""
         return tuple(
@@ -990,7 +990,7 @@ class CentralUnit:
         await self._hub.fetch_program_data(include_internal=include_internal)
 
     @measure_execution_time
-    async def load_and_refresh_entity_data(self, paramset_key: str | None = None) -> None:
+    async def load_and_refresh_entity_data(self, paramset_key: ParamsetKey | None = None) -> None:
         """Refresh entity data."""
         if paramset_key != ParamsetKey.MASTER and self.data_cache.is_empty:
             await self.data_cache.load()
@@ -1039,16 +1039,14 @@ class CentralUnit:
     ) -> list[str]:
         """Return all parameters from VALUES paramset."""
         parameters: set[str] = set()
-        for channels in self.paramset_descriptions.raw_paramset_descriptions.values():  # pylint: disable=too-many-nested-blocks
+        for channels in self.paramset_descriptions.raw_paramset_descriptions.values():
             for channel_address in channels:
                 device_type: str | None = None
                 if full_format:
                     device_type = self.device_descriptions.get_device_type(
                         device_address=get_device_address(channel_address)
                     )
-                for parameter, paramset in (
-                    channels[channel_address].get(paramset_key.value, {}).items()
-                ):
+                for parameter, paramset in channels[channel_address].get(paramset_key, {}).items():
                     p_operations = paramset[Description.OPERATIONS]
 
                     if all(p_operations & operation for operation in operations):
@@ -1094,7 +1092,7 @@ class CentralUnit:
         return None
 
     def get_generic_entity(
-        self, channel_address: str, parameter: str, paramset_key: str | None = None
+        self, channel_address: str, parameter: str, paramset_key: ParamsetKey | None = None
     ) -> GenericEntity | None:
         """Get entity by channel_address and parameter."""
         if device := self.get_device(address=channel_address):

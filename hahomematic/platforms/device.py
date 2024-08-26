@@ -497,7 +497,7 @@ class HmDevice(PayloadMixin):
         return self._custom_entities.get(channel_no)
 
     def get_generic_entity(
-        self, channel_address: str, parameter: str, paramset_key: str | None = None
+        self, channel_address: str, parameter: str, paramset_key: ParamsetKey | None = None
     ) -> GenericEntity | None:
         """Return an entity from device."""
         if paramset_key:
@@ -712,7 +712,7 @@ class ValueCache:
     async def get_value(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         call_source: CallSource,
         direct_call: bool = False,
@@ -760,12 +760,12 @@ class ValueCache:
             return NO_CACHE_ENTRY if value == self._NO_VALUE_CACHE_ENTRY else value
 
     @staticmethod
-    def _get_key(channel_address: str, paramset_key: str, parameter: str) -> str:
+    def _get_key(channel_address: str, paramset_key: ParamsetKey, parameter: str) -> str:
         """Get the key for the cache entry."""
-        return f"{channel_address}.{paramset_key}.{parameter}"
+        return f"{channel_address}.{str(paramset_key)}.{parameter}"
 
     def _add_entry_to_device_cache(
-        self, channel_address: str, paramset_key: str, parameter: str, value: Any
+        self, channel_address: str, paramset_key: ParamsetKey, parameter: str, value: Any
     ) -> None:
         """Add value to cache."""
         key = self._get_key(
@@ -778,7 +778,7 @@ class ValueCache:
     def _get_value_from_cache(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
     ) -> Any:
         """Load data from caches."""

@@ -21,6 +21,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     DataOperationResult,
     Description,
+    ParamsetKey,
 )
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
@@ -278,7 +279,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """Init the paramset description cache."""
         # {interface_id, {channel_address, paramsets}}
         self._raw_paramset_descriptions: Final[
-            dict[str, dict[str, dict[str, dict[str, Any]]]]
+            dict[str, dict[str, dict[ParamsetKey, dict[str, Any]]]]
         ] = {}
         super().__init__(
             central=central,
@@ -289,7 +290,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         self._address_parameter_cache: Final[dict[tuple[str, str], set[int | None]]] = {}
 
     @property
-    def raw_paramset_descriptions(self) -> dict[str, dict[str, dict[str, dict[str, Any]]]]:
+    def raw_paramset_descriptions(self) -> dict[str, dict[str, dict[ParamsetKey, dict[str, Any]]]]:
         """Return the paramset descriptions."""
         return self._raw_paramset_descriptions
 
@@ -297,7 +298,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         self,
         interface_id: str,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         paramset_description: dict[str, Any],
     ) -> None:
         """Add paramset description to cache."""
@@ -329,14 +330,16 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """Return if interface is in paramset_descriptions cache."""
         return interface_id in self._raw_paramset_descriptions
 
-    def get_paramset_keys(self, interface_id: str, channel_address: str) -> tuple[str, ...]:
+    def get_paramset_keys(
+        self, interface_id: str, channel_address: str
+    ) -> tuple[ParamsetKey, ...]:
         """Get paramset_keys from paramset descriptions cache."""
         return tuple(
             self._raw_paramset_descriptions.get(interface_id, {}).get(channel_address, [])
         )
 
     def get_paramset_descriptions(
-        self, interface_id: str, channel_address: str, paramset_key: str
+        self, interface_id: str, channel_address: str, paramset_key: ParamsetKey
     ) -> dict[str, Any]:
         """Get paramset descriptions from cache."""
         return (
@@ -346,7 +349,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         )
 
     def get_parameter_data(
-        self, interface_id: str, channel_address: str, paramset_key: str, parameter: str
+        self, interface_id: str, channel_address: str, paramset_key: ParamsetKey, parameter: str
     ) -> Any:
         """Get parameter_data  from cache."""
         return (
@@ -368,17 +371,17 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     def get_channel_addresses_by_paramset_key(
         self, interface_id: str, device_address: str
-    ) -> dict[str, list[str]]:
+    ) -> dict[ParamsetKey, list[str]]:
         """Get device channel addresses."""
-        channel_addresses: dict[str, list[str]] = {}
+        channel_addresses: dict[ParamsetKey, list[str]] = {}
         interface_paramset_descriptions = self._raw_paramset_descriptions[interface_id]
         for (
             channel_address,
             paramset_descriptions,
         ) in interface_paramset_descriptions.items():
             if channel_address.startswith(device_address):
-                for paramset_key in paramset_descriptions:
-                    if paramset_key not in channel_addresses:
+                for p_key in paramset_descriptions:
+                    if (paramset_key := ParamsetKey(p_key)) not in channel_addresses:
                         channel_addresses[paramset_key] = []
                     channel_addresses[paramset_key].append(channel_address)
 

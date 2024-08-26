@@ -28,6 +28,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
+    ParamsetKey,
     SysvarType,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
@@ -198,9 +199,9 @@ def get_channel_no(address: str) -> int | None:
     return get_split_channel_address(channel_address=address)[1]
 
 
-def get_entity_key(channel_address: str, paramset_key: str, parameter: str) -> ENTITY_KEY:
+def get_entity_key(channel_address: str, paramset_key: ParamsetKey, parameter: str) -> ENTITY_KEY:
     """Return an entity key."""
-    return (str(channel_address), str(paramset_key), str(parameter))
+    return (str(channel_address), paramset_key, str(parameter))
 
 
 @lru_cache(maxsize=2048)

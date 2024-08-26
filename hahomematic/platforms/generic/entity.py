@@ -27,7 +27,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
         device: hmd.HmDevice,
         unique_id: str,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         parameter_data: Mapping[str, Any],
     ) -> None:

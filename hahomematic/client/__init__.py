@@ -394,7 +394,7 @@ class Client(ABC):
     async def get_value(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         call_source: CallSource = CallSource.MANUAL_OR_SCHEDULED,
     ) -> Any:
@@ -479,7 +479,7 @@ class Client(ABC):
             return set()
 
     def _check_set_value(
-        self, channel_address: str, paramset_key: str, parameter: str, value: Any
+        self, channel_address: str, paramset_key: ParamsetKey, parameter: str, value: Any
     ) -> Any:
         """Check set_value."""
         return self._convert_value(
@@ -493,7 +493,7 @@ class Client(ABC):
     async def set_value(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         value: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
@@ -519,7 +519,7 @@ class Client(ABC):
             check_against_pd=check_against_pd,
         )
 
-    async def get_paramset(self, address: str, paramset_key: str) -> dict[str, Any]:
+    async def get_paramset(self, address: str, paramset_key: ParamsetKey) -> dict[str, Any]:
         """
         Return a paramset from CCU.
 
@@ -532,7 +532,7 @@ class Client(ABC):
                 address,
                 paramset_key,
             )
-            return await self._proxy_read.getParamset(address, paramset_key)  # type: ignore[no-any-return]
+            return await self._proxy_read.getParamset(address, str(paramset_key))  # type: ignore[no-any-return]
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "GET_PARAMSET failed with %s [%s]: %s, %s",
@@ -547,7 +547,7 @@ class Client(ABC):
     async def put_paramset(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         values: dict[str, Any],
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
@@ -572,10 +572,10 @@ class Client(ABC):
             )
             if rx_mode:
                 await self._proxy.putParamset(
-                    channel_address, paramset_key, checked_values, rx_mode
+                    channel_address, str(paramset_key), checked_values, rx_mode
                 )
             else:
-                await self._proxy.putParamset(channel_address, paramset_key, checked_values)
+                await self._proxy.putParamset(channel_address, str(paramset_key), checked_values)
             # store the send value in the last_value_send_cache
             entity_keys = self._last_value_send_cache.add_put_paramset(
                 channel_address=channel_address,
@@ -606,7 +606,7 @@ class Client(ABC):
             return set()
 
     def _check_put_paramset(
-        self, channel_address: str, paramset_key: str, values: dict[str, Any]
+        self, channel_address: str, paramset_key: ParamsetKey, values: dict[str, Any]
     ) -> dict[str, Any]:
         """Check put_paramset."""
         checked_values: dict[str, Any] = {}
@@ -623,7 +623,7 @@ class Client(ABC):
     def _convert_value(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         value: Any,
         operation: Operations,
@@ -652,7 +652,7 @@ class Client(ABC):
         )
 
     async def fetch_paramset_description(
-        self, channel_address: str, paramset_key: str, save_to_file: bool = True
+        self, channel_address: str, paramset_key: ParamsetKey, save_to_file: bool = True
     ) -> None:
         """Fetch a specific paramset and add it to the known ones."""
         _LOGGER.debug("FETCH_PARAMSET_DESCRIPTION: %s for %s", paramset_key, channel_address)
@@ -679,7 +679,7 @@ class Client(ABC):
                 self.central.paramset_descriptions.add(
                     interface_id=self.interface_id,
                     channel_address=address,
-                    paramset_key=paramset_key,
+                    paramset_key=ParamsetKey(paramset_key),
                     paramset_description=paramset_description,
                 )
 
@@ -714,11 +714,11 @@ class Client(ABC):
         return paramsets
 
     async def _get_paramset_description(
-        self, address: str, paramset_key: str
+        self, address: str, paramset_key: ParamsetKey
     ) -> dict[str, Any] | None:
         """Get paramset description from CCU."""
         try:
-            return await self._proxy_read.getParamsetDescription(address, paramset_key)  # type: ignore[no-any-return]
+            return await self._proxy_read.getParamsetDescription(address, str(paramset_key))  # type: ignore[no-any-return]
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "GET_PARAMSET_DESCRIPTIONS failed with %s [%s] for %s address %s",

@@ -322,7 +322,7 @@ class ParameterVisibilityCache:
 
         # device_type, channel_no, paramset_key, set[parameter]
         self._un_ignore_parameters_by_device_paramset_key: Final[
-            dict[str, dict[int | None, dict[str, set[str]]]]
+            dict[str, dict[int | None, dict[ParamsetKey, set[str]]]]
         ] = {}
 
         # device_type, channel_no
@@ -373,7 +373,7 @@ class ParameterVisibilityCache:
         self,
         device_type: str,
         channel_no: int | None,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
     ) -> bool:
         """Check if parameter can be ignored."""
@@ -437,7 +437,7 @@ class ParameterVisibilityCache:
         self,
         device_type: str,
         channel_no: int | str | None,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         custom_only: bool = False,
     ) -> bool:
@@ -495,7 +495,7 @@ class ParameterVisibilityCache:
         self,
         device_type: str,
         channel_no: int | None,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         custom_only: bool = False,
     ) -> bool:
@@ -557,7 +557,7 @@ class ParameterVisibilityCache:
 
     def _get_un_ignore_line_details(
         self, line: str
-    ) -> tuple[str, int | str | None, str, str] | str | None:
+    ) -> tuple[str, int | str | None, str, ParamsetKey] | str | None:
         """
         Check the format of the line for un_ignore file.
 
@@ -566,7 +566,7 @@ class ParameterVisibilityCache:
 
         device_type: str | None = None
         channel_no: int | str | None = None
-        paramset_key: str | None = None
+        paramset_key: ParamsetKey | None = None
         parameter: str | None = None
 
         if "@" in line:
@@ -576,7 +576,7 @@ class ParameterVisibilityCache:
                     param_data = data[0].split(":")
                     if len(param_data) == 2:
                         parameter = param_data[0]
-                        paramset_key = param_data[1]
+                        paramset_key = ParamsetKey(param_data[1])
                     else:
                         _LOGGER.warning(
                             "GET_UN_IGNORE_LINE_DETAILS failed: Could not add line '%s' to un ignore cache. "
@@ -641,7 +641,11 @@ class ParameterVisibilityCache:
         return line
 
     def _add_complex_un_ignore_entry(
-        self, device_type: str, channel_no: int | str | None, paramset_key: str, parameter: str
+        self,
+        device_type: str,
+        channel_no: int | str | None,
+        paramset_key: ParamsetKey,
+        parameter: str,
     ) -> None:
         """Add line to un ignore cache."""
         if paramset_key == ParamsetKey.MASTER:
@@ -676,7 +680,7 @@ class ParameterVisibilityCache:
         self,
         device_type: str,
         channel_no: int | None,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
     ) -> bool:
         """
@@ -695,7 +699,7 @@ class ParameterVisibilityCache:
     def is_relevant_paramset(
         self,
         device_type: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         channel_no: int | None,
     ) -> bool:
         """

@@ -66,7 +66,7 @@ class CommandCache:
         return {entity_key}
 
     def add_put_paramset(
-        self, channel_address: str, paramset_key: str, values: dict[str, Any]
+        self, channel_address: str, paramset_key: ParamsetKey, values: dict[str, Any]
     ) -> set[ENTITY_KEY]:
         """Add data from put paramset command."""
         entity_keys: set[ENTITY_KEY] = set()
@@ -256,7 +256,7 @@ class CentralDataCache:
         for client in self._central.clients:
             await client.fetch_all_device_data()
 
-    async def refresh_entity_data(self, paramset_key: str | None = None) -> None:
+    async def refresh_entity_data(self, paramset_key: ParamsetKey | None = None) -> None:
         """Refresh entity data."""
         for entity in self._central.get_readable_generic_entities(paramset_key=paramset_key):
             await entity.load_entity_value(call_source=CallSource.HM_INIT)

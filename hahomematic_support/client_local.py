@@ -17,6 +17,7 @@ from hahomematic.const import (
     ENTITY_KEY,
     CallSource,
     InterfaceName,
+    ParamsetKey,
     ProductGroup,
     ProgramData,
     ProxyInitState,
@@ -184,7 +185,7 @@ class ClientLocal(Client):  # pragma: no cover
     async def get_value(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         call_source: CallSource = CallSource.MANUAL_OR_SCHEDULED,
     ) -> Any:
@@ -194,7 +195,7 @@ class ClientLocal(Client):  # pragma: no cover
     async def set_value(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         value: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
@@ -210,7 +211,7 @@ class ClientLocal(Client):  # pragma: no cover
         await self.central.event(self.interface_id, channel_address, parameter, value)
         return result
 
-    async def get_paramset(self, address: str, paramset_key: str) -> Any:
+    async def get_paramset(self, address: str, paramset_key: ParamsetKey) -> Any:
         """
         Return a paramset from CCU.
 
@@ -219,7 +220,7 @@ class ClientLocal(Client):  # pragma: no cover
         """
         return {}
 
-    async def _get_paramset_description(self, address: str, paramset_key: str) -> Any:
+    async def _get_paramset_description(self, address: str, paramset_key: ParamsetKey) -> Any:
         """Get paramset description from CCU."""
         if not self._local_resources:
             _LOGGER.warning(
@@ -245,12 +246,12 @@ class ClientLocal(Client):  # pragma: no cover
         ):
             self._paramset_descriptions_cache.update(data)
 
-        return self._paramset_descriptions_cache.get(address, {}).get(paramset_key)
+        return self._paramset_descriptions_cache.get(address, {}).get(str(paramset_key))
 
     async def put_paramset(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         values: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: str | None = None,
