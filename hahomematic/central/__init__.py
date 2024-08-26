@@ -909,6 +909,7 @@ class CentralUnit:
 
         entity_key = get_entity_key(
             channel_address=channel_address,
+            paramset_key=ParamsetKey.VALUES,
             parameter=parameter,
         )
 
@@ -1093,11 +1094,13 @@ class CentralUnit:
         return None
 
     def get_generic_entity(
-        self, channel_address: str, parameter: str, paramset_key: ParamsetKey = ParamsetKey.VALUES
+        self, channel_address: str, parameter: str, paramset_key: str | None = None
     ) -> GenericEntity | None:
         """Get entity by channel_address and parameter."""
         if device := self.get_device(address=channel_address):
-            return device.get_generic_entity(channel_address=channel_address, parameter=parameter)
+            return device.get_generic_entity(
+                channel_address=channel_address, parameter=parameter, paramset_key=paramset_key
+            )
         return None
 
     def get_event(self, channel_address: str, parameter: str) -> GenericEvent | None:

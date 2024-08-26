@@ -1257,8 +1257,10 @@ async def _track_single_entity_state_change_or_timeout(
                 )
                 ev.set()
 
-    channel_address, parameter = entity_key
-    if entity := device.get_generic_entity(channel_address=channel_address, parameter=parameter):
+    channel_address, paramset_key, parameter = entity_key
+    if entity := device.get_generic_entity(
+        channel_address=channel_address, parameter=parameter, paramset_key=paramset_key
+    ):
         if not entity.supports_events:
             _LOGGER.debug(
                 "TRACK_SINGLE_ENTITY_STATE_CHANGE_OR_TIMEOUT: Entity supports no events %s",

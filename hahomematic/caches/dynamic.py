@@ -59,6 +59,7 @@ class CommandCache:
 
         entity_key = get_entity_key(
             channel_address=channel_address,
+            paramset_key=ParamsetKey.VALUES,
             parameter=parameter,
         )
         self._last_send_command[entity_key] = (value, datetime.now())
@@ -72,6 +73,7 @@ class CommandCache:
         for parameter, value in values.items():
             entity_key = get_entity_key(
                 channel_address=channel_address,
+                paramset_key=paramset_key,
                 parameter=parameter,
             )
             self._last_send_command[entity_key] = (value, datetime.now())

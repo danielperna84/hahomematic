@@ -496,16 +496,43 @@ class HmDevice(PayloadMixin):
         """Return an entity from device."""
         return self._custom_entities.get(channel_no)
 
-    def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
+    def get_generic_entity(
+        self, channel_address: str, parameter: str, paramset_key: str | None = None
+    ) -> GenericEntity | None:
         """Return an entity from device."""
+        if paramset_key:
+            return self._generic_entities.get(
+                get_entity_key(
+                    channel_address=channel_address,
+                    paramset_key=paramset_key,
+                    parameter=parameter,
+                )
+            )
+
+        if entity := self._generic_entities.get(
+            get_entity_key(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey.VALUES,
+                parameter=parameter,
+            )
+        ):
+            return entity
         return self._generic_entities.get(
-            get_entity_key(channel_address=channel_address, parameter=parameter)
+            get_entity_key(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey.MASTER,
+                parameter=parameter,
+            )
         )
 
     def get_generic_event(self, channel_address: str, parameter: str) -> GenericEvent | None:
         """Return a generic event from device."""
         return self._generic_events.get(
-            get_entity_key(channel_address=channel_address, parameter=parameter)
+            get_entity_key(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey.VALUES,
+                parameter=parameter,
+            )
         )
 
     def get_readable_entities(self, paramset_key: ParamsetKey) -> tuple[GenericEntity, ...]:

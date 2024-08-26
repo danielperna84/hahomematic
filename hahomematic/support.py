@@ -198,9 +198,9 @@ def get_channel_no(address: str) -> int | None:
     return get_split_channel_address(channel_address=address)[1]
 
 
-def get_entity_key(channel_address: str, parameter: str) -> ENTITY_KEY:
+def get_entity_key(channel_address: str, paramset_key: str, parameter: str) -> ENTITY_KEY:
     """Return an entity key."""
-    return (str(channel_address), str(parameter))
+    return (str(channel_address), str(paramset_key), str(parameter))
 
 
 @lru_cache(maxsize=2048)

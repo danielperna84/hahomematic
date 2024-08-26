@@ -480,6 +480,7 @@ class BaseParameterEntity[
         """Return entity key value."""
         return get_entity_key(
             channel_address=self._channel_address,
+            paramset_key=self._paramset_key,
             parameter=self._parameter,
         )
 

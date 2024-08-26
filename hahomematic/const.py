@@ -74,8 +74,8 @@ MAX_CACHE_AGE: Final = 60
 
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
-# channel_address, parameter
-ENTITY_KEY = tuple[str, str]
+# channel_address, paramset_key,parameter
+ENTITY_KEY = tuple[str, str, str]
 CALLBACK_TYPE = Callable[[], None] | None
 
 UN_IGNORE_WILDCARD: Final = "all"
