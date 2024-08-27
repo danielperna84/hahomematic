@@ -241,7 +241,7 @@ ENTITY_DEFINITION: Mapping[ED, Mapping[int | DeviceProfile, Any]] = {
         },
         DeviceProfile.IP_DRG_DALI: {
             ED.DEVICE_GROUP: {
-                ED.PRIMARY_CHANNEL: 1,
+                ED.PRIMARY_CHANNEL: 0,
                 ED.ALLOW_UNDEFINED_GENERIC_ENTITIES: False,
                 ED.REPEATABLE_FIELDS: {
                     Field.COLOR_TEMPERATURE: Parameter.COLOR_TEMPERATURE,

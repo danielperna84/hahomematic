@@ -1,3 +1,7 @@
+# Version 2024.8.15 (2024-08-26)
+
+- Small definition fix for DALI
+
 # Version 2024.8.14 (2024-08-26)
 
 - Add paramset_key to entity_key
