@@ -28,11 +28,14 @@ from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
+    ParameterData,
     ParamsetKey,
     SysvarType,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 
+EXPORTER = "EXPORTER"
+IMPORTER = "IMPORTER"
 _LOGGER: Final = logging.getLogger(__name__)
 
 
@@ -388,3 +391,68 @@ def debug_enabled() -> bool:
         pass
 
     return False
+
+
+def paramset_description_export_converter(
+    data: dict[str, dict[str, dict[ParamsetKey, dict[str, ParameterData]]]],
+) -> dict[str, dict[str, dict[str, dict[str, dict[str, Any]]]]]:
+    """Paramset description export converter."""
+    target: dict[str, dict[str, dict[str, dict[str, dict[str, Any]]]]] = {}
+    try:
+        for interface, interface_data in data.items():
+            if interface not in target:
+                target[interface] = {}
+            for address, items in interface_data.items():
+                if address not in target[interface]:
+                    target[interface][address] = {}
+                for p_key, paramsets in items.items():
+                    if (paramset_key := str(p_key)) not in target[interface][address]:
+                        target[interface][address][paramset_key] = {}
+                    for parameter, paramset in paramsets.items():
+                        target[interface][address][paramset_key][parameter] = paramset.as_dict()
+    except Exception as ex:
+        _LOGGER.error(
+            "PARAMSET_DESCRIPTION_EXPORT_CONVERTER failed: %s", reduce_args(args=ex.args)
+        )
+    return target
+
+
+def paramset_description_import_converter(
+    data: dict[str, dict[str, dict[str, dict[str, dict[str, Any]]]]],
+) -> dict[str, dict[str, dict[ParamsetKey, dict[str, ParameterData]]]]:
+    """Paramset description import converter."""
+    target: dict[str, dict[str, dict[ParamsetKey, dict[str, ParameterData]]]] = {}
+    try:
+        for interface, interface_data in data.items():
+            if interface not in target:
+                target[interface] = {}
+            for address, items in interface_data.items():
+                if address not in target[interface]:
+                    target[interface][address] = {}
+                for p_key, paramsets in items.items():
+                    if (paramset_key := ParamsetKey(p_key)) not in target[interface][address]:
+                        target[interface][address][paramset_key] = {}
+                    for parameter, paramset in paramsets.items():
+                        target[interface][address][paramset_key][parameter] = ParameterData(
+                            paramset
+                        )
+
+    except Exception as ex:
+        _LOGGER.error(
+            "PARAMSET_DESCRIPTION_IMPORT_CONVERTER failed: %s", reduce_args(args=ex.args)
+        )
+    return target
+
+
+def device_paramset_description_export_converter(
+    data: dict[str, dict[ParamsetKey, dict[str, ParameterData]]],
+) -> dict[str, dict[str, dict[str, dict[str, Any]]]]:
+    """Device paramset description export converter."""
+    return paramset_description_export_converter(data={EXPORTER: data})[EXPORTER]
+
+
+def device_paramset_description_import_converter(
+    data: dict[str, dict[str, dict[str, dict[str, Any]]]],
+) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
+    """Device Paramset description import converter."""
+    return paramset_description_import_converter(data={IMPORTER: data})[IMPORTER]

@@ -566,14 +566,12 @@ class ParameterData:
         self.max: Final[Any] = data[Description.MAX]
         self.min: Final[Any] = data[Description.MIN]
         self.operations: int = data[Description.OPERATIONS]
-        # self.TYPE: ParameterType = ParameterType.NONE
-        # with contextlib.suppress(ValueError):
+        self.special: Mapping[str, Any] | None = data.get(Description.SPECIAL)
         self.hm_type = ParameterType(data[Description.TYPE])
         self.unit: str | None = data.get(Description.UNIT)
-        self.special: Mapping[str, Any] | None = data.get(Description.SPECIAL)
         self.value_list: Iterable[Any] | None = data.get(Description.VALUE_LIST)
 
-    def as_dict(self) -> Mapping[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Return dataclass as dict."""
         data_dict = {
             Description.DEFAULT.value: self.default,
@@ -591,4 +589,4 @@ class ParameterData:
             data_dict[Description.UNIT.value] = self.unit
         if self.value_list:
             data_dict[Description.VALUE_LIST.value] = self.value_list
-        return data_dict
+        return dict(sorted(data_dict.items()))

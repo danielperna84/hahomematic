@@ -25,7 +25,7 @@ from hahomematic.const import (
     SystemInformation,
     SystemVariableData,
 )
-from hahomematic.support import reduce_args
+from hahomematic.support import device_paramset_description_import_converter
 
 LOCAL_SERIAL: Final = "0815_4711"
 BACKEND_LOCAL: Final = "Local CCU"
@@ -38,7 +38,9 @@ class ClientLocal(Client):  # pragma: no cover
         """Initialize the Client."""
         super().__init__(client_config=client_config)
         self._local_resources = local_resources
-        self._paramset_descriptions_cache: dict[str, dict[str, dict[str, ParameterData]]] = {}
+        self._paramset_descriptions_cache: dict[
+            str, dict[ParamsetKey, dict[str, ParameterData]]
+        ] = {}
 
     async def init_client(self) -> None:
         """Init the client."""
@@ -248,28 +250,11 @@ class ClientLocal(Client):  # pragma: no cover
                 )
             )
         ):
-            self._paramset_descriptions_cache.update(self._convert_date(data=data))
+            self._paramset_descriptions_cache.update(
+                device_paramset_description_import_converter(data=data)
+            )
 
         return self._paramset_descriptions_cache.get(address, {}).get(paramset_key)
-
-    def _convert_date(
-        self, data: dict[str, dict[str, dict[str, Any]]]
-    ) -> dict[str, dict[str, dict[str, ParameterData]]]:
-        """Convert data."""
-        target: dict[str, dict[str, dict[str, ParameterData]]] = {}
-        try:
-            for address, items in data.items():
-                if address not in target:
-                    target[address] = {}
-                for p_key, paramsets in items.items():
-                    if (paramset_key := ParamsetKey(p_key)) not in target[address]:
-                        target[address][paramset_key] = {}
-                    for parameter, paramset in paramsets.items():
-                        target[address][paramset_key][parameter] = ParameterData(paramset)
-
-        except Exception as ex:
-            _LOGGER.error("CONVERT_DATA failed: %s", reduce_args(args=ex.args))
-        return target
 
     async def put_paramset(
         self,

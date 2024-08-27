@@ -31,7 +31,8 @@ from hahomematic.support import (
     delete_file,
     get_device_address,
     get_split_channel_address,
-    reduce_args,
+    paramset_description_export_converter,
+    paramset_description_import_converter,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -440,25 +441,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     def _convert_date_load(self, data: Any) -> Any:
         """Convert data load."""
-        target: dict[str, dict[str, dict[str, dict[str, ParameterData]]]] = {}
-        try:
-            for interface, interface_data in data.items():
-                if interface not in target:
-                    target[interface] = {}
-                for address, items in interface_data.items():
-                    if address not in target[interface]:
-                        target[interface][address] = {}
-                    for p_key, paramsets in items.items():
-                        if (paramset_key := ParamsetKey(p_key)) not in target[interface][address]:
-                            target[interface][address][paramset_key] = {}
-                        for parameter, paramset in paramsets.items():
-                            target[interface][address][paramset_key][parameter] = ParameterData(
-                                paramset
-                            )
-
-        except Exception as ex:
-            _LOGGER.error("CONVERT_DATA_LOAD failed: %s", reduce_args(args=ex.args))
-        return target
+        return paramset_description_import_converter(data=data)
 
     async def save(self) -> DataOperationResult:
         """Save current paramset descriptions to disk."""
@@ -466,21 +449,4 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     def _convert_date_save(self, data: Any) -> Any:
         """Convert data save."""
-        target: dict[str, dict[str, dict[str, dict[str, dict[str, Any]]]]] = {}
-        try:
-            for interface, interface_data in data.items():
-                if interface not in target:
-                    target[interface] = {}
-                for address, items in interface_data.items():
-                    if address not in target[interface]:
-                        target[interface][address] = {}
-                    for p_key, paramsets in items.items():
-                        if (paramset_key := str(p_key)) not in target[interface][address]:
-                            target[interface][address][paramset_key] = {}
-                        for parameter, paramset in paramsets.items():
-                            target[interface][address][paramset_key][parameter] = (
-                                paramset.as_dict()
-                            )
-        except Exception as ex:
-            _LOGGER.error("CONVERT_DATA_SAVE failed: %s", reduce_args(args=ex.args))
-        return target
+        return paramset_description_export_converter(data=data)
