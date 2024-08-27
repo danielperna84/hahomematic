@@ -21,6 +21,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     DataOperationResult,
     Description,
+    ParameterData,
     ParamsetKey,
 )
 from hahomematic.platforms.device import HmDevice
@@ -30,6 +31,7 @@ from hahomematic.support import (
     delete_file,
     get_device_address,
     get_split_channel_address,
+    reduce_args,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -52,6 +54,14 @@ class BasePersistentCache(ABC):
         self._persistant_cache: Final = persistant_cache
         self.last_save: datetime = INIT_DATETIME
 
+    def _convert_date_load(self, data: Any) -> Any:
+        """Convert data load."""
+        return data
+
+    def _convert_date_save(self, data: Any) -> Any:
+        """Convert data save."""
+        return data
+
     async def save(self) -> DataOperationResult:
         """Save current name data in NAMES to disk."""
 
@@ -66,7 +76,10 @@ class BasePersistentCache(ABC):
                     mode="wb",
                 ) as fptr:
                     fptr.write(
-                        orjson.dumps(self._persistant_cache, option=orjson.OPT_NON_STR_KEYS)
+                        orjson.dumps(
+                            self._convert_date_save(data=self._persistant_cache),
+                            option=orjson.OPT_NON_STR_KEYS,
+                        )
                     )
                 return DataOperationResult.SAVE_SUCCESS
 
@@ -90,7 +103,9 @@ class BasePersistentCache(ABC):
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
                 self._persistant_cache.clear()
-                self._persistant_cache.update(orjson.loads(fptr.read()))
+                self._persistant_cache.update(
+                    self._convert_date_load(data=orjson.loads(fptr.read()))
+                )
             return DataOperationResult.LOAD_SUCCESS
 
         return await self._central.looper.async_add_executor_job(
@@ -279,7 +294,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """Init the paramset description cache."""
         # {interface_id, {channel_address, paramsets}}
         self._raw_paramset_descriptions: Final[
-            dict[str, dict[str, dict[ParamsetKey, dict[str, Any]]]]
+            dict[str, dict[str, dict[ParamsetKey, dict[str, ParameterData]]]]
         ] = {}
         super().__init__(
             central=central,
@@ -290,7 +305,9 @@ class ParamsetDescriptionCache(BasePersistentCache):
         self._address_parameter_cache: Final[dict[tuple[str, str], set[int | None]]] = {}
 
     @property
-    def raw_paramset_descriptions(self) -> dict[str, dict[str, dict[ParamsetKey, dict[str, Any]]]]:
+    def raw_paramset_descriptions(
+        self,
+    ) -> dict[str, dict[str, dict[ParamsetKey, dict[str, ParameterData]]]]:
         """Return the paramset descriptions."""
         return self._raw_paramset_descriptions
 
@@ -299,7 +316,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         interface_id: str,
         channel_address: str,
         paramset_key: ParamsetKey,
-        paramset_description: dict[str, Any],
+        paramset_description: dict[str, ParameterData],
     ) -> None:
         """Add paramset description to cache."""
         if interface_id not in self._raw_paramset_descriptions:
@@ -340,7 +357,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     def get_paramset_descriptions(
         self, interface_id: str, channel_address: str, paramset_key: ParamsetKey
-    ) -> dict[str, Any]:
+    ) -> dict[str, ParameterData]:
         """Get paramset descriptions from cache."""
         return (
             self._raw_paramset_descriptions.get(interface_id, {})
@@ -350,7 +367,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     def get_parameter_data(
         self, interface_id: str, channel_address: str, paramset_key: ParamsetKey, parameter: str
-    ) -> Any:
+    ) -> ParameterData | None:
         """Get parameter_data  from cache."""
         return (
             self._raw_paramset_descriptions.get(interface_id, {})
@@ -421,6 +438,49 @@ class ParamsetDescriptionCache(BasePersistentCache):
         self._init_address_parameter_list()
         return result
 
+    def _convert_date_load(self, data: Any) -> Any:
+        """Convert data load."""
+        target: dict[str, dict[str, dict[str, dict[str, ParameterData]]]] = {}
+        try:
+            for interface, interface_data in data.items():
+                if interface not in target:
+                    target[interface] = {}
+                for address, items in interface_data.items():
+                    if address not in target[interface]:
+                        target[interface][address] = {}
+                    for p_key, paramsets in items.items():
+                        if (paramset_key := ParamsetKey(p_key)) not in target[interface][address]:
+                            target[interface][address][paramset_key] = {}
+                        for parameter, paramset in paramsets.items():
+                            target[interface][address][paramset_key][parameter] = ParameterData(
+                                paramset
+                            )
+
+        except Exception as ex:
+            _LOGGER.error("CONVERT_DATA_LOAD failed: %s", reduce_args(args=ex.args))
+        return target
+
     async def save(self) -> DataOperationResult:
         """Save current paramset descriptions to disk."""
         return await super().save()
+
+    def _convert_date_save(self, data: Any) -> Any:
+        """Convert data save."""
+        target: dict[str, dict[str, dict[str, dict[str, dict[str, Any]]]]] = {}
+        try:
+            for interface, interface_data in data.items():
+                if interface not in target:
+                    target[interface] = {}
+                for address, items in interface_data.items():
+                    if address not in target[interface]:
+                        target[interface][address] = {}
+                    for p_key, paramsets in items.items():
+                        if (paramset_key := str(p_key)) not in target[interface][address]:
+                            target[interface][address][paramset_key] = {}
+                        for parameter, paramset in paramsets.items():
+                            target[interface][address][paramset_key][parameter] = (
+                                paramset.as_dict()
+                            )
+        except Exception as ex:
+            _LOGGER.error("CONVERT_DATA_SAVE failed: %s", reduce_args(args=ex.args))
+        return target

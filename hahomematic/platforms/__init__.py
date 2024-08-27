@@ -11,7 +11,6 @@ from hahomematic.const import (
     CLICK_EVENTS,
     DEVICE_ERROR_EVENTS,
     IMPULSE_EVENTS,
-    Description,
     Flag,
     Operations,
     ParamsetKey,
@@ -69,10 +68,10 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         continue
 
                     # required to fix hm master paramset operation values
-                    if parameter_is_un_ignored and parameter_data[Description.OPERATIONS] == 0:
-                        parameter_data[Description.OPERATIONS] = 3
+                    if parameter_is_un_ignored and parameter_data.operations == 0:
+                        parameter_data.operations = 3
 
-                if parameter_data[Description.OPERATIONS] & Operations.EVENT and (
+                if parameter_data.operations & Operations.EVENT and (
                     parameter in CLICK_EVENTS
                     or parameter.startswith(DEVICE_ERROR_EVENTS)
                     or parameter in IMPULSE_EVENTS
@@ -84,10 +83,10 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                         parameter_data=parameter_data,
                     )
                 if (
-                    not parameter_data[Description.OPERATIONS] & Operations.EVENT
-                    and not parameter_data[Description.OPERATIONS] & Operations.WRITE
+                    not parameter_data.operations & Operations.EVENT
+                    and not parameter_data.operations & Operations.WRITE
                 ) or (
-                    parameter_data[Description.FLAGS] & Flag.INTERNAL
+                    parameter_data.flags & Flag.INTERNAL
                     and parameter not in ALLOWED_INTERNAL_PARAMETERS
                     and not parameter_is_un_ignored
                 ):

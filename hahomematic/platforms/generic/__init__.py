@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Final
+from typing import Final
 
 from hahomematic import support as hms
 from hahomematic.const import (
     CLICK_EVENTS,
     VIRTUAL_REMOTE_TYPES,
-    Description,
     Operations,
     Parameter,
+    ParameterData,
     ParameterType,
     ParamsetKey,
 )
@@ -42,7 +42,7 @@ def create_entity_and_append_to_device(
     channel_address: str,
     paramset_key: ParamsetKey,
     parameter: str,
-    parameter_data: dict[str, Any],
+    parameter_data: ParameterData,
 ) -> None:
     """Decides which default platform should be used, and creates the required entities."""
     if device.central.parameter_visibility.parameter_is_ignored(
@@ -68,8 +68,8 @@ def create_entity_and_append_to_device(
         parameter,
         device.interface_id,
     )
-    p_type = parameter_data[Description.TYPE]
-    p_operations = parameter_data[Description.OPERATIONS]
+    p_type = parameter_data.hm_type
+    p_operations = parameter_data.operations
     entity_t: type[hmge.GenericEntity] | None = None
     if p_operations & Operations.WRITE:
         if p_type == ParameterType.ACTION:
@@ -95,9 +95,9 @@ def create_entity_and_append_to_device(
         elif p_type == ParameterType.STRING:
             entity_t = HmText
     elif parameter not in CLICK_EVENTS:
-        # Also check, if sensor could be a binary_sensor due to value_list.
+        # Also check, if sensor could be a binary_sensor due to.
         if is_binary_sensor(parameter_data):
-            parameter_data[Description.TYPE] = ParameterType.BOOL
+            parameter_data.hm_type = ParameterType.BOOL
             entity_t = HmBinarySensor
         else:
             entity_t = HmSensor

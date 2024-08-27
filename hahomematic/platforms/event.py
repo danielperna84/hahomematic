@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
@@ -13,11 +12,11 @@ from hahomematic.const import (
     DEVICE_ERROR_EVENTS,
     ENTITY_EVENTS,
     IMPULSE_EVENTS,
-    Description,
     EntityUsage,
     HmPlatform,
     HomematicEventType,
     Operations,
+    ParameterData,
     ParamsetKey,
 )
 from hahomematic.platforms import device as hmd
@@ -40,7 +39,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         unique_id: str,
         channel_address: str,
         parameter: str,
-        parameter_data: Mapping[str, Any],
+        parameter_data: ParameterData,
     ) -> None:
         """Initialize the event handler."""
         super().__init__(
@@ -131,7 +130,7 @@ class ImpulseEvent(GenericEvent):
 
 
 def create_event_and_append_to_device(
-    device: hmd.HmDevice, channel_address: str, parameter: str, parameter_data: Mapping[str, Any]
+    device: hmd.HmDevice, channel_address: str, parameter: str, parameter_data: ParameterData
 ) -> None:
     """Create action event entity."""
     if device.central.parameter_visibility.parameter_is_ignored(
@@ -160,7 +159,7 @@ def create_event_and_append_to_device(
         device.interface_id,
     )
     event_t: type[GenericEvent] | None = None
-    if parameter_data[Description.OPERATIONS] & Operations.EVENT:
+    if parameter_data.operations & Operations.EVENT:
         if parameter in CLICK_EVENTS:
             event_t = ClickEvent
         if parameter.startswith(DEVICE_ERROR_EVENTS):

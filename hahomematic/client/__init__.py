@@ -15,6 +15,7 @@ from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT, WAIT_FOR_
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
     DEFAULT_CUSTOM_ID,
+    DEFAULT_PARAMSETS,
     ENTITY_KEY,
     EVENT_AVAILABLE,
     EVENT_SECONDS_SINCE_LAST_EVENT,
@@ -28,6 +29,7 @@ from hahomematic.const import (
     InterfaceEventType,
     InterfaceName,
     Operations,
+    ParameterData,
     ParameterType,
     ParamsetKey,
     ProductGroup,
@@ -40,13 +42,7 @@ from hahomematic.exceptions import BaseHomematicException, HaHomematicException,
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.support import convert_value
-from hahomematic.support import (
-    build_headers,
-    build_xml_rpc_uri,
-    get_channel_no,
-    get_device_address,
-    reduce_args,
-)
+from hahomematic.support import build_headers, build_xml_rpc_uri, get_device_address, reduce_args
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -635,13 +631,9 @@ class Client(ABC):
             paramset_key=paramset_key,
             parameter=parameter,
         ):
-            pd_type = ParameterType(parameter_data[Description.TYPE])
-            pd_value_list = (
-                tuple(parameter_data[Description.VALUE_LIST])
-                if Description.VALUE_LIST in parameter_data
-                else None
-            )
-            if not bool(int(parameter_data[Description.OPERATIONS]) & operation):
+            pd_type = ParameterType(parameter_data.hm_type)
+            pd_value_list = tuple(parameter_data.value_list) if parameter_data.value_list else None
+            if not bool(int(parameter_data.operations) & operation):
                 raise HaHomematicException(
                     f"Parameter {parameter} does not support the requested operation {operation.value}"
                 )
@@ -684,29 +676,18 @@ class Client(ABC):
                 )
 
     async def get_paramset_descriptions(
-        self, device_description: dict[str, Any], load_all: bool = False
-    ) -> dict[str, dict[str, Any]]:
+        self, device_description: dict[str, Any]
+    ) -> dict[str, dict[str, dict[str, ParameterData]]]:
         """Get paramsets for provided device description."""
         if not device_description:
             return {}
-        paramsets: dict[str, dict[str, Any]] = {}
+        paramsets: dict[str, dict[str, dict[str, ParameterData]]] = {}
         address = device_description[Description.ADDRESS]
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
-        for paramset_key in device_description.get(Description.PARAMSETS, []):
-            if not (self.central.config.load_all_paramset_descriptions or load_all):
-                channel_no = get_channel_no(address)
-                device_type = (
-                    device_description[Description.TYPE]
-                    if channel_no is None
-                    else device_description[Description.PARENT_TYPE]
-                )
-                if not self.central.parameter_visibility.is_relevant_paramset(
-                    device_type=device_type,
-                    channel_no=channel_no,
-                    paramset_key=paramset_key,
-                ):
-                    continue
+        for p_key in device_description.get(Description.PARAMSETS, []):
+            if (paramset_key := ParamsetKey(p_key)) not in DEFAULT_PARAMSETS:
+                continue
             if paramset_description := await self._get_paramset_description(
                 address=address, paramset_key=paramset_key
             ):
@@ -715,10 +696,15 @@ class Client(ABC):
 
     async def _get_paramset_description(
         self, address: str, paramset_key: ParamsetKey
-    ) -> dict[str, Any] | None:
+    ) -> dict[str, ParameterData] | None:
         """Get paramset description from CCU."""
         try:
-            return await self._proxy_read.getParamsetDescription(address, paramset_key)  # type: ignore[no-any-return]
+            if raw_paramset_description := await self._proxy_read.getParamsetDescription(
+                address, paramset_key
+            ):
+                return {
+                    key: ParameterData(value) for key, value in raw_paramset_description.items()
+                }
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "GET_PARAMSET_DESCRIPTIONS failed with %s [%s] for %s address %s",
@@ -736,9 +722,7 @@ class Client(ABC):
         all_paramsets: dict[str, dict[str, Any]] = {}
         for device_description in device_descriptions:
             all_paramsets.update(
-                await self.get_paramset_descriptions(
-                    device_description=device_description, load_all=True
-                )
+                await self.get_paramset_descriptions(device_description=device_description)
             )
         return all_paramsets
 
