@@ -638,7 +638,7 @@ class CeIpDrgDaliLight(CeDimmer):
     @property
     def _relevant_entities(self) -> tuple[hmge.GenericEntity, ...]:
         """Returns the list of relevant entities. To be overridden by subclasses."""
-        return self._e_hue, self._e_level, self._e_saturation, self._e_color_temperature_kelvin
+        return (self._e_level,)
 
     @value_property
     def effects(self) -> tuple[str, ...] | None:
