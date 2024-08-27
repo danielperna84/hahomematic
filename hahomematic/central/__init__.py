@@ -310,6 +310,11 @@ class CentralUnit:
             self._version = max(versions) if versions else None
         return self._version
 
+    async def save_caches(self) -> None:
+        """Save persistent caches."""
+        await self.device_descriptions.save()
+        await self.paramset_descriptions.save()
+
     async def start(self) -> None:
         """Start processing of the central unit."""
         if self._started:
@@ -350,6 +355,7 @@ class CentralUnit:
         if not self._started:
             _LOGGER.debug("STOP: Central %s not started", self._name)
             return
+        await self.save_caches()
         self._stop_connection_checker()
         await self._stop_clients()
         if self.json_rpc_client.is_activated:
@@ -780,7 +786,8 @@ class CentralUnit:
         )
         for address in addresses:
             if device := self._devices.get(address):
-                await self.remove_device(device=device)
+                self.remove_device(device=device)
+        await self.save_caches()
 
     @callback_backend_system(system_event=BackendSystemEvent.NEW_DEVICES)
     async def add_new_devices(
@@ -832,8 +839,7 @@ class CentralUnit:
                         reduce_args(args=err.args),
                     )
 
-            await self.device_descriptions.save()
-            await self.paramset_descriptions.save()
+            await self.save_caches()
             if new_device_addresses := self._check_for_new_device_addresses():
                 await self.device_details.load()
                 await self.data_cache.load()
@@ -951,7 +957,7 @@ class CentralUnit:
                 self._entity_event_subscriptions[entity.entity_key] = []
             self._entity_event_subscriptions[entity.entity_key].append(entity.event)
 
-    async def remove_device(self, device: HmDevice) -> None:
+    def remove_device(self, device: HmDevice) -> None:
         """Remove device to central collections."""
         if device.device_address not in self._devices:
             _LOGGER.debug(
@@ -961,8 +967,8 @@ class CentralUnit:
             return
         device.clear_collections()
 
-        await self.device_descriptions.remove_device(device=device)
-        await self.paramset_descriptions.remove_device(device=device)
+        self.device_descriptions.remove_device(device=device)
+        self.paramset_descriptions.remove_device(device=device)
         self.device_details.remove_device(device=device)
         del self._devices[device.device_address]
 

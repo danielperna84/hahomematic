@@ -71,12 +71,13 @@ class BasePersistentCache(ABC):
         def _save() -> DataOperationResult:
             if not check_or_create_directory(self._cache_dir):
                 return DataOperationResult.NO_SAVE
-            converted_data = self._convert_date_before_save(data=self._persistant_cache)
-            if (converted_hash := hash_sha256(value=converted_data)) == self._last_hash:
-                return DataOperationResult.NO_SAVE
 
             self.last_save = datetime.now()
             if self._central.config.use_caches:
+                converted_data = self._convert_date_before_save(data=self._persistant_cache)
+                if (converted_hash := hash_sha256(value=converted_data)) == self._last_hash:
+                    return DataOperationResult.NO_SAVE
+
                 with open(
                     file=os.path.join(self._cache_dir, self._filename),
                     mode="wb",
@@ -170,12 +171,11 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Find raw device in cache."""
         return self._raw_device_descriptions.get(interface_id, [])
 
-    async def remove_device(self, device: HmDevice) -> None:
+    def remove_device(self, device: HmDevice) -> None:
         """Remove device from cache."""
         deleted_addresses: list[str] = [device.device_address]
         deleted_addresses.extend(device.channels)
         self._remove_device(interface_id=device.interface_id, deleted_addresses=deleted_addresses)
-        await self.save()
 
     def _remove_device(self, interface_id: str, deleted_addresses: list[str]) -> None:
         """Remove device from cache."""
@@ -343,14 +343,12 @@ class ParamsetDescriptionCache(BasePersistentCache):
             channel_address=channel_address, paramsets=[paramset_description]
         )
 
-    async def remove_device(self, device: HmDevice) -> None:
+    def remove_device(self, device: HmDevice) -> None:
         """Remove device paramset descriptions from cache."""
         if interface := self._raw_paramset_descriptions.get(device.interface_id):
             for channel_address in device.channels:
                 if channel_address in interface:
                     del self._raw_paramset_descriptions[device.interface_id][channel_address]
-
-        await self.save()
 
     def has_interface_id(self, interface_id: str) -> bool:
         """Return if interface is in paramset_descriptions cache."""
