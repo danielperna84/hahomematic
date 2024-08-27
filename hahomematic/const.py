@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
-from typing import Final
+from typing import Any, Final
 
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = 15  # check if connection is available via rpc ping
 DEFAULT_CUSTOM_ID: Final = "custom_id"
@@ -135,6 +135,7 @@ class Description(StrEnum):
     MAX = "MAX"
     MIN = "MIN"
     NAME = "NAME"
+    ID = "ID"
     OPERATIONS = "OPERATIONS"
     PARAMSETS = "PARAMSETS"
     PARENT = "PARENT"
@@ -420,6 +421,7 @@ class ParameterType(StrEnum):
     FLOAT = "FLOAT"
     INTEGER = "INTEGER"
     STRING = "STRING"
+    EMPTY = ""
 
 
 CLICK_EVENTS: Final[tuple[Parameter, ...]] = (
@@ -433,12 +435,20 @@ CLICK_EVENTS: Final[tuple[Parameter, ...]] = (
     Parameter.PRESS_UNLOCK,
 )
 
+DEFAULT_PARAMSETS: Final[tuple[ParamsetKey, ...]] = (
+    ParamsetKey.MASTER,
+    ParamsetKey.VALUES,
+)
+
 DEVICE_ERROR_EVENTS: Final[tuple[Parameter, ...]] = (Parameter.ERROR, Parameter.SENSOR_ERROR)
 
 ENTITY_EVENTS: Final[tuple[HomematicEventType, ...]] = (
     HomematicEventType.IMPULSE,
     HomematicEventType.KEYPRESS,
 )
+
+# channel_address, paramset_key,parameter
+ENTITY_KEY = tuple[str, ParamsetKey, str]
 
 IMPULSE_EVENTS: Final[tuple[Parameter, ...]] = (Parameter.SEQUENCE_OK,)
 
@@ -477,9 +487,6 @@ PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.TEXT,
     HmPlatform.UPDATE,
 )
-
-# channel_address, paramset_key,parameter
-ENTITY_KEY = tuple[str, ParamsetKey, str]
 
 RELEVANT_INIT_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.CONFIG_PENDING,
@@ -545,3 +552,41 @@ class SystemInformation:
     auth_enabled: bool | None = None
     https_redirect_enabled: bool | None = None
     serial: str | None = None
+
+
+@dataclass
+class ParameterData:
+    """Dataclass for parameter data."""
+
+    def __init__(self, data: Mapping[str, Any]) -> None:
+        """Init the dataclass from mapping."""
+        self.default: Final[Any] = data[Description.DEFAULT]
+        self.flags: Final[int] = data[Description.FLAGS]
+        self.id: Final[str | None] = data.get(Description.ID)
+        self.max: Final[Any] = data[Description.MAX]
+        self.min: Final[Any] = data[Description.MIN]
+        self.operations: int = data[Description.OPERATIONS]
+        self.special: Mapping[str, Any] | None = data.get(Description.SPECIAL)
+        self.hm_type = ParameterType(data[Description.TYPE])
+        self.unit: str | None = data.get(Description.UNIT)
+        self.value_list: Iterable[Any] | None = data.get(Description.VALUE_LIST)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return dataclass as dict."""
+        data_dict = {
+            Description.DEFAULT.value: self.default,
+            Description.FLAGS.value: self.flags,
+            Description.MAX.value: self.max,
+            Description.MIN.value: self.min,
+            Description.OPERATIONS.value: self.operations,
+            Description.TYPE.value: self.hm_type,
+        }
+        if self.id:
+            data_dict[Description.ID.value] = self.id
+        if self.special:
+            data_dict[Description.SPECIAL.value] = self.special
+        if self.unit:
+            data_dict[Description.UNIT.value] = self.unit
+        if self.value_list:
+            data_dict[Description.VALUE_LIST.value] = self.value_list
+        return dict(sorted(data_dict.items()))

@@ -21,6 +21,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     DataOperationResult,
     Description,
+    ParameterData,
     ParamsetKey,
 )
 from hahomematic.platforms.device import HmDevice
@@ -30,6 +31,9 @@ from hahomematic.support import (
     delete_file,
     get_device_address,
     get_split_channel_address,
+    hash_sha256,
+    paramset_description_export_converter,
+    paramset_description_import_converter,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -51,12 +55,24 @@ class BasePersistentCache(ABC):
         self._filename: Final = f"{central.name}_{self._file_postfix}"
         self._persistant_cache: Final = persistant_cache
         self.last_save: datetime = INIT_DATETIME
+        self._last_hash = hash_sha256(value=persistant_cache)
+
+    def _convert_date_after_load(self, data: Any) -> Any:
+        """Convert data load."""
+        return data
+
+    def _convert_date_before_save(self, data: Any) -> Any:
+        """Convert data save."""
+        return data
 
     async def save(self) -> DataOperationResult:
         """Save current name data in NAMES to disk."""
 
         def _save() -> DataOperationResult:
             if not check_or_create_directory(self._cache_dir):
+                return DataOperationResult.NO_SAVE
+            converted_data = self._convert_date_before_save(data=self._persistant_cache)
+            if (converted_hash := hash_sha256(value=converted_data)) == self._last_hash:
                 return DataOperationResult.NO_SAVE
 
             self.last_save = datetime.now()
@@ -66,8 +82,12 @@ class BasePersistentCache(ABC):
                     mode="wb",
                 ) as fptr:
                     fptr.write(
-                        orjson.dumps(self._persistant_cache, option=orjson.OPT_NON_STR_KEYS)
+                        orjson.dumps(
+                            converted_data,
+                            option=orjson.OPT_NON_STR_KEYS,
+                        )
                     )
+                    self._last_hash = converted_hash
                 return DataOperationResult.SAVE_SUCCESS
 
             _LOGGER.debug("save: not saving cache for %s", self._central.name)
@@ -89,8 +109,12 @@ class BasePersistentCache(ABC):
                 file=os.path.join(self._cache_dir, self._filename),
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
+                converted_data = self._convert_date_after_load(data=orjson.loads(fptr.read()))
+                if (converted_hash := hash_sha256(value=converted_data)) == self._last_hash:
+                    return DataOperationResult.NO_LOAD
                 self._persistant_cache.clear()
-                self._persistant_cache.update(orjson.loads(fptr.read()))
+                self._persistant_cache.update(converted_data)
+                self._last_hash = converted_hash
             return DataOperationResult.LOAD_SUCCESS
 
         return await self._central.looper.async_add_executor_job(
@@ -279,7 +303,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         """Init the paramset description cache."""
         # {interface_id, {channel_address, paramsets}}
         self._raw_paramset_descriptions: Final[
-            dict[str, dict[str, dict[ParamsetKey, dict[str, Any]]]]
+            dict[str, dict[str, dict[ParamsetKey, dict[str, ParameterData]]]]
         ] = {}
         super().__init__(
             central=central,
@@ -290,7 +314,9 @@ class ParamsetDescriptionCache(BasePersistentCache):
         self._address_parameter_cache: Final[dict[tuple[str, str], set[int | None]]] = {}
 
     @property
-    def raw_paramset_descriptions(self) -> dict[str, dict[str, dict[ParamsetKey, dict[str, Any]]]]:
+    def raw_paramset_descriptions(
+        self,
+    ) -> dict[str, dict[str, dict[ParamsetKey, dict[str, ParameterData]]]]:
         """Return the paramset descriptions."""
         return self._raw_paramset_descriptions
 
@@ -299,7 +325,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
         interface_id: str,
         channel_address: str,
         paramset_key: ParamsetKey,
-        paramset_description: dict[str, Any],
+        paramset_description: dict[str, ParameterData],
     ) -> None:
         """Add paramset description to cache."""
         if interface_id not in self._raw_paramset_descriptions:
@@ -340,7 +366,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     def get_paramset_descriptions(
         self, interface_id: str, channel_address: str, paramset_key: ParamsetKey
-    ) -> dict[str, Any]:
+    ) -> dict[str, ParameterData]:
         """Get paramset descriptions from cache."""
         return (
             self._raw_paramset_descriptions.get(interface_id, {})
@@ -350,7 +376,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
 
     def get_parameter_data(
         self, interface_id: str, channel_address: str, paramset_key: ParamsetKey, parameter: str
-    ) -> Any:
+    ) -> ParameterData | None:
         """Get parameter_data  from cache."""
         return (
             self._raw_paramset_descriptions.get(interface_id, {})
@@ -421,6 +447,14 @@ class ParamsetDescriptionCache(BasePersistentCache):
         self._init_address_parameter_list()
         return result
 
+    def _convert_date_after_load(self, data: Any) -> Any:
+        """Convert data load."""
+        return paramset_description_import_converter(data=data)
+
     async def save(self) -> DataOperationResult:
         """Save current paramset descriptions to disk."""
         return await super().save()
+
+    def _convert_date_before_save(self, data: Any) -> Any:
+        """Convert data save."""
+        return paramset_description_export_converter(data=data)

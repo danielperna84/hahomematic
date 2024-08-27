@@ -14,8 +14,8 @@ from hahomematic.const import (
     PROGRAM_ADDRESS,
     SYSVAR_ADDRESS,
     VIRTUAL_REMOTE_ADDRESSES,
-    Description,
     EntityUsage,
+    ParameterData,
     ParameterType,
 )
 from hahomematic.platforms import device as hmd
@@ -369,11 +369,11 @@ def convert_value(
     return value
 
 
-def is_binary_sensor(parameter_data: Mapping[str, Any]) -> bool:
+def is_binary_sensor(parameter_data: ParameterData) -> bool:
     """Check, if the sensor is a binary_sensor."""
-    if parameter_data[Description.TYPE] == ParameterType.BOOL:
+    if parameter_data.hm_type == ParameterType.BOOL:
         return True
-    if value_list := parameter_data.get(Description.VALUE_LIST):
+    if value_list := parameter_data.value_list:
         return tuple(value_list) in _BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
     return False
 

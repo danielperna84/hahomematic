@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any, Final
 
-from hahomematic.const import CallSource, EntityUsage, HomematicEventType, Parameter, ParamsetKey
+from hahomematic.const import (
+    CallSource,
+    EntityUsage,
+    HomematicEventType,
+    Parameter,
+    ParameterData,
+    ParamsetKey,
+)
 from hahomematic.platforms import device as hmd, entity as hme
 from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.support import EntityNameData, GenericParameterType, get_entity_name
@@ -29,7 +35,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
         channel_address: str,
         paramset_key: ParamsetKey,
         parameter: str,
-        parameter_data: Mapping[str, Any],
+        parameter_data: ParameterData,
     ) -> None:
         """Init the generic entity."""
         super().__init__(

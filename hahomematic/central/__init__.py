@@ -1046,10 +1046,10 @@ class CentralUnit:
                     device_type = self.device_descriptions.get_device_type(
                         device_address=get_device_address(channel_address)
                     )
-                for parameter, paramset in channels[channel_address].get(paramset_key, {}).items():
-                    p_operations = paramset[Description.OPERATIONS]
-
-                    if all(p_operations & operation for operation in operations):
+                for parameter, parameter_data in (
+                    channels[channel_address].get(paramset_key, {}).items()
+                ):
+                    if all(parameter_data.operations & operation for operation in operations):
                         if un_ignore_candidates_only and (
                             (
                                 (
@@ -1354,7 +1354,6 @@ class CentralConfig:
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
         start_direct: bool = False,
-        load_all_paramset_descriptions: bool = False,
     ) -> None:
         """Init the client config."""
         self.connection_state: Final = CentralConnectionState()
@@ -1374,7 +1373,6 @@ class CentralConfig:
         self.json_port: Final = json_port
         self.un_ignore_list: Final = un_ignore_list
         self.start_direct: Final = start_direct
-        self.load_all_paramset_descriptions: Final = load_all_paramset_descriptions
 
     @property
     def central_url(self) -> str:

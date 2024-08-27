@@ -29,12 +29,12 @@ from hahomematic.const import (
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     NO_CACHE_ENTRY,
     CallSource,
-    Description,
     EntityUsage,
     Flag,
     HmPlatform,
     Operations,
     Parameter,
+    ParameterData,
     ParameterType,
     ParamsetKey,
 )
@@ -402,7 +402,7 @@ class BaseParameterEntity[
         channel_address: str,
         paramset_key: ParamsetKey,
         parameter: str,
-        parameter_data: Mapping[str, Any],
+        parameter_data: ParameterData,
     ) -> None:
         """Initialize the entity."""
         self._paramset_key: Final = paramset_key
@@ -434,25 +434,19 @@ class BaseParameterEntity[
         self._is_forced_sensor: bool = False
         self._assign_parameter_data(parameter_data=parameter_data)
 
-    def _assign_parameter_data(self, parameter_data: Mapping[str, Any]) -> None:
+    def _assign_parameter_data(self, parameter_data: ParameterData) -> None:
         """Assign parameter data to instance variables."""
-        self._type: ParameterType = ParameterType(parameter_data[Description.TYPE])
-        self._values = (
-            tuple(parameter_data[Description.VALUE_LIST])
-            if Description.VALUE_LIST in parameter_data
-            else None
-        )
-        self._max: ParameterT = self._convert_value(parameter_data[Description.MAX])
-        self._min: ParameterT = self._convert_value(parameter_data[Description.MIN])
-        self._default: ParameterT = self._convert_value(
-            parameter_data.get(Description.DEFAULT, self._min)
-        )
-        flags: int = parameter_data[Description.FLAGS]
+        self._type: ParameterType = ParameterType(parameter_data.hm_type)
+        self._values = tuple(parameter_data.value_list) if parameter_data.value_list else None
+        self._max: ParameterT = self._convert_value(parameter_data.max)
+        self._min: ParameterT = self._convert_value(parameter_data.min)
+        self._default: ParameterT = self._convert_value(parameter_data.default or self._min)
+        flags: int = parameter_data.flags
         self._visible: bool = flags & Flag.VISIBLE == Flag.VISIBLE
         self._service: bool = flags & Flag.SERVICE == Flag.SERVICE
-        self._operations: int = parameter_data[Description.OPERATIONS]
-        self._special: Mapping[str, Any] | None = parameter_data.get(Description.SPECIAL)
-        self._raw_unit: str | None = parameter_data.get(Description.UNIT)
+        self._operations: int = parameter_data.operations
+        self._special: Mapping[str, Any] | None = parameter_data.special
+        self._raw_unit: str | None = parameter_data.unit
         self._unit: str | None = self._cleanup_unit(raw_unit=self._raw_unit)
         self._multiplier: int = self._get_multiplier(raw_unit=self._raw_unit)
 
@@ -710,14 +704,13 @@ class BaseParameterEntity[
 
     def update_parameter_data(self) -> None:
         """Update parameter data."""
-        self._assign_parameter_data(
-            parameter_data=self._central.paramset_descriptions.get_parameter_data(
-                interface_id=self._device.interface_id,
-                channel_address=self._channel_address,
-                paramset_key=self._paramset_key,
-                parameter=self._parameter,
-            )
-        )
+        if parameter_data := self._central.paramset_descriptions.get_parameter_data(
+            interface_id=self._device.interface_id,
+            channel_address=self._channel_address,
+            paramset_key=self._paramset_key,
+            parameter=self._parameter,
+        ):
+            self._assign_parameter_data(parameter_data=parameter_data)
 
     def _convert_value(self, value: Any) -> ParameterT:
         """Convert to value to ParameterT."""
