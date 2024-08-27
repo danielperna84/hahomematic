@@ -496,16 +496,43 @@ class HmDevice(PayloadMixin):
         """Return an entity from device."""
         return self._custom_entities.get(channel_no)
 
-    def get_generic_entity(self, channel_address: str, parameter: str) -> GenericEntity | None:
+    def get_generic_entity(
+        self, channel_address: str, parameter: str, paramset_key: ParamsetKey | None = None
+    ) -> GenericEntity | None:
         """Return an entity from device."""
+        if paramset_key:
+            return self._generic_entities.get(
+                get_entity_key(
+                    channel_address=channel_address,
+                    paramset_key=paramset_key,
+                    parameter=parameter,
+                )
+            )
+
+        if entity := self._generic_entities.get(
+            get_entity_key(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey.VALUES,
+                parameter=parameter,
+            )
+        ):
+            return entity
         return self._generic_entities.get(
-            get_entity_key(channel_address=channel_address, parameter=parameter)
+            get_entity_key(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey.MASTER,
+                parameter=parameter,
+            )
         )
 
     def get_generic_event(self, channel_address: str, parameter: str) -> GenericEvent | None:
         """Return a generic event from device."""
         return self._generic_events.get(
-            get_entity_key(channel_address=channel_address, parameter=parameter)
+            get_entity_key(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey.VALUES,
+                parameter=parameter,
+            )
         )
 
     def get_readable_entities(self, paramset_key: ParamsetKey) -> tuple[GenericEntity, ...]:
@@ -625,7 +652,7 @@ class ValueCache:
         self._sema_get_or_load_value: Final = asyncio.Semaphore()
         self._device: Final = device
         # {key, CacheEntry}
-        self._device_cache: Final[dict[str, CacheEntry]] = {}
+        self._device_cache: Final[dict[ENTITY_KEY, CacheEntry]] = {}
 
     async def init_base_entities(self) -> None:
         """Load data by get_value."""
@@ -685,7 +712,7 @@ class ValueCache:
     async def get_value(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         call_source: CallSource,
         direct_call: bool = False,
@@ -732,16 +759,11 @@ class ValueCache:
 
             return NO_CACHE_ENTRY if value == self._NO_VALUE_CACHE_ENTRY else value
 
-    @staticmethod
-    def _get_key(channel_address: str, paramset_key: str, parameter: str) -> str:
-        """Get the key for the cache entry."""
-        return f"{channel_address}.{paramset_key}.{parameter}"
-
     def _add_entry_to_device_cache(
-        self, channel_address: str, paramset_key: str, parameter: str, value: Any
+        self, channel_address: str, paramset_key: ParamsetKey, parameter: str, value: Any
     ) -> None:
         """Add value to cache."""
-        key = self._get_key(
+        key = get_entity_key(
             channel_address=channel_address, paramset_key=paramset_key, parameter=parameter
         )
         # write value to cache even if an exception has occurred
@@ -751,7 +773,7 @@ class ValueCache:
     def _get_value_from_cache(
         self,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
     ) -> Any:
         """Load data from caches."""
@@ -770,7 +792,7 @@ class ValueCache:
             return global_value
 
         # Try to get data from device cache
-        key = self._get_key(
+        key = get_entity_key(
             channel_address=channel_address, paramset_key=paramset_key, parameter=parameter
         )
         if (

@@ -36,6 +36,7 @@ from hahomematic.const import (
     Operations,
     Parameter,
     ParameterType,
+    ParamsetKey,
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
@@ -399,12 +400,12 @@ class BaseParameterEntity[
         device: hmd.HmDevice,
         unique_id: str,
         channel_address: str,
-        paramset_key: str,
+        paramset_key: ParamsetKey,
         parameter: str,
         parameter_data: Mapping[str, Any],
     ) -> None:
         """Initialize the entity."""
-        self._paramset_key: Final[str] = paramset_key
+        self._paramset_key: Final = paramset_key
         # required for name in BaseEntity
         self._parameter: Final[str] = parameter
 
@@ -480,6 +481,7 @@ class BaseParameterEntity[
         """Return entity key value."""
         return get_entity_key(
             channel_address=self._channel_address,
+            paramset_key=self._paramset_key,
             parameter=self._parameter,
         )
 
@@ -504,7 +506,7 @@ class BaseParameterEntity[
         return self._parameter
 
     @config_property
-    def paramset_key(self) -> str:
+    def paramset_key(self) -> ParamsetKey:
         """Return paramset_key name."""
         return self._paramset_key
 
@@ -767,7 +769,7 @@ class CallParameterCollector:
         """Init the generator."""
         self._device: Final = device
         self._client: Final = device.client
-        self._paramsets: Final[dict[str, dict[int, dict[str, dict[str, Any]]]]] = {}
+        self._paramsets: Final[dict[ParamsetKey, dict[int, dict[str, dict[str, Any]]]]] = {}
 
     def add_entity(
         self,

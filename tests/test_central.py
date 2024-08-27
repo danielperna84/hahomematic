@@ -163,7 +163,7 @@ async def test_device_un_ignore_etrv(
     line: str,
     parameter: str,
     channel_no: int,
-    paramset_key: str,
+    paramset_key: ParamsetKey,
     expected_result: bool,
 ) -> None:
     """Test device un ignore."""
@@ -204,7 +204,7 @@ async def test_device_un_ignore_broll(
     line: str,
     parameter: str,
     channel_no: int,
-    paramset_key: str,
+    paramset_key: ParamsetKey,
     expected_result: bool,
 ) -> None:
     """Test device un ignore."""
@@ -247,7 +247,7 @@ async def test_device_un_ignore_hm(
     line: str,
     parameter: str,
     channel_no: int | None,
-    paramset_key: str,
+    paramset_key: ParamsetKey,
     expected_result: bool,
 ) -> None:
     """Test device un ignore."""
@@ -334,7 +334,7 @@ async def test_device_un_ignore_hm2(
     lines: list[str],
     parameter: str,
     channel_no: int | None,
-    paramset_key: str,
+    paramset_key: ParamsetKey,
     expected_result: bool,
 ) -> None:
     """Test device un ignore."""

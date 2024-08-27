@@ -1,3 +1,8 @@
+# Version 2024.8.14 (2024-08-26)
+
+- Add paramset_key to entity_key
+- Switch typing of paramset_key from str to ParamsetKey
+
 # Version 2024.8.13 (2024-08-25)
 
 - Check/convert values of manual executed put_paramset/set_value

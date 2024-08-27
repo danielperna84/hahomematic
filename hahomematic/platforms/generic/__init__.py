@@ -14,6 +14,7 @@ from hahomematic.const import (
     Operations,
     Parameter,
     ParameterType,
+    ParamsetKey,
 )
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.generic import entity as hmge
@@ -39,7 +40,7 @@ _SWITCH_ENTITY_TO_SENSOR: Final[Mapping[str | tuple[str, ...], Parameter]] = {
 def create_entity_and_append_to_device(
     device: hmd.HmDevice,
     channel_address: str,
-    paramset_key: str,
+    paramset_key: ParamsetKey,
     parameter: str,
     parameter_data: dict[str, Any],
 ) -> None:

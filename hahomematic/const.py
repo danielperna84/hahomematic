@@ -74,8 +74,7 @@ MAX_CACHE_AGE: Final = 60
 
 NO_CACHE_ENTRY: Final = "NO_CACHE_ENTRY"
 
-# channel_address, parameter
-ENTITY_KEY = tuple[str, str]
+
 CALLBACK_TYPE = Callable[[], None] | None
 
 UN_IGNORE_WILDCARD: Final = "all"
@@ -328,7 +327,9 @@ class Parameter(StrEnum):
 class ParamsetKey(StrEnum):
     """Enum with paramset keys."""
 
+    LINK = "LINK"
     MASTER = "MASTER"
+    SERVICE = "SERVICE"
     VALUES = "VALUES"
 
 
@@ -476,6 +477,9 @@ PLATFORMS: Final[tuple[HmPlatform, ...]] = (
     HmPlatform.TEXT,
     HmPlatform.UPDATE,
 )
+
+# channel_address, paramset_key,parameter
+ENTITY_KEY = tuple[str, ParamsetKey, str]
 
 RELEVANT_INIT_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.CONFIG_PENDING,
