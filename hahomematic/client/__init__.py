@@ -30,7 +30,6 @@ from hahomematic.const import (
     InterfaceName,
     Operations,
     ParameterData,
-    ParameterType,
     ParamsetKey,
     ProductGroup,
     ProgramData,
@@ -631,7 +630,7 @@ class Client(ABC):
             paramset_key=paramset_key,
             parameter=parameter,
         ):
-            pd_type = ParameterType(parameter_data.hm_type)
+            pd_type = parameter_data.hm_type
             pd_value_list = tuple(parameter_data.value_list) if parameter_data.value_list else None
             if not bool(int(parameter_data.operations) & operation):
                 raise HaHomematicException(
