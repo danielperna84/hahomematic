@@ -246,7 +246,7 @@ class ClientLocal(Client):  # pragma: no cover
         ):
             self._paramset_descriptions_cache.update(data)
 
-        return self._paramset_descriptions_cache.get(address, {}).get(str(paramset_key))
+        return self._paramset_descriptions_cache.get(address, {}).get(paramset_key)
 
     async def put_paramset(
         self,
