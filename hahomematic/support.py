@@ -8,6 +8,7 @@ import contextlib
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
+import hashlib
 from ipaddress import IPv4Address
 import logging
 import os
@@ -456,3 +457,24 @@ def device_paramset_description_import_converter(
 ) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
     """Device Paramset description import converter."""
     return paramset_description_import_converter(data={IMPORTER: data})[IMPORTER]
+
+
+def hash_sha256(value: Any) -> str:
+    """Hash a value with sha256."""
+    hasher = hashlib.sha256()
+    hasher.update(repr(_make_value_hashable(value)).encode())
+    return base64.b64encode(hasher.digest()).decode()
+
+
+def _make_value_hashable(value: Any) -> Any:
+    """Make a hashable object."""
+    if isinstance(value, (tuple, list)):
+        return tuple(_make_value_hashable(e) for e in value)
+
+    if isinstance(value, dict):
+        return tuple(sorted((k, _make_value_hashable(v)) for k, v in value.items()))
+
+    if isinstance(value, (set, frozenset)):
+        return tuple(sorted(_make_value_hashable(e) for e in value))
+
+    return value
