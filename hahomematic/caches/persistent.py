@@ -71,12 +71,13 @@ class BasePersistentCache(ABC):
         def _save() -> DataOperationResult:
             if not check_or_create_directory(self._cache_dir):
                 return DataOperationResult.NO_SAVE
-            converted_data = self._convert_date_before_save(data=self._persistant_cache)
-            if (converted_hash := hash_sha256(value=converted_data)) == self._last_hash:
-                return DataOperationResult.NO_SAVE
 
             self.last_save = datetime.now()
             if self._central.config.use_caches:
+                converted_data = self._convert_date_before_save(data=self._persistant_cache)
+                if (converted_hash := hash_sha256(value=converted_data)) == self._last_hash:
+                    return DataOperationResult.NO_SAVE
+
                 with open(
                     file=os.path.join(self._cache_dir, self._filename),
                     mode="wb",
