@@ -673,11 +673,11 @@ class Client(ABC):
 
     async def get_paramset_descriptions(
         self, device_description: dict[str, Any]
-    ) -> dict[str, dict[str, dict[str, ParameterData]]]:
+    ) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
         """Get paramsets for provided device description."""
         if not device_description:
             return {}
-        paramsets: dict[str, dict[str, dict[str, ParameterData]]] = {}
+        paramsets: dict[str, dict[ParamsetKey, dict[str, ParameterData]]] = {}
         address = device_description[Description.ADDRESS]
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
@@ -713,9 +713,9 @@ class Client(ABC):
 
     async def get_all_paramset_descriptions(
         self, device_descriptions: tuple[dict[str, Any], ...]
-    ) -> dict[str, dict[str, Any]]:
+    ) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
         """Get all paramset descriptions for provided device descriptions."""
-        all_paramsets: dict[str, dict[str, Any]] = {}
+        all_paramsets: dict[str, dict[ParamsetKey, dict[str, ParameterData]]] = {}
         for device_description in device_descriptions:
             all_paramsets.update(
                 await self.get_paramset_descriptions(device_description=device_description)
