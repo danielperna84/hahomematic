@@ -614,9 +614,8 @@ class HmDevice(PayloadMixin):
                 await self.client.fetch_paramset_description(
                     channel_address=channel_address,
                     paramset_key=paramset_key,
-                    save_to_file=False,
                 )
-        await self.central.paramset_descriptions.save()
+        await self.central.save_caches(save_paramset_descriptions=True)
         for entity in self.generic_entities:
             entity.update_parameter_data()
         self.fire_device_updated_callback()

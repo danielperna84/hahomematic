@@ -643,7 +643,7 @@ class Client(ABC):
         )
 
     async def fetch_paramset_description(
-        self, channel_address: str, paramset_key: ParamsetKey, save_to_file: bool = True
+        self, channel_address: str, paramset_key: ParamsetKey
     ) -> None:
         """Fetch a specific paramset and add it to the known ones."""
         _LOGGER.debug("FETCH_PARAMSET_DESCRIPTION: %s for %s", paramset_key, channel_address)
@@ -657,9 +657,6 @@ class Client(ABC):
                 paramset_key=paramset_key,
                 paramset_description=paramset_description,
             )
-
-        if save_to_file:
-            await self.central.paramset_descriptions.save()
 
     async def fetch_paramset_descriptions(self, device_description: dict[str, Any]) -> None:
         """Fetch paramsets for provided device description."""
@@ -676,11 +673,11 @@ class Client(ABC):
 
     async def get_paramset_descriptions(
         self, device_description: dict[str, Any]
-    ) -> dict[str, dict[str, dict[str, ParameterData]]]:
+    ) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
         """Get paramsets for provided device description."""
         if not device_description:
             return {}
-        paramsets: dict[str, dict[str, dict[str, ParameterData]]] = {}
+        paramsets: dict[str, dict[ParamsetKey, dict[str, ParameterData]]] = {}
         address = device_description[Description.ADDRESS]
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
@@ -716,9 +713,9 @@ class Client(ABC):
 
     async def get_all_paramset_descriptions(
         self, device_descriptions: tuple[dict[str, Any], ...]
-    ) -> dict[str, dict[str, Any]]:
+    ) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
         """Get all paramset descriptions for provided device descriptions."""
-        all_paramsets: dict[str, dict[str, Any]] = {}
+        all_paramsets: dict[str, dict[ParamsetKey, dict[str, ParameterData]]] = {}
         for device_description in device_descriptions:
             all_paramsets.update(
                 await self.get_paramset_descriptions(device_description=device_description)
@@ -785,7 +782,7 @@ class Client(ABC):
                 interface_id=self.interface_id, device_address=device_address
             )
         )
-        await self.central.paramset_descriptions.save()
+        await self.central.save_caches(save_paramset_descriptions=True)
 
     def __str__(self) -> str:
         """Provide some useful information."""

@@ -310,10 +310,14 @@ class CentralUnit:
             self._version = max(versions) if versions else None
         return self._version
 
-    async def save_caches(self) -> None:
+    async def save_caches(
+        self, save_device_descriptions: bool = False, save_paramset_descriptions: bool = False
+    ) -> None:
         """Save persistent caches."""
-        await self.device_descriptions.save()
-        await self.paramset_descriptions.save()
+        if save_device_descriptions:
+            await self.device_descriptions.save()
+        if save_paramset_descriptions:
+            await self.paramset_descriptions.save()
 
     async def start(self) -> None:
         """Start processing of the central unit."""
@@ -355,7 +359,7 @@ class CentralUnit:
         if not self._started:
             _LOGGER.debug("STOP: Central %s not started", self._name)
             return
-        await self.save_caches()
+        await self.save_caches(save_device_descriptions=True, save_paramset_descriptions=True)
         self._stop_connection_checker()
         await self._stop_clients()
         if self.json_rpc_client.is_activated:
@@ -825,13 +829,17 @@ class CentralUnit:
                 )
             )
             client = self._clients[interface_id]
+            save_paramset_descriptions = False
+            save_device_descriptions = False
             for dev_desc in device_descriptions:
                 try:
                     self.device_descriptions.add_device_description(
                         interface_id=interface_id, device_description=dev_desc
                     )
+                    save_device_descriptions = True
                     if dev_desc[Description.ADDRESS] not in known_addresses:
                         await client.fetch_paramset_descriptions(device_description=dev_desc)
+                        save_paramset_descriptions = True
                 except Exception as err:  # pragma: no cover
                     _LOGGER.error(
                         "ADD_NEW_DEVICES failed: %s [%s]",
@@ -839,7 +847,10 @@ class CentralUnit:
                         reduce_args(args=err.args),
                     )
 
-            await self.save_caches()
+            await self.save_caches(
+                save_device_descriptions=save_device_descriptions,
+                save_paramset_descriptions=save_paramset_descriptions,
+            )
             if new_device_addresses := self._check_for_new_device_addresses():
                 await self.device_details.load()
                 await self.data_cache.load()

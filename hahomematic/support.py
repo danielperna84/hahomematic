@@ -403,14 +403,16 @@ def paramset_description_export_converter(
         for interface, interface_data in data.items():
             if interface not in target:
                 target[interface] = {}
-            for address, items in interface_data.items():
+            for address, channel_data in interface_data.items():
                 if address not in target[interface]:
                     target[interface][address] = {}
-                for p_key, paramsets in items.items():
+                for p_key, paramsets in channel_data.items():
                     if (paramset_key := str(p_key)) not in target[interface][address]:
                         target[interface][address][paramset_key] = {}
-                    for parameter, paramset in paramsets.items():
-                        target[interface][address][paramset_key][parameter] = paramset.as_dict()
+                    for parameter, parameter_data in paramsets.items():
+                        target[interface][address][paramset_key][parameter] = (
+                            parameter_data.as_dict()
+                        )
     except Exception as ex:
         _LOGGER.error(
             "PARAMSET_DESCRIPTION_EXPORT_CONVERTER failed: %s", reduce_args(args=ex.args)
@@ -427,15 +429,15 @@ def paramset_description_import_converter(
         for interface, interface_data in data.items():
             if interface not in target:
                 target[interface] = {}
-            for address, items in interface_data.items():
+            for address, channel_data in interface_data.items():
                 if address not in target[interface]:
                     target[interface][address] = {}
-                for p_key, paramsets in items.items():
+                for p_key, paramsets in channel_data.items():
                     if (paramset_key := ParamsetKey(p_key)) not in target[interface][address]:
                         target[interface][address][paramset_key] = {}
-                    for parameter, paramset in paramsets.items():
+                    for parameter, parameter_data in paramsets.items():
                         target[interface][address][paramset_key][parameter] = ParameterData(
-                            paramset
+                            parameter_data
                         )
 
     except Exception as ex:
