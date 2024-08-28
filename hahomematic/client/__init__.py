@@ -643,7 +643,7 @@ class Client(ABC):
         )
 
     async def fetch_paramset_description(
-        self, channel_address: str, paramset_key: ParamsetKey, save_to_file: bool = True
+        self, channel_address: str, paramset_key: ParamsetKey
     ) -> None:
         """Fetch a specific paramset and add it to the known ones."""
         _LOGGER.debug("FETCH_PARAMSET_DESCRIPTION: %s for %s", paramset_key, channel_address)
@@ -657,9 +657,6 @@ class Client(ABC):
                 paramset_key=paramset_key,
                 paramset_description=paramset_description,
             )
-
-        if save_to_file:
-            await self.central.paramset_descriptions.save()
 
     async def fetch_paramset_descriptions(self, device_description: dict[str, Any]) -> None:
         """Fetch paramsets for provided device description."""
