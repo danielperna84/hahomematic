@@ -558,6 +558,19 @@ class SystemInformation:
 class ParameterData:
     """Dataclass for parameter data."""
 
+    __slots__ = (
+        "default",
+        "flags",
+        "id",
+        "max",
+        "min",
+        "operations",
+        "special",
+        "hm_type",
+        "unit",
+        "value_list",
+    )
+
     def __init__(self, data: Mapping[str, Any]) -> None:
         """Init the dataclass from mapping."""
         self.default: Final[Any] = data[Description.DEFAULT]

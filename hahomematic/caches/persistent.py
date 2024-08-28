@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
+import asyncio
 from collections.abc import Mapping
 from datetime import datetime
 from functools import lru_cache
@@ -50,12 +51,23 @@ class BasePersistentCache(ABC):
         persistant_cache: dict[str, Any],
     ) -> None:
         """Init the base class of the persistent cache."""
+        self._sema_save_or_load: Final = asyncio.Semaphore()
         self._central: Final = central
         self._cache_dir: Final = f"{central.config.storage_folder}/{CACHE_PATH}"
         self._filename: Final = f"{central.name}_{self._file_postfix}"
         self._persistant_cache: Final = persistant_cache
-        self.last_save: datetime = INIT_DATETIME
-        self._last_hash = hash_sha256(value=persistant_cache)
+        self.last_save_triggered: datetime = INIT_DATETIME
+        self.last_hash_saved = hash_sha256(value=persistant_cache)
+
+    @property
+    def cache_hash(self) -> str:
+        """Return the hash of the cache."""
+        return hash_sha256(value=self._persistant_cache)
+
+    @property
+    def data_changed(self) -> bool:
+        """Return if the data has changed."""
+        return self.cache_hash != self.last_hash_saved
 
     def _convert_date_after_load(self, data: Any) -> Any:
         """Convert data load."""
@@ -67,60 +79,58 @@ class BasePersistentCache(ABC):
 
     async def save(self) -> DataOperationResult:
         """Save current name data in NAMES to disk."""
-
-        def _save() -> DataOperationResult:
-            if not check_or_create_directory(self._cache_dir):
-                return DataOperationResult.NO_SAVE
-
-            self.last_save = datetime.now()
-            if self._central.config.use_caches:
-                converted_data = self._convert_date_before_save(data=self._persistant_cache)
-                if (converted_hash := hash_sha256(value=converted_data)) == self._last_hash:
-                    return DataOperationResult.NO_SAVE
-
-                with open(
-                    file=os.path.join(self._cache_dir, self._filename),
-                    mode="wb",
-                ) as fptr:
-                    fptr.write(
-                        orjson.dumps(
-                            converted_data,
-                            option=orjson.OPT_NON_STR_KEYS,
-                        )
-                    )
-                    self._last_hash = converted_hash
-                return DataOperationResult.SAVE_SUCCESS
-
-            _LOGGER.debug("save: not saving cache for %s", self._central.name)
+        self.last_save_triggered = datetime.now()
+        if (
+            not check_or_create_directory(self._cache_dir)
+            or not self._central.config.use_caches
+            or (cache_hash := self.cache_hash) == self.last_hash_saved
+        ):
             return DataOperationResult.NO_SAVE
 
-        return await self._central.looper.async_add_executor_job(
-            _save, name=f"save-persistent-cache-{self._filename}"
-        )
+        def _save() -> DataOperationResult:
+            with open(
+                file=os.path.join(self._cache_dir, self._filename),
+                mode="wb",
+            ) as fptr:
+                fptr.write(
+                    orjson.dumps(
+                        self._convert_date_before_save(data=self._persistant_cache),
+                        option=orjson.OPT_NON_STR_KEYS,
+                    )
+                )
+                self.last_hash_saved = cache_hash
+
+            return DataOperationResult.SAVE_SUCCESS
+
+        async with self._sema_save_or_load:
+            return await self._central.looper.async_add_executor_job(
+                _save, name=f"save-persistent-cache-{self._filename}"
+            )
 
     async def load(self) -> DataOperationResult:
         """Load file from disk into dict."""
+        if not check_or_create_directory(self._cache_dir) or not os.path.exists(
+            os.path.join(self._cache_dir, self._filename)
+        ):
+            return DataOperationResult.NO_LOAD
 
         def _load() -> DataOperationResult:
-            if not check_or_create_directory(self._cache_dir):
-                return DataOperationResult.NO_LOAD
-            if not os.path.exists(os.path.join(self._cache_dir, self._filename)):
-                return DataOperationResult.NO_LOAD
             with open(
                 file=os.path.join(self._cache_dir, self._filename),
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
                 converted_data = self._convert_date_after_load(data=orjson.loads(fptr.read()))
-                if (converted_hash := hash_sha256(value=converted_data)) == self._last_hash:
+                if (converted_hash := hash_sha256(value=converted_data)) == self.last_hash_saved:
                     return DataOperationResult.NO_LOAD
                 self._persistant_cache.clear()
                 self._persistant_cache.update(converted_data)
-                self._last_hash = converted_hash
+                self.last_hash_saved = converted_hash
             return DataOperationResult.LOAD_SUCCESS
 
-        return await self._central.looper.async_add_executor_job(
-            _load, name=f"load-persistent-cache-{self._filename}"
-        )
+        async with self._sema_save_or_load:
+            return await self._central.looper.async_add_executor_job(
+                _load, name=f"load-persistent-cache-{self._filename}"
+            )
 
     async def clear(self) -> None:
         """Remove stored file from disk."""

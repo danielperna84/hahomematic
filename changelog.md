@@ -3,6 +3,7 @@
 - Small definition fix for DALI
 - Use ParameterData for paramset descriptions
 - Avoid permanent cache save on remove device
+- Ensure only one load/save of cache file at time
 
 # Version 2024.8.14 (2024-08-26)
 

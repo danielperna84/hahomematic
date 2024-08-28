@@ -120,11 +120,15 @@ async def test_device_config_pending(
     central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
     assert device._e_config_pending.value is False
-    last_save = central.paramset_descriptions.last_save
+    cache_hash = central.paramset_descriptions.cache_hash
+    last_save_triggered = central.paramset_descriptions.last_save_triggered
     await central.event(const.INTERFACE_ID, "VCU2128127:0", "CONFIG_PENDING", True)
     assert device._e_config_pending.value is True
-    assert last_save == central.paramset_descriptions.last_save
+    assert cache_hash == central.paramset_descriptions.cache_hash
+    assert last_save_triggered == central.paramset_descriptions.last_save_triggered
     await central.event(const.INTERFACE_ID, "VCU2128127:0", "CONFIG_PENDING", False)
     assert device._e_config_pending.value is False
     await asyncio.sleep(2)
-    assert last_save != central.paramset_descriptions.last_save
+    # Save triggered, but data not changed
+    assert cache_hash == central.paramset_descriptions.cache_hash
+    assert last_save_triggered != central.paramset_descriptions.last_save_triggered
