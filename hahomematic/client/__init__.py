@@ -782,7 +782,7 @@ class Client(ABC):
                 interface_id=self.interface_id, device_address=device_address
             )
         )
-        await self.central.paramset_descriptions.save()
+        await self.central.save_caches(save_paramset_descriptions=True)
 
     def __str__(self) -> str:
         """Provide some useful information."""
