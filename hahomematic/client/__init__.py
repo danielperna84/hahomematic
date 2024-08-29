@@ -24,6 +24,7 @@ from hahomematic.const import (
     VIRTUAL_REMOTE_TYPES,
     Backend,
     CallSource,
+    CommandRxMode,
     Description,
     DeviceDescription,
     ForcedDeviceAvailability,
@@ -42,7 +43,13 @@ from hahomematic.exceptions import BaseHomematicException, HaHomematicException,
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.support import convert_value
-from hahomematic.support import build_headers, build_xml_rpc_uri, get_device_address, reduce_args
+from hahomematic.support import (
+    build_headers,
+    build_xml_rpc_uri,
+    get_device_address,
+    reduce_args,
+    supports_rx_mode,
+)
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -427,7 +434,7 @@ class Client(ABC):
         parameter: str,
         value: Any,
         wait_for_callback: int | None,
-        rx_mode: str | None = None,
+        rx_mode: CommandRxMode | None = None,
         check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -443,8 +450,12 @@ class Client(ABC):
                 else value
             )
             _LOGGER.debug("SET_VALUE: %s, %s, %s", channel_address, parameter, checked_value)
-            if rx_mode:
-                await self._proxy.setValue(channel_address, parameter, checked_value, rx_mode)
+            if rx_mode and (device := self.central.get_device(address=channel_address)):
+                if supports_rx_mode(command_rx_mode=rx_mode, rx_modes=device.rx_modes):
+                    await self._proxy.setValue(channel_address, parameter, checked_value, rx_mode)
+                else:
+                    _LOGGER.warning("SET_VALUE failed: unsupported rx_mode: %s", rx_mode)
+                    return set()
             else:
                 await self._proxy.setValue(channel_address, parameter, checked_value)
             # store the send value in the last_value_send_cache
@@ -493,7 +504,7 @@ class Client(ABC):
         parameter: str,
         value: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
-        rx_mode: str | None = None,
+        rx_mode: CommandRxMode | None = None,
         check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -546,7 +557,7 @@ class Client(ABC):
         paramset_key: ParamsetKey,
         values: dict[str, Any],
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
-        rx_mode: str | None = None,
+        rx_mode: CommandRxMode | None = None,
         check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """
@@ -566,10 +577,14 @@ class Client(ABC):
             _LOGGER.debug(
                 "PUT_PARAMSET: %s, %s, %s", channel_address, paramset_key, checked_values
             )
-            if rx_mode:
-                await self._proxy.putParamset(
-                    channel_address, paramset_key, checked_values, rx_mode
-                )
+            if rx_mode and (device := self.central.get_device(address=channel_address)):
+                if supports_rx_mode(command_rx_mode=rx_mode, rx_modes=device.rx_modes):
+                    await self._proxy.putParamset(
+                        channel_address, paramset_key, checked_values, rx_mode
+                    )
+                else:
+                    _LOGGER.warning("PUT_PARAMSET failed: unsupported rx_mode: %s", rx_mode)
+                    return set()
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, checked_values)
             # store the send value in the last_value_send_cache

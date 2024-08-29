@@ -392,7 +392,7 @@ class ProxyInitState(Enum):
 
 
 class RxMode(IntEnum):
-    """Enum for homemazc rx modes."""
+    """Enum for homematic rx modes."""
 
     UNDEFINED = 0
     ALWAYS = 1
@@ -400,6 +400,13 @@ class RxMode(IntEnum):
     CONFIG = 4
     WAKEUP = 8
     LAZY_CONFIG = 10
+
+
+class CommandRxMode(StrEnum):
+    """Enum for homematic rx modes for commands."""
+
+    BURST = "BURST"
+    WAKEUP = "WAKEUP"
 
 
 class SysvarType(StrEnum):

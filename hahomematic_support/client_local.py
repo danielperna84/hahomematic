@@ -16,6 +16,7 @@ from hahomematic.const import (
     DEFAULT_ENCODING,
     ENTITY_KEY,
     CallSource,
+    CommandRxMode,
     InterfaceName,
     ParameterData,
     ParamsetKey,
@@ -203,7 +204,7 @@ class ClientLocal(Client):  # pragma: no cover
         parameter: str,
         value: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
-        rx_mode: str | None = None,
+        rx_mode: CommandRxMode | None = None,
         check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """Set single value on paramset VALUES."""
@@ -262,7 +263,7 @@ class ClientLocal(Client):  # pragma: no cover
         paramset_key: ParamsetKey,
         values: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
-        rx_mode: str | None = None,
+        rx_mode: CommandRxMode | None = None,
         check_against_pd: bool = False,
     ) -> set[ENTITY_KEY]:
         """

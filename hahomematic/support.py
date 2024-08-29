@@ -29,6 +29,7 @@ from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
+    CommandRxMode,
     ParameterData,
     ParamsetKey,
     RxMode,
@@ -501,3 +502,10 @@ def get_rx_modes(mode: int) -> tuple[RxMode, ...]:
     if mode & RxMode.ALWAYS:
         rx_modes.add(RxMode.ALWAYS)
     return tuple(rx_modes)
+
+
+def supports_rx_mode(command_rx_mode: CommandRxMode, rx_modes: tuple[RxMode, ...]) -> bool:
+    """Check if rx mode is supported."""
+    return (command_rx_mode == CommandRxMode.BURST and RxMode.BURST in rx_modes) or (
+        command_rx_mode == CommandRxMode.WAKEUP and RxMode.WAKEUP in rx_modes
+    )
