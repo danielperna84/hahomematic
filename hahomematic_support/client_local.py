@@ -26,7 +26,6 @@ from hahomematic.const import (
     SystemInformation,
     SystemVariableData,
 )
-from hahomematic.support import device_paramset_description_import_converter
 
 LOCAL_SERIAL: Final = "0815_4711"
 BACKEND_LOCAL: Final = "Local CCU"
@@ -251,9 +250,7 @@ class ClientLocal(Client):  # pragma: no cover
                 )
             )
         ):
-            self._paramset_descriptions_cache.update(
-                device_paramset_description_import_converter(data=data)
-            )
+            self._paramset_descriptions_cache.update(data)
 
         return self._paramset_descriptions_cache.get(address, {}).get(paramset_key)
 

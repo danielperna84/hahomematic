@@ -1066,7 +1066,7 @@ class CentralUnit:
                 for parameter, parameter_data in (
                     channels[channel_address].get(paramset_key, {}).items()
                 ):
-                    if all(parameter_data.operations & operation for operation in operations):
+                    if all(parameter_data["OPERATIONS"] & operation for operation in operations):
                         if un_ignore_candidates_only and (
                             (
                                 (

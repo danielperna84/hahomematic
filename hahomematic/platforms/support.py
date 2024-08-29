@@ -371,9 +371,9 @@ def convert_value(
 
 def is_binary_sensor(parameter_data: ParameterData) -> bool:
     """Check, if the sensor is a binary_sensor."""
-    if parameter_data.hm_type == ParameterType.BOOL:
+    if parameter_data["TYPE"] == ParameterType.BOOL:
         return True
-    if value_list := parameter_data.value_list:
+    if value_list := parameter_data.get("VALUE_LIST"):
         return tuple(value_list) in _BINARY_SENSOR_TRUE_VALUE_DICT_FOR_VALUE_LIST
     return False
 
