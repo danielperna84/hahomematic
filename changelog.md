@@ -1,9 +1,10 @@
 # Version 2024.8.15 (2024-08-26)
 
-- Small definition fix for DALI
-- Use ParameterData for paramset descriptions
 - Avoid permanent cache save on remove device
 - Ensure only one load/save of cache file at time
+- Small definition fix for DALI
+- Use ParameterData for paramset descriptions
+- Use Typed dict for device_description
 
 # Version 2024.8.14 (2024-08-26)
 
