@@ -1,6 +1,7 @@
 # Version 2024.8.15 (2024-08-26)
 
 - Avoid permanent cache save on remove device
+- Check rx_mode
 - Ensure only one load/save of cache file at time
 - Small definition fix for DALI
 - Use ParameterData for paramset descriptions
