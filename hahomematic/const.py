@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
-from typing import Any, Final, TypedDict
+from typing import Any, Final, Required, TypedDict
 
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = 15  # check if connection is available via rpc ping
 DEFAULT_CUSTOM_ID: Final = "custom_id"
@@ -577,33 +577,33 @@ class ParameterData:
         return {key.upper(): str(value) for key, value in self.__dict__.items() if value}
 
 
-class DeviceDescription(TypedDict):
+class DeviceDescription(TypedDict, total=False):
     """Typed dict for device descriptions."""
 
-    TYPE: str
+    TYPE: Required[str]
     SUBTYPE: str | None
-    ADDRESS: str
-    RF_ADDRESS: int
-    CHILDREN: list
-    PARENT: str
-    PARENT_TYPE: str | None
-    INDEX: int | None
-    AES_ACTIVE: int | None
-    PARAMSETS: list
+    ADDRESS: Required[str]
+    # RF_ADDRESS: int | None
+    CHILDREN: Required[list[str]]
+    PARENT: Required[str]
+    # PARENT_TYPE: str | None
+    # INDEX: int | None
+    # AES_ACTIVE: int | None
+    PARAMSETS: Required[list[str]]
     FIRMWARE: str
     AVAILABLE_FIRMWARE: str | None
-    UPDATABLE: bool
+    UPDATABLE: bool | None
     FIRMWARE_UPDATE_STATE: str | None
     FIRMWARE_UPDATABLE: bool | None
-    VERSION: int
-    FLAGS: int
-    LINK_SOURCE_ROLES: str | None
-    LINK_TARGET_ROLES: str | None
-    DIRECTION: int | None
-    GROUP: str | None
-    TEAM: str
-    TEAM_TAG: str
-    TEAM_CHANNELS: list
-    INTERFACE: str
-    ROAMING: int
-    RX_MODE: int
+    # VERSION: Required[int]
+    # FLAGS: Required[int]
+    # LINK_SOURCE_ROLES: str | None
+    # LINK_TARGET_ROLES: str | None
+    # DIRECTION: int | None
+    # GROUP: str | None
+    # TEAM: str | None
+    # TEAM_TAG: str | None
+    # TEAM_CHANNELS: list
+    INTERFACE: str | None
+    # ROAMING: int | None
+    RX_MODE: int | None

@@ -677,10 +677,10 @@ class Client(ABC):
     ) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
         """Get paramsets for provided device description."""
         paramsets: dict[str, dict[ParamsetKey, dict[str, ParameterData]]] = {}
-        address = device_description[Description.ADDRESS]
+        address = device_description["ADDRESS"]
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
-        for p_key in device_description[Description.PARAMSETS]:
+        for p_key in device_description["PARAMSETS"]:
             if (paramset_key := ParamsetKey(p_key)) not in DEFAULT_PARAMSETS:
                 continue
             if paramset_description := await self._get_paramset_description(

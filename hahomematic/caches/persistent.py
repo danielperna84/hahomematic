@@ -21,7 +21,6 @@ from hahomematic.const import (
     FILE_PARAMSETS,
     INIT_DATETIME,
     DataOperationResult,
-    Description,
     DeviceDescription,
     ParameterData,
     ParamsetKey,
@@ -170,7 +169,7 @@ class DeviceDescriptionCache(BasePersistentCache):
 
         self._remove_device(
             interface_id=interface_id,
-            deleted_addresses=[device_description[Description.ADDRESS]],
+            deleted_addresses=[device_description["ADDRESS"]],
         )
         self._raw_device_descriptions[interface_id].append(device_description)
 
@@ -191,9 +190,9 @@ class DeviceDescriptionCache(BasePersistentCache):
     def _remove_device(self, interface_id: str, deleted_addresses: list[str]) -> None:
         """Remove device from cache."""
         self._raw_device_descriptions[interface_id] = [
-            raw_device
-            for raw_device in self.get_raw_device_descriptions(interface_id)
-            if raw_device[Description.ADDRESS] not in deleted_addresses
+            device_descriptions
+            for device_descriptions in self.get_raw_device_descriptions(interface_id)
+            if device_descriptions["ADDRESS"] not in deleted_addresses
         ]
 
         for address in deleted_addresses:
@@ -215,10 +214,10 @@ class DeviceDescriptionCache(BasePersistentCache):
         for channel_address in self._addresses.get(interface_id, {}).get(device_address, set()):
             device_description = self.get_device_description(
                 interface_id=interface_id,
-                device_address=channel_address,
+                address=channel_address,
             )
             channels[channel_address] = Channel(
-                type=device_description[Description.TYPE], address=channel_address
+                type=device_description["TYPE"], address=channel_address
             )
 
         return channels
@@ -233,30 +232,32 @@ class DeviceDescriptionCache(BasePersistentCache):
         """Return the device description by interface and device_address."""
         return self._device_descriptions.get(interface_id, {}).get(device_address)
 
-    def get_device_description(self, interface_id: str, device_address: str) -> DeviceDescription:
+    def get_device_description(self, interface_id: str, address: str) -> DeviceDescription:
         """Return the device description by interface and device_address."""
-        return self._device_descriptions[interface_id][device_address]
+        return self._device_descriptions[interface_id][address]
 
     def get_device_with_channels(
         self, interface_id: str, device_address: str
-    ) -> Mapping[str, Any]:
+    ) -> Mapping[str, DeviceDescription]:
         """Return the device dict by interface and device_address."""
-        data: dict[str, Any] = {
-            device_address: self._device_descriptions.get(interface_id, {}).get(device_address, {})
-        }
-        children = data[device_address][Description.CHILDREN]
-        for channel_address in children:
-            data[channel_address] = self._device_descriptions.get(interface_id, {}).get(
-                channel_address, {}
+        device_descriptions: dict[str, DeviceDescription] = {
+            device_address: self.get_device_description(
+                interface_id=interface_id, address=device_address
             )
-        return data
+        }
+        children = device_descriptions[device_address]["CHILDREN"]
+        for channel_address in children:
+            device_descriptions[channel_address] = self.get_device_description(
+                interface_id=interface_id, address=channel_address
+            )
+        return device_descriptions
 
     @lru_cache
     def get_device_type(self, device_address: str) -> str | None:
         """Return the device type."""
         for data in self._device_descriptions.values():
             if items := data.get(device_address):
-                return items[Description.TYPE]
+                return items["TYPE"]
         return None
 
     def _convert_device_descriptions(
@@ -277,7 +278,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         if interface_id not in self._device_descriptions:
             self._device_descriptions[interface_id] = {}
 
-        address = device_description[Description.ADDRESS]
+        address = device_description["ADDRESS"]
         self._device_descriptions[interface_id][address] = device_description
 
         if ":" not in address and address not in self._addresses[interface_id]:

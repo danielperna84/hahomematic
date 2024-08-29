@@ -46,7 +46,6 @@ from hahomematic.const import (
     PORT_ANY,
     UN_IGNORE_WILDCARD,
     BackendSystemEvent,
-    Description,
     DeviceDescription,
     DeviceFirmwareState,
     HmPlatform,
@@ -824,7 +823,7 @@ class CentralUnit:
         async with self._sema_add_devices:
             # We need this to avoid adding duplicates.
             known_addresses = tuple(
-                dev_desc[Description.ADDRESS]
+                dev_desc["ADDRESS"]
                 for dev_desc in self.device_descriptions.get_raw_device_descriptions(
                     interface_id=interface_id
                 )
@@ -838,7 +837,7 @@ class CentralUnit:
                         interface_id=interface_id, device_description=dev_desc
                     )
                     save_device_descriptions = True
-                    if dev_desc[Description.ADDRESS] not in known_addresses:
+                    if dev_desc["ADDRESS"] not in known_addresses:
                         await client.fetch_paramset_descriptions(device_description=dev_desc)
                         save_paramset_descriptions = True
                 except Exception as err:  # pragma: no cover
