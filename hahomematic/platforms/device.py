@@ -100,7 +100,7 @@ class HmDevice(PayloadMixin):
         )
         self._device_type: Final = device_description["TYPE"]
         self._sub_type: Final = device_description.get("SUBTYPE")
-        self._rx_modes: Final = get_rx_modes(mode=device_description["RX_MODE"])
+        self._rx_modes: Final = get_rx_modes(mode=device_description.get("RX_MODE", 0))
 
         self._ignore_for_custom_entity: Final[bool] = (
             central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
