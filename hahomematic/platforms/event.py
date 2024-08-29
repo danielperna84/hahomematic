@@ -159,7 +159,7 @@ def create_event_and_append_to_device(
         device.interface_id,
     )
     event_t: type[GenericEvent] | None = None
-    if parameter_data.operations & Operations.EVENT:
+    if parameter_data["OPERATIONS"] & Operations.EVENT:
         if parameter in CLICK_EVENTS:
             event_t = ClickEvent
         if parameter.startswith(DEVICE_ERROR_EVENTS):

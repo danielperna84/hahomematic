@@ -25,7 +25,6 @@ from hahomematic.const import (
     Backend,
     CallSource,
     CommandRxMode,
-    Description,
     DeviceDescription,
     ForcedDeviceAvailability,
     InterfaceEventType,
@@ -53,11 +52,12 @@ from hahomematic.support import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-_ADDRESS: Final = "address"
-_CHANNELS: Final = "channels"
-_ID: Final = "id"
-_INTERFACE: Final = "interface"
-_NAME: Final = "name"
+_JSON_ADDRESS: Final = "address"
+_JSON_CHANNELS: Final = "channels"
+_JSON_ID: Final = "id"
+_JSON_INTERFACE: Final = "interface"
+_JSON_NAME: Final = "name"
+_NAME: Final = "NAME"
 
 
 class Client(ABC):
@@ -646,9 +646,11 @@ class Client(ABC):
             paramset_key=paramset_key,
             parameter=parameter,
         ):
-            pd_type = parameter_data.hm_type
-            pd_value_list = tuple(parameter_data.value_list) if parameter_data.value_list else None
-            if not bool(int(parameter_data.operations) & operation):
+            pd_type = parameter_data["TYPE"]
+            pd_value_list = (
+                tuple(parameter_data["VALUE_LIST"]) if parameter_data.get("VALUE_LIST") else None
+            )
+            if not bool(int(parameter_data["OPERATIONS"]) & operation):
                 raise HaHomematicException(
                     f"Parameter {parameter} does not support the requested operation {operation.value}"
                 )
@@ -709,12 +711,10 @@ class Client(ABC):
     ) -> dict[str, ParameterData] | None:
         """Get paramset description from CCU."""
         try:
-            if raw_paramset_description := await self._proxy_read.getParamsetDescription(
-                address, paramset_key
-            ):
-                return {
-                    key: ParameterData(value) for key, value in raw_paramset_description.items()
-                }
+            return cast(
+                dict[str, ParameterData],
+                await self._proxy_read.getParamsetDescription(address, paramset_key),
+            )
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "GET_PARAMSET_DESCRIPTIONS failed with %s [%s] for %s address %s",
@@ -819,21 +819,23 @@ class ClientCCU(Client):
         """Get all names via JSON-RPS and store in data.NAMES."""
         if json_result := await self._json_rpc_client.get_device_details():
             for device in json_result:
-                device_address = device[_ADDRESS]
-                self.central.device_details.add_name(address=device_address, name=device[_NAME])
-                self.central.device_details.add_device_channel_id(
-                    address=device_address, channel_id=device[_ID]
+                device_address = device[_JSON_ADDRESS]
+                self.central.device_details.add_name(
+                    address=device_address, name=device[_JSON_NAME]
                 )
-                for channel in device.get(_CHANNELS, []):
-                    channel_address = channel[_ADDRESS]
+                self.central.device_details.add_device_channel_id(
+                    address=device_address, channel_id=device[_JSON_ID]
+                )
+                for channel in device.get(_JSON_CHANNELS, []):
+                    channel_address = channel[_JSON_ADDRESS]
                     self.central.device_details.add_name(
-                        address=channel_address, name=channel[_NAME]
+                        address=channel_address, name=channel[_JSON_NAME]
                     )
                     self.central.device_details.add_device_channel_id(
-                        address=channel_address, channel_id=channel[_ID]
+                        address=channel_address, channel_id=channel[_JSON_ID]
                     )
                 self.central.device_details.add_interface(
-                    address=device_address, interface=device[_INTERFACE]
+                    address=device_address, interface=device[_JSON_INTERFACE]
                 )
         else:
             _LOGGER.debug("FETCH_DEVICE_DETAILS: Unable to fetch device details via JSON-RPC")
@@ -968,7 +970,7 @@ class ClientHomegear(Client):
             try:
                 self.central.device_details.add_name(
                     address,
-                    await self._proxy_read.getMetadata(address, Description.NAME),
+                    await self._proxy_read.getMetadata(address, _NAME),
                 )
             except BaseHomematicException as ex:
                 _LOGGER.warning(

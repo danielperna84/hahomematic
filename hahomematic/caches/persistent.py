@@ -33,8 +33,6 @@ from hahomematic.support import (
     get_device_address,
     get_split_channel_address,
     hash_sha256,
-    paramset_description_export_converter,
-    paramset_description_import_converter,
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -69,14 +67,6 @@ class BasePersistentCache(ABC):
         """Return if the data has changed."""
         return self.cache_hash != self.last_hash_saved
 
-    def _convert_date_after_load(self, data: Any) -> Any:
-        """Convert data load."""
-        return data
-
-    def _convert_date_before_save(self, data: Any) -> Any:
-        """Convert data save."""
-        return data
-
     async def save(self) -> DataOperationResult:
         """Save current name data in NAMES to disk."""
         self.last_save_triggered = datetime.now()
@@ -94,7 +84,7 @@ class BasePersistentCache(ABC):
             ) as fptr:
                 fptr.write(
                     orjson.dumps(
-                        self._convert_date_before_save(data=self._persistant_cache),
+                        self._persistant_cache,
                         option=orjson.OPT_NON_STR_KEYS,
                     )
                 )
@@ -119,11 +109,11 @@ class BasePersistentCache(ABC):
                 file=os.path.join(self._cache_dir, self._filename),
                 encoding=DEFAULT_ENCODING,
             ) as fptr:
-                converted_data = self._convert_date_after_load(data=orjson.loads(fptr.read()))
-                if (converted_hash := hash_sha256(value=converted_data)) == self.last_hash_saved:
+                data = orjson.loads(fptr.read())
+                if (converted_hash := hash_sha256(value=data)) == self.last_hash_saved:
                     return DataOperationResult.NO_LOAD
                 self._persistant_cache.clear()
-                self._persistant_cache.update(converted_data)
+                self._persistant_cache.update(data)
                 self.last_hash_saved = converted_hash
             return DataOperationResult.LOAD_SUCCESS
 
@@ -454,14 +444,6 @@ class ParamsetDescriptionCache(BasePersistentCache):
         self._init_address_parameter_list()
         return result
 
-    def _convert_date_after_load(self, data: Any) -> Any:
-        """Convert data load."""
-        return paramset_description_import_converter(data=data)
-
     async def save(self) -> DataOperationResult:
         """Save current paramset descriptions to disk."""
         return await super().save()
-
-    def _convert_date_before_save(self, data: Any) -> Any:
-        """Convert data save."""
-        return paramset_description_export_converter(data=data)

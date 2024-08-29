@@ -121,22 +121,6 @@ class DataOperationResult(Enum):
     NO_SAVE = 21
 
 
-class Description(StrEnum):
-    """Enum with homematic device/paramset description attributes."""
-
-    DEFAULT = "DEFAULT"
-    FLAGS = "FLAGS"
-    MAX = "MAX"
-    MIN = "MIN"
-    NAME = "NAME"
-    ID = "ID"
-    OPERATIONS = "OPERATIONS"
-    SPECIAL = "SPECIAL"
-    TYPE = "TYPE"
-    UNIT = "UNIT"
-    VALUE_LIST = "VALUE_LIST"
-
-
 class DeviceFirmwareState(StrEnum):
     """Enum with homematic device firmware states."""
 
@@ -563,26 +547,19 @@ class SystemInformation:
     serial: str | None = None
 
 
-@dataclass
-class ParameterData:
-    """Dataclass for parameter data."""
+class ParameterData(TypedDict, total=False):
+    """Typed dict for parameter data."""
 
-    def __init__(self, data: Mapping[str, Any]) -> None:
-        """Init the dataclass from mapping."""
-        self.default: Final[Any] = data[Description.DEFAULT]
-        self.flags: Final[int] = data[Description.FLAGS]
-        self.id: Final[str | None] = data.get(Description.ID)
-        self.max: Final[Any] = data[Description.MAX]
-        self.min: Final[Any] = data[Description.MIN]
-        self.operations: int = data[Description.OPERATIONS]
-        self.special: Mapping[str, Any] | None = data.get(Description.SPECIAL)
-        self.hm_type = ParameterType(data[Description.TYPE])
-        self.unit: str | None = data.get(Description.UNIT)
-        self.value_list: Iterable[Any] | None = data.get(Description.VALUE_LIST)
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return dataclass as dict."""
-        return {key.upper(): str(value) for key, value in self.__dict__.items() if value}
+    DEFAULT: Any
+    FLAGS: int
+    ID: str
+    MAX: Any
+    MIN: Any
+    OPERATIONS: int
+    SPECIAL: Mapping[str, Any]
+    TYPE: ParameterType
+    UNIT: str
+    VALUE_LIST: Iterable[Any]
 
 
 class DeviceDescription(TypedDict, total=False):

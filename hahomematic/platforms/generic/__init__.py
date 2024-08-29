@@ -68,8 +68,8 @@ def create_entity_and_append_to_device(
         parameter,
         device.interface_id,
     )
-    p_type = parameter_data.hm_type
-    p_operations = parameter_data.operations
+    p_type = parameter_data["TYPE"]
+    p_operations = parameter_data["OPERATIONS"]
     entity_t: type[hmge.GenericEntity] | None = None
     if p_operations & Operations.WRITE:
         if p_type == ParameterType.ACTION:
@@ -97,7 +97,7 @@ def create_entity_and_append_to_device(
     elif parameter not in CLICK_EVENTS:
         # Also check, if sensor could be a binary_sensor due to.
         if is_binary_sensor(parameter_data):
-            parameter_data.hm_type = ParameterType.BOOL
+            parameter_data["TYPE"] = ParameterType.BOOL
             entity_t = HmBinarySensor
         else:
             entity_t = HmSensor

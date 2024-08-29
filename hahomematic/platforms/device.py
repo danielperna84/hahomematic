@@ -55,7 +55,6 @@ from hahomematic.support import (
     CacheEntry,
     Channel,
     check_or_create_directory,
-    device_paramset_description_export_converter,
     get_entity_key,
     get_rx_modes,
     reduce_args,
@@ -841,9 +840,7 @@ class _DefinitionExporter:
         await self._save(
             file_dir=f"{self._storage_folder}/{DEFAULT_PARAMSET_DESCRIPTIONS_DIR}",
             filename=filename,
-            data=device_paramset_description_export_converter(
-                data=anonymize_paramset_descriptions
-            ),
+            data=anonymize_paramset_descriptions,
         )
 
     def _anonymize_address(self, address: str) -> str:

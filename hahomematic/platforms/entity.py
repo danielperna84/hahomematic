@@ -436,17 +436,19 @@ class BaseParameterEntity[
 
     def _assign_parameter_data(self, parameter_data: ParameterData) -> None:
         """Assign parameter data to instance variables."""
-        self._type: ParameterType = ParameterType(parameter_data.hm_type)
-        self._values = tuple(parameter_data.value_list) if parameter_data.value_list else None
-        self._max: ParameterT = self._convert_value(parameter_data.max)
-        self._min: ParameterT = self._convert_value(parameter_data.min)
-        self._default: ParameterT = self._convert_value(parameter_data.default or self._min)
-        flags: int = parameter_data.flags
+        self._type: ParameterType = ParameterType(parameter_data["TYPE"])
+        self._values = (
+            tuple(parameter_data["VALUE_LIST"]) if parameter_data.get("VALUE_LIST") else None
+        )
+        self._max: ParameterT = self._convert_value(parameter_data["MAX"])
+        self._min: ParameterT = self._convert_value(parameter_data["MIN"])
+        self._default: ParameterT = self._convert_value(parameter_data["DEFAULT"])
+        flags: int = parameter_data["FLAGS"]
         self._visible: bool = flags & Flag.VISIBLE == Flag.VISIBLE
         self._service: bool = flags & Flag.SERVICE == Flag.SERVICE
-        self._operations: int = parameter_data.operations
-        self._special: Mapping[str, Any] | None = parameter_data.special
-        self._raw_unit: str | None = parameter_data.unit
+        self._operations: int = parameter_data["OPERATIONS"]
+        self._special: Mapping[str, Any] | None = parameter_data.get("SPECIAL")
+        self._raw_unit: str | None = parameter_data.get("UNIT")
         self._unit: str | None = self._cleanup_unit(raw_unit=self._raw_unit)
         self._multiplier: int = self._get_multiplier(raw_unit=self._raw_unit)
 
