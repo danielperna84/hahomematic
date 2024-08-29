@@ -36,8 +36,6 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
 
-EXPORTER = "EXPORTER"
-IMPORTER = "IMPORTER"
 _LOGGER: Final = logging.getLogger(__name__)
 
 
