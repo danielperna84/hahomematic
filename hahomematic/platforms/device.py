@@ -91,20 +91,13 @@ class HmDevice(PayloadMixin):
         self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
         self._device_updated_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
-        self._device_type: Final = str(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=interface_id,
-                device_address=device_address,
-                parameter=Description.TYPE,
-            )
+
+        device_description = self.central.device_descriptions.get_device_description(
+            interface_id=interface_id, device_address=device_address
         )
-        self._sub_type: Final = str(
-            central.device_descriptions.get_device_parameter(
-                interface_id=interface_id,
-                device_address=device_address,
-                parameter=Description.SUBTYPE,
-            )
-        )
+        self._device_type: Final = device_description["TYPE"]
+        self._sub_type: Final = device_description.get("SUBTYPE")
+
         self._ignore_for_custom_entity: Final[bool] = (
             central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
         )
@@ -136,42 +129,17 @@ class HmDevice(PayloadMixin):
 
     def _update_firmware_data(self) -> None:
         """Update firmware related data from device descriptions."""
-        self._available_firmware: str | None = (
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=self._interface_id,
-                device_address=self._device_address,
-                parameter=Description.AVAILABLE_FIRMWARE,
-            )
-            or None
+        device_description = self.central.device_descriptions.get_device_description(
+            interface_id=self._interface_id,
+            device_address=self._device_address,
         )
-        self._firmware = str(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=self._interface_id,
-                device_address=self._device_address,
-                parameter=Description.FIRMWARE,
-            )
+        self._available_firmware = str(device_description.get("AVAILABLE_FIRMWARE", ""))
+        self._firmware = device_description["FIRMWARE"]
+        self._firmware_update_state = DeviceFirmwareState(
+            device_description.get("FIRMWARE_UPDATE_STATE") or DeviceFirmwareState.UP_TO_DATE
         )
 
-        try:
-            self._firmware_update_state = DeviceFirmwareState(
-                str(
-                    self.central.device_descriptions.get_device_parameter(
-                        interface_id=self._interface_id,
-                        device_address=self._device_address,
-                        parameter=Description.FIRMWARE_UPDATE_STATE,
-                    )
-                )
-            )
-        except ValueError:
-            self._firmware_update_state = DeviceFirmwareState.UP_TO_DATE
-
-        self._firmware_updatable = bool(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=self._interface_id,
-                device_address=self._device_address,
-                parameter=Description.FIRMWARE_UPDATABLE,
-            )
-        )
+        self._firmware_updatable = device_description.get("FIRMWARE_UPDATABLE") or False
 
     def _identify_manufacturer(self) -> Manufacturer:
         """Identify the manufacturer of a device."""
@@ -322,7 +290,7 @@ class HmDevice(PayloadMixin):
         return self._rooms
 
     @config_property
-    def sub_type(self) -> str:
+    def sub_type(self) -> str | None:
         """Return the sub_type of the device."""
         return self._sub_type
 

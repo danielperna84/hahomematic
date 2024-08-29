@@ -47,6 +47,7 @@ from hahomematic.const import (
     UN_IGNORE_WILDCARD,
     BackendSystemEvent,
     Description,
+    DeviceDescription,
     DeviceFirmwareState,
     HmPlatform,
     HomematicEventType,
@@ -795,7 +796,7 @@ class CentralUnit:
 
     @callback_backend_system(system_event=BackendSystemEvent.NEW_DEVICES)
     async def add_new_devices(
-        self, interface_id: str, device_descriptions: tuple[dict[str, Any], ...]
+        self, interface_id: str, device_descriptions: tuple[DeviceDescription, ...]
     ) -> None:
         """Add new devices to central unit."""
         await self._add_new_devices(
@@ -804,7 +805,7 @@ class CentralUnit:
 
     @measure_execution_time
     async def _add_new_devices(
-        self, interface_id: str, device_descriptions: tuple[dict[str, Any], ...]
+        self, interface_id: str, device_descriptions: tuple[DeviceDescription, ...]
     ) -> None:
         """Add new devices to central unit."""
         _LOGGER.debug(
@@ -953,7 +954,7 @@ class CentralUnit:
                 )
 
     @callback_backend_system(system_event=BackendSystemEvent.LIST_DEVICES)
-    def list_devices(self, interface_id: str) -> list[dict[str, Any]]:
+    def list_devices(self, interface_id: str) -> list[DeviceDescription]:
         """Return already existing devices to CCU / Homegear."""
         result = self.device_descriptions.get_raw_device_descriptions(interface_id=interface_id)
         _LOGGER.debug(
