@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
-from typing import Any, Final
+from typing import Any, Final, Required, TypedDict
 
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = 15  # check if connection is available via rpc ping
 DEFAULT_CUSTOM_ID: Final = "custom_id"
@@ -159,6 +159,7 @@ class DeviceFirmwareState(StrEnum):
     READY_FOR_UPDATE = "READY_FOR_UPDATE"
     DO_UPDATE_PENDING = "DO_UPDATE_PENDING"
     PERFORMING_UPDATE = "PERFORMING_UPDATE"
+    BACKGROUND_UPDATE_NOT_SUPPORTED = "BACKGROUND_UPDATE_NOT_SUPPORTED"
 
 
 class EntityUsage(StrEnum):
@@ -558,19 +559,6 @@ class SystemInformation:
 class ParameterData:
     """Dataclass for parameter data."""
 
-    __slots__ = (
-        "default",
-        "flags",
-        "id",
-        "max",
-        "min",
-        "operations",
-        "special",
-        "hm_type",
-        "unit",
-        "value_list",
-    )
-
     def __init__(self, data: Mapping[str, Any]) -> None:
         """Init the dataclass from mapping."""
         self.default: Final[Any] = data[Description.DEFAULT]
@@ -586,20 +574,36 @@ class ParameterData:
 
     def as_dict(self) -> dict[str, Any]:
         """Return dataclass as dict."""
-        data_dict = {
-            Description.DEFAULT.value: self.default,
-            Description.FLAGS.value: self.flags,
-            Description.MAX.value: self.max,
-            Description.MIN.value: self.min,
-            Description.OPERATIONS.value: self.operations,
-            Description.TYPE.value: self.hm_type,
-        }
-        if self.id:
-            data_dict[Description.ID.value] = self.id
-        if self.special:
-            data_dict[Description.SPECIAL.value] = self.special
-        if self.unit:
-            data_dict[Description.UNIT.value] = self.unit
-        if self.value_list:
-            data_dict[Description.VALUE_LIST.value] = self.value_list
-        return dict(sorted(data_dict.items()))
+        return {key.upper(): str(value) for key, value in self.__dict__.items() if value}
+
+
+class DeviceDescription(TypedDict, total=False):
+    """Typed dict for device descriptions."""
+
+    TYPE: Required[str]
+    SUBTYPE: str | None
+    ADDRESS: Required[str]
+    # RF_ADDRESS: int | None
+    CHILDREN: Required[list[str]]
+    PARENT: Required[str]
+    # PARENT_TYPE: str | None
+    # INDEX: int | None
+    # AES_ACTIVE: int | None
+    PARAMSETS: Required[list[str]]
+    FIRMWARE: str
+    AVAILABLE_FIRMWARE: str | None
+    UPDATABLE: bool | None
+    FIRMWARE_UPDATE_STATE: str | None
+    FIRMWARE_UPDATABLE: bool | None
+    # VERSION: Required[int]
+    # FLAGS: Required[int]
+    # LINK_SOURCE_ROLES: str | None
+    # LINK_TARGET_ROLES: str | None
+    # DIRECTION: int | None
+    # GROUP: str | None
+    # TEAM: str | None
+    # TEAM_TAG: str | None
+    # TEAM_CHANNELS: list
+    INTERFACE: str | None
+    # ROAMING: int | None
+    RX_MODE: int | None

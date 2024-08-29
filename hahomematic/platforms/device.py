@@ -30,7 +30,7 @@ from hahomematic.const import (
     VIRTUAL_REMOTE_TYPES,
     CallSource,
     DataOperationResult,
-    Description,
+    DeviceDescription,
     DeviceFirmwareState,
     EntityUsage,
     ForcedDeviceAvailability,
@@ -38,6 +38,7 @@ from hahomematic.const import (
     HomematicEventType,
     Manufacturer,
     Parameter,
+    ParameterData,
     ParamsetKey,
     ProductGroup,
 )
@@ -91,20 +92,13 @@ class HmDevice(PayloadMixin):
         self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
         self._device_updated_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
-        self._device_type: Final = str(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=interface_id,
-                device_address=device_address,
-                parameter=Description.TYPE,
-            )
+
+        device_description = self.central.device_descriptions.get_device_description(
+            interface_id=interface_id, address=device_address
         )
-        self._sub_type: Final = str(
-            central.device_descriptions.get_device_parameter(
-                interface_id=interface_id,
-                device_address=device_address,
-                parameter=Description.SUBTYPE,
-            )
-        )
+        self._device_type: Final = device_description["TYPE"]
+        self._sub_type: Final = device_description.get("SUBTYPE")
+
         self._ignore_for_custom_entity: Final[bool] = (
             central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
         )
@@ -136,42 +130,17 @@ class HmDevice(PayloadMixin):
 
     def _update_firmware_data(self) -> None:
         """Update firmware related data from device descriptions."""
-        self._available_firmware: str | None = (
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=self._interface_id,
-                device_address=self._device_address,
-                parameter=Description.AVAILABLE_FIRMWARE,
-            )
-            or None
+        device_description = self.central.device_descriptions.get_device_description(
+            interface_id=self._interface_id,
+            address=self._device_address,
         )
-        self._firmware = str(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=self._interface_id,
-                device_address=self._device_address,
-                parameter=Description.FIRMWARE,
-            )
+        self._available_firmware = str(device_description.get("AVAILABLE_FIRMWARE", ""))
+        self._firmware = device_description["FIRMWARE"]
+        self._firmware_update_state = DeviceFirmwareState(
+            device_description.get("FIRMWARE_UPDATE_STATE") or DeviceFirmwareState.UP_TO_DATE
         )
 
-        try:
-            self._firmware_update_state = DeviceFirmwareState(
-                str(
-                    self.central.device_descriptions.get_device_parameter(
-                        interface_id=self._interface_id,
-                        device_address=self._device_address,
-                        parameter=Description.FIRMWARE_UPDATE_STATE,
-                    )
-                )
-            )
-        except ValueError:
-            self._firmware_update_state = DeviceFirmwareState.UP_TO_DATE
-
-        self._firmware_updatable = bool(
-            self.central.device_descriptions.get_device_parameter(
-                interface_id=self._interface_id,
-                device_address=self._device_address,
-                parameter=Description.FIRMWARE_UPDATABLE,
-            )
-        )
+        self._firmware_updatable = device_description.get("FIRMWARE_UPDATABLE") or False
 
     def _identify_manufacturer(self) -> Manufacturer:
         """Identify the manufacturer of a device."""
@@ -322,7 +291,7 @@ class HmDevice(PayloadMixin):
         return self._rooms
 
     @config_property
-    def sub_type(self) -> str:
+    def sub_type(self) -> str | None:
         """Return the sub_type of the device."""
         return self._sub_type
 
@@ -816,41 +785,38 @@ class _DefinitionExporter:
 
     async def export_data(self) -> None:
         """Export data."""
-        device_descriptions: Mapping[str, Any] = (
+        device_descriptions: Mapping[str, DeviceDescription] = (
             self._central.device_descriptions.get_device_with_channels(
                 interface_id=self._interface_id, device_address=self._device_address
             )
         )
-        paramset_descriptions: Mapping[
-            str, Any
+        paramset_descriptions: dict[
+            str, dict[ParamsetKey, dict[str, ParameterData]]
         ] = await self._client.get_all_paramset_descriptions(
             device_descriptions=tuple(device_descriptions.values())
         )
-        device_type = device_descriptions[self._device_address][Description.TYPE]
+        device_type = device_descriptions[self._device_address]["TYPE"]
         filename = f"{device_type}.json"
 
         # anonymize device_descriptions
-        anonymize_device_descriptions: list[Any] = []
+        anonymize_device_descriptions: list[DeviceDescription] = []
         for device_description in device_descriptions.values():
-            if device_description == {}:
-                continue  # pragma: no cover
-            new_device_description = copy(device_description)
-            new_device_description[Description.ADDRESS] = self._anonymize_address(
-                address=new_device_description[Description.ADDRESS]
+            new_device_description: DeviceDescription = copy(device_description)
+            new_device_description["ADDRESS"] = self._anonymize_address(
+                address=new_device_description["ADDRESS"]
             )
-            if new_device_description.get(Description.PARENT):
-                new_device_description[Description.PARENT] = new_device_description[
-                    Description.ADDRESS
-                ].split(":")[0]
-            elif new_device_description.get(Description.CHILDREN):
-                new_device_description[Description.CHILDREN] = [
-                    self._anonymize_address(a)
-                    for a in new_device_description[Description.CHILDREN]
+            if new_device_description.get("PARENT"):
+                new_device_description["PARENT"] = new_device_description["ADDRESS"].split(":")[0]
+            elif new_device_description.get("CHILDREN"):
+                new_device_description["CHILDREN"] = [
+                    self._anonymize_address(a) for a in new_device_description["CHILDREN"]
                 ]
             anonymize_device_descriptions.append(new_device_description)
 
         # anonymize paramset_descriptions
-        anonymize_paramset_descriptions: dict[str, Any] = {}
+        anonymize_paramset_descriptions: dict[
+            str, dict[ParamsetKey, dict[str, ParameterData]]
+        ] = {}
         for address, paramset_description in paramset_descriptions.items():
             anonymize_paramset_descriptions[self._anonymize_address(address=address)] = (
                 paramset_description

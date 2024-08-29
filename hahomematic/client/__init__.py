@@ -25,6 +25,7 @@ from hahomematic.const import (
     Backend,
     CallSource,
     Description,
+    DeviceDescription,
     ForcedDeviceAvailability,
     InterfaceEventType,
     InterfaceName,
@@ -334,7 +335,7 @@ class Client(ABC):
         return None
 
     @measure_execution_time
-    async def get_all_device_descriptions(self) -> tuple[dict[str, Any]] | None:
+    async def get_all_device_descriptions(self) -> tuple[DeviceDescription] | None:
         """Get device descriptions from CCU / Homegear."""
         try:
             return tuple(await self._proxy.listDevices())
@@ -344,7 +345,7 @@ class Client(ABC):
             )
         return None
 
-    async def get_device_description(self, device_address: str) -> tuple[dict[str, Any]] | None:
+    async def get_device_description(self, device_address: str) -> tuple[DeviceDescription] | None:
         """Get device descriptions from CCU / Homegear."""
         try:
             if device_description := await self._proxy_read.getDeviceDescription(device_address):
@@ -658,7 +659,7 @@ class Client(ABC):
                 paramset_description=paramset_description,
             )
 
-    async def fetch_paramset_descriptions(self, device_description: dict[str, Any]) -> None:
+    async def fetch_paramset_descriptions(self, device_description: DeviceDescription) -> None:
         """Fetch paramsets for provided device description."""
         data = await self.get_paramset_descriptions(device_description=device_description)
         for address, paramsets in data.items():
@@ -672,16 +673,14 @@ class Client(ABC):
                 )
 
     async def get_paramset_descriptions(
-        self, device_description: dict[str, Any]
+        self, device_description: DeviceDescription
     ) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
         """Get paramsets for provided device description."""
-        if not device_description:
-            return {}
         paramsets: dict[str, dict[ParamsetKey, dict[str, ParameterData]]] = {}
-        address = device_description[Description.ADDRESS]
+        address = device_description["ADDRESS"]
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
-        for p_key in device_description.get(Description.PARAMSETS, []):
+        for p_key in device_description["PARAMSETS"]:
             if (paramset_key := ParamsetKey(p_key)) not in DEFAULT_PARAMSETS:
                 continue
             if paramset_description := await self._get_paramset_description(
@@ -712,7 +711,7 @@ class Client(ABC):
         return None
 
     async def get_all_paramset_descriptions(
-        self, device_descriptions: tuple[dict[str, Any], ...]
+        self, device_descriptions: tuple[DeviceDescription, ...]
     ) -> dict[str, dict[ParamsetKey, dict[str, ParameterData]]]:
         """Get all paramset descriptions for provided device descriptions."""
         all_paramsets: dict[str, dict[ParamsetKey, dict[str, ParameterData]]] = {}
@@ -767,9 +766,12 @@ class Client(ABC):
                 device_address,
             )
             return
-        if not self.central.device_descriptions.get_device(
+
+        if device_description := self.central.device_descriptions.find_device_description(
             interface_id=self.interface_id, device_address=device_address
         ):
+            await self.fetch_paramset_descriptions(device_description=device_description)
+        else:
             _LOGGER.warning(
                 "UPDATE_PARAMSET_DESCRIPTIONS failed: "
                 "Channel missing in central.cache. "
@@ -777,11 +779,6 @@ class Client(ABC):
                 device_address,
             )
             return
-        await self.fetch_paramset_descriptions(
-            device_description=self.central.device_descriptions.get_device(
-                interface_id=self.interface_id, device_address=device_address
-            )
-        )
         await self.central.save_caches(save_paramset_descriptions=True)
 
     def __str__(self) -> str:
