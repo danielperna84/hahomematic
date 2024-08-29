@@ -31,6 +31,7 @@ from hahomematic.const import (
     NO_CACHE_ENTRY,
     ParameterData,
     ParamsetKey,
+    RxMode,
     SysvarType,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
@@ -480,3 +481,23 @@ def _make_value_hashable(value: Any) -> Any:
         return tuple(sorted(_make_value_hashable(e) for e in value))
 
     return value
+
+
+def get_rx_modes(mode: int) -> tuple[RxMode, ...]:
+    """Convert int to rx modes."""
+    rx_modes: set[RxMode] = set()
+    if mode == 10:
+        rx_modes.add(RxMode.LAZY_CONFIG)
+        return tuple(rx_modes)
+    if mode & RxMode.WAKEUP:
+        mode -= RxMode.WAKEUP
+        rx_modes.add(RxMode.WAKEUP)
+    if mode & RxMode.CONFIG:
+        mode -= RxMode.CONFIG
+        rx_modes.add(RxMode.CONFIG)
+    if mode & RxMode.BURST:
+        mode -= RxMode.BURST
+        rx_modes.add(RxMode.BURST)
+    if mode & RxMode.ALWAYS:
+        rx_modes.add(RxMode.ALWAYS)
+    return tuple(rx_modes)
