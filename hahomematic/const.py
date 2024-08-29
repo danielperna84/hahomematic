@@ -124,24 +124,14 @@ class DataOperationResult(Enum):
 class Description(StrEnum):
     """Enum with homematic device/paramset description attributes."""
 
-    ADDRESS = "ADDRESS"
-    AVAILABLE_FIRMWARE = "AVAILABLE_FIRMWARE"
-    CHILDREN = "CHILDREN"
     DEFAULT = "DEFAULT"
-    FIRMWARE = "FIRMWARE"
-    FIRMWARE_UPDATABLE = "UPDATABLE"
-    FIRMWARE_UPDATE_STATE = "FIRMWARE_UPDATE_STATE"
     FLAGS = "FLAGS"
     MAX = "MAX"
     MIN = "MIN"
     NAME = "NAME"
     ID = "ID"
     OPERATIONS = "OPERATIONS"
-    PARAMSETS = "PARAMSETS"
-    PARENT = "PARENT"
-    PARENT_TYPE = "PARENT_TYPE"
-    SPECIAL = "SPECIAL"  # Which has the following keys
-    SUBTYPE = "SUBTYPE"
+    SPECIAL = "SPECIAL"
     TYPE = "TYPE"
     UNIT = "UNIT"
     VALUE_LIST = "VALUE_LIST"
@@ -401,6 +391,24 @@ class ProxyInitState(Enum):
     DE_INIT_SKIPPED = 16
 
 
+class RxMode(IntEnum):
+    """Enum for homematic rx modes."""
+
+    UNDEFINED = 0
+    ALWAYS = 1
+    BURST = 2
+    CONFIG = 4
+    WAKEUP = 8
+    LAZY_CONFIG = 10
+
+
+class CommandRxMode(StrEnum):
+    """Enum for homematic rx modes for commands."""
+
+    BURST = "BURST"
+    WAKEUP = "WAKEUP"
+
+
 class SysvarType(StrEnum):
     """Enum for homematic sysvar types."""
 
@@ -606,4 +614,4 @@ class DeviceDescription(TypedDict, total=False):
     # TEAM_CHANNELS: list
     INTERFACE: str | None
     # ROAMING: int | None
-    RX_MODE: int | None
+    RX_MODE: int

@@ -29,8 +29,10 @@ from hahomematic.const import (
     INIT_DATETIME,
     MAX_CACHE_AGE,
     NO_CACHE_ENTRY,
+    CommandRxMode,
     ParameterData,
     ParamsetKey,
+    RxMode,
     SysvarType,
 )
 from hahomematic.exceptions import BaseHomematicException, HaHomematicException
@@ -480,3 +482,30 @@ def _make_value_hashable(value: Any) -> Any:
         return tuple(sorted(_make_value_hashable(e) for e in value))
 
     return value
+
+
+def get_rx_modes(mode: int) -> tuple[RxMode, ...]:
+    """Convert int to rx modes."""
+    rx_modes: set[RxMode] = set()
+    if mode == 10:
+        rx_modes.add(RxMode.LAZY_CONFIG)
+        return tuple(rx_modes)
+    if mode & RxMode.WAKEUP:
+        mode -= RxMode.WAKEUP
+        rx_modes.add(RxMode.WAKEUP)
+    if mode & RxMode.CONFIG:
+        mode -= RxMode.CONFIG
+        rx_modes.add(RxMode.CONFIG)
+    if mode & RxMode.BURST:
+        mode -= RxMode.BURST
+        rx_modes.add(RxMode.BURST)
+    if mode & RxMode.ALWAYS:
+        rx_modes.add(RxMode.ALWAYS)
+    return tuple(rx_modes)
+
+
+def supports_rx_mode(command_rx_mode: CommandRxMode, rx_modes: tuple[RxMode, ...]) -> bool:
+    """Check if rx mode is supported."""
+    return (command_rx_mode == CommandRxMode.BURST and RxMode.BURST in rx_modes) or (
+        command_rx_mode == CommandRxMode.WAKEUP and RxMode.WAKEUP in rx_modes
+    )

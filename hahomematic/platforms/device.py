@@ -41,6 +41,7 @@ from hahomematic.const import (
     ParameterData,
     ParamsetKey,
     ProductGroup,
+    RxMode,
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.platforms.custom import definition as hmed, entity as hmce
@@ -56,6 +57,7 @@ from hahomematic.support import (
     check_or_create_directory,
     device_paramset_description_export_converter,
     get_entity_key,
+    get_rx_modes,
     reduce_args,
 )
 
@@ -98,6 +100,7 @@ class HmDevice(PayloadMixin):
         )
         self._device_type: Final = device_description["TYPE"]
         self._sub_type: Final = device_description.get("SUBTYPE")
+        self._rx_modes: Final = get_rx_modes(mode=device_description.get("RX_MODE", 0))
 
         self._ignore_for_custom_entity: Final[bool] = (
             central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
@@ -289,6 +292,11 @@ class HmDevice(PayloadMixin):
     def rooms(self) -> set[str]:
         """Return all rooms of the device."""
         return self._rooms
+
+    @config_property
+    def rx_modes(self) -> tuple[RxMode, ...]:
+        """Return the rx mode."""
+        return self._rx_modes
 
     @config_property
     def sub_type(self) -> str | None:
