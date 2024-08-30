@@ -15,7 +15,6 @@ from hahomematic.config import CALLBACK_WARN_INTERVAL, RECONNECT_WAIT, WAIT_FOR_
 from hahomematic.const import (
     DATETIME_FORMAT_MILLIS,
     DEFAULT_CUSTOM_ID,
-    DEFAULT_PARAMSETS,
     ENTITY_KEY,
     EVENT_AVAILABLE,
     EVENT_SECONDS_SINCE_LAST_EVENT,
@@ -650,7 +649,10 @@ class Client(ABC):
             pd_value_list = (
                 tuple(parameter_data["VALUE_LIST"]) if parameter_data.get("VALUE_LIST") else None
             )
-            if not bool(int(parameter_data["OPERATIONS"]) & operation):
+            if (
+                not bool(pd_operation := int(parameter_data["OPERATIONS"]) & operation)
+                and pd_operation
+            ):
                 raise HaHomematicException(
                     f"Parameter {parameter} does not support the requested operation {operation.value}"
                 )
@@ -698,8 +700,7 @@ class Client(ABC):
         paramsets[address] = {}
         _LOGGER.debug("GET_PARAMSET_DESCRIPTIONS for %s", address)
         for p_key in device_description["PARAMSETS"]:
-            if (paramset_key := ParamsetKey(p_key)) not in DEFAULT_PARAMSETS:
-                continue
+            paramset_key = ParamsetKey(p_key)
             if paramset_description := await self._get_paramset_description(
                 address=address, paramset_key=paramset_key
             ):
