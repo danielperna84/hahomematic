@@ -571,7 +571,10 @@ class Client(ABC):
             if check_against_pd:
                 check_paramset_key = (
                     ParamsetKey.LINK
-                    if (is_link_call := is_channel_address(address=paramset_key))
+                    if (
+                        is_link_call := is_channel_address(address=paramset_key)
+                        and isinstance(paramset_key, str)
+                    )
                     else ParamsetKey(paramset_key)
                 )
                 checked_values = self._check_put_paramset(
