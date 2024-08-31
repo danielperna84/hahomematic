@@ -45,6 +45,7 @@ from hahomematic.support import (
     build_headers,
     build_xml_rpc_uri,
     get_device_address,
+    is_channel_address,
     reduce_args,
     supports_rx_mode,
 )
@@ -553,7 +554,7 @@ class Client(ABC):
     async def put_paramset(
         self,
         channel_address: str,
-        paramset_key: ParamsetKey,
+        paramset_key: ParamsetKey | str,
         values: dict[str, Any],
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: CommandRxMode | None = None,
@@ -565,14 +566,19 @@ class Client(ABC):
         Address is usually the channel_address,
         but for bidcos devices there is a master paramset at the device.
         """
+        is_link_call: bool = False
         try:
-            checked_values = (
-                self._check_put_paramset(
-                    channel_address=channel_address, paramset_key=paramset_key, values=values
+            if check_against_pd:
+                check_paramset_key = (
+                    ParamsetKey.LINK
+                    if (is_link_call := is_channel_address(address=paramset_key))
+                    else ParamsetKey(paramset_key)
                 )
-                if check_against_pd
-                else values
-            )
+                checked_values = self._check_put_paramset(
+                    channel_address=channel_address, paramset_key=check_paramset_key, values=values
+                )
+            else:
+                checked_values = values
             _LOGGER.debug(
                 "PUT_PARAMSET: %s, %s, %s", channel_address, paramset_key, checked_values
             )
@@ -586,10 +592,14 @@ class Client(ABC):
                     return set()
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, checked_values)
+
+            if is_link_call:
+                return set()
+
             # store the send value in the last_value_send_cache
             entity_keys = self._last_value_send_cache.add_put_paramset(
                 channel_address=channel_address,
-                paramset_key=paramset_key,
+                paramset_key=ParamsetKey(paramset_key),
                 values=checked_values,
             )
             if wait_for_callback is not None and (
@@ -638,6 +648,7 @@ class Client(ABC):
         value: Any,
         operation: Operations,
     ) -> Any:
+        # Rewrite check for LINK paramset
         """Check a single parameter against paramset descriptions."""
         if parameter_data := self.central.paramset_descriptions.get_parameter_data(
             interface_id=self.interface_id,
@@ -1254,7 +1265,9 @@ async def _track_single_entity_state_change_or_timeout(
 
     channel_address, paramset_key, parameter = entity_key
     if entity := device.get_generic_entity(
-        channel_address=channel_address, parameter=parameter, paramset_key=paramset_key
+        channel_address=channel_address,
+        parameter=parameter,
+        paramset_key=ParamsetKey(paramset_key),
     ):
         if not entity.supports_events:
             _LOGGER.debug(
