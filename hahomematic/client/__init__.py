@@ -563,8 +563,9 @@ class Client(ABC):
         """
         Set paramsets manually.
 
-        Address is usually the channel_address,
-        but for bidcos devices there is a master paramset at the device.
+        Address is usually the channel_address, but for bidcos devices there is a master paramset at the device.
+        Paramset_key can be a str with a channel address in case of manipulating a direct link.
+        If paramset_key is string and contains a channel address, then the LINK paramset must be used for a check.
         """
         is_link_call: bool = False
         try:
@@ -596,6 +597,7 @@ class Client(ABC):
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, checked_values)
 
+            # if a call is related to a link then no further action is needed
             if is_link_call:
                 return set()
 
