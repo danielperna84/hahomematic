@@ -394,6 +394,10 @@ class Client(ABC):
             _LOGGER.warning("GET_INSTALL_MODE failed: %s [%s]", ex.name, reduce_args(args=ex.args))
         return 0
 
+    async def get_link_peers(self, channel_address: str) -> tuple[str, ...] | None:
+        """Return a list of link pers."""
+        return tuple(await self._proxy.getLinkPeers(channel_address))
+
     async def get_value(
         self,
         channel_address: str,
