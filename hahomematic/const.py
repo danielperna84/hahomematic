@@ -428,11 +428,6 @@ CLICK_EVENTS: Final[tuple[Parameter, ...]] = (
     Parameter.PRESS_UNLOCK,
 )
 
-DEFAULT_PARAMSETS: Final[tuple[ParamsetKey, ...]] = (
-    ParamsetKey.MASTER,
-    ParamsetKey.VALUES,
-)
-
 DEVICE_ERROR_EVENTS: Final[tuple[Parameter, ...]] = (Parameter.ERROR, Parameter.SENSOR_ERROR)
 
 ENTITY_EVENTS: Final[tuple[HomematicEventType, ...]] = (

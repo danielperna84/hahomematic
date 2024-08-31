@@ -26,6 +26,7 @@ from hahomematic.const import (
     SystemInformation,
     SystemVariableData,
 )
+from hahomematic.support import is_channel_address
 
 LOCAL_SERIAL: Final = "0815_4711"
 BACKEND_LOCAL: Final = "Local CCU"
@@ -257,7 +258,7 @@ class ClientLocal(Client):  # pragma: no cover
     async def put_paramset(
         self,
         channel_address: str,
-        paramset_key: ParamsetKey,
+        paramset_key: ParamsetKey | str,
         values: Any,
         wait_for_callback: int | None = WAIT_FOR_CALLBACK,
         rx_mode: CommandRxMode | None = None,
@@ -270,9 +271,15 @@ class ClientLocal(Client):  # pragma: no cover
         but for bidcos devices there is a master paramset at the device.
         """
         # store the send value in the last_value_send_cache
-        result = self._last_value_send_cache.add_put_paramset(
-            channel_address=channel_address, paramset_key=paramset_key, values=values
-        )
+        if isinstance(paramset_key, str) and is_channel_address(address=paramset_key):
+            result = set()
+        else:
+            result = self._last_value_send_cache.add_put_paramset(
+                channel_address=channel_address,
+                paramset_key=ParamsetKey(paramset_key),
+                values=values,
+            )
+
         # fire an event to fake the state change for the content of a paramset
         for parameter in values:
             await self.central.event(

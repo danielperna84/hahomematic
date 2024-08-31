@@ -1,8 +1,10 @@
 # Version 2024.8.15 (2024-08-29)
 
+- Add check for link paramsets
 - Avoid permanent cache save on remove device
 - Check rx_mode
 - Ensure only one load/save of cache file at time
+- Load all paramsets
 - Small definition fix for DALI
 - Use TypedDict for device_description
 - Use TypedDict for parameter_data

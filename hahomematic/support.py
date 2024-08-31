@@ -202,6 +202,23 @@ def get_channel_no(address: str) -> int | None:
     return get_split_channel_address(channel_address=address)[1]
 
 
+def is_channel_address(address: str) -> bool:
+    """Check if it is a channel address."""
+    if ":" not in address:
+        return False
+    try:
+        device_address, channel_no = get_split_channel_address(channel_address=address)
+        if (
+            isinstance(device_address, str)
+            and isinstance(channel_no, int)
+            and len(device_address) == 10
+        ):
+            return True
+    except Exception:
+        return False
+    return False
+
+
 def get_entity_key(channel_address: str, paramset_key: ParamsetKey, parameter: str) -> ENTITY_KEY:
     """Return an entity key."""
     return (str(channel_address), paramset_key, str(parameter))
