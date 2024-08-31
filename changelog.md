@@ -1,3 +1,7 @@
+# Version 2024.9.0 (2024-09-01)
+
+- Add getLinkPeers XmlRPC method
+
 # Version 2024.8.15 (2024-08-29)
 
 - Add check for link paramsets
