@@ -116,7 +116,7 @@ async def test_central_full(central_unit_full) -> None:
 
     assert usage_types[EntityUsage.NO_CREATE] == 3117
     assert usage_types[EntityUsage.CE_PRIMARY] == 208
-    assert usage_types[EntityUsage.ENTITY] == 3799
+    assert usage_types[EntityUsage.ENTITY] == 3638
     assert usage_types[EntityUsage.CE_VISIBLE] == 125
     assert usage_types[EntityUsage.CE_SECONDARY] == 146
 
