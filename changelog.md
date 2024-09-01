@@ -1,6 +1,7 @@
 # Version 2024.9.0 (2024-09-01)
 
 - Add getLinkPeers XmlRPC method
+- Only try device update refresh if device is updatable
 
 # Version 2024.8.15 (2024-08-29)
 
