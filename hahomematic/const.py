@@ -124,6 +124,7 @@ class DataOperationResult(Enum):
 class DeviceFirmwareState(StrEnum):
     """Enum with homematic device firmware states."""
 
+    UNKNOWN = "UNKNOWN"
     UP_TO_DATE = "UP_TO_DATE"
     LIVE_UP_TO_DATE = "LIVE_UP_TO_DATE"
     NEW_FIRMWARE_AVAILABLE = "NEW_FIRMWARE_AVAILABLE"
@@ -438,6 +439,17 @@ ENTITY_EVENTS: Final[tuple[HomematicEventType, ...]] = (
 # channel_address, paramset_key,parameter
 ENTITY_KEY = tuple[str, ParamsetKey, str]
 
+HMIP_FIRMWARE_UPDATE_IN_PROGRESS_STATES: Final[tuple[DeviceFirmwareState, ...]] = (
+    DeviceFirmwareState.DO_UPDATE_PENDING,
+    DeviceFirmwareState.PERFORMING_UPDATE,
+)
+
+HMIP_FIRMWARE_UPDATE_READY_STATES: Final[tuple[DeviceFirmwareState, ...]] = (
+    DeviceFirmwareState.READY_FOR_UPDATE,
+    DeviceFirmwareState.DO_UPDATE_PENDING,
+    DeviceFirmwareState.PERFORMING_UPDATE,
+)
+
 IMPULSE_EVENTS: Final[tuple[Parameter, ...]] = (Parameter.SEQUENCE_OK,)
 
 KEY_CHANNEL_OPERATION_MODE_VISIBILITY: Final[Mapping[str, tuple[str, ...]]] = {
@@ -480,6 +492,12 @@ RELEVANT_INIT_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.CONFIG_PENDING,
     Parameter.STICKY_UN_REACH,
     Parameter.UN_REACH,
+)
+
+INTERFACE_SUPPORTS_FIRMWARE_UPDATES: Final[tuple[InterfaceName, ...]] = (
+    InterfaceName.BIDCOS_RF,
+    InterfaceName.BIDCOS_WIRED,
+    InterfaceName.HMIP_RF,
 )
 
 IGNORE_FOR_UN_IGNORE_PARAMETERS: Final[tuple[Parameter, ...]] = (

@@ -137,7 +137,7 @@ class HmDevice(PayloadMixin):
         self._available_firmware = str(device_description.get("AVAILABLE_FIRMWARE", ""))
         self._firmware = device_description["FIRMWARE"]
         self._firmware_update_state = DeviceFirmwareState(
-            device_description.get("FIRMWARE_UPDATE_STATE") or DeviceFirmwareState.UP_TO_DATE
+            device_description.get("FIRMWARE_UPDATE_STATE") or DeviceFirmwareState.UNKNOWN
         )
 
         self._firmware_updatable = device_description.get("FIRMWARE_UPDATABLE") or False
