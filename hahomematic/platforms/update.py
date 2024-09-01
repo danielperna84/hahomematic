@@ -10,7 +10,14 @@ from collections.abc import Callable
 from functools import partial
 from typing import Final
 
-from hahomematic.const import CALLBACK_TYPE, DEFAULT_CUSTOM_ID, HmPlatform
+from hahomematic.const import (
+    CALLBACK_TYPE,
+    DEFAULT_CUSTOM_ID,
+    HMIP_FIRMWARE_UPDATE_IN_PROGRESS_STATES,
+    HMIP_FIRMWARE_UPDATE_READY_STATES,
+    HmPlatform,
+    InterfaceName,
+)
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, value_property
@@ -64,14 +71,25 @@ class HmUpdate(CallbackEntity):
         return self._device.firmware
 
     @value_property
-    def available_firmware(self) -> str | None:
-        """Latest version available for install."""
-        return self._device.available_firmware
-
-    @value_property
     def firmware_update_state(self) -> str | None:
         """Latest version available for install."""
         return self._device.firmware_update_state
+
+    def in_progress(self) -> bool:
+        """Update installation progress."""
+        if self._device.interface == InterfaceName.HMIP_RF:
+            return self._device.firmware_update_state in HMIP_FIRMWARE_UPDATE_IN_PROGRESS_STATES
+        return False
+
+    @property
+    def latest_firmware(self) -> str | None:
+        """Latest firmware available for install."""
+        if (
+            self._device.interface == InterfaceName.HMIP_RF
+            and self._device.firmware_update_state in HMIP_FIRMWARE_UPDATE_READY_STATES
+        ) or self._device.interface in (InterfaceName.BIDCOS_RF, InterfaceName.BIDCOS_WIRED):
+            return self._device.available_firmware
+        return self._device.firmware
 
     @property
     def path(self) -> str:
