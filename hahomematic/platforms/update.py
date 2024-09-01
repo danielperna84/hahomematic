@@ -75,13 +75,14 @@ class HmUpdate(CallbackEntity):
         """Latest version available for install."""
         return self._device.firmware_update_state
 
+    @value_property
     def in_progress(self) -> bool:
         """Update installation progress."""
         if self._device.interface == InterfaceName.HMIP_RF:
             return self._device.firmware_update_state in HMIP_FIRMWARE_UPDATE_IN_PROGRESS_STATES
         return False
 
-    @property
+    @value_property
     def latest_firmware(self) -> str | None:
         """Latest firmware available for install."""
         if (
