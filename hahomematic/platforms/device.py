@@ -27,7 +27,6 @@ from hahomematic.const import (
     NO_CACHE_ENTRY,
     PLATFORMS,
     RELEVANT_INIT_PARAMETERS,
-    VIRTUAL_REMOTE_TYPES,
     CallSource,
     DataOperationResult,
     DeviceDescription,
@@ -120,9 +119,7 @@ class HmDevice(PayloadMixin):
         self.value_cache: Final = ValueCache(device=self)
         self._rooms: Final = central.device_details.get_device_rooms(device_address=device_address)
         self._update_firmware_data()
-        self._update_entity: Final = (
-            HmUpdate(device=self) if self.device_type not in VIRTUAL_REMOTE_TYPES else None
-        )
+        self._update_entity: Final = HmUpdate(device=self) if self.is_updatable else None  # pylint: disable=using-constant-test
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",
             self._interface_id,
