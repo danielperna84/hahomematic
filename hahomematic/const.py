@@ -494,7 +494,7 @@ RELEVANT_INIT_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.UN_REACH,
 )
 
-INTERFACE_SUPPORTS_FIRMWARE_UPDATES: Final[tuple[InterfaceName, ...]] = (
+INTERFACES_SUPPORTING_FIRMWARE_UPDATES: Final[tuple[InterfaceName, ...]] = (
     InterfaceName.BIDCOS_RF,
     InterfaceName.BIDCOS_WIRED,
     InterfaceName.HMIP_RF,

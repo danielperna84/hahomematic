@@ -20,7 +20,7 @@ from hahomematic.const import (
     EVENT_SECONDS_SINCE_LAST_EVENT,
     HOMEGEAR_SERIAL,
     INIT_DATETIME,
-    INTERFACE_SUPPORTS_FIRMWARE_UPDATES,
+    INTERFACES_SUPPORTING_FIRMWARE_UPDATES,
     VIRTUAL_REMOTE_TYPES,
     Backend,
     CallSource,
@@ -141,7 +141,7 @@ class Client(ABC):
     @property
     def supports_firmware_updates(self) -> bool:
         """Return the supports_ping_pong info of the backend."""
-        return self.interface in INTERFACE_SUPPORTS_FIRMWARE_UPDATES
+        return self.interface in INTERFACES_SUPPORTING_FIRMWARE_UPDATES
 
     async def proxy_init(self) -> ProxyInitState:
         """Init the proxy has to tell the CCU / Homegear where to send the events."""
