@@ -572,7 +572,7 @@ class DeviceDescription(TypedDict, total=False):
     PARAMSETS: Required[list[str]]
     FIRMWARE: str
     AVAILABLE_FIRMWARE: str | None
-    UPDATABLE: bool | None
+    UPDATABLE: bool
     FIRMWARE_UPDATE_STATE: str | None
     FIRMWARE_UPDATABLE: bool | None
     # VERSION: Required[int]

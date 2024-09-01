@@ -100,6 +100,7 @@ class HmDevice(PayloadMixin):
         self._device_type: Final = device_description["TYPE"]
         self._sub_type: Final = device_description.get("SUBTYPE")
         self._rx_modes: Final = get_rx_modes(mode=device_description.get("RX_MODE", 0))
+        self._is_updatable: Final = device_description["UPDATABLE"]
 
         self._ignore_for_custom_entity: Final[bool] = (
             central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
@@ -301,6 +302,11 @@ class HmDevice(PayloadMixin):
     def sub_type(self) -> str | None:
         """Return the sub_type of the device."""
         return self._sub_type
+
+    @config_property
+    def is_updatable(self) -> bool:
+        """Return if the device is updatable."""
+        return self._is_updatable
 
     @property
     def update_entity(self) -> HmUpdate | None:

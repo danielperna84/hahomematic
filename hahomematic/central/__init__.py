@@ -398,7 +398,11 @@ class CentralUnit:
 
     async def refresh_firmware_data(self, device_address: str | None = None) -> None:
         """Refresh device firmware data."""
-        if device_address and (device := self.get_device(address=device_address)):
+        if (
+            device_address
+            and (device := self.get_device(address=device_address)) is not None
+            and device.is_updatable
+        ):
             await self._refresh_device_descriptions(
                 client=device.client, device_address=device_address
             )
@@ -407,7 +411,8 @@ class CentralUnit:
             for client in self._clients.values():
                 await self._refresh_device_descriptions(client=client)
             for device in self._devices.values():
-                device.refresh_firmware_data()
+                if device.is_updatable:
+                    device.refresh_firmware_data()
 
     async def refresh_firmware_data_by_state(
         self, device_firmware_states: tuple[DeviceFirmwareState, ...]
