@@ -1,3 +1,7 @@
+# Version 2024.9.2 (2024-09-02)
+
+- Allow str for get_paramset
+
 # Version 2024.9.1 (2024-09-02)
 
 - Improve paramset key check
