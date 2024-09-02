@@ -20,6 +20,7 @@ from typing import Any, Final
 
 from hahomematic.config import TIMEOUT
 from hahomematic.const import (
+    ADDRESS_PATTERN,
     ALLOWED_HOSTNAME_PATTERN,
     CACHE_PATH,
     CCU_PASSWORD_PATTERN,
@@ -205,9 +206,19 @@ def get_channel_no(address: str) -> int | None:
     return get_split_channel_address(channel_address=address)[1]
 
 
+def is_address(address: str) -> bool:
+    """Check if it is a address."""
+    return ADDRESS_PATTERN.match(address) is not None
+
+
 def is_channel_address(address: str) -> bool:
     """Check if it is a channel address."""
     return CHANNEL_ADDRESS_PATTERN.match(address) is not None
+
+
+def is_channel_no(channel_no: int) -> bool:
+    """Check if it is a channel no."""
+    return 0 <= channel_no <= 999
 
 
 def is_device_address(address: str) -> bool:
