@@ -208,15 +208,18 @@ def is_channel_address(address: str) -> bool:
         return False
     try:
         device_address, channel_no = get_split_channel_address(channel_address=address)
-        if (
-            isinstance(device_address, str)
-            and isinstance(channel_no, int)
-            and len(device_address) == 10
-        ):
+        if isinstance(channel_no, int) and len(device_address) > 9:
             return True
     except Exception:
         return False
     return False
+
+
+def is_paramset_key(paramset_key: ParamsetKey | str) -> bool:
+    """Check if it is a paramset key."""
+    return isinstance(paramset_key, ParamsetKey) or (
+        isinstance(paramset_key, str) and paramset_key in ParamsetKey
+    )
 
 
 def get_entity_key(channel_address: str, paramset_key: ParamsetKey, parameter: str) -> ENTITY_KEY:
