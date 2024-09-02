@@ -216,11 +216,6 @@ def is_channel_address(address: str) -> bool:
     return CHANNEL_ADDRESS_PATTERN.match(address) is not None
 
 
-def is_channel_no(channel_no: int) -> bool:
-    """Check if it is a channel no."""
-    return 0 <= channel_no <= 999
-
-
 def is_device_address(address: str) -> bool:
     """Check if it is a device address."""
     return DEVICE_ADDRESS_PATTERN.match(address) is not None

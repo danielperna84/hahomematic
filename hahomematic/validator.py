@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from hahomematic.support import is_address, is_channel_address, is_channel_no, is_device_address
+from hahomematic.const import MAX_WAIT_FOR_CALLBACK
+from hahomematic.support import is_address, is_channel_address, is_device_address
+
+channel_no = vol.All(vol.Coerce(int), vol.Range(min=1, max=999))
+wait_for = vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_WAIT_FOR_CALLBACK))
 
 
 def address(value: str) -> str:
@@ -19,13 +23,6 @@ def channel_address(value: str) -> str:
     if is_channel_address(address=value):
         return value
     raise vol.Invalid("channel_address is invalid")
-
-
-def channel_no(value: int) -> int:
-    """Validate channel_no."""
-    if is_channel_no(channel_no=value):
-        return value
-    raise vol.Invalid("channel_no is invalid")
 
 
 def device_address(value: str) -> str:

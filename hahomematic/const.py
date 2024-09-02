@@ -21,6 +21,7 @@ DEFAULT_TIMEOUT: Final = 60  # default timeout for a connection
 DEFAULT_TLS: Final = False
 DEFAULT_VERIFY_TLS: Final = False
 DEFAULT_WAIT_FOR_CALLBACK: Final[int | None] = None
+MAX_WAIT_FOR_CALLBACK: Final[int] = 600
 
 REGA_SCRIPT_FETCH_ALL_DEVICE_DATA: Final = "fetch_all_device_data.fn"
 REGA_SCRIPT_GET_SERIAL: Final = "get_serial.fn"
