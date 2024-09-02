@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum, StrEnum
+import re
 from typing import Any, Final, Required, TypedDict
 
 DEFAULT_CONNECTION_CHECKER_INTERVAL: Final = 15  # check if connection is available via rpc ping
@@ -33,7 +34,12 @@ DEFAULT_PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
 # Password can be empty.
 # Allowed characters: A-Z, a-z, 0-9, .!$():;#-
 # The CCU WebUI also supports ÄäÖöÜüß, but these characters are not supported by the XmlRPC servers
-CCU_PASSWORD_PATTERN: Final = r"[A-Za-z0-9.!$():;#-]{0,}"
+CCU_PASSWORD_PATTERN: Final = re.compile(r"[A-Za-z0-9.!$():;#-]{0,}")
+# Pattern is bigger than needed
+CHANNEL_ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z]{10,20}:[0-9]{1,3}$")
+DEVICE_ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z]{10,20}$")
+ALLOWED_HOSTNAME_PATTERN: Final = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
+HTMLTAG_PATTERN: Final = re.compile(r"<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});")
 
 IDENTIFIER_SEPARATOR: Final = "@"
 DATETIME_FORMAT: Final = "%d.%m.%Y %H:%M:%S"

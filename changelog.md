@@ -1,3 +1,7 @@
+# Version 2024.9.3 (2024-09-02)
+
+- Improve validation of channel address, device address, password and htmltag
+
 # Version 2024.9.2 (2024-09-02)
 
 - Allow str for get_paramset
