@@ -47,6 +47,7 @@ from hahomematic.support import (
     build_xml_rpc_uri,
     get_device_address,
     is_channel_address,
+    is_paramset_key,
     reduce_args,
     supports_rx_mode,
 )
@@ -578,21 +579,30 @@ class Client(ABC):
         If paramset_key is string and contains a channel address, then the LINK paramset must be used for a check.
         """
         is_link_call: bool = False
+        checked_values = values
         try:
             if check_against_pd:
+                is_pkey = is_paramset_key(paramset_key=paramset_key)
+                is_link_call = is_channel_address(address=paramset_key)
+
                 check_paramset_key = (
-                    ParamsetKey.LINK
-                    if (
-                        is_link_call := is_channel_address(address=paramset_key)
-                        and isinstance(paramset_key, str)
+                    ParamsetKey(paramset_key)
+                    if is_pkey
+                    else ParamsetKey.LINK
+                    if is_link_call
+                    else None
+                )
+                if check_paramset_key:
+                    checked_values = self._check_put_paramset(
+                        channel_address=channel_address,
+                        paramset_key=check_paramset_key,
+                        values=values,
                     )
-                    else ParamsetKey(paramset_key)
-                )
-                checked_values = self._check_put_paramset(
-                    channel_address=channel_address, paramset_key=check_paramset_key, values=values
-                )
-            else:
-                checked_values = values
+                else:
+                    raise HaHomematicException(
+                        "Parameter paramset_key is neither a valid ParamsetKey nor a channel address."
+                    )
+
             _LOGGER.debug(
                 "PUT_PARAMSET: %s, %s, %s", channel_address, paramset_key, checked_values
             )
@@ -602,8 +612,7 @@ class Client(ABC):
                         channel_address, paramset_key, checked_values, rx_mode
                     )
                 else:
-                    _LOGGER.warning("PUT_PARAMSET failed: unsupported rx_mode: %s", rx_mode)
-                    return set()
+                    raise HaHomematicException(f"Unsupported rx_mode: {rx_mode}")
             else:
                 await self._proxy.putParamset(channel_address, paramset_key, checked_values)
 
