@@ -537,7 +537,7 @@ class Client(ABC):
             check_against_pd=check_against_pd,
         )
 
-    async def get_paramset(self, address: str, paramset_key: ParamsetKey) -> dict[str, Any]:
+    async def get_paramset(self, address: str, paramset_key: ParamsetKey | str) -> dict[str, Any]:
         """
         Return a paramset from CCU.
 
