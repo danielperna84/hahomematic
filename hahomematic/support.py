@@ -20,8 +20,12 @@ from typing import Any, Final
 
 from hahomematic.config import TIMEOUT
 from hahomematic.const import (
+    ADDRESS_PATTERN,
+    ALLOWED_HOSTNAME_PATTERN,
     CACHE_PATH,
     CCU_PASSWORD_PATTERN,
+    CHANNEL_ADDRESS_PATTERN,
+    DEVICE_ADDRESS_PATTERN,
     ENTITY_KEY,
     FILE_DEVICES,
     FILE_PARAMSETS,
@@ -164,11 +168,11 @@ def check_password(password: str | None) -> bool:
     """Check password."""
     if password is None:
         return False
-    if re.fullmatch(CCU_PASSWORD_PATTERN, password) is None:
+    if CCU_PASSWORD_PATTERN.fullmatch(password) is None:
         _LOGGER.warning(
             "CHECK_CONFIG: password contains not allowed characters. "
             "Use only allowed characters. See password regex: %s",
-            CCU_PASSWORD_PATTERN,
+            CCU_PASSWORD_PATTERN.pattern,
         )
         return False
     return True
@@ -202,17 +206,19 @@ def get_channel_no(address: str) -> int | None:
     return get_split_channel_address(channel_address=address)[1]
 
 
+def is_address(address: str) -> bool:
+    """Check if it is a address."""
+    return ADDRESS_PATTERN.match(address) is not None
+
+
 def is_channel_address(address: str) -> bool:
     """Check if it is a channel address."""
-    if ":" not in address:
-        return False
-    try:
-        device_address, channel_no = get_split_channel_address(channel_address=address)
-        if isinstance(channel_no, int) and len(device_address) > 9:
-            return True
-    except Exception:
-        return False
-    return False
+    return CHANNEL_ADDRESS_PATTERN.match(address) is not None
+
+
+def is_device_address(address: str) -> bool:
+    """Check if it is a device address."""
+    return DEVICE_ADDRESS_PATTERN.match(address) is not None
 
 
 def is_paramset_key(paramset_key: ParamsetKey | str) -> bool:
@@ -287,8 +293,7 @@ def is_valid_hostname(hostname: str | None) -> bool:
     if re.match(r"[0-9]+$", labels[-1]):
         return False
 
-    allowed = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
-    return all(allowed.match(label) for label in labels)
+    return all(ALLOWED_HOSTNAME_PATTERN.match(label) for label in labels)
 
 
 def is_valid_ipv4_address(address: str | None) -> bool:

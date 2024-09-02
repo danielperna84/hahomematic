@@ -8,7 +8,6 @@ from json import JSONDecodeError
 import logging
 import os
 from pathlib import Path
-import re
 from typing import Any, Final
 
 from aiohttp import ClientConnectorCertificateError, ClientError, ClientResponse, ClientSession
@@ -20,6 +19,7 @@ from hahomematic.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     DEFAULT_ENCODING,
+    HTMLTAG_PATTERN,
     PATH_JSON_RPC,
     REGA_SCRIPT_FETCH_ALL_DEVICE_DATA,
     REGA_SCRIPT_GET_SERIAL,
@@ -442,7 +442,7 @@ class JsonRpcAioHttpClient:
                     method=JsonRpcMethod.SYSVAR_SET_BOOL, extra_params=params
                 )
             elif isinstance(value, str):
-                if re.findall("<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});", value):
+                if HTMLTAG_PATTERN.findall(value):
                     _LOGGER.warning(
                         "SET_SYSTEM_VARIABLE failed: "
                         "Value (%s) contains html tags. This is not allowed",

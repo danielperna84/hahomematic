@@ -34,6 +34,8 @@ from hahomematic.support import (
     find_free_port,
     get_channel_no,
     get_tls_context,
+    is_channel_address,
+    is_device_address,
     is_valid_hostname,
     is_valid_ipv4_address,
     parse_sys_var,
@@ -570,3 +572,28 @@ def test_is_valid_ipv4_address() -> None:
     assert is_valid_ipv4_address("192.168.1782") is False
     assert is_valid_ipv4_address("192.168.178.2") is True
     assert is_valid_ipv4_address("ccu") is False
+
+
+def test_is_device_address() -> None:
+    """Test is_device_address."""
+    assert is_device_address("123456789") is False
+    assert is_device_address("123456789:2") is False
+    assert is_device_address("1234567890") is True
+    assert is_device_address("1234567890-") is False
+    assert is_device_address("123456789_:123") is False
+    assert is_device_address("ABcdEFghIJ1234567890") is True
+    assert is_device_address("12345678901234567890") is True
+    assert is_device_address("123456789012345678901") is False
+
+
+def test_is_channel_address() -> None:
+    """Test is_channel_address."""
+    assert is_channel_address("123456789") is False
+    assert is_channel_address("123456789:2") is False
+    assert is_channel_address("1234567890:1") is True
+    assert is_channel_address("1234567890:12") is True
+    assert is_channel_address("1234567890:123") is True
+    assert is_channel_address("123456789_:123") is False
+    assert is_channel_address("ABcdEFghIJ1234567890:123") is True
+    assert is_channel_address("12345678901234567890:123") is True
+    assert is_channel_address("123456789012345678901:123") is False
