@@ -537,7 +537,7 @@ class Client(ABC):
             check_against_pd=check_against_pd,
         )
 
-    async def get_paramset(self, address: str, paramset_key: ParamsetKey) -> dict[str, Any]:
+    async def get_paramset(self, address: str, paramset_key: ParamsetKey | str) -> dict[str, Any]:
         """
         Return a paramset from CCU.
 
@@ -582,14 +582,11 @@ class Client(ABC):
         checked_values = values
         try:
             if check_against_pd:
-                is_pkey = is_paramset_key(paramset_key=paramset_key)
-                is_link_call = is_channel_address(address=paramset_key)
-
                 check_paramset_key = (
                     ParamsetKey(paramset_key)
-                    if is_pkey
+                    if is_paramset_key(paramset_key=paramset_key)
                     else ParamsetKey.LINK
-                    if is_link_call
+                    if (is_link_call := is_channel_address(address=paramset_key))
                     else None
                 )
                 if check_paramset_key:
