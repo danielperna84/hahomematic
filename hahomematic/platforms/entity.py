@@ -49,6 +49,7 @@ from hahomematic.platforms.support import (
     generate_channel_unique_id,
 )
 from hahomematic.support import get_entity_key, reduce_args
+import hahomematic.validator as val
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -90,8 +91,8 @@ _MULTIPLIER_UNIT: Final[Mapping[str, int]] = {
 
 EVENT_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(EVENT_ADDRESS): str,
-        vol.Required(EVENT_CHANNEL_NO): int,
+        vol.Required(EVENT_ADDRESS): val.device_address,
+        vol.Required(EVENT_CHANNEL_NO): val.channel_no,
         vol.Required(EVENT_DEVICE_TYPE): str,
         vol.Required(EVENT_INTERFACE_ID): str,
         vol.Required(EVENT_PARAMETER): str,

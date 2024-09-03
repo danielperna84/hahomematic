@@ -20,7 +20,6 @@ from typing import Any, Final
 
 from hahomematic.config import TIMEOUT
 from hahomematic.const import (
-    ADDRESS_PATTERN,
     ALLOWED_HOSTNAME_PATTERN,
     CACHE_PATH,
     CCU_PASSWORD_PATTERN,
@@ -90,7 +89,7 @@ def check_config(
     if central_name and IDENTIFIER_SEPARATOR in central_name:
         config_failures.append(f"Instance name must not contain {IDENTIFIER_SEPARATOR}")
 
-    if not (is_valid_hostname(hostname=host) or is_valid_ipv4_address(address=host)):
+    if not (is_hostname(hostname=host) or is_ipv4_address(address=host)):
         config_failures.append("Invalid hostname or ipv4 address")
     if not username:
         config_failures.append("Username must not be empty")
@@ -103,12 +102,12 @@ def check_config(
     except BaseHomematicException as haex:
         config_failures.append(reduce_args(haex.args)[0])
     if callback_host and not (
-        is_valid_hostname(hostname=callback_host) or is_valid_ipv4_address(address=callback_host)
+        is_hostname(hostname=callback_host) or is_ipv4_address(address=callback_host)
     ):
         config_failures.append("Invalid callback hostname or ipv4 address")
-    if callback_port and not is_valid_port(port=callback_port):
+    if callback_port and not is_port(port=callback_port):
         config_failures.append("Invalid callback port")
-    if json_port and not is_valid_port(port=json_port):
+    if json_port and not is_port(port=json_port):
         config_failures.append("Invalid json port")
 
     return config_failures
@@ -208,7 +207,7 @@ def get_channel_no(address: str) -> int | None:
 
 def is_address(address: str) -> bool:
     """Check if it is a address."""
-    return ADDRESS_PATTERN.match(address) is not None
+    return is_device_address(address=address) or is_channel_address(address=address)
 
 
 def is_channel_address(address: str) -> bool:
@@ -277,7 +276,7 @@ def get_ip_addr(host: str, port: int) -> str | None:
     return local_ip
 
 
-def is_valid_hostname(hostname: str | None) -> bool:
+def is_hostname(hostname: str | None) -> bool:
     """Return True if hostname is valid."""
     if not hostname:
         return False
@@ -296,7 +295,7 @@ def is_valid_hostname(hostname: str | None) -> bool:
     return all(ALLOWED_HOSTNAME_PATTERN.match(label) for label in labels)
 
 
-def is_valid_ipv4_address(address: str | None) -> bool:
+def is_ipv4_address(address: str | None) -> bool:
     """Return True if ipv4_address is valid."""
     if not address:
         return False
@@ -307,7 +306,7 @@ def is_valid_ipv4_address(address: str | None) -> bool:
     return True
 
 
-def is_valid_port(port: int) -> bool:
+def is_port(port: int) -> bool:
     """Return True if port is valid."""
     return 0 <= port <= 65535
 

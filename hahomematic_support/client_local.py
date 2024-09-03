@@ -216,7 +216,7 @@ class ClientLocal(Client):  # pragma: no cover
         await self.central.event(self.interface_id, channel_address, parameter, value)
         return result
 
-    async def get_paramset(self, address: str, paramset_key: ParamsetKey) -> Any:
+    async def get_paramset(self, address: str, paramset_key: ParamsetKey | str) -> Any:
         """
         Return a paramset from CCU.
 

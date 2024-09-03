@@ -1,3 +1,7 @@
+# Version 2024.9.4 (2024-09-03)
+
+- Use validator for local schema
+
 # Version 2024.9.3 (2024-09-02)
 
 - Improve validation of channel address, device address, password and htmltag

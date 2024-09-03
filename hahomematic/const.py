@@ -37,7 +37,6 @@ DEFAULT_PARAMSET_DESCRIPTIONS_DIR: Final = "export_paramset_descriptions"
 # The CCU WebUI also supports ÄäÖöÜüß, but these characters are not supported by the XmlRPC servers
 CCU_PASSWORD_PATTERN: Final = re.compile(r"[A-Za-z0-9.!$():;#-]{0,}")
 # Pattern is bigger than needed
-ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z:]{10,25}$")
 CHANNEL_ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z]{10,20}:[0-9]{1,3}$")
 DEVICE_ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z]{10,20}$")
 ALLOWED_HOSTNAME_PATTERN: Final = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
