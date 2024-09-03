@@ -648,7 +648,7 @@ def _create_entities(
         device_address=device.device_address, channel_no=channel_no
     )
     unique_id = generate_unique_id(central=device.central, address=channel_address)
-    if channel_address not in device.channels:
+    if channel_address not in device.channel_addresses:
         return tuple(entities)
     entity = custom_entity_class(
         device=device,

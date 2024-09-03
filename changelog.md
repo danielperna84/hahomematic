@@ -1,3 +1,7 @@
+# Version 2024.9.5 (2024-09-03)
+
+- Improve device_description usage
+
 # Version 2024.9.4 (2024-09-03)
 
 - Use validator for local schema

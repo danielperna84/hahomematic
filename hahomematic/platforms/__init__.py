@@ -25,7 +25,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
     """Create the entities associated to this device."""
-    for channel_address in device.channels:
+    for channel_address in device.channel_addresses:
         channel_no = hms.get_channel_no(channel_address)
 
         if not device.central.paramset_descriptions.get_paramset_keys(
