@@ -27,7 +27,6 @@ from hahomematic.const import (
 )
 from hahomematic.platforms.device import HmDevice
 from hahomematic.support import (
-    Channel,
     check_or_create_directory,
     delete_file,
     get_device_address,
@@ -174,7 +173,7 @@ class DeviceDescriptionCache(BasePersistentCache):
     def remove_device(self, device: HmDevice) -> None:
         """Remove device from cache."""
         deleted_addresses: list[str] = [device.device_address]
-        deleted_addresses.extend(device.channels)
+        deleted_addresses.extend(device.channel_addresses)
         self._remove_device(interface_id=device.interface_id, deleted_addresses=deleted_addresses)
 
     def _remove_device(self, interface_id: str, deleted_addresses: list[str]) -> None:
@@ -197,20 +196,6 @@ class DeviceDescriptionCache(BasePersistentCache):
     def get_addresses(self, interface_id: str) -> tuple[str, ...]:
         """Return the addresses by interface."""
         return tuple(self._addresses.get(interface_id, {}).keys())
-
-    def get_channels(self, interface_id: str, device_address: str) -> Mapping[str, Channel]:
-        """Return the device channels by interface and device_address."""
-        channels: dict[str, Channel] = {}
-        for channel_address in self._addresses.get(interface_id, {}).get(device_address, set()):
-            device_description = self.get_device_description(
-                interface_id=interface_id,
-                address=channel_address,
-            )
-            channels[channel_address] = Channel(
-                type=device_description["TYPE"], address=channel_address
-            )
-
-        return channels
 
     def get_device_descriptions(self, interface_id: str) -> dict[str, DeviceDescription]:
         """Return the devices by interface."""
@@ -345,7 +330,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
     def remove_device(self, device: HmDevice) -> None:
         """Remove device paramset descriptions from cache."""
         if interface := self._raw_paramset_descriptions.get(device.interface_id):
-            for channel_address in device.channels:
+            for channel_address in device.channel_addresses:
                 if channel_address in interface:
                     del self._raw_paramset_descriptions[device.interface_id][channel_address]
 

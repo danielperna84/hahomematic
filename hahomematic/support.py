@@ -368,19 +368,6 @@ def cleanup_cache_dirs(instance_name: str, storage_folder: str) -> None:
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class Channel:
-    """dataclass for a device channel."""
-
-    type: str
-    address: str
-
-    @property
-    def no(self) -> int | None:
-        """Return the channel no."""
-        return get_channel_no(self.address)
-
-
-@dataclass(frozen=True, kw_only=True, slots=True)
 class CacheEntry:
     """An entry for the value cache."""
 

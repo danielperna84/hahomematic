@@ -14,7 +14,7 @@ from typing import Any, Final
 
 import orjson
 
-from hahomematic import central as hmcu
+from hahomematic import central as hmcu, client as hmcl
 from hahomematic.async_support import loop_check
 from hahomematic.const import (
     CALLBACK_TYPE,
@@ -52,7 +52,6 @@ from hahomematic.platforms.support import PayloadMixin, get_device_name
 from hahomematic.platforms.update import HmUpdate
 from hahomematic.support import (
     CacheEntry,
-    Channel,
     check_or_create_directory,
     get_entity_key,
     get_rx_modes,
@@ -70,15 +69,14 @@ class HmDevice(PayloadMixin):
         PayloadMixin.__init__(self)
         # channel_no, base_channel_no
         self._sub_device_channels: Final[dict[int, int]] = {}
-        self.central: Final = central
+        self._central: Final = central
         self._interface_id: Final = interface_id
         self._interface: Final = central.device_details.get_interface(device_address)
-        self.client: Final = central.get_client(interface_id=interface_id)
+        self._client: Final = central.get_client(interface_id=interface_id)
         self._device_address: Final = device_address
-        self._channels: Final = central.device_descriptions.get_channels(
-            interface_id, device_address
+        self._device_description = self._get_device_description(
+            interface_id=interface_id, address=device_address
         )
-        self._channel_addresses: Final[tuple[str, ...]] = tuple(self._channels.keys())
         _LOGGER.debug(
             "__INIT__: Initializing device: %s, %s",
             interface_id,
@@ -93,19 +91,19 @@ class HmDevice(PayloadMixin):
         self._device_updated_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
 
-        device_description = self.central.device_descriptions.get_device_description(
-            interface_id=interface_id, address=device_address
+        self._channel_addresses: Final = tuple(
+            [device_address] + self._device_description["CHILDREN"]
         )
-        self._device_type: Final = device_description["TYPE"]
-        self._sub_type: Final = device_description.get("SUBTYPE")
-        self._rx_modes: Final = get_rx_modes(mode=device_description.get("RX_MODE", 0))
-        self._is_updatable: Final = device_description["UPDATABLE"]
+        self._device_type: Final = self._device_description["TYPE"]
+        self._is_updatable: Final = self._device_description["UPDATABLE"]
+        self._rx_modes: Final = get_rx_modes(mode=self._device_description.get("RX_MODE", 0))
+        self._sub_type: Final = self._device_description.get("SUBTYPE")
 
         self._ignore_for_custom_entity: Final[bool] = (
             central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
         )
         self._manufacturer = self._identify_manufacturer()
-        self._product_group: Final = self.client.get_product_group(self._device_type)
+        self._product_group: Final = self._client.get_product_group(self._device_type)
         # marker if device will be created as custom entity
         self._has_custom_entity_definition: Final = (
             hmed.entity_definition_exists(device_type=self._device_type)
@@ -118,7 +116,6 @@ class HmDevice(PayloadMixin):
         )
         self.value_cache: Final = ValueCache(device=self)
         self._rooms: Final = central.device_details.get_device_rooms(device_address=device_address)
-        self._update_firmware_data()
         self._update_entity: Final = HmUpdate(device=self) if self.is_updatable else None  # pylint: disable=using-constant-test
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",
@@ -127,20 +124,6 @@ class HmDevice(PayloadMixin):
             self._device_type,
             self._name,
         )
-
-    def _update_firmware_data(self) -> None:
-        """Update firmware related data from device descriptions."""
-        device_description = self.central.device_descriptions.get_device_description(
-            interface_id=self._interface_id,
-            address=self._device_address,
-        )
-        self._available_firmware = str(device_description.get("AVAILABLE_FIRMWARE", ""))
-        self._firmware = device_description["FIRMWARE"]
-        self._firmware_update_state = DeviceFirmwareState(
-            device_description.get("FIRMWARE_UPDATE_STATE") or DeviceFirmwareState.UNKNOWN
-        )
-
-        self._firmware_updatable = device_description.get("FIRMWARE_UPDATABLE") or False
 
     def _identify_manufacturer(self) -> Manufacturer:
         """Identify the manufacturer of a device."""
@@ -174,12 +157,17 @@ class HmDevice(PayloadMixin):
     @config_property
     def available_firmware(self) -> str | None:
         """Return the available firmware of the device."""
-        return self._available_firmware
+        return str(self._device_description.get("AVAILABLE_FIRMWARE", ""))
 
     @property
-    def channels(self) -> Mapping[str, Channel]:
-        """Return the channels."""
-        return self._channels
+    def central(self) -> hmcu.CentralUnit:
+        """Return the central of the device."""
+        return self._central
+
+    @property
+    def client(self) -> hmcl.Client:
+        """Return the client of the device."""
+        return self._client
 
     @property
     def channel_addresses(self) -> tuple[str, ...]:
@@ -211,17 +199,19 @@ class HmDevice(PayloadMixin):
     @config_property
     def firmware(self) -> str:
         """Return the firmware of the device."""
-        return self._firmware
+        return self._device_description["FIRMWARE"]
 
     @config_property
     def firmware_updatable(self) -> bool:
         """Return the firmware update state of the device."""
-        return self._firmware_updatable
+        return self._device_description.get("FIRMWARE_UPDATABLE") or False
 
     @config_property
     def firmware_update_state(self) -> DeviceFirmwareState:
         """Return the firmware update state of the device."""
-        return self._firmware_update_state
+        return DeviceFirmwareState(
+            self._device_description.get("FIRMWARE_UPDATE_STATE") or DeviceFirmwareState.UNKNOWN
+        )
 
     @property
     def generic_events(self) -> tuple[GenericEvent, ...]:
@@ -331,6 +321,12 @@ class HmDevice(PayloadMixin):
             channel_address=f"{self._device_address}:0", parameter=Parameter.CONFIG_PENDING
         )
 
+    def _get_device_description(self, interface_id: str, address: str) -> DeviceDescription:
+        """Return the description of the device."""
+        return self._central.device_descriptions.get_device_description(
+            interface_id=interface_id, address=address
+        )
+
     def add_sub_device_channel(self, channel_no: int, base_channel_no: int) -> None:
         """Assign channel no to base channel no."""
         if base_channel_no not in self._sub_device_channels:
@@ -347,7 +343,7 @@ class HmDevice(PayloadMixin):
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseParameterEntity):
-            self.central.add_event_subscription(entity=entity)
+            self._central.add_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             self._generic_entities[entity.entity_key] = entity
             self._register_device_updated_callback(cb=entity.fire_entity_updated_callback)
@@ -359,7 +355,7 @@ class HmDevice(PayloadMixin):
     def remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseParameterEntity):
-            self.central.remove_event_subscription(entity=entity)
+            self._central.remove_event_subscription(entity=entity)
         if isinstance(entity, GenericEntity):
             del self._generic_entities[entity.entity_key]
             self._unregister_device_updated_callback(cb=entity.fire_entity_updated_callback)
@@ -537,35 +533,37 @@ class HmDevice(PayloadMixin):
 
     def refresh_firmware_data(self) -> None:
         """Refresh firmware data of the device."""
-        old_available_firmware = self._available_firmware
-        old_firmware = self._firmware
-        old_firmware_update_state = self._firmware_update_state
-        old_firmware_updatable = self._firmware_updatable
+        old_available_firmware = self.available_firmware
+        old_firmware = self.firmware
+        old_firmware_update_state = self.firmware_update_state
+        old_firmware_updatable = self.firmware_updatable
 
-        self._update_firmware_data()
+        self._device_description = self._get_device_description(
+            interface_id=self._interface_id, address=self._device_address
+        )
 
         if (
-            old_available_firmware != self._available_firmware
-            or old_firmware != self._firmware
-            or old_firmware_update_state != self._firmware_update_state
-            or old_firmware_updatable != self._firmware_updatable
+            old_available_firmware != self.available_firmware
+            or old_firmware != self.firmware
+            or old_firmware_update_state != self.firmware_update_state
+            or old_firmware_updatable != self.firmware_updatable
         ):
             for callback_handler in self._firmware_update_callbacks:
                 callback_handler()
 
     async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Update the firmware of the homematic device."""
-        update_result = await self.client.update_device_firmware(
+        update_result = await self._client.update_device_firmware(
             device_address=self._device_address
         )
 
         async def refresh_data() -> None:
             for refresh_interval in refresh_after_update_intervals:
                 await asyncio.sleep(refresh_interval)
-                await self.central.refresh_firmware_data(device_address=self._device_address)
+                await self._central.refresh_firmware_data(device_address=self._device_address)
 
         if refresh_after_update_intervals:
-            self.central.looper.create_task(target=refresh_data(), name="refresh_firmware_data")
+            self._central.looper.create_task(target=refresh_data(), name="refresh_firmware_data")
 
         return update_result
 
@@ -585,16 +583,16 @@ class HmDevice(PayloadMixin):
         for (
             paramset_key,
             channel_addresses,
-        ) in self.central.paramset_descriptions.get_channel_addresses_by_paramset_key(
+        ) in self._central.paramset_descriptions.get_channel_addresses_by_paramset_key(
             interface_id=self._interface_id,
             device_address=self._device_address,
         ).items():
             for channel_address in channel_addresses:
-                await self.client.fetch_paramset_description(
+                await self._client.fetch_paramset_description(
                     channel_address=channel_address,
                     paramset_key=paramset_key,
                 )
-        await self.central.save_caches(save_paramset_descriptions=True)
+        await self._central.save_caches(save_paramset_descriptions=True)
         for entity in self.generic_entities:
             entity.update_parameter_data()
         self.fire_device_updated_callback()

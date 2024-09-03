@@ -29,6 +29,7 @@ from hahomematic.const import (
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
     NO_CACHE_ENTRY,
     CallSource,
+    DeviceDescription,
     EntityUsage,
     Flag,
     HmPlatform,
@@ -57,7 +58,7 @@ _CONFIGURABLE_CHANNEL: Final[tuple[str, ...]] = (
     "KEY_TRANSCEIVER",
     "MULTI_MODE_INPUT_TRANSMITTER",
 )
-_COLLECTOR_ARGUMENT_NAME = "collector"
+_COLLECTOR_ARGUMENT_NAME: Final = "collector"
 
 _FIX_UNIT_REPLACE: Final[Mapping[str, str]] = {
     '"': "",
@@ -278,6 +279,10 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._channel_address: Final[str] = hms.get_channel_address(
             device_address=device.device_address, channel_no=channel_no
         )
+        self._channel_description: Final = self._get_channel_description(
+            interface_id=self._device.interface_id, channel_address=self._channel_address
+        )
+        self._channel_type: Final = self._channel_description["TYPE"]
         self._channel_unique_id: Final = generate_channel_unique_id(
             central=device.central, address=self._channel_address
         )
@@ -285,7 +290,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
             channel_address=self._channel_address
         )
         self._is_in_multiple_channels: Final = is_in_multiple_channels
-        self._channel_type: Final = str(device.channels[self._channel_address].type)
         self._function: Final = self._central.device_details.get_function_text(
             address=self._channel_address
         )
@@ -380,6 +384,14 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @abstractmethod
     async def load_entity_value(self, call_source: CallSource, direct_call: bool = False) -> None:
         """Init the entity data."""
+
+    def _get_channel_description(
+        self, interface_id: str, channel_address: str
+    ) -> DeviceDescription:
+        """Return the description of the channel."""
+        return self.central.device_descriptions.get_device_description(
+            interface_id=interface_id, address=channel_address
+        )
 
     @abstractmethod
     def _get_entity_name(self) -> EntityNameData:
