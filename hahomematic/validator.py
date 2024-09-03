@@ -61,5 +61,5 @@ def paramset_key(value: str) -> str:
     raise vol.Invalid("paramset_key is invalid")
 
 
-address = vol.Any(device_address, channel_address)
-host = vol.Any(hostname, ipv4_address)
+address = vol.All(vol.Coerce(str), vol.Any(device_address, channel_address))
+host = vol.All(vol.Coerce(str), vol.Any(hostname, ipv4_address))
