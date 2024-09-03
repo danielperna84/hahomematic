@@ -36,8 +36,8 @@ from hahomematic.support import (
     get_tls_context,
     is_channel_address,
     is_device_address,
-    is_valid_hostname,
-    is_valid_ipv4_address,
+    is_hostname,
+    is_ipv4_address,
     parse_sys_var,
     to_bool,
 )
@@ -552,26 +552,26 @@ def test_converter(
 
 def test_is_valid_hostname() -> None:
     """Test is_valid_hostname."""
-    assert is_valid_hostname(None) is False
-    assert is_valid_hostname("") is False
-    assert is_valid_hostname(" ") is False
-    assert is_valid_hostname("123") is False
-    assert is_valid_hostname("ccu") is True
-    assert is_valid_hostname("ccu.test.de") is True
-    assert is_valid_hostname("ccu.de") is True
-    assert is_valid_hostname("ccu.123") is False
-    assert is_valid_hostname("192.168.178.2") is False
-    assert is_valid_hostname("5422eb72-raspberrymatic") is True
+    assert is_hostname(None) is False
+    assert is_hostname("") is False
+    assert is_hostname(" ") is False
+    assert is_hostname("123") is False
+    assert is_hostname("ccu") is True
+    assert is_hostname("ccu.test.de") is True
+    assert is_hostname("ccu.de") is True
+    assert is_hostname("ccu.123") is False
+    assert is_hostname("192.168.178.2") is False
+    assert is_hostname("5422eb72-raspberrymatic") is True
 
 
 def test_is_valid_ipv4_address() -> None:
     """Test is_valid_ipv4_address."""
-    assert is_valid_ipv4_address(None) is False
-    assert is_valid_ipv4_address("") is False
-    assert is_valid_ipv4_address(" ") is False
-    assert is_valid_ipv4_address("192.168.1782") is False
-    assert is_valid_ipv4_address("192.168.178.2") is True
-    assert is_valid_ipv4_address("ccu") is False
+    assert is_ipv4_address(None) is False
+    assert is_ipv4_address("") is False
+    assert is_ipv4_address(" ") is False
+    assert is_ipv4_address("192.168.1782") is False
+    assert is_ipv4_address("192.168.178.2") is True
+    assert is_ipv4_address("ccu") is False
 
 
 def test_is_device_address() -> None:

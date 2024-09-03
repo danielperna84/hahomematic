@@ -16,6 +16,7 @@ from hahomematic.platforms.custom import entity as hmce
 from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
 from hahomematic.platforms.support import generate_unique_id
+import hahomematic.validator as val
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -25,18 +26,22 @@ ALL_DEVICES: dict[HmPlatform, Mapping[str, CustomConfig | tuple[CustomConfig, ..
 ALL_BLACKLISTED_DEVICES: list[tuple[str, ...]] = []
 
 SCHEMA_ED_ADDITIONAL_ENTITIES = vol.Schema(
-    {vol.Required(vol.Any(int, tuple[int, ...])): vol.Schema((vol.Optional(Parameter),))}
+    {
+        vol.Required(vol.Any(val.positive_int, tuple[int, ...])): vol.Schema(
+            (vol.Optional(Parameter),)
+        )
+    }
 )
 
 SCHEMA_ED_FIELD_DETAILS = vol.Schema({vol.Required(Field): Parameter})
 
-SCHEMA_ED_FIELD = vol.Schema({vol.Required(int): SCHEMA_ED_FIELD_DETAILS})
+SCHEMA_ED_FIELD = vol.Schema({vol.Required(val.positive_int): SCHEMA_ED_FIELD_DETAILS})
 
 SCHEMA_ED_DEVICE_GROUP = vol.Schema(
     {
-        vol.Required(ED.PRIMARY_CHANNEL.value): vol.Any(int, None),
+        vol.Required(ED.PRIMARY_CHANNEL.value): vol.Any(val.positive_int, None),
         vol.Required(ED.ALLOW_UNDEFINED_GENERIC_ENTITIES.value): bool,
-        vol.Optional(ED.SECONDARY_CHANNELS.value): (int,),
+        vol.Optional(ED.SECONDARY_CHANNELS.value): (val.positive_int,),
         vol.Optional(ED.REPEATABLE_FIELDS.value): SCHEMA_ED_FIELD_DETAILS,
         vol.Optional(ED.VISIBLE_REPEATABLE_FIELDS.value): SCHEMA_ED_FIELD_DETAILS,
         vol.Optional(ED.FIELDS.value): SCHEMA_ED_FIELD,

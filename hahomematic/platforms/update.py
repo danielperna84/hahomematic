@@ -85,10 +85,13 @@ class HmUpdate(CallbackEntity):
     @value_property
     def latest_firmware(self) -> str | None:
         """Latest firmware available for install."""
-        if (
-            self._device.interface == InterfaceName.HMIP_RF
-            and self._device.firmware_update_state in HMIP_FIRMWARE_UPDATE_READY_STATES
-        ) or self._device.interface in (InterfaceName.BIDCOS_RF, InterfaceName.BIDCOS_WIRED):
+        if self._device.available_firmware and (
+            (
+                self._device.interface == InterfaceName.HMIP_RF
+                and self._device.firmware_update_state in HMIP_FIRMWARE_UPDATE_READY_STATES
+            )
+            or self._device.interface in (InterfaceName.BIDCOS_RF, InterfaceName.BIDCOS_WIRED)
+        ):
             return self._device.available_firmware
         return self._device.firmware
 
