@@ -52,7 +52,7 @@ async def test_hmfloat(
     assert efloat.values is None
     assert efloat.value is None
     await efloat.send_value(0.3)
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000011:3",
         paramset_key="VALUES",
         parameter="LEVEL",
@@ -98,7 +98,7 @@ async def test_hmfloat_special(
     assert efloat.values is None
     assert efloat.value is None
     await efloat.send_value(8.0)
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000054:2",
         paramset_key="VALUES",
         parameter="SETPOINT",
@@ -107,7 +107,7 @@ async def test_hmfloat_special(
     assert efloat.value == 8.0
 
     await efloat.send_value("VENT_OPEN")
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000054:2",
         paramset_key="VALUES",
         parameter="SETPOINT",
@@ -146,7 +146,7 @@ async def test_hminteger(
     assert einteger.values is None
     assert einteger.value is None
     await einteger.send_value(3)
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU4984404:1",
         paramset_key="VALUES",
         parameter="SET_POINT_MODE",
@@ -155,7 +155,7 @@ async def test_hminteger(
     assert einteger.value == 3
 
     await einteger.send_value(1.0)
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU4984404:1",
         paramset_key="VALUES",
         parameter="SET_POINT_MODE",

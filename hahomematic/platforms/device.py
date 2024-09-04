@@ -71,7 +71,7 @@ class HmDevice(PayloadMixin):
         self._sub_device_channels: Final[dict[int, int]] = {}
         self._central: Final = central
         self._interface_id: Final = interface_id
-        self._interface: Final = central.device_details.get_interface(device_address)
+        self._interface: Final = central.device_details.get_interface(address=device_address)
         self._client: Final = central.get_client(interface_id=interface_id)
         self._device_address: Final = device_address
         self._device_description = self._get_device_description(
@@ -114,7 +114,7 @@ class HmDevice(PayloadMixin):
             device_address=device_address,
             device_type=self._device_type,
         )
-        self.value_cache: Final = ValueCache(device=self)
+        self._value_cache: Final[ValueCache] = ValueCache(device=self)
         self._rooms: Final = central.device_details.get_device_rooms(device_address=device_address)
         self._update_entity: Final = HmUpdate(device=self) if self.is_updatable else None  # pylint: disable=using-constant-test
         _LOGGER.debug(
@@ -223,6 +223,11 @@ class HmDevice(PayloadMixin):
         """Return the generic entities."""
         return tuple(self._generic_entities.values())
 
+    @property
+    def has_custom_entity_definition(self) -> bool:
+        """Return if custom_entity definition is available for the device."""
+        return self._has_custom_entity_definition
+
     @config_property
     def has_sub_devices(self) -> bool:
         """Return if device has multiple sub device channels."""
@@ -248,10 +253,10 @@ class HmDevice(PayloadMixin):
         """Return if device should be ignored for custom entity."""
         return self._ignore_for_custom_entity
 
-    @property
-    def has_custom_entity_definition(self) -> bool:
-        """Return if custom_entity definition is available for the device."""
-        return self._has_custom_entity_definition
+    @config_property
+    def is_updatable(self) -> bool:
+        """Return if the device is updatable."""
+        return self._is_updatable
 
     @config_property
     def manufacturer(self) -> str:
@@ -290,15 +295,15 @@ class HmDevice(PayloadMixin):
         """Return the sub_type of the device."""
         return self._sub_type
 
-    @config_property
-    def is_updatable(self) -> bool:
-        """Return if the device is updatable."""
-        return self._is_updatable
-
     @property
     def update_entity(self) -> HmUpdate | None:
         """Return the device firmware update entity of the device."""
         return self._update_entity
+
+    @property
+    def value_cache(self) -> ValueCache:
+        """Return the value_cache of the device."""
+        return self._value_cache
 
     @property
     def _e_unreach(self) -> GenericEntity | None:
@@ -570,9 +575,9 @@ class HmDevice(PayloadMixin):
     async def load_value_cache(self) -> None:
         """Init the parameter cache."""
         if len(self._generic_entities) > 0:
-            await self.value_cache.init_base_entities()
+            await self._value_cache.init_base_entities()
         if len(self._generic_events) > 0:
-            await self.value_cache.init_readable_events()
+            await self._value_cache.init_readable_events()
         _LOGGER.debug(
             "INIT_DATA: Skipping load_data, missing entities for %s",
             self._device_address,

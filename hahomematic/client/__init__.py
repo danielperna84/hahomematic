@@ -68,29 +68,22 @@ class Client(ABC):
     def __init__(self, client_config: _ClientConfig) -> None:
         """Initialize the Client."""
         self._config: Final = client_config
-        self.central: Final[hmcu.CentralUnit] = client_config.central
         self._last_value_send_cache = CommandCache(interface_id=client_config.interface_id)
-
-        self._json_rpc_client: Final = client_config.central.json_rpc_client
-
-        self.interface: Final[str] = client_config.interface
-        self.interface_id: Final[str] = client_config.interface_id
-        self.version: Final[str] = client_config.version
+        self._json_rpc_client: Final = client_config.central.config.json_rpc_client
         self._available: bool = True
         self._connection_error_count: int = 0
         self._is_callback_alive: bool = True
-        self.modified_at: datetime = INIT_DATETIME
         self._ping_pong_cache: Final = PingPongCache(
             central=client_config.central, interface_id=client_config.interface_id
         )
-
         self._proxy: XmlRpcProxy
         self._proxy_read: XmlRpcProxy
-        self.system_information: SystemInformation
+        self._system_information: SystemInformation
+        self.modified_at: datetime = INIT_DATETIME
 
     async def init_client(self) -> None:
         """Init the client."""
-        self.system_information = await self._get_system_information()
+        self._system_information = await self._get_system_information()
         self._proxy = await self._config.get_xml_rpc_proxy(
             auth_enabled=self.system_information.auth_enabled
         )
@@ -102,6 +95,21 @@ class Client(ABC):
     def available(self) -> bool:
         """Return the availability of the client."""
         return self._available
+
+    @property
+    def central(self) -> hmcu.CentralUnit:
+        """Return the central of the client."""
+        return self._config.central
+
+    @property
+    def interface(self) -> str:
+        """Return the interface of the client."""
+        return self._config.interface
+
+    @property
+    def interface_id(self) -> str:
+        """Return the interface id of the client."""
+        return self._config.interface_id
 
     @property
     def last_value_send_cache(self) -> CommandCache:
@@ -117,6 +125,16 @@ class Client(ABC):
     def ping_pong_cache(self) -> PingPongCache:
         """Return the ping pong cache."""
         return self._ping_pong_cache
+
+    @property
+    def system_information(self) -> SystemInformation:
+        """Return the system_information of the client."""
+        return self._system_information
+
+    @property
+    def version(self) -> str:
+        """Return the version id of the client."""
+        return self._config.version
 
     def get_product_group(self, device_type: str) -> ProductGroup:
         """Return the product group."""
@@ -1113,20 +1131,14 @@ class _ClientConfig:
         self.interface_config: Final = interface_config
         self.interface: Final = interface_config.interface
         self.interface_id: Final = interface_config.interface_id
-        self._callback_host: Final[str] = (
-            central.config.callback_host
-            if central.config.callback_host
-            else central.xml_rpc_server_ip_addr
-        )
-        self._callback_port: Final[int] = (
-            central.config.callback_port
-            if central.config.callback_port
-            else central.xml_rpc_server_port
-        )
         self.has_credentials: Final[bool] = (
             central.config.username is not None and central.config.password is not None
         )
-        self.init_url: Final[str] = f"http://{self._callback_host}:{self._callback_port}"
+        self.init_url: Final[str] = f"http://{central.config.callback_host
+            if central.config.callback_host
+            else central.xml_rpc_server_ip_addr}:{central.config.callback_port
+            if central.config.callback_port
+            else central.xml_rpc_server_port}"
         self.xml_rpc_uri: Final = build_xml_rpc_uri(
             host=central.config.host,
             port=interface_config.port,

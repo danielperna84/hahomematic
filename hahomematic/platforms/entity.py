@@ -293,9 +293,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._function: Final = self._central.device_details.get_function_text(
             address=self._channel_address
         )
-        self._client: Final[hmcl.Client] = device.central.get_client(
-            interface_id=device.interface_id
-        )
+        self._client: Final[hmcl.Client] = device.client
 
         self._forced_usage: EntityUsage | None = None
         self._entity_name_data: Final = self._get_entity_name()
