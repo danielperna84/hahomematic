@@ -24,7 +24,8 @@ from tests import const
 
 _LOGGER = logging.getLogger(__name__)
 
-EXCLUDE_METHODS_FROM_MOCKS: Final = ["system_information", "version"]
+EXCLUDE_METHODS_FROM_MOCKS: Final = []
+INCLUDE_PROPERTIES_IN_MOCKS: Final = []
 GOT_DEVICES = False
 
 
@@ -163,15 +164,19 @@ def load_device_description(central: CentralUnit, filename: str) -> Any:
     return dev_desc
 
 
-def get_mock(instance: Any):
+def get_mock(instance: Any, **kwargs):
     """Create a mock and copy instance attributes over mock."""
     if isinstance(instance, Mock):
         instance.__dict__.update(instance._mock_wraps.__dict__)
         return instance
-    mock = MagicMock(spec=instance, wraps=instance)
+    mock = MagicMock(spec=instance, wraps=instance, **kwargs)
     mock.__dict__.update(instance.__dict__)
     try:
-        for method_name in _get_not_mockable_method_names(instance):
+        for method_name in [
+            prop
+            for prop in _get_not_mockable_method_names(instance)
+            if prop not in INCLUDE_PROPERTIES_IN_MOCKS and prop not in kwargs
+        ]:
             setattr(mock, method_name, getattr(instance, method_name))
     except Exception:
         pass
@@ -183,9 +188,9 @@ def _get_not_mockable_method_names(instance: Any) -> set[str]:
     """Return all relevant method names for mocking."""
     methods: set[str] = set(_get_public_attributes_by_decorator(instance, property))
 
-    for attribute in dir(instance):
-        if attribute in EXCLUDE_METHODS_FROM_MOCKS:
-            methods.add(attribute)
+    for method in dir(instance):
+        if method in EXCLUDE_METHODS_FROM_MOCKS:
+            methods.add(method)
     return methods
 
 
