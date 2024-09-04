@@ -45,7 +45,7 @@ class ClientLocal(Client):  # pragma: no cover
 
     async def init_client(self) -> None:
         """Init the client."""
-        self.system_information = await self._get_system_information()
+        self._system_information = await self._get_system_information()
 
     @property
     def available(self) -> bool:

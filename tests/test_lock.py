@@ -49,7 +49,7 @@ async def test_cerflock(
 
     assert lock.is_locked is True
     await lock.unlock()
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000146:1",
         paramset_key="VALUES",
         parameter="STATE",
@@ -58,7 +58,7 @@ async def test_cerflock(
     )
     assert lock.is_locked is False
     await lock.lock()
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU0000146:1",
         paramset_key="VALUES",
         parameter="STATE",

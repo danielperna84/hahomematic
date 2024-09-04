@@ -6,7 +6,7 @@ import asyncio
 import importlib.resources
 import logging
 import os
-from typing import Any
+from typing import Any, Final
 from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientSession
@@ -17,17 +17,19 @@ from hahomematic.central import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, _ClientConfig
 from hahomematic.const import BackendSystemEvent, InterfaceName
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.decorators import _get_public_attributes_by_decorator
 from hahomematic_support.client_local import ClientLocal, LocalRessources
 
 from tests import const
 
 _LOGGER = logging.getLogger(__name__)
 
+EXCLUDE_METHODS_FROM_MOCKS: Final = []
+INCLUDE_PROPERTIES_IN_MOCKS: Final = []
 GOT_DEVICES = False
 
+
 # pylint: disable=protected-access
-
-
 class Factory:
     """Factory for a central with one local client."""
 
@@ -113,7 +115,7 @@ class Factory:
         """Return a central based on give address_device_translation."""
         central, client = await self.get_unpatched_default_central(
             address_device_translation=address_device_translation,
-            do_mock_client=do_mock_client,
+            do_mock_client=True,
             ignore_devices_on_create=ignore_devices_on_create,
             un_ignore_list=un_ignore_list,
         )
@@ -162,15 +164,34 @@ def load_device_description(central: CentralUnit, filename: str) -> Any:
     return dev_desc
 
 
-def get_mock(instance, **kwargs):
+def get_mock(instance: Any, **kwargs):
     """Create a mock and copy instance attributes over mock."""
     if isinstance(instance, Mock):
         instance.__dict__.update(instance._mock_wraps.__dict__)
         return instance
-
     mock = MagicMock(spec=instance, wraps=instance, **kwargs)
     mock.__dict__.update(instance.__dict__)
-    return mock
+    try:
+        for method_name in [
+            prop
+            for prop in _get_not_mockable_method_names(instance)
+            if prop not in INCLUDE_PROPERTIES_IN_MOCKS and prop not in kwargs
+        ]:
+            setattr(mock, method_name, getattr(instance, method_name))
+    except Exception:
+        pass
+    finally:
+        return mock
+
+
+def _get_not_mockable_method_names(instance: Any) -> set[str]:
+    """Return all relevant method names for mocking."""
+    methods: set[str] = set(_get_public_attributes_by_decorator(instance, property))
+
+    for method in dir(instance):
+        if method in EXCLUDE_METHODS_FROM_MOCKS:
+            methods.add(method)
+    return methods
 
 
 def _load_json_file(anchor: str, resource: str, filename: str) -> Any | None:

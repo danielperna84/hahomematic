@@ -50,7 +50,7 @@ async def test_ceswitch(
     assert switch.value is False
     assert switch.channel_value is False
     await switch.turn_on()
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         parameter="STATE",
@@ -59,7 +59,7 @@ async def test_ceswitch(
     )
     assert switch.value is True
     await switch.turn_off()
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         parameter="STATE",
@@ -68,7 +68,7 @@ async def test_ceswitch(
     )
     assert switch.value is False
     await switch.turn_on(on_time=60)
-    assert mock_client.method_calls[-2] == call.put_paramset(
+    assert mock_client.method_calls[-1] == call.put_paramset(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         values={"ON_TIME": 60.0, "STATE": True},
@@ -79,7 +79,7 @@ async def test_ceswitch(
     await switch.turn_off()
     switch.set_on_time(35.4)
     await switch.turn_on()
-    assert mock_client.method_calls[-2] == call.put_paramset(
+    assert mock_client.method_calls[-1] == call.put_paramset(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         values={"ON_TIME": 35.4, "STATE": True},
@@ -121,7 +121,7 @@ async def test_hmswitch(
 
     assert switch.value is None
     await switch.turn_on()
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         parameter="STATE",
@@ -129,7 +129,7 @@ async def test_hmswitch(
     )
     assert switch.value is True
     await switch.turn_off()
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         parameter="STATE",
@@ -137,13 +137,13 @@ async def test_hmswitch(
     )
     assert switch.value is False
     await switch.turn_on(on_time=60)
-    assert mock_client.method_calls[-3] == call.set_value(
+    assert mock_client.method_calls[-2] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         parameter="ON_TIME",
         value=60.0,
     )
-    assert mock_client.method_calls[-2] == call.set_value(
+    assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU2128127:4",
         paramset_key="VALUES",
         parameter="STATE",

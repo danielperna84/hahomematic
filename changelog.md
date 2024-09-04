@@ -1,6 +1,7 @@
 # Version 2024.9.5 (2024-09-03)
 
 - Improve device_description usage
+- Reduce number of required characters for an address identification
 
 # Version 2024.9.4 (2024-09-03)
 
