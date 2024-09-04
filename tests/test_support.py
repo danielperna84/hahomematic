@@ -12,7 +12,13 @@ import pytest
 from hahomematic.caches.visibility import _get_value_from_dict_by_wildcard_key
 from hahomematic.central import CentralUnit
 from hahomematic.client import Client
-from hahomematic.const import INIT_DATETIME, EntityUsage, ParameterType, SysvarType
+from hahomematic.const import (
+    INIT_DATETIME,
+    VIRTUAL_REMOTE_ADDRESSES,
+    EntityUsage,
+    ParameterType,
+    SysvarType,
+)
 from hahomematic.converter import _COMBINED_PARAMETER_TO_HM_CONVERTER, convert_hm_level_to_cpv
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms.support import (
@@ -576,10 +582,12 @@ def test_is_valid_ipv4_address() -> None:
 
 def test_is_device_address() -> None:
     """Test is_device_address."""
-    assert is_device_address("123456789") is False
+    for address in VIRTUAL_REMOTE_ADDRESSES:
+        assert is_device_address(address) is True
     assert is_device_address("123456789:2") is False
-    assert is_device_address("1234567890") is True
-    assert is_device_address("1234567890-") is False
+    assert is_device_address("KEQ1234567") is True
+    assert is_device_address("001858A123B912") is True
+    assert is_device_address("1234567890#") is False
     assert is_device_address("123456789_:123") is False
     assert is_device_address("ABcdEFghIJ1234567890") is True
     assert is_device_address("12345678901234567890") is True
@@ -588,10 +596,12 @@ def test_is_device_address() -> None:
 
 def test_is_channel_address() -> None:
     """Test is_channel_address."""
-    assert is_channel_address("123456789") is False
-    assert is_channel_address("123456789:2") is False
-    assert is_channel_address("1234567890:1") is True
-    assert is_channel_address("1234567890:12") is True
+    for address in VIRTUAL_REMOTE_ADDRESSES:
+        assert is_channel_address(f"{address}:13") is True
+    assert is_channel_address("1234") is False
+    assert is_channel_address("1234:2") is False
+    assert is_channel_address("KEQ1234567:13") is True
+    assert is_channel_address("001858A123B912:1") is True
     assert is_channel_address("1234567890:123") is True
     assert is_channel_address("123456789_:123") is False
     assert is_channel_address("ABcdEFghIJ1234567890:123") is True
