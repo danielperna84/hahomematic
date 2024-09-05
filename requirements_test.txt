@@ -19,3 +19,4 @@ pytest-socket==0.7.0
 pytest-timeout==2.3.1
 pytest==8.3.2
 types-python-slugify==8.0.2.20240310
+uv==0.4.5
