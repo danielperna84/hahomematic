@@ -8,9 +8,16 @@ from json import JSONDecodeError
 import logging
 import os
 from pathlib import Path
+from ssl import SSLContext
 from typing import Any, Final
 
-from aiohttp import ClientConnectorCertificateError, ClientError, ClientResponse, ClientSession
+from aiohttp import (
+    ClientConnectorCertificateError,
+    ClientError,
+    ClientResponse,
+    ClientSession,
+    ClientTimeout,
+)
 import orjson
 
 from hahomematic import central as hmcu, config
@@ -108,7 +115,7 @@ class JsonRpcAioHttpClient:
         self._password: Final = password
         self._looper = Looper()
         self._tls: Final = tls
-        self._tls_context: Final = get_tls_context(verify_tls) if tls else None
+        self._tls_context: Final[SSLContext | bool] = get_tls_context(verify_tls) if tls else False
         self._url: Final = f"{device_url}{PATH_JSON_RPC}"
         self._script_cache: Final[dict[str, str]] = {}
         self._last_session_id_refresh: datetime | None = None
@@ -312,7 +319,7 @@ class JsonRpcAioHttpClient:
                     self._url,
                     data=payload,
                     headers=headers,
-                    timeout=config.TIMEOUT,
+                    timeout=ClientTimeout(total=config.TIMEOUT),
                     ssl=self._tls_context,
                 )
             ) is None:
