@@ -50,7 +50,7 @@ IP_ANY_V4: Final = "0.0.0.0"
 PORT_ANY: Final = 0
 BLOCK_LOG_TIMEOUT = 60
 CACHE_PATH: Final = "cache"
-
+KWARGS_ARG_ENTITY = "entity"
 PATH_JSON_RPC: Final = "/api/homematic.cgi"
 
 HOMEGEAR_SERIAL = "Homegear_SN0815"

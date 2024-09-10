@@ -74,15 +74,15 @@ class value_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
 
 def _get_public_attributes_by_decorator(
     data_object: Any, property_decorator: type
-) -> dict[str, Any]:
+) -> Mapping[str, Any]:
     """Return the object attributes by decorator."""
-    pub_attribute_names = [
+    pub_attributes = [
         y
         for y in dir(data_object.__class__)
         if not y.startswith("_")
         and isinstance(getattr(data_object.__class__, y), property_decorator)
     ]
-    return {x: _get_text_value(getattr(data_object, x)) for x in pub_attribute_names}
+    return {x: _get_text_value(getattr(data_object, x)) for x in pub_attributes}
 
 
 def _get_text_value(value: Any) -> Any:

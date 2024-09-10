@@ -27,6 +27,7 @@ from hahomematic.const import (
     EVENT_VALUE,
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
+    KWARGS_ARG_ENTITY,
     NO_CACHE_ENTRY,
     CallSource,
     DeviceDescription,
@@ -234,7 +235,8 @@ class CallbackEntity(ABC):
         """Do what is needed when the value of the entity has been updated/refreshed."""
         for callback_handler in self._entity_updated_callbacks:
             try:
-                callback_handler(entity=self)
+                kwargs[KWARGS_ARG_ENTITY] = self
+                callback_handler(*args, **kwargs)
             except Exception as ex:
                 _LOGGER.warning("FIRE_entity_updated_EVENT failed: %s", reduce_args(args=ex.args))
 
