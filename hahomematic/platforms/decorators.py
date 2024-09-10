@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from datetime import datetime
 from enum import Enum
 from typing import Any
 
@@ -73,15 +74,15 @@ class value_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
 
 def _get_public_attributes_by_decorator(
     data_object: Any, property_decorator: type
-) -> Mapping[str, Any]:
+) -> dict[str, Any]:
     """Return the object attributes by decorator."""
-    pub_attributes = [
+    pub_attribute_names = [
         y
         for y in dir(data_object.__class__)
         if not y.startswith("_")
         and isinstance(getattr(data_object.__class__, y), property_decorator)
     ]
-    return {x: _get_text_value(getattr(data_object, x)) for x in pub_attributes}
+    return {x: _get_text_value(getattr(data_object, x)) for x in pub_attribute_names}
 
 
 def _get_text_value(value: Any) -> Any:
@@ -90,6 +91,8 @@ def _get_text_value(value: Any) -> Any:
         return tuple(_get_text_value(v) for v in value)
     if isinstance(value, Enum):
         return str(value)
+    if isinstance(value, datetime):
+        return datetime.timestamp(value)
     return value
 
 

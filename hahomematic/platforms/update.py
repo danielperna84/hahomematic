@@ -45,7 +45,7 @@ class HmUpdate(CallbackEntity):
         )
         self._set_modified_at()
 
-    @property
+    @value_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self._device.available
@@ -98,7 +98,7 @@ class HmUpdate(CallbackEntity):
     @property
     def path(self) -> str:
         """Return the path of the entity."""
-        return f"{self._device.device_address}/{HmPlatform.UPDATE}".lower()
+        return f"{self._central.name}/{self._device.device_address}/{HmPlatform.UPDATE}".lower()
 
     def register_entity_updated_callback(self, cb: Callable, custom_id: str) -> CALLBACK_TYPE:
         """Register update callback."""

@@ -1,3 +1,7 @@
+# Version 2024.9.6 (2024-09-10)
+
+- Adjust payload and path
+
 # Version 2024.9.5 (2024-09-03)
 
 - Improve device_description usage

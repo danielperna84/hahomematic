@@ -75,7 +75,7 @@ class GenericSystemVariable(GenericHubEntity):
         self._value = data.value
         self._old_value: bool | float | int | str | None = None
 
-    @property
+    @value_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.central.available

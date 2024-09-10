@@ -117,7 +117,7 @@ class CallbackEntity(ABC):
         self._modified_at: datetime = INIT_DATETIME
         self._refreshed_at: datetime = INIT_DATETIME
 
-    @property
+    @value_property
     @abstractmethod
     def available(self) -> bool:
         """Return the availability of the device."""
@@ -142,12 +142,12 @@ class CallbackEntity(ABC):
     def full_name(self) -> str:
         """Return the full name of the entity."""
 
-    @property
+    @value_property
     def modified_at(self) -> datetime:
         """Return the last update datetime value."""
         return self._modified_at
 
-    @property
+    @value_property
     def refreshed_at(self) -> datetime:
         """Return the last refresh datetime value."""
         return self._refreshed_at
@@ -234,7 +234,7 @@ class CallbackEntity(ABC):
         """Do what is needed when the value of the entity has been updated/refreshed."""
         for callback_handler in self._entity_updated_callbacks:
             try:
-                callback_handler(*args, **kwargs)
+                callback_handler(entity=self)
             except Exception as ex:
                 _LOGGER.warning("FIRE_entity_updated_EVENT failed: %s", reduce_args(args=ex.args))
 
@@ -298,12 +298,12 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._forced_usage: EntityUsage | None = None
         self._entity_name_data: Final = self._get_entity_name()
 
-    @property
+    @value_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self._device.available
 
-    @config_property
+    @property
     def base_channel_no(self) -> int | None:
         """Return the base channel no of the entity."""
         return self._device.get_sub_device_channel(channel_no=self._channel_no)
@@ -311,7 +311,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @property
     def _base_path(self) -> str:
         """Return the base path of the entity."""
-        return f"{self._device.device_address}/{self._channel_no}/{self._platform}"
+        return f"{self._central.name}/{self._device.device_address}/{self._channel_no}/{self._platform}"
 
     @config_property
     def channel_address(self) -> str:
@@ -547,12 +547,12 @@ class BaseParameterEntity[
         """Return, if entity is writeable."""
         return False if self._is_forced_sensor else bool(self._operations & Operations.WRITE)
 
-    @property
+    @value_property
     def modified_at(self) -> datetime:
         """Return the last modified datetime value."""
         return self._modified_at
 
-    @property
+    @value_property
     def refreshed_at(self) -> datetime:
         """Return the last refreshed datetime value."""
         return self._refreshed_at
