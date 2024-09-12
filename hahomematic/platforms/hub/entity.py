@@ -8,7 +8,7 @@ from typing import Any, Final
 from slugify import slugify
 
 from hahomematic import central as hmcu
-from hahomematic.const import SYSVAR_ADDRESS, HubData, SystemVariableData
+from hahomematic.const import HUB_PATH, SYSVAR_ADDRESS, HubData, SystemVariableData
 from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import generate_unique_id
@@ -32,7 +32,7 @@ class GenericHubEntity(CallbackEntity):
         )
         super().__init__(central=central, unique_id=unique_id)
         self._name: Final = self.get_name(data=data)
-        self._full_name: Final = f"{self.central.name}_{self._name}"
+        self._full_name: Final = f"{self._central.name}_{self._name}"
 
     @abstractmethod
     def get_name(self, data: HubData) -> str:
@@ -51,7 +51,7 @@ class GenericHubEntity(CallbackEntity):
     @property
     def path(self) -> str:
         """Return the path of the entity."""
-        return f"{self.central.name}/{self.platform}".lower()
+        return f"{self._central.name}/{HUB_PATH}/{self.platform}/{self.name}".lower()
 
 
 class GenericSystemVariable(GenericHubEntity):

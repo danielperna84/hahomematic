@@ -47,8 +47,8 @@ class PayloadMixin:
         return get_public_attributes_for_config_property(data_object=self)
 
     @property
-    def payload_value(self) -> Mapping[str, Any]:
-        """Return the payload value."""
+    def payload_state(self) -> Mapping[str, Any]:
+        """Return the payload state."""
         return get_public_attributes_for_state_property(data_object=self)
 
 

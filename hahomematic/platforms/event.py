@@ -51,7 +51,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
             parameter_data=parameter_data,
         )
 
-    @config_property
+    @property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
         if (forced_by_com := self._enabled_by_channel_operation_mode) is None:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from hahomematic.platforms.decorators import (
-    config_property,
     get_public_attributes_for_config_property,
     get_public_attributes_for_state_property,
     state_property,
@@ -59,7 +58,7 @@ class PropertyTestClazz:
         """Delete value."""
         self._value = ""
 
-    @config_property
+    @property
     def config(self) -> str:
         """Return config."""
         return self._config

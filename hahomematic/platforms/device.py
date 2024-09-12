@@ -160,6 +160,11 @@ class HmDevice(PayloadMixin):
         return str(self._device_description.get("AVAILABLE_FIRMWARE", ""))
 
     @property
+    def path(self) -> str:
+        """Return the base path of the entity."""
+        return f"{self._central.path}/{self._device_address}"
+
+    @property
     def central(self) -> hmcu.CentralUnit:
         """Return the central of the device."""
         return self._central
@@ -228,7 +233,7 @@ class HmDevice(PayloadMixin):
         """Return if custom_entity definition is available for the device."""
         return self._has_custom_entity_definition
 
-    @config_property
+    @property
     def has_sub_devices(self) -> bool:
         """Return if device has multiple sub device channels."""
         return len(set(self._sub_device_channels.values())) > 1
@@ -248,12 +253,12 @@ class HmDevice(PayloadMixin):
         """Return the interface_id of the device."""
         return self._interface_id
 
-    @config_property
+    @property
     def ignore_for_custom_entity(self) -> bool:
         """Return if device should be ignored for custom entity."""
         return self._ignore_for_custom_entity
 
-    @config_property
+    @property
     def is_updatable(self) -> bool:
         """Return if the device is updatable."""
         return self._is_updatable
@@ -268,7 +273,7 @@ class HmDevice(PayloadMixin):
         """Return the name of the device."""
         return self._name
 
-    @config_property
+    @property
     def product_group(self) -> ProductGroup:
         """Return the product group of the device."""
         return self._product_group
@@ -285,12 +290,12 @@ class HmDevice(PayloadMixin):
         """Return all rooms of the device."""
         return self._rooms
 
-    @config_property
+    @property
     def rx_modes(self) -> tuple[RxMode, ...]:
         """Return the rx mode."""
         return self._rx_modes
 
-    @config_property
+    @property
     def sub_type(self) -> str | None:
         """Return the sub_type of the device."""
         return self._sub_type

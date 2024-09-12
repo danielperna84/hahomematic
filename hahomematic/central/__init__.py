@@ -31,6 +31,7 @@ from hahomematic.central.decorators import callback_backend_system, callback_eve
 from hahomematic.client.json_rpc import JsonRpcAioHttpClient
 from hahomematic.client.xml_rpc import XmlRpcProxy
 from hahomematic.const import (
+    APP_PATH,
     CALLBACK_TYPE,
     DATETIME_FORMAT_MILLIS,
     DEFAULT_TLS,
@@ -262,6 +263,11 @@ class CentralUnit:
     def name(self) -> str:
         """Return the name of the backend."""
         return self._config.name
+
+    @property
+    def path(self) -> str:
+        """Return the base path of the entity."""
+        return f"{APP_PATH}/{self.name}"
 
     @property
     def program_buttons(self) -> tuple[HmProgramButton, ...]:

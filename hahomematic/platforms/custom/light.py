@@ -509,7 +509,7 @@ class CeIpRGBWLight(CeDimmer):
             DeviceOperationMode.RGB,
         )
 
-    @config_property
+    @property
     def usage(self) -> EntityUsage:
         """
         Return the entity usage.

@@ -42,16 +42,18 @@ DEVICE_ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z-]{5,20}$")
 ALLOWED_HOSTNAME_PATTERN: Final = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
 HTMLTAG_PATTERN: Final = re.compile(r"<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});")
 
-IDENTIFIER_SEPARATOR: Final = "@"
-DATETIME_FORMAT: Final = "%d.%m.%Y %H:%M:%S"
-DATETIME_FORMAT_MILLIS: Final = "%d.%m.%Y %H:%M:%S.%f'"
-INIT_DATETIME: Final = datetime.strptime("01.01.1970 00:00:00", DATETIME_FORMAT)
-IP_ANY_V4: Final = "0.0.0.0"
-PORT_ANY: Final = 0
+APP_PATH: Final = "homematicip_local"
+HUB_PATH: Final = "hub"
 BLOCK_LOG_TIMEOUT = 60
 CACHE_PATH: Final = "cache"
+DATETIME_FORMAT: Final = "%d.%m.%Y %H:%M:%S"
+DATETIME_FORMAT_MILLIS: Final = "%d.%m.%Y %H:%M:%S.%f'"
+IDENTIFIER_SEPARATOR: Final = "@"
+INIT_DATETIME: Final = datetime.strptime("01.01.1970 00:00:00", DATETIME_FORMAT)
+IP_ANY_V4: Final = "0.0.0.0"
 KWARGS_ARG_ENTITY = "entity"
 PATH_JSON_RPC: Final = "/api/homematic.cgi"
+PORT_ANY: Final = 0
 
 HOMEGEAR_SERIAL = "Homegear_SN0815"
 

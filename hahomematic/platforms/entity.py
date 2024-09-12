@@ -173,12 +173,12 @@ class CallbackEntity(ABC):
         """Return the unique_id."""
         return self._unique_id
 
-    @config_property
+    @property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
         return EntityUsage.ENTITY
 
-    @config_property
+    @property
     def enabled_default(self) -> bool:
         """Return, if entity should be enabled based on usage attribute."""
         return self.usage in (
@@ -313,19 +313,19 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @property
     def _base_path(self) -> str:
         """Return the base path of the entity."""
-        return f"{self._central.name}/{self._device.device_address}/{self._channel_no}/{self._platform}"
+        return f"{self._device.path}/{self._channel_no}/{self._platform}"
 
     @config_property
     def channel_address(self) -> str:
         """Return the channel_address of the entity."""
         return self._channel_address
 
-    @config_property
+    @property
     def channel_no(self) -> int:
         """Return the channel_no of the entity."""
         return self._channel_no
 
-    @config_property
+    @property
     def channel_unique_id(self) -> str:
         """Return the channel_unique_id of the entity."""
         return self._channel_unique_id
@@ -345,7 +345,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Return the full name of the entity."""
         return self._entity_name_data.full_name
 
-    @config_property
+    @property
     def is_in_multiple_channels(self) -> bool:
         """Return the parameter/CE is also in multiple channels."""
         return self._is_in_multiple_channels
@@ -372,7 +372,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Return the rooms assigned to an entity."""
         return self._rooms
 
-    @config_property
+    @property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
         return self._get_entity_usage()
@@ -475,17 +475,17 @@ class BaseParameterEntity[
         """Return the HomeMatic type."""
         return self._type
 
-    @config_property
+    @property
     def is_unit_fixed(self) -> bool:
         """Return if the unit is fixed."""
         return self._raw_unit != self._unit
 
-    @config_property
+    @property
     def is_un_ignored(self) -> bool:
         """Return if the parameter is un ignored."""
         return self._is_un_ignored
 
-    @config_property
+    @property
     def entity_key(self) -> ENTITY_KEY:
         """Return entity key value."""
         return get_entity_key(
@@ -504,7 +504,7 @@ class BaseParameterEntity[
         """Return min value."""
         return self._min
 
-    @config_property
+    @property
     def multiplier(self) -> int:
         """Return multiplier value."""
         return self._multiplier
@@ -524,7 +524,7 @@ class BaseParameterEntity[
         """Return the path of the entity."""
         return f"{self._base_path}/{self._parameter}".lower()
 
-    @config_property
+    @property
     def raw_unit(self) -> str | None:
         """Return raw unit value."""
         return self._raw_unit
