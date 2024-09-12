@@ -1,6 +1,7 @@
 # Version 2024.9.6 (2024-09-10)
 
 - Adjust payload and path
+- Rename value_property to state_property
 
 # Version 2024.9.5 (2024-09-03)
 
