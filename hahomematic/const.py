@@ -42,7 +42,7 @@ DEVICE_ADDRESS_PATTERN: Final = re.compile(r"^[0-9a-zA-Z-]{5,20}$")
 ALLOWED_HOSTNAME_PATTERN: Final = re.compile(r"(?!-)[a-z0-9-]{1,63}(?<!-)$", re.IGNORECASE)
 HTMLTAG_PATTERN: Final = re.compile(r"<.*?>|&([a-z0-9]+|#[0-9]{1,6}|#x[0-9a-f]{1,6});")
 
-APP_PATH: Final = "homematicip_local"
+APP_PATH_PREFIX: Final = "hmipl"
 HUB_PATH: Final = "hub"
 BLOCK_LOG_TIMEOUT = 60
 CACHE_PATH: Final = "cache"
