@@ -7,7 +7,7 @@ See https://www.home-assistant.io/integrations/number/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.generic.entity import GenericEntity
 
 
@@ -55,7 +55,7 @@ class HmFloat(BaseNumber[float | None]):
             value=value, type_converter=float, do_validate=do_validate
         )
 
-    @value_property
+    @state_property
     def value(self) -> float | None:  # type: ignore[override]
         """Return the value of the entity."""
         return self._value  # type: ignore[no-any-return]
@@ -76,7 +76,7 @@ class HmInteger(BaseNumber[int | None]):
             value=value, type_converter=int, do_validate=do_validate
         )
 
-    @value_property
+    @state_property
     def value(self) -> int | None:  # type: ignore[override]
         """Return the value of the entity."""
         return self._value  # type: ignore[no-any-return]

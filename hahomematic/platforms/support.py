@@ -22,7 +22,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.decorators import (
     get_public_attributes_for_config_property,
-    get_public_attributes_for_value_property,
+    get_public_attributes_for_state_property,
 )
 from hahomematic.support import to_bool
 
@@ -49,7 +49,7 @@ class PayloadMixin:
     @property
     def payload_value(self) -> Mapping[str, Any]:
         """Return the payload value."""
-        return get_public_attributes_for_value_property(data_object=self)
+        return get_public_attributes_for_state_property(data_object=self)
 
 
 class OnTimeMixin:

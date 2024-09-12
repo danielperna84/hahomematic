@@ -44,7 +44,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.platforms.custom import definition as hmed, entity as hmce
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
@@ -143,7 +143,7 @@ class HmDevice(PayloadMixin):
             )
         )
 
-    @value_property
+    @state_property
     def available(self) -> bool:
         """Return the availability of the device."""
         if self._forced_availability != ForcedDeviceAvailability.NOT_SET:

@@ -18,7 +18,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
@@ -126,7 +126,7 @@ class BaseClimateEntity(CustomEntity):
         """Return temperature unit."""
         return _TEMP_CELSIUS
 
-    @value_property
+    @state_property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if self._e_temperature_minimum.value is not None:
@@ -138,24 +138,24 @@ class BaseClimateEntity(CustomEntity):
             return min_temp + _DEFAULT_TEMPERATURE_STEP
         return min_temp
 
-    @value_property
+    @state_property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self._e_temperature_maximum.value is not None:
             return float(self._e_temperature_maximum.value)
         return self._e_setpoint.max  # type: ignore[no-any-return]
 
-    @value_property
+    @state_property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._e_humidity.value
 
-    @value_property
+    @state_property
     def current_temperature(self) -> float | None:
         """Return current temperature."""
         return self._e_temperature.value
 
-    @value_property
+    @state_property
     def target_temperature(self) -> float | None:
         """Return target temperature."""
         return self._e_setpoint.value
@@ -165,27 +165,27 @@ class BaseClimateEntity(CustomEntity):
         """Return the supported step of target temperature."""
         return _DEFAULT_TEMPERATURE_STEP
 
-    @value_property
+    @state_property
     def preset_mode(self) -> PresetMode:
         """Return the current preset mode."""
         return PresetMode.NONE
 
-    @value_property
+    @state_property
     def preset_modes(self) -> tuple[PresetMode, ...]:
         """Return available preset modes."""
         return (PresetMode.NONE,)
 
-    @value_property
+    @state_property
     def hvac_action(self) -> HvacAction | None:
         """Return the hvac action."""
         return None
 
-    @value_property
+    @state_property
     def hvac_mode(self) -> HvacMode:
         """Return hvac operation mode."""
         return HvacMode.HEAT
 
-    @value_property
+    @state_property
     def hvac_modes(self) -> tuple[HvacMode, ...]:
         """Return the available hvac operation modes."""
         return (HvacMode.HEAT,)
@@ -282,7 +282,7 @@ class CeRfThermostat(BaseClimateEntity):
             field=Field.VALVE_STATE, entity_type=HmSensor[int | None]
         )
 
-    @value_property
+    @state_property
     def hvac_action(self) -> HvacAction | None:
         """Return the hvac action."""
         if self._e_valve_state.value is None:
@@ -293,7 +293,7 @@ class CeRfThermostat(BaseClimateEntity):
             return HvacAction.HEAT
         return HvacAction.IDLE
 
-    @value_property
+    @state_property
     def hvac_mode(self) -> HvacMode:
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= _OFF_TEMPERATURE:
@@ -302,12 +302,12 @@ class CeRfThermostat(BaseClimateEntity):
             return HvacMode.HEAT
         return HvacMode.AUTO
 
-    @value_property
+    @state_property
     def hvac_modes(self) -> tuple[HvacMode, ...]:
         """Return the available hvac operation modes."""
         return (HvacMode.AUTO, HvacMode.HEAT, HvacMode.OFF)
 
-    @value_property
+    @state_property
     def preset_mode(self) -> PresetMode:
         """Return the current preset mode."""
         if self._e_control_mode.value is None:
@@ -318,7 +318,7 @@ class CeRfThermostat(BaseClimateEntity):
             return PresetMode.AWAY
         return PresetMode.NONE
 
-    @value_property
+    @state_property
     def preset_modes(self) -> tuple[PresetMode, ...]:
         """Return available preset modes."""
         return (
@@ -446,7 +446,7 @@ class CeIpThermostat(BaseClimateEntity):
             return str(self._e_heating_mode.value) == "HEATING"
         return True
 
-    @value_property
+    @state_property
     def hvac_action(self) -> HvacAction | None:
         """Return the hvac action."""
         if self._e_state.value is None and self._e_level.value is None:
@@ -459,7 +459,7 @@ class CeIpThermostat(BaseClimateEntity):
             return HvacAction.HEAT if self._is_heating_mode else HvacAction.COOL
         return HvacAction.IDLE
 
-    @value_property
+    @state_property
     def hvac_mode(self) -> HvacMode:
         """Return hvac operation mode."""
         if self.target_temperature and self.target_temperature <= _OFF_TEMPERATURE:
@@ -470,7 +470,7 @@ class CeIpThermostat(BaseClimateEntity):
             return HvacMode.AUTO
         return HvacMode.AUTO
 
-    @value_property
+    @state_property
     def hvac_modes(self) -> tuple[HvacMode, ...]:
         """Return the available hvac operation modes."""
         return (
@@ -479,7 +479,7 @@ class CeIpThermostat(BaseClimateEntity):
             HvacMode.OFF,
         )
 
-    @value_property
+    @state_property
     def preset_mode(self) -> PresetMode:
         """Return the current preset mode."""
         if self._e_boost_mode.value:
@@ -490,7 +490,7 @@ class CeIpThermostat(BaseClimateEntity):
             return self._current_profile_name if self._current_profile_name else PresetMode.NONE
         return PresetMode.NONE
 
-    @value_property
+    @state_property
     def preset_modes(self) -> tuple[PresetMode, ...]:
         """Return available preset modes."""
         presets = [PresetMode.BOOST, PresetMode.NONE]

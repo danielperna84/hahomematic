@@ -42,7 +42,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.support import (
     EntityNameData,
     GenericParameterType,
@@ -118,7 +118,7 @@ class CallbackEntity(ABC):
         self._modified_at: datetime = INIT_DATETIME
         self._refreshed_at: datetime = INIT_DATETIME
 
-    @value_property
+    @state_property
     @abstractmethod
     def available(self) -> bool:
         """Return the availability of the device."""
@@ -143,12 +143,12 @@ class CallbackEntity(ABC):
     def full_name(self) -> str:
         """Return the full name of the entity."""
 
-    @value_property
+    @state_property
     def modified_at(self) -> datetime:
         """Return the last update datetime value."""
         return self._modified_at
 
-    @value_property
+    @state_property
     def refreshed_at(self) -> datetime:
         """Return the last refresh datetime value."""
         return self._refreshed_at
@@ -300,7 +300,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._forced_usage: EntityUsage | None = None
         self._entity_name_data: Final = self._get_entity_name()
 
-    @value_property
+    @state_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self._device.available
@@ -549,12 +549,12 @@ class BaseParameterEntity[
         """Return, if entity is writeable."""
         return False if self._is_forced_sensor else bool(self._operations & Operations.WRITE)
 
-    @value_property
+    @state_property
     def modified_at(self) -> datetime:
         """Return the last modified datetime value."""
         return self._modified_at
 
-    @value_property
+    @state_property
     def refreshed_at(self) -> datetime:
         """Return the last refreshed datetime value."""
         return self._refreshed_at
@@ -582,7 +582,7 @@ class BaseParameterEntity[
         """Return, if the state is uncertain."""
         return self._state_uncertain
 
-    @value_property
+    @state_property
     def value(self) -> ParameterT:
         """Return the value of the entity."""
         return self._value

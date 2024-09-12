@@ -17,7 +17,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
@@ -52,12 +52,12 @@ class CeSwitch(CustomEntity, OnTimeMixin):
             field=Field.CHANNEL_STATE, entity_type=HmBinarySensor
         )
 
-    @value_property
+    @state_property
     def channel_value(self) -> bool | None:
         """Return the current channel value of the switch."""
         return self._e_channel_state.value
 
-    @value_property
+    @state_property
     def value(self) -> bool | None:
         """Return the current value of the switch."""
         return self._e_state.value

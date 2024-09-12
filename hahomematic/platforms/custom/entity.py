@@ -12,7 +12,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
 from hahomematic.platforms.custom.support import ExtendedConfig
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import BaseEntity, CallParameterCollector
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.support import (
@@ -78,7 +78,7 @@ class CustomEntity(BaseEntity):
             "INIT_ENTITY_FIELDS: Initialising the custom entity fields for %s", self.full_name
         )
 
-    @value_property
+    @state_property
     def modified_at(self) -> datetime:
         """Return the latest last update timestamp."""
         modified_at: datetime = INIT_DATETIME
@@ -87,7 +87,7 @@ class CustomEntity(BaseEntity):
                 modified_at = entity_modified_at
         return modified_at
 
-    @value_property
+    @state_property
     def refreshed_at(self) -> datetime:
         """Return the latest last refresh timestamp."""
         refreshed_at: datetime = INIT_DATETIME

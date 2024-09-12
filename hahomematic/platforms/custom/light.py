@@ -17,7 +17,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.generic.action import HmAction
@@ -154,41 +154,41 @@ class CeDimmer(CustomEntity, OnTimeMixin):
             field=Field.RAMP_TIME_VALUE, entity_type=HmAction
         )
 
-    @value_property
+    @state_property
     def is_on(self) -> bool | None:
         """Return true if dimmer is on."""
         return self._e_level.value is not None and self._e_level.value > _DIMMER_OFF
 
-    @value_property
+    @state_property
     def brightness(self) -> int | None:
         """Return the brightness of this light between min/max brightness."""
         return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
-    @value_property
+    @state_property
     def brightness_pct(self) -> int | None:
         """Return the brightness in percent of this light."""
         return int((self._e_level.value or _MIN_BRIGHTNESS) * 100)
 
-    @value_property
+    @state_property
     def channel_brightness(self) -> int | None:
         """Return the channel_brightness of this light between min/max brightness."""
         if self._e_channel_level.value is not None:
             return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
         return None
 
-    @value_property
+    @state_property
     def channel_brightness_pct(self) -> int | None:
         """Return the channel_brightness in percent of this light."""
         if self._e_channel_level.value is not None:
             return int(self._e_channel_level.value * 100)
         return None
 
-    @value_property
+    @state_property
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between min/max mireds."""
         return None
 
-    @value_property
+    @state_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         return None
@@ -218,12 +218,12 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         """Flag if light supports transition."""
         return isinstance(self._e_ramp_time_value, HmAction)
 
-    @value_property
+    @state_property
     def effect(self) -> str | None:
         """Return the current effect."""
         return None
 
-    @value_property
+    @state_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
         return None
@@ -319,7 +319,7 @@ class CeColorDimmer(CeDimmer):
         super()._init_entity_fields()
         self._e_color: HmInteger = self._get_entity(field=Field.COLOR, entity_type=HmInteger)
 
-    @value_property
+    @state_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if (color := self._e_color.value) is not None:
@@ -367,14 +367,14 @@ class CeColorDimmerEffect(CeColorDimmer):
         super()._init_entity_fields()
         self._e_effect: HmInteger = self._get_entity(field=Field.PROGRAM, entity_type=HmInteger)
 
-    @value_property
+    @state_property
     def effect(self) -> str | None:
         """Return the current effect."""
         if self._e_effect.value is not None:
             return self._effects[int(self._e_effect.value)]
         return None
 
-    @value_property
+    @state_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
         return self._effects
@@ -412,7 +412,7 @@ class CeColorTempDimmer(CeDimmer):
             field=Field.COLOR_LEVEL, entity_type=HmFloat
         )
 
-    @value_property
+    @state_property
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between min/max mireds."""
         return int(_MAX_MIREDS - (_MAX_MIREDS - _MIN_MIREDS) * (self._e_color_level.value or 0.0))
@@ -462,14 +462,14 @@ class CeIpRGBWLight(CeDimmer):
         )
         self._e_saturation: HmFloat = self._get_entity(field=Field.SATURATION, entity_type=HmFloat)
 
-    @value_property
+    @state_property
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between min/max mireds."""
         if not self._e_color_temperature_kelvin.value:
             return None
         return math.floor(1000000 / self._e_color_temperature_kelvin.value)
 
-    @value_property
+    @state_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if self._e_hue.value is not None and self._e_saturation.value is not None:
@@ -527,7 +527,7 @@ class CeIpRGBWLight(CeDimmer):
             return EntityUsage.NO_CREATE
         return self._get_entity_usage()
 
-    @value_property
+    @state_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
         return self._e_effect.values or ()
@@ -621,14 +621,14 @@ class CeIpDrgDaliLight(CeDimmer):
         )
         self._e_saturation: HmFloat = self._get_entity(field=Field.SATURATION, entity_type=HmFloat)
 
-    @value_property
+    @state_property
     def color_temp(self) -> int | None:
         """Return the color temperature in mireds of this light between min/max mireds."""
         if not self._e_color_temperature_kelvin.value:
             return None
         return math.floor(1000000 / self._e_color_temperature_kelvin.value)
 
-    @value_property
+    @state_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if self._e_hue.value is not None and self._e_saturation.value is not None:
@@ -640,7 +640,7 @@ class CeIpDrgDaliLight(CeDimmer):
         """Returns the list of relevant entities. To be overridden by subclasses."""
         return (self._e_level,)
 
-    @value_property
+    @state_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
         return self._e_effect.values or ()
@@ -702,12 +702,12 @@ class CeIpDrgDaliLight(CeDimmer):
 class CeIpFixedColorLight(CeDimmer):
     """Class for HomematicIP HmIP-BSL light entities."""
 
-    @value_property
+    @state_property
     def color_name(self) -> str | None:
         """Return the name of the color."""
         return self._e_color.value
 
-    @value_property
+    @state_property
     def channel_color_name(self) -> str | None:
         """Return the name of the channel color."""
         return self._e_channel_color.value
@@ -738,19 +738,19 @@ class CeIpFixedColorLight(CeDimmer):
             else ()
         )
 
-    @value_property
+    @state_property
     def effect(self) -> str | None:
         """Return the current effect."""
         if (effect := self._e_effect.value) is not None and effect in self._effect_list:
             return effect
         return None
 
-    @value_property
+    @state_property
     def effects(self) -> tuple[str, ...] | None:
         """Return the supported effects."""
         return self._effect_list
 
-    @value_property
+    @state_property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
         if (
@@ -760,7 +760,7 @@ class CeIpFixedColorLight(CeDimmer):
             return hs_color
         return 0.0, 0.0
 
-    @value_property
+    @state_property
     def channel_hs_color(self) -> tuple[float, float] | None:
         """Return the channel hue and saturation color value [float, float]."""
         if self._e_channel_color.value is not None:

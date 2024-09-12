@@ -68,7 +68,7 @@ class config_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
 
 
 # pylint: disable=invalid-name
-class value_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
+class state_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
     """Decorate to mark own value properties."""
 
 
@@ -103,8 +103,8 @@ def get_public_attributes_for_config_property(data_object: Any) -> Mapping[str, 
     )
 
 
-def get_public_attributes_for_value_property(data_object: Any) -> Mapping[str, Any]:
-    """Return the object attributes by decorator value_property."""
+def get_public_attributes_for_state_property(data_object: Any) -> Mapping[str, Any]:
+    """Return the object attributes by decorator state_property."""
     return _get_public_attributes_by_decorator(
-        data_object=data_object, property_decorator=value_property
+        data_object=data_object, property_decorator=state_property
     )

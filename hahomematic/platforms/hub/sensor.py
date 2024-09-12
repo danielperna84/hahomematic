@@ -10,7 +10,7 @@ import logging
 from typing import Any, Final
 
 from hahomematic.const import HmPlatform, SysvarType
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 from hahomematic.platforms.support import get_value_from_value_list
 
@@ -22,7 +22,7 @@ class HmSysvarSensor(GenericSystemVariable):
 
     _platform = HmPlatform.HUB_SENSOR
 
-    @value_property
+    @state_property
     def value(self) -> Any | None:
         """Return the value."""
         if (

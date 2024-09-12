@@ -9,7 +9,7 @@ from slugify import slugify
 
 from hahomematic import central as hmcu
 from hahomematic.const import SYSVAR_ADDRESS, HubData, SystemVariableData
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import generate_unique_id
 from hahomematic.support import parse_sys_var
@@ -75,7 +75,7 @@ class GenericSystemVariable(GenericHubEntity):
         self._value = data.value
         self._old_value: bool | float | int | str | None = None
 
-    @value_property
+    @state_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.central.available
@@ -85,12 +85,12 @@ class GenericSystemVariable(GenericHubEntity):
         """Return the old value."""
         return self._old_value
 
-    @value_property
+    @state_property
     def value(self) -> Any | None:
         """Return the value."""
         return self._value
 
-    @value_property
+    @state_property
     def values(self) -> tuple[str, ...] | None:
         """Return the value_list."""
         return self._values
