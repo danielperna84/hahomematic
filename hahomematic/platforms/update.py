@@ -22,10 +22,10 @@ from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
 from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import CallbackEntity
-from hahomematic.platforms.support import generate_unique_id
+from hahomematic.platforms.support import PayloadMixin, generate_unique_id
 
 
-class HmUpdate(CallbackEntity):
+class HmUpdate(CallbackEntity, PayloadMixin):
     """
     Implementation of a update.
 
@@ -36,6 +36,7 @@ class HmUpdate(CallbackEntity):
 
     def __init__(self, device: hmd.HmDevice) -> None:
         """Init the callback entity."""
+        PayloadMixin.__init__(self)
         self._device: Final = device
         super().__init__(
             central=device.central,
