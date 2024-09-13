@@ -52,7 +52,7 @@ class CeSwitch(CustomEntity, OnTimeMixin):
             field=Field.CHANNEL_STATE, entity_type=HmBinarySensor
         )
 
-    @state_property
+    @property
     def channel_value(self) -> bool | None:
         """Return the current channel value of the switch."""
         return self._e_channel_state.value
