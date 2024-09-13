@@ -44,7 +44,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import BaseHomematicException
 from hahomematic.platforms.custom import definition as hmed, entity as hmce
-from hahomematic.platforms.decorators import config_property, state_property
+from hahomematic.platforms.decorators import info_property, state_property
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
 from hahomematic.platforms.generic.entity import GenericEntity
@@ -154,7 +154,7 @@ class HmDevice(PayloadMixin):
             return not un_reach.value
         return True
 
-    @config_property
+    @property
     def available_firmware(self) -> str | None:
         """Return the available firmware of the device."""
         return str(self._device_description.get("AVAILABLE_FIRMWARE", ""))
@@ -191,27 +191,27 @@ class HmDevice(PayloadMixin):
         """Return the custom entities."""
         return tuple(self._custom_entities.values())
 
-    @config_property
+    @info_property
     def device_address(self) -> str:
         """Return the device_address of the device."""
         return self._device_address
 
-    @config_property
+    @info_property
     def device_type(self) -> str:
         """Return the device_type of the device."""
         return self._device_type
 
-    @config_property
+    @info_property
     def firmware(self) -> str:
         """Return the firmware of the device."""
         return self._device_description["FIRMWARE"]
 
-    @config_property
+    @property
     def firmware_updatable(self) -> bool:
         """Return the firmware update state of the device."""
         return self._device_description.get("FIRMWARE_UPDATABLE") or False
 
-    @config_property
+    @property
     def firmware_update_state(self) -> DeviceFirmwareState:
         """Return the firmware update state of the device."""
         return DeviceFirmwareState(
@@ -238,17 +238,17 @@ class HmDevice(PayloadMixin):
         """Return if device has multiple sub device channels."""
         return len(set(self._sub_device_channels.values())) > 1
 
-    @config_property
+    @info_property
     def identifier(self) -> str:
         """Return the identifier of the device."""
         return f"{self._device_address}{IDENTIFIER_SEPARATOR}{self._interface_id}"
 
-    @config_property
+    @property
     def interface(self) -> str:
         """Return the interface of the device."""
         return self._interface
 
-    @config_property
+    @property
     def interface_id(self) -> str:
         """Return the interface_id of the device."""
         return self._interface_id
@@ -259,16 +259,23 @@ class HmDevice(PayloadMixin):
         return self._ignore_for_custom_entity
 
     @property
+    def info(self) -> dict[str, Any]:
+        """Return the device info."""
+        device_info = self.payload_info
+        device_info["central_name"] = self._central.payload_info
+        return device_info
+
+    @property
     def is_updatable(self) -> bool:
         """Return if the device is updatable."""
         return self._is_updatable
 
-    @config_property
+    @info_property
     def manufacturer(self) -> str:
         """Return the manufacturer of the device."""
         return self._manufacturer
 
-    @config_property
+    @info_property
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
@@ -278,14 +285,14 @@ class HmDevice(PayloadMixin):
         """Return the product group of the device."""
         return self._product_group
 
-    @config_property
+    @info_property
     def room(self) -> str | None:
         """Return the room of the device, if only one assigned in CCU."""
         if self._rooms and len(self._rooms) == 1:
             return list(self._rooms)[0]
         return None
 
-    @config_property
+    @property
     def rooms(self) -> set[str]:
         """Return all rooms of the device."""
         return self._rooms

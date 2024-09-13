@@ -20,7 +20,6 @@ from hahomematic.const import (
     ParamsetKey,
 )
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.entity import BaseParameterEntity
 from hahomematic.platforms.support import EntityNameData, generate_unique_id, get_event_name
 
@@ -58,7 +57,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
             return self._get_entity_usage()
         return EntityUsage.EVENT if forced_by_com else EntityUsage.NO_CREATE
 
-    @config_property
+    @property
     def event_type(self) -> HomematicEventType:
         """Return the event_type of the event."""
         return self._event_type

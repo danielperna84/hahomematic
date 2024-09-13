@@ -51,7 +51,7 @@ class GenericHubEntity(CallbackEntity):
     @property
     def path(self) -> str:
         """Return the path of the entity."""
-        return f"{self._central.name}/{HUB_PATH}/{self.platform}/{self.name}".lower()
+        return f"{self._central.path}/{HUB_PATH}/{self.platform}/{self.name}"
 
 
 class GenericSystemVariable(GenericHubEntity):

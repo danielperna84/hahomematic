@@ -190,7 +190,7 @@ class BaseClimateEntity(CustomEntity):
         """Return the available hvac operation modes."""
         return (HvacMode.HEAT,)
 
-    @config_property
+    @property
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return False
@@ -328,7 +328,7 @@ class CeRfThermostat(BaseClimateEntity):
             PresetMode.NONE,
         )
 
-    @config_property
+    @property
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return True
@@ -498,7 +498,7 @@ class CeIpThermostat(BaseClimateEntity):
             presets.extend(self._profile_names)
         return tuple(presets)
 
-    @config_property
+    @property
     def supports_preset(self) -> bool:
         """Flag if climate supports preset."""
         return True

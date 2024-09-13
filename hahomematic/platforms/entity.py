@@ -163,7 +163,7 @@ class CallbackEntity(ABC):
     def path(self) -> str:
         """Return the path of the entity."""
 
-    @config_property
+    @property
     def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return self._platform
@@ -311,11 +311,11 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._device.get_sub_device_channel(channel_no=self._channel_no)
 
     @property
-    def _base_path(self) -> str:
+    def path(self) -> str:
         """Return the base path of the entity."""
         return f"{self._device.path}/{self._channel_no}/{self._platform}"
 
-    @config_property
+    @property
     def channel_address(self) -> str:
         """Return the channel_address of the entity."""
         return self._channel_address
@@ -335,7 +335,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Return the device of the entity."""
         return self._device
 
-    @config_property
+    @property
     def function(self) -> str | None:
         """Return the function of the entity."""
         return self._function
@@ -360,14 +360,14 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Return the entity name data of the entity."""
         return self._entity_name_data
 
-    @config_property
+    @property
     def room(self) -> str | None:
         """Return the room, if only one exists."""
         if self._rooms and len(self._rooms) == 1:
             return list(self._rooms)[0]
         return None
 
-    @config_property
+    @property
     def rooms(self) -> set[str]:
         """Return the rooms assigned to an entity."""
         return self._rooms
@@ -465,12 +465,12 @@ class BaseParameterEntity[
         self._unit: str | None = self._cleanup_unit(raw_unit=self._raw_unit)
         self._multiplier: int = self._get_multiplier(raw_unit=self._raw_unit)
 
-    @config_property
+    @property
     def default(self) -> ParameterT:
         """Return default value."""
         return self._default
 
-    @config_property
+    @property
     def hmtype(self) -> ParameterType:
         """Return the HomeMatic type."""
         return self._type
@@ -509,12 +509,12 @@ class BaseParameterEntity[
         """Return multiplier value."""
         return self._multiplier
 
-    @config_property
+    @property
     def parameter(self) -> str:
         """Return parameter name."""
         return self._parameter
 
-    @config_property
+    @property
     def paramset_key(self) -> ParamsetKey:
         """Return paramset_key name."""
         return self._paramset_key
@@ -522,7 +522,7 @@ class BaseParameterEntity[
     @property
     def path(self) -> str:
         """Return the path of the entity."""
-        return f"{self._base_path}/{self._parameter}".lower()
+        return f"{super().path}/{self._parameter.lower()}"
 
     @property
     def raw_unit(self) -> str | None:
@@ -572,7 +572,7 @@ class BaseParameterEntity[
         """Return the old value of the entity."""
         return self._old_value
 
-    @config_property
+    @property
     def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return HmPlatform.SENSOR if self._is_forced_sensor else self._platform

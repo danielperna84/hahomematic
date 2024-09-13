@@ -98,7 +98,7 @@ class HmUpdate(CallbackEntity):
     @property
     def path(self) -> str:
         """Return the path of the entity."""
-        return f"{self._device.path}/{HmPlatform.UPDATE}".lower()
+        return f"{self._device.path}/{HmPlatform.UPDATE}"
 
     def register_entity_updated_callback(self, cb: Callable, custom_id: str) -> CALLBACK_TYPE:
         """Register update callback."""

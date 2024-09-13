@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from datetime import datetime
 from enum import Enum
 from typing import Any
@@ -68,13 +68,18 @@ class config_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
 
 
 # pylint: disable=invalid-name
+class info_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
+    """Decorate to mark own info properties."""
+
+
+# pylint: disable=invalid-name
 class state_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
     """Decorate to mark own value properties."""
 
 
 def _get_public_attributes_by_decorator(
     data_object: Any, property_decorator: type
-) -> Mapping[str, Any]:
+) -> dict[str, Any]:
     """Return the object attributes by decorator."""
     pub_attributes = [
         y
@@ -96,14 +101,21 @@ def _get_text_value(value: Any) -> Any:
     return value
 
 
-def get_public_attributes_for_config_property(data_object: Any) -> Mapping[str, Any]:
+def get_public_attributes_for_config_property(data_object: Any) -> dict[str, Any]:
     """Return the object attributes by decorator config_property."""
     return _get_public_attributes_by_decorator(
         data_object=data_object, property_decorator=config_property
     )
 
 
-def get_public_attributes_for_state_property(data_object: Any) -> Mapping[str, Any]:
+def get_public_attributes_for_info_property(data_object: Any) -> dict[str, Any]:
+    """Return the object attributes by decorator info_property."""
+    return _get_public_attributes_by_decorator(
+        data_object=data_object, property_decorator=info_property
+    )
+
+
+def get_public_attributes_for_state_property(data_object: Any) -> dict[str, Any]:
     """Return the object attributes by decorator state_property."""
     return _get_public_attributes_by_decorator(
         data_object=data_object, property_decorator=state_property

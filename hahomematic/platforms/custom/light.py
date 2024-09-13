@@ -17,7 +17,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import config_property, state_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.generic.action import HmAction
@@ -193,27 +193,27 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         """Return the hue and saturation color value [float, float]."""
         return None
 
-    @config_property
+    @property
     def supports_brightness(self) -> bool:
         """Flag if light supports brightness."""
         return isinstance(self._e_level, HmFloat)
 
-    @config_property
+    @property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
         return self.color_temp is not None
 
-    @config_property
+    @property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
         return self.effects is not None and len(self.effects) > 0
 
-    @config_property
+    @property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return self.hs_color is not None
 
-    @config_property
+    @property
     def supports_transition(self) -> bool:
         """Flag if light supports transition."""
         return isinstance(self._e_ramp_time_value, HmAction)
@@ -487,12 +487,12 @@ class CeIpRGBWLight(CeDimmer):
             return self._e_level, self._e_color_temperature_kelvin
         return (self._e_level,)
 
-    @config_property
+    @property
     def supports_color_temperature(self) -> bool:
         """Flag if light supports color temperature."""
         return self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE
 
-    @config_property
+    @property
     def supports_effects(self) -> bool:
         """Flag if light supports effects."""
         return (
@@ -501,7 +501,7 @@ class CeIpRGBWLight(CeDimmer):
             and len(self.effects) > 0
         )
 
-    @config_property
+    @property
     def supports_hs_color(self) -> bool:
         """Flag if light supports color."""
         return self._e_device_operation_mode.value in (

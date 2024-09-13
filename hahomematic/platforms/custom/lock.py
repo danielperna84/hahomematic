@@ -16,7 +16,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import config_property, state_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.sensor import HmSensor
@@ -79,7 +79,7 @@ class BaseLock(CustomEntity):
         """Return true if the lock is unlocking."""
         return None
 
-    @config_property
+    @property
     @abstractmethod
     def supports_open(self) -> bool:
         """Flag if lock supports open."""
@@ -132,7 +132,7 @@ class CeIpLock(BaseLock):
             return str(self._e_direction.value) == LockActivity.UNLOCKING
         return None
 
-    @config_property
+    @property
     def supports_open(self) -> bool:
         """Flag if lock supports open."""
         return True
@@ -177,7 +177,7 @@ class CeButtonLock(BaseLock):
         """Return true if lock is on."""
         return self._e_button_lock.value is True
 
-    @config_property
+    @property
     def supports_open(self) -> bool:
         """Flag if lock supports open."""
         return False
@@ -237,7 +237,7 @@ class CeRfLock(BaseLock):
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value != LockError.NO_ERROR
 
-    @config_property
+    @property
     def supports_open(self) -> bool:
         """Flag if lock supports open."""
         return True

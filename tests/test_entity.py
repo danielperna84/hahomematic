@@ -10,7 +10,7 @@ import pytest
 from hahomematic.caches.visibility import check_ignore_parameters_is_clean
 from hahomematic.central import CentralUnit
 from hahomematic.client import Client
-from hahomematic.const import APP_PATH_PREFIX, CallSource, EntityUsage
+from hahomematic.const import CallSource, EntityUsage
 from hahomematic.platforms.custom.definition import (
     get_required_parameters,
     validate_entity_definition,
@@ -68,7 +68,7 @@ async def test_custom_entity_callback(
     assert switch.value is None
     assert (
         str(switch)
-        == f"path: {APP_PATH_PREFIX}/centraltest/vcu2128127/4/switch, name: HmIP-BSM_VCU2128127"
+        == f"path: {central.config.base_path}CentralTest/VCU2128127/4/switch, name: HmIP-BSM_VCU2128127"
     )
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 1)
     assert switch.value is True
@@ -117,7 +117,7 @@ async def test_generic_entity_callback(
     assert switch.value is None
     assert (
         str(switch)
-        == f"path: {APP_PATH_PREFIX}/centraltest/vcu2128127/4/switch/state, name: HmIP-BSM_VCU2128127 State ch4"
+        == f"path: {central.config.base_path}CentralTest/VCU2128127/4/switch/state, name: HmIP-BSM_VCU2128127 State ch4"
     )
     await central.event(const.INTERFACE_ID, "VCU2128127:4", "STATE", 1)
     assert switch.value is True
