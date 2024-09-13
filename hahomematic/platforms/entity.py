@@ -27,6 +27,7 @@ from hahomematic.const import (
     EVENT_VALUE,
     INIT_DATETIME,
     KEY_CHANNEL_OPERATION_MODE_VISIBILITY,
+    KWARGS_ARG_ENTITY,
     NO_CACHE_ENTRY,
     CallSource,
     DeviceDescription,
@@ -41,7 +42,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.support import (
     EntityNameData,
     GenericParameterType,
@@ -117,7 +118,7 @@ class CallbackEntity(ABC):
         self._modified_at: datetime = INIT_DATETIME
         self._refreshed_at: datetime = INIT_DATETIME
 
-    @property
+    @state_property
     @abstractmethod
     def available(self) -> bool:
         """Return the availability of the device."""
@@ -142,12 +143,12 @@ class CallbackEntity(ABC):
     def full_name(self) -> str:
         """Return the full name of the entity."""
 
-    @property
+    @state_property
     def modified_at(self) -> datetime:
         """Return the last update datetime value."""
         return self._modified_at
 
-    @property
+    @state_property
     def refreshed_at(self) -> datetime:
         """Return the last refresh datetime value."""
         return self._refreshed_at
@@ -162,7 +163,7 @@ class CallbackEntity(ABC):
     def path(self) -> str:
         """Return the path of the entity."""
 
-    @config_property
+    @property
     def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return self._platform
@@ -172,12 +173,12 @@ class CallbackEntity(ABC):
         """Return the unique_id."""
         return self._unique_id
 
-    @config_property
+    @property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
         return EntityUsage.ENTITY
 
-    @config_property
+    @property
     def enabled_default(self) -> bool:
         """Return, if entity should be enabled based on usage attribute."""
         return self.usage in (
@@ -234,6 +235,7 @@ class CallbackEntity(ABC):
         """Do what is needed when the value of the entity has been updated/refreshed."""
         for callback_handler in self._entity_updated_callbacks:
             try:
+                kwargs[KWARGS_ARG_ENTITY] = self
                 callback_handler(*args, **kwargs)
             except Exception as ex:
                 _LOGGER.warning("FIRE_entity_updated_EVENT failed: %s", reduce_args(args=ex.args))
@@ -298,32 +300,32 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         self._forced_usage: EntityUsage | None = None
         self._entity_name_data: Final = self._get_entity_name()
 
-    @property
+    @state_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self._device.available
 
-    @config_property
+    @property
     def base_channel_no(self) -> int | None:
         """Return the base channel no of the entity."""
         return self._device.get_sub_device_channel(channel_no=self._channel_no)
 
     @property
-    def _base_path(self) -> str:
+    def path(self) -> str:
         """Return the base path of the entity."""
-        return f"{self._device.device_address}/{self._channel_no}/{self._platform}"
+        return f"{self._device.path}/{self._channel_no}/{self._platform}"
 
-    @config_property
+    @property
     def channel_address(self) -> str:
         """Return the channel_address of the entity."""
         return self._channel_address
 
-    @config_property
+    @property
     def channel_no(self) -> int:
         """Return the channel_no of the entity."""
         return self._channel_no
 
-    @config_property
+    @property
     def channel_unique_id(self) -> str:
         """Return the channel_unique_id of the entity."""
         return self._channel_unique_id
@@ -333,7 +335,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Return the device of the entity."""
         return self._device
 
-    @config_property
+    @property
     def function(self) -> str | None:
         """Return the function of the entity."""
         return self._function
@@ -343,7 +345,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Return the full name of the entity."""
         return self._entity_name_data.full_name
 
-    @config_property
+    @property
     def is_in_multiple_channels(self) -> bool:
         """Return the parameter/CE is also in multiple channels."""
         return self._is_in_multiple_channels
@@ -358,19 +360,19 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Return the entity name data of the entity."""
         return self._entity_name_data
 
-    @config_property
+    @property
     def room(self) -> str | None:
         """Return the room, if only one exists."""
         if self._rooms and len(self._rooms) == 1:
             return list(self._rooms)[0]
         return None
 
-    @config_property
+    @property
     def rooms(self) -> set[str]:
         """Return the rooms assigned to an entity."""
         return self._rooms
 
-    @config_property
+    @property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
         return self._get_entity_usage()
@@ -463,27 +465,27 @@ class BaseParameterEntity[
         self._unit: str | None = self._cleanup_unit(raw_unit=self._raw_unit)
         self._multiplier: int = self._get_multiplier(raw_unit=self._raw_unit)
 
-    @config_property
+    @property
     def default(self) -> ParameterT:
         """Return default value."""
         return self._default
 
-    @config_property
+    @property
     def hmtype(self) -> ParameterType:
         """Return the HomeMatic type."""
         return self._type
 
-    @config_property
+    @property
     def is_unit_fixed(self) -> bool:
         """Return if the unit is fixed."""
         return self._raw_unit != self._unit
 
-    @config_property
+    @property
     def is_un_ignored(self) -> bool:
         """Return if the parameter is un ignored."""
         return self._is_un_ignored
 
-    @config_property
+    @property
     def entity_key(self) -> ENTITY_KEY:
         """Return entity key value."""
         return get_entity_key(
@@ -502,17 +504,17 @@ class BaseParameterEntity[
         """Return min value."""
         return self._min
 
-    @config_property
+    @property
     def multiplier(self) -> int:
         """Return multiplier value."""
         return self._multiplier
 
-    @config_property
+    @property
     def parameter(self) -> str:
         """Return parameter name."""
         return self._parameter
 
-    @config_property
+    @property
     def paramset_key(self) -> ParamsetKey:
         """Return paramset_key name."""
         return self._paramset_key
@@ -520,9 +522,9 @@ class BaseParameterEntity[
     @property
     def path(self) -> str:
         """Return the path of the entity."""
-        return f"{self._base_path}/{self._parameter}".lower()
+        return f"{super().path}/{self._parameter.lower()}"
 
-    @config_property
+    @property
     def raw_unit(self) -> str | None:
         """Return raw unit value."""
         return self._raw_unit
@@ -547,12 +549,12 @@ class BaseParameterEntity[
         """Return, if entity is writeable."""
         return False if self._is_forced_sensor else bool(self._operations & Operations.WRITE)
 
-    @property
+    @state_property
     def modified_at(self) -> datetime:
         """Return the last modified datetime value."""
         return self._modified_at
 
-    @property
+    @state_property
     def refreshed_at(self) -> datetime:
         """Return the last refreshed datetime value."""
         return self._refreshed_at
@@ -570,7 +572,7 @@ class BaseParameterEntity[
         """Return the old value of the entity."""
         return self._old_value
 
-    @config_property
+    @property
     def platform(self) -> HmPlatform:
         """Return, the platform of the entity."""
         return HmPlatform.SENSOR if self._is_forced_sensor else self._platform
@@ -580,7 +582,7 @@ class BaseParameterEntity[
         """Return, if the state is uncertain."""
         return self._state_uncertain
 
-    @value_property
+    @state_property
     def value(self) -> ParameterT:
         """Return the value of the entity."""
         return self._value

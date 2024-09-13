@@ -10,7 +10,8 @@ import pytest
 from hahomematic.const import EntityUsage
 from hahomematic.platforms.decorators import (
     get_public_attributes_for_config_property,
-    get_public_attributes_for_value_property,
+    get_public_attributes_for_info_property,
+    get_public_attributes_for_state_property,
 )
 from hahomematic.platforms.generic.entity import GenericEntity
 
@@ -47,10 +48,10 @@ async def test_central_full(central_unit_full) -> None:
         for entity in device.generic_entities:
             if entity.parameter not in data[device.device_type]:
                 data[device.device_type][entity.parameter] = f"{entity.hmtype}"
-        pub_value_props = get_public_attributes_for_value_property(data_object=device)
-        assert pub_value_props
-        pub_config_props = get_public_attributes_for_config_property(data_object=device)
-        assert pub_config_props
+        pub_state_props = get_public_attributes_for_state_property(data_object=device)
+        assert pub_state_props
+        info_config_props = get_public_attributes_for_info_property(data_object=device)
+        assert info_config_props
 
     custom_entities = []
     for device in central_unit_full.devices:
@@ -61,7 +62,7 @@ async def test_central_full(central_unit_full) -> None:
         if custom_entity.device.device_type not in ce_channels:
             ce_channels[custom_entity.device.device_type] = []
         ce_channels[custom_entity.device.device_type].append(custom_entity.channel_no)
-        pub_value_props = get_public_attributes_for_value_property(data_object=custom_entity)
+        pub_value_props = get_public_attributes_for_state_property(data_object=custom_entity)
         assert pub_value_props
         pub_config_props = get_public_attributes_for_config_property(data_object=custom_entity)
         assert pub_config_props
@@ -77,7 +78,7 @@ async def test_central_full(central_unit_full) -> None:
             entity_types[entity.hmtype][type(entity).__name__].append(entity)
 
         if isinstance(entity, GenericEntity):
-            pub_value_props = get_public_attributes_for_value_property(data_object=entity)
+            pub_value_props = get_public_attributes_for_state_property(data_object=entity)
             assert pub_value_props
             pub_config_props = get_public_attributes_for_config_property(data_object=entity)
             assert pub_config_props

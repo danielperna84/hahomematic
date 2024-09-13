@@ -10,7 +10,7 @@ import logging
 from typing import Final
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 from hahomematic.platforms.support import get_value_from_value_list
 
@@ -23,7 +23,7 @@ class HmSysvarSelect(GenericSystemVariable):
     _platform = HmPlatform.HUB_SELECT
     _is_extended = True
 
-    @value_property
+    @state_property
     def value(self) -> str | None:
         """Get the value of the entity."""
         if (

@@ -17,7 +17,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.binary_sensor import HmBinarySensor
@@ -46,32 +46,32 @@ class BaseSiren(CustomEntity):
 
     _platform = HmPlatform.SIREN
 
-    @value_property
+    @state_property
     @abstractmethod
     def is_on(self) -> bool:
         """Return true if siren is on."""
 
-    @value_property
+    @state_property
     @abstractmethod
     def available_tones(self) -> tuple[str, ...] | None:
         """Return available tones."""
 
-    @value_property
+    @state_property
     @abstractmethod
     def available_lights(self) -> tuple[str, ...] | None:
         """Return available lights."""
 
-    @config_property
+    @property
     @abstractmethod
     def supports_duration(self) -> bool:
         """Flag if siren supports duration."""
 
-    @config_property
+    @property
     def supports_tones(self) -> bool:
         """Flag if siren supports tones."""
         return self.available_tones is not None
 
-    @config_property
+    @property
     def supports_lights(self) -> bool:
         """Flag if siren supports lights."""
         return self.available_lights is not None
@@ -112,7 +112,7 @@ class CeIpSiren(BaseSiren):
             field=Field.DURATION_UNIT, entity_type=HmAction
         )
 
-    @value_property
+    @state_property
     def is_on(self) -> bool:
         """Return true if siren is on."""
         return (
@@ -120,17 +120,17 @@ class CeIpSiren(BaseSiren):
             or self._e_optical_alarm_active.value is True
         )
 
-    @value_property
+    @state_property
     def available_tones(self) -> tuple[str, ...] | None:
         """Return available tones."""
         return self._e_acoustic_alarm_selection.values
 
-    @value_property
+    @state_property
     def available_lights(self) -> tuple[str, ...] | None:
         """Return available lights."""
         return self._e_optical_alarm_selection.values
 
-    @config_property
+    @property
     def supports_duration(self) -> bool:
         """Flag if siren supports duration."""
         return True
@@ -195,7 +195,7 @@ class CeIpSirenSmoke(BaseSiren):
             field=Field.SMOKE_DETECTOR_COMMAND, entity_type=HmAction
         )
 
-    @value_property
+    @state_property
     def is_on(self) -> bool:
         """Return true if siren is on."""
         if not self._e_smoke_detector_alarm_status.value:
@@ -204,17 +204,17 @@ class CeIpSirenSmoke(BaseSiren):
             self._e_smoke_detector_alarm_status.value != _SMOKE_DETECTOR_ALARM_STATUS_IDLE_OFF
         )
 
-    @value_property
+    @state_property
     def available_tones(self) -> tuple[str, ...] | None:
         """Return available tones."""
         return None
 
-    @value_property
+    @state_property
     def available_lights(self) -> tuple[str, ...] | None:
         """Return available lights."""
         return None
 
-    @config_property
+    @property
     def supports_duration(self) -> bool:
         """Flag if siren supports duration."""
         return False

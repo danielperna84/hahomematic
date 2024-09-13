@@ -16,7 +16,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.sensor import HmSensor
@@ -59,27 +59,27 @@ class BaseLock(CustomEntity):
 
     _platform = HmPlatform.LOCK
 
-    @value_property
+    @state_property
     @abstractmethod
     def is_locked(self) -> bool:
         """Return true if lock is on."""
 
-    @value_property
+    @state_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return False
 
-    @value_property
+    @state_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         return None
 
-    @value_property
+    @state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         return None
 
-    @config_property
+    @property
     @abstractmethod
     def supports_open(self) -> bool:
         """Flag if lock supports open."""
@@ -113,26 +113,26 @@ class CeIpLock(BaseLock):
             field=Field.DIRECTION, entity_type=HmSensor[str | None]
         )
 
-    @value_property
+    @state_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._e_lock_state.value == LockState.LOCKED
 
-    @value_property
+    @state_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == LockActivity.LOCKING
         return None
 
-    @value_property
+    @state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == LockActivity.UNLOCKING
         return None
 
-    @config_property
+    @property
     def supports_open(self) -> bool:
         """Flag if lock supports open."""
         return True
@@ -172,12 +172,12 @@ class CeButtonLock(BaseLock):
         """Return the entity name postfix."""
         return "BUTTON_LOCK"
 
-    @value_property
+    @state_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._e_button_lock.value is True
 
-    @config_property
+    @property
     def supports_open(self) -> bool:
         """Flag if lock supports open."""
         return False
@@ -213,31 +213,31 @@ class CeRfLock(BaseLock):
             field=Field.ERROR, entity_type=HmSensor[str | None]
         )
 
-    @value_property
+    @state_property
     def is_locked(self) -> bool:
         """Return true if lock is on."""
         return self._e_state.value is not True
 
-    @value_property
+    @state_property
     def is_locking(self) -> bool | None:
         """Return true if the lock is locking."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == LockActivity.LOCKING
         return None
 
-    @value_property
+    @state_property
     def is_unlocking(self) -> bool | None:
         """Return true if the lock is unlocking."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == LockActivity.UNLOCKING
         return None
 
-    @value_property
+    @state_property
     def is_jammed(self) -> bool:
         """Return true if lock is jammed."""
         return self._e_error.value is not None and self._e_error.value != LockError.NO_ERROR
 
-    @config_property
+    @property
     def supports_open(self) -> bool:
         """Flag if lock supports open."""
         return True

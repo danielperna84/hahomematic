@@ -68,6 +68,7 @@ from hahomematic.exceptions import (
 from hahomematic.performance import measure_execution_time
 from hahomematic.platforms import create_entities_and_append_to_device
 from hahomematic.platforms.custom.entity import CustomEntity
+from hahomematic.platforms.decorators import info_property
 from hahomematic.platforms.device import HmDevice
 from hahomematic.platforms.entity import BaseParameterEntity, CallbackEntity
 from hahomematic.platforms.event import GenericEvent
@@ -75,6 +76,7 @@ from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.hub import Hub
 from hahomematic.platforms.hub.button import HmProgramButton
 from hahomematic.platforms.hub.entity import GenericHubEntity, GenericSystemVariable
+from hahomematic.platforms.support import PayloadMixin
 from hahomematic.support import (
     check_config,
     get_channel_no,
@@ -101,7 +103,7 @@ INTERFACE_EVENT_SCHEMA = vol.Schema(
 )
 
 
-class CentralUnit:
+class CentralUnit(PayloadMixin):
     """Central unit that collects everything to handle communication from/to CCU/Homegear."""
 
     def __init__(self, central_config: CentralConfig) -> None:
@@ -161,7 +163,7 @@ class CentralUnit:
         """Return the availability of the central."""
         return all(client.available for client in self._clients.values())
 
-    @property
+    @info_property
     def central_url(self) -> str:
         """Return the central_orl from config."""
         return self._config.central_url
@@ -251,17 +253,22 @@ class CentralUnit:
         """Return the loop support."""
         return self._looper
 
-    @property
+    @info_property
     def model(self) -> str | None:
         """Return the model of the backend."""
         if not self._model and (client := self.primary_client):
             self._model = client.model
         return self._model
 
-    @property
+    @info_property
     def name(self) -> str:
         """Return the name of the backend."""
         return self._config.name
+
+    @property
+    def path(self) -> str:
+        """Return the base path of the entity."""
+        return f"{self._config.base_path}{self.name}"
 
     @property
     def program_buttons(self) -> tuple[HmProgramButton, ...]:
@@ -292,7 +299,7 @@ class CentralUnit:
         """Return the sysvar entities."""
         return tuple(self._sysvar_entities.values())
 
-    @property
+    @info_property
     def version(self) -> str | None:
         """Return the version of the backend."""
         if self._version is None:
@@ -1397,6 +1404,7 @@ class CentralConfig:
         json_port: int | None = None,
         un_ignore_list: list[str] | None = None,
         start_direct: bool = False,
+        base_path: str | None = None,
     ) -> None:
         """Init the client config."""
         self.connection_state: Final = CentralConnectionState()
@@ -1417,6 +1425,7 @@ class CentralConfig:
         self.un_ignore_list: Final = un_ignore_list
         self.start_direct: Final = start_direct
         self._json_rpc_client: JsonRpcAioHttpClient | None = None
+        self._base_path: Final = base_path
 
     @property
     def central_url(self) -> str:
@@ -1458,6 +1467,15 @@ class CentralConfig:
                 verify_tls=self.verify_tls,
             )
         return self._json_rpc_client
+
+    @property
+    def base_path(self) -> str:
+        """Return the path prefix."""
+        if not self._base_path:
+            return ""
+        if self._base_path.endswith("/"):
+            return self._base_path
+        return f"{self._base_path}/"
 
     def check_config(self) -> None:
         """Check config. Throws BaseHomematicException on failure."""

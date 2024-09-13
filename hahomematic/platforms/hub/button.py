@@ -10,6 +10,7 @@ from typing import Final
 
 from hahomematic import central as hmcu
 from hahomematic.const import PROGRAM_ADDRESS, HmPlatform, HubData, ProgramData
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.hub.entity import GenericHubEntity
 
 
@@ -35,7 +36,7 @@ class HmProgramButton(GenericHubEntity):
         self.is_internal: bool = data.is_internal
         self.last_execute_time: str = data.last_execute_time
 
-    @property
+    @state_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self.is_active

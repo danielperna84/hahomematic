@@ -5,8 +5,8 @@ from __future__ import annotations
 from hahomematic.platforms.decorators import (
     config_property,
     get_public_attributes_for_config_property,
-    get_public_attributes_for_value_property,
-    value_property,
+    get_public_attributes_for_state_property,
+    state_property,
 )
 
 # pylint: disable=protected-access
@@ -32,7 +32,7 @@ def test_generic_property_read() -> None:
     test_class = PropertyTestClazz()
     config_attributes = get_public_attributes_for_config_property(data_object=test_class)
     assert config_attributes == {"config": "test_config"}
-    value_attributes = get_public_attributes_for_value_property(data_object=test_class)
+    value_attributes = get_public_attributes_for_state_property(data_object=test_class)
     assert value_attributes == {"value": "test_value"}
 
 
@@ -44,7 +44,7 @@ class PropertyTestClazz:
         self._value: str = "test_value"
         self._config: str = "test_config"
 
-    @value_property
+    @state_property
     def value(self) -> str:
         """Return value."""
         return self._value

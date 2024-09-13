@@ -20,7 +20,7 @@ from hahomematic.const import (
 )
 from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.decorators import config_property, value_property
+from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import CallbackEntity
 from hahomematic.platforms.support import generate_unique_id
 
@@ -45,7 +45,7 @@ class HmUpdate(CallbackEntity):
         )
         self._set_modified_at()
 
-    @property
+    @state_property
     def available(self) -> bool:
         """Return the availability of the device."""
         return self._device.available
@@ -65,24 +65,24 @@ class HmUpdate(CallbackEntity):
         """Return the name of the entity."""
         return "Update"
 
-    @value_property
+    @state_property
     def firmware(self) -> str | None:
         """Version installed and in use."""
         return self._device.firmware
 
-    @value_property
+    @state_property
     def firmware_update_state(self) -> str | None:
         """Latest version available for install."""
         return self._device.firmware_update_state
 
-    @value_property
+    @state_property
     def in_progress(self) -> bool:
         """Update installation progress."""
         if self._device.interface == InterfaceName.HMIP_RF:
             return self._device.firmware_update_state in HMIP_FIRMWARE_UPDATE_IN_PROGRESS_STATES
         return False
 
-    @value_property
+    @state_property
     def latest_firmware(self) -> str | None:
         """Latest firmware available for install."""
         if self._device.available_firmware and (
@@ -98,7 +98,7 @@ class HmUpdate(CallbackEntity):
     @property
     def path(self) -> str:
         """Return the path of the entity."""
-        return f"{self._device.device_address}/{HmPlatform.UPDATE}".lower()
+        return f"{self._device.path}/{HmPlatform.UPDATE}"
 
     def register_entity_updated_callback(self, cb: Callable, custom_id: str) -> CALLBACK_TYPE:
         """Register update callback."""

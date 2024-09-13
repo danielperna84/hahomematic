@@ -19,7 +19,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
 from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
 from hahomematic.platforms.generic.number import HmFloat
@@ -114,7 +114,7 @@ class CeCover(CustomEntity):
             return float(self._e_channel_level.value)
         return self._e_level.value if self._e_level.value is not None else self._closed_level
 
-    @value_property
+    @state_property
     def current_position(self) -> int:
         """Return current position of cover."""
         return int(self._channel_level * 100)
@@ -143,19 +143,19 @@ class CeCover(CustomEntity):
             return
         await self._e_level.send_value(value=level, collector=collector)
 
-    @value_property
+    @state_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return self._channel_level == self._closed_level
 
-    @value_property
+    @state_property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._e_direction.value is not None:
             return str(self._e_direction.value) == CoverActivity.OPENING
         return None
 
-    @value_property
+    @state_property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._e_direction.value is not None:
@@ -203,7 +203,7 @@ class CeWindowDrive(CeCover):
     _closed_level: float = _WD_CLOSED_LEVEL
     _open_level: float = _OPEN_LEVEL
 
-    @value_property
+    @state_property
     def current_position(self) -> int:
         """Return current position of cover."""
         level = self._e_level.value if self._e_level.value is not None else self._closed_level
@@ -255,7 +255,7 @@ class CeBlind(CeCover):
             return float(self._e_channel_level_2.value)
         return self._e_level_2.value if self._e_level_2.value is not None else self._closed_level
 
-    @value_property
+    @state_property
     def current_tilt_position(self) -> int:
         """Return current tilt position of cover."""
         return int(self._channel_tilt_level * 100)
@@ -480,7 +480,7 @@ class CeGarage(CustomEntity):
             field=Field.SECTION, entity_type=HmSensor[str | None]
         )
 
-    @value_property
+    @state_property
     def current_position(self) -> int | None:
         """Return current position of the garage door ."""
         if self._e_door_state.value == GarageDoorState.OPEN:
@@ -508,21 +508,21 @@ class CeGarage(CustomEntity):
         if 0 <= position <= 10:
             await self.close(collector=collector)
 
-    @value_property
+    @state_property
     def is_closed(self) -> bool | None:
         """Return if the garage door is closed."""
         if self._e_door_state.value is not None:
             return str(self._e_door_state.value) == GarageDoorState.CLOSED
         return None
 
-    @value_property
+    @state_property
     def is_opening(self) -> bool | None:
         """Return if the garage door is opening."""
         if self._e_section.value is not None:
             return int(self._e_section.value) == GarageDoorActivity.OPENING
         return None
 
-    @value_property
+    @state_property
     def is_closing(self) -> bool | None:
         """Return if the garage door is closing."""
         if self._e_section.value is not None:

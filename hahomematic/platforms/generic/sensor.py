@@ -11,7 +11,7 @@ import logging
 from typing import Any, Final
 
 from hahomematic.const import HmPlatform, Parameter
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import get_value_from_value_list
 
@@ -27,7 +27,7 @@ class HmSensor[SensorT: float | int | str | None](GenericEntity[SensorT, None]):
 
     _platform = HmPlatform.SENSOR
 
-    @value_property
+    @state_property
     def value(self) -> SensorT:  # type: ignore[override]
         """Return the value."""
         if (

@@ -14,7 +14,6 @@ from hahomematic.const import (
     ParamsetKey,
 )
 from hahomematic.platforms import device as hmd, entity as hme
-from hahomematic.platforms.decorators import config_property
 from hahomematic.platforms.support import EntityNameData, GenericParameterType, get_entity_name
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -47,7 +46,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
             parameter_data=parameter_data,
         )
 
-    @config_property
+    @property
     def usage(self) -> EntityUsage:
         """Return the entity usage."""
         if self._is_forced_sensor or self._is_un_ignored:

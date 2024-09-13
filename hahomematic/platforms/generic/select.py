@@ -7,7 +7,7 @@ See https://www.home-assistant.io/integrations/select/.
 from __future__ import annotations
 
 from hahomematic.const import HmPlatform
-from hahomematic.platforms.decorators import value_property
+from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.generic.entity import GenericEntity
 from hahomematic.platforms.support import get_value_from_value_list
 
@@ -21,7 +21,7 @@ class HmSelect(GenericEntity[int | str, int | float | str]):
 
     _platform = HmPlatform.SELECT
 
-    @value_property
+    @state_property
     def value(self) -> str | None:  # type: ignore[override]
         """Get the value of the entity."""
         if (
