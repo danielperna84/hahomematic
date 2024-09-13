@@ -11,11 +11,11 @@ from hahomematic import central as hmcu
 from hahomematic.const import HUB_PATH, SYSVAR_ADDRESS, HubData, SystemVariableData
 from hahomematic.platforms.decorators import config_property, state_property
 from hahomematic.platforms.entity import CallbackEntity
-from hahomematic.platforms.support import generate_unique_id
+from hahomematic.platforms.support import PayloadMixin, generate_unique_id
 from hahomematic.support import parse_sys_var
 
 
-class GenericHubEntity(CallbackEntity):
+class GenericHubEntity(CallbackEntity, PayloadMixin):
     """Class for a HomeMatic system variable."""
 
     def __init__(
@@ -25,6 +25,7 @@ class GenericHubEntity(CallbackEntity):
         data: HubData,
     ) -> None:
         """Initialize the entity."""
+        PayloadMixin.__init__(self)
         unique_id: Final = generate_unique_id(
             central=central,
             address=address,

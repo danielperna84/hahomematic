@@ -169,14 +169,14 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         """Return the brightness in percent of this light."""
         return int((self._e_level.value or _MIN_BRIGHTNESS) * 100)
 
-    @state_property
+    @property
     def channel_brightness(self) -> int | None:
         """Return the channel_brightness of this light between min/max brightness."""
         if self._e_channel_level.value is not None:
             return int(self._e_channel_level.value * _MAX_BRIGHTNESS)
         return None
 
-    @state_property
+    @property
     def channel_brightness_pct(self) -> int | None:
         """Return the channel_brightness in percent of this light."""
         if self._e_channel_level.value is not None:
@@ -707,7 +707,7 @@ class CeIpFixedColorLight(CeDimmer):
         """Return the name of the color."""
         return self._e_color.value
 
-    @state_property
+    @property
     def channel_color_name(self) -> str | None:
         """Return the name of the channel color."""
         return self._e_channel_color.value
@@ -760,7 +760,7 @@ class CeIpFixedColorLight(CeDimmer):
             return hs_color
         return 0.0, 0.0
 
-    @state_property
+    @property
     def channel_hs_color(self) -> tuple[float, float] | None:
         """Return the channel hue and saturation color value [float, float]."""
         if self._e_channel_color.value is not None:

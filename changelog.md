@@ -1,5 +1,6 @@
-# Version 2024.9.6 (2024-09-10)
+# Version 2024.9.6 (2024-09-13)
 
+- Add missing PayloadMixin
 - Adjust payload and path
 - Rename value_property to state_property
 

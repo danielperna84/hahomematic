@@ -127,9 +127,9 @@ class HmDevice(PayloadMixin):
 
     def _identify_manufacturer(self) -> Manufacturer:
         """Identify the manufacturer of a device."""
-        if self.device_type.lower().startswith("hb"):
+        if self._device_type.lower().startswith("hb"):
             return Manufacturer.HB
-        if self.device_type.lower().startswith("alpha"):
+        if self._device_type.lower().startswith("alpha"):
             return Manufacturer.MOEHLENHOFF
         return Manufacturer.EQ3
 

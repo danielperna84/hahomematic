@@ -57,7 +57,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
 
     async def event(self, value: Any) -> None:
         """Handle event for which this entity has subscribed."""
-        self.device.client.last_value_send_cache.remove_last_value_send(
+        self._device.client.last_value_send_cache.remove_last_value_send(
             entity_key=self.entity_key,
             value=value,
         )
