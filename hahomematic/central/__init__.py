@@ -163,7 +163,7 @@ class CentralUnit(PayloadMixin):
         """Return the availability of the central."""
         return all(client.available for client in self._clients.values())
 
-    @property
+    @info_property
     def central_url(self) -> str:
         """Return the central_orl from config."""
         return self._config.central_url
@@ -253,7 +253,7 @@ class CentralUnit(PayloadMixin):
         """Return the loop support."""
         return self._looper
 
-    @property
+    @info_property
     def model(self) -> str | None:
         """Return the model of the backend."""
         if not self._model and (client := self.primary_client):
@@ -299,7 +299,7 @@ class CentralUnit(PayloadMixin):
         """Return the sysvar entities."""
         return tuple(self._sysvar_entities.values())
 
-    @property
+    @info_property
     def version(self) -> str | None:
         """Return the version of the backend."""
         if self._version is None:
