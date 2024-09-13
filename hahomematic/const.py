@@ -613,16 +613,3 @@ class DeviceDescription(TypedDict, total=False):
     INTERFACE: str | None
     # ROAMING: int | None
     RX_MODE: int
-
-
-class DeviceInfo(TypedDict, total=False):
-    """Entity device information for device registry."""
-
-    central_name: str
-    device_address: str
-    device_type: str
-    firmware: str
-    identifier: str
-    manufacturer: str
-    name: str
-    room: str

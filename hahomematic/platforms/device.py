@@ -262,7 +262,7 @@ class HmDevice(PayloadMixin):
     def info(self) -> dict[str, Any]:
         """Return the device info."""
         device_info = self.payload_info
-        device_info["central_name"] = self._central.payload_info
+        device_info["central"] = self._central.payload_info
         return device_info
 
     @property
