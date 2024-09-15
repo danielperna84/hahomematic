@@ -67,6 +67,7 @@ async def test_cecover(
     assert cover._channel_level == _CLOSED_LEVEL
     assert cover.is_closed is True
     await cover.set_position(position=81)
+    assert cover.collector_method_names == ("close", "open", "set_position", "stop")
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU8537918:4",
         paramset_key="VALUES",
