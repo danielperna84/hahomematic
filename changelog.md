@@ -1,6 +1,7 @@
 # Version 2024.9.7 (2024-09-15)
 
 - Add bind_collector to all relevant methods with option to disable it
+- Identify bind_collector annotated methods
 
 # Version 2024.9.6 (2024-09-13)
 

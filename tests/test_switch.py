@@ -45,6 +45,7 @@ async def test_ceswitch(
     central, mock_client, _ = central_client_factory
     switch: CeSwitch = cast(CeSwitch, helper.get_prepared_custom_entity(central, "VCU2128127", 4))
     assert switch.usage == EntityUsage.CE_PRIMARY
+    assert switch.collector_method_names == ("turn_off", "turn_on")
 
     await switch.turn_off()
     assert switch.value is False
@@ -118,6 +119,7 @@ async def test_hmswitch(
     central, mock_client, _ = central_client_factory
     switch: HmSwitch = cast(HmSwitch, central.get_generic_entity("VCU2128127:4", "STATE"))
     assert switch.usage == EntityUsage.NO_CREATE
+    assert switch.collector_method_names == ()
 
     assert switch.value is None
     await switch.turn_on()
