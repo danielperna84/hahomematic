@@ -14,6 +14,7 @@ from hahomematic.const import (
     ParamsetKey,
 )
 from hahomematic.platforms import device as hmd, entity as hme
+from hahomematic.platforms.entity import service
 from hahomematic.platforms.support import EntityNameData, GenericParameterType, get_entity_name
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -89,6 +90,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
                 event_data=self.get_event_data(new_value),
             )
 
+    @service()
     async def send_value(
         self,
         value: InputParameterT,

@@ -859,12 +859,12 @@ def bind_collector(
 ) -> Callable:
     """Decorate function to automatically add collector if not set."""
 
-    def decorator_bind_collector[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
+    def decorator[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
         """Decorate function to automatically add collector if not set."""
         argument_index = getfullargspec(func).args.index(_COLLECTOR_ARGUMENT_NAME)
 
         @wraps(func)
-        async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Wrap method to add collector."""
             if not enabled:
                 return await func(*args, **kwargs)
@@ -886,10 +886,27 @@ def bind_collector(
                 )
             return return_value
 
-        wrapper_collector.bind_collector = True  # type: ignore[attr-defined]
-        return wrapper_collector  # type: ignore[return-value]
+        wrapper.service_call = True  # type: ignore[attr-defined]
+        return wrapper  # type: ignore[return-value]
 
-    return decorator_bind_collector
+    return decorator
+
+
+def service() -> Callable:
+    """Decorate function to mark as service."""
+
+    def decorator[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
+        """Decorate function ."""
+
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            """Wrap method."""
+            return await func(*args, **kwargs)
+
+        wrapper.service_call = True  # type: ignore[attr-defined]
+        return wrapper  # type: ignore[return-value]
+
+    return decorator
 
 
 def get_bind_collector_methods(obj: object) -> dict[str, Callable]:
@@ -900,5 +917,5 @@ def get_bind_collector_methods(obj: object) -> dict[str, Callable]:
         if not name.startswith("_")
         # and name != "collector_methods"
         and callable(getattr(obj, name))
-        and hasattr(getattr(obj, name), "bind_collector")
+        and hasattr(getattr(obj, name), "service_call")
     }
