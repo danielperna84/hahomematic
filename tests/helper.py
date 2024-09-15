@@ -17,7 +17,7 @@ from hahomematic.central import CentralConfig, CentralUnit
 from hahomematic.client import Client, InterfaceConfig, _ClientConfig
 from hahomematic.const import BackendSystemEvent, InterfaceName
 from hahomematic.platforms.custom.entity import CustomEntity
-from hahomematic.platforms.decorators import _get_public_attributes_by_decorator
+from hahomematic.platforms.decorators import get_public_attributes_by_class_decorator
 from hahomematic_support.client_local import ClientLocal, LocalRessources
 
 from tests import const
@@ -186,7 +186,7 @@ def get_mock(instance: Any, **kwargs):
 
 def _get_not_mockable_method_names(instance: Any) -> set[str]:
     """Return all relevant method names for mocking."""
-    methods: set[str] = set(_get_public_attributes_by_decorator(instance, property))
+    methods: set[str] = set(get_public_attributes_by_class_decorator(instance, property))
 
     for method in dir(instance):
         if method in EXCLUDE_METHODS_FROM_MOCKS:

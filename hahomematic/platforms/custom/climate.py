@@ -216,11 +216,13 @@ class BaseClimateEntity(CustomEntity):
             value=temperature, collector=collector, do_validate=do_validate
         )
 
+    @bind_collector()
     async def set_hvac_mode(
         self, hvac_mode: HvacMode, collector: CallParameterCollector | None = None
     ) -> None:
         """Set new target hvac mode."""
 
+    @bind_collector()
     async def set_preset_mode(
         self, preset_mode: PresetMode, collector: CallParameterCollector | None = None
     ) -> None:

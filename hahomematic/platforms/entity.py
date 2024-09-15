@@ -842,6 +842,7 @@ def bind_collector(
     wait_for_callback: int | None = WAIT_FOR_CALLBACK,
     use_command_queue: bool = False,
     use_put_paramset: bool = True,
+    enabled: bool = True,
 ) -> Callable:
     """Decorate function to automatically add collector if not set."""
 
@@ -852,6 +853,8 @@ def bind_collector(
         @wraps(func)
         async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
             """Wrap method to add collector."""
+            if not enabled:
+                return await func(*args, **kwargs)
 
             try:
                 collector_exists = args[argument_index] is not None

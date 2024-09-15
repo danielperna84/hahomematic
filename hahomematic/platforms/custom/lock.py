@@ -85,14 +85,17 @@ class BaseLock(CustomEntity):
         """Flag if lock supports open."""
 
     @abstractmethod
+    @bind_collector()
     async def lock(self, collector: CallParameterCollector | None = None) -> None:
         """Lock the lock."""
 
     @abstractmethod
+    @bind_collector()
     async def unlock(self, collector: CallParameterCollector | None = None) -> None:
         """Unlock the lock."""
 
     @abstractmethod
+    @bind_collector()
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the lock."""
 

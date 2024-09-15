@@ -63,7 +63,6 @@ async def test_cecover(
     central, mock_client, _ = central_client_factory
     cover: CeCover = cast(CeCover, helper.get_prepared_custom_entity(central, "VCU8537918", 4))
     assert cover.usage == EntityUsage.CE_PRIMARY
-
     assert cover.current_position == 0
     assert cover._channel_level == _CLOSED_LEVEL
     assert cover.is_closed is True
@@ -233,7 +232,6 @@ async def test_cewindowdrive(
         CeWindowDrive, helper.get_prepared_custom_entity(central, "VCU0000350", 1)
     )
     assert cover.usage == EntityUsage.CE_PRIMARY
-
     assert cover.current_position == 0
     assert cover._channel_level == _WD_CLOSED_LEVEL
     assert cover.is_closed is True
