@@ -10,6 +10,7 @@ import logging
 from typing import Final
 
 from hahomematic.const import HmPlatform
+from hahomematic.platforms.entity import service_call
 from hahomematic.platforms.hub.entity import GenericSystemVariable
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ class HmSysvarNumber(GenericSystemVariable):
     _platform = HmPlatform.HUB_NUMBER
     _is_extended = True
 
+    @service_call()
     async def send_variable(self, value: float) -> None:
         """Set the value of the entity."""
         if value is not None and self.max is not None and self.min is not None:
