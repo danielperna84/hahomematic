@@ -77,6 +77,7 @@ class BaseSiren(CustomEntity):
         return self.available_lights is not None
 
     @abstractmethod
+    @bind_collector()
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
@@ -85,6 +86,7 @@ class BaseSiren(CustomEntity):
         """Turn the device on."""
 
     @abstractmethod
+    @bind_collector()
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
 
@@ -219,6 +221,7 @@ class CeIpSirenSmoke(BaseSiren):
         """Flag if siren supports duration."""
         return False
 
+    @bind_collector()
     async def turn_on(
         self,
         collector: CallParameterCollector | None = None,
@@ -227,6 +230,7 @@ class CeIpSirenSmoke(BaseSiren):
         """Turn the device on."""
         await self._e_smoke_detector_command.send_value(value=SirenCommand.ON, collector=collector)
 
+    @bind_collector()
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the device off."""
         await self._e_smoke_detector_command.send_value(

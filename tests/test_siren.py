@@ -162,6 +162,7 @@ async def test_ceipsirensmoke(
         paramset_key="VALUES",
         parameter="SMOKE_DETECTOR_COMMAND",
         value=2,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
 
     await siren.turn_off()
@@ -170,6 +171,7 @@ async def test_ceipsirensmoke(
         paramset_key="VALUES",
         parameter="SMOKE_DETECTOR_COMMAND",
         value=1,
+        wait_for_callback=WAIT_FOR_CALLBACK,
     )
 
     call_count = len(mock_client.method_calls)

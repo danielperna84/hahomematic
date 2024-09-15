@@ -274,6 +274,7 @@ class CeBlind(CeCover):
             return float(last_value_send)
         return None
 
+    @bind_collector(enabled=False)
     async def set_position(
         self,
         position: int | None = None,
@@ -344,6 +345,7 @@ class CeBlind(CeCover):
         await self._e_level_2.send_value(value=tilt_level, collector=collector)
         await super()._set_level(level=level, collector=collector)
 
+    @bind_collector(enabled=False)
     async def open(self, collector: CallParameterCollector | None = None) -> None:
         """Open the cover and open the tilt."""
         if not self.is_state_change(open=True, tilt_open=True):
@@ -354,6 +356,7 @@ class CeBlind(CeCover):
             collector=collector,
         )
 
+    @bind_collector(enabled=False)
     async def close(self, collector: CallParameterCollector | None = None) -> None:
         """Close the cover and close the tilt."""
         if not self.is_state_change(close=True, tilt_close=True):
@@ -364,6 +367,7 @@ class CeBlind(CeCover):
             collector=collector,
         )
 
+    @bind_collector(enabled=False)
     async def stop(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion."""
         async with self._command_processing_lock:
@@ -375,18 +379,21 @@ class CeBlind(CeCover):
         self.central.command_queue_handler.empty_queue(address=self._channel_address)
         await super().stop(collector=collector)
 
+    @bind_collector(enabled=False)
     async def open_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Open the tilt."""
         if not self.is_state_change(tilt_open=True):
             return
         await self._set_level(tilt_level=self._open_tilt_level, collector=collector)
 
+    @bind_collector(enabled=False)
     async def close_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Close the tilt."""
         if not self.is_state_change(tilt_close=True):
             return
         await self._set_level(tilt_level=self._closed_level, collector=collector)
 
+    @bind_collector(enabled=False)
     async def stop_tilt(self, collector: CallParameterCollector | None = None) -> None:
         """Stop the device if in motion. Use only when command_processing_lock is held."""
         await self.stop(collector=collector)

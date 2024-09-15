@@ -77,15 +77,14 @@ class state_property[_GETTER, _SETTER](generic_property[_GETTER, _SETTER]):
     """Decorate to mark own value properties."""
 
 
-def _get_public_attributes_by_decorator(
-    data_object: Any, property_decorator: type
+def get_public_attributes_by_class_decorator(
+    data_object: Any, class_decorator: type
 ) -> dict[str, Any]:
     """Return the object attributes by decorator."""
     pub_attributes = [
         y
         for y in dir(data_object.__class__)
-        if not y.startswith("_")
-        and isinstance(getattr(data_object.__class__, y), property_decorator)
+        if not y.startswith("_") and isinstance(getattr(data_object.__class__, y), class_decorator)
     ]
     return {x: _get_text_value(getattr(data_object, x)) for x in pub_attributes}
 
@@ -103,20 +102,20 @@ def _get_text_value(value: Any) -> Any:
 
 def get_public_attributes_for_config_property(data_object: Any) -> dict[str, Any]:
     """Return the object attributes by decorator config_property."""
-    return _get_public_attributes_by_decorator(
-        data_object=data_object, property_decorator=config_property
+    return get_public_attributes_by_class_decorator(
+        data_object=data_object, class_decorator=config_property
     )
 
 
 def get_public_attributes_for_info_property(data_object: Any) -> dict[str, Any]:
     """Return the object attributes by decorator info_property."""
-    return _get_public_attributes_by_decorator(
-        data_object=data_object, property_decorator=info_property
+    return get_public_attributes_by_class_decorator(
+        data_object=data_object, class_decorator=info_property
     )
 
 
 def get_public_attributes_for_state_property(data_object: Any) -> dict[str, Any]:
     """Return the object attributes by decorator state_property."""
-    return _get_public_attributes_by_decorator(
-        data_object=data_object, property_decorator=state_property
+    return get_public_attributes_by_class_decorator(
+        data_object=data_object, class_decorator=state_property
     )
