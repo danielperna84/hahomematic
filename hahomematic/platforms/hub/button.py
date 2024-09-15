@@ -8,9 +8,12 @@ from __future__ import annotations
 
 from typing import Final
 
+from platforms.entity import get_service_calls
+
 from hahomematic import central as hmcu
 from hahomematic.const import PROGRAM_ADDRESS, HmPlatform, HubData, ProgramData
 from hahomematic.platforms.decorators import state_property
+from hahomematic.platforms.entity import service_call
 from hahomematic.platforms.hub.entity import GenericHubEntity
 
 
@@ -35,6 +38,7 @@ class HmProgramButton(GenericHubEntity):
         self.is_active: bool = data.is_active
         self.is_internal: bool = data.is_internal
         self.last_execute_time: str = data.last_execute_time
+        self._service_methods = get_service_calls(obj=self)
 
     @state_property
     def available(self) -> bool:
@@ -62,6 +66,7 @@ class HmProgramButton(GenericHubEntity):
         if do_update:
             self.fire_entity_updated_callback()
 
+    @service_call()
     async def press(self) -> None:
         """Handle the button press."""
         await self.central.execute_program(pid=self.pid)

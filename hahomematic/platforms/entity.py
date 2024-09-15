@@ -117,6 +117,7 @@ class CallbackEntity(ABC):
         self._custom_id: str | None = None
         self._modified_at: datetime = INIT_DATETIME
         self._refreshed_at: datetime = INIT_DATETIME
+        self._service_methods: dict[str, Callable] = {}
 
     @state_property
     @abstractmethod
@@ -192,6 +193,17 @@ class CallbackEntity(ABC):
     def is_registered(self) -> bool:
         """Return if entity is registered externally."""
         return self._custom_id is not None
+
+    # @property
+    @property
+    def service_methods(self) -> Mapping[str, Callable]:
+        """Return all service methods."""
+        return self._service_methods
+
+    @property
+    def service_method_names(self) -> tuple[str, ...]:
+        """Return all service methods."""
+        return tuple(self._service_methods.keys())
 
     def register_internal_entity_updated_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register internal entity updated callback."""
@@ -299,7 +311,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
 
         self._forced_usage: EntityUsage | None = None
         self._entity_name_data: Final = self._get_entity_name()
-        self._collector_methods: dict[str, Callable] = {}
 
     @state_property
     def available(self) -> bool:
@@ -310,17 +321,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     def base_channel_no(self) -> int | None:
         """Return the base channel no of the entity."""
         return self._device.get_sub_device_channel(channel_no=self._channel_no)
-
-    # @property
-    @property
-    def collector_methods(self) -> Mapping[str, Callable]:
-        """Return all collector methods."""
-        return self._collector_methods
-
-    @property
-    def collector_method_names(self) -> tuple[str, ...]:
-        """Return all collector methods."""
-        return tuple(self._collector_methods.keys())
 
     @property
     def path(self) -> str:
@@ -458,7 +458,7 @@ class BaseParameterEntity[
         self._state_uncertain: bool = True
         self._is_forced_sensor: bool = False
         self._assign_parameter_data(parameter_data=parameter_data)
-        self._collector_methods = get_bind_collector_methods(obj=self)
+        self._service_methods = get_service_calls(obj=self)
 
     def _assign_parameter_data(self, parameter_data: ParameterData) -> None:
         """Assign parameter data to instance variables."""
@@ -859,12 +859,12 @@ def bind_collector(
 ) -> Callable:
     """Decorate function to automatically add collector if not set."""
 
-    def decorator_bind_collector[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
+    def decorator[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
         """Decorate function to automatically add collector if not set."""
         argument_index = getfullargspec(func).args.index(_COLLECTOR_ARGUMENT_NAME)
 
         @wraps(func)
-        async def wrapper_collector(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Wrap method to add collector."""
             if not enabled:
                 return await func(*args, **kwargs)
@@ -886,19 +886,35 @@ def bind_collector(
                 )
             return return_value
 
-        wrapper_collector.bind_collector = True  # type: ignore[attr-defined]
-        return wrapper_collector  # type: ignore[return-value]
+        wrapper.service_call = True  # type: ignore[attr-defined]
+        return wrapper  # type: ignore[return-value]
 
-    return decorator_bind_collector
+    return decorator
 
 
-def get_bind_collector_methods(obj: object) -> dict[str, Callable]:
-    """Get all methods decorated with the "bind_collector" decorator."""
+def service_call() -> Callable:
+    """Mark function as service call."""
+
+    def decorator[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
+        """Decorate function ."""
+
+        @wraps(func)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            """Wrap method."""
+            return await func(*args, **kwargs)
+
+        wrapper.service_call = True  # type: ignore[attr-defined]
+        return wrapper  # type: ignore[return-value]
+
+    return decorator
+
+
+def get_service_calls(obj: object) -> dict[str, Callable]:
+    """Get all methods decorated with the "bind_collector" or "service_call"  decorator."""
     return {
         name: getattr(obj, name)
         for name in dir(obj)
         if not name.startswith("_")
-        # and name != "collector_methods"
         and callable(getattr(obj, name))
-        and hasattr(getattr(obj, name), "bind_collector")
+        and hasattr(getattr(obj, name), "service_call")
     }

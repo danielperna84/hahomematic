@@ -10,7 +10,7 @@ from typing import Final
 
 from hahomematic.const import HmPlatform, ParameterType
 from hahomematic.platforms.decorators import state_property
-from hahomematic.platforms.entity import CallParameterCollector
+from hahomematic.platforms.entity import CallParameterCollector, service_call
 from hahomematic.platforms.generic.entity import GenericEntity
 
 _PARAM_ON_TIME: Final = "ON_TIME"
@@ -32,6 +32,7 @@ class HmSwitch(GenericEntity[bool | None, bool]):
             return False
         return self._value  # type: ignore[no-any-return]
 
+    @service_call()
     async def turn_on(
         self, collector: CallParameterCollector | None = None, on_time: float | None = None
     ) -> None:
@@ -40,10 +41,12 @@ class HmSwitch(GenericEntity[bool | None, bool]):
             await self.set_on_time(on_time=on_time)
         await self.send_value(value=True, collector=collector)
 
+    @service_call()
     async def turn_off(self, collector: CallParameterCollector | None = None) -> None:
         """Turn the switch off."""
         await self.send_value(value=False, collector=collector)
 
+    @service_call()
     async def set_on_time(self, on_time: float) -> None:
         """Set the on time value in seconds."""
         await self._client.set_value(
