@@ -8,12 +8,10 @@ from __future__ import annotations
 
 from typing import Final
 
-from platforms.entity import get_service_calls
-
 from hahomematic import central as hmcu
 from hahomematic.const import PROGRAM_ADDRESS, HmPlatform, HubData, ProgramData
 from hahomematic.platforms.decorators import state_property
-from hahomematic.platforms.entity import service_call
+from hahomematic.platforms.entity import service_call, get_service_calls
 from hahomematic.platforms.hub.entity import GenericHubEntity
 
 
