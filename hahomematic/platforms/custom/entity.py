@@ -13,11 +13,7 @@ from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import ED, DeviceProfile, Field
 from hahomematic.platforms.custom.support import ExtendedConfig
 from hahomematic.platforms.decorators import state_property
-from hahomematic.platforms.entity import (
-    BaseEntity,
-    CallParameterCollector,
-    get_bind_collector_methods,
-)
+from hahomematic.platforms.entity import BaseEntity, CallParameterCollector, get_service_calls
 from hahomematic.platforms.generic import entity as hmge
 from hahomematic.platforms.support import (
     EntityNameData,
@@ -65,7 +61,7 @@ class CustomEntity(BaseEntity):
         self._data_entities: Final[dict[Field, hmge.GenericEntity]] = {}
         self._init_entities()
         self._init_entity_fields()
-        self._collector_methods = get_bind_collector_methods(obj=self)
+        self._service_methods = get_service_calls(obj=self)
 
     @property
     def allow_undefined_generic_entities(self) -> bool:

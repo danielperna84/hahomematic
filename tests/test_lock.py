@@ -120,7 +120,7 @@ async def test_ceiplock(
     central, mock_client, _ = central_client_factory
     lock: CeIpLock = cast(CeIpLock, helper.get_prepared_custom_entity(central, "VCU9724704", 1))
     assert lock.usage == EntityUsage.CE_PRIMARY
-    assert lock.collector_method_names == ("lock", "open", "unlock")
+    assert lock.service_method_names == ("lock", "open", "unlock")
 
     assert lock.is_locked is False
     await lock.lock()

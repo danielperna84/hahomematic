@@ -2,6 +2,7 @@
 
 - Add bind_collector to all relevant methods with option to disable it
 - Identify bind_collector annotated methods
+- Mark externally accessed services with service_call if bind_collector is not appropriate
 
 # Version 2024.9.6 (2024-09-13)
 

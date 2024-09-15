@@ -44,7 +44,7 @@ async def test_ceipsiren(
     central, mock_client, _ = central_client_factory
     siren: CeIpSiren = cast(CeIpSiren, helper.get_prepared_custom_entity(central, "VCU8249617", 3))
     assert siren.usage == EntityUsage.CE_PRIMARY
-    assert siren.collector_method_names == ("turn_off", "turn_on")
+    assert siren.service_method_names == ("turn_off", "turn_on")
 
     assert siren.is_on is False
     await central.event(const.INTERFACE_ID, "VCU8249617:3", "ACOUSTIC_ALARM_ACTIVE", 1)

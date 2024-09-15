@@ -62,7 +62,7 @@ async def test_cesimplerfthermostat(
     assert climate.usage == EntityUsage.CE_PRIMARY
 
     assert climate.is_valid is False
-    assert climate.collector_method_names == (
+    assert climate.service_method_names == (
         "disable_away_mode",
         "enable_away_mode_by_calendar",
         "enable_away_mode_by_duration",
@@ -142,7 +142,7 @@ async def test_cerfthermostat(
         CeRfThermostat, helper.get_prepared_custom_entity(central, "VCU0000050", 4)
     )
     assert climate.usage == EntityUsage.CE_PRIMARY
-    assert climate.collector_method_names == (
+    assert climate.service_method_names == (
         "disable_away_mode",
         "enable_away_mode_by_calendar",
         "enable_away_mode_by_duration",
@@ -311,7 +311,7 @@ async def test_ceipthermostat(
         CeIpThermostat, helper.get_prepared_custom_entity(central, "VCU1769958", 1)
     )
     assert climate.usage == EntityUsage.CE_PRIMARY
-    assert climate.collector_method_names == (
+    assert climate.service_method_names == (
         "disable_away_mode",
         "enable_away_mode_by_calendar",
         "enable_away_mode_by_duration",

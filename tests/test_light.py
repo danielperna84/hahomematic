@@ -61,7 +61,7 @@ async def test_cedimmer(
     central, mock_client, _ = central_client_factory
     light: CeDimmer = cast(CeDimmer, helper.get_prepared_custom_entity(central, "VCU1399816", 4))
     assert light.usage == EntityUsage.CE_PRIMARY
-    assert light.collector_method_names == ("turn_off", "turn_on")
+    assert light.service_method_names == ("turn_off", "turn_on")
     assert light.color_temp is None
     assert light.hs_color is None
     assert light.supports_brightness is True

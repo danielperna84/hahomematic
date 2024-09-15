@@ -67,7 +67,7 @@ async def test_cecover(
     assert cover._channel_level == _CLOSED_LEVEL
     assert cover.is_closed is True
     await cover.set_position(position=81)
-    assert cover.collector_method_names == ("close", "open", "set_position", "stop")
+    assert cover.service_method_names == ("close", "open", "set_position", "stop")
     assert mock_client.method_calls[-1] == call.set_value(
         channel_address="VCU8537918:4",
         paramset_key="VALUES",
@@ -145,7 +145,7 @@ async def test_ceipblind_dr(
     central, mock_client, _ = central_client_factory
     cover: CeIpBlind = cast(CeIpBlind, helper.get_prepared_custom_entity(central, "VCU7807849", 2))
     assert cover.usage == EntityUsage.CE_PRIMARY
-    assert cover.collector_method_names == (
+    assert cover.service_method_names == (
         "close",
         "close_tilt",
         "open",
@@ -309,7 +309,7 @@ async def test_ceblind(
     central, mock_client, _ = central_client_factory
     cover: CeBlind = cast(CeBlind, helper.get_prepared_custom_entity(central, "VCU0000144", 1))
     assert cover.usage == EntityUsage.CE_PRIMARY
-    assert cover.collector_method_names == (
+    assert cover.service_method_names == (
         "close",
         "close_tilt",
         "open",
@@ -669,7 +669,7 @@ async def test_ceipblind_hdm(
     central, mock_client, _ = central_client_factory
     cover: CeIpBlind = cast(CeIpBlind, helper.get_prepared_custom_entity(central, "VCU3560967", 1))
     assert cover.usage == EntityUsage.CE_PRIMARY
-    assert cover.collector_method_names == (
+    assert cover.service_method_names == (
         "close",
         "close_tilt",
         "open",
@@ -803,7 +803,7 @@ async def test_cegarageho(
     central, mock_client, _ = central_client_factory
     cover: CeGarage = cast(CeGarage, helper.get_prepared_custom_entity(central, "VCU3574044", 1))
     assert cover.usage == EntityUsage.CE_PRIMARY
-    assert cover.collector_method_names == ("close", "open", "set_position", "stop", "vent")
+    assert cover.service_method_names == ("close", "open", "set_position", "stop", "vent")
 
     assert cover.current_position is None
     await cover.set_position(position=81)
