@@ -39,7 +39,7 @@ class GenericHubEntity(CallbackEntity, PayloadMixin):
     def get_name(self, data: HubData) -> str:
         """Return the name of the hub entity."""
 
-    @config_property
+    @property
     def full_name(self) -> str:
         """Return the fullname of the entity."""
         return self._full_name

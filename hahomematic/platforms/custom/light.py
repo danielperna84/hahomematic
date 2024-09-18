@@ -164,7 +164,7 @@ class CeDimmer(CustomEntity, OnTimeMixin):
         """Return the brightness of this light between min/max brightness."""
         return int((self._e_level.value or _MIN_BRIGHTNESS) * _MAX_BRIGHTNESS)
 
-    @state_property
+    @property
     def brightness_pct(self) -> int | None:
         """Return the brightness in percent of this light."""
         return int((self._e_level.value or _MIN_BRIGHTNESS) * 100)

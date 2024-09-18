@@ -57,7 +57,7 @@ class HmUpdate(CallbackEntity, PayloadMixin):
         """Return the device of the entity."""
         return self._device
 
-    @config_property
+    @property
     def full_name(self) -> str:
         """Return the full name of the entity."""
         return f"{self._device.name} Update"

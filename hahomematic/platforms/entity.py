@@ -139,7 +139,7 @@ class CallbackEntity(ABC):
         """Return the central unit."""
         return self._central
 
-    @config_property
+    @property
     @abstractmethod
     def full_name(self) -> str:
         """Return the full name of the entity."""
@@ -352,7 +352,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         """Return the function of the entity."""
         return self._function
 
-    @config_property
+    @property
     def full_name(self) -> str:
         """Return the full name of the entity."""
         return self._entity_name_data.full_name

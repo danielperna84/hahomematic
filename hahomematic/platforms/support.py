@@ -45,17 +45,29 @@ class PayloadMixin:
     @property
     def payload_config(self) -> dict[str, Any]:
         """Return the config payload."""
-        return get_public_attributes_for_config_property(data_object=self)
+        return {
+            key: value
+            for key, value in get_public_attributes_for_config_property(data_object=self).items()
+            if value is not None
+        }
 
     @property
     def payload_info(self) -> dict[str, Any]:
         """Return the info payload."""
-        return get_public_attributes_for_info_property(data_object=self)
+        return {
+            key: value
+            for key, value in get_public_attributes_for_info_property(data_object=self).items()
+            if value is not None
+        }
 
     @property
     def payload_state(self) -> dict[str, Any]:
         """Return the state payload."""
-        return get_public_attributes_for_state_property(data_object=self)
+        return {
+            key: value
+            for key, value in get_public_attributes_for_state_property(data_object=self).items()
+            if value is not None
+        }
 
 
 class OnTimeMixin:
