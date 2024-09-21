@@ -377,10 +377,10 @@ class HmDevice(PayloadMixin):
         """Get channel of device."""
         return self._channels.get(channel_address)
 
-    def clear_collections(self) -> None:
+    def remove(self) -> None:
         """Remove entities from collections and central."""
         for channel in self._channels.values():
-            channel.clear_collections()
+            channel.remove()
 
     def register_device_updated_callback(self, cb: Callable) -> CALLBACK_TYPE:
         """Register update callback."""
@@ -724,7 +724,7 @@ class HmChannel(PayloadMixin):
         if isinstance(entity, GenericEvent):
             self._generic_events[entity.entity_key] = entity
 
-    def remove_entity(self, entity: CallbackEntity) -> None:
+    def _remove_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
         if isinstance(entity, BaseParameterEntity):
             self._central.remove_event_subscription(entity=entity)
@@ -737,17 +737,18 @@ class HmChannel(PayloadMixin):
             del self._generic_events[entity.entity_key]
         entity.fire_device_removed_callback()
 
-    def clear_collections(self) -> None:
+    def remove(self) -> None:
         """Remove entities from collections and central."""
         for event in self.generic_events:
-            self.remove_entity(event)
+            self._remove_entity(event)
         self._generic_events.clear()
 
         for entity in self.generic_entities:
-            self.remove_entity(entity)
+            self._remove_entity(entity)
         self._generic_entities.clear()
 
-        self._custom_entity = None
+        if self._custom_entity:
+            self._remove_entity(self._custom_entity)
 
     def _set_modified_at(self) -> None:
         self._modified_at = datetime.now()

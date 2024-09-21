@@ -1008,7 +1008,7 @@ class CentralUnit(PayloadMixin):
                 device.device_address,
             )
             return
-        device.clear_collections()
+        device.remove()
 
         self._device_descriptions.remove_device(device=device)
         self._paramset_descriptions.remove_device(device=device)
