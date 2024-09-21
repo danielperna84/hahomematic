@@ -596,7 +596,7 @@ class BaseParameterEntity[
     @property
     def _enabled_by_channel_operation_mode(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
-        if self._channel.model not in _CONFIGURABLE_CHANNEL:
+        if self._channel.type_name not in _CONFIGURABLE_CHANNEL:
             return None
         if self._parameter not in KEY_CHANNEL_OPERATION_MODE_VISIBILITY:
             return None

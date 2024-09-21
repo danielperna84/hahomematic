@@ -608,7 +608,7 @@ class HmChannel(PayloadMixin):
         self._description = self._central.device_descriptions.get_device_description(
             interface_id=self._device.interface_id, address=channel_address
         )
-        self._model: Final = self._description["TYPE"]
+        self._type_name: Final = self._description["TYPE"]
         self._no: Final[int | None] = get_channel_no(address=channel_address)
         self._unique_id: Final = generate_channel_unique_id(
             central=self._central, address=channel_address
@@ -671,9 +671,9 @@ class HmChannel(PayloadMixin):
         return tuple(self._generic_events.values())
 
     @property
-    def model(self) -> str:
-        """Return the model of the device."""
-        return self._model
+    def type_name(self) -> str:
+        """Return the type name of the channel."""
+        return self._type_name
 
     @property
     def no(self) -> int | None:
@@ -854,7 +854,7 @@ class HmChannel(PayloadMixin):
         """Provide some useful information."""
         return (
             f"address: {self._address}, "
-            f"type: {self._model}, "
+            f"type: {self._type_name}, "
             f"generic_entities: {len(self._generic_entities)}, "
             f"custom_entity: {self._custom_entity is not None}, "
             f"events: {len(self._generic_events)}"

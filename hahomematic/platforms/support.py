@@ -204,7 +204,7 @@ def get_entity_name(
 
     _LOGGER.debug(
         "GET_ENTITY_NAME: Using unique_id for %s %s %s",
-        channel.model,
+        channel.device.model,
         channel.address,
         parameter,
     )
