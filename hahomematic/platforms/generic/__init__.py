@@ -48,7 +48,7 @@ def create_entity_and_append_to_channel(
     central = channel.central
     device = channel.device
     if central.parameter_visibility.parameter_is_ignored(
-        device_type=device.model,
+        model=device.model,
         channel_no=hms.get_channel_no(address=channel.address),
         paramset_key=paramset_key,
         parameter=parameter,
@@ -126,7 +126,7 @@ def create_entity_and_append_to_channel(
 def _check_switch_to_sensor(entity: hmge.GenericEntity) -> bool:
     """Check if parameter of a device should be wrapped to a different platform."""
     if entity.device.central.parameter_visibility.parameter_is_un_ignored(
-        device_type=entity.device.model,
+        model=entity.device.model,
         channel_no=entity.channel_no,
         paramset_key=entity.paramset_key,
         parameter=entity.parameter,

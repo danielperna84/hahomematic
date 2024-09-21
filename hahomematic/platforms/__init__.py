@@ -43,7 +43,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
             interface_id=device.interface_id, channel_address=channel_address
         ):
             if not device.central.parameter_visibility.is_relevant_paramset(
-                device_type=device.model,
+                model=device.model,
                 channel_no=channel.no,
                 paramset_key=paramset_key,
             ):
@@ -58,7 +58,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
             ).items():
                 parameter_is_un_ignored: bool = (
                     device.central.parameter_visibility.parameter_is_un_ignored(
-                        device_type=device.model,
+                        model=device.model,
                         channel_no=channel.no,
                         paramset_key=paramset_key,
                         parameter=parameter,

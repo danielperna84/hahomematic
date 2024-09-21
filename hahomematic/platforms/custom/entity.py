@@ -51,7 +51,7 @@ class CustomEntity(BaseEntity):
             channel=channel,
             unique_id=unique_id,
             is_in_multiple_channels=hmed.is_multi_channel_device(
-                device_type=channel.device.model, platform=self.platform
+                model=channel.device.model, platform=self.platform
             ),
         )
         self._allow_undefined_generic_entities: Final[bool] = self._device_def[

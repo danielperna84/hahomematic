@@ -131,7 +131,7 @@ def create_event_and_append_to_channel(
     """Create action event entity."""
     device = channel.device
     if device.central.parameter_visibility.parameter_is_ignored(
-        device_type=device.model,
+        model=device.model,
         channel_no=hms.get_channel_no(address=channel.address),
         paramset_key=ParamsetKey.VALUES,
         parameter=parameter,

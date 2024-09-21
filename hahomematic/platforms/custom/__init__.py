@@ -34,7 +34,7 @@ def create_custom_entity_and_append_to_channels(
         )
 
         # Call the custom creation function.
-        for custom_config in get_custom_configs(device_type=device.model):
+        for custom_config in get_custom_configs(model=device.model):
             for channel in device.channels.values():
                 custom_config.make_ce_func(channel, custom_config)
 

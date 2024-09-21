@@ -741,16 +741,16 @@ def _get_device_entities(
 
 
 def get_custom_configs(
-    device_type: str,
+    model: str,
     platform: HmPlatform | None = None,
 ) -> tuple[CustomConfig, ...]:
     """Return the entity configs to create custom entities."""
-    device_type = device_type.lower().replace("hb-", "hm-")
+    model = model.lower().replace("hb-", "hm-")
     custom_configs: list[CustomConfig] = []
     for platform_blacklisted_devices in ALL_BLACKLISTED_DEVICES:
         if hms.element_matches_key(
             search_elements=platform_blacklisted_devices,
-            compare_with=device_type,
+            compare_with=model,
         ):
             return ()
 
@@ -759,7 +759,7 @@ def get_custom_configs(
             continue
         if func := _get_entity_config_by_platform(
             platform_devices=platform_devices,
-            device_type=device_type,
+            model=model,
         ):
             if isinstance(func, tuple):
                 custom_configs.extend(func)  # noqa:PERF401
@@ -770,31 +770,31 @@ def get_custom_configs(
 
 def _get_entity_config_by_platform(
     platform_devices: Mapping[str, CustomConfig | tuple[CustomConfig, ...]],
-    device_type: str,
+    model: str,
 ) -> CustomConfig | tuple[CustomConfig, ...] | None:
     """Return the entity configs to create custom entities."""
     for d_type, custom_configs in platform_devices.items():
-        if device_type.lower() == d_type.lower():
+        if model.lower() == d_type.lower():
             return custom_configs
 
     for d_type, custom_configs in platform_devices.items():
-        if device_type.lower().startswith(d_type.lower()):
+        if model.lower().startswith(d_type.lower()):
             return custom_configs
 
     return None
 
 
-def is_multi_channel_device(device_type: str, platform: HmPlatform) -> bool:
+def is_multi_channel_device(model: str, platform: HmPlatform) -> bool:
     """Return true, if device has multiple channels."""
     channels: list[int | None] = []
-    for custom_config in get_custom_configs(device_type=device_type, platform=platform):
+    for custom_config in get_custom_configs(model=model, platform=platform):
         channels.extend(custom_config.channels)
     return len(channels) > 1
 
 
-def entity_definition_exists(device_type: str) -> bool:
+def entity_definition_exists(model: str) -> bool:
     """Check if device desc exits."""
-    return len(get_custom_configs(device_type)) > 0
+    return len(get_custom_configs(model)) > 0
 
 
 def get_required_parameters() -> tuple[Parameter, ...]:

@@ -136,13 +136,13 @@ class Client(ABC):
         """Return the version id of the client."""
         return self._config.version
 
-    def get_product_group(self, device_type: str) -> ProductGroup:
+    def get_product_group(self, model: str) -> ProductGroup:
         """Return the product group."""
         if self.interface == InterfaceName.HMIP_RF:
-            l_device_type = device_type.lower()
-            if l_device_type.startswith("hmipw"):
+            l_model = model.lower()
+            if l_model.startswith("hmipw"):
                 return ProductGroup.HMIPW
-            if l_device_type.startswith("hmip"):
+            if l_model.startswith("hmip"):
                 return ProductGroup.HMIP
         if self.interface == InterfaceName.BIDCOS_WIRED:
             return ProductGroup.HMW
@@ -360,9 +360,9 @@ class Client(ABC):
 
     def get_virtual_remote(self) -> HmDevice | None:
         """Get the virtual remote for the Client."""
-        for device_type in VIRTUAL_REMOTE_TYPES:
+        for model in VIRTUAL_REMOTE_TYPES:
             for device in self.central.devices:
-                if device.interface_id == self.interface_id and device.model == device_type:
+                if device.interface_id == self.interface_id and device.model == model:
                     return device
         return None
 

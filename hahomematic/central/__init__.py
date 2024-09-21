@@ -1090,9 +1090,9 @@ class CentralUnit(PayloadMixin):
         parameters: set[str] = set()
         for channels in self._paramset_descriptions.raw_paramset_descriptions.values():
             for channel_address in channels:
-                device_type: str | None = None
+                model: str | None = None
                 if full_format:
-                    device_type = self._device_descriptions.get_device_type(
+                    model = self._device_descriptions.get_model(
                         device_address=get_device_address(channel_address)
                     )
                 for parameter, parameter_data in (
@@ -1125,7 +1125,7 @@ class CentralUnit(PayloadMixin):
                             else get_channel_no(channel_address)
                         )
 
-                        full_parameter = f"{parameter}:{paramset_key}@{device_type}:"
+                        full_parameter = f"{parameter}:{paramset_key}@{model}:"
                         if channel is not None:
                             full_parameter += str(channel)
                         parameters.add(full_parameter)

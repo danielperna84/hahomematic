@@ -101,19 +101,18 @@ class HmDevice(PayloadMixin):
         self._rx_modes: Final = get_rx_modes(mode=self._description.get("RX_MODE", 0))
         self._sub_model: Final = self._description.get("SUBTYPE")
         self._ignore_for_custom_entity: Final[bool] = (
-            central.parameter_visibility.device_type_is_ignored(device_type=self._model)
+            central.parameter_visibility.model_is_ignored(model=self._model)
         )
         self._manufacturer = self._identify_manufacturer()
         self._product_group: Final = self._client.get_product_group(self._model)
         # marker if device will be created as custom entity
         self._has_custom_entity_definition: Final = (
-            hmed.entity_definition_exists(device_type=self._model)
-            and not self._ignore_for_custom_entity
+            hmed.entity_definition_exists(model=self._model) and not self._ignore_for_custom_entity
         )
         self._name: Final = get_device_name(
             central=central,
             device_address=device_address,
-            device_type=self._model,
+            model=self._model,
         )
         self._value_cache: Final[ValueCache] = ValueCache(device=self)
         self._rooms: Final = central.device_details.get_device_rooms(device_address=device_address)
@@ -673,7 +672,7 @@ class HmChannel(PayloadMixin):
 
     @property
     def model(self) -> str:
-        """Return the device_type of the device."""
+        """Return the model of the device."""
         return self._model
 
     @property
@@ -1046,8 +1045,8 @@ class _DefinitionExporter:
         ] = await self._client.get_all_paramset_descriptions(
             device_descriptions=tuple(device_descriptions.values())
         )
-        device_type = device_descriptions[self._device_address]["TYPE"]
-        filename = f"{device_type}.json"
+        model = device_descriptions[self._device_address]["TYPE"]
+        filename = f"{model}.json"
 
         # anonymize device_descriptions
         anonymize_device_descriptions: list[DeviceDescription] = []

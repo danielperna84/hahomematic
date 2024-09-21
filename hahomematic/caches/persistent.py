@@ -228,7 +228,7 @@ class DeviceDescriptionCache(BasePersistentCache):
         return device_descriptions
 
     @lru_cache
-    def get_device_type(self, device_address: str) -> str | None:
+    def get_model(self, device_address: str) -> str | None:
         """Return the device type."""
         for data in self._device_descriptions.values():
             if items := data.get(device_address):

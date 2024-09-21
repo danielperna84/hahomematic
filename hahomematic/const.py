@@ -66,9 +66,9 @@ EVENT_ADDRESS: Final = "address"
 EVENT_AVAILABLE: Final = "available"
 EVENT_CHANNEL_NO: Final = "channel_no"
 EVENT_DATA: Final = "data"
-EVENT_DEVICE_TYPE: Final = "device_type"
 EVENT_INSTANCE_NAME: Final = "instance_name"
 EVENT_INTERFACE_ID: Final = "interface_id"
+EVENT_MODEL: Final = "model"
 EVENT_PARAMETER: Final = "parameter"
 EVENT_PONG_MISMATCH_COUNT: Final = "pong_mismatch_count"
 EVENT_SECONDS_SINCE_LAST_EVENT: Final = "seconds_since_last_event"
@@ -514,7 +514,7 @@ IGNORE_FOR_UN_IGNORE_PARAMETERS: Final[tuple[Parameter, ...]] = (
     Parameter.UN_REACH,
 )
 
-# virtual remotes device_types
+# virtual remotes s
 VIRTUAL_REMOTE_TYPES: Final[tuple[str, ...]] = (
     "HM-RCV-50",
     "HMW-RCV-50",

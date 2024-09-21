@@ -21,8 +21,8 @@ from hahomematic.const import (
     ENTITY_KEY,
     EVENT_ADDRESS,
     EVENT_CHANNEL_NO,
-    EVENT_DEVICE_TYPE,
     EVENT_INTERFACE_ID,
+    EVENT_MODEL,
     EVENT_PARAMETER,
     EVENT_VALUE,
     INIT_DATETIME,
@@ -94,7 +94,7 @@ EVENT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(EVENT_ADDRESS): val.device_address,
         vol.Required(EVENT_CHANNEL_NO): val.channel_no,
-        vol.Required(EVENT_DEVICE_TYPE): str,
+        vol.Required(EVENT_MODEL): str,
         vol.Required(EVENT_INTERFACE_ID): str,
         vol.Required(EVENT_PARAMETER): str,
         vol.Optional(EVENT_VALUE): vol.Any(bool, int),
@@ -299,11 +299,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._device.available
 
     @property
-    def base_channel_no(self) -> int | None:
-        """Return the base channel no of the entity."""
-        return self._channel.base_no
-
-    @property
     def path(self) -> str:
         """Return the base path of the entity."""
         return f"{self._channel.path}/{self._platform}"
@@ -419,7 +414,7 @@ class BaseParameterEntity[
         )
         self._is_un_ignored: Final[bool] = (
             self._central.parameter_visibility.parameter_is_un_ignored(
-                device_type=self._device.model,
+                model=self._device.model,
                 channel_no=self._channel.no,
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
@@ -749,7 +744,7 @@ class BaseParameterEntity[
         event_data = {
             EVENT_ADDRESS: self._device.address,
             EVENT_CHANNEL_NO: self._channel.no,
-            EVENT_DEVICE_TYPE: self._device.model,
+            EVENT_MODEL: self._device.model,
             EVENT_INTERFACE_ID: self._device.interface_id,
             EVENT_PARAMETER: self._parameter,
         }

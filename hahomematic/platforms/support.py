@@ -156,22 +156,22 @@ class EntityNameData:
         return channel_parameter_name
 
 
-def get_device_name(central: hmcu.CentralUnit, device_address: str, device_type: str) -> str:
+def get_device_name(central: hmcu.CentralUnit, device_address: str, model: str) -> str:
     """Return the cached name for a device, or an auto-generated."""
     if name := central.device_details.get_name(address=device_address):
         return name
 
     _LOGGER.debug(
         "GET_DEVICE_NAME: Using auto-generated name for %s %s",
-        device_type,
+        model,
         device_address,
     )
-    return _get_generic_device_name(device_address=device_address, device_type=device_type)
+    return _get_generic_device_name(device_address=device_address, model=model)
 
 
-def _get_generic_device_name(device_address: str, device_type: str) -> str:
+def _get_generic_device_name(device_address: str, model: str) -> str:
     """Return auto-generated device name."""
-    return f"{device_type}_{device_address}"
+    return f"{model}_{device_address}"
 
 
 def get_entity_name(

@@ -173,7 +173,7 @@ async def test_device_un_ignore_etrv(
     try:
         assert (
             central.parameter_visibility.parameter_is_un_ignored(
-                device_type="HmIP-eTRV-2",
+                model="HmIP-eTRV-2",
                 channel_no=channel_no,
                 paramset_key=paramset_key,
                 parameter=parameter,
@@ -214,7 +214,7 @@ async def test_device_un_ignore_broll(
     try:
         assert (
             central.parameter_visibility.parameter_is_un_ignored(
-                device_type="HmIP-BROLL",
+                model="HmIP-BROLL",
                 channel_no=channel_no,
                 paramset_key=paramset_key,
                 parameter=parameter,
@@ -257,7 +257,7 @@ async def test_device_un_ignore_hm(
     try:
         assert (
             central.parameter_visibility.parameter_is_un_ignored(
-                device_type="HM-TC-IT-WM-W-EU",
+                model="HM-TC-IT-WM-W-EU",
                 channel_no=channel_no,
                 paramset_key=paramset_key,
                 parameter=parameter,
@@ -344,7 +344,7 @@ async def test_device_un_ignore_hm2(
     try:
         assert (
             central.parameter_visibility.parameter_is_un_ignored(
-                device_type="HM-ES-PMSw1-Pl",
+                model="HM-ES-PMSw1-Pl",
                 channel_no=channel_no,
                 paramset_key=paramset_key,
                 parameter=parameter,
@@ -362,7 +362,7 @@ async def test_device_un_ignore_hm2(
 
 
 @pytest.mark.parametrize(
-    ("lines", "device_type", "address", "expected_result"),
+    ("lines", "model", "address", "expected_result"),
     [
         (
             ["ignore_HmIP-BWTH"],
@@ -385,10 +385,10 @@ async def test_device_un_ignore_hm2(
     ],
 )
 @pytest.mark.asyncio()
-async def test_ignore_device_type(
+async def test_ignore_(
     factory: helper.Factory,
     lines: list[str],
-    device_type: str,
+    model: str,
     address: str,
     expected_result: bool,
 ) -> None:
@@ -397,10 +397,7 @@ async def test_ignore_device_type(
         {"VCU1769958": "HmIP-BWTH.json", "VCU3609622": "HmIP-eTRV-2.json"}, un_ignore_list=lines
     )
     try:
-        assert (
-            central.parameter_visibility.device_type_is_ignored(device_type=device_type)
-            is expected_result
-        )
+        assert central.parameter_visibility.model_is_ignored(model=model) is expected_result
         if device := central.get_device(address=address):
             if expected_result:
                 assert len(device.custom_entities) == 0

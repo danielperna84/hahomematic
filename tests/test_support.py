@@ -357,13 +357,12 @@ async def test_get_device_name(
     """Test get_device_name."""
     central, _, _ = central_client_factory
     assert (
-        get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
+        get_device_name(central=central, device_address="VCU2128127", model="HmIP-BSM")
         == "HmIP-BSM_VCU2128127"
     )
     central.device_details.add_name(address="VCU2128127", name="Roof")
     assert (
-        get_device_name(central=central, device_address="VCU2128127", device_type="HmIP-BSM")
-        == "Roof"
+        get_device_name(central=central, device_address="VCU2128127", model="HmIP-BSM") == "Roof"
     )
 
 
