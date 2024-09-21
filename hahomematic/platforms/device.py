@@ -88,13 +88,13 @@ class HmDevice(PayloadMixin):
         self._forced_availability: ForcedDeviceAvailability = ForcedDeviceAvailability.NOT_SET
         self._device_updated_callbacks: Final[list[Callable]] = []
         self._firmware_update_callbacks: Final[list[Callable]] = []
-        self._channel_addresses: Final = tuple(
+        channel_addresses = tuple(
             [device_address]
             + [address for address in self._description["CHILDREN"] if address != ""]
         )
         self._channels: Final[dict[str, HmChannel]] = {
             address: HmChannel(device=self, channel_address=address)
-            for address in self._channel_addresses
+            for address in channel_addresses
         }
         self._model: Final = self._description["TYPE"]
         self._is_updatable: Final = self._description["UPDATABLE"]
@@ -169,11 +169,6 @@ class HmDevice(PayloadMixin):
     def central(self) -> hmcu.CentralUnit:
         """Return the central of the device."""
         return self._central
-
-    @property
-    def channel_addresses(self) -> tuple[str, ...]:
-        """Return the channel addresses."""
-        return self._channel_addresses
 
     @property
     def channels(self) -> dict[str, HmChannel]:

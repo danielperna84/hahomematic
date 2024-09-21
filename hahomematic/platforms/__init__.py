@@ -25,7 +25,7 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
     """Create the entities associated to this device."""
-    for channel_address in device.channel_addresses:
+    for channel_address in device.channels:
         if (channel := device.get_channel(channel_address=channel_address)) is None:
             raise HaHomematicException(
                 f"CREATE_ENTITIES_AND_APPEND_TO_DEVICE: Channel {channel_address} does not exists.",

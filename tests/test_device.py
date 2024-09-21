@@ -55,7 +55,7 @@ async def test_device_general(
     assert device.interface_id == const.INTERFACE_ID
     assert device.has_custom_entity_definition is True
     assert len(device.custom_entities) == 3
-    assert len(device.channel_addresses) == 11
+    assert len(device.channels) == 11
 
 
 @pytest.mark.asyncio()

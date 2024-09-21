@@ -1,3 +1,7 @@
+# Version 2024.9.9 (2024-09-21)
+
+- Use channel instead of channel_addresses
+
 # Version 2024.9.8 (2024-09-21)
 
 - Refactor device/entity to extract channel
