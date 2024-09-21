@@ -44,7 +44,7 @@ class CustomEntity(BaseEntity):
         # required for name in BaseEntity
         self._device_def: Final = device_def
         self._entity_def: Final = entity_def
-        self._base_channel_no: int = base_channel_no
+        self._base_no: int = base_channel_no
         self._custom_config: Final = custom_config
         self._extended: Final = custom_config.extended
         super().__init__(
@@ -68,9 +68,9 @@ class CustomEntity(BaseEntity):
         return self._allow_undefined_generic_entities
 
     @property
-    def base_channel_no(self) -> int | None:
+    def base_no(self) -> int | None:
         """Return the base channel no of the entity."""
-        return self._base_channel_no
+        return self._base_no
 
     def _init_entity_fields(self) -> None:
         """Init the entity fields."""
@@ -138,14 +138,14 @@ class CustomEntity(BaseEntity):
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
         is_only_primary_channel = check_channel_is_the_only_primary_channel(
-            current_channel_no=self.channel_no,
+            current_channel_no=self._channel.no,
             device_def=self._device_def,
             device_has_multiple_channels=self.is_in_multiple_channels,
         )
         return get_custom_entity_name(
             central=self._central,
             device=self._device,
-            channel_no=self.channel_no,
+            channel_no=self._channel.no,
             is_only_primary_channel=is_only_primary_channel,
             usage=self._get_entity_usage(),
             postfix=self.entity_name_postfix.replace("_", " ").title(),

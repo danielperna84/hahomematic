@@ -458,11 +458,11 @@ class HmDevice(PayloadMixin):
             if (
                 event.event_type == event_type
                 and (registered is None or event.is_registered == registered)
-                and event.channel_no is not None
+                and event.channel.no is not None
             ):
-                if event.channel_no not in event_dict:
-                    event_dict[event.channel_no] = []
-                event_dict[event.channel_no].append(event)
+                if event.channel.no not in event_dict:
+                    event_dict[event.channel.no] = []
+                event_dict[event.channel.no].append(event)
 
         return event_dict
 
@@ -795,11 +795,11 @@ class HmChannel(PayloadMixin):
             if (
                 event.event_type == event_type
                 and (registered is None or event.is_registered == registered)
-                and event.channel_no is not None
+                and event.channel.no is not None
             ):
-                if event.channel_no not in event_dict:
-                    event_dict[event.channel_no] = []
-                event_dict[event.channel_no].append(event)
+                if event.channel.no not in event_dict:
+                    event_dict[event.channel.no] = []
+                event_dict[event.channel.no].append(event)
 
         return event_dict
 
@@ -878,7 +878,7 @@ class ValueCache:
         try:
             for entity in self._get_base_entities():
                 value = await self.get_value(
-                    channel_address=entity.channel_address,
+                    channel_address=entity.channel.address,
                     paramset_key=entity.paramset_key,
                     parameter=entity.parameter,
                     call_source=CallSource.HM_INIT,
@@ -898,7 +898,7 @@ class ValueCache:
             entity
             for entity in self._device.generic_entities
             if (
-                entity.channel_no == 0
+                entity.channel.no == 0
                 and entity.paramset_key == ParamsetKey.VALUES
                 and entity.parameter in RELEVANT_INIT_PARAMETERS
             )
@@ -910,7 +910,7 @@ class ValueCache:
         try:
             for event in self._get_readable_events():
                 value = await self.get_value(
-                    channel_address=event.channel_address,
+                    channel_address=event.channel.address,
                     paramset_key=event.paramset_key,
                     parameter=event.parameter,
                     call_source=CallSource.HM_INIT,

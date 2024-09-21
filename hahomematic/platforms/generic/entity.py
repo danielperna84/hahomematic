@@ -132,7 +132,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
         return get_entity_name(
             central=self._central,
             device=self._device,
-            channel_no=self.channel_no,
+            channel_no=self._channel.no,
             parameter=self._parameter,
         )
 
@@ -142,7 +142,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
             return self._forced_usage
         if self._central.parameter_visibility.parameter_is_hidden(
             model=self._device.model,
-            channel_no=self.channel_no,
+            channel_no=self._channel.no,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
         ):

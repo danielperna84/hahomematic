@@ -61,7 +61,7 @@ async def test_central_full(central_unit_full) -> None:
     for custom_entity in custom_entities:
         if custom_entity.device.model not in ce_channels:
             ce_channels[custom_entity.device.model] = []
-        ce_channels[custom_entity.device.model].append(custom_entity.channel_no)
+        ce_channels[custom_entity.device.model].append(custom_entity.channel.no)
         pub_value_props = get_public_attributes_for_state_property(data_object=custom_entity)
         assert pub_value_props
         pub_config_props = get_public_attributes_for_config_property(data_object=custom_entity)

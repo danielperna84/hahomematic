@@ -519,10 +519,10 @@ class CeIpRGBWLight(CeDimmer):
         if (
             self._e_device_operation_mode.value
             in (DeviceOperationMode.RGB, DeviceOperationMode.RGBW)
-            and self.channel_no in (2, 3, 4)
+            and self._channel.no in (2, 3, 4)
         ) or (
             self._e_device_operation_mode.value == DeviceOperationMode.TUNABLE_WHITE
-            and self.channel_no in (3, 4)
+            and self._channel.no in (3, 4)
         ):
             return EntityUsage.NO_CREATE
         return self._get_entity_usage()

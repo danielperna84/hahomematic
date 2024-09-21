@@ -127,7 +127,7 @@ def _check_switch_to_sensor(entity: hmge.GenericEntity) -> bool:
     """Check if parameter of a device should be wrapped to a different platform."""
     if entity.device.central.parameter_visibility.parameter_is_un_ignored(
         model=entity.device.model,
-        channel_no=entity.channel_no,
+        channel_no=entity.channel.no,
         paramset_key=entity.paramset_key,
         parameter=entity.parameter,
     ):

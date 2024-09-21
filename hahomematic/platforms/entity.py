@@ -309,21 +309,6 @@ class BaseEntity(CallbackEntity, PayloadMixin):
         return self._channel
 
     @property
-    def channel_address(self) -> str:
-        """Return the channel_address of the entity."""
-        return self._channel.address
-
-    @property
-    def channel_no(self) -> int | None:
-        """Return the channel_no of the entity."""
-        return self._channel.no
-
-    @property
-    def channel_unique_id(self) -> str:
-        """Return the channel_unique_id of the entity."""
-        return self._channel.unique_id
-
-    @property
     def device(self) -> hmd.HmDevice:
         """Return the device of the entity."""
         return self._device
@@ -773,9 +758,9 @@ class CallParameterCollector:
             self._paramsets[entity.paramset_key] = {}
         if collector_order not in self._paramsets[entity.paramset_key]:
             self._paramsets[entity.paramset_key][collector_order] = {}
-        if entity.channel_address not in self._paramsets[entity.paramset_key][collector_order]:
-            self._paramsets[entity.paramset_key][collector_order][entity.channel_address] = {}
-        self._paramsets[entity.paramset_key][collector_order][entity.channel_address][
+        if entity.channel.address not in self._paramsets[entity.paramset_key][collector_order]:
+            self._paramsets[entity.paramset_key][collector_order][entity.channel.address] = {}
+        self._paramsets[entity.paramset_key][collector_order][entity.channel.address][
             entity.parameter
         ] = value
 

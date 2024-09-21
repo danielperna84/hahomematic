@@ -78,7 +78,7 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
         return get_event_name(
             central=self._central,
             device=self._device,
-            channel_no=self.channel_no,
+            channel_no=self._channel.no,
             parameter=self._parameter,
         )
 
