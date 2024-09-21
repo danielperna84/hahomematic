@@ -213,7 +213,7 @@ class DeviceDetailsCache:
         """Remove name from cache."""
         if device.address in self._names_cache:
             del self._names_cache[device.address]
-        for channel_address in device.channel_addresses:
+        for channel_address in device.channels:
             if channel_address in self._names_cache:
                 del self._names_cache[channel_address]
 

@@ -172,9 +172,10 @@ class DeviceDescriptionCache(BasePersistentCache):
 
     def remove_device(self, device: HmDevice) -> None:
         """Remove device from cache."""
-        deleted_addresses: list[str] = [device.address]
-        deleted_addresses.extend(device.channel_addresses)
-        self._remove_device(interface_id=device.interface_id, deleted_addresses=deleted_addresses)
+        self._remove_device(
+            interface_id=device.interface_id,
+            deleted_addresses=[device.address, *list(device.channels.keys())],
+        )
 
     def _remove_device(self, interface_id: str, deleted_addresses: list[str]) -> None:
         """Remove device from cache."""
@@ -330,7 +331,7 @@ class ParamsetDescriptionCache(BasePersistentCache):
     def remove_device(self, device: HmDevice) -> None:
         """Remove device paramset descriptions from cache."""
         if interface := self._raw_paramset_descriptions.get(device.interface_id):
-            for channel_address in device.channel_addresses:
+            for channel_address in device.channels:
                 if channel_address in interface:
                     del self._raw_paramset_descriptions[device.interface_id][channel_address]
 

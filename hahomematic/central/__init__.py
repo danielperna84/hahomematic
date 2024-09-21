@@ -130,7 +130,6 @@ class CentralUnit(PayloadMixin):
         self._primary_client: hmcl.Client | None = None
         # {interface_id, client}
         self._clients: Final[dict[str, hmcl.Client]] = {}
-        # {{channel_address, parameter}, event_handle}
         self._entity_event_subscriptions: Final[
             dict[ENTITY_KEY, list[Callable[[Any], Coroutine[Any, Any, None]]]]
         ] = {}
@@ -807,10 +806,10 @@ class CentralUnit(PayloadMixin):
 
         if (device := self._devices.get(device_address)) is None:
             return
-        addresses = device.channel_addresses
-        addresses += (device_address,)
 
-        await self.delete_devices(interface_id=interface_id, addresses=addresses)
+        await self.delete_devices(
+            interface_id=interface_id, addresses=[device_address, *list(device.channels.keys())]
+        )
 
     @callback_backend_system(system_event=BackendSystemEvent.DELETE_DEVICES)
     async def delete_devices(self, interface_id: str, addresses: tuple[str, ...]) -> None:
@@ -1093,7 +1092,7 @@ class CentralUnit(PayloadMixin):
                 model: str | None = None
                 if full_format:
                     model = self._device_descriptions.get_model(
-                        device_address=get_device_address(channel_address)
+                        device_address=get_device_address(address=channel_address)
                     )
                 for parameter, parameter_data in (
                     channels[channel_address].get(paramset_key, {}).items()
@@ -1122,7 +1121,7 @@ class CentralUnit(PayloadMixin):
                         channel = (
                             UN_IGNORE_WILDCARD
                             if use_channel_wildcard
-                            else get_channel_no(channel_address)
+                            else get_channel_no(address=channel_address)
                         )
 
                         full_parameter = f"{parameter}:{paramset_key}@{model}:"
