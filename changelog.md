@@ -3,7 +3,6 @@
 - Refactor device/entity to extract channel
 - Replace device_type by model
 - Shorten names
--
 
 # Version 2024.9.7 (2024-09-15)
 
