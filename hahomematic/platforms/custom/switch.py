@@ -92,30 +92,28 @@ class CeSwitch(CustomEntity, OnTimeMixin):
 
 
 def make_ip_switch(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create HomematicIP switch entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeSwitch,
         device_profile=DeviceProfile.IP_SWITCH,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 # Case for device model is not relevant.
 # HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "ELV-SH-BS2": CustomConfig(make_ce_func=make_ip_switch, channels=(3, 7)),
-    "HmIP-BS2": CustomConfig(make_ce_func=make_ip_switch, channels=(3, 7)),
-    "HmIP-BSL": CustomConfig(make_ce_func=make_ip_switch, channels=(3,)),
-    "HmIP-BSM": CustomConfig(make_ce_func=make_ip_switch, channels=(3,)),
+    "ELV-SH-BS2": CustomConfig(make_ce_func=make_ip_switch, channels=(4, 8)),
+    "HmIP-BS2": CustomConfig(make_ce_func=make_ip_switch, channels=(4, 8)),
+    "HmIP-BSL": CustomConfig(make_ce_func=make_ip_switch, channels=(4,)),
+    "HmIP-BSM": CustomConfig(make_ce_func=make_ip_switch, channels=(4,)),
     "HmIP-DRSI1": CustomConfig(
         make_ce_func=make_ip_switch,
-        channels=(2,),
+        channels=(3,),
         extended=ExtendedConfig(
             additional_entities={
                 0: (Parameter.ACTUAL_TEMPERATURE,),
@@ -124,35 +122,35 @@ DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
     ),
     "HmIP-DRSI4": CustomConfig(
         make_ce_func=make_ip_switch,
-        channels=(5, 9, 13, 17),
+        channels=(6, 10, 14, 18),
         extended=ExtendedConfig(
             additional_entities={
                 0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
-    "HmIP-FSI": CustomConfig(make_ce_func=make_ip_switch, channels=(2,)),
-    "HmIP-FSM": CustomConfig(make_ce_func=make_ip_switch, channels=(1,)),
+    "HmIP-FSI": CustomConfig(make_ce_func=make_ip_switch, channels=(3,)),
+    "HmIP-FSM": CustomConfig(make_ce_func=make_ip_switch, channels=(2,)),
     "HmIP-MOD-OC8": CustomConfig(
-        make_ce_func=make_ip_switch, channels=(9, 13, 17, 21, 25, 29, 33, 37)
+        make_ce_func=make_ip_switch, channels=(10, 14, 18, 22, 26, 30, 34, 38)
     ),
-    "HmIP-PCBS": CustomConfig(make_ce_func=make_ip_switch, channels=(2,)),
-    "HmIP-PCBS-BAT": CustomConfig(make_ce_func=make_ip_switch, channels=(2,)),
-    "HmIP-PCBS2": CustomConfig(make_ce_func=make_ip_switch, channels=(3, 7)),
-    "HmIP-PS": CustomConfig(make_ce_func=make_ip_switch, channels=(2,)),
-    "HmIP-SCTH230": CustomConfig(make_ce_func=make_ip_switch, channels=(7,)),
-    "HmIP-USBSM": CustomConfig(make_ce_func=make_ip_switch, channels=(2,)),
-    "HmIP-WGC": CustomConfig(make_ce_func=make_ip_switch, channels=(2,)),
-    "HmIP-WHS2": CustomConfig(make_ce_func=make_ip_switch, channels=(1, 5)),
+    "HmIP-PCBS": CustomConfig(make_ce_func=make_ip_switch, channels=(3,)),
+    "HmIP-PCBS-BAT": CustomConfig(make_ce_func=make_ip_switch, channels=(3,)),
+    "HmIP-PCBS2": CustomConfig(make_ce_func=make_ip_switch, channels=(4, 8)),
+    "HmIP-PS": CustomConfig(make_ce_func=make_ip_switch, channels=(3,)),
+    "HmIP-SCTH230": CustomConfig(make_ce_func=make_ip_switch, channels=(8,)),
+    "HmIP-USBSM": CustomConfig(make_ce_func=make_ip_switch, channels=(3,)),
+    "HmIP-WGC": CustomConfig(make_ce_func=make_ip_switch, channels=(3,)),
+    "HmIP-WHS2": CustomConfig(make_ce_func=make_ip_switch, channels=(2, 6)),
     "HmIPW-DRS": CustomConfig(
         make_ce_func=make_ip_switch,
-        channels=(1, 5, 9, 13, 17, 21, 25, 29),
+        channels=(2, 6, 10, 14, 18, 22, 26, 30),
         extended=ExtendedConfig(
             additional_entities={
                 0: (Parameter.ACTUAL_TEMPERATURE,),
             }
         ),
     ),
-    "HmIPW-FIO6": CustomConfig(make_ce_func=make_ip_switch, channels=(7, 11, 15, 19, 23, 27)),
+    "HmIPW-FIO6": CustomConfig(make_ce_func=make_ip_switch, channels=(8, 12, 16, 20, 24, 28)),
 }
 hmed.ALL_DEVICES[HmPlatform.SWITCH] = DEVICES

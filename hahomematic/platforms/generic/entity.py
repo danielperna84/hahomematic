@@ -30,18 +30,14 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
 
     def __init__(
         self,
-        device: hmd.HmDevice,
-        unique_id: str,
-        channel_address: str,
+        channel: hmd.HmChannel,
         paramset_key: ParamsetKey,
         parameter: str,
         parameter_data: ParameterData,
     ) -> None:
         """Init the generic entity."""
         super().__init__(
-            device=device,
-            unique_id=unique_id,
-            channel_address=channel_address,
+            channel=channel,
             paramset_key=paramset_key,
             parameter=parameter,
             parameter_data=parameter_data,
@@ -119,7 +115,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
             return
 
         await self._client.set_value(
-            channel_address=self._channel_address,
+            channel_address=self._channel.channel_address,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
             value=converted_value,

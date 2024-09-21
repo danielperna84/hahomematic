@@ -764,12 +764,11 @@ class CentralUnit(PayloadMixin):
                         interface_id=interface_id,
                         device_address=device_address,
                     )
-
-                except Exception as err:  # pragma: no cover
+                except Exception as ex:  # pragma: no cover
                     _LOGGER.error(
                         "CREATE_DEVICES failed: %s [%s] Unable to create device: %s, %s",
-                        type(err).__name__,
-                        reduce_args(args=err.args),
+                        type(ex).__name__,
+                        reduce_args(args=ex.args),
                         interface_id,
                         device_address,
                     )
@@ -779,11 +778,11 @@ class CentralUnit(PayloadMixin):
                         await device.load_value_cache()
                         new_devices.add(device)
                         self._devices[device_address] = device
-                except Exception as err:  # pragma: no cover
+                except Exception as ex:  # pragma: no cover
                     _LOGGER.error(
                         "CREATE_DEVICES failed: %s [%s] Unable to create entities: %s, %s",
-                        type(err).__name__,
-                        reduce_args(args=err.args),
+                        type(ex).__name__,
+                        reduce_args(args=ex.args),
                         interface_id,
                         device_address,
                     )
@@ -873,11 +872,11 @@ class CentralUnit(PayloadMixin):
                     if dev_desc["ADDRESS"] not in known_addresses:
                         await client.fetch_paramset_descriptions(device_description=dev_desc)
                         save_paramset_descriptions = True
-                except Exception as err:  # pragma: no cover
+                except Exception as ex:  # pragma: no cover
                     _LOGGER.error(
                         "ADD_NEW_DEVICES failed: %s [%s]",
-                        type(err).__name__,
-                        reduce_args(args=err.args),
+                        type(ex).__name__,
+                        reduce_args(args=ex.args),
                     )
 
             await self.save_caches(
@@ -1375,11 +1374,11 @@ class ConnectionChecker(threading.Thread):
                         await self._central.load_and_refresh_entity_data()
         except NoConnection as nex:
             _LOGGER.error("CHECK_CONNECTION failed: no connection: %s", reduce_args(args=nex.args))
-        except Exception as err:
+        except Exception as ex:
             _LOGGER.error(
                 "CHECK_CONNECTION failed: %s [%s]",
-                type(err).__name__,
-                reduce_args(args=err.args),
+                type(ex).__name__,
+                reduce_args(args=ex.args),
             )
 
 

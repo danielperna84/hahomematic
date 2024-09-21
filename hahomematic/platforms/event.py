@@ -34,17 +34,14 @@ class GenericEvent(BaseParameterEntity[Any, Any]):
 
     def __init__(
         self,
-        device: hmd.HmDevice,
+        channel: hmd.HmChannel,
         unique_id: str,
-        channel_address: str,
         parameter: str,
         parameter_data: ParameterData,
     ) -> None:
         """Initialize the event handler."""
         super().__init__(
-            device=device,
-            unique_id=unique_id,
-            channel_address=channel_address,
+            channel=channel,
             paramset_key=ParamsetKey.VALUES,
             parameter=parameter,
             parameter_data=parameter_data,
@@ -128,32 +125,33 @@ class ImpulseEvent(GenericEvent):
     _event_type = HomematicEventType.IMPULSE
 
 
-def create_event_and_append_to_device(
-    device: hmd.HmDevice, channel_address: str, parameter: str, parameter_data: ParameterData
+def create_event_and_append_to_channel(
+    channel: hmd.HmChannel, parameter: str, parameter_data: ParameterData
 ) -> None:
     """Create action event entity."""
+    device = channel.device
     if device.central.parameter_visibility.parameter_is_ignored(
         device_type=device.device_type,
-        channel_no=hms.get_channel_no(address=channel_address),
+        channel_no=hms.get_channel_no(address=channel.channel_address),
         paramset_key=ParamsetKey.VALUES,
         parameter=parameter,
     ):
         _LOGGER.debug(
             "create_event_and_append_to_device: Ignoring parameter: %s [%s]",
             parameter,
-            channel_address,
+            channel.channel_address,
         )
         return
     unique_id = generate_unique_id(
         central=device.central,
-        address=channel_address,
+        address=channel.channel_address,
         parameter=parameter,
         prefix=f"event_{device.central.name}",
     )
 
     _LOGGER.debug(
         "CREATE_EVENT_AND_APPEND_TO_DEVICE: Creating event for %s, %s, %s",
-        channel_address,
+        channel.channel_address,
         parameter,
         device.interface_id,
     )
@@ -167,10 +165,9 @@ def create_event_and_append_to_device(
             event_t = ImpulseEvent
     if event_t:
         event = event_t(
-            device=device,
+            channel=channel,
             unique_id=unique_id,
-            channel_address=channel_address,
             parameter=parameter,
             parameter_data=parameter_data,
         )
-        device.add_entity(event)
+        channel.add_entity(event)

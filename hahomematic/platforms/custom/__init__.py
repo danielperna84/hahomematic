@@ -7,13 +7,12 @@ import logging
 from typing import Final
 
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom.definition import entity_definition_exists, get_entity_configs
-from hahomematic.platforms.custom.support import CustomConfig
+from hahomematic.platforms.custom.definition import entity_definition_exists, get_custom_configs
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 
-def create_custom_entity_and_append_to_device(
+def create_custom_entity_and_append_to_channels(
     device: hmd.HmDevice,
 ) -> None:
     """Decides which default platform should be used, and creates the required entities."""
@@ -22,7 +21,7 @@ def create_custom_entity_and_append_to_device(
         _LOGGER.debug(
             "CREATE_ENTITIES: Ignoring for custom entity: %s, %s, %s due to ignored",
             device.interface_id,
-            device.device_address,
+            device,
             device.device_type,
         )
         return
@@ -30,21 +29,14 @@ def create_custom_entity_and_append_to_device(
         _LOGGER.debug(
             "CREATE_ENTITIES: Handling custom entity integration: %s, %s, %s",
             device.interface_id,
-            device.device_address,
+            device,
             device.device_type,
         )
 
         # Call the custom creation function.
-        for entity_configs in get_entity_configs(device.device_type):
-            if isinstance(entity_configs, CustomConfig):
-                entity_configs.make_ce_func(
-                    device, entity_configs.channels, entity_configs.extended
-                )
-            else:
-                for entity_config in entity_configs:
-                    entity_config.make_ce_func(
-                        device, entity_config.channels, entity_config.extended
-                    )
+        for custom_config in get_custom_configs(device_type=device.device_type):
+            for channel in device.channels.values():
+                custom_config.make_ce_func(channel, custom_config)
 
 
 def _importlibs() -> None:

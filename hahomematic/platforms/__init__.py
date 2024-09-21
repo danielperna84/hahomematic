@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Final
 
-from hahomematic import support as hms
 from hahomematic.caches.visibility import ALLOWED_INTERNAL_PARAMETERS
 from hahomematic.const import (
     CLICK_EVENTS,
@@ -15,10 +14,11 @@ from hahomematic.const import (
     Operations,
     ParamsetKey,
 )
+from hahomematic.exceptions import HaHomematicException
 from hahomematic.platforms import device as hmd
-from hahomematic.platforms.custom import create_custom_entity_and_append_to_device
-from hahomematic.platforms.event import create_event_and_append_to_device
-from hahomematic.platforms.generic import create_entity_and_append_to_device
+from hahomematic.platforms.custom import create_custom_entity_and_append_to_channels
+from hahomematic.platforms.event import create_event_and_append_to_channel
+from hahomematic.platforms.generic import create_entity_and_append_to_channel
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -26,7 +26,10 @@ _LOGGER: Final = logging.getLogger(__name__)
 def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
     """Create the entities associated to this device."""
     for channel_address in device.channel_addresses:
-        channel_no = hms.get_channel_no(channel_address)
+        if (channel := device.get_channel(channel_address=channel_address)) is None:
+            raise HaHomematicException(
+                f"CREATE_ENTITIES_AND_APPEND_TO_DEVICE: Channel {channel_address} does not exists.",
+            )
 
         if not device.central.paramset_descriptions.get_paramset_keys(
             interface_id=device.interface_id, channel_address=channel_address
@@ -41,7 +44,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
         ):
             if not device.central.parameter_visibility.is_relevant_paramset(
                 device_type=device.device_type,
-                channel_no=channel_no,
+                channel_no=channel.channel_no,
                 paramset_key=paramset_key,
             ):
                 continue
@@ -56,7 +59,7 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                 parameter_is_un_ignored: bool = (
                     device.central.parameter_visibility.parameter_is_un_ignored(
                         device_type=device.device_type,
-                        channel_no=channel_no,
+                        channel_no=channel.channel_no,
                         paramset_key=paramset_key,
                         parameter=parameter,
                     )
@@ -76,9 +79,8 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                     or parameter.startswith(DEVICE_ERROR_EVENTS)
                     or parameter in IMPULSE_EVENTS
                 ):
-                    create_event_and_append_to_device(
-                        device=device,
-                        channel_address=channel_address,
+                    create_event_and_append_to_channel(
+                        channel=channel,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
@@ -99,11 +101,10 @@ def create_entities_and_append_to_device(device: hmd.HmDevice) -> None:
                 if parameter not in IMPULSE_EVENTS and (
                     not parameter.startswith(DEVICE_ERROR_EVENTS) or parameter_is_un_ignored
                 ):
-                    create_entity_and_append_to_device(
-                        device=device,
-                        channel_address=channel_address,
+                    create_entity_and_append_to_channel(
+                        channel=channel,
                         paramset_key=paramset_key,
                         parameter=parameter,
                         parameter_data=parameter_data,
                     )
-    create_custom_entity_and_append_to_device(device=device)
+    create_custom_entity_and_append_to_channels(device=device)

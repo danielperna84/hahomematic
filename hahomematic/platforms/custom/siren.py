@@ -16,7 +16,7 @@ from hahomematic.platforms import device as hmd
 from hahomematic.platforms.custom import definition as hmed
 from hahomematic.platforms.custom.const import DeviceProfile, Field
 from hahomematic.platforms.custom.entity import CustomEntity
-from hahomematic.platforms.custom.support import CustomConfig, ExtendedConfig
+from hahomematic.platforms.custom.support import CustomConfig
 from hahomematic.platforms.decorators import state_property
 from hahomematic.platforms.entity import CallParameterCollector, bind_collector
 from hahomematic.platforms.generic.action import HmAction
@@ -239,39 +239,35 @@ class CeIpSirenSmoke(BaseSiren):
 
 
 def make_ip_siren(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create HomematicIP siren entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeIpSiren,
         device_profile=DeviceProfile.IP_SIREN,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 def make_ip_siren_smoke(
-    device: hmd.HmDevice,
-    group_base_channels: tuple[int, ...],
-    extended: ExtendedConfig | None = None,
-) -> tuple[CustomEntity, ...]:
+    channel: hmd.HmChannel,
+    custom_config: CustomConfig,
+) -> None:
     """Create HomematicIP siren entities."""
-    return hmed.make_custom_entity(
-        device=device,
+    hmed.make_custom_entity(
+        channel=channel,
         entity_class=CeIpSirenSmoke,
         device_profile=DeviceProfile.IP_SIREN_SMOKE,
-        group_base_channels=group_base_channels,
-        extended=extended,
+        custom_config=custom_config,
     )
 
 
 # Case for device model is not relevant.
 # HomeBrew (HB-) devices are always listed as HM-.
 DEVICES: Mapping[str, CustomConfig | tuple[CustomConfig, ...]] = {
-    "HmIP-ASIR": CustomConfig(make_ce_func=make_ip_siren, channels=(0,)),
-    "HmIP-SWSD": CustomConfig(make_ce_func=make_ip_siren_smoke, channels=(0,)),
+    "HmIP-ASIR": CustomConfig(make_ce_func=make_ip_siren, channels=(3,)),
+    "HmIP-SWSD": CustomConfig(make_ce_func=make_ip_siren_smoke),
 }
 hmed.ALL_DEVICES[HmPlatform.SIREN] = DEVICES
