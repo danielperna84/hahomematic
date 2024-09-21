@@ -301,7 +301,7 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @property
     def base_channel_no(self) -> int | None:
         """Return the base channel no of the entity."""
-        return self._channel.base_channel_no
+        return self._channel.base_no
 
     @property
     def path(self) -> str:
@@ -316,17 +316,17 @@ class BaseEntity(CallbackEntity, PayloadMixin):
     @property
     def channel_address(self) -> str:
         """Return the channel_address of the entity."""
-        return self._channel.channel_address
+        return self._channel.address
 
     @property
     def channel_no(self) -> int | None:
         """Return the channel_no of the entity."""
-        return self._channel.channel_no
+        return self._channel.no
 
     @property
     def channel_unique_id(self) -> str:
         """Return the channel_unique_id of the entity."""
-        return self._channel.channel_unique_id
+        return self._channel.unique_id
 
     @property
     def device(self) -> hmd.HmDevice:
@@ -411,16 +411,16 @@ class BaseParameterEntity[
         super().__init__(
             channel=channel,
             unique_id=generate_unique_id(
-                central=channel.central, address=channel.channel_address, parameter=parameter
+                central=channel.central, address=channel.address, parameter=parameter
             ),
             is_in_multiple_channels=channel.device.central.paramset_descriptions.is_in_multiple_channels(
-                channel_address=channel.channel_address, parameter=parameter
+                channel_address=channel.address, parameter=parameter
             ),
         )
         self._is_un_ignored: Final[bool] = (
             self._central.parameter_visibility.parameter_is_un_ignored(
-                device_type=self._device.device_type,
-                channel_no=self._channel.channel_no,
+                device_type=self._device.model,
+                channel_no=self._channel.no,
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
                 custom_only=True,
@@ -477,7 +477,7 @@ class BaseParameterEntity[
     def entity_key(self) -> ENTITY_KEY:
         """Return entity key value."""
         return get_entity_key(
-            channel_address=self._channel.channel_address,
+            channel_address=self._channel.address,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
         )
@@ -606,7 +606,7 @@ class BaseParameterEntity[
     def _channel_operation_mode(self) -> str | None:
         """Return the channel operation mode if available."""
         cop: BaseParameterEntity | None = self._device.get_generic_entity(
-            channel_address=self._channel.channel_address,
+            channel_address=self._channel.address,
             parameter=Parameter.CHANNEL_OPERATION_MODE,
         )
         if cop and cop.value:
@@ -616,7 +616,7 @@ class BaseParameterEntity[
     @property
     def _enabled_by_channel_operation_mode(self) -> bool | None:
         """Return, if the entity/event must be enabled."""
-        if self._channel.channel_type not in _CONFIGURABLE_CHANNEL:
+        if self._channel.model not in _CONFIGURABLE_CHANNEL:
             return None
         if self._parameter not in KEY_CHANNEL_OPERATION_MODE_VISIBILITY:
             return None
@@ -677,7 +677,7 @@ class BaseParameterEntity[
 
         self.write_value(
             value=await self._device.value_cache.get_value(
-                channel_address=self._channel.channel_address,
+                channel_address=self._channel.address,
                 paramset_key=self._paramset_key,
                 parameter=self._parameter,
                 call_source=call_source,
@@ -709,7 +709,7 @@ class BaseParameterEntity[
         """Update parameter data."""
         if parameter_data := self._central.paramset_descriptions.get_parameter_data(
             interface_id=self._device.interface_id,
-            channel_address=self._channel.channel_address,
+            channel_address=self._channel.address,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
         ):
@@ -738,7 +738,7 @@ class BaseParameterEntity[
             _LOGGER.debug(
                 "CONVERT_VALUE: conversion failed for %s, %s, %s, value: [%s]",
                 self._device.interface_id,
-                self._channel.channel_address,
+                self._channel.address,
                 self._parameter,
                 value,
             )
@@ -747,9 +747,9 @@ class BaseParameterEntity[
     def get_event_data(self, value: Any = None) -> dict[str, Any]:
         """Get the event_data."""
         event_data = {
-            EVENT_ADDRESS: self._device.device_address,
-            EVENT_CHANNEL_NO: self._channel.channel_no,
-            EVENT_DEVICE_TYPE: self._device.device_type,
+            EVENT_ADDRESS: self._device.address,
+            EVENT_CHANNEL_NO: self._channel.no,
+            EVENT_DEVICE_TYPE: self._device.model,
             EVENT_INTERFACE_ID: self._device.interface_id,
             EVENT_PARAMETER: self._parameter,
         }

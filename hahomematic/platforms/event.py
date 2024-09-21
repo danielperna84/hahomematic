@@ -131,27 +131,27 @@ def create_event_and_append_to_channel(
     """Create action event entity."""
     device = channel.device
     if device.central.parameter_visibility.parameter_is_ignored(
-        device_type=device.device_type,
-        channel_no=hms.get_channel_no(address=channel.channel_address),
+        device_type=device.model,
+        channel_no=hms.get_channel_no(address=channel.address),
         paramset_key=ParamsetKey.VALUES,
         parameter=parameter,
     ):
         _LOGGER.debug(
             "create_event_and_append_to_device: Ignoring parameter: %s [%s]",
             parameter,
-            channel.channel_address,
+            channel.address,
         )
         return
     unique_id = generate_unique_id(
         central=device.central,
-        address=channel.channel_address,
+        address=channel.address,
         parameter=parameter,
         prefix=f"event_{device.central.name}",
     )
 
     _LOGGER.debug(
         "CREATE_EVENT_AND_APPEND_TO_DEVICE: Creating event for %s, %s, %s",
-        channel.channel_address,
+        channel.address,
         parameter,
         device.interface_id,
     )

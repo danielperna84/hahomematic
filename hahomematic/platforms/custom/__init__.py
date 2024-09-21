@@ -22,19 +22,19 @@ def create_custom_entity_and_append_to_channels(
             "CREATE_ENTITIES: Ignoring for custom entity: %s, %s, %s due to ignored",
             device.interface_id,
             device,
-            device.device_type,
+            device.model,
         )
         return
-    if entity_definition_exists(device.device_type):
+    if entity_definition_exists(device.model):
         _LOGGER.debug(
             "CREATE_ENTITIES: Handling custom entity integration: %s, %s, %s",
             device.interface_id,
             device,
-            device.device_type,
+            device.model,
         )
 
         # Call the custom creation function.
-        for custom_config in get_custom_configs(device_type=device.device_type):
+        for custom_config in get_custom_configs(device_type=device.model):
             for channel in device.channels.values():
                 custom_config.make_ce_func(channel, custom_config)
 

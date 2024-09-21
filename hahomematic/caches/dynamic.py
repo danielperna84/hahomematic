@@ -211,8 +211,8 @@ class DeviceDetailsCache:
 
     def remove_device(self, device: HmDevice) -> None:
         """Remove name from cache."""
-        if device.device_address in self._names_cache:
-            del self._names_cache[device.device_address]
+        if device.address in self._names_cache:
+            del self._names_cache[device.address]
         for channel_address in device.channel_addresses:
             if channel_address in self._names_cache:
                 del self._names_cache[channel_address]

@@ -362,7 +362,7 @@ class Client(ABC):
         """Get the virtual remote for the Client."""
         for device_type in VIRTUAL_REMOTE_TYPES:
             for device in self.central.devices:
-                if device.interface_id == self.interface_id and device.device_type == device_type:
+                if device.interface_id == self.interface_id and device.model == device_type:
                     return device
         return None
 

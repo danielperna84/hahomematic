@@ -40,17 +40,17 @@ async def test_device_general(
     """Test device availability."""
     central, _, _ = central_client_factory
     device = central.get_device(address="VCU2128127")
-    assert device.device_address == "VCU2128127"
+    assert device.address == "VCU2128127"
     assert device.name == "HmIP-BSM_VCU2128127"
     assert (
         str(device) == "address: VCU2128127, "
-        "type: 8, "
+        "model: 8, "
         "name: HmIP-BSM_VCU2128127, "
         "generic_entities: 27, "
         "custom_entities: 3, "
         "events: 6"
     )
-    assert device.device_type == "HmIP-BSM"
+    assert device.model == "HmIP-BSM"
     assert device.interface == "BidCos-RF"
     assert device.interface_id == const.INTERFACE_ID
     assert device.has_custom_entity_definition is True

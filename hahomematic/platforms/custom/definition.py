@@ -558,11 +558,9 @@ def make_custom_entity(
     add_sub_device_channels_to_device(
         device=channel.device, device_profile=device_profile, custom_config=custom_config
     )
-    base_channel_no = get_sub_device_base_channel(
-        device=channel.device, channel_no=channel.channel_no
-    )
+    base_channel_no = get_sub_device_base_channel(device=channel.device, channel_no=channel.no)
     channels = _relevant_channels(device_profile=device_profile, custom_config=custom_config)
-    if channel.channel_no in set(channels):
+    if channel.no in set(channels):
         _create_entity(
             channel=channel,
             custom_entity_class=entity_class,
@@ -586,7 +584,7 @@ def _create_entity(
     custom_config: CustomConfig,
 ) -> None:
     """Create custom entities."""
-    unique_id = generate_unique_id(central=channel.central, address=channel.channel_address)
+    unique_id = generate_unique_id(central=channel.central, address=channel.address)
 
     try:
         if (

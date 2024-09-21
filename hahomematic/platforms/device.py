@@ -69,14 +69,13 @@ class HmDevice(PayloadMixin):
     def __init__(self, central: hmcu.CentralUnit, interface_id: str, device_address: str) -> None:
         """Initialize the device object."""
         PayloadMixin.__init__(self)
-        # channel_no, base_channel_no
-        self._sub_device_channels: Final[dict[int | None, int]] = {}
         self._central: Final = central
         self._interface_id: Final = interface_id
+        self._address: Final = device_address
+        self._sub_device_channels: Final[dict[int | None, int]] = {}
         self._interface: Final = central.device_details.get_interface(address=device_address)
         self._client: Final = central.get_client(interface_id=interface_id)
-        self._device_address: Final = device_address
-        self._device_description = self._central.device_descriptions.get_device_description(
+        self._description = self._central.device_descriptions.get_device_description(
             interface_id=interface_id, address=device_address
         )
         _LOGGER.debug(
@@ -91,34 +90,30 @@ class HmDevice(PayloadMixin):
         self._firmware_update_callbacks: Final[list[Callable]] = []
         self._channel_addresses: Final = tuple(
             [device_address]
-            + [
-                channel_address
-                for channel_address in self._device_description["CHILDREN"]
-                if channel_address != ""
-            ]
+            + [address for address in self._description["CHILDREN"] if address != ""]
         )
         self._channels: Final[dict[str, HmChannel]] = {
-            channel_address: HmChannel(device=self, channel_address=channel_address)
-            for channel_address in self._channel_addresses
+            address: HmChannel(device=self, channel_address=address)
+            for address in self._channel_addresses
         }
-        self._device_type: Final = self._device_description["TYPE"]
-        self._is_updatable: Final = self._device_description["UPDATABLE"]
-        self._rx_modes: Final = get_rx_modes(mode=self._device_description.get("RX_MODE", 0))
-        self._sub_type: Final = self._device_description.get("SUBTYPE")
+        self._model: Final = self._description["TYPE"]
+        self._is_updatable: Final = self._description["UPDATABLE"]
+        self._rx_modes: Final = get_rx_modes(mode=self._description.get("RX_MODE", 0))
+        self._sub_model: Final = self._description.get("SUBTYPE")
         self._ignore_for_custom_entity: Final[bool] = (
-            central.parameter_visibility.device_type_is_ignored(device_type=self._device_type)
+            central.parameter_visibility.device_type_is_ignored(device_type=self._model)
         )
         self._manufacturer = self._identify_manufacturer()
-        self._product_group: Final = self._client.get_product_group(self._device_type)
+        self._product_group: Final = self._client.get_product_group(self._model)
         # marker if device will be created as custom entity
         self._has_custom_entity_definition: Final = (
-            hmed.entity_definition_exists(device_type=self._device_type)
+            hmed.entity_definition_exists(device_type=self._model)
             and not self._ignore_for_custom_entity
         )
         self._name: Final = get_device_name(
             central=central,
             device_address=device_address,
-            device_type=self._device_type,
+            device_type=self._model,
         )
         self._value_cache: Final[ValueCache] = ValueCache(device=self)
         self._rooms: Final = central.device_details.get_device_rooms(device_address=device_address)
@@ -126,18 +121,23 @@ class HmDevice(PayloadMixin):
         _LOGGER.debug(
             "__INIT__: Initialized device: %s, %s, %s, %s",
             self._interface_id,
-            self._device_address,
-            self._device_type,
+            self._address,
+            self._model,
             self._name,
         )
 
     def _identify_manufacturer(self) -> Manufacturer:
         """Identify the manufacturer of a device."""
-        if self._device_type.lower().startswith("hb"):
+        if self._model.lower().startswith("hb"):
             return Manufacturer.HB
-        if self._device_type.lower().startswith("alpha"):
+        if self._model.lower().startswith("alpha"):
             return Manufacturer.MOEHLENHOFF
         return Manufacturer.EQ3
+
+    @info_property
+    def address(self) -> str:
+        """Return the address of the device."""
+        return self._address
 
     @property
     def allow_undefined_generic_entities(self) -> bool:
@@ -164,22 +164,12 @@ class HmDevice(PayloadMixin):
     @property
     def available_firmware(self) -> str | None:
         """Return the available firmware of the device."""
-        return str(self._device_description.get("AVAILABLE_FIRMWARE", ""))
-
-    @property
-    def path(self) -> str:
-        """Return the base path of the entity."""
-        return f"{self._central.path}/{self._device_address}"
+        return str(self._description.get("AVAILABLE_FIRMWARE", ""))
 
     @property
     def central(self) -> hmcu.CentralUnit:
         """Return the central of the device."""
         return self._central
-
-    @property
-    def client(self) -> hmcl.Client:
-        """Return the client of the device."""
-        return self._client
 
     @property
     def channel_addresses(self) -> tuple[str, ...]:
@@ -190,6 +180,11 @@ class HmDevice(PayloadMixin):
     def channels(self) -> dict[str, HmChannel]:
         """Return the channels."""
         return self._channels
+
+    @property
+    def client(self) -> hmcl.Client:
+        """Return the client of the device."""
+        return self._client
 
     @property
     def config_pending(self) -> bool:
@@ -208,30 +203,20 @@ class HmDevice(PayloadMixin):
         )
 
     @info_property
-    def device_address(self) -> str:
-        """Return the device_address of the device."""
-        return self._device_address
-
-    @info_property
-    def device_type(self) -> str:
-        """Return the device_type of the device."""
-        return self._device_type
-
-    @info_property
     def firmware(self) -> str:
         """Return the firmware of the device."""
-        return self._device_description["FIRMWARE"]
+        return self._description["FIRMWARE"]
 
     @property
     def firmware_updatable(self) -> bool:
         """Return the firmware update state of the device."""
-        return self._device_description.get("FIRMWARE_UPDATABLE") or False
+        return self._description.get("FIRMWARE_UPDATABLE") or False
 
     @property
     def firmware_update_state(self) -> DeviceFirmwareState:
         """Return the firmware update state of the device."""
         return DeviceFirmwareState(
-            self._device_description.get("FIRMWARE_UPDATE_STATE") or DeviceFirmwareState.UNKNOWN
+            self._description.get("FIRMWARE_UPDATE_STATE") or DeviceFirmwareState.UNKNOWN
         )
 
     @property
@@ -263,7 +248,7 @@ class HmDevice(PayloadMixin):
     @info_property
     def identifier(self) -> str:
         """Return the identifier of the device."""
-        return f"{self._device_address}{IDENTIFIER_SEPARATOR}{self._interface_id}"
+        return f"{self._address}{IDENTIFIER_SEPARATOR}{self._interface_id}"
 
     @property
     def interface(self) -> str:
@@ -298,9 +283,19 @@ class HmDevice(PayloadMixin):
         return self._manufacturer
 
     @info_property
+    def model(self) -> str:
+        """Return the model of the device."""
+        return self._model
+
+    @info_property
     def name(self) -> str:
         """Return the name of the device."""
         return self._name
+
+    @property
+    def path(self) -> str:
+        """Return the base path of the entity."""
+        return f"{self._central.path}/{self._address}"
 
     @property
     def product_group(self) -> ProductGroup:
@@ -325,9 +320,9 @@ class HmDevice(PayloadMixin):
         return self._rx_modes
 
     @property
-    def sub_type(self) -> str | None:
-        """Return the sub_type of the device."""
-        return self._sub_type
+    def sub_model(self) -> str | None:
+        """Return the sub model of the device."""
+        return self._sub_model
 
     @property
     def update_entity(self) -> HmUpdate | None:
@@ -343,21 +338,21 @@ class HmDevice(PayloadMixin):
     def _e_unreach(self) -> GenericEntity | None:
         """Return th UNREACH entity."""
         return self.get_generic_entity(
-            channel_address=f"{self._device_address}:0", parameter=Parameter.UN_REACH
+            channel_address=f"{self._address}:0", parameter=Parameter.UN_REACH
         )
 
     @property
     def _e_sticky_un_reach(self) -> GenericEntity | None:
         """Return th STICKY_UN_REACH entity."""
         return self.get_generic_entity(
-            channel_address=f"{self._device_address}:0", parameter=Parameter.STICKY_UN_REACH
+            channel_address=f"{self._address}:0", parameter=Parameter.STICKY_UN_REACH
         )
 
     @property
     def _e_config_pending(self) -> GenericEntity | None:
         """Return th CONFIG_PENDING entity."""
         return self.get_generic_entity(
-            channel_address=f"{self._device_address}:0", parameter=Parameter.CONFIG_PENDING
+            channel_address=f"{self._address}:0", parameter=Parameter.CONFIG_PENDING
         )
 
     def add_sub_device_channel(self, channel_no: int | None, base_channel_no: int) -> None:
@@ -476,7 +471,7 @@ class HmDevice(PayloadMixin):
         """Return an entity from device."""
         if channel := self.get_channel(
             channel_address=get_channel_address(
-                device_address=self._device_address, channel_no=channel_no
+                device_address=self._address, channel_no=channel_no
             )
         ):
             return channel.custom_entity
@@ -522,8 +517,8 @@ class HmDevice(PayloadMixin):
         old_firmware_update_state = self.firmware_update_state
         old_firmware_updatable = self.firmware_updatable
 
-        self._device_description = self._central.device_descriptions.get_device_description(
-            interface_id=self._interface_id, address=self._device_address
+        self._description = self._central.device_descriptions.get_device_description(
+            interface_id=self._interface_id, address=self._address
         )
 
         if (
@@ -537,14 +532,12 @@ class HmDevice(PayloadMixin):
 
     async def update_firmware(self, refresh_after_update_intervals: tuple[int, ...]) -> bool:
         """Update the firmware of the homematic device."""
-        update_result = await self._client.update_device_firmware(
-            device_address=self._device_address
-        )
+        update_result = await self._client.update_device_firmware(device_address=self._address)
 
         async def refresh_data() -> None:
             for refresh_interval in refresh_after_update_intervals:
                 await asyncio.sleep(refresh_interval)
-                await self._central.refresh_firmware_data(device_address=self._device_address)
+                await self._central.refresh_firmware_data(device_address=self._address)
 
         if refresh_after_update_intervals:
             self._central.looper.create_task(target=refresh_data(), name="refresh_firmware_data")
@@ -559,7 +552,7 @@ class HmDevice(PayloadMixin):
             await self._value_cache.init_readable_events()
         _LOGGER.debug(
             "INIT_DATA: Skipping load_data, missing entities for %s",
-            self._device_address,
+            self._address,
         )
 
     async def reload_paramset_descriptions(self) -> None:
@@ -569,7 +562,7 @@ class HmDevice(PayloadMixin):
             channel_addresses,
         ) in self._central.paramset_descriptions.get_channel_addresses_by_paramset_key(
             interface_id=self._interface_id,
-            device_address=self._device_address,
+            device_address=self._address,
         ).items():
             for channel_address in channel_addresses:
                 await self._client.fetch_paramset_description(
@@ -594,8 +587,8 @@ class HmDevice(PayloadMixin):
     def __str__(self) -> str:
         """Provide some useful information."""
         return (
-            f"address: {self._device_address}, "
-            f"type: {len(self._device_type)}, "
+            f"address: {self._address}, "
+            f"model: {len(self._model)}, "
             f"name: {self._name}, "
             f"generic_entities: {len(self.generic_entities)}, "
             f"custom_entities: {len(self.custom_entities)}, "
@@ -612,18 +605,16 @@ class HmChannel(PayloadMixin):
 
         self._device: Final = device
         self._central: Final = device.central
-        self._channel_address: Final = channel_address
-        self._channel_description = self._central.device_descriptions.get_device_description(
+        self._address: Final = channel_address
+        self._description = self._central.device_descriptions.get_device_description(
             interface_id=self._device.interface_id, address=channel_address
         )
-        self._channel_type: Final = self._channel_description["TYPE"]
-        self._channel_no: Final[int | None] = get_channel_no(address=channel_address)
-        self._channel_unique_id: Final = generate_channel_unique_id(
+        self._model: Final = self._description["TYPE"]
+        self._no: Final[int | None] = get_channel_no(address=channel_address)
+        self._unique_id: Final = generate_channel_unique_id(
             central=self._central, address=channel_address
         )
-        self._base_channel_no: Final = self._device.get_sub_device_base_channel(
-            channel_no=self._channel_no
-        )
+        self._base_no: Final = self._device.get_sub_device_base_channel(channel_no=self._no)
         self._custom_entity: hmce.CustomEntity | None = None
         self._generic_entities: Final[dict[ENTITY_KEY, GenericEntity]] = {}
         self._generic_events: Final[dict[ENTITY_KEY, GenericEvent]] = {}
@@ -632,13 +623,18 @@ class HmChannel(PayloadMixin):
             channel_address=channel_address
         )
         self._function: Final = self._central.device_details.get_function_text(
-            address=self._channel_address
+            address=self._address
         )
 
     @property
-    def base_channel_no(self) -> int | None:
+    def address(self) -> str:
+        """Return the address of the device."""
+        return self._address
+
+    @property
+    def base_no(self) -> int | None:
         """Return the base channel no of the entity."""
-        return self._base_channel_no
+        return self._base_no
 
     @property
     def central(self) -> hmcu.CentralUnit:
@@ -646,34 +642,14 @@ class HmChannel(PayloadMixin):
         return self._central
 
     @property
-    def channel_address(self) -> str:
-        """Return the channel_address of the device."""
-        return self._channel_address
-
-    @property
-    def channel_description(self) -> DeviceDescription:
-        """Return the device description for the channel."""
-        return self._channel_description
-
-    @property
-    def channel_no(self) -> int | None:
-        """Return the channel_no of the device."""
-        return self._channel_no
-
-    @property
-    def channel_type(self) -> str:
-        """Return the device_type of the device."""
-        return self._channel_type
-
-    @property
-    def channel_unique_id(self) -> str:
-        """Return the channel_unique_id of the entity."""
-        return self._channel_unique_id
-
-    @property
     def custom_entity(self) -> hmce.CustomEntity | None:
         """Return the custom entities."""
         return self._custom_entity
+
+    @property
+    def description(self) -> DeviceDescription:
+        """Return the device description for the channel."""
+        return self._description
 
     @property
     def device(self) -> HmDevice:
@@ -686,19 +662,29 @@ class HmChannel(PayloadMixin):
         return self._function
 
     @property
-    def generic_events(self) -> tuple[GenericEvent, ...]:
-        """Return the generic events."""
-        return tuple(self._generic_events.values())
-
-    @property
     def generic_entities(self) -> tuple[GenericEntity, ...]:
         """Return the generic entities."""
         return tuple(self._generic_entities.values())
 
     @property
+    def generic_events(self) -> tuple[GenericEvent, ...]:
+        """Return the generic events."""
+        return tuple(self._generic_events.values())
+
+    @property
+    def model(self) -> str:
+        """Return the device_type of the device."""
+        return self._model
+
+    @property
+    def no(self) -> int | None:
+        """Return the channel_no of the device."""
+        return self._no
+
+    @property
     def path(self) -> str:
         """Return the base path of the entity."""
-        return f"{self._device.path}/{self._channel_no}"
+        return f"{self._device.path}/{self._no}"
 
     @info_property
     def room(self) -> str | None:
@@ -711,6 +697,11 @@ class HmChannel(PayloadMixin):
     def rooms(self) -> set[str]:
         """Return all rooms of the device."""
         return self._rooms
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique_id of the channel."""
+        return self._unique_id
 
     def add_entity(self, entity: CallbackEntity) -> None:
         """Add a hm entity to a device."""
@@ -820,7 +811,7 @@ class HmChannel(PayloadMixin):
         if paramset_key:
             return self._generic_entities.get(
                 get_entity_key(
-                    channel_address=self._channel_address,
+                    channel_address=self._address,
                     paramset_key=paramset_key,
                     parameter=parameter,
                 )
@@ -828,7 +819,7 @@ class HmChannel(PayloadMixin):
 
         if entity := self._generic_entities.get(
             get_entity_key(
-                channel_address=self._channel_address,
+                channel_address=self._address,
                 paramset_key=ParamsetKey.VALUES,
                 parameter=parameter,
             )
@@ -836,7 +827,7 @@ class HmChannel(PayloadMixin):
             return entity
         return self._generic_entities.get(
             get_entity_key(
-                channel_address=self._channel_address,
+                channel_address=self._address,
                 paramset_key=ParamsetKey.MASTER,
                 parameter=parameter,
             )
@@ -846,7 +837,7 @@ class HmChannel(PayloadMixin):
         """Return a generic event from device."""
         return self._generic_events.get(
             get_entity_key(
-                channel_address=self._channel_address,
+                channel_address=self._address,
                 paramset_key=ParamsetKey.VALUES,
                 parameter=parameter,
             )
@@ -863,8 +854,8 @@ class HmChannel(PayloadMixin):
     def __str__(self) -> str:
         """Provide some useful information."""
         return (
-            f"address: {self._channel_address}, "
-            f"type: {self._channel_type}, "
+            f"address: {self._address}, "
+            f"type: {self._model}, "
             f"generic_entities: {len(self._generic_entities)}, "
             f"custom_entity: {self._custom_entity is not None}, "
             f"events: {len(self._generic_events)}"
@@ -897,8 +888,8 @@ class ValueCache:
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "init_base_entities: Failed to init cache for channel0 %s, %s [%s]",
-                self._device.device_type,
-                self._device.device_address,
+                self._device.model,
+                self._device.address,
                 ex,
             )
 
@@ -929,8 +920,8 @@ class ValueCache:
         except BaseHomematicException as ex:
             _LOGGER.debug(
                 "init_base_events: Failed to init cache for channel0 %s, %s [%s]",
-                self._device.device_type,
-                self._device.device_address,
+                self._device.model,
+                self._device.address,
                 ex,
             )
 
@@ -974,7 +965,7 @@ class ValueCache:
             except BaseHomematicException as ex:
                 _LOGGER.debug(
                     "GET_OR_LOAD_VALUE: Failed to get data for %s, %s, %s: %s",
-                    self._device.device_type,
+                    self._device.model,
                     channel_address,
                     parameter,
                     ex,
@@ -1040,7 +1031,7 @@ class _DefinitionExporter:
         self._central: Final = device.client.central
         self._storage_folder: Final = self._central.config.storage_folder
         self._interface_id: Final = device.interface_id
-        self._device_address: Final = device.device_address
+        self._device_address: Final = device.address
         self._random_id: Final[str] = f"VCU{int(random.randint(1000000, 9999999))}"
 
     async def export_data(self) -> None:

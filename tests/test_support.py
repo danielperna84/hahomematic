@@ -205,7 +205,7 @@ async def test_get_entity_name(
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Level"
     assert name_data.entity_name == "Level"
 
-    central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
+    central.device_details.add_name(address=f"{device.address}:5", name="Roof")
     name_data = get_entity_name(central=central, device=device, channel_no=5, parameter="LEVEL")
     assert name_data.full_name == "HmIP-BSM_VCU2128127 Roof Level"
     assert name_data.entity_name == "Roof Level"
@@ -246,7 +246,7 @@ async def test_get_event_name(
     assert name_data.entity_name == "ch4 Level"
     assert name_data.full_name == "HmIP-BSM_VCU2128127 ch4 Level"
 
-    central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
+    central.device_details.add_name(address=f"{device.address}:5", name="Roof")
     name_data = get_event_name(central=central, device=device, channel_no=5, parameter="LEVEL")
     assert name_data.channel_name == "Roof"
     assert name_data.entity_name == "Roof Level"
@@ -301,7 +301,7 @@ async def test_custom_entity_name(
     assert name_data.full_name == "HmIP-BSM_VCU2128127 vch4"
     assert name_data.entity_name == "vch4"
 
-    central.device_details.add_name(address=f"{device.device_address}:5", name="Roof")
+    central.device_details.add_name(address=f"{device.address}:5", name="Roof")
     name_data = get_custom_entity_name(
         central=central,
         device=device,

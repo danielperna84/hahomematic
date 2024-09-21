@@ -172,7 +172,7 @@ class DeviceDescriptionCache(BasePersistentCache):
 
     def remove_device(self, device: HmDevice) -> None:
         """Remove device from cache."""
-        deleted_addresses: list[str] = [device.device_address]
+        deleted_addresses: list[str] = [device.address]
         deleted_addresses.extend(device.channel_addresses)
         self._remove_device(interface_id=device.interface_id, deleted_addresses=deleted_addresses)
 

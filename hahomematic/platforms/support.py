@@ -181,9 +181,7 @@ def get_entity_name(
     parameter: str,
 ) -> EntityNameData:
     """Get name for entity."""
-    channel_address = hms.get_channel_address(
-        device_address=device.device_address, channel_no=channel_no
-    )
+    channel_address = hms.get_channel_address(device_address=device.address, channel_no=channel_no)
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
         device=device,
@@ -213,7 +211,7 @@ def get_entity_name(
 
     _LOGGER.debug(
         "GET_ENTITY_NAME: Using unique_id for %s %s %s",
-        device.device_type,
+        device.model,
         channel_address,
         parameter,
     )
@@ -227,9 +225,7 @@ def get_event_name(
     parameter: str,
 ) -> EntityNameData:
     """Get name for event."""
-    channel_address = hms.get_channel_address(
-        device_address=device.device_address, channel_no=channel_no
-    )
+    channel_address = hms.get_channel_address(device_address=device.address, channel_no=channel_no)
     if channel_name := _get_base_name_from_channel_or_device(
         central=central,
         device=device,
@@ -253,7 +249,7 @@ def get_event_name(
 
     _LOGGER.debug(
         "GET_EVENT_NAME: Using unique_id for %s %s %s",
-        device.device_type,
+        device.model,
         channel_address,
         parameter,
     )
@@ -292,8 +288,8 @@ def get_custom_entity_name(
 
     _LOGGER.debug(
         "GET_CUSTOM_ENTITY_NAME: Using unique_id for %s %s %s",
-        device.device_type,
-        device.device_address,
+        device.model,
+        device.address,
         channel_no,
     )
     return EntityNameData.empty()
@@ -343,10 +339,8 @@ def _get_base_name_from_channel_or_device(
     channel_no: int | None,
 ) -> str | None:
     """Get the name from channel if it's not default, otherwise from device."""
-    channel_address = hms.get_channel_address(
-        device_address=device.device_address, channel_no=channel_no
-    )
-    default_channel_name = f"{device.device_type} {channel_address}"
+    channel_address = hms.get_channel_address(device_address=device.address, channel_no=channel_no)
+    default_channel_name = f"{device.model} {channel_address}"
     name = central.device_details.get_name(channel_address)
     if name is None or name == default_channel_name:
         return hms.get_channel_address(device_address=device.name, channel_no=channel_no)

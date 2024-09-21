@@ -451,7 +451,7 @@ class CentralUnit(PayloadMixin):
             for device_in_state in self._devices.values()
             if device_in_state.firmware_update_state in device_firmware_states
         ]:
-            await self.refresh_firmware_data(device_address=device.device_address)
+            await self.refresh_firmware_data(device_address=device.address)
 
     async def _refresh_device_descriptions(
         self, client: hmcl.Client, device_address: str | None = None
@@ -1002,10 +1002,10 @@ class CentralUnit(PayloadMixin):
 
     def remove_device(self, device: HmDevice) -> None:
         """Remove device to central collections."""
-        if device.device_address not in self._devices:
+        if device.address not in self._devices:
             _LOGGER.debug(
                 "REMOVE_DEVICE: device %s not registered in central",
-                device.device_address,
+                device.address,
             )
             return
         device.remove()
@@ -1013,7 +1013,7 @@ class CentralUnit(PayloadMixin):
         self._device_descriptions.remove_device(device=device)
         self._paramset_descriptions.remove_device(device=device)
         self._device_details.remove_device(device=device)
-        del self._devices[device.device_address]
+        del self._devices[device.address]
 
     def remove_event_subscription(self, entity: BaseParameterEntity) -> None:
         """Remove event subscription from central collections."""
@@ -1136,7 +1136,7 @@ class CentralUnit(PayloadMixin):
         """Get the virtual remote for the Client."""
         for client in self._clients.values():
             virtual_remote = client.get_virtual_remote()
-            if virtual_remote and virtual_remote.device_address == device_address:
+            if virtual_remote and virtual_remote.address == device_address:
                 return virtual_remote
         return None
 

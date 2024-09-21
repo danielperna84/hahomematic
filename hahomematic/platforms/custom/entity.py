@@ -51,7 +51,7 @@ class CustomEntity(BaseEntity):
             channel=channel,
             unique_id=unique_id,
             is_in_multiple_channels=hmed.is_multi_channel_device(
-                device_type=channel.device.device_type, platform=self.platform
+                device_type=channel.device.model, platform=self.platform
             ),
         )
         self._allow_undefined_generic_entities: Final[bool] = self._device_def[
@@ -155,7 +155,7 @@ class CustomEntity(BaseEntity):
         """Generate the usage for the entity."""
         if self._forced_usage:
             return self._forced_usage
-        if self._channel.channel_no in self._custom_config.channels:
+        if self._channel.no in self._custom_config.channels:
             return EntityUsage.CE_PRIMARY
         return EntityUsage.CE_SECONDARY
 
@@ -181,7 +181,7 @@ class CustomEntity(BaseEntity):
         # Add repeating fields
         for field_name, parameter in self._device_def.get(hmed.ED.REPEATABLE_FIELDS, {}).items():
             entity = self._device.get_generic_entity(
-                channel_address=self._channel.channel_address, parameter=parameter
+                channel_address=self._channel.address, parameter=parameter
             )
             self._add_entity(field=field_name, entity=entity, is_visible=False)
 
@@ -190,7 +190,7 @@ class CustomEntity(BaseEntity):
             hmed.ED.VISIBLE_REPEATABLE_FIELDS, {}
         ).items():
             entity = self._device.get_generic_entity(
-                channel_address=self._channel.channel_address, parameter=parameter
+                channel_address=self._channel.address, parameter=parameter
             )
             self._add_entity(field=field_name, entity=entity, is_visible=True)
 
@@ -199,7 +199,7 @@ class CustomEntity(BaseEntity):
                 for channel_no, mapping in fixed_channels.items():
                     for field_name, parameter in mapping.items():
                         channel_address = get_channel_address(
-                            device_address=self._device.device_address, channel_no=channel_no
+                            device_address=self._device.address, channel_no=channel_no
                         )
                         entity = self._device.get_generic_entity(
                             channel_address=channel_address, parameter=parameter
@@ -230,7 +230,7 @@ class CustomEntity(BaseEntity):
         for channel_no, channel in fields.items():
             for field, parameter in channel.items():
                 channel_address = get_channel_address(
-                    device_address=self._device.device_address, channel_no=channel_no
+                    device_address=self._device.address, channel_no=channel_no
                 )
                 if entity := self._device.get_generic_entity(
                     channel_address=channel_address, parameter=parameter
@@ -275,7 +275,7 @@ class CustomEntity(BaseEntity):
     def _mark_entity(self, channel_no: int | None, parameters: tuple[str, ...]) -> None:
         """Mark entity to be created in HA."""
         channel_address = get_channel_address(
-            device_address=self._device.device_address, channel_no=channel_no
+            device_address=self._device.address, channel_no=channel_no
         )
 
         for parameter in parameters:

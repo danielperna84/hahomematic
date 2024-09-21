@@ -115,7 +115,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
             return
 
         await self._client.set_value(
-            channel_address=self._channel.channel_address,
+            channel_address=self._channel.address,
             paramset_key=self._paramset_key,
             parameter=self._parameter,
             value=converted_value,
@@ -141,7 +141,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
         if self._forced_usage:
             return self._forced_usage
         if self._central.parameter_visibility.parameter_is_hidden(
-            device_type=self._device.device_type,
+            device_type=self._device.model,
             channel_no=self.channel_no,
             paramset_key=self._paramset_key,
             parameter=self._parameter,

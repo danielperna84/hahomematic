@@ -48,21 +48,21 @@ def create_entity_and_append_to_channel(
     central = channel.central
     device = channel.device
     if central.parameter_visibility.parameter_is_ignored(
-        device_type=device.device_type,
-        channel_no=hms.get_channel_no(address=channel.channel_address),
+        device_type=device.model,
+        channel_no=hms.get_channel_no(address=channel.address),
         paramset_key=paramset_key,
         parameter=parameter,
     ):
         _LOGGER.debug(
             "CREATE_ENTITIES: Ignoring parameter: %s [%s]",
             parameter,
-            channel.channel_address,
+            channel.address,
         )
         return
 
     _LOGGER.debug(
         "CREATE_ENTITIES: Creating entity for %s, %s, %s",
-        channel.channel_address,
+        channel.address,
         parameter,
         device.interface_id,
     )
@@ -72,7 +72,7 @@ def create_entity_and_append_to_channel(
     if p_operations & Operations.WRITE:
         if p_type == ParameterType.ACTION:
             if p_operations == Operations.WRITE:
-                if parameter in _BUTTON_ACTIONS or device.device_type in VIRTUAL_REMOTE_TYPES:
+                if parameter in _BUTTON_ACTIONS or device.model in VIRTUAL_REMOTE_TYPES:
                     entity_t = HmButton
                 else:
                     entity_t = HmAction
@@ -115,7 +115,7 @@ def create_entity_and_append_to_channel(
         _LOGGER.debug(
             "CREATE_ENTITY_AND_APPEND_TO_CHANNEL: %s: %s %s",
             entity.platform,
-            channel.channel_address,
+            channel.address,
             parameter,
         )
         channel.add_entity(entity)
@@ -126,7 +126,7 @@ def create_entity_and_append_to_channel(
 def _check_switch_to_sensor(entity: hmge.GenericEntity) -> bool:
     """Check if parameter of a device should be wrapped to a different platform."""
     if entity.device.central.parameter_visibility.parameter_is_un_ignored(
-        device_type=entity.device.device_type,
+        device_type=entity.device.model,
         channel_no=entity.channel_no,
         paramset_key=entity.paramset_key,
         parameter=entity.parameter,
@@ -136,7 +136,7 @@ def _check_switch_to_sensor(entity: hmge.GenericEntity) -> bool:
         if (
             hms.element_matches_key(
                 search_elements=devices,
-                compare_with=entity.device.device_type,
+                compare_with=entity.device.model,
             )
             and entity.parameter == parameter
         ):
