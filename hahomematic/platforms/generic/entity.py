@@ -130,9 +130,7 @@ class GenericEntity[ParameterT: GenericParameterType, InputParameterT: GenericPa
     def _get_entity_name(self) -> EntityNameData:
         """Create the name for the entity."""
         return get_entity_name(
-            central=self._central,
-            device=self._device,
-            channel_no=self._channel.no,
+            channel=self._channel,
             parameter=self._parameter,
         )
 

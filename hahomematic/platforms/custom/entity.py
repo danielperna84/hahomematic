@@ -143,9 +143,7 @@ class CustomEntity(BaseEntity):
             device_has_multiple_channels=self.is_in_multiple_channels,
         )
         return get_custom_entity_name(
-            central=self._central,
-            device=self._device,
-            channel_no=self._channel.no,
+            channel=self._channel,
             is_only_primary_channel=is_only_primary_channel,
             usage=self._get_entity_usage(),
             postfix=self.entity_name_postfix.replace("_", " ").title(),
